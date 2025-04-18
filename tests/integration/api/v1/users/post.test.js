@@ -1,5 +1,7 @@
 import orchestrator from "tests/orchestrator";
 import { version as uuidVersion } from "uuid";
+import user from "models/user";
+import password from "models/password";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -10,16 +12,22 @@ beforeAll(async () => {
 describe("POST /api/v1/users", () => {
   describe("anonymous user", () => {
     test("With Unique and valid data", async () => {
+      const testUser = {
+        password: "password",
+        username: "fagoabreu",
+        cpf: "11111111111",
+      };
+
       const response = await fetch("http://localhost:3000/api/v1/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: "fagoabreu",
+          username: testUser.username,
           email: "fagoabreu@gmail.com",
-          password: "password",
-          cpf: 11111111111,
+          password: testUser.password,
+          cpf: testUser.cpf,
         }),
       });
 
@@ -28,16 +36,31 @@ describe("POST /api/v1/users", () => {
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         id: responseBody.id,
-        username: "fagoabreu",
+        username: testUser.username,
         email: "fagoabreu@gmail.com",
-        password: "password",
-        cpf: "11111111111",
+        password: responseBody.password,
+        cpf: testUser.cpf,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
+
+      const userInDatabase = await user.findOneByUsername(
+        responseBody.username,
+      );
+
+      const correctPasswordMatch = await password.compare(
+        testUser.password,
+        userInDatabase.password,
+      );
+      const incorrectPasswordMatch = await password.compare(
+        "Senha Errada",
+        userInDatabase.password,
+      );
+      expect(correctPasswordMatch).toBe(true);
+      expect(incorrectPasswordMatch).toBe(false);
     });
 
     test("With duplicated 'Email'", async () => {
