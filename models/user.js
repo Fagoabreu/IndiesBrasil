@@ -1,10 +1,12 @@
 import database from "infra/database";
+import password from "models/password";
 import { ValidationError, NotFoundError } from "infra/errors.js";
 
 async function create(userInputValues) {
   await validateUniqueEmail(userInputValues.email);
   await validateUniqueUsename(userInputValues.username);
   await validateUniqueCPF(userInputValues.cpf);
+  await hashPasswordInObject(userInputValues);
 
   const newUser = await runInserQuery(userInputValues);
   return newUser;
@@ -85,6 +87,11 @@ async function validateUniqueCPF(cpf) {
       action: "Utilize outro cpf para realizar o cadastro.",
     });
   }
+}
+
+async function hashPasswordInObject(userInputValues) {
+  const hashedPassword = await password.hash(userInputValues.password);
+  userInputValues.password = hashedPassword;
 }
 
 async function runInserQuery(userInputValues) {
