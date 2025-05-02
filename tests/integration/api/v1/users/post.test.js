@@ -97,7 +97,7 @@ describe("POST /api/v1/users", () => {
       expect(responseBody).toEqual({
         name: "ValidationError",
         message: "O email informado já está sendo utilizado.",
-        action: "Utilize outro email para realizar o cadastro.",
+        action: "Utilize outro email para esta operação.",
         status_code: 400,
       });
     });
@@ -121,7 +121,7 @@ describe("POST /api/v1/users", () => {
       expect(responseBody).toEqual({
         name: "ValidationError",
         message: "O usuario informado já está sendo utilizado.",
-        action: "Utilize outro usuario para realizar o cadastro.",
+        action: "Utilize outro username para esta operação.",
         status_code: 400,
       });
     });
@@ -145,7 +145,7 @@ describe("POST /api/v1/users", () => {
       expect(responseBody).toEqual({
         name: "ValidationError",
         message: "O cpf informado já está sendo utilizado.",
-        action: "Utilize outro cpf para realizar o cadastro.",
+        action: "Utilize outro cpf para esta operação.",
         status_code: 400,
       });
     });

@@ -3,13 +3,36 @@ import password from "models/password";
 import { ValidationError, NotFoundError } from "infra/errors.js";
 
 async function create(userInputValues) {
-  await validateUniqueEmail(userInputValues.email);
   await validateUniqueUsename(userInputValues.username);
+  await validateUniqueEmail(userInputValues.email);
   await validateUniqueCPF(userInputValues.cpf);
   await hashPasswordInObject(userInputValues);
 
   const newUser = await runInserQuery(userInputValues);
   return newUser;
+}
+
+async function update(username, userInputValues) {
+  const currentUser = await findOneByUsername(username);
+  if ("username" in userInputValues) {
+    await validateUniqueUsename(userInputValues.username);
+  }
+  if ("email" in userInputValues) {
+    await validateUniqueEmail(userInputValues.email);
+  }
+  if ("cpf" in userInputValues) {
+    await validateUniqueCPF(userInputValues.cpf);
+  }
+  if ("password" in userInputValues) {
+    await hashPasswordInObject(userInputValues);
+  }
+
+  const userWithNewValues = {
+    ...currentUser,
+    ...userInputValues,
+  };
+  const updatedUser = await runUpdatedQuery(userWithNewValues);
+  return updatedUser;
 }
 
 async function findOneByUsername(username) {
@@ -52,7 +75,7 @@ async function validateUniqueEmail(email) {
   if (results.rowCount > 0) {
     throw new ValidationError({
       message: "O email informado já está sendo utilizado.",
-      action: "Utilize outro email para realizar o cadastro.",
+      action: "Utilize outro email para esta operação.",
     });
   }
 }
@@ -68,7 +91,7 @@ async function validateUniqueUsename(username) {
   if (results.rowCount > 0) {
     throw new ValidationError({
       message: "O usuario informado já está sendo utilizado.",
-      action: "Utilize outro usuario para realizar o cadastro.",
+      action: "Utilize outro username para esta operação.",
     });
   }
 }
@@ -84,7 +107,7 @@ async function validateUniqueCPF(cpf) {
   if (results.rowCount > 0) {
     throw new ValidationError({
       message: "O cpf informado já está sendo utilizado.",
-      action: "Utilize outro cpf para realizar o cadastro.",
+      action: "Utilize outro cpf para esta operação.",
     });
   }
 }
@@ -113,8 +136,36 @@ async function runInserQuery(userInputValues) {
   return results.rows[0];
 }
 
+async function runUpdatedQuery(userWithNewValues) {
+  const results = await database.query({
+    text: `
+      update
+        users
+      set
+        username = $2,
+        email = $3,
+        password = $4,
+        cpf = $5,
+        updated_at = timezone('utc',now())
+      where 
+        id = $1
+      returning
+        *
+    `,
+    values: [
+      userWithNewValues.id,
+      userWithNewValues.username,
+      userWithNewValues.email,
+      userWithNewValues.password,
+      userWithNewValues.cpf,
+    ],
+  });
+  return results.rows[0];
+}
+
 const user = {
   create,
+  update,
   findOneByUsername,
 };
 
