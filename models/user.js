@@ -23,6 +23,16 @@ async function update(username, userInputValues) {
   if ("cpf" in userInputValues) {
     await validateUniqueCPF(userInputValues.cpf);
   }
+  if ("password" in userInputValues) {
+    await hashPasswordInObject(userInputValues);
+  }
+
+  const userWithNewValues = {
+    ...currentUser,
+    ...userInputValues,
+  };
+  const updatedUser = await runUpdatedQuery(userWithNewValues);
+  return updatedUser;
 }
 
 async function findOneByUsername(username) {
@@ -121,6 +131,33 @@ async function runInserQuery(userInputValues) {
       userInputValues.email,
       userInputValues.password,
       userInputValues.cpf,
+    ],
+  });
+  return results.rows[0];
+}
+
+async function runUpdatedQuery(userWithNewValues) {
+  const results = await database.query({
+    text: `
+      update
+        users
+      set
+        username = $2,
+        email = $3,
+        password = $4,
+        cpf = $5,
+        updated_at = timezone('utc',now())
+      where 
+        id = $1
+      returning
+        *
+    `,
+    values: [
+      userWithNewValues.id,
+      userWithNewValues.username,
+      userWithNewValues.email,
+      userWithNewValues.password,
+      userWithNewValues.cpf,
     ],
   });
   return results.rows[0];
