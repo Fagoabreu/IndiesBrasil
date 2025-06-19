@@ -37,30 +37,59 @@ async function update(username, userInputValues) {
 async function findOneByUsername(username) {
   const userFound = await runSelectQuery(username);
   return userFound;
+
+  async function runSelectQuery(username) {
+    const results = await database.query({
+      text: `
+        select 
+          * 
+        from 
+          users u 
+        where 
+          LOWER(u.username) = LOWER($1)
+        limit
+          1`,
+      values: [username],
+    });
+
+    if (results.rowCount === 0) {
+      throw new NotFoundError({
+        message: "O username informado não foi encontrado no sistema.",
+        action: "Verifique se o username foi digitado corretamente",
+      });
+    }
+
+    return results.rows[0];
+  }
 }
 
-async function runSelectQuery(username) {
-  const results = await database.query({
-    text: `
-      select 
-        * 
-      from 
-        users u 
-      where 
-        LOWER(u.username) = LOWER($1)
-      limit
-        1`,
-    values: [username],
-  });
+async function findOneByEmail(email) {
+  const userFound = await runSelectQuery(email);
+  return userFound;
 
-  if (results.rowCount === 0) {
-    throw new NotFoundError({
-      message: "O username informado não foi encontrado no sistema.",
-      action: "Verifique se o username foi digitado corretamente",
+  async function runSelectQuery(email) {
+    const results = await database.query({
+      text: `
+        select 
+          * 
+        from 
+          users u 
+        where 
+          LOWER(u.email) = LOWER($1)
+        limit
+          1`,
+      values: [email],
     });
-  }
 
-  return results.rows[0];
+    if (results.rowCount === 0) {
+      throw new NotFoundError({
+        message: "O email informado não foi encontrado no sistema.",
+        action: "Verifique se o email foi digitado corretamente",
+      });
+    }
+
+    return results.rows[0];
+  }
 }
 
 async function validateUniqueEmail(email) {
@@ -166,6 +195,7 @@ const user = {
   create,
   update,
   findOneByUsername,
+  findOneByEmail,
 };
 
 export default user;
