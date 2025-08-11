@@ -4,7 +4,7 @@ import migrator from "models/migrator.js";
 import user from "models/user.js";
 import { faker } from "@faker-js/faker";
 import session from "models/session";
-var fakerBR = require("faker-br");
+let fakerBR = require("faker-br");
 
 async function waitForAllServices() {
   await waitForWebServer();

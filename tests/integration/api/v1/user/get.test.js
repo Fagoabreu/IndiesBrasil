@@ -118,12 +118,12 @@ describe("GET /api/v1/user", () => {
       });
     });
 
-    test("With expiring sessions renew", async () => {
+    test("With halfway-expired session", async () => {
       jest.useFakeTimers({
         now: new Date(Date.now() - session.EXPIRATION_IN_MILLISECONDS / 2),
       });
       const createdUser = await orchestrator.createUser({
-        username: "UserWithExpeSession",
+        username: "UserWithHalfwayExpiredSession",
       });
       const sessionObject = await orchestrator.createSession(createdUser.id);
 
@@ -134,11 +134,12 @@ describe("GET /api/v1/user", () => {
         },
       });
 
-      const responseBody = await response.json();
       expect(response.status).toBe(200);
+
+      const responseBody = await response.json();
       expect(responseBody).toEqual({
         id: createdUser.id,
-        username: "UserWithExpeSession",
+        username: "UserWithHalfwayExpiredSession",
         email: createdUser.email,
         password: createdUser.password,
         created_at: createdUser.created_at.toISOString(),
@@ -163,10 +164,10 @@ describe("GET /api/v1/user", () => {
       const parsedCookie = setCookieParser(response, { map: true });
       expect(parsedCookie.session_id).toEqual({
         name: "session_id",
-        httpOnly: true,
-        path: "/",
-        maxAge: session.EXPIRATION_IN_MILLISECONDS / 1000,
         value: renewedSessionObject.token,
+        maxAge: session.EXPIRATION_IN_MILLISECONDS / 1000,
+        path: "/",
+        httpOnly: true,
       });
     });
   });
