@@ -3,10 +3,17 @@ import { version as uuidVersion } from "uuid";
 import user from "models/user";
 import password from "models/password";
 
+const sendMailMock = jest.fn();
+jest.mock("nodemailer");
+const nodemailer = require("nodemailer"); //doesn't work with import. idk why
+nodemailer.createTransport.mockReturnValue({ sendMail: sendMailMock });
+
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
   await orchestrator.clearDatabase();
   await orchestrator.runPendingMigrations();
+  sendMailMock.mockClear();
+  nodemailer.createTransport.mockClear();
 });
 
 describe("POST /api/v1/users", () => {
