@@ -161,7 +161,6 @@ describe("Patch /api/v1/users/[username]", () => {
       const user1 = await orchestrator.createUser({
         email: "uniqueEmail1@gmail.com",
       });
-      console.log(user1);
       const response = await fetch(
         `http://localhost:3000/api/v1/users/${user1.username}`,
         {
