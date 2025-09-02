@@ -14,15 +14,8 @@ async function send(mailOptions) {
   await transporter.sendMail(mailOptions);
 }
 
-async function clear() {
-  await fetch("http://localhost:1080/messages", {
-    method: "DELETE",
-  });
-}
-
 const email = {
   send,
-  clear,
 };
 
 export default email;
