@@ -7,9 +7,34 @@ async function create(userInputValues) {
   await validateUniqueEmail(userInputValues.email);
   await validateUniqueCPF(userInputValues.cpf);
   await hashPasswordInObject(userInputValues);
+  injectDefaultFeaturesInObject(userInputValues);
 
   const newUser = await runInserQuery(userInputValues);
   return newUser;
+
+  async function runInserQuery(userInputValues) {
+    const results = await database.query({
+      text: `
+      Insert into 
+        users (username,email,password,cpf,features) 
+      values
+        ($1,$2,$3,$4,$5)
+      returning
+        *`,
+      values: [
+        userInputValues.username,
+        userInputValues.email,
+        userInputValues.password,
+        userInputValues.cpf,
+        userInputValues.features,
+      ],
+    });
+    return results.rows[0];
+  }
+
+  function injectDefaultFeaturesInObject(userInputValues) {
+    userInputValues.features = ["read:activation_token"];
+  }
 }
 
 async function update(username, userInputValues) {
@@ -172,25 +197,6 @@ async function validateUniqueCPF(cpf) {
 async function hashPasswordInObject(userInputValues) {
   const hashedPassword = await password.hash(userInputValues.password);
   userInputValues.password = hashedPassword;
-}
-
-async function runInserQuery(userInputValues) {
-  const results = await database.query({
-    text: `
-      Insert into 
-        users (username,email,password,cpf) 
-      values
-        ($1,$2,$3,$4)
-      returning
-        *`,
-    values: [
-      userInputValues.username,
-      userInputValues.email,
-      userInputValues.password,
-      userInputValues.cpf,
-    ],
-  });
-  return results.rows[0];
 }
 
 async function runUpdatedQuery(userWithNewValues) {

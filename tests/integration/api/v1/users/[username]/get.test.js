@@ -31,7 +31,7 @@ describe("GET /api/v1/users/[username]", () => {
         cpf: "32454643231",
         created_at: response2Body.created_at,
         updated_at: response2Body.updated_at,
-        features: [],
+        features: ["read:activation_token"],
       });
       expect(uuidVersion(response2Body.id)).toBe(4);
       expect(Date.parse(response2Body.created_at)).not.toBeNaN();
@@ -60,7 +60,7 @@ describe("GET /api/v1/users/[username]", () => {
         cpf: "32454643232",
         created_at: response2Body.created_at,
         updated_at: response2Body.updated_at,
-        features: [],
+        features: ["read:activation_token"],
       });
       expect(uuidVersion(response2Body.id)).toBe(4);
       expect(Date.parse(response2Body.created_at)).not.toBeNaN();

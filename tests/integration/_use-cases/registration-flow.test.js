@@ -37,7 +37,7 @@ describe("Use case: Registration Flow (all successful)", () => {
       created_at: createUserResponseBody.created_at,
       updated_at: createUserResponseBody.updated_at,
       cpf: "12312312312",
-      features: [],
+      features: ["read:activation_token"],
     });
   });
 
