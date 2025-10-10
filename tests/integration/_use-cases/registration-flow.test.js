@@ -4,7 +4,7 @@ beforeAll(async () => {
   await orchestrator.waitForAllServices();
   await orchestrator.clearDatabase();
   await orchestrator.runPendingMigrations();
-  //await orchestrator.deleteAllEmails();
+  await orchestrator.deleteAllEmails();
 });
 
 describe("Use case: Registration Flow (all successful)", () => {
