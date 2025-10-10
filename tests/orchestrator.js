@@ -6,7 +6,7 @@ import { faker } from "@faker-js/faker";
 import session from "models/session";
 let fakerBR = require("faker-br");
 
-const emailHttpUrl = `http://${process.env.EMAIL_HTTP_HOSTNAME}:${process.env.EMAIL_HTTP_PORT}`;
+const emailHttpUrl = `http://${process.env.EMAIL_HTTP_HOST}:${process.env.EMAIL_HTTP_PORT}`;
 
 async function waitForAllServices() {
   await waitForWebServer();
@@ -67,6 +67,7 @@ async function createSession(userId) {
 }
 
 async function deleteAllEmails() {
+  console.log("Deleting all emails");
   await fetch(`${emailHttpUrl}/messages`, {
     method: "DELETE",
   });
@@ -76,6 +77,11 @@ async function getLastEmail() {
   const emailListResponse = await fetch(`${emailHttpUrl}/messages`);
   const emailsListBody = await emailListResponse.json();
   const lastEmailItem = emailsListBody.pop();
+
+  //if (!lastEmailItem) {
+  //  return null;
+  //}
+
   const emailTextResponse = await fetch(
     `${emailHttpUrl}/messages/${lastEmailItem.id}.plain`,
   );
