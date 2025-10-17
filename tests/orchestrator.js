@@ -67,7 +67,7 @@ async function createSession(userId) {
 }
 
 async function deleteAllEmails() {
-  console.log("Deleting all emails");
+  //console.log("Deleting all emails");
   await fetch(`${emailHttpUrl}/messages`, {
     method: "DELETE",
   });
@@ -76,6 +76,7 @@ async function deleteAllEmails() {
 async function getLastEmail() {
   const emailListResponse = await fetch(`${emailHttpUrl}/messages`);
   const emailsListBody = await emailListResponse.json();
+  //console.log("Email list response status:", emailsListBody);
   const lastEmailItem = emailsListBody.pop();
 
   if (!lastEmailItem) {
