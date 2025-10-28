@@ -37,6 +37,38 @@ async function findOneValidById(tokenId) {
   }
 }
 
+async function updateValidSetUsedById(tokenId) {
+  const activationTokenObject = await runUpdateQuery(tokenId);
+  return activationTokenObject;
+
+  async function runUpdateQuery(tokenId) {
+    const results = await database.query({
+      text: `
+        update user_activation_tokens
+        set 
+          used_at = timezone('utc', NOW()),
+          updated_at = timezone('utc', NOW())
+        WHERE 
+          id = $1
+          and expires_at > NOW()
+          and used_at IS NULL
+        RETURNING 
+          *
+        `,
+      values: [tokenId],
+    });
+
+    if (results.rowCount === 0) {
+      throw new NotFoundError({
+        message:
+          "O token de ativação utilizado não foi encontrado no sistema ou expirou.",
+        action: "Faça um novo cadastro.",
+      });
+    }
+    return results.rows[0];
+  }
+}
+
 async function create(userId) {
   const expiresAt = new Date(Date.now() + EXPIRATION_IN_MILLISECONDS);
 
@@ -56,29 +88,6 @@ async function create(userId) {
       values: [userId, expiresAt],
     });
 
-    return results.rows[0];
-  }
-}
-
-async function markTokenAsUsed(activationTokenId) {
-  const usedActivationToken = await runUpdateQuery(activationTokenId);
-  return usedActivationToken;
-
-  async function runUpdateQuery(activationTokenId) {
-    const results = await database.query({
-      text: `
-        UPDATE 
-          user_activation_tokens
-        SET
-          used_at = timezone('utc', NOW()),
-          updated_at = timezone('utc', NOW())
-        WHERE 
-          id = $1
-        RETURNING
-          *
-      `,
-      values: [activationTokenId],
-    });
     return results.rows[0];
   }
 }
@@ -105,8 +114,8 @@ Equipe Indies Brasil`,
 const activation = {
   create,
   sendEmailToUser,
+  updateValidSetUsedById,
   findOneValidById,
-  markTokenAsUsed,
   activateUserByUserId,
 };
 
