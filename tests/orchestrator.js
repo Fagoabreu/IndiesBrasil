@@ -49,7 +49,7 @@ async function runPendingMigrations() {
 }
 
 async function createUser(userObject) {
-  return await user.create({
+  let createdUser = await user.create({
     username:
       userObject?.username ||
       faker.internet
@@ -60,6 +60,10 @@ async function createUser(userObject) {
     password: userObject?.password || faker.internet.password(),
     cpf: userObject?.cpf || fakerBR.br.cpf(),
   });
+  if (userObject?.features) {
+    createdUser = await user.setFeatures(createdUser.id, userObject.features);
+  }
+  return createdUser;
 }
 
 async function createSession(userId) {
