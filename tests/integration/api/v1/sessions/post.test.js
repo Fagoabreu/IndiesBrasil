@@ -91,8 +91,8 @@ describe("Post /api/v1/sessions", () => {
       const createdUser = await orchestrator.createUser({
         email: "tudo.correto@gmail.com",
         password: "tudocorretopwd",
-        features: ["create:session"],
       });
+      await orchestrator.activateUser(createdUser);
 
       const response = await fetch("http://localhost:3000/api/v1/sessions", {
         method: "POST",

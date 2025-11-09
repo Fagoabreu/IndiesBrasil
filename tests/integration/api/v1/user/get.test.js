@@ -15,6 +15,7 @@ describe("GET /api/v1/user", () => {
       const createdUser = await orchestrator.createUser({
         username: "UserWithValidSession",
       });
+      const activatedUser = await orchestrator.activateUser(createdUser);
 
       const sessionObject = await orchestrator.createSession(createdUser.id);
       const response = await fetch("http://localhost:3000/api/v1/user", {
@@ -35,8 +36,8 @@ describe("GET /api/v1/user", () => {
         password: createdUser.password,
         cpf: createdUser.cpf,
         created_at: createdUser.created_at.toISOString(),
-        updated_at: createdUser.updated_at.toISOString(),
-        features: ["read:activation_token"],
+        updated_at: activatedUser.updated_at.toISOString(),
+        features: ["create:session", "read:session"],
       });
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
@@ -151,6 +152,7 @@ describe("GET /api/v1/user", () => {
       const createdUser = await orchestrator.createUser({
         username: "UserWithHalfwayExpiredSession",
       });
+      const updatedUser = await orchestrator.activateUser(createdUser);
       const sessionObject = await orchestrator.createSession(createdUser.id);
 
       jest.useRealTimers();
@@ -169,9 +171,9 @@ describe("GET /api/v1/user", () => {
         email: createdUser.email,
         password: createdUser.password,
         created_at: createdUser.created_at.toISOString(),
-        updated_at: createdUser.updated_at.toISOString(),
+        updated_at: updatedUser.updated_at.toISOString(),
         cpf: createdUser.cpf,
-        features: ["read:activation_token"],
+        features: ["create:session", "read:session"],
       });
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
