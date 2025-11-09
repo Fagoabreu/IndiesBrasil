@@ -1,6 +1,5 @@
 import Head from "next/head";
-import Link from "next/link";
-import "bootstrap/dist/css/bootstrap.min.css";
+import { Header, PageLayout, Text } from "@primer/react";
 
 export default function Layout({ children }) {
   return (
@@ -10,44 +9,25 @@ export default function Layout({ children }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      {/* Navbar */}
-      <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div className="container">
-          <Link className="navbar-brand" href="/">
-            Indies do Brasil
-          </Link>
-          <button
-            className="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarNav"
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
-          <div className="collapse navbar-collapse" id="navbarNav">
-            <ul className="navbar-nav ms-auto">
-              <li className="nav-item">
-                <Link className="nav-link active" href="/">
-                  Home
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" href="/status">
-                  Server Status
-                </Link>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </nav>
+      <PageLayout>
+        <Header>
+          <Header.Item>
+            <Header.Link href="/" fontSize={2}>
+              Indies do Brasil
+            </Header.Link>
+          </Header.Item>
+          <Header.Item full />
+          <Header.Item>
+            <Header.Link href="/">Home</Header.Link>
+          </Header.Item>
+          <Header.Item>
+            <Header.Link href="/status">Server Status</Header.Link>
+          </Header.Item>
+        </Header>
 
-      {/* Conteúdo da página */}
-      <main className="container mt-4">{children}</main>
-
-      {/* Footer */}
-      <footer className="bg-light text-center py-3 mt-5 border-top">
-        <p className="mb-0">&copy; {new Date().getFullYear()} Indies Brasil.</p>
-      </footer>
+        <PageLayout.Content>{children}</PageLayout.Content>
+        <Text>&copy; {new Date().getFullYear()} Indies Brasil.</Text>
+      </PageLayout>
     </>
   );
 }
