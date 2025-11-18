@@ -130,6 +130,7 @@ const activation = {
   markTokenAsUsed,
   findOneValidById,
   activateUserByUserId,
+  EXPIRATION_IN_MILLISECONDS,
 };
 
 export default activation;
