@@ -1,0 +1,10 @@
+.validation-anim {
+  transition: 0.25s ease;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.validation-anim-enter {
+  opacity: 0;
+  transform: translateY(-4px);
+}
