@@ -21,13 +21,7 @@ async function create(userInputValues) {
         ($1,$2,$3,$4,$5)
       returning
         *`,
-      values: [
-        userInputValues.username,
-        userInputValues.email,
-        userInputValues.password,
-        userInputValues.cpf,
-        userInputValues.features,
-      ],
+      values: [userInputValues.username, userInputValues.email, userInputValues.password, userInputValues.cpf, userInputValues.features],
     });
     return results.rows[0];
   }
@@ -238,13 +232,7 @@ async function runUpdatedQuery(userWithNewValues) {
       returning
         *
     `,
-    values: [
-      userWithNewValues.id,
-      userWithNewValues.username,
-      userWithNewValues.email,
-      userWithNewValues.password,
-      userWithNewValues.cpf,
-    ],
+    values: [userWithNewValues.id, userWithNewValues.username, userWithNewValues.email, userWithNewValues.password, userWithNewValues.cpf],
   });
   return results.rows[0];
 }
