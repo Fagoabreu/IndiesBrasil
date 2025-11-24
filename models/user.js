@@ -9,10 +9,10 @@ async function create(userInputValues) {
   await hashPasswordInObject(userInputValues);
   injectDefaultFeaturesInObject(userInputValues);
 
-  const newUser = await runInserQuery(userInputValues);
+  const newUser = await runInsertQuery(userInputValues);
   return newUser;
 
-  async function runInserQuery(userInputValues) {
+  async function runInsertQuery(userInputValues) {
     const results = await database.query({
       text: `
       Insert into 
@@ -61,7 +61,13 @@ async function findOneById(id) {
     const results = await database.query({
       text: `
         select 
-          * 
+          id,
+          username,
+          email,
+          cpf,
+          features,
+          created_at,
+          updated_at 
         from 
           users u 
         where 
@@ -237,6 +243,37 @@ async function runUpdatedQuery(userWithNewValues) {
   return results.rows[0];
 }
 
+async function findUsers(userId, isfollowing) {
+  let queryText = `
+    SELECT 
+      u.id,
+      u.username,
+      u.avatar_url
+    FROM users u
+    WHERE u.id != $1
+  `;
+
+  const values = [userId];
+
+  if (isfollowing === false) {
+    queryText += `
+      AND NOT EXISTS (
+        SELECT 1 
+        FROM user_followers uf
+        WHERE uf.lead_user_id = u.id
+          AND uf.user_id = $2
+      )
+    `;
+    values.push(userId);
+  }
+
+  const results = await database.query({
+    text: queryText,
+    values,
+  });
+  return results.rows;
+}
+
 const user = {
   create,
   update,
@@ -244,6 +281,7 @@ const user = {
   findOneByUsername,
   findOneByEmail,
   setFeatures,
+  findUsers,
 };
 
 export default user;

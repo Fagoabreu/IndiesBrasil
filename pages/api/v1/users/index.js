@@ -7,6 +7,7 @@ const router = createRouter();
 
 router.use(controller.injectAnonymousOrUser);
 router.post(controller.canRequest("create:user"), postHandler);
+router.post(controller.canRequest("read:session"), getHandler);
 
 export default router.handler(controller.errorHandlers);
 
@@ -18,4 +19,11 @@ async function postHandler(request, response) {
   await activation.sendEmailToUser(newUser, activationToken);
 
   return response.status(201).json(newUser);
+}
+
+async function getHandler(request, response) {
+  const { isfollowing } = req.query;
+  const userId = request.context.user.id;
+  const selectedUsers = await user.findUsers(userId, isfollowing);
+  return response.status(201).json(selectedUsers);
 }

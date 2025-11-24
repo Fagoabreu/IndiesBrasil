@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { Heading, Avatar, Button, Stack, ActionMenu } from "@primer/react";
+import { useUser } from "@/context/UserContext.js";
 
-function HeaderComponent({ user }) {
+function HeaderComponent() {
+  const { user, logout } = useUser();
+
   return (
     <Stack
       direction="horizontal"
@@ -26,21 +29,17 @@ function HeaderComponent({ user }) {
             <Avatar src={user.avatarUrl} size={32} />
           </ActionMenu.Anchor>
           <ActionMenu.Overlay>
-            <ActionMenu.Item>Perfil</ActionMenu.Item>
-            <ActionMenu.Item>Configurações</ActionMenu.Item>
-            <ActionMenu.Divider />
+            <ActionMenu.Item onSelect={() => (location.href = "/perfil")}>Perfil</ActionMenu.Item>
             <ActionMenu.Item>Sair</ActionMenu.Item>
+            <ActionMenu.Item onSelect={logout}>Sair</ActionMenu.Item>
           </ActionMenu.Overlay>
         </ActionMenu>
       ) : (
         <Stack direction="horizontal" gap={3}>
-          {/* Botão Login */}
-          <Link href="/login" style={{ textDecoration: "none" }}>
+          <Link href="/login">
             <Button variant="invisible">Login</Button>
           </Link>
-
-          {/* Botão Cadastrar */}
-          <Link href="/cadastro" style={{ textDecoration: "none" }}>
+          <Link href="/cadastro">
             <Button variant="primary">Cadastrar</Button>
           </Link>
         </Stack>

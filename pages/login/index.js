@@ -1,9 +1,12 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router";
 import { PageLayout, Heading, Button, FormControl, TextInput, Flash, Stack, Spinner } from "@primer/react";
+import { useUser } from "@/context/UserContext.js";
 
 export default function Login() {
   const router = useRouter();
+  const { fetchUser } = useUser();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,6 +25,7 @@ export default function Login() {
       });
 
       if (response.status === 201) {
+        await fetchUser();
         router.push("/");
       } else {
         const data = await response.json();
