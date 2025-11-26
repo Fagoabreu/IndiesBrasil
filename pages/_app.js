@@ -1,19 +1,18 @@
-import "../css/styles.css"; // opcional, se você tiver estilos próprios
+import "../css/styles.css";
 import "@primer/primitives/dist/css/functional/themes/light.css";
-import { BaseStyles, ThemeProvider } from "@primer/react";
-import Layout from "../components/Layout";
-import { UserProvider } from "@/context/UserContext.js";
+import { BaseStyles } from "@primer/react";
+import LayoutFinalScroll from "../components/LayoutFinalScroll";
+import { UserProvider, useUser } from "@/context/UserContext";
+import WhoToFollow from "@/components/WhoToFollow.js";
 
 export default function MyApp({ Component, pageProps }) {
   return (
-    <ThemeProvider colorMode="auto">
+    <UserProvider>
       <BaseStyles>
-        <UserProvider>
-          <Layout>
-            <Component {...pageProps} />
-          </Layout>
-        </UserProvider>
+        <LayoutFinalScroll user={null} RightSidebar={<WhoToFollow />}>
+          <Component {...pageProps} />
+        </LayoutFinalScroll>
       </BaseStyles>
-    </ThemeProvider>
+    </UserProvider>
   );
 }

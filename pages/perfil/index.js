@@ -72,7 +72,7 @@ export default function Perfil() {
         <Stack direction="vertical" gap={5} alignItems="center">
           {/* Avatar + Nome */}
           <Stack direction="vertical" alignItems="center" gap={2}>
-            <Avatar size={96} src={user.avatarUrl} />
+            <Avatar size={96} src={user.avatarUrl || "/images/avatar.png"} />
             <Heading as="h3">{user.name || user.username}</Heading>
             <Text sx={{ color: "fg.muted" }}>@{user.username}</Text>
             {user.bio && <Text sx={{ textAlign: "center", maxWidth: 600 }}>{user.bio}</Text>}

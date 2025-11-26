@@ -35,7 +35,7 @@ export default function CreatePost({ user, onPost }) {
       }}
     >
       <Stack direction="horizontal" gap={2}>
-        <Avatar src={user.avatarUrl || "/avatar.png"} />
+        <Avatar src={user.avatarUrl || "/images/avatar.png"} />
         <Textarea placeholder="No que você está pensando?" value={content} onChange={(e) => setContent(e.target.value)} disabled={isPosting} sx={{ width: "100%" }} />
       </Stack>
 

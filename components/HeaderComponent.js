@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Heading, Avatar, Button, Stack, ActionMenu } from "@primer/react";
+import { Heading, Avatar, Button, Stack, ActionMenu, ActionList } from "@primer/react";
 import { useUser } from "@/context/UserContext.js";
 
 function HeaderComponent() {
@@ -25,13 +25,14 @@ function HeaderComponent() {
 
       {user ? (
         <ActionMenu>
-          <ActionMenu.Anchor>
-            <Avatar src={user.avatarUrl} size={32} />
-          </ActionMenu.Anchor>
+          <ActionMenu.Button>
+            <Avatar src={user.avatarUrl || "/images/avatar.png"} size={32} />
+          </ActionMenu.Button>
           <ActionMenu.Overlay>
-            <ActionMenu.Item onSelect={() => (location.href = "/perfil")}>Perfil</ActionMenu.Item>
-            <ActionMenu.Item>Sair</ActionMenu.Item>
-            <ActionMenu.Item onSelect={logout}>Sair</ActionMenu.Item>
+            <ActionList>
+              <ActionList.Item onSelect={() => (location.href = "/perfil")}>Perfil</ActionList.Item>
+              <ActionList.Item onSelect={logout}>Sair</ActionList.Item>
+            </ActionList>
           </ActionMenu.Overlay>
         </ActionMenu>
       ) : (

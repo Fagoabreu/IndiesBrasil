@@ -6,30 +6,53 @@ export default function WhoToFollow() {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    async function fetchUsers() {
+    async function loadUsers() {
       try {
         const res = await fetch("/api/v1/users?isfollowing=false", {
-          credentials: "include", // Envia session_id do cookie
+          credentials: "include",
         });
 
         const data = await res.json();
-        setUsers(data || []);
-      } catch (err) {
-        console.error("Erro ao buscar sugestões:", err);
+        setUsers(
+          (data || []).map((u) => ({
+            ...u,
+            isFollowing: u.isFollowing ?? false,
+            followers_count: u.followers_count ?? 0,
+          })),
+        );
+      } catch (error) {
+        console.error("Erro ao carregar sugestões:", error);
       }
     }
 
-    fetchUsers();
+    loadUsers();
   }, []);
 
   if (!users.length) return null;
+
+  const handleToggleFollow = (username, nowFollowing) => {
+    setUsers((prev) =>
+      prev
+        .map((u) =>
+          u.username === username
+            ? {
+                ...u,
+                isFollowing: nowFollowing,
+                followers_count: u.followers_count + (nowFollowing ? 1 : -1),
+              }
+            : u,
+        )
+        // Se o usuário começou a seguir, removemos da lista
+        .filter((u) => !u.isFollowing),
+    );
+  };
 
   return (
     <Stack direction="vertical" gap={3}>
       <Text fontWeight="bold">Sugestões de quem seguir</Text>
 
       {users.map((u) => (
-        <Stack key={u.id} direction="horizontal" gap={2} sx={{ alignItems: "center" }}>
+        <Stack key={u.username} direction="horizontal" gap={2} sx={{ alignItems: "center" }}>
           <Avatar src={u.avatar_url || "/images/avatar.png"} />
 
           <Stack direction="vertical" gap={0}>
@@ -37,9 +60,12 @@ export default function WhoToFollow() {
             <Text fontSize={0} color="fg.muted">
               @{u.username}
             </Text>
+            <Text fontSize={0} color="fg.muted">
+              {u.followers_count ?? 0} seguidores
+            </Text>
           </Stack>
 
-          <FollowButton userId={u.id} onFollow={(id) => setUsers((prev) => prev.filter((user) => user.id !== id))} />
+          <FollowButton username={u.username} isFollowing={u.isFollowing ?? false} onToggle={handleToggleFollow} />
         </Stack>
       ))}
     </Stack>

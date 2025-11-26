@@ -7,7 +7,7 @@ const router = createRouter();
 
 router.use(controller.injectAnonymousOrUser);
 router.post(controller.canRequest("create:user"), postHandler);
-router.post(controller.canRequest("read:session"), getHandler);
+router.get(controller.canRequest("read:session"), getHandler);
 
 export default router.handler(controller.errorHandlers);
 
@@ -22,7 +22,7 @@ async function postHandler(request, response) {
 }
 
 async function getHandler(request, response) {
-  const { isfollowing } = req.query;
+  const isfollowing = request.query;
   const userId = request.context.user.id;
   const selectedUsers = await user.findUsers(userId, isfollowing);
   return response.status(201).json(selectedUsers);
