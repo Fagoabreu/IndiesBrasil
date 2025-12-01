@@ -1,11 +1,9 @@
 import Link from "next/link";
-import { Avatar, ActionMenu, ActionList, Box, TextInput, IconButton } from "@primer/react";
+import { Avatar, ActionMenu, ActionList, TextInput, IconButton, useTheme } from "@primer/react";
 import { SunIcon, MoonIcon, SearchIcon } from "@primer/octicons-react";
-import { useTheme } from "@primer/react";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/context/UserContext.js";
 import styles from "./HeaderComponent.module.css";
-import { useState, useEffect } from "react";
-import { useThemeToggle } from "@/context/ThemeContext";
+import { useThemeToggle } from "@/context/ThemeContext.js";
 
 export default function HeaderComponent() {
   const { user, logout } = useUser();
@@ -14,7 +12,6 @@ export default function HeaderComponent() {
   return (
     <header className={`${styles.header} color-bg-default`}>
       <div className={styles.left}>
-        {/* Logo */}
         <ActionMenu>
           <ActionMenu.Button className={styles.logoButton}>
             <img src="/images/icon.png" className={styles.logo} />
@@ -40,13 +37,10 @@ export default function HeaderComponent() {
       </div>
 
       <div className={styles.right}>
-        {/* Tema */}
-        <IconButton aria-label="Tema" icon={mode === "day" ? MoonIcon : SunIcon} onClick={toggleTheme} />
+        <IconButton aria-label="Tema" className={styles.themeButton} icon={mode === "day" ? MoonIcon : SunIcon} onClick={toggleTheme} />
 
-        {/* Busca */}
         <TextInput leadingVisual={SearchIcon} placeholder="Pesquisar" className={styles.search} />
 
-        {/* Menu usuário */}
         {user && (
           <ActionMenu>
             <ActionMenu.Button>

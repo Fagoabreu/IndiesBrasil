@@ -5,7 +5,7 @@ import HeaderComponent from "./HeaderComponent";
 
 export default function Layout({ children, user, RightSidebar }) {
   return (
-    <PageLayout sx={{ height: "100vh" }}>
+    <PageLayout sx={{ height: "page-layout" }}>
       <PageLayout.Header>
         <HeaderComponent user={user} />
       </PageLayout.Header>
@@ -33,6 +33,7 @@ export default function Layout({ children, user, RightSidebar }) {
         </Stack.Item>
 
         <Stack.Item
+          className="main-content"
           sx={{
             flex: "1 1 auto",
             display: "flex",
