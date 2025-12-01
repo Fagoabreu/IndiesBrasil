@@ -9,6 +9,7 @@ function LeftSidebarComponent() {
       <ActionList>
         <ActionList.Item onClick={() => router.push("/")}>Home</ActionList.Item>
         <ActionList.Item onClick={() => router.push("/posts")}>Posts</ActionList.Item>
+        <ActionList.Item onClick={() => router.push("/following")}>Following</ActionList.Item>
       </ActionList>
     </Stack.Item>
   );
