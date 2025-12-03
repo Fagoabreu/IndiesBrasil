@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import CreatePost from "@/components/CreatePost";
-import PostCard from "@/components/PostCard";
-import WhoToFollow from "@/components/WhoToFollow";
+import PostCardComponent from "@/components/PostCardComponent";
 import { useUser } from "@/context/UserContext";
 
 // fetchPosts e fetchDbUserId como antes
@@ -17,6 +16,7 @@ export default function PostsPage() {
       setLoadingPosts(true);
       try {
         const [fetchedPosts, fetchedUserId] = await Promise.all([fetchPosts(), fetchDbUserId()]);
+
         setPosts(fetchedPosts || []);
         setDbUserId(fetchedUserId);
       } catch (err) {
@@ -28,26 +28,49 @@ export default function PostsPage() {
     loadData();
   }, []);
 
-  const handleAddPost = (content) => {
-    const newPost = {
-      id: posts.length + 1,
-      author: {
-        id: dbUserId,
-        name: user.name,
-        username: user.username,
-        avatarUrl: user.avatarUrl || "/images/avatar.png",
-      },
-      content,
-      createdAt: new Date().toISOString(),
-      likesCount: 0,
-      likedByUser: false,
-      commentsCount: 0,
-    };
-    setPosts([newPost, ...posts]);
+  // POST /api/v1/posts
+  const handleAddPost = async (content, imgUrl = null) => {
+    try {
+      const response = await fetch("/api/v1/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          author_username: user.username,
+          content,
+          img_url: imgUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error("Erro ao criar post");
+        return;
+      }
+
+      const createdPost = await response.json();
+      setPosts((prev) => [createdPost, ...prev]);
+    } catch (error) {
+      console.error("Erro ao criar post:", error);
+    }
   };
 
-  const handleDeletePost = (postId) => {
-    setPosts(posts.filter((p) => p.id !== postId));
+  // DELETE /api/v1/posts/:id
+  const handleDeletePost = async (postId) => {
+    try {
+      const response = await fetch(`/api/v1/posts/${postId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        console.error("Erro ao deletar post");
+        return;
+      }
+
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
+    } catch (error) {
+      console.error("Erro ao deletar:", error);
+    }
   };
 
   if (loadingUser || loadingPosts) return <div style={{ padding: 32 }}>Carregando...</div>;
@@ -55,8 +78,9 @@ export default function PostsPage() {
   return (
     <>
       {user && <CreatePost user={user} onPost={handleAddPost} />}
+
       {posts.map((post) => (
-        <PostCard key={post.id} post={post} dbUserId={dbUserId} onDelete={handleDeletePost} />
+        <PostCardComponent key={post.id} post={post} dbUserId={dbUserId} onDelete={handleDeletePost} />
       ))}
     </>
   );

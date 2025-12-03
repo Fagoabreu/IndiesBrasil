@@ -1,38 +1,5 @@
-/* Força fundo global */
-html[data-color-mode="night"],
-html[data-color-mode="night"] body {
-  background-color: #050a08 !important;
-  background: #050a08 !important;
-  color: #00ff99 !important;
-}
-
-/* Força fundo claro também (opcional) */
-html[data-color-mode="day"],
-html[data-color-mode="day"] body {
-  background-color: #ffffff !important;
-  background: #ffffff !important;
-  color: #111 !important;
-}
-
-/* Tornar os containers do Primer transparentes para herdar o body */
-html[data-color-mode="night"] .color-bg-default,
-html[data-color-mode="night"] .color-bg-subtle,
-html[data-color-mode="night"] .page-layout,
-html[data-color-mode="night"] .page-layout > *,
-html[data-color-mode="night"] .main-content,
-html[data-color-mode="night"] .sidebar {
-  background: transparent !important;
-}
-
-/* Seu tema Retro Gamer (parte relevante) */
-html[data-color-mode="night"] body {
-  background: #050a08 !important;
-  color: #00ff99 !important;
-}
-html[data-color-mode="night"] a {
-  color: #00ff99 !important;
-}
-html[data-color-mode="night"] .header {
-  background: rgba(10, 20, 15, 0.6) !important;
-  border-bottom: 1px solid rgba(0, 255, 153, 0.2) !important;
+html,
+body {
+  margin: 0;
+  padding: 0;
 }

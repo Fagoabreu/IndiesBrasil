@@ -1,20 +1,22 @@
 import Link from "next/link";
 import { Avatar, ActionMenu, ActionList, TextInput, IconButton, useTheme } from "@primer/react";
 import { SunIcon, MoonIcon, SearchIcon } from "@primer/octicons-react";
-import { useUser } from "@/context/UserContext.js";
+
 import styles from "./HeaderComponent.module.css";
-import { useThemeToggle } from "@/context/ThemeContext.js";
 
 export default function HeaderComponent() {
-  const { user, logout } = useUser();
-  const { mode, toggleTheme } = useThemeToggle();
+  const { colorMode, setColorMode } = useTheme();
+
+  const toggleTheme = () => {
+    setColorMode(colorMode === "day" ? "night" : "day");
+  };
 
   return (
-    <header className={`${styles.header} color-bg-default`}>
+    <header className={`${styles.header} color-bg-default color-fg-default`}>
       <div className={styles.left}>
         <ActionMenu>
           <ActionMenu.Button className={styles.logoButton}>
-            <img src="/images/icon.png" className={styles.logo} />
+            <img src="/images/logo.png" className={styles.logo} />
             <span className={styles.logoText}>Indies Brasil</span>
           </ActionMenu.Button>
 
@@ -37,24 +39,25 @@ export default function HeaderComponent() {
       </div>
 
       <div className={styles.right}>
-        <IconButton aria-label="Tema" className={styles.themeButton} icon={mode === "day" ? MoonIcon : SunIcon} onClick={toggleTheme} />
+        {/* Toggle de tema */}
+        <IconButton aria-label="Alternar tema" icon={colorMode === "day" ? MoonIcon : SunIcon} onClick={toggleTheme} />
 
+        {/* Busca */}
         <TextInput leadingVisual={SearchIcon} placeholder="Pesquisar" className={styles.search} />
 
-        {user && (
-          <ActionMenu>
-            <ActionMenu.Button>
-              <Avatar src={user.avatarUrl || "/images/avatar.png"} size={32} />
-            </ActionMenu.Button>
+        {/* Avatar do usuário */}
+        <ActionMenu>
+          <ActionMenu.Button>
+            <Avatar src="/images/avatar.png" size={32} />
+          </ActionMenu.Button>
 
-            <ActionMenu.Overlay>
-              <ActionList>
-                <ActionList.Item onSelect={() => (location.href = "/perfil")}>Perfil</ActionList.Item>
-                <ActionList.Item onSelect={logout}>Sair</ActionList.Item>
-              </ActionList>
-            </ActionMenu.Overlay>
-          </ActionMenu>
-        )}
+          <ActionMenu.Overlay>
+            <ActionList>
+              <ActionList.Item onSelect={() => (location.href = "/perfil")}>Perfil</ActionList.Item>
+              <ActionList.Item>Sair</ActionList.Item>
+            </ActionList>
+          </ActionMenu.Overlay>
+        </ActionMenu>
       </div>
     </header>
   );

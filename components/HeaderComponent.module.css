@@ -1,21 +1,13 @@
-/* ---------- HEADER BASE ---------- */
-
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 14px 28px;
-  backdrop-filter: blur(16px);
   position: sticky;
   top: 0;
   z-index: 50;
-  transition:
-    background 0.3s ease,
-    color 0.3s ease;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* Left */
 .left {
   display: flex;
   align-items: center;
@@ -41,7 +33,6 @@
   font-size: 18px;
 }
 
-/* Center */
 .center {
   flex: 1;
   display: flex;
@@ -52,19 +43,12 @@
   display: flex;
   gap: 24px;
   font-size: 15px;
-  opacity: 0.9;
 }
 
 .nav a {
   text-decoration: none;
-  transition: opacity 0.2s;
 }
 
-.nav a:hover {
-  opacity: 1;
-}
-
-/* Right */
 .right {
   display: flex;
   align-items: center;
@@ -74,27 +58,4 @@
 .search input {
   width: 230px !important;
   border-radius: 20px !important;
-}
-
-/* Theme button */
-.themeButton {
-  transition: transform 0.2s ease;
-}
-
-.themeButton:hover {
-  transform: rotate(18deg);
-}
-
-/* ---------- THEMES ---------- */
-
-/* LIGHT THEME — Vidro opalino */
-:global([data-color-mode="day"]) .header {
-  background: rgba(255, 255, 255, 0.7);
-  color: #111;
-}
-
-/* DARK THEME — Preto gamer translúcido */
-:global([data-color-mode="night"]) .header {
-  background: rgba(10, 12, 20, 0.55);
-  color: #f0f0f0;
 }

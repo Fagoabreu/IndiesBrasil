@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Avatar, Stack, Text } from "@primer/react";
-import FollowButton from "./FollowButton";
+import { Stack, Text } from "@primer/react";
+import UserCardComponent from "./UserCardComponent";
 
 export default function WhoToFollow() {
   const [users, setUsers] = useState([]);
@@ -24,48 +24,22 @@ export default function WhoToFollow() {
         console.error("Erro ao carregar sugestões:", error);
       }
     }
-
     loadUsers();
   }, []);
 
-  if (!users.length) return null;
+  function handleToggleFollow(username, nowFollowing) {
+    setUsers((prev) => prev.map((u) => (u.username === username ? { ...u, isFollowing: nowFollowing, followers_count: u.followers_count + (nowFollowing ? 1 : -1) } : u)).filter((u) => !u.isFollowing));
+  }
 
-  const handleToggleFollow = (username, nowFollowing) => {
-    setUsers((prev) =>
-      prev
-        .map((u) =>
-          u.username === username
-            ? {
-                ...u,
-                isFollowing: nowFollowing,
-                followers_count: u.followers_count + (nowFollowing ? 1 : -1),
-              }
-            : u,
-        )
-        // Se o usuário começou a seguir, removemos da lista
-        .filter((u) => !u.isFollowing),
-    );
-  };
+  if (!users.length) return null;
 
   return (
     <Stack direction="vertical" gap={3}>
       <Text fontWeight="bold">Sugestões de quem seguir</Text>
 
       {users.map((u) => (
-        <Stack key={u.username} direction="horizontal" gap={2} sx={{ alignItems: "center" }}>
-          <Avatar src={u.avatar_url || "/images/avatar.png"} />
-
-          <Stack direction="vertical" gap={0}>
-            <Text fontWeight="bold">{u.username}</Text>
-            <Text fontSize={0} color="fg.muted">
-              @{u.username}
-            </Text>
-            <Text fontSize={0} color="fg.muted">
-              {u.followers_count ?? 0} seguidores
-            </Text>
-          </Stack>
-
-          <FollowButton username={u.username} isFollowing={u.isFollowing ?? false} onToggle={handleToggleFollow} />
+        <Stack direction="horizontal" gap={2} sx={{ alignItems: "center" }} key={u.username}>
+          <UserCardComponent user={u} onToggleFollow={handleToggleFollow} />
         </Stack>
       ))}
     </Stack>
