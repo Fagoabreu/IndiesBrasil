@@ -112,6 +112,9 @@
 .commentItem {
   color: var(--fgColor-muted);
   font-size: 13px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .commentUser {

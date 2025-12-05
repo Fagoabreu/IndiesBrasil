@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Avatar, Textarea, Button, Stack } from "@primer/react";
+import styles from "./CreatePost.module.css";
 
 export default function CreatePost({ user, onPost }) {
   const [content, setContent] = useState("");
@@ -13,7 +14,6 @@ export default function CreatePost({ user, onPost }) {
 
     setImageFile(file);
 
-    // Preview temporário
     const reader = new FileReader();
     reader.onload = () => setImagePreview(reader.result);
     reader.readAsDataURL(file);
@@ -22,11 +22,12 @@ export default function CreatePost({ user, onPost }) {
   const handleSubmit = async () => {
     if (!content.trim()) return;
     setIsPosting(true);
-    onPost(content, imagePreview); // enviando base64 ou null
 
     try {
-      // Aqui você chamaria a API POST /api/v1/posts com cookie de sessão
-      if (onPost) onPost(content); // adiciona localmente
+      // Envia para PostsPage
+      await onPost(content, imagePreview);
+
+      // Limpa campos
       setContent("");
       setImageFile(null);
       setImagePreview(null);
@@ -52,15 +53,19 @@ export default function CreatePost({ user, onPost }) {
       }}
     >
       <Stack direction="horizontal" gap={2}>
-        <Avatar src={user.avatarUrl || "/images/avatar.png"} />
+        <Avatar src={user.avatarUrl || "/images/avatar.png"} size={40} />
         <Textarea placeholder="No que você está pensando?" value={content} onChange={(e) => setContent(e.target.value)} disabled={isPosting} sx={{ width: "100%" }} />
       </Stack>
 
+      {/* Input de imagem */}
       <input type="file" accept="image/*" onChange={handleImageSelect} />
+
+      {/* Preview */}
       {imagePreview && (
         <div className={styles.previewBox}>
-          <img src={imagePreview} />
+          <img src={imagePreview} className={styles.previewImg} />
           <button
+            className={styles.removeBtn}
             onClick={() => {
               setImagePreview(null);
               setImageFile(null);

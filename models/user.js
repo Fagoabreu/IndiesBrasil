@@ -245,28 +245,31 @@ async function runUpdatedQuery(userWithNewValues) {
 
 async function findUsers(userId, isfollowing) {
   let queryText = `
-    SELECT 
+    SELECT
       u.id,
       u.username,
-      u.avatar_url
+      u.avatar_url,
+      COUNT(uf.follower_id) AS followers_count
     FROM users u
+    LEFT JOIN user_followers uf
+      ON uf.lead_user_id = u.id
     WHERE u.id != $1
   `;
-
-  const values = [userId];
 
   if (isfollowing === false) {
     queryText += `
       AND NOT EXISTS (
-        SELECT 1 
-        FROM user_followers uf
-        WHERE uf.lead_user_id = u.id
-          AND uf.user_id = $2
+        SELECT 1
+        FROM user_followers uf2
+        WHERE uf2.lead_user_id = u.id
+        AND uf2.follower_id = $1
       )
-    `;
-    values.push(userId);
+      `;
   }
 
+  queryText += ` GROUP BY u.id, u.username, u.avatar_url`;
+
+  const values = [userId];
   const results = await database.query({
     text: queryText,
     values,

@@ -24,7 +24,8 @@ function timeAgo(dateString) {
   return "agora";
 }
 
-export default function PostCardComponent({ post, dbUserId, onDelete }) {
+export default function PostCardComponent({ post, onDelete }) {
+  console.log("Rendering PostCardComponent for post:", post);
   const [hasLiked, setHasLiked] = useState(post.likedByUser || false);
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
   const [showCommentBox, setShowCommentBox] = useState(false);
@@ -33,6 +34,7 @@ export default function PostCardComponent({ post, dbUserId, onDelete }) {
   const [expanded, setExpanded] = useState(false);
   const [comments, setComments] = useState([]);
   const [commentsLoaded, setCommentsLoaded] = useState(false);
+  const [commentsCount, setCommentsCount] = useState(post.comments_count);
 
   const MAX_CHARS = 240;
   const isLong = post.content.length > MAX_CHARS;
@@ -61,20 +63,54 @@ export default function PostCardComponent({ post, dbUserId, onDelete }) {
     setShowComments((prev) => !prev);
   };
 
+  const deleteComments = async () => {};
+  const handleSubmitComment = async () => {
+    if (!newComment.trim()) return;
+
+    try {
+      const res = await fetch(`/api/v1/posts/${post.id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ content: newComment }),
+      });
+
+      if (!res.ok) {
+        console.error("Erro ao comentar");
+        return;
+      }
+
+      const createdComment = await res.json();
+
+      // Adiciona novo comentário na lista
+      setComments((prev) => [createdComment, ...prev]);
+      setCommentsCount((prev) => prev + 1);
+
+      // Limpa e fecha o box
+      setNewComment("");
+      setShowCommentBox(false);
+
+      // Garante que a lista apareça
+      setShowComments(true);
+    } catch (error) {
+      console.error("Erro ao enviar comentário:", error);
+    }
+  };
+
   return (
     <div className={styles.postWrapper}>
       {/* HEADER */}
       <Stack direction="horizontal" gap={2} className={styles.headerRow}>
-        <Avatar src={post.author.avatarUrl || "/avatar.png"} size={32} sx={{ borderRadius: "50%" }} />
+        <Avatar src={post.author_avatar_url || "/images/avatar.png"} size={32} sx={{ borderRadius: "50%" }} />
 
         <Stack direction="vertical" gap={0} className={styles.headerText}>
-          <Text className={styles.authorName}>{post.author.name}</Text>
+          <Text className={styles.authorName}>{post.author_username}</Text>
           <Text className={styles.subInfo}>
-            @{post.author.username} • {timeAgo(post.createdAt)}
+            @{post.author_username} • {timeAgo(post.created_at)}
           </Text>
         </Stack>
 
-        {dbUserId === post.author.id && (
+        {post.is_current_user && (
           <Button variant="invisible" className={styles.deleteBtn} onClick={() => onDelete?.(post.id)}>
             Deletar
           </Button>
@@ -101,7 +137,7 @@ export default function PostCardComponent({ post, dbUserId, onDelete }) {
 
         {/* MOSTRAR / OCULTAR COMENTÁRIOS */}
         <button className={styles.iconBtn} onClick={toggleComments}>
-          💬 <span>{post.commentsCount || 0}</span>
+          💬 <span>{commentsCount}</span>
         </button>
 
         {/* RESPONDER */}
@@ -115,8 +151,16 @@ export default function PostCardComponent({ post, dbUserId, onDelete }) {
         <div className={styles.commentList}>
           {comments.map((c, idx) => (
             <div key={idx} className={styles.commentItem}>
-              <Text className={styles.commentUser}>@{c.username}</Text>
-              <Text className={styles.commentText}>{c.text}</Text>
+              <Avatar src={c.author_avatar_url || "/images/avatar.png"} size={32} sx={{ borderRadius: "50%" }} />
+              <div className={styles.commentBody}>
+                <Text className={styles.commentUser}>@{c.author_username}</Text>
+                <Text className={styles.commentText}>{c.content}</Text>
+              </div>
+              {c.is_current_user && (
+                <Button variant="invisible" className={styles.deleteBtn} onClick={() => deleteComments?.(c.id)}>
+                  Deletar
+                </Button>
+              )}
             </div>
           ))}
         </div>
@@ -127,13 +171,7 @@ export default function PostCardComponent({ post, dbUserId, onDelete }) {
         <div className={styles.commentBox}>
           <Textarea placeholder="Adicionar comentário..." value={newComment} onChange={(e) => setNewComment(e.target.value)} />
           <div className={styles.commentActions}>
-            <Button
-              onClick={() => {
-                setNewComment("");
-                setShowCommentBox(false);
-              }}
-              disabled={!newComment.trim()}
-            >
+            <Button onClick={handleSubmitComment} disabled={!newComment.trim()}>
               Comentar
             </Button>
           </div>

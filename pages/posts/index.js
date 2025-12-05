@@ -3,22 +3,16 @@ import CreatePost from "@/components/CreatePost";
 import PostCardComponent from "@/components/PostCardComponent";
 import { useUser } from "@/context/UserContext";
 
-// fetchPosts e fetchDbUserId como antes
-
 export default function PostsPage() {
   const { user, loadingUser } = useUser();
   const [posts, setPosts] = useState([]);
-  const [dbUserId, setDbUserId] = useState(null);
   const [loadingPosts, setLoadingPosts] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       setLoadingPosts(true);
       try {
-        const [fetchedPosts, fetchedUserId] = await Promise.all([fetchPosts(), fetchDbUserId()]);
-
-        setPosts(fetchedPosts || []);
-        setDbUserId(fetchedUserId);
+        await fetchPosts();
       } catch (err) {
         console.error(err);
       } finally {
@@ -28,6 +22,26 @@ export default function PostsPage() {
     loadData();
   }, []);
 
+  // GET /api/v1/posts
+  async function fetchPosts() {
+    try {
+      const response = await fetch("/api/v1/posts", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        console.error("Erro ao carregar post");
+        return;
+      }
+
+      const fetchedPosts = await response.json();
+      setPosts(fetchedPosts || []);
+    } catch (error) {
+      console.error("Erro ao criar post:", error);
+    }
+  }
   // POST /api/v1/posts
   const handleAddPost = async (content, imgUrl = null) => {
     try {
@@ -36,9 +50,8 @@ export default function PostsPage() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          author_username: user.username,
           content,
-          img_url: imgUrl,
+          img: imgUrl,
         }),
       });
 
@@ -80,7 +93,7 @@ export default function PostsPage() {
       {user && <CreatePost user={user} onPost={handleAddPost} />}
 
       {posts.map((post) => (
-        <PostCardComponent key={post.id} post={post} dbUserId={dbUserId} onDelete={handleDeletePost} />
+        <PostCardComponent key={post.id} post={post} onDelete={handleDeletePost} />
       ))}
     </>
   );
