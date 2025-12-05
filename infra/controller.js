@@ -3,14 +3,7 @@ import session from "models/session.js";
 import user from "models/user.js";
 import authorization from "models/authorization.js";
 
-const {
-  InternalServerError,
-  MethodNotAllowedError,
-  ValidationError,
-  NotFoundError,
-  UnauthorizedError,
-  ForbiddenError,
-} = require("./errors");
+const { InternalServerError, MethodNotAllowedError, ValidationError, NotFoundError, UnauthorizedError, ForbiddenError } = require("./errors");
 
 function onNoMatchHandler(request, response) {
   const publicErrorObject = new MethodNotAllowedError();
@@ -18,11 +11,7 @@ function onNoMatchHandler(request, response) {
 }
 
 function onErrorHandler(error, request, response) {
-  if (
-    error instanceof ValidationError ||
-    error instanceof NotFoundError ||
-    error instanceof ForbiddenError
-  ) {
+  if (error instanceof ValidationError || error instanceof NotFoundError || error instanceof ForbiddenError) {
     return response.status(error.statusCode).json(error);
   }
 

@@ -13,18 +13,14 @@ beforeAll(async () => {
 describe("PATCH /api/v1/activations/[token_id]", () => {
   describe("Anonymous user", () => {
     test("With nonexistent token", async () => {
-      const response = await fetch(
-        "http://localhost:3000/api/v1/activations/b80cfad3-f589-4c0f-b12d-df686093c2a7",
-        {
-          method: "PATCH",
-        },
-      );
+      const response = await fetch("http://localhost:3000/api/v1/activations/b80cfad3-f589-4c0f-b12d-df686093c2a7", {
+        method: "PATCH",
+      });
       expect(response.status).toBe(404);
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         name: "NotFoundError",
-        message:
-          "O token de ativação utilizado não foi encontrado no sistema ou expirou.",
+        message: "O token de ativação utilizado não foi encontrado no sistema ou expirou.",
         action: "Faça um novo cadastro.",
         status_code: 404,
       });
@@ -39,18 +35,14 @@ describe("PATCH /api/v1/activations/[token_id]", () => {
 
       jest.useRealTimers();
 
-      const response = await fetch(
-        `http://localhost:3000/api/v1/activations/${expiredActivationToken.id}`,
-        {
-          method: "PATCH",
-        },
-      );
+      const response = await fetch(`http://localhost:3000/api/v1/activations/${expiredActivationToken.id}`, {
+        method: "PATCH",
+      });
       expect(response.status).toBe(404);
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         name: "NotFoundError",
-        message:
-          "O token de ativação utilizado não foi encontrado no sistema ou expirou.",
+        message: "O token de ativação utilizado não foi encontrado no sistema ou expirou.",
         action: "Faça um novo cadastro.",
         status_code: 404,
       });
@@ -59,26 +51,19 @@ describe("PATCH /api/v1/activations/[token_id]", () => {
       const createdUser = await orchestrator.createUser();
       const activationToken = await activation.create(createdUser.id);
 
-      const response1 = await fetch(
-        `http://localhost:3000/api/v1/activations/${activationToken.id}`,
-        {
-          method: "PATCH",
-        },
-      );
+      const response1 = await fetch(`http://localhost:3000/api/v1/activations/${activationToken.id}`, {
+        method: "PATCH",
+      });
       expect(response1.status).toBe(200);
 
-      const response2 = await fetch(
-        `http://localhost:3000/api/v1/activations/${activationToken.id}`,
-        {
-          method: "PATCH",
-        },
-      );
+      const response2 = await fetch(`http://localhost:3000/api/v1/activations/${activationToken.id}`, {
+        method: "PATCH",
+      });
       expect(response2.status).toBe(404);
       const responseBody2 = await response2.json();
       expect(responseBody2).toEqual({
         name: "NotFoundError",
-        message:
-          "O token de ativação utilizado não foi encontrado no sistema ou expirou.",
+        message: "O token de ativação utilizado não foi encontrado no sistema ou expirou.",
         action: "Faça um novo cadastro.",
         status_code: 404,
       });
@@ -87,12 +72,9 @@ describe("PATCH /api/v1/activations/[token_id]", () => {
       const createdUser = await orchestrator.createUser();
       const activationToken = await activation.create(createdUser.id);
 
-      const response = await fetch(
-        `http://localhost:3000/api/v1/activations/${activationToken.id}`,
-        {
-          method: "PATCH",
-        },
-      );
+      const response = await fetch(`http://localhost:3000/api/v1/activations/${activationToken.id}`, {
+        method: "PATCH",
+      });
       expect(response.status).toBe(200);
       const responseBody = await response.json();
 
@@ -122,22 +104,16 @@ describe("PATCH /api/v1/activations/[token_id]", () => {
       expect(expiresAt - createdAt).toBe(activation.EXPIRATION_IN_MILLISECONDS);
 
       const activatedUser = await user.findOneById(responseBody.user_id);
-      expect(activatedUser.features).toEqual([
-        "create:session",
-        "read:session",
-      ]);
+      expect(activatedUser.features).toEqual(["create:session", "read:session"]);
     });
     test("With valid token but user already activated", async () => {
       const createdUser = await orchestrator.createUser();
       await orchestrator.activateUser(createdUser);
       const activationToken = await activation.create(createdUser.id);
 
-      const response = await fetch(
-        `http://localhost:3000/api/v1/activations/${activationToken.id}`,
-        {
-          method: "PATCH",
-        },
-      );
+      const response = await fetch(`http://localhost:3000/api/v1/activations/${activationToken.id}`, {
+        method: "PATCH",
+      });
       expect(response.status).toBe(403);
       const responseBody = await response.json();
       expect(responseBody).toEqual({
@@ -157,23 +133,19 @@ describe("PATCH /api/v1/activations/[token_id]", () => {
       const user2 = await orchestrator.createUser();
       const user2ActivationToken = await activation.create(user2.id);
 
-      const response = await fetch(
-        `http://localhost:3000/api/v1/activations/${user2ActivationToken.id}`,
-        {
-          method: "PATCH",
-          headers: {
-            Cookie: `session_id=${user1SessionObject.token}`,
-          },
+      const response = await fetch(`http://localhost:3000/api/v1/activations/${user2ActivationToken.id}`, {
+        method: "PATCH",
+        headers: {
+          Cookie: `session_id=${user1SessionObject.token}`,
         },
-      );
+      });
 
       expect(response.status).toBe(403);
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         name: "ForbiddenError",
         message: "Você não possui permissão para executar esta ação",
-        action:
-          'Verifique se o seu usuário possui a feature "read:activation_token" para executar esta ação.',
+        action: 'Verifique se o seu usuário possui a feature "read:activation_token" para executar esta ação.',
         status_code: 403,
       });
     });

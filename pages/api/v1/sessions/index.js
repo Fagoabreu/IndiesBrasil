@@ -15,10 +15,7 @@ export default router.handler(controller.errorHandlers);
 
 async function postHandler(request, response) {
   const userInputValues = request.body;
-  const authenticatedUser = await authentication.getAuthenticateUser(
-    userInputValues.email,
-    userInputValues.password,
-  );
+  const authenticatedUser = await authentication.getAuthenticateUser(userInputValues.email, userInputValues.password);
   if (!authorization.can(authenticatedUser, "create:session")) {
     throw new ForbiddenError({
       message: "Você não possui permissão para realizar login",
