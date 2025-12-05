@@ -16,12 +16,12 @@ async function create(userInputValues) {
     const results = await database.query({
       text: `
       Insert into 
-        users (username,email,password,cpf,features) 
+        users (username,email,password,cpf,features,avatar_url) 
       values
-        ($1,$2,$3,$4,$5)
+        ($1,$2,$3,$4,$5,$6)
       returning
         *`,
-      values: [userInputValues.username, userInputValues.email, userInputValues.password, userInputValues.cpf, userInputValues.features],
+      values: [userInputValues.username, userInputValues.email, userInputValues.password, userInputValues.cpf, userInputValues.features, userInputValues.avatar_url],
     });
     return results.rows[0];
   }

@@ -60,6 +60,7 @@ async function createUser(userObject) {
     email: userObject?.email || faker.internet.email(),
     password: userObject?.password || faker.internet.password(),
     cpf: userObject?.cpf || fakerBR.br.cpf(),
+    avatar_url: userObject?.avatar_url || faker.internet.url(),
   });
   if (userObject?.features) {
     createdUser = await user.setFeatures(createdUser.id, userObject.features);
@@ -92,9 +93,7 @@ async function getLastEmail() {
     return null;
   }
 
-  const emailTextResponse = await fetch(
-    `${emailHttpUrl}/messages/${lastEmailItem.id}.plain`,
-  );
+  const emailTextResponse = await fetch(`${emailHttpUrl}/messages/${lastEmailItem.id}.plain`);
   const emailTextBody = await emailTextResponse.text();
   lastEmailItem.text = emailTextBody;
   return lastEmailItem;

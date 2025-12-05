@@ -16,21 +16,19 @@ describe("Use case: Registration Flow (all successful)", () => {
   let createSessionResponseBody;
 
   test("Create user account", async () => {
-    const createUserResponse = await fetch(
-      "http://localhost:3000/api/v1/users",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: "RegistrationFlow",
-          email: "registration.flow@curso.dev",
-          password: "RegistrationFlowPassword",
-          cpf: "12312312312",
-        }),
+    const createUserResponse = await fetch("http://localhost:3000/api/v1/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        username: "RegistrationFlow",
+        email: "registration.flow@curso.dev",
+        password: "RegistrationFlowPassword",
+        cpf: "12312312312",
+        avatar_url: "https://avatars.com/registrationflow",
+      }),
+    });
     expect(createUserResponse.status).toBe(201);
 
     createUserResponseBody = await createUserResponse.json();
@@ -38,6 +36,7 @@ describe("Use case: Registration Flow (all successful)", () => {
       id: createUserResponseBody.id,
       username: "RegistrationFlow",
       email: "registration.flow@curso.dev",
+      avatar_url: "https://avatars.com/registrationflow",
       password: createUserResponseBody.password,
       created_at: createUserResponseBody.created_at,
       updated_at: createUserResponseBody.updated_at,
@@ -55,24 +54,18 @@ describe("Use case: Registration Flow (all successful)", () => {
     expect(lastEmail.text).toContain("RegistrationFlow");
 
     activationTokenId = orchestrator.extractUUID(lastEmail.text);
-    expect(lastEmail.text).toContain(
-      `${webserver.origin}/cadastro/ativar/${activationTokenId}`,
-    );
+    expect(lastEmail.text).toContain(`${webserver.origin}/cadastro/ativar/${activationTokenId}`);
 
-    const activationTokenObject =
-      await activation.findOneValidById(activationTokenId);
+    const activationTokenObject = await activation.findOneValidById(activationTokenId);
 
     expect(activationTokenObject.user_id).toBe(createUserResponseBody.id);
     expect(activationTokenObject.used_at).toBeNull();
   });
 
   test("Active account", async () => {
-    const activationResponse = await fetch(
-      `http://localhost:3000/api/v1/activations/${activationTokenId}`,
-      {
-        method: "PATCH",
-      },
-    );
+    const activationResponse = await fetch(`http://localhost:3000/api/v1/activations/${activationTokenId}`, {
+      method: "PATCH",
+    });
     expect(activationResponse.status).toBe(200);
     const activationResponseBody = await activationResponse.json();
     expect(Date.parse(activationResponseBody.used_at)).not.toBeNaN();
@@ -82,19 +75,16 @@ describe("Use case: Registration Flow (all successful)", () => {
   });
 
   test("Login", async () => {
-    const createSessionResponse = await fetch(
-      "http://localhost:3000/api/v1/sessions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: "registration.flow@curso.dev",
-          password: "RegistrationFlowPassword",
-        }),
+    const createSessionResponse = await fetch("http://localhost:3000/api/v1/sessions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        email: "registration.flow@curso.dev",
+        password: "RegistrationFlowPassword",
+      }),
+    });
     expect(createSessionResponse.status).toBe(201);
 
     createSessionResponseBody = await createSessionResponse.json();

@@ -1,7 +1,7 @@
 exports.up = (pgm) => {
   pgm.addColumn("users", {
     avatar_url: {
-      type: "varchar[256]",
+      type: "varchar(256)",
       default: null,
     },
   });

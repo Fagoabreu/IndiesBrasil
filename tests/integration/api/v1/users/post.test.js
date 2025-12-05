@@ -16,6 +16,7 @@ describe("POST /api/v1/users", () => {
         password: "password",
         username: "fagoabreu",
         cpf: "11111111111",
+        avatar_url: "https://avatars.com/fagoabreu",
       };
 
       const response = await fetch("http://localhost:3000/api/v1/users", {
@@ -28,6 +29,7 @@ describe("POST /api/v1/users", () => {
           email: "fagoabreu@gmail.com",
           password: testUser.password,
           cpf: testUser.cpf,
+          avatar_url: testUser.avatar_url,
         }),
       });
 
@@ -40,6 +42,7 @@ describe("POST /api/v1/users", () => {
         email: "fagoabreu@gmail.com",
         password: responseBody.password,
         cpf: testUser.cpf,
+        avatar_url: testUser.avatar_url,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
         features: ["read:activation_token"],
@@ -48,18 +51,10 @@ describe("POST /api/v1/users", () => {
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
 
-      const userInDatabase = await user.findOneByUsername(
-        responseBody.username,
-      );
+      const userInDatabase = await user.findOneByUsername(responseBody.username);
 
-      const correctPasswordMatch = await password.compare(
-        testUser.password,
-        userInDatabase.password,
-      );
-      const incorrectPasswordMatch = await password.compare(
-        "Senha Errada",
-        userInDatabase.password,
-      );
+      const correctPasswordMatch = await password.compare(testUser.password, userInDatabase.password);
+      const incorrectPasswordMatch = await password.compare("Senha Errada", userInDatabase.password);
       expect(correctPasswordMatch).toBe(true);
       expect(incorrectPasswordMatch).toBe(false);
     });
@@ -177,8 +172,7 @@ describe("POST /api/v1/users", () => {
       expect(responseBody).toEqual({
         name: "ForbiddenError",
         message: "Você não possui permissão para executar esta ação",
-        action:
-          'Verifique se o seu usuário possui a feature "create:user" para executar esta ação.',
+        action: 'Verifique se o seu usuário possui a feature "create:user" para executar esta ação.',
         status_code: 403,
       });
     });

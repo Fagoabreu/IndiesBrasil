@@ -15,11 +15,10 @@ describe("GET /api/v1/users/[username]", () => {
         email: "mesmo.case@gmail.com",
         password: "password",
         cpf: 32454643231,
+        avatar_url: "https://avatars.com/mesmocase",
       });
 
-      const response2 = await fetch(
-        "http://localhost:3000/api/v1/users/MesmoCase",
-      );
+      const response2 = await fetch("http://localhost:3000/api/v1/users/MesmoCase");
       expect(response2.status).toBe(200);
 
       const response2Body = await response2.json();
@@ -29,6 +28,7 @@ describe("GET /api/v1/users/[username]", () => {
         email: "mesmo.case@gmail.com",
         password: response2Body.password,
         cpf: "32454643231",
+        avatar_url: "https://avatars.com/mesmocase",
         created_at: response2Body.created_at,
         updated_at: response2Body.updated_at,
         features: ["read:activation_token"],
@@ -44,11 +44,10 @@ describe("GET /api/v1/users/[username]", () => {
         email: "diferente.case@gmail.com",
         password: "password",
         cpf: 32454643232,
+        avatar_url: "https://avatars.com/casediferente",
       });
 
-      const response2 = await fetch(
-        "http://localhost:3000/api/v1/users/casediFerente",
-      );
+      const response2 = await fetch("http://localhost:3000/api/v1/users/casediFerente");
       expect(response2.status).toBe(200);
 
       const response2Body = await response2.json();
@@ -58,6 +57,7 @@ describe("GET /api/v1/users/[username]", () => {
         email: "diferente.case@gmail.com",
         password: response2Body.password,
         cpf: "32454643232",
+        avatar_url: "https://avatars.com/casediferente",
         created_at: response2Body.created_at,
         updated_at: response2Body.updated_at,
         features: ["read:activation_token"],
@@ -68,9 +68,7 @@ describe("GET /api/v1/users/[username]", () => {
     });
 
     test("With NonExist username", async () => {
-      const response = await fetch(
-        "http://localhost:3000/api/v1/users/UsuarioInexistente",
-      );
+      const response = await fetch("http://localhost:3000/api/v1/users/UsuarioInexistente");
       expect(response.status).toBe(404);
 
       const response2Body = await response.json();
