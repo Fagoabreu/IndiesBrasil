@@ -3,7 +3,6 @@ import { useRouter } from "next/router";
 import { PageLayout, Heading, Button, FormControl, TextInput, Flash, Stack, Spinner, ProgressBar, IconButton } from "@primer/react";
 import { EyeIcon, EyeClosedIcon } from "@primer/octicons-react";
 import PasswordRule from "@/components/PasswordRule.js";
-import TestProgress from "@/components/TestProgress.js";
 
 export default function Cadastro() {
   const router = useRouter();
@@ -29,15 +28,11 @@ export default function Cadastro() {
   // CPF MASK
   function formatCPF(value) {
     return value
-      .replace(/\D/g, "") // Remove tudo que não for número
+      .replace(/\D/g, "")
       .replace(/(\d{3})(\d)/, "$1.$2")
       .replace(/(\d{3})(\d)/, "$1.$2")
       .replace(/(\d{3})(\d{1,2})$/, "$1-$2")
       .substring(0, 14);
-  }
-
-  function handleCpfChange(e) {
-    setCpf(formatCpf(e.target.value));
   }
 
   // ======================================================
@@ -130,7 +125,7 @@ export default function Cadastro() {
         const data = await response.json();
         setErrorMsg(data.message || "Erro ao criar conta.");
       }
-    } catch (error) {
+    } catch {
       setErrorMsg("Erro ao conectar ao servidor.");
     }
 

@@ -63,7 +63,28 @@ export default function PostCardComponent({ post, onDelete }) {
     setShowComments((prev) => !prev);
   };
 
-  const deleteComments = async () => {};
+  const deleteComments = async (commentId) => {
+    try {
+      const res = await fetch(`/api/v1/posts/${post.id}/comments/${commentId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        console.error("Erro ao deletar comentário");
+        return;
+      }
+
+      // Remove do estado
+      setComments((prev) => prev.filter((c) => c.id !== commentId));
+
+      // Atualiza contador
+      setCommentsCount((prev) => prev - 1);
+    } catch (error) {
+      console.error("Erro ao deletar comentário:", error);
+    }
+  };
+
   const handleSubmitComment = async () => {
     if (!newComment.trim()) return;
 

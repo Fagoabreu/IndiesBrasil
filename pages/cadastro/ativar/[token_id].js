@@ -31,7 +31,7 @@ export default function ActivationPage() {
         }
       } catch (err) {
         setStatus("error");
-        setMessage("Erro ao conectar com o servidor.");
+        setMessage("Erro ao conectar com o servidor. {}", err.message);
       }
     }
 

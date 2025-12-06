@@ -1,31 +1,58 @@
+/* ========================= */
+/*         LAYOUT BASE       */
+/* ========================= */
+
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 28px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--borderColor, rgba(140, 140, 140, 0.2));
   position: sticky;
   top: 0;
   z-index: 50;
+  backdrop-filter: blur(12px);
+  transition: background 0.25s ease;
 }
+
+/* Estilo GitHub: fundo levemente translúcido */
+.color-bg-default {
+  background-color: rgba(var(--bgColor, 255, 255, 255), 0.75);
+}
+
+/* ========================= */
+/*       LOGO + NAV LEFT     */
+/* ========================= */
 
 .left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 24px;
 }
 
-.logo {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-}
-
-.logoButton {
-  display: flex !important;
+.logoArea {
+  display: flex;
   align-items: center;
   gap: 10px;
-  background: transparent !important;
-  border: none !important;
+  text-decoration: none;
+  transition: opacity 0.25s ease;
+}
+
+.logoArea:hover {
+  opacity: 0.7;
+}
+
+.logoWrapper {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: transform 0.25s ease;
+}
+
+.logoArea:hover .logoWrapper {
+  transform: scale(1.05);
 }
 
 .logoText {
@@ -33,29 +60,91 @@
   font-size: 18px;
 }
 
+/* DESKTOP NAV */
+.navDesktop {
+  display: flex;
+  gap: 20px;
+}
+
+.navDesktop a {
+  text-decoration: none;
+  font-size: 15px;
+  position: relative;
+  padding: 4px 0;
+  transition: color 0.25s ease;
+}
+
+/* Linha animada estilo GitHub */
+.navDesktop a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  height: 2px;
+  width: 0;
+  background: currentColor;
+  border-radius: 4px;
+  transition: width 0.25s ease;
+}
+
+.navDesktop a:hover::after {
+  width: 100%;
+}
+
+/* ========================= */
+/*          SEARCH BAR       */
+/* ========================= */
+
 .center {
   flex: 1;
   display: flex;
   justify-content: center;
 }
 
-.nav {
-  display: flex;
-  gap: 24px;
-  font-size: 15px;
+.search input {
+  width: 280px !important;
+  border-radius: 20px !important;
+  transition:
+    box-shadow 0.25s ease,
+    background 0.25s ease;
 }
 
-.nav a {
-  text-decoration: none;
+.search input:focus {
+  box-shadow: 0 0 0 3px rgba(100, 140, 255, 0.3);
 }
+
+/* ========================= */
+/*          RIGHT SIDE       */
+/* ========================= */
 
 .right {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 16px;
 }
 
-.search input {
-  width: 230px !important;
-  border-radius: 20px !important;
+.right button {
+  transition: transform 0.2s ease;
+}
+
+.right button:hover {
+  transform: scale(1.12);
+}
+
+/* ========================= */
+/*        RESPONSIVO         */
+/* ========================= */
+
+@media (max-width: 840px) {
+  .navDesktop {
+    display: none;
+  }
+
+  .center {
+    display: none;
+  }
+
+  .header {
+    justify-content: space-between;
+  }
 }

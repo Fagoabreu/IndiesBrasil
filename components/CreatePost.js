@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Avatar, Textarea, Button, Stack } from "@primer/react";
 import styles from "./CreatePost.module.css";
+import Image from "next/image";
 
 export default function CreatePost({ user, onPost }) {
   const [content, setContent] = useState("");
@@ -63,7 +64,8 @@ export default function CreatePost({ user, onPost }) {
       {/* Preview */}
       {imagePreview && (
         <div className={styles.previewBox}>
-          <img src={imagePreview} className={styles.previewImg} />
+          <Image src={imagePreview} alt="Pré-visualização da imagem selecionada" width={300} height={300} unoptimized className={styles.previewImg} />
+
           <button
             className={styles.removeBtn}
             onClick={() => {

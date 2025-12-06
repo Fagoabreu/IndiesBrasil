@@ -18,10 +18,7 @@ export default function Perfil() {
   // ref para fechar modal ao clicar fora
   const modalRef = useRef(null);
 
-  useEffect(() => {
-    if (!loadingUser && !user) {
-      router.push("/login");
-    }
+  function openEditModal() {
     if (user) {
       setEditForm({
         name: user.name || user.username || "",
@@ -29,6 +26,13 @@ export default function Perfil() {
         website: user.website || "",
         location: user.location || "",
       });
+    }
+    setEditing(true);
+  }
+
+  useEffect(() => {
+    if (!loadingUser && !user) {
+      router.push("/login");
     }
   }, [loadingUser, user, router]);
 
@@ -98,7 +102,7 @@ export default function Perfil() {
 
           {/* Ações */}
           {isOwnProfile ? (
-            <Button variant="primary" onClick={() => setEditing(true)} sx={{ width: 200 }}>
+            <Button variant="primary" onClick={openEditModal} sx={{ width: 200 }}>
               Editar Perfil
             </Button>
           ) : (

@@ -1,3 +1,4 @@
+import { NotFoundError } from "@/infra/errors";
 import database from "infra/database";
 
 const baseSelectQuery = `

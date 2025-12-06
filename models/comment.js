@@ -13,10 +13,6 @@ FROM
   comments c
   INNER JOIN users u
     ON u.id = c.author_id 
-WHERE
-  c.post_id = $1
-Order by
-  c.created_at DESC
 `;
 
 async function create(commentInputValues) {
@@ -48,23 +44,60 @@ async function getCommentsByPostId(post_id, user_id) {
   return postComments;
 
   async function runSelectQuery(post_id, user_id) {
+    const whereClause = `WHERE
+      c.post_id = $1
+      Order by
+      c.created_at DESC
+    `;
+
     const results = await database.query({
-      text: baseSelectQuery,
+      text: baseSelectQuery + whereClause,
       values: [post_id, user_id || null],
     });
     return results.rows;
   }
 }
 
-async function getCommentsById(comment_id, current_user_id) {}
+async function getCommentsByCommentId(comment_id, user_id) {
+  const postComments = await runSelectQuery(comment_id, user_id);
+  return postComments;
 
-async function deleteByIdAndAuthorId(author_id, comment_id) {}
+  async function runSelectQuery(comment_id, user_id) {
+    const whereClause = `
+      WHERE
+      c.id = $1
+    `;
+
+    const results = await database.query({
+      text: baseSelectQuery + whereClause,
+      values: [comment_id, user_id || null],
+    });
+    return results.rows[0];
+  }
+}
+
+async function deleteById(comment_id) {
+  const postComments = await runDeleteQuery(comment_id);
+  return postComments;
+
+  async function runDeleteQuery(comment_id) {
+    const results = await database.query({
+      text: `Delete from comments 
+        WHERE
+        id = $1
+        returning *
+      `,
+      values: [comment_id],
+    });
+    return results.rows[0];
+  }
+}
 
 const comment = {
   create,
   getCommentsByPostId,
-  getCommentsById,
-  deleteByIdAndAuthorId,
+  getCommentsByCommentId,
+  deleteById,
 };
 
 export default comment;

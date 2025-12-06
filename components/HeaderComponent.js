@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Avatar, ActionMenu, ActionList, TextInput, IconButton, useTheme } from "@primer/react";
 import { SunIcon, MoonIcon, SearchIcon } from "@primer/octicons-react";
 
@@ -13,39 +14,31 @@ export default function HeaderComponent() {
 
   return (
     <header className={`${styles.header} color-bg-default color-fg-default`}>
+      {/* LEFT SIDE */}
       <div className={styles.left}>
-        <ActionMenu>
-          <ActionMenu.Button className={styles.logoButton}>
-            <img src="/images/logo.png" className={styles.logo} />
-            <span className={styles.logoText}>Indies Brasil</span>
-          </ActionMenu.Button>
+        <Link href="/" className={styles.logoArea}>
+          <div className={styles.logoWrapper}>
+            <Image src="/images/logo.png" alt="Logo Indies Brasil" fill sizes="40px" priority />
+          </div>
+          <span className={styles.logoText}>Indies Brasil</span>
+        </Link>
 
-          <ActionMenu.Overlay>
-            <ActionList>
-              <ActionList.Item onSelect={() => (window.location.href = "/")}>Início</ActionList.Item>
-              <ActionList.Item onSelect={() => (window.location.href = "/eventos")}>Eventos</ActionList.Item>
-              <ActionList.Item onSelect={() => (window.location.href = "/membros")}>Membros</ActionList.Item>
-            </ActionList>
-          </ActionMenu.Overlay>
-        </ActionMenu>
-      </div>
-
-      <div className={styles.center}>
-        <nav className={styles.nav}>
+        <nav className={styles.navDesktop}>
           <Link href="/">Início</Link>
           <Link href="/eventos">Eventos</Link>
           <Link href="/membros">Membros</Link>
         </nav>
       </div>
 
+      {/* CENTER — SEARCH BAR */}
+      <div className={styles.center}>
+        <TextInput leadingVisual={SearchIcon} placeholder="Pesquisar" className={styles.search} />
+      </div>
+
+      {/* RIGHT SIDE */}
       <div className={styles.right}>
-        {/* Toggle de tema */}
         <IconButton aria-label="Alternar tema" icon={colorMode === "day" ? MoonIcon : SunIcon} onClick={toggleTheme} />
 
-        {/* Busca */}
-        <TextInput leadingVisual={SearchIcon} placeholder="Pesquisar" className={styles.search} />
-
-        {/* Avatar do usuário */}
         <ActionMenu>
           <ActionMenu.Button>
             <Avatar src="/images/avatar.png" size={32} />

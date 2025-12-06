@@ -10,6 +10,7 @@ export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
+  // 🔹 fetchUser exposto para uso externo (ex: atualizar perfil)
   async function fetchUser() {
     try {
       const res = await fetch("/api/v1/user", {
@@ -39,8 +40,29 @@ export function UserProvider({ children }) {
     setUser(null);
   }
 
+  // ✅ Correção do ESLint: recriar logic dentro do useEffect
   useEffect(() => {
-    fetchUser();
+    async function init() {
+      try {
+        const res = await fetch("/api/v1/user", {
+          method: "GET",
+          credentials: "include",
+        });
+
+        if (res.status === 200) {
+          const data = await res.json();
+          setUser(data);
+        } else {
+          setUser(null);
+        }
+      } catch {
+        setUser(null);
+      }
+
+      setLoadingUser(false);
+    }
+
+    init(); // agora está válido
   }, []);
 
   return (
@@ -48,7 +70,7 @@ export function UserProvider({ children }) {
       value={{
         user,
         setUser,
-        fetchUser,
+        fetchUser, // ainda disponível externamente
         logout,
         loadingUser,
       }}
@@ -58,5 +80,4 @@ export function UserProvider({ children }) {
   );
 }
 
-// 🔹 exportação do contexto
 export { UserContext };

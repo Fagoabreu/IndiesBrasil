@@ -31,7 +31,7 @@ export default function Login() {
         const data = await response.json();
         setErrMsg(data.message || "Credenciais inválidas.");
       }
-    } catch (error) {
+    } catch {
       setErrMsg("Erro de conexão com o servidor.");
     }
 
