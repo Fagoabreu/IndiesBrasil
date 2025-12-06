@@ -92,6 +92,7 @@ describe("Post /api/v1/sessions", () => {
         email: "tudo.correto@gmail.com",
         password: "tudocorretopwd",
       });
+      await orchestrator.activateUser(createdUser);
 
       const response = await fetch("http://localhost:3000/api/v1/sessions", {
         method: "POST",
@@ -124,9 +125,7 @@ describe("Post /api/v1/sessions", () => {
 
       expiresAt.setMilliseconds(0);
       createdAt.setMilliseconds(0);
-      expect(
-        Math.abs(expiresAt - createdAt - session.EXPIRATION_IN_MILLISECONDS),
-      ).toBeLessThanOrEqual(1000);
+      expect(Math.abs(expiresAt - createdAt - session.EXPIRATION_IN_MILLISECONDS)).toBeLessThanOrEqual(1000);
 
       const parsedSetCookie = setCookieParser(response, {
         map: true,

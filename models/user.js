@@ -7,9 +7,28 @@ async function create(userInputValues) {
   await validateUniqueEmail(userInputValues.email);
   await validateUniqueCPF(userInputValues.cpf);
   await hashPasswordInObject(userInputValues);
+  injectDefaultFeaturesInObject(userInputValues);
 
-  const newUser = await runInserQuery(userInputValues);
+  const newUser = await runInsertQuery(userInputValues);
   return newUser;
+
+  async function runInsertQuery(userInputValues) {
+    const results = await database.query({
+      text: `
+      Insert into 
+        users (username,email,password,cpf,features,avatar_url) 
+      values
+        ($1,$2,$3,$4,$5,$6)
+      returning
+        *`,
+      values: [userInputValues.username, userInputValues.email, userInputValues.password, userInputValues.cpf, userInputValues.features, userInputValues.avatar_url],
+    });
+    return results.rows[0];
+  }
+
+  function injectDefaultFeaturesInObject(userInputValues) {
+    userInputValues.features = ["read:activation_token"];
+  }
 }
 
 async function update(username, userInputValues) {
@@ -42,7 +61,13 @@ async function findOneById(id) {
     const results = await database.query({
       text: `
         select 
-          * 
+          id,
+          username,
+          email,
+          cpf,
+          features,
+          created_at,
+          updated_at 
         from 
           users u 
         where 
@@ -174,23 +199,27 @@ async function hashPasswordInObject(userInputValues) {
   userInputValues.password = hashedPassword;
 }
 
-async function runInserQuery(userInputValues) {
-  const results = await database.query({
-    text: `
-      Insert into 
-        users (username,email,password,cpf) 
-      values
-        ($1,$2,$3,$4)
-      returning
-        *`,
-    values: [
-      userInputValues.username,
-      userInputValues.email,
-      userInputValues.password,
-      userInputValues.cpf,
-    ],
-  });
-  return results.rows[0];
+async function setFeatures(userId, features) {
+  const updatedUser = await runUpdatedQuery(userId, features);
+  return updatedUser;
+
+  async function runUpdatedQuery(userId, features) {
+    const results = await database.query({
+      text: `
+      update
+        users
+      set
+        features = $2,
+        updated_at = timezone('utc',now())
+      where 
+        id = $1
+      returning 
+        *
+      `,
+      values: [userId, features],
+    });
+    return results.rows[0];
+  }
 }
 
 async function runUpdatedQuery(userWithNewValues) {
@@ -209,15 +238,69 @@ async function runUpdatedQuery(userWithNewValues) {
       returning
         *
     `,
-    values: [
-      userWithNewValues.id,
-      userWithNewValues.username,
-      userWithNewValues.email,
-      userWithNewValues.password,
-      userWithNewValues.cpf,
-    ],
+    values: [userWithNewValues.id, userWithNewValues.username, userWithNewValues.email, userWithNewValues.password, userWithNewValues.cpf],
   });
   return results.rows[0];
+}
+
+async function findUsers(userId, isfollowing) {
+  let queryText = `
+    SELECT
+      u.id,
+      u.username,
+      u.avatar_url,
+      COUNT(uf.follower_id) AS followers_count
+    FROM users u
+    LEFT JOIN user_followers uf
+      ON uf.lead_user_id = u.id
+    WHERE u.id != $1
+  `;
+
+  if (isfollowing === false) {
+    queryText += `
+      AND NOT EXISTS (
+        SELECT 1
+        FROM user_followers uf2
+        WHERE uf2.lead_user_id = u.id
+        AND uf2.follower_id = $1
+      )
+      `;
+  }
+
+  queryText += ` GROUP BY u.id, u.username, u.avatar_url`;
+
+  const values = [userId];
+  const results = await database.query({
+    text: queryText,
+    values,
+  });
+  return results.rows;
+}
+
+async function toggleFollow(followerId, leaderId) {
+  const followResult = await runSelectQuery(followerId, leaderId);
+  return followResult;
+
+  async function runSelectQuery(followerId, leaderId) {
+    const results = await database.query({
+      text: `
+      WITH delete_attempt AS (
+        DELETE FROM user_followers
+        WHERE follower_id = $1 AND lead_user_id = $2
+        RETURNING *
+      )
+      INSERT INTO user_followers (follower_id, lead_user_id)
+      SELECT $1, $2
+      WHERE NOT EXISTS (SELECT 1 FROM delete_attempt)
+      RETURNING 'followed' AS action`,
+      values: [followerId, leaderId],
+    });
+    if (results.rowCount === 0) {
+      return { action: "unfollowed" };
+    }
+
+    return results.rows[0];
+  }
 }
 
 const user = {
@@ -226,6 +309,9 @@ const user = {
   findOneById,
   findOneByUsername,
   findOneByEmail,
+  setFeatures,
+  findUsers,
+  toggleFollow,
 };
 
 export default user;

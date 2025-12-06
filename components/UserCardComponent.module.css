@@ -1,0 +1,56 @@
+/* components/UserCardComponent.module.css */
+
+/* wrapper externo — usado em vez de Box/Card */
+.cardWrapper {
+  padding: 12px 14px;
+  border-radius: 8px;
+  cursor: default;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+  border: 1px solid var(--borderColor-default);
+  background: var(--bgColor-subtle);
+}
+
+/* efeito sutil no hover */
+.cardWrapper:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  border-color: var(--borderColor-emphasis, rgba(0, 0, 0, 0.08));
+}
+
+/* avatar */
+.avatar {
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+/* bloco de informações (usa o espaço restante) */
+.info {
+  flex: 1;
+  min-width: 0; /* para truncar textos corretamente quando necessário */
+}
+
+/* link do nome de usuário */
+.username {
+  text-decoration: none;
+  color: inherit; /* deixa o Primer controlar a cor via tokens */
+}
+
+/* handle e seguidores — apenas opacidade */
+.handle {
+  opacity: 0.75;
+}
+
+.followers {
+  opacity: 0.6;
+  margin-top: 2px;
+  font-size: 0.9rem;
+}
+
+/* botão */
+.button {
+  white-space: nowrap;
+  margin-left: 8px;
+}
