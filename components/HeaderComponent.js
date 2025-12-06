@@ -8,13 +8,10 @@ import styles from "./HeaderComponent.module.css";
 export default function HeaderComponent() {
   const { colorMode, setColorMode } = useTheme();
 
-  const toggleTheme = () => {
-    setColorMode(colorMode === "day" ? "night" : "day");
-  };
+  const toggleTheme = () => setColorMode(colorMode === "day" ? "night" : "day");
 
   return (
     <header className={`${styles.header} color-bg-default color-fg-default`}>
-      {/* LEFT SIDE */}
       <div className={styles.left}>
         <Link href="/" className={styles.logoArea}>
           <div className={styles.logoWrapper}>
@@ -25,17 +22,15 @@ export default function HeaderComponent() {
 
         <nav className={styles.navDesktop}>
           <Link href="/">Início</Link>
-          <Link href="/eventos">Eventos</Link>
+          <Link href="/posts">Posts</Link>
           <Link href="/membros">Membros</Link>
         </nav>
       </div>
 
-      {/* CENTER — SEARCH BAR */}
       <div className={styles.center}>
-        <TextInput leadingVisual={SearchIcon} placeholder="Pesquisar" className={styles.search} />
+        <TextInput leadingVisual={SearchIcon} placeholder="Pesquisar" />
       </div>
 
-      {/* RIGHT SIDE */}
       <div className={styles.right}>
         <IconButton aria-label="Alternar tema" icon={colorMode === "day" ? MoonIcon : SunIcon} onClick={toggleTheme} />
 
@@ -46,8 +41,9 @@ export default function HeaderComponent() {
 
           <ActionMenu.Overlay>
             <ActionList>
-              <ActionList.Item onSelect={() => (location.href = "/perfil")}>Perfil</ActionList.Item>
-              <ActionList.Item>Sair</ActionList.Item>
+              <ActionList.Item onSelect={() => (window.location.href = "/perfil")}>Perfil</ActionList.Item>
+
+              <ActionList.Item variant="danger">Sair</ActionList.Item>
             </ActionList>
           </ActionMenu.Overlay>
         </ActionMenu>

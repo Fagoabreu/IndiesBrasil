@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { Stack, Text } from "@primer/react";
+import { Avatar, Text } from "@primer/react";
 import UserCardComponent from "./UserCardComponent";
+import { useEffect, useState } from "react";
 
 export default function WhoToFollow() {
   const [users, setUsers] = useState([]);

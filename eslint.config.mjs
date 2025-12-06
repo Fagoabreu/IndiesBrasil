@@ -3,6 +3,7 @@ import js from "@eslint/js";
 import next from "eslint-config-next";
 import jest from "eslint-plugin-jest";
 import prettier from "eslint-config-prettier";
+import primerReact from "eslint-plugin-primer-react";
 
 // 👉 regra resolvida: criar constante nomeada
 const config = [
@@ -10,7 +11,17 @@ const config = [
 
   ...next,
 
-  // bloco de Jest
+  // Primer React Lint — versão recomendada pela documentação
+  {
+    plugins: {
+      "primer-react": primerReact,
+    },
+    rules: {
+      ...primerReact.configs.recommended.rules,
+    },
+  },
+
+  // Jest config
   {
     files: ["tests/**/*.js", "tests/**/*.jsx", "**/*.test.js", "**/*.spec.js"],
     plugins: { jest },
@@ -31,8 +42,10 @@ const config = [
     },
   },
 
+  // Prettier desativa regras conflitantes
   prettier,
 
+  // Regras globais da aplicação
   {
     files: ["**/*.{js,jsx}"],
     rules: {
@@ -41,10 +54,10 @@ const config = [
     },
   },
 
+  // Pastas ignoradas
   {
     ignores: ["node_modules", ".next", "dist", "coverage", "infra/**/*.js"],
   },
 ];
 
-// 👉 agora exportamos a constante nomeada
 export default config;

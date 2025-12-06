@@ -1,28 +1,27 @@
-/* ========================= */
-/*         LAYOUT BASE       */
-/* ========================= */
-
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 12px 24px;
-  border-bottom: 1px solid var(--borderColor, rgba(140, 140, 140, 0.2));
+
+  border-bottom: 1px solid var(--color-border-default);
+
+  background-color: var(--color-bg-default);
+  backdrop-filter: blur(12px);
+
   position: sticky;
   top: 0;
   z-index: 50;
-  backdrop-filter: blur(12px);
-  transition: background 0.25s ease;
+
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease;
 }
 
-/* Estilo GitHub: fundo levemente translúcido */
+/* Translucent GitHub effect */
 .color-bg-default {
-  background-color: rgba(var(--bgColor, 255, 255, 255), 0.75);
+  background-color: color-mix(in srgb, var(--color-bg-default) 75%, transparent);
 }
-
-/* ========================= */
-/*       LOGO + NAV LEFT     */
-/* ========================= */
 
 .left {
   display: flex;
@@ -35,11 +34,7 @@
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  transition: opacity 0.25s ease;
-}
-
-.logoArea:hover {
-  opacity: 0.7;
+  color: var(--color-fg-default);
 }
 
 .logoWrapper {
@@ -48,33 +43,27 @@
   height: 40px;
   border-radius: 10px;
   overflow: hidden;
-  transition: transform 0.25s ease;
-}
-
-.logoArea:hover .logoWrapper {
-  transform: scale(1.05);
 }
 
 .logoText {
   font-weight: 600;
   font-size: 18px;
+  color: var(--color-fg-default);
 }
 
-/* DESKTOP NAV */
 .navDesktop {
   display: flex;
   gap: 20px;
 }
 
 .navDesktop a {
+  color: var(--color-fg-default);
   text-decoration: none;
   font-size: 15px;
   position: relative;
   padding: 4px 0;
-  transition: color 0.25s ease;
 }
 
-/* Linha animada estilo GitHub */
 .navDesktop a::after {
   content: "";
   position: absolute;
@@ -83,7 +72,6 @@
   height: 2px;
   width: 0;
   background: currentColor;
-  border-radius: 4px;
   transition: width 0.25s ease;
 }
 
@@ -91,60 +79,14 @@
   width: 100%;
 }
 
-/* ========================= */
-/*          SEARCH BAR       */
-/* ========================= */
-
 .center {
   flex: 1;
   display: flex;
   justify-content: center;
 }
 
-.search input {
-  width: 280px !important;
-  border-radius: 20px !important;
-  transition:
-    box-shadow 0.25s ease,
-    background 0.25s ease;
-}
-
-.search input:focus {
-  box-shadow: 0 0 0 3px rgba(100, 140, 255, 0.3);
-}
-
-/* ========================= */
-/*          RIGHT SIDE       */
-/* ========================= */
-
 .right {
   display: flex;
   align-items: center;
   gap: 16px;
-}
-
-.right button {
-  transition: transform 0.2s ease;
-}
-
-.right button:hover {
-  transform: scale(1.12);
-}
-
-/* ========================= */
-/*        RESPONSIVO         */
-/* ========================= */
-
-@media (max-width: 840px) {
-  .navDesktop {
-    display: none;
-  }
-
-  .center {
-    display: none;
-  }
-
-  .header {
-    justify-content: space-between;
-  }
 }
