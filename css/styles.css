@@ -9,7 +9,10 @@ body {
     background-color 0.25s ease,
     color 0.25s ease;
 }
-
+.layout-body {
+  background-color: var(--bgColor-inset);
+  color: var(--fgColor-default);
+}
 .main-content {
   padding: 24px;
   background-color: var(--color-bg-default);

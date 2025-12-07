@@ -4,7 +4,7 @@ import LeftSidebarComponent from "./LeftSidebarComponent";
 
 export default function Layout({ children, RightSidebar = null }) {
   return (
-    <SplitPageLayout>
+    <SplitPageLayout className="layout-body">
       <SplitPageLayout.Header>
         <HeaderComponent />
       </SplitPageLayout.Header>
