@@ -3,15 +3,21 @@ import Image from "next/image";
 import { Avatar, ActionMenu, ActionList, TextInput, IconButton, useTheme } from "@primer/react";
 import { SunIcon, MoonIcon, SearchIcon } from "@primer/octicons-react";
 
+import { useUser } from "@/context/UserContext";
+
 import styles from "./HeaderComponent.module.css";
 
 export default function HeaderComponent() {
   const { colorMode, setColorMode } = useTheme();
+  const { user, logout } = useUser(); // 🔥 USER + LOGOUT DO CONTEXTO
 
   const toggleTheme = () => setColorMode(colorMode === "day" ? "night" : "day");
 
+  const avatarSrc = user?.avatarUrl || "/images/avatar.png";
+  const usernameLabel = user?.name || user?.username || "Usuário";
+
   return (
-    <header className={`${styles.header} color-bg-default color-fg-default`}>
+    <header className={styles.header}>
       <div className={styles.left}>
         <Link href="/" className={styles.logoArea}>
           <div className={styles.logoWrapper}>
@@ -36,14 +42,16 @@ export default function HeaderComponent() {
 
         <ActionMenu>
           <ActionMenu.Button>
-            <Avatar src="/images/avatar.png" size={32} />
+            <Avatar src={avatarSrc} size={32} />
           </ActionMenu.Button>
 
           <ActionMenu.Overlay>
             <ActionList>
-              <ActionList.Item onSelect={() => (window.location.href = "/perfil")}>Perfil</ActionList.Item>
+              <ActionList.Item onSelect={() => (window.location.href = "/perfil")}>{usernameLabel}</ActionList.Item>
 
-              <ActionList.Item variant="danger">Sair</ActionList.Item>
+              <ActionList.Item variant="danger" onSelect={logout}>
+                Sair
+              </ActionList.Item>
             </ActionList>
           </ActionMenu.Overlay>
         </ActionMenu>

@@ -1,9 +1,8 @@
-html,
 body {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  background-color: var(--color-bg-default);
+  background-color: var(--color-canvas-default);
   color: var(--color-fg-default);
   transition:
     background-color 0.25s ease,

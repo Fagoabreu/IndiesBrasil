@@ -244,31 +244,49 @@ async function runUpdatedQuery(userWithNewValues) {
 }
 
 async function findUsers(userId, isfollowing) {
-  let queryText = `
-    SELECT
-      u.id,
-      u.username,
-      u.avatar_url,
-      COUNT(uf.follower_id) AS followers_count
-    FROM users u
-    LEFT JOIN user_followers uf
-      ON uf.lead_user_id = u.id
-    WHERE u.id != $1
+  let baseQuery = `
+      SELECT
+        u.id,
+        u.username,
+        u.avatar_url,
+
+        COUNT(f.follower_id) AS followers_count,
+
+        (uf.follower_id IS NOT NULL) AS is_following
+
+      FROM users u
+
+      -- Seguidores do usuário
+      LEFT JOIN user_followers f
+        ON f.lead_user_id = u.id
+
+      -- Verifica se o usuário atual segue esse usuário
+      LEFT JOIN user_followers uf
+        ON uf.lead_user_id = u.id
+        AND uf.follower_id = $1
   `;
 
-  if (isfollowing === false) {
-    queryText += `
-      AND NOT EXISTS (
+  let whereClause = `
+      WHERE 
+        u.id <> $1
+      `;
+  if (isfollowing != undefined) {
+    whereClause += isfollowing === true || isfollowing === "true" ? " AND " : " AND NOT ";
+    whereClause += `
+        EXISTS (
         SELECT 1
         FROM user_followers uf2
         WHERE uf2.lead_user_id = u.id
         AND uf2.follower_id = $1
       )
-      `;
+    `;
   }
-
-  queryText += ` GROUP BY u.id, u.username, u.avatar_url`;
-
+  let endQuery = `
+      GROUP BY
+        u.id, u.username, u.avatar_url, uf.follower_id
+      ORDER BY 
+        u.username;`;
+  const queryText = baseQuery + whereClause + endQuery;
   const values = [userId];
   const results = await database.query({
     text: queryText,

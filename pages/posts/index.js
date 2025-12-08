@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import CreatePost from "@/components/CreatePost";
 import PostCardComponent from "@/components/PostCardComponent";
 import { useUser } from "@/context/UserContext";
@@ -9,18 +9,18 @@ export default function PostsPage() {
   const [posts, setPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     setLoadingPosts(true);
     try {
       await fetchPosts();
     } finally {
       setLoadingPosts(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   // GET /api/v1/posts
   async function fetchPosts() {

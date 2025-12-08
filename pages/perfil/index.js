@@ -73,9 +73,9 @@ export default function Perfil() {
       </PageLayout.Header>
 
       <PageLayout.Content width="large">
-        <Stack direction="vertical" gap={5} alignItems="center">
+        <Stack direction="vertical" gap={5} sx={{ alignItems: "center" }}>
           {/* Avatar + Nome */}
-          <Stack direction="vertical" alignItems="center" gap={2}>
+          <Stack direction="vertical" gap={2} sx={{ alignItems: "center" }}>
             <Avatar size={96} src={user.avatarUrl || "/images/avatar.png"} />
             <Heading as="h3">{user.name || user.username}</Heading>
             <Text sx={{ color: "fg.muted" }}>@{user.username}</Text>
@@ -84,17 +84,17 @@ export default function Perfil() {
 
           {/* Stats */}
           <Stack direction="horizontal" gap={5} sx={{ alignItems: "center" }}>
-            <Stack direction="vertical" alignItems="center" gap={1}>
+            <Stack direction="vertical" gap={1} sx={{ alignItems: "center" }}>
               <Heading as="h4">{user.following_count ?? 0}</Heading>
               <Text sx={{ color: "fg.muted" }}>Following</Text>
             </Stack>
 
-            <Stack direction="vertical" alignItems="center" gap={1}>
+            <Stack direction="vertical" gap={1} sx={{ alignItems: "center" }}>
               <Heading as="h4">{user.followers_count ?? 0}</Heading>
               <Text sx={{ color: "fg.muted" }}>Followers</Text>
             </Stack>
 
-            <Stack direction="vertical" alignItems="center" gap={1}>
+            <Stack direction="vertical" gap={1} sx={{ alignItems: "center" }}>
               <Heading as="h4">{user.posts_count ?? 0}</Heading>
               <Text sx={{ color: "fg.muted" }}>Posts</Text>
             </Stack>
@@ -110,8 +110,8 @@ export default function Perfil() {
           )}
 
           {/* Extra info */}
-          <Stack direction="vertical" gap={1} alignItems="center" sx={{ color: "fg.muted" }}>
-            {user.location && <Text>{user.location}</Text>}
+          <Stack direction="vertical" gap={1} sx={{ alignItems: "center", color: "fg.muted" }}>
+            {user.location && <span>{user.location}</span>}
             {user.website && (
               <a style={{ color: "var(--fg-default)", textDecoration: "underline" }} href={user.website.startsWith("http") ? user.website : `https://${user.website}`} target="_blank" rel="noreferrer">
                 {user.website}
@@ -138,7 +138,7 @@ export default function Perfil() {
                     borderRadius: 2,
                   }}
                 >
-                  <Text>{post.content}</Text>
+                  <p>{post.content}</p>
                 </Stack>
               ))}
           </Stack>

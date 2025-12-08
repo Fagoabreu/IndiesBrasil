@@ -3,9 +3,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 24px;
-
   border-bottom: 1px solid var(--color-border-default);
-  color: var(--header-fgColor-default);
+
+  /* Mover o efeito translucent para cá */
+  background-color: color-mix(in srgb, var(--color-bg-default) 75%, transparent);
   backdrop-filter: blur(12px);
 
   position: sticky;
@@ -15,11 +16,6 @@
   transition:
     background-color 0.25s ease,
     border-color 0.25s ease;
-}
-
-/* Translucent GitHub effect */
-.color-bg-default {
-  background-color: color-mix(in srgb, var(--color-bg-default) 75%, transparent);
 }
 
 .left {
@@ -87,5 +83,9 @@
 .right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+}
+
+.right > * {
+  flex-shrink: 0;
 }

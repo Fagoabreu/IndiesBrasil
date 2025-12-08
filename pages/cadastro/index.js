@@ -42,11 +42,10 @@ export default function Cadastro() {
     if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
 
     let sum = 0;
-    let remainder;
 
     for (let i = 1; i <= 9; i++) sum += parseInt(cpf[i - 1]) * (11 - i);
 
-    remainder = (sum * 10) % 11;
+    let remainder = (sum * 10) % 11;
     if (remainder >= 10) remainder = 0;
     if (remainder !== parseInt(cpf[9])) return false;
 
@@ -117,7 +116,7 @@ export default function Cadastro() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password, cpf: rawCpf }),
       });
-      console.log("Response status:", response.body);
+
       if (response.status === 201) {
         setSuccessMsg("Conta criada com sucesso! Verifique seu e-mail.");
         setTimeout(() => router.push("/login"), 2500);
@@ -133,7 +132,7 @@ export default function Cadastro() {
   }
 
   // ======================================================
-  // VALIDATION STATUS ON THE FLY
+  // VALIDATION STATUS
   const statusUser = username ? "success" : undefined;
   const statusEmail = email ? "success" : undefined;
   const statusCpf = cpf && isValidCPF(cpf) ? "success" : undefined;
@@ -155,34 +154,28 @@ export default function Cadastro() {
             {/* USERNAME */}
             <FormControl required validationStatus={fieldErrors.username ? "error" : statusUser}>
               <FormControl.Label>Nome de usuário</FormControl.Label>
+
               <TextInput block value={username} onChange={(e) => setUsername(e.target.value)} />
-              {fieldErrors.username && (
-                <FormControl.Validation className="validation-anim" variant="error">
-                  {fieldErrors.username}
-                </FormControl.Validation>
-              )}
+
+              {fieldErrors.username && <FormControl.Validation variant="error">{fieldErrors.username}</FormControl.Validation>}
             </FormControl>
 
             {/* EMAIL */}
             <FormControl required validationStatus={fieldErrors.email ? "error" : statusEmail}>
               <FormControl.Label>Email</FormControl.Label>
+
               <TextInput type="email" block value={email} onChange={(e) => setEmail(e.target.value)} />
-              {fieldErrors.email && (
-                <FormControl.Validation className="validation-anim" variant="error">
-                  {fieldErrors.email}
-                </FormControl.Validation>
-              )}
+
+              {fieldErrors.email && <FormControl.Validation variant="error">{fieldErrors.email}</FormControl.Validation>}
             </FormControl>
 
             {/* CPF */}
             <FormControl required validationStatus={fieldErrors.cpf ? "error" : statusCpf}>
               <FormControl.Label>CPF</FormControl.Label>
+
               <TextInput block maxLength={14} value={cpf} onChange={(e) => setCpf(formatCPF(e.target.value))} placeholder="000.000.000-00" />
-              {fieldErrors.cpf && (
-                <FormControl.Validation className="validation-anim" variant="error">
-                  {fieldErrors.cpf}
-                </FormControl.Validation>
-              )}
+
+              {fieldErrors.cpf && <FormControl.Validation variant="error">{fieldErrors.cpf}</FormControl.Validation>}
             </FormControl>
 
             {/* PASSWORD */}
@@ -197,7 +190,7 @@ export default function Cadastro() {
                 trailingAction={<IconButton aria-label="Mostrar" icon={showPass ? EyeClosedIcon : EyeIcon} onClick={() => setShowPass(!showPass)} />}
               />
 
-              {/* Checklist de regras */}
+              {/* Checklist */}
               <Stack direction="vertical" gap={1} sx={{ fontSize: 13, marginTop: 2 }}>
                 <PasswordRule ok={password.length >= 8} label="Mínimo de 8 caracteres" />
                 <PasswordRule ok={/[A-Z]/.test(password)} label="Pelo menos uma letra maiúscula" />
@@ -205,19 +198,15 @@ export default function Cadastro() {
                 <PasswordRule ok={/[^A-Za-z0-9]/.test(password)} label="Pelo menos um caractere especial" />
               </Stack>
 
-              {/* Barra de força com label */}
-              <Stack direction="vertical" gap={1} sx={{ marginTop: 2 }}>
-                <FormControl.Caption>Força: {strengthInfo[strength].label}</FormControl.Caption>
-                <div style={{ width: "100%", height: 12 }}>
-                  <ProgressBar progress={strengthInfo[strength].percent} bg={strength <= 1 ? "danger.fg" : strength === 2 ? "attention.fg" : "success.fg"} barSize="large" aria-label={`Força da senha: ${strengthInfo[strength].label}`} />
-                </div>
-              </Stack>
+              {/* Caption (filho direto obrigatório) */}
+              <FormControl.Caption>Força: {strengthInfo[strength].label}</FormControl.Caption>
 
-              {fieldErrors.password && (
-                <FormControl.Validation className="validation-anim" variant="error">
-                  {fieldErrors.password}
-                </FormControl.Validation>
-              )}
+              {/* Progress */}
+              <div style={{ width: "100%", height: 12, marginTop: 4 }}>
+                <ProgressBar progress={strengthInfo[strength].percent} bg={strength <= 1 ? "danger.fg" : strength === 2 ? "attention.fg" : "success.fg"} barSize="large" aria-label={`Força da senha: ${strengthInfo[strength].label}`} />
+              </div>
+
+              {fieldErrors.password && <FormControl.Validation variant="error">{fieldErrors.password}</FormControl.Validation>}
             </FormControl>
 
             {/* CONFIRM PASSWORD */}
@@ -232,11 +221,7 @@ export default function Cadastro() {
                 trailingAction={<IconButton aria-label="Mostrar" icon={showConfirmPass ? EyeClosedIcon : EyeIcon} onClick={() => setShowConfirmPass(!showConfirmPass)} />}
               />
 
-              {fieldErrors.confirmPass && (
-                <FormControl.Validation className="validation-anim" variant="error">
-                  {fieldErrors.confirmPass}
-                </FormControl.Validation>
-              )}
+              {fieldErrors.confirmPass && <FormControl.Validation variant="error">{fieldErrors.confirmPass}</FormControl.Validation>}
             </FormControl>
 
             <Button type="submit" variant="primary" block disabled={loading}>

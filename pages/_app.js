@@ -1,9 +1,6 @@
+import { ThemeProvider } from "@primer/react";
 import "../css/styles.css";
 
-import "@primer/primitives/dist/css/functional/themes/light.css";
-import "@primer/primitives/dist/css/functional/themes/dark.css";
-
-import { ThemeProvider } from "@primer/react";
 import { UserProvider } from "@/context/UserContext";
 import Layout from "@/components/Layout";
 
