@@ -1,6 +1,6 @@
 // components/PostCardComponent.jsx
 import { useState } from "react";
-import { Avatar, Textarea, Button, Stack, Text } from "@primer/react";
+import { Avatar, Textarea, Button, Stack } from "@primer/react";
 import styles from "./PostCardComponent.module.css";
 
 function timeAgo(dateString) {
@@ -125,10 +125,10 @@ export default function PostCardComponent({ post, onDelete }) {
         <Avatar src={post.author_avatar_url || "/images/avatar.png"} size={32} sx={{ borderRadius: "50%" }} />
 
         <Stack direction="vertical" gap={0} className={styles.headerText}>
-          <Text className={styles.authorName}>{post.author_username}</Text>
-          <Text className={styles.subInfo}>
+          <span className={styles.authorName}>{post.author_username}</span>
+          <span className={styles.subInfo}>
             @{post.author_username} • {timeAgo(post.created_at)}
-          </Text>
+          </span>
         </Stack>
 
         {post.is_current_user && (
@@ -139,14 +139,14 @@ export default function PostCardComponent({ post, onDelete }) {
       </Stack>
 
       {/* CONTEÚDO */}
-      <Text className={styles.postContent}>
+      <p className={styles.postContent}>
         {shownText}
         {isLong && (
           <button className={styles.showMoreBtn} onClick={() => setExpanded(!expanded)}>
             {expanded ? "Mostrar menos" : "Mostrar mais"}
           </button>
         )}
-      </Text>
+      </p>
 
       {/* AÇÕES */}
       <div className={styles.actions}>
@@ -174,8 +174,8 @@ export default function PostCardComponent({ post, onDelete }) {
             <div key={idx} className={styles.commentItem}>
               <Avatar src={c.author_avatar_url || "/images/avatar.png"} size={32} sx={{ borderRadius: "50%" }} />
               <div className={styles.commentBody}>
-                <Text className={styles.commentUser}>@{c.author_username}</Text>
-                <Text className={styles.commentText}>{c.content}</Text>
+                <span className={styles.commentUser}>@{c.author_username}</span>
+                <p className={styles.commentText}>{c.content}</p>
               </div>
               {c.is_current_user && (
                 <Button variant="invisible" className={styles.deleteBtn} onClick={() => deleteComments?.(c.id)}>

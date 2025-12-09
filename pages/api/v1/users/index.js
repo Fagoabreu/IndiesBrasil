@@ -22,7 +22,7 @@ async function postHandler(request, response) {
 }
 
 async function getHandler(request, response) {
-  const isfollowing = request.query;
+  const isfollowing = request.query.isfollowing;
   const userId = request.context.user.id;
   const selectedUsers = await user.findUsers(userId, isfollowing);
   return response.status(201).json(selectedUsers);

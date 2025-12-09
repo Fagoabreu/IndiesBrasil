@@ -1,24 +1,23 @@
-import React from "react";
-import { PageLayout, Stack } from "@primer/react";
-import LeftSidebarComponent from "./LeftSidebarComponent";
+import { SplitPageLayout } from "@primer/react";
 import HeaderComponent from "./HeaderComponent";
+import LeftSidebarComponent from "./LeftSidebarComponent";
 
-export default function Layout({ children, user, RightSidebar }) {
+export default function Layout({ children, RightSidebar = null }) {
   return (
-    <PageLayout sx={{ height: "page-layout" }}>
-      <PageLayout.Header>
-        <HeaderComponent user={user} />
-      </PageLayout.Header>
+    <SplitPageLayout className="layout-body">
+      <SplitPageLayout.Header>
+        <HeaderComponent />
+      </SplitPageLayout.Header>
 
-      <Stack direction="horizontal" gap={4}>
-        <Stack.Item>
-          <LeftSidebarComponent />
-        </Stack.Item>
+      <SplitPageLayout.Pane position="start">
+        <LeftSidebarComponent />
+      </SplitPageLayout.Pane>
 
-        <Stack.Item className="main-content">{children}</Stack.Item>
+      <SplitPageLayout.Content>
+        <div className="main-content">{children}</div>
+      </SplitPageLayout.Content>
 
-        {RightSidebar && <Stack.Item>{RightSidebar}</Stack.Item>}
-      </Stack>
-    </PageLayout>
+      {RightSidebar && <SplitPageLayout.Pane position="end">{RightSidebar}</SplitPageLayout.Pane>}
+    </SplitPageLayout>
   );
 }

@@ -1,47 +1,40 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import CreatePost from "@/components/CreatePost";
 import PostCardComponent from "@/components/PostCardComponent";
 import { useUser } from "@/context/UserContext";
+import WhoToFollow from "@/components/WhoToFollow";
 
 export default function PostsPage() {
   const { user, loadingUser } = useUser();
   const [posts, setPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
 
-  useEffect(() => {
-    async function loadData() {
-      setLoadingPosts(true);
-      try {
-        await fetchPosts();
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoadingPosts(false);
-      }
+  const loadData = useCallback(async () => {
+    setLoadingPosts(true);
+    try {
+      await fetchPosts();
+    } finally {
+      setLoadingPosts(false);
     }
-    loadData();
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   // GET /api/v1/posts
   async function fetchPosts() {
-    try {
-      const response = await fetch("/api/v1/posts", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      });
+    const response = await fetch("/api/v1/posts", {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
 
-      if (!response.ok) {
-        console.error("Erro ao carregar post");
-        return;
-      }
-
-      const fetchedPosts = await response.json();
-      setPosts(fetchedPosts || []);
-    } catch (error) {
-      console.error("Erro ao criar post:", error);
-    }
+    if (!response.ok) return;
+    const data = await response.json();
+    setPosts(data || []);
   }
+
   // POST /api/v1/posts
   const handleAddPost = async (content, imgUrl = null) => {
     try {
@@ -98,3 +91,6 @@ export default function PostsPage() {
     </>
   );
 }
+
+// 👉 Sidebar da página
+PostsPage.RightSidebar = <WhoToFollow />;

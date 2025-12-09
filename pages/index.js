@@ -1,8 +1,8 @@
 function Home() {
   return (
     <>
-      <h1>Welcome to Indies Brasil</h1>
-      <p>Your gateway to indie games in Brazil.</p>
+      <h1>Bem vindo ao Indies Brasil</h1>
+      <p>O Local dos desenvolvedores, artistas, streamers e jogadores</p>
     </>
   );
 }

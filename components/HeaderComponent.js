@@ -3,18 +3,21 @@ import Image from "next/image";
 import { Avatar, ActionMenu, ActionList, TextInput, IconButton, useTheme } from "@primer/react";
 import { SunIcon, MoonIcon, SearchIcon } from "@primer/octicons-react";
 
+import { useUser } from "@/context/UserContext";
+
 import styles from "./HeaderComponent.module.css";
 
 export default function HeaderComponent() {
   const { colorMode, setColorMode } = useTheme();
+  const { user, logout } = useUser(); // 🔥 USER + LOGOUT DO CONTEXTO
 
-  const toggleTheme = () => {
-    setColorMode(colorMode === "day" ? "night" : "day");
-  };
+  const toggleTheme = () => setColorMode(colorMode === "day" ? "night" : "day");
+
+  const avatarSrc = user?.avatarUrl || "/images/avatar.png";
+  const usernameLabel = user?.name || user?.username || "Usuário";
 
   return (
-    <header className={`${styles.header} color-bg-default color-fg-default`}>
-      {/* LEFT SIDE */}
+    <header className={styles.header}>
       <div className={styles.left}>
         <Link href="/" className={styles.logoArea}>
           <div className={styles.logoWrapper}>
@@ -25,29 +28,30 @@ export default function HeaderComponent() {
 
         <nav className={styles.navDesktop}>
           <Link href="/">Início</Link>
-          <Link href="/eventos">Eventos</Link>
+          <Link href="/posts">Posts</Link>
           <Link href="/membros">Membros</Link>
         </nav>
       </div>
 
-      {/* CENTER — SEARCH BAR */}
       <div className={styles.center}>
-        <TextInput leadingVisual={SearchIcon} placeholder="Pesquisar" className={styles.search} />
+        <TextInput leadingVisual={SearchIcon} placeholder="Pesquisar" />
       </div>
 
-      {/* RIGHT SIDE */}
       <div className={styles.right}>
         <IconButton aria-label="Alternar tema" icon={colorMode === "day" ? MoonIcon : SunIcon} onClick={toggleTheme} />
 
         <ActionMenu>
           <ActionMenu.Button>
-            <Avatar src="/images/avatar.png" size={32} />
+            <Avatar src={avatarSrc} size={32} />
           </ActionMenu.Button>
 
           <ActionMenu.Overlay>
             <ActionList>
-              <ActionList.Item onSelect={() => (location.href = "/perfil")}>Perfil</ActionList.Item>
-              <ActionList.Item>Sair</ActionList.Item>
+              <ActionList.Item onSelect={() => (window.location.href = "/perfil")}>{usernameLabel}</ActionList.Item>
+
+              <ActionList.Item variant="danger" onSelect={logout}>
+                Sair
+              </ActionList.Item>
             </ActionList>
           </ActionMenu.Overlay>
         </ActionMenu>

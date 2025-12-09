@@ -1,18 +1,19 @@
 import "../css/styles.css";
-import "@primer/primitives/dist/css/functional/themes/light.css";
-import "@primer/primitives/dist/css/functional/themes/dark.css";
 
 import { BaseStyles, ThemeProvider } from "@primer/react";
 import { UserProvider } from "@/context/UserContext";
-import Layout from "../components/Layout";
-import WhoToFollow from "@/components/WhoToFollow";
+import Layout from "@/components/Layout";
+import "@primer/primitives/dist/css/functional/themes/light.css"; // Example import
+import "@primer/primitives/dist/css/functional/themes/dark.css";
 
-export default function MyApp({ Component, pageProps }) {
+export default function App({ Component, pageProps }) {
+  const RightSidebar = Component.RightSidebar || null;
+
   return (
-    <ThemeProvider colorMode="day">
+    <ThemeProvider colorMode="auto" preventSSRMismatch>
       <BaseStyles>
         <UserProvider>
-          <Layout RightSidebar={<WhoToFollow />}>
+          <Layout RightSidebar={RightSidebar}>
             <Component {...pageProps} />
           </Layout>
         </UserProvider>
