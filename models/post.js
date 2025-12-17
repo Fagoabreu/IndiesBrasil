@@ -127,7 +127,6 @@ async function getPosts(user_id) {
     const userPosts = await runSelectQuery(user_id);
     return userPosts;
   }
-
   const noUserPosts = await runSelectNoUserQuery(user_id);
   return noUserPosts;
 
@@ -139,7 +138,7 @@ async function getPosts(user_id) {
     return results.rows;
   }
 
-  async function runSelectNoUserQuery(user_id) {
+  async function runSelectNoUserQuery() {
     const results = await database.query({
       text: baseNoUserSelectQuery + ` ORDER BY p.created_at DESC;`,
     });
