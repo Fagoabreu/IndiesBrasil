@@ -68,6 +68,10 @@ export default function Login() {
             <Button variant="invisible" block onClick={() => router.push("/cadastro")}>
               Criar conta
             </Button>
+
+            <Button variant="invisible" block onClick={() => router.push("/cadastro/reset-password")}>
+              Esquecia a senha
+            </Button>
           </Stack>
         </form>
       </PageLayout.Content>

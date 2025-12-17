@@ -41,7 +41,7 @@
     "cookie": "1.0.2",
     "dotenv": "16.4.7",
     "dotenv-expand": "12.0.1",
-    "next": "^16.0.7",
+    "next": "16.0.7",
     "next-connect": "1.0.0-next.4",
     "node-pg-migrate": "7.9.1",
     "nodemailer": "^7.0.10",
