@@ -13,13 +13,15 @@ export default function WhoToFollow() {
         });
 
         const data = await res.json();
-        setUsers(
-          (data || []).map((u) => ({
-            ...u,
-            isFollowing: u.isFollowing ?? false,
-            followers_count: u.followers_count ?? 0,
-          })),
-        );
+        if (res.ok) {
+          setUsers(
+            (data || []).map((u) => ({
+              ...u,
+              isFollowing: u.isFollowing ?? false,
+              followers_count: u.followers_count ?? 0,
+            })),
+          );
+        }
       } catch (error) {
         console.error("Erro ao carregar sugestões:", error);
       }

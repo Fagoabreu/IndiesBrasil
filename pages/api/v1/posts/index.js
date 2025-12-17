@@ -4,8 +4,8 @@ import { createRouter } from "next-connect";
 
 const router = createRouter();
 router.use(controller.injectAnonymousOrUser);
-router.post(controller.canRequest("read:session"), postHandler);
-router.get(controller.canRequest("read:session"), getHandler);
+router.post(controller.canRequest("create:post"), postHandler);
+router.get(controller.canRequest("read:post"), getHandler);
 
 export default router.handler(controller.errorHandlers);
 

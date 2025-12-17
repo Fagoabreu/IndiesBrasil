@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Avatar, ActionMenu, ActionList, TextInput, IconButton, useTheme } from "@primer/react";
+import { Avatar, ActionMenu, ActionList, TextInput, IconButton, useTheme, Button } from "@primer/react";
 import { SunIcon, MoonIcon, SearchIcon } from "@primer/octicons-react";
 
 import { useUser } from "@/context/UserContext";
@@ -39,22 +39,27 @@ export default function HeaderComponent() {
 
       <div className={styles.right}>
         <IconButton aria-label="Alternar tema" icon={colorMode === "day" ? MoonIcon : SunIcon} onClick={toggleTheme} />
+        {user ? (
+          <ActionMenu>
+            <ActionMenu.Button>
+              <Avatar src={avatarSrc} size={32} />
+            </ActionMenu.Button>
 
-        <ActionMenu>
-          <ActionMenu.Button>
-            <Avatar src={avatarSrc} size={32} />
-          </ActionMenu.Button>
+            <ActionMenu.Overlay>
+              <ActionList>
+                <ActionList.Item onSelect={() => (window.location.href = "/perfil")}>{usernameLabel}</ActionList.Item>
 
-          <ActionMenu.Overlay>
-            <ActionList>
-              <ActionList.Item onSelect={() => (window.location.href = "/perfil")}>{usernameLabel}</ActionList.Item>
-
-              <ActionList.Item variant="danger" onSelect={logout}>
-                Sair
-              </ActionList.Item>
-            </ActionList>
-          </ActionMenu.Overlay>
-        </ActionMenu>
+                <ActionList.Item variant="danger" onSelect={logout}>
+                  Sair
+                </ActionList.Item>
+              </ActionList>
+            </ActionMenu.Overlay>
+          </ActionMenu>
+        ) : (
+          <Button type="submit" variant="primary" as={Link} href="/login">
+            Entrar
+          </Button>
+        )}
       </div>
     </header>
   );

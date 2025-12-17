@@ -46,6 +46,41 @@ SELECT
           ) pl ON true
 `;
 
+const baseNoUserSelectQuery = `
+SELECT
+          p.id,
+          p.organization_id,
+          p.event_id,
+          p.content,
+          p.img,
+          p.created_at,
+          p.parent_post_id,
+          u.username AS author_username,
+          u.avatar_url AS author_avatar_url,
+          COALESCE(l.likes_count, 0) AS likes_count,
+          COALESCE(c.comments_count, 0) AS comments_count,
+          false AS liked_by_user,
+          false AS is_current_user
+        FROM 
+          posts p
+          INNER JOIN users u
+            ON p.author_id = u.id
+
+          -- Contagem de likes
+          LEFT JOIN LATERAL (
+            SELECT COUNT(*) AS likes_count
+            FROM post_likes pl
+            WHERE pl.post_id = p.id
+          ) l ON true
+
+          -- Contagem de comentários
+          LEFT JOIN LATERAL (
+            SELECT COUNT(*) AS comments_count
+              FROM comments co
+              WHERE co.post_id = p.id
+          ) c ON true
+`;
+
 async function create(postInputValues) {
   const newPost = await runInsertQuery(postInputValues);
   return newPost;
@@ -88,13 +123,25 @@ async function deleteById(postId) {
 }
 
 async function getPosts(user_id) {
-  const userPosts = await runSelectQuery(user_id);
-  return userPosts;
+  if (user_id) {
+    const userPosts = await runSelectQuery(user_id);
+    return userPosts;
+  }
+
+  const noUserPosts = await runSelectNoUserQuery(user_id);
+  return noUserPosts;
 
   async function runSelectQuery(user_id) {
     const results = await database.query({
       text: baseSelectQuery + ` ORDER BY p.created_at DESC;`,
       values: [user_id || null],
+    });
+    return results.rows;
+  }
+
+  async function runSelectNoUserQuery(user_id) {
+    const results = await database.query({
+      text: baseNoUserSelectQuery + ` ORDER BY p.created_at DESC;`,
     });
     return results.rows;
   }

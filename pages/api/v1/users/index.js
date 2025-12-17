@@ -7,7 +7,7 @@ const router = createRouter();
 
 router.use(controller.injectAnonymousOrUser);
 router.post(controller.canRequest("create:user"), postHandler);
-router.get(controller.canRequest("read:session"), getHandler);
+router.get(controller.canRequest("read:user"), getHandler);
 
 export default router.handler(controller.errorHandlers);
 

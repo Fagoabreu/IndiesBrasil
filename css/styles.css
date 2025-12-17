@@ -9,6 +9,7 @@ body {
 .layout-body {
   background-color: var(--bgColor-inset);
   color: var(--fgColor-default);
+  min-height: 100vh;
 }
 .main-content {
   padding: 24px;

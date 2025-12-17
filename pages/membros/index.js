@@ -13,8 +13,12 @@ export default function MembersPage() {
       try {
         const res = await fetch("/api/v1/users", { credentials: "include" });
         const data = await res.json();
-        setMembers(data || []);
-        setFiltered(data || []);
+        if (res.status == 200) {
+          setMembers(data || []);
+          setFiltered(data || []);
+        } else {
+          console.error("Erro ao carregar membros", data);
+        }
       } catch (e) {
         console.error("Erro ao carregar membros", e);
       }
@@ -35,7 +39,8 @@ export default function MembersPage() {
   return (
     <PageLayout padding="spacious">
       <PageLayout.Header>
-        <Heading as="h2">Membros ({filtered.length.toLocaleString()})</Heading>
+        {console.log(filtered)}
+        <Heading as="h2">Membros ({filtered?.length.toLocaleString() || 0})</Heading>
       </PageLayout.Header>
 
       <PageLayout.Content width="full">
