@@ -10,10 +10,28 @@ beforeAll(async () => {
 });
 
 describe("Patch /api/v1/users/[username]", () => {
+  let sessionToken;
+
+  describe("authenticated user", () => {
+    test("create user uthenticated", async () => {
+      const createdUser = await orchestrator.createUser({
+        username: "authenticatedUser",
+      });
+      expect(createdUser.username).toBe("authenticatedUser");
+      const activatedUser = await orchestrator.activateUser(createdUser);
+      expect(activatedUser.username).toBe("authenticatedUser");
+      sessionToken = await orchestrator.createSession(activatedUser.id);
+    });
+  });
+
   describe("anonymous user", () => {
     test("With NonExist username", async () => {
       const response = await fetch("http://localhost:3000/api/v1/users/UsuarioInexistente", {
         method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          cookie: `session_id=${sessionToken.token}`,
+        },
       });
       expect(response.status).toBe(404);
 
@@ -39,9 +57,10 @@ describe("Patch /api/v1/users/[username]", () => {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          cookie: `session_id=${sessionToken.token}`,
         },
         body: JSON.stringify({
-          username: "User1",
+          username: "user1",
         }),
       });
 
@@ -68,6 +87,7 @@ describe("Patch /api/v1/users/[username]", () => {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          cookie: `session_id=${sessionToken.token}`,
         },
         body: JSON.stringify({
           email: "email1@gmail.com",
@@ -97,6 +117,7 @@ describe("Patch /api/v1/users/[username]", () => {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          cookie: `session_id=${sessionToken.token}`,
         },
         body: JSON.stringify({
           cpf: 55555555555,
@@ -122,6 +143,7 @@ describe("Patch /api/v1/users/[username]", () => {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          cookie: `session_id=${sessionToken.token}`,
         },
         body: JSON.stringify({
           username: "uniqueUser2",
@@ -155,6 +177,7 @@ describe("Patch /api/v1/users/[username]", () => {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          cookie: `session_id=${sessionToken.token}`,
         },
         body: JSON.stringify({
           email: "uniqueEmail2@gmail.com",
@@ -189,6 +212,7 @@ describe("Patch /api/v1/users/[username]", () => {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          cookie: `session_id=${sessionToken.token}`,
         },
         body: JSON.stringify({
           password: "newPassword2",

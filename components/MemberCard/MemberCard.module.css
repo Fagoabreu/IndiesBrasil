@@ -1,6 +1,6 @@
 .cardWrapper {
-  background-color: var(--color-canvas-default);
-  border: 1px solid var(--color-border-default);
+  background-color: var(--bgColor-default);
+  border: 1px solid var(--borderColor-default);
   border-radius: 12px;
   padding: 16px;
   display: flex;
@@ -11,11 +11,12 @@
     transform 0.15s ease,
     box-shadow 0.2s ease;
   cursor: pointer;
+  max-width: 300px;
 }
 
 .cardWrapper:hover {
   transform: translateY(-3px);
-  box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-floating-large);
 }
 
 .initialsBox {

@@ -59,7 +59,7 @@ async function injectAnonymousOrUser(request, response, next) {
 
 function injectAnonymousUser(request) {
   const anonymousUserObject = {
-    features: ["read:activation_token", "create:session", "create:user"],
+    features: ["read:activation_token", "create:session", "create:user", "read:user", "read:post"],
   };
   request.context = {
     ...request.context,
@@ -83,7 +83,7 @@ function canRequest(feature) {
     if (authorization.can(userTryingToRequest, feature)) {
       return next();
     }
-
+    console.log("User features:", userTryingToRequest.features, "\n Resquest", feature);
     throw new ForbiddenError({
       message: "Você não possui permissão para executar esta ação",
       action: `Verifique se o seu usuário possui a feature "${feature}" para executar esta ação.`,

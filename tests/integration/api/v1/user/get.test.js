@@ -50,7 +50,7 @@ describe("GET /api/v1/user", () => {
         cpf: createdUser.cpf,
         created_at: createdUser.created_at.toISOString(),
         updated_at: activatedUser.updated_at.toISOString(),
-        features: ["create:session", "read:session"],
+        features: ["create:session", "read:session", "read:post", "create:post", "read:user", "update:user"],
       });
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
@@ -179,7 +179,7 @@ describe("GET /api/v1/user", () => {
         created_at: createdUser.created_at.toISOString(),
         updated_at: updatedUser.updated_at.toISOString(),
         cpf: createdUser.cpf,
-        features: ["create:session", "read:session"],
+        features: ["create:session", "read:session", "read:post", "create:post", "read:user", "update:user"],
       });
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
