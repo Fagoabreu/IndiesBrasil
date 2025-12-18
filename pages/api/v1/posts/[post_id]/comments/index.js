@@ -5,8 +5,8 @@ import { createRouter } from "next-connect";
 
 const router = createRouter();
 router.use(controller.injectAnonymousOrUser);
-router.get(controller.canRequest("read:session"), getHandler);
-router.post(controller.canRequest("read:session"), postHandler);
+router.get(controller.canRequest("read:post"), getHandler);
+router.post(controller.canRequest("create:post"), postHandler);
 
 export default router.handler(controller.errorHandlers);
 
@@ -22,5 +22,5 @@ async function postHandler(request, response) {
   commentInputValues.author_id = request.context.user.id;
   commentInputValues.post_id = request.query.post_id;
   const resultComment = await comment.create(commentInputValues);
-  return response.status(200).json(resultComment);
+  return response.status(201).json(resultComment);
 }

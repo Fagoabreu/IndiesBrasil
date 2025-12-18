@@ -24,8 +24,7 @@ function timeAgo(dateString) {
   return "agora";
 }
 
-export default function PostCardComponent({ post, onDelete }) {
-  console.log("Rendering PostCardComponent for post:", post);
+export default function PostCardComponent({ post, onDelete, canInteract = true }) {
   const [hasLiked, setHasLiked] = useState(post.likedByUser || false);
   const [likesCount, setLikesCount] = useState(post.likesCount || 0);
   const [showCommentBox, setShowCommentBox] = useState(false);
@@ -151,10 +150,12 @@ export default function PostCardComponent({ post, onDelete }) {
       {/* AÇÕES */}
       <div className={styles.actions}>
         {/* LIKE */}
-        <button className={`${styles.iconBtn} ${hasLiked ? styles.liked : ""}`} onClick={handleLike}>
-          <span className={styles.heart}>❤️</span>
-          <span>{likesCount}</span>
-        </button>
+        {canInteract && (
+          <button className={`${styles.iconBtn} ${hasLiked ? styles.liked : ""}`} onClick={handleLike}>
+            <span className={styles.heart}>❤️</span>
+            <span>{likesCount}</span>
+          </button>
+        )}
 
         {/* MOSTRAR / OCULTAR COMENTÁRIOS */}
         <button className={styles.iconBtn} onClick={toggleComments}>
@@ -162,9 +163,11 @@ export default function PostCardComponent({ post, onDelete }) {
         </button>
 
         {/* RESPONDER */}
-        <button className={styles.replyBtn} onClick={() => setShowCommentBox(true)}>
-          Responder
-        </button>
+        {canInteract && (
+          <button className={styles.replyBtn} onClick={() => setShowCommentBox(true)}>
+            Responder
+          </button>
+        )}
       </div>
 
       {/* LISTA DE COMENTÁRIOS */}

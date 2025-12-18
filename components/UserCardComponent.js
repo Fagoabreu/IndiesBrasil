@@ -2,7 +2,7 @@
 import { Avatar, Button, Text, Link, Stack } from "@primer/react";
 import styles from "./UserCardComponent.module.css";
 
-export default function UserCardComponent({ user, onToggleFollow }) {
+export default function UserCardComponent({ user, onToggleFollow, canFollow = true }) {
   return (
     <div className={styles.cardWrapper}>
       <Stack direction="horizontal" gap={3} sx={{ alignItems: "center" }}>
@@ -23,10 +23,11 @@ export default function UserCardComponent({ user, onToggleFollow }) {
             {user.followers_count ?? 0} seguidores
           </Text>
         </Stack>
-
-        <Button size="small" variant={user.isFollowing ? "danger" : "primary"} onClick={() => onToggleFollow(user.username, !user.isFollowing)} className={styles.button}>
-          {user.isFollowing ? "Deixar de seguir" : "Seguir"}
-        </Button>
+        {canFollow && (
+          <Button size="small" variant={user.isFollowing ? "danger" : "primary"} onClick={() => onToggleFollow(user.username, !user.isFollowing)} className={styles.button}>
+            {user.isFollowing ? "Deixar de seguir" : "Seguir"}
+          </Button>
+        )}
       </Stack>
     </div>
   );

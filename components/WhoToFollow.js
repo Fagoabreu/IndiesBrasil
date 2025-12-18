@@ -1,8 +1,10 @@
 import { Stack, Text } from "@primer/react";
 import UserCardComponent from "./UserCardComponent";
 import { useEffect, useState } from "react";
+import { useUser } from "@/context/UserContext";
 
 export default function WhoToFollow() {
+  const { user } = useUser();
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
@@ -41,7 +43,7 @@ export default function WhoToFollow() {
 
       {users.map((u) => (
         <Stack direction="horizontal" gap={2} sx={{ alignItems: "center" }} key={u.username}>
-          <UserCardComponent user={u} onToggleFollow={handleToggleFollow} />
+          <UserCardComponent user={u} onToggleFollow={handleToggleFollow} canFollow={user} />
         </Stack>
       ))}
     </Stack>

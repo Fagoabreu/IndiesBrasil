@@ -16,7 +16,7 @@ async function postHandler(request, response) {
   const createdPost = await post.create(userInputValues);
   const resultPost = await post.getPostById(userInputValues.author_id, createdPost.id);
   response.setHeader("Cache-Control", "no-store,no-cache-max-age=0,must-revalidate");
-  return response.status(200).json(resultPost);
+  return response.status(201).json(resultPost);
 }
 
 async function getHandler(request, response) {

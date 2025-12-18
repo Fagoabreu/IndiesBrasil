@@ -17,7 +17,7 @@ export default function MemberCard({ user }) {
       <div className={styles.info}>
         <p className={styles.name}>{user.username}</p>
         {user.bio && <p className={styles.bio}>{user.bio}</p>}
-        <p>Seguidores:{user.followers_count}</p>
+        <p>Seguidores: {user.followers_count}</p>
       </div>
     </div>
   );

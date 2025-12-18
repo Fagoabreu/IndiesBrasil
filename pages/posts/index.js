@@ -86,7 +86,7 @@ export default function PostsPage() {
       {user && <CreatePost user={user} onPost={handleAddPost} />}
 
       {posts.map((post) => (
-        <PostCardComponent key={post.id} post={post} onDelete={handleDeletePost} />
+        <PostCardComponent key={post.id} post={post} onDelete={handleDeletePost} canInteract={user} />
       ))}
     </>
   );

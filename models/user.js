@@ -244,55 +244,78 @@ async function runUpdatedQuery(userWithNewValues) {
 }
 
 async function findUsers(userId, isfollowing) {
-  let baseQuery = `
+  if (userId !== undefined) {
+    return await runUserSelectQuery(userId, isfollowing);
+  }
+  return await runNoUserSelectQuery();
+
+  async function runNoUserSelectQuery() {
+    const results = await database.query({
+      text: `
       SELECT
         u.id,
         u.username,
         u.avatar_url,
-
-        COUNT(f.follower_id) AS followers_count,
-
-        (uf.follower_id IS NOT NULL) AS is_following
-
+        COUNT(f.follower_id) AS followers_count
       FROM users u
-
       -- Seguidores do usuário
       LEFT JOIN user_followers f
         ON f.lead_user_id = u.id
-
-      -- Verifica se o usuário atual segue esse usuário
-      LEFT JOIN user_followers uf
-        ON uf.lead_user_id = u.id
-        AND uf.follower_id = $1
-  `;
-
-  let whereClause = `
-      WHERE 
-        u.id <> $1
-      `;
-  if (isfollowing != undefined) {
-    whereClause += isfollowing === true || isfollowing === "true" ? " AND " : " AND NOT ";
-    whereClause += `
-        EXISTS (
-        SELECT 1
-        FROM user_followers uf2
-        WHERE uf2.lead_user_id = u.id
-        AND uf2.follower_id = $1
-      )
-    `;
-  }
-  let endQuery = `
       GROUP BY
-        u.id, u.username, u.avatar_url, uf.follower_id
+        u.id, u.username, u.avatar_url
       ORDER BY 
-        u.username;`;
-  const queryText = baseQuery + whereClause + endQuery;
-  const values = [userId];
-  const results = await database.query({
-    text: queryText,
-    values,
-  });
-  return results.rows;
+        u.username
+      `,
+    });
+    return results.rows;
+  }
+
+  async function runUserSelectQuery(userId, isfollowing) {
+    let baseQuery = `
+        SELECT
+          u.id,
+          u.username,
+          u.avatar_url,
+          COUNT(f.follower_id) AS followers_count,
+          (uf.follower_id IS NOT NULL) AS is_following
+        FROM users u
+        -- Seguidores do usuário
+        LEFT JOIN user_followers f
+          ON f.lead_user_id = u.id
+        -- Verifica se o usuário atual segue esse usuário
+        LEFT JOIN user_followers uf
+          ON uf.lead_user_id = u.id
+          AND uf.follower_id = $1
+    `;
+
+    let whereClause = `
+        WHERE 
+          u.id <> $1
+        `;
+    if (isfollowing != undefined) {
+      whereClause += isfollowing === true || isfollowing === "true" ? " AND " : " AND NOT ";
+      whereClause += `
+          EXISTS (
+          SELECT 1
+          FROM user_followers uf2
+          WHERE uf2.lead_user_id = u.id
+          AND uf2.follower_id = $1
+        )
+      `;
+    }
+    let endQuery = `
+        GROUP BY
+          u.id, u.username, u.avatar_url, uf.follower_id
+        ORDER BY 
+          u.username;`;
+    const queryText = baseQuery + whereClause + endQuery;
+    const values = [userId];
+    const results = await database.query({
+      text: queryText,
+      values,
+    });
+    return results.rows;
+  }
 }
 
 async function toggleFollow(followerId, leaderId) {
