@@ -1,49 +1,96 @@
-.cardWrapper {
+.card {
   background-color: var(--bgColor-default);
-  border: 1px solid var(--borderColor-default);
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 16px;
+  padding: 20px 18px;
+  max-width: 280px;
+  text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 12px;
   align-items: center;
+  gap: 10px;
+  border: 1px solid var(--borderColor-default);
+  box-shadow: var(--shadow-floating-small);
   transition:
-    transform 0.15s ease,
-    box-shadow 0.2s ease;
-  cursor: pointer;
-  max-width: 300px;
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
-.cardWrapper:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-floating-large);
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-floating-medium);
+  border-color: var(--borderColor-emphasis);
 }
 
-.initialsBox {
-  width: 120px;
-  height: 120px;
-  border-radius: 12px;
-  background-color: var(--color-accent-fg);
+/* Avatar */
+
+.avatarWrapper {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-accent-emphasis), var(--color-accent-fg));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 42px;
-  font-weight: bold;
-  color: #fff;
 }
 
-.info {
-  text-align: center;
+.avatar {
+  border-radius: 50%;
+  background-color: var(--bgColor-default);
 }
+
+/* Textos */
 
 .name {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
+  margin: 6px 0 0;
+  color: var(--fgColor-default);
+}
+
+.role {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fgColor-muted);
   margin: 0;
 }
 
 .bio {
-  font-size: 14px;
-  color: var(--color-fg-muted);
-  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--fgColor-muted);
+  margin: 6px 0;
+}
+
+/* Email */
+
+.emailBox {
+  background-color: var(--bgColor-subtle);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  border: 1px solid var(--borderColor-default);
+}
+
+.email {
+  color: var(--fgColor-accent);
+  text-decoration: none;
+}
+
+/* Social links */
+
+.socials {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.socials a {
+  color: var(--fgColor-accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.socials a:hover {
+  text-decoration: underline;
 }

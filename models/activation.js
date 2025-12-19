@@ -4,6 +4,8 @@ import { ForbiddenError, NotFoundError, ValidationError } from "infra/errors.js"
 import webserver from "infra/webserver.js";
 import user from "./user.js";
 import authorization from "./authorization.js";
+import activationEmailTemplate from "@/lib/email/templates/activationEmail.js";
+import resetPasswordEmailTemplate from "@/lib/email/templates/resetPasswordEmail.js";
 
 const EXPIRATION_IN_MILLISECONDS = 60 * 60 * 1000; // 1 hora
 
@@ -124,30 +126,39 @@ async function changePasswordByToken(tokenId, password) {
 }
 
 async function sendEmailToUser(user, activationToken) {
+  const activationLink = `${webserver.origin}/cadastro/ativar/${activationToken.id}`;
+
+  const { html, text } = activationEmailTemplate({
+    username: user.username,
+    activationLink,
+  });
+
   await email.send({
-    from: "IndiesBrasil <contato@indies.com.br>",
+    from: "Indies Brasil <contato@indies.com.br>",
     to: user.email,
-    subject: "Ative seu cadastro no IndieX!",
-    text: `${user.username}, clique no link abaixo para finalizar o cadastro
-
-${webserver.origin}/cadastro/ativar/${activationToken.id}
-
-Atenciosamente
-Equipe Indies Brasil`,
+    subject: "Ative seu cadastro no Indies Brasil",
+    html,
+    text,
   });
 }
 
 async function sendPasswordEmailToUser(user, activationToken) {
+  const resetLink = `${webserver.origin}/cadastro/reset-password/${activationToken.id}`;
+
+  const { html, text } = resetPasswordEmailTemplate({
+    username: user.username,
+    resetLink,
+  });
+
   await email.send({
-    from: "IndiesBrasil <contato@indies.com.br>",
+    from: "Indies Brasil <contato@indies.com.br>",
     to: user.email,
-    subject: "Redefinição de senha",
-    text: `${user.username}, Para redefinir sua senha clique no link abaixo:
-
-${webserver.origin}/cadastro/reset-password/${activationToken.id}
-
-Atenciosamente
-Equipe Indies Brasil`,
+    subject: "Redefinição de senha — Indies Brasil",
+    html,
+    text,
+    headers: {
+      "Content-Type": "text/html; charset=UTF-8",
+    },
   });
 }
 
