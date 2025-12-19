@@ -34,6 +34,7 @@ describe("Delete /api/v1/sessions", () => {
         now: Date.now() - session.EXPIRATION_IN_MILLISECONDS,
       });
       const createdUser = await orchestrator.createUser();
+      await orchestrator.activateUser(createdUser);
       const sessionObject = await orchestrator.createSession(createdUser.id);
 
       jest.useRealTimers();
@@ -65,7 +66,6 @@ describe("Delete /api/v1/sessions", () => {
       expect(response.status).toBe(200);
 
       const responseBody = await response.json();
-      console.log(responseBody);
       expect(responseBody).toEqual({
         id: sessionObject.id,
         token: sessionObject.token,

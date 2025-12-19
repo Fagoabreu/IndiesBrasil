@@ -71,22 +71,24 @@ async function markTokenAsUsed(tokenId) {
 }
 
 async function create(userId) {
-  const expiresAt = new Date(Date.now() + EXPIRATION_IN_MILLISECONDS);
+  const dateNumber = Date.now();
+  const createdDate = new Date(dateNumber);
+  const expiresAt = new Date(dateNumber + EXPIRATION_IN_MILLISECONDS);
 
-  const newToken = await runInsertQuery(userId, expiresAt);
+  const newToken = await runInsertQuery(userId, expiresAt, createdDate);
   return newToken;
 
-  async function runInsertQuery(userId, expiresAt) {
+  async function runInsertQuery(userId, expiresAt, createdDate) {
     const results = await database.query({
       text: `
         INSERT INTO
-          user_activation_tokens (user_id, expires_at)
+          user_activation_tokens (user_id, expires_at, created_at)
         VALUES 
-          ($1, $2)
+          ($1, $2, $3)
         RETURNING 
           *
       `,
-      values: [userId, expiresAt],
+      values: [userId, expiresAt, createdDate],
     });
 
     return results.rows[0];
