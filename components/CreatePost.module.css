@@ -1,23 +1,56 @@
+.container {
+  padding: 12px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 12px;
+  background: var(--bgColor-default);
+  margin-bottom: 16px;
+}
+
+.contentArea {
+  width: 100%;
+}
+
+.textarea {
+  width: 100%;
+  border: none;
+  resize: none;
+  font-size: 15px;
+  background: transparent;
+  color: var(--fgColor-default);
+}
+
+.textarea:focus {
+  outline: none;
+}
+
 .previewBox {
+  position: relative;
   margin-top: 8px;
-  padding: 8px;
-  border: 1px solid var(--borderColor-muted);
-  border-radius: 6px;
-  background: var(--bgColor-muted);
+  max-width: 320px;
 }
 
 .previewImg {
-  max-width: 140px;
-  border-radius: 6px;
-  display: block;
-  margin-bottom: 6px;
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--borderColor-muted);
 }
 
-.removeBtn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--fgColor-danger);
-  font-size: 13px;
-  padding: 0;
+.removeImageBtn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: var(--bgColor-default);
+}
+
+.actionBar {
+  margin-top: 8px;
+  padding-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--borderColor-muted);
+}
+
+.fileInput {
+  display: none;
 }

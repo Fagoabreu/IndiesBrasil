@@ -1,19 +1,18 @@
-import { useState } from "react";
-import { Avatar, Textarea, Button, Stack } from "@primer/react";
-import styles from "./CreatePost.module.css";
+import { useState, useRef } from "react";
+import { Avatar, Textarea, Button, Stack, IconButton } from "@primer/react";
+import { ImageIcon, XIcon } from "@primer/octicons-react";
 import Image from "next/image";
+import styles from "./CreatePost.module.css";
 
 export default function CreatePost({ user, onPost }) {
   const [content, setContent] = useState("");
   const [isPosting, setIsPosting] = useState(false);
-  const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
 
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    setImageFile(file);
 
     const reader = new FileReader();
     reader.onload = () => setImagePreview(reader.result);
@@ -22,15 +21,11 @@ export default function CreatePost({ user, onPost }) {
 
   const handleSubmit = async () => {
     if (!content.trim()) return;
+
     setIsPosting(true);
-
     try {
-      // Envia para PostsPage
       await onPost(content, imagePreview);
-
-      // Limpa campos
       setContent("");
-      setImageFile(null);
       setImagePreview(null);
     } catch (err) {
       console.error("Erro ao criar post:", err);
@@ -40,47 +35,33 @@ export default function CreatePost({ user, onPost }) {
   };
 
   return (
-    <Stack
-      direction="vertical"
-      gap={2}
-      sx={{
-        padding: 3,
-        borderRadius: 6,
-        borderWidth: 1,
-        borderStyle: "solid",
-        borderColor: "border.default",
-        display: "flex",
-        marginBottom: 16,
-      }}
-    >
-      <Stack direction="horizontal" gap={2}>
+    <div className={styles.container}>
+      <Stack direction="horizontal" gap={2} align="flex-start">
         <Avatar src={user.avatarUrl || "/images/avatar.png"} size={40} />
-        <Textarea placeholder="No que você está pensando?" value={content} onChange={(e) => setContent(e.target.value)} disabled={isPosting} sx={{ width: "100%" }} />
-      </Stack>
 
-      {/* Input de imagem */}
-      <input type="file" accept="image/*" onChange={handleImageSelect} />
+        <div className={styles.contentArea}>
+          <Textarea placeholder="No que você está pensando?" value={content} onChange={(e) => setContent(e.target.value)} disabled={isPosting} className={styles.textarea} />
 
-      {/* Preview */}
-      {imagePreview && (
-        <div className={styles.previewBox}>
-          <Image src={imagePreview} alt="Pré-visualização da imagem selecionada" width={300} height={300} unoptimized className={styles.previewImg} />
+          {imagePreview && (
+            <div className={styles.previewBox}>
+              <Image src={imagePreview} alt="Pré-visualização da imagem" width={300} height={300} unoptimized className={styles.previewImg} />
 
-          <button
-            className={styles.removeBtn}
-            onClick={() => {
-              setImagePreview(null);
-              setImageFile(null);
-            }}
-          >
-            Remover imagem
-          </button>
+              <IconButton icon={XIcon} aria-label="Remover imagem" className={styles.removeImageBtn} onClick={() => setImagePreview(null)} />
+            </div>
+          )}
+
+          <div className={styles.actionBar}>
+            <div>
+              <IconButton icon={ImageIcon} aria-label="Adicionar imagem" onClick={() => fileInputRef.current.click()} />
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className={styles.fileInput} />
+            </div>
+
+            <Button variant="primary" disabled={!content.trim() || isPosting} onClick={handleSubmit}>
+              {isPosting ? "Postando..." : "Postar"}
+            </Button>
+          </div>
         </div>
-      )}
-
-      <Button onClick={handleSubmit} disabled={!content.trim() || isPosting} sx={{ alignSelf: "flex-end" }}>
-        {isPosting ? "Postando..." : "Postar"}
-      </Button>
-    </Stack>
+      </Stack>
+    </div>
   );
 }
