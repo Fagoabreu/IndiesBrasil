@@ -1,0 +1,26 @@
+#Docker
+.dockerignore
+Dockerfile
+compose.yaml
+# pastas de desenvolvimento
+.git
+.github
+.next
+.vscode
+node_modules
+tests
+#arquivos de desenvolvimento
+.env
+.env*.local
+.husky
+.gitignore
+.prettierignore
+commitlint.config.js
+eslint.config.mjs
+jest.config.js
+
+//outros
+npm-debug.log
+README.md
+!.next/static
+!.next/standalone
