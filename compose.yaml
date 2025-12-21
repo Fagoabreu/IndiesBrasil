@@ -1,0 +1,53 @@
+services:
+  nginx:
+    image: nginx:1.29.4-alpine
+    ports:
+      - 8080:8080
+    configs:
+      - source: nginx_config
+        target: /etc/nginx/nginx.conf
+    networks:
+      - public
+    depends_on:
+      - indies-app
+
+  indies-app:
+    image: indies-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: indies-app
+    env_file:
+      - .env.production.local
+    networks:
+      - private
+      - public
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17.2-alpine3.20
+    env_file:
+      - .env.production.local
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - private
+
+configs:
+  nginx_config:
+    file: ./nginx.conf
+
+networks:
+  public:
+
+  private:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "10.0.0.0/19"
+          gateway: "10.0.0.1"
+
+volumes:
+  postgres-data:
