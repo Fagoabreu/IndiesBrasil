@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
-import CreatePost from "@/components/CreatePost";
-import PostCardComponent from "@/components/PostCardComponent";
 import { useUser } from "@/context/UserContext";
 import WhoToFollow from "@/components/WhoToFollow";
+import PostCardComponent from "@/components/PostCard/PostCardComponent";
+import CreatePost from "@/components/CreatePost/CreatePost";
 
 export default function PostsPage() {
   const { user, loadingUser } = useUser();

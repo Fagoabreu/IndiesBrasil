@@ -1,6 +1,6 @@
 import { SplitPageLayout } from "@primer/react";
-import HeaderComponent from "./HeaderComponent";
 import LeftSidebarComponent from "./LeftSidebarComponent";
+import HeaderComponent from "./Header/HeaderComponent";
 
 export default function Layout({ children, RightSidebar = null }) {
   return (

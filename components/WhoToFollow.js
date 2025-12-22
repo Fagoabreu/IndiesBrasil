@@ -1,7 +1,7 @@
 import { Stack, Text } from "@primer/react";
-import UserCardComponent from "./UserCardComponent";
 import { useEffect, useState } from "react";
 import { useUser } from "@/context/UserContext";
+import UserCardComponent from "./UserCard/UserCardComponent";
 
 export default function WhoToFollow() {
   const { user } = useUser();
