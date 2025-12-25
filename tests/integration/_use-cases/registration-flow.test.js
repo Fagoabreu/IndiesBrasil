@@ -26,7 +26,6 @@ describe("Use case: Registration Flow (all successful)", () => {
         email: "registration.flow@curso.dev",
         password: "RegistrationFlowPassword",
         cpf: "12312312312",
-        avatar_url: "https://avatars.com/registrationflow",
       }),
     });
     expect(createUserResponse.status).toBe(201);
@@ -36,7 +35,6 @@ describe("Use case: Registration Flow (all successful)", () => {
       id: createUserResponseBody.id,
       username: "RegistrationFlow",
       email: "registration.flow@curso.dev",
-      avatar_url: "https://avatars.com/registrationflow",
       password: createUserResponseBody.password,
       created_at: createUserResponseBody.created_at,
       updated_at: createUserResponseBody.updated_at,

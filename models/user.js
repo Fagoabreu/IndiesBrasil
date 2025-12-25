@@ -10,18 +10,27 @@ async function create(userInputValues) {
   injectDefaultFeaturesInObject(userInputValues);
 
   const newUser = await runInsertQuery(userInputValues);
-  return newUser;
+  return {
+    username: newUser.username,
+    email: newUser.email,
+    id: newUser.id,
+    cpf: newUser.cpf,
+    features: newUser.features,
+    created_at: newUser.created_at,
+    updated_at: newUser.updated_at,
+    password: newUser.password,
+  };
 
   async function runInsertQuery(userInputValues) {
     const results = await database.query({
       text: `
       Insert into 
-        users (username,email,password,cpf,features,avatar_url) 
+        users (username,email,password,cpf,features) 
       values
-        ($1,$2,$3,$4,$5,$6)
+        ($1,$2,$3,$4,$5)
       returning
         *`,
-      values: [userInputValues.username, userInputValues.email, userInputValues.password, userInputValues.cpf, userInputValues.features, userInputValues.avatar_url],
+      values: [userInputValues.username, userInputValues.email, userInputValues.password, userInputValues.cpf, userInputValues.features],
     });
     return results.rows[0];
   }
@@ -255,14 +264,14 @@ async function findUsers(userId, isfollowing) {
       SELECT
         u.id,
         u.username,
-        u.avatar_url,
+        u.avatar_image,
         COUNT(f.follower_id) AS followers_count
       FROM users u
       -- Seguidores do usuário
       LEFT JOIN user_followers f
         ON f.lead_user_id = u.id
       GROUP BY
-        u.id, u.username, u.avatar_url
+        u.id, u.username, u.avatar_image
       ORDER BY 
         u.username
       `,
@@ -275,7 +284,7 @@ async function findUsers(userId, isfollowing) {
         SELECT
           u.id,
           u.username,
-          u.avatar_url,
+          u.avatar_image,
           COUNT(f.follower_id) AS followers_count,
           (uf.follower_id IS NOT NULL) AS is_following
         FROM users u
@@ -305,7 +314,7 @@ async function findUsers(userId, isfollowing) {
     }
     let endQuery = `
         GROUP BY
-          u.id, u.username, u.avatar_url, uf.follower_id
+          u.id, u.username, u.avatar_image, uf.follower_id
         ORDER BY 
           u.username;`;
     const queryText = baseQuery + whereClause + endQuery;

@@ -7,7 +7,7 @@ SELECT
   c.created_at,
   c.content,
   u.username AS author_username,
-  u.avatar_url AS author_avatar_url,
+  u.avatar_image AS author_avatar_image,
   (c.author_id = $2) AS is_current_user
 FROM 
   comments c

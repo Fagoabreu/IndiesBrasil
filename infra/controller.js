@@ -49,7 +49,7 @@ async function clearSessionCookie(response) {
 }
 async function injectAnonymousOrUser(request, response, next) {
   if (request.cookies?.session_id) {
-    await injectAuthenticatedUser(request);
+    await injectAuthenticatedUser(request, request.cookies.session_id);
     return next();
   }
 
@@ -67,8 +67,7 @@ function injectAnonymousUser(request) {
   };
 }
 
-async function injectAuthenticatedUser(request) {
-  const sessionToken = request.cookies.session_id;
+async function injectAuthenticatedUser(request, sessionToken) {
   const sessionObject = await session.findOneValidByToken(sessionToken);
   const userObject = await user.findOneById(sessionObject.user_id);
   request.context = {
@@ -90,6 +89,25 @@ function canRequest(feature) {
     });
   };
 }
+
+export async function injectApiUser(request) {
+  const cookieHeader = request.headers.get("cookie");
+  if (!cookieHeader) {
+    injectAnonymousUser(request);
+    return;
+  }
+
+  const cookies = cookie.parse(cookieHeader);
+  const sessionToken = cookies.session_id;
+
+  if (!sessionToken) {
+    injectAnonymousUser(request);
+    return;
+  }
+
+  await injectAuthenticatedUser(request, sessionToken);
+}
+
 const controller = {
   errorHandlers: {
     onNoMatch: onNoMatchHandler,
@@ -99,6 +117,9 @@ const controller = {
   clearSessionCookie,
   injectAnonymousOrUser,
   canRequest,
+  injectAuthenticatedUser,
+  injectApiUser,
+  onErrorHandler,
 };
 
 export default controller;

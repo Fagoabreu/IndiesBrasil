@@ -121,7 +121,7 @@ export default function PostCardComponent({ post, onDelete, canInteract = true }
     <div className={styles.postWrapper}>
       {/* HEADER */}
       <Stack direction="horizontal" gap={2} className={styles.headerRow}>
-        <Avatar src={post.author_avatar_url || "/images/avatar.png"} size={32} sx={{ borderRadius: "50%" }} />
+        <Avatar src={post.author_avatar_image || "/images/avatar.png"} size={32} sx={{ borderRadius: "50%" }} />
 
         <Stack direction="vertical" gap={0} className={styles.headerText}>
           <span className={styles.authorName}>{post.author_username}</span>
@@ -175,7 +175,7 @@ export default function PostCardComponent({ post, onDelete, canInteract = true }
         <div className={styles.commentList}>
           {comments.map((c, idx) => (
             <div key={idx} className={styles.commentItem}>
-              <Avatar src={c.author_avatar_url || "/images/avatar.png"} size={32} sx={{ borderRadius: "50%" }} />
+              <Avatar src={c.author_avatar_image || "/images/avatar.png"} size={32} sx={{ borderRadius: "50%" }} />
               <div className={styles.commentBody}>
                 <span className={styles.commentUser}>@{c.author_username}</span>
                 <p className={styles.commentText}>{c.content}</p>

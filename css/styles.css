@@ -1,7 +1,13 @@
+* {
+  margin: 0;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
 body {
   margin: 0;
   padding: 0;
-  min-height: 100%;
+  min-height: 100vh;
+  min-width: 100vh;
   transition:
     background-color 0.25s ease,
     color 0.25s ease;

@@ -8,12 +8,13 @@ export default function CreatePost({ user, onPost }) {
   const [content, setContent] = useState("");
   const [isPosting, setIsPosting] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
+    setImageFile(file);
     const reader = new FileReader();
     reader.onload = () => setImagePreview(reader.result);
     reader.readAsDataURL(file);
@@ -24,9 +25,10 @@ export default function CreatePost({ user, onPost }) {
 
     setIsPosting(true);
     try {
-      await onPost(content, imagePreview);
+      await onPost(content, imageFile);
       setContent("");
       setImagePreview(null);
+      setImageFile(null);
     } catch (err) {
       console.error("Erro ao criar post:", err);
     } finally {

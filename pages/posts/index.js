@@ -36,16 +36,19 @@ export default function PostsPage() {
   }
 
   // POST /api/v1/posts
-  const handleAddPost = async (content, imgUrl = null) => {
+  const handleAddPost = async (content, file = null) => {
     try {
+      const formData = new FormData();
+      formData.append("content", content);
+
+      if (file) {
+        formData.append("file", file);
+      }
+
       const response = await fetch("/api/v1/posts", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          content,
-          img: imgUrl,
-        }),
+        body: formData,
       });
 
       if (!response.ok) {
@@ -59,7 +62,6 @@ export default function PostsPage() {
       console.error("Erro ao criar post:", error);
     }
   };
-
   // DELETE /api/v1/posts/:id
   const handleDeletePost = async (postId) => {
     try {
