@@ -60,7 +60,6 @@ async function createUser(userObject) {
     email: userObject?.email || faker.internet.email(),
     password: userObject?.password || faker.internet.password(),
     cpf: userObject?.cpf || fakerBR.br.cpf(),
-    avatar_url: userObject?.avatar_url || faker.internet.url(),
   });
   if (userObject?.features) {
     createdUser = await user.setFeatures(createdUser.id, userObject.features);

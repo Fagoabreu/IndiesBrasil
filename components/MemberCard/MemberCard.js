@@ -7,7 +7,7 @@ export default function MemberCard({ user }) {
     <div className={styles.card}>
       {/* Avatar */}
       <div className={styles.avatarWrapper}>
-        <Avatar src={user.avatar_url || "/images/avatar.png"} size={96} className={styles.avatar} />
+        <Avatar src={user.avatar_image || "/images/avatar.png"} size={96} className={styles.avatar} />
       </div>
 
       {/* Nome */}

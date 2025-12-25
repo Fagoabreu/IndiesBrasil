@@ -7,7 +7,7 @@ export default function UserCardComponent({ user, onToggleFollow, canFollow = tr
     <div className={styles.card}>
       {/* Header */}
       <Stack direction="horizontal" gap={3} alignItems="center">
-        <Avatar size={64} src={user.avatar_url || "/images/avatar.png"} className={styles.avatar} />
+        <Avatar size={64} src={user.avatar_image || "/images/avatar.png"} className={styles.avatar} />
 
         <div className={styles.headerInfo}>
           <Text as="div" fontWeight="bold" fontSize={2}>

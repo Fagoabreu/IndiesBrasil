@@ -16,7 +16,6 @@ describe("POST /api/v1/users", () => {
         password: "password",
         username: "fagoabreu",
         cpf: "11111111111",
-        avatar_url: "https://avatars.com/fagoabreu",
       };
 
       const response = await fetch("http://localhost:3000/api/v1/users", {
@@ -29,7 +28,6 @@ describe("POST /api/v1/users", () => {
           email: "fagoabreu@gmail.com",
           password: testUser.password,
           cpf: testUser.cpf,
-          avatar_url: testUser.avatar_url,
         }),
       });
 
@@ -42,7 +40,6 @@ describe("POST /api/v1/users", () => {
         email: "fagoabreu@gmail.com",
         password: responseBody.password,
         cpf: testUser.cpf,
-        avatar_url: testUser.avatar_url,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
         features: ["read:activation_token"],

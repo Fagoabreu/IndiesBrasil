@@ -15,7 +15,7 @@ describe("GET /api/v1/users/[username]", () => {
         email: "mesmo.case@gmail.com",
         password: "password",
         cpf: 32454643231,
-        avatar_url: "https://avatars.com/mesmocase",
+        avatar_image: "https://avatars.com/mesmocase",
       });
 
       const response2 = await fetch("http://localhost:3000/api/v1/users/MesmoCase");
@@ -28,10 +28,10 @@ describe("GET /api/v1/users/[username]", () => {
         email: "mesmo.case@gmail.com",
         password: response2Body.password,
         cpf: "32454643231",
-        avatar_url: "https://avatars.com/mesmocase",
         created_at: response2Body.created_at,
         updated_at: response2Body.updated_at,
         features: ["read:activation_token"],
+        avatar_image: null,
       });
       expect(uuidVersion(response2Body.id)).toBe(4);
       expect(Date.parse(response2Body.created_at)).not.toBeNaN();
@@ -44,7 +44,6 @@ describe("GET /api/v1/users/[username]", () => {
         email: "diferente.case@gmail.com",
         password: "password",
         cpf: 32454643232,
-        avatar_url: "https://avatars.com/casediferente",
       });
 
       const response2 = await fetch("http://localhost:3000/api/v1/users/casediFerente");
@@ -57,10 +56,10 @@ describe("GET /api/v1/users/[username]", () => {
         email: "diferente.case@gmail.com",
         password: response2Body.password,
         cpf: "32454643232",
-        avatar_url: "https://avatars.com/casediferente",
         created_at: response2Body.created_at,
         updated_at: response2Body.updated_at,
         features: ["read:activation_token"],
+        avatar_image: null,
       });
       expect(uuidVersion(response2Body.id)).toBe(4);
       expect(Date.parse(response2Body.created_at)).not.toBeNaN();
