@@ -10,6 +10,7 @@ SELECT
           p.img,
           p.created_at,
           p.parent_post_id,
+          p.embed,
           pui.secure_url AS post_img_url,
           u.username AS author_username,
           u.avatar_image AS author_avatar_image,
@@ -65,6 +66,7 @@ SELECT
           p.img,
           p.created_at,
           p.parent_post_id,
+          p.embed,
           pui.secure_url AS post_img_url,
           u.username AS author_username,
           u.avatar_image AS author_avatar_image,
@@ -115,13 +117,23 @@ async function create(postInputValues) {
           img,
           created_at,
           visibility,
-          parent_post_id)
+          parent_post_id,
+          embed)
       values
-        ($1, $2, $3,$4, $5, timezone('utc',now()), $6, $7)
+        ($1, $2, $3,$4, $5, timezone('utc',now()), $6, $7, $8)
       returning
         *
       `,
-      values: [postInputValues.author_id, postInputValues.organization_id, postInputValues.event_id, postInputValues.content, postInputValues.img, postInputValues.visibility ?? "public", postInputValues.parent_post_id],
+      values: [
+        postInputValues.author_id,
+        postInputValues.organization_id,
+        postInputValues.event_id,
+        postInputValues.content,
+        postInputValues.img,
+        postInputValues.visibility ?? "public",
+        postInputValues.parent_post_id,
+        postInputValues.embed,
+      ],
     });
     return results.rows[0];
   }

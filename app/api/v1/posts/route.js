@@ -2,6 +2,7 @@ import post from "@/models/post";
 import controller from "@/infra/controller";
 import { UnauthorizedError } from "@/infra/errors";
 import uploadedImages from "@/models/uploadedImages";
+import embededResolver from "@/infra/embededResolver";
 
 export async function POST(request) {
   try {
@@ -15,7 +16,6 @@ export async function POST(request) {
     const formData = await request.formData();
     const content = formData.get("content");
     const file = formData.get("file");
-    console.log("requestUser", user);
 
     const userInputValues = {
       content,
@@ -25,6 +25,11 @@ export async function POST(request) {
     if (file) {
       const imageData = await uploadedImages.uploadImage(file, "posts");
       userInputValues.img = imageData.id;
+    }
+
+    if (content) {
+      const embeds = await embededResolver.getEmbededLinks(content);
+      if (embeds.length > 0) userInputValues.embed = embeds;
     }
 
     const createdPost = await post.create(userInputValues);

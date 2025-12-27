@@ -4,6 +4,7 @@ import { Avatar, Button, Stack } from "@primer/react";
 import styles from "./PostCardComponent.module.css";
 import PostActionsComponent from "../PostActions/PostActionsComponent";
 import CommentPanelComponent from "../CommentPanel/CommentPanelComponent";
+import EmbedComponent from "../Embeds/EmbedComponent";
 
 function timeAgo(dateString) {
   const now = new Date();
@@ -124,60 +125,70 @@ export default function PostCardComponent({ post, onDelete, canInteract = true }
 
   return (
     <article className={styles.postCard}>
-      {/* HEADER */}
-      <Stack direction="horizontal" gap={2} className={styles.headerRow}>
-        <Avatar src={post.author_avatar_url || "/images/avatar.png"} size={32} />
-
-        <Stack direction="vertical" gap={0} className={styles.headerText}>
-          <span className={styles.authorName}>{post.author_username}</span>
-          <span className={styles.subInfo}>
-            @{post.author_username} • {timeAgo(post.created_at)}
-          </span>
-        </Stack>
-
-        {post.is_current_user && (
-          <Button variant="invisible" className={styles.deleteBtn} onClick={() => onDelete?.(post.id)}>
-            Deletar
-          </Button>
-        )}
-      </Stack>
-
-      {/* CONTEÚDO */}
-      <p className={styles.postContent}>
-        {shownText}
-        {isLong && (
-          <button className={styles.showMoreBtn} onClick={() => setExpanded(!expanded)}>
-            {expanded ? "Mostrar menos" : "Mostrar mais"}
-          </button>
-        )}
-      </p>
-      {/* IMAGEM DO POST */}
-      {post.post_img_url && (
-        <div className={styles.imageWrapper}>
-          <img src={post.post_img_url} alt="Imagem do post" loading="lazy" className={styles.postImage} />
+      <div className={styles.postGrid}>
+        {/* COLUNA AVATAR */}
+        <div className={styles.avatarCol}>
+          <Avatar src={post.author_avatar_url || "/images/avatar.png"} size={40} />
         </div>
-      )}
+        {/* COLUNA CONTEÚDO */}
+        <div className={styles.contentCol}>
+          {/* HEADER */}
+          <div className={styles.header}>
+            <div>
+              <strong className={styles.authorName}>{post.author_username}</strong>
+              <span className={styles.subInfo}>
+                @{post.author_username} · {timeAgo(post.created_at)}
+              </span>
+            </div>
+            {post.is_current_user && (
+              <Button variant="invisible" size="small" className={styles.deleteBtn} onClick={() => onDelete?.(post.id)}>
+                Deletar
+              </Button>
+            )}
+          </div>
 
-      {/* AÇÕES */}
-      <PostActionsComponent
-        hasLiked={hasLiked}
-        likesCount={likesCount}
-        commentsCount={commentsCount}
-        canInteract={canInteract}
-        onLike={handleLike}
-        onToggleComments={toggleComments}
-        onReply={() => setShowCommentBox(true)}
-      />
+          {/* TEXTO */}
+          <div className={styles.text}>
+            {shownText}
+            {isLong && (
+              <button className={styles.showMoreBtn} onClick={() => setExpanded(!expanded)}>
+                {expanded ? "Mostrar menos" : "Mostrar mais"}
+              </button>
+            )}
+          </div>
 
-      {/* PAINEL DE COMENTÁRIOS */}
-      <CommentPanelComponent
-        comments={comments}
-        showCommentBox={showCommentBox}
-        showComments={showComments}
-        onCloseCommentBox={() => setShowCommentBox(false)}
-        onSubmitComment={handleSubmitComment}
-        onDeleteComment={deleteComments}
-      />
+          {/* IMAGEM */}
+          {post.post_img_url && (
+            <div className={styles.media}>
+              <img src={post.post_img_url} alt="Imagem do post" loading="lazy" />
+            </div>
+          )}
+
+          {/* EMBEDS */}
+          <EmbedComponent embeds={post.embed} />
+
+          {/* AÇÕES */}
+          <PostActionsComponent
+            hasLiked={hasLiked}
+            likesCount={likesCount}
+            commentsCount={commentsCount}
+            canInteract={canInteract}
+            onLike={handleLike}
+            onToggleComments={toggleComments}
+            onReply={() => setShowCommentBox(true)}
+          />
+
+          {/* COMENTÁRIOS */}
+          <CommentPanelComponent
+            comments={comments}
+            showCommentBox={showCommentBox}
+            showComments={showComments}
+            onCloseCommentBox={() => setShowCommentBox(false)}
+            onSubmitComment={handleSubmitComment}
+            onDeleteComment={deleteComments}
+          />
+        </div>
+      </div>
     </article>
   );
 }

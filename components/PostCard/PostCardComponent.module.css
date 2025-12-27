@@ -1,50 +1,72 @@
-.headerRow {
-  display: flex;
-  align-items: center;
+.postCard {
+  padding: 12px;
+  border-bottom: 1px solid var(--borderColor-muted);
 }
 
-.headerText {
-  min-width: 0;
+.postGrid {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 12px;
+}
+
+.avatarCol {
+  display: flex;
+  justify-content: center;
+}
+
+.contentCol {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* HEADER */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
 }
 
 .authorName {
   font-weight: 600;
-  font-size: 16px;
+  font-size: 14px;
+  color: var(--fgColor-default);
 }
 
 .subInfo {
+  display: block;
   font-size: 12px;
-  opacity: 0.7;
+  color: var(--fgColor-muted);
 }
 
-.postContent {
-  margin: 8px 0 6px 40px;
+/* TEXTO */
+.text {
   font-size: 14px;
-  line-height: 1.45;
-  color: var(--fgColor-muted);
+  line-height: 1.5;
+  color: var(--fgColor-default);
+  white-space: pre-wrap;
 }
 
 .showMoreBtn {
   margin-left: 6px;
+  font-size: 12px;
   color: var(--fgColor-accent);
-  cursor: pointer;
   background: none;
   border: none;
-  font-size: 12px;
-  padding: 0;
+  cursor: pointer;
 }
 
-.imageWrapper {
-  margin-top: 12px;
+/* MÍDIA */
+.media {
+  margin-top: 4px;
   border-radius: 12px;
   overflow: hidden;
-  background: var(--bgColor-muted);
+  border: 1px solid var(--borderColor-muted);
 }
 
-.postImage {
-  width: auto;
-  height: 100%;
-  max-height: 320px;
-  display: block;
+.media img {
+  width: 100%;
+  max-height: 400px;
   object-fit: cover;
+  display: block;
 }

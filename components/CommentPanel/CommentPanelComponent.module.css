@@ -1,19 +1,8 @@
-.commentList {
-  margin-left: 40px;
-  margin-top: 20px;
-  margin-bottom: 40px;
-
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
+.commentList,
 .commentBox {
-  margin-left: 40px;
-  margin-top: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  margin-top: 8px;
+  padding-left: 12px;
+  border-left: 2px solid var(--borderColor-muted);
 }
 
 .commentActions {

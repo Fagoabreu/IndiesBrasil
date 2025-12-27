@@ -1,27 +1,26 @@
 .actions {
   display: flex;
+  gap: 24px;
   align-items: center;
-  gap: 20px;
-  margin-left: 40px;
-  margin-top: 6px;
+  margin-top: 4px;
+}
+
+.iconBtn {
+  color: var(--fgColor-muted);
+}
+
+.iconBtn:hover {
+  color: var(--fgColor-default);
+}
+
+.liked {
+  color: var(--fgColor-danger);
 }
 
 .actionItem {
   display: flex;
   align-items: center;
   gap: 6px;
-}
-
-.iconBtn {
-  color: var(--button-default-fgColor-rest);
-}
-
-.iconBtn:hover {
-  transform: scale(1.15);
-}
-
-.liked {
-  color: var(--fgColor-danger);
 }
 
 .counter {
