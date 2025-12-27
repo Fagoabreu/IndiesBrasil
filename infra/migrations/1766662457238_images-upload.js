@@ -3,6 +3,11 @@ exports.up = (pgm) => {
     id: {
       type: "varchar(256)",
       primaryKey: true,
+      notNull: true,
+    },
+
+    public_id: {
+      type: "varchar(256)",
       notNull: false,
     },
 
@@ -17,11 +22,11 @@ exports.up = (pgm) => {
     },
     width: {
       type: "INTEGER",
-      notNull: true,
+      notNull: false,
     },
     height: {
       type: "INTEGER",
-      notNull: true,
+      notNull: false,
     },
     format: {
       type: "varchar(32)",

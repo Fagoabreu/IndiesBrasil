@@ -1,0 +1,27 @@
+.commentDiv {
+  color: var(--fgColor-muted);
+  font-size: 13px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.commentUser {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.commentText {
+  opacity: 0.9;
+}
+
+.deleteBtn {
+  margin-left: auto;
+  padding: 4px 6px;
+  font-size: 12px;
+  color: var(--fgColor-muted);
+}
+
+.deleteBtn:hover {
+  color: var(--fgColor-danger);
+}

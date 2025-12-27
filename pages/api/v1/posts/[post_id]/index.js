@@ -20,7 +20,11 @@ async function deleteHandler(request, response) {
   }
 
   const imgId = postToDelete.img;
+  if (imgId) {
+    uploadedImages.deleteImage(imgId);
+  }
 
+  await post.deleteCommentsByPostId(postToDelete.id);
   const resultPost = await post.deletePostByIdAndAuthorId(author_id, postToDelete.id);
 
   if (imgId) {

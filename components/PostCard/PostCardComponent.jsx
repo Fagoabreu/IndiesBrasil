@@ -1,7 +1,9 @@
 // components/PostCardComponent.jsx
 import { useState } from "react";
-import { Avatar, Textarea, Button, Stack } from "@primer/react";
+import { Avatar, Button, Stack } from "@primer/react";
 import styles from "./PostCardComponent.module.css";
+import PostActionsComponent from "../PostActions/PostActionsComponent";
+import CommentPanelComponent from "../CommentPanel/CommentPanelComponent";
 
 function timeAgo(dateString) {
   const now = new Date();
@@ -25,23 +27,32 @@ function timeAgo(dateString) {
 }
 
 export default function PostCardComponent({ post, onDelete, canInteract = true }) {
-  const [hasLiked, setHasLiked] = useState(post.likedByUser || false);
-  const [likesCount, setLikesCount] = useState(post.likesCount || 0);
+  const [hasLiked, setHasLiked] = useState(post.liked_by_user || false);
+  const [likesCount, setLikesCount] = useState(Number(post.likes_count) || 0);
+  const [commentsCount, setCommentsCount] = useState(Number(post.comments_count));
+
   const [showCommentBox, setShowCommentBox] = useState(false);
   const [showComments, setShowComments] = useState(false);
-  const [newComment, setNewComment] = useState("");
   const [expanded, setExpanded] = useState(false);
+
   const [comments, setComments] = useState([]);
   const [commentsLoaded, setCommentsLoaded] = useState(false);
-  const [commentsCount, setCommentsCount] = useState(post.comments_count);
 
   const MAX_CHARS = 240;
   const isLong = post.content.length > MAX_CHARS;
   const shownText = expanded ? post.content : post.content.slice(0, MAX_CHARS);
 
   const handleLike = () => {
-    setHasLiked(!hasLiked);
-    setLikesCount((prev) => prev + (hasLiked ? -1 : 1));
+    const liked = !hasLiked;
+    setHasLiked(liked);
+    setLikesCount((prev) => prev + (liked ? 1 : -1));
+
+    fetch(`/api/v1/posts/${post.id}/likes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ liked }),
+    });
   };
 
   const toggleComments = async () => {
@@ -84,21 +95,16 @@ export default function PostCardComponent({ post, onDelete, canInteract = true }
     }
   };
 
-  const handleSubmitComment = async () => {
-    if (!newComment.trim()) return;
-
+  const handleSubmitComment = async (content) => {
     try {
       const res = await fetch(`/api/v1/posts/${post.id}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ content: newComment }),
+        body: JSON.stringify({ content }),
       });
 
-      if (!res.ok) {
-        console.error("Erro ao comentar");
-        return;
-      }
+      if (!res.ok) return;
 
       const createdComment = await res.json();
 
@@ -107,7 +113,6 @@ export default function PostCardComponent({ post, onDelete, canInteract = true }
       setCommentsCount((prev) => prev + 1);
 
       // Limpa e fecha o box
-      setNewComment("");
       setShowCommentBox(false);
 
       // Garante que a lista apareça
@@ -118,10 +123,10 @@ export default function PostCardComponent({ post, onDelete, canInteract = true }
   };
 
   return (
-    <div className={styles.postWrapper}>
+    <article className={styles.postCard}>
       {/* HEADER */}
       <Stack direction="horizontal" gap={2} className={styles.headerRow}>
-        <Avatar src={post.author_avatar_image || "/images/avatar.png"} size={32} sx={{ borderRadius: "50%" }} />
+        <Avatar src={post.author_avatar_url || "/images/avatar.png"} size={32} />
 
         <Stack direction="vertical" gap={0} className={styles.headerText}>
           <span className={styles.authorName}>{post.author_username}</span>
@@ -146,61 +151,33 @@ export default function PostCardComponent({ post, onDelete, canInteract = true }
           </button>
         )}
       </p>
+      {/* IMAGEM DO POST */}
+      {post.post_img_url && (
+        <div className={styles.imageWrapper}>
+          <img src={post.post_img_url} alt="Imagem do post" loading="lazy" className={styles.postImage} />
+        </div>
+      )}
 
       {/* AÇÕES */}
-      <div className={styles.actions}>
-        {/* LIKE */}
-        {canInteract && (
-          <button className={`${styles.iconBtn} ${hasLiked ? styles.liked : ""}`} onClick={handleLike}>
-            <span className={styles.heart}>❤️</span>
-            <span>{likesCount}</span>
-          </button>
-        )}
+      <PostActionsComponent
+        hasLiked={hasLiked}
+        likesCount={likesCount}
+        commentsCount={commentsCount}
+        canInteract={canInteract}
+        onLike={handleLike}
+        onToggleComments={toggleComments}
+        onReply={() => setShowCommentBox(true)}
+      />
 
-        {/* MOSTRAR / OCULTAR COMENTÁRIOS */}
-        <button className={styles.iconBtn} onClick={toggleComments}>
-          💬 <span>{commentsCount}</span>
-        </button>
-
-        {/* RESPONDER */}
-        {canInteract && (
-          <button className={styles.replyBtn} onClick={() => setShowCommentBox(true)}>
-            Responder
-          </button>
-        )}
-      </div>
-
-      {/* LISTA DE COMENTÁRIOS */}
-      {showComments && (
-        <div className={styles.commentList}>
-          {comments.map((c, idx) => (
-            <div key={idx} className={styles.commentItem}>
-              <Avatar src={c.author_avatar_image || "/images/avatar.png"} size={32} sx={{ borderRadius: "50%" }} />
-              <div className={styles.commentBody}>
-                <span className={styles.commentUser}>@{c.author_username}</span>
-                <p className={styles.commentText}>{c.content}</p>
-              </div>
-              {c.is_current_user && (
-                <Button variant="invisible" className={styles.deleteBtn} onClick={() => deleteComments?.(c.id)}>
-                  Deletar
-                </Button>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* CAIXA DE COMENTÁRIO */}
-      {showCommentBox && (
-        <div className={styles.commentBox}>
-          <Textarea placeholder="Adicionar comentário..." value={newComment} onChange={(e) => setNewComment(e.target.value)} />
-          <div className={styles.commentActions}>
-            <Button onClick={handleSubmitComment} disabled={!newComment.trim()}>
-              Comentar
-            </Button>
-          </div>
-        </div>
-      )}
-    </div>
+      {/* PAINEL DE COMENTÁRIOS */}
+      <CommentPanelComponent
+        comments={comments}
+        showCommentBox={showCommentBox}
+        showComments={showComments}
+        onCloseCommentBox={() => setShowCommentBox(false)}
+        onSubmitComment={handleSubmitComment}
+        onDeleteComment={deleteComments}
+      />
+    </article>
   );
 }

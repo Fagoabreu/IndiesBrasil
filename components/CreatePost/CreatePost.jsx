@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Avatar, Textarea, Button, Stack, IconButton } from "@primer/react";
-import { ImageIcon, XIcon } from "@primer/octicons-react";
+import { ImageIcon, TrashIcon } from "@primer/octicons-react";
 import Image from "next/image";
 import styles from "./CreatePost.module.css";
 
@@ -48,7 +48,7 @@ export default function CreatePost({ user, onPost }) {
             <div className={styles.previewBox}>
               <Image src={imagePreview} alt="Pré-visualização da imagem" width={300} height={300} unoptimized className={styles.previewImg} />
 
-              <IconButton icon={XIcon} aria-label="Remover imagem" className={styles.removeImageBtn} onClick={() => setImagePreview(null)} />
+              <IconButton icon={TrashIcon} aria-label="Remover imagem" className={styles.removeImageBtn} onClick={() => setImagePreview(null)} />
             </div>
           )}
 
@@ -58,7 +58,7 @@ export default function CreatePost({ user, onPost }) {
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className={styles.fileInput} />
             </div>
 
-            <Button variant="primary" disabled={!content.trim() || isPosting} onClick={handleSubmit}>
+            <Button variant="primary" disabled={(!content.trim() && !imagePreview) || isPosting} onClick={handleSubmit}>
               {isPosting ? "Postando..." : "Postar"}
             </Button>
           </div>
