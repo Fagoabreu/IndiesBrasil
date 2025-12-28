@@ -4,6 +4,11 @@
   align-items: center;
   margin-top: 4px;
 }
+.actionItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 
 .iconBtn {
   color: var(--fgColor-muted);
@@ -15,12 +20,6 @@
 
 .liked {
   color: var(--fgColor-danger);
-}
-
-.actionItem {
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .counter {

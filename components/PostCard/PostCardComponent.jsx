@@ -140,7 +140,7 @@ export default function PostCardComponent({ post, onDelete, canInteract = true }
                 @{post.author_username} · {timeAgo(post.created_at)}
               </span>
             </div>
-            {post.is_current_user && (
+            {canInteract && post.is_current_user && (
               <Button variant="invisible" size="small" className={styles.deleteBtn} onClick={() => onDelete?.(post.id)}>
                 Deletar
               </Button>

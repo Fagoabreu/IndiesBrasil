@@ -1,5 +1,6 @@
 import Image from "next/image";
 import styles from "./EmbedComponent.module.css";
+import InstagramEmbed from "./InstagramEmbed";
 
 export default function EmbedComponent({ embeds }) {
   if (!embeds?.length) return null;
@@ -12,6 +13,14 @@ export default function EmbedComponent({ embeds }) {
 
         if (embed.type === "twitch") {
           return <iframe key={index} src={embed.embedUrl} height="400" width="100%" allowFullScreen />;
+        }
+
+        if (embed.type === "instagram") {
+          return (
+            <div key={index} className={styles.embed}>
+              <InstagramEmbed url={embed.url} />
+            </div>
+          );
         }
         if (embed.type === "preview") {
           return (

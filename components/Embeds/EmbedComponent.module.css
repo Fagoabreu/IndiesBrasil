@@ -1,9 +1,10 @@
 .embed {
-  margin-top: 12px;
   border-radius: 6px;
   overflow: hidden;
   border: 1px solid var(--borderColor-default);
   background-color: var(--bgColor-muted);
+  display: flex;
+  justify-content: center;
 }
 
 .embed iframe {

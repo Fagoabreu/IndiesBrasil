@@ -1,0 +1,8 @@
+.instagram-media {
+  margin: 0 auto;
+  max-width: 540px;
+  max-height: 400px;
+  object-fit: contain;
+  display: block;
+  justify-content: center;
+}

@@ -22,6 +22,10 @@ async function resolveEmbed(url) {
     return resolveTwitch(url);
   }
 
+  if (isInstagram(url)) {
+    return resolveInstagram(url);
+  }
+
   return fetchLinkPreview(url);
 }
 
@@ -39,6 +43,10 @@ function isYouTube(url) {
 
 function isTwitch(url) {
   return /twitch\.tv/.test(url);
+}
+
+function isInstagram(url) {
+  return /instagram\.com\/(p|reel|tv)\//.test(url);
 }
 
 function resolveYouTube(url) {
@@ -63,6 +71,13 @@ function resolveTwitch(url) {
     type: "twitch",
     channel,
     embedUrl: `https://player.twitch.tv/?channel=${channel}&parent=${webserverOrigin}`,
+    url,
+  };
+}
+
+function resolveInstagram(url) {
+  return {
+    type: "instagram",
     url,
   };
 }

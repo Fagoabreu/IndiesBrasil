@@ -4,15 +4,29 @@
   display: flex;
   align-items: flex-start;
   gap: 8px;
+  margin-bottom: 10px;
+}
+
+/* 🔒 protege o avatar */
+.commentDiv :global(img),
+.commentDiv :global(svg) {
+  flex-shrink: 0;
+}
+
+.commentBody {
+  min-width: 0; /* FUNDAMENTAL para flex */
 }
 
 .commentUser {
   font-weight: 600;
   margin-right: 4px;
+  display: inline-block;
 }
 
 .commentText {
   opacity: 0.9;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .deleteBtn {
