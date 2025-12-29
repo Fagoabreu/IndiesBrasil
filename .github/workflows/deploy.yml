@@ -1,0 +1,60 @@
+name: Deploy Indies Brasil
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Deploy to VPS
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+            cd /var/www/indies || exit 1
+
+            git pull origin main
+
+            cat > .env.production << EOL
+            NODE_ENV=production
+            
+            PORT=${{ secrets.PORT}}
+            
+            SESSION_SECRET=${{ secrets.SESSION_SECRET }}
+            PEPPER=${{ secrests.PEPPER}}
+            NEXT_PUBLIC_SITE_NAME=${{ secrests.NEXT_PUBLIC_SITE_NAME}}
+            NEXT_PUBLIC_BASE_URL=${{ secrests.NEXT_PUBLIC_BASE_URL}}
+            
+            POSTGRES_HOST=${{ secrests.POSTGRES_HOST}}
+            POSTGRES_PORT=${{ secrests.POSTGRES_PORT}}
+            POSTGRES_DB=${{ secrests.POSTGRES_DB}}
+            POSTGRES_USER=${{ secrests.POSTGRES_USER}}
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            
+            EMAIL_SMTP_HOST=${{secrests.EMAIL_SMTP_HOST}}
+            EMAIL_SMTP_PORT=${{secrests.EMAIL_SMTP_PORT}}
+            EMAIL_SMTP_USER=${{secrests.EMAIL_SMTP_USER}}
+            EMAIL_SMTP_PASSWORD=${{secrests.EMAIL_SMTP_PASSWORD}}
+            FILE_UPLOAD_BASE_FOLDER=${{secrests.FILE_UPLOAD_BASE_FOLDER}}
+
+            CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
+            CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
+            CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
+
+            EOL
+
+            docker compose build
+            docker compose up -d
+
+            docker image prune -f
+          EOF
