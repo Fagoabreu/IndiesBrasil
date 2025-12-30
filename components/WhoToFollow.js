@@ -32,7 +32,11 @@ export default function WhoToFollow() {
   }, []);
 
   function handleToggleFollow(username, nowFollowing) {
-    setUsers((prev) => prev.map((u) => (u.username === username ? { ...u, isFollowing: nowFollowing, followers_count: u.followers_count + (nowFollowing ? 1 : -1) } : u)).filter((u) => !u.isFollowing));
+    setUsers((prev) =>
+      prev
+        .map((u) => (u.username === username ? { ...u, isFollowing: nowFollowing, followers_count: u.followers_count + (nowFollowing ? 1 : -1) } : u))
+        .filter((u) => !u.isFollowing),
+    );
   }
 
   if (!users.length) return null;

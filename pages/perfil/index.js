@@ -113,7 +113,12 @@ export default function Perfil() {
           <Stack direction="vertical" gap={1} sx={{ alignItems: "center", color: "fg.muted" }}>
             {user.location && <span>{user.location}</span>}
             {user.website && (
-              <a style={{ color: "var(--fg-default)", textDecoration: "underline" }} href={user.website.startsWith("http") ? user.website : `https://${user.website}`} target="_blank" rel="noreferrer">
+              <a
+                style={{ color: "var(--fg-default)", textDecoration: "underline" }}
+                href={user.website.startsWith("http") ? user.website : `https://${user.website}`}
+                target="_blank"
+                rel="noreferrer"
+              >
                 {user.website}
               </a>
             )}

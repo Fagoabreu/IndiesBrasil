@@ -42,7 +42,13 @@ export default function CreatePost({ user, onPost }) {
         <Avatar src={user.avatarUrl || "/images/avatar.png"} size={40} />
 
         <div className={styles.contentArea}>
-          <Textarea placeholder="No que você está pensando?" value={content} onChange={(e) => setContent(e.target.value)} disabled={isPosting} className={styles.textarea} />
+          <Textarea
+            placeholder="No que você está pensando?"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            disabled={isPosting}
+            className={styles.textarea}
+          />
 
           {imagePreview && (
             <div className={styles.previewBox}>

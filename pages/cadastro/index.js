@@ -203,7 +203,12 @@ export default function Cadastro() {
 
               {/* Progress */}
               <div style={{ width: "100%", height: 12, marginTop: 4 }}>
-                <ProgressBar progress={strengthInfo[strength].percent} bg={strength <= 1 ? "danger.fg" : strength === 2 ? "attention.fg" : "success.fg"} barSize="large" aria-label={`Força da senha: ${strengthInfo[strength].label}`} />
+                <ProgressBar
+                  progress={strengthInfo[strength].percent}
+                  bg={strength <= 1 ? "danger.fg" : strength === 2 ? "attention.fg" : "success.fg"}
+                  barSize="large"
+                  aria-label={`Força da senha: ${strengthInfo[strength].label}`}
+                />
               </div>
 
               {fieldErrors.password && <FormControl.Validation variant="error">{fieldErrors.password}</FormControl.Validation>}
@@ -218,7 +223,13 @@ export default function Cadastro() {
                 type={showConfirmPass ? "text" : "password"}
                 value={confirmPass}
                 onChange={(e) => setConfirmPass(e.target.value)}
-                trailingAction={<IconButton aria-label="Mostrar" icon={showConfirmPass ? EyeClosedIcon : EyeIcon} onClick={() => setShowConfirmPass(!showConfirmPass)} />}
+                trailingAction={
+                  <IconButton
+                    aria-label="Mostrar"
+                    icon={showConfirmPass ? EyeClosedIcon : EyeIcon}
+                    onClick={() => setShowConfirmPass(!showConfirmPass)}
+                  />
+                }
               />
 
               {fieldErrors.confirmPass && <FormControl.Validation variant="error">{fieldErrors.confirmPass}</FormControl.Validation>}

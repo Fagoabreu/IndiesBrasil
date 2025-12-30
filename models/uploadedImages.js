@@ -3,7 +3,8 @@ import database from "infra/database.js";
 
 async function uploadImage(file, subfolder) {
   if (!file) return null;
-  const uploadFolder = process.env.FILE_UPLOAD_BASE_FOLDER + "/" + (process.env.NODE_ENV === "production" ? "PROD" : "DEV") + "/" + (subfolder ?? "DEFAULT");
+  const uploadFolder =
+    process.env.FILE_UPLOAD_BASE_FOLDER + "/" + (process.env.NODE_ENV === "production" ? "PROD" : "DEV") + "/" + (subfolder ?? "DEFAULT");
   const uploadedResult = await uploadFile.postFile(file, uploadFolder);
 
   return await saveImage(uploadedResult, subfolder);
