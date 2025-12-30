@@ -1,10 +1,11 @@
 // components/PostCardComponent.jsx
 import { useState } from "react";
-import { Avatar, Button, Stack } from "@primer/react";
+import { Avatar, Button } from "@primer/react";
 import styles from "./PostCardComponent.module.css";
 import PostActionsComponent from "../PostActions/PostActionsComponent";
 import CommentPanelComponent from "../CommentPanel/CommentPanelComponent";
 import EmbedComponent from "../Embeds/EmbedComponent";
+import Image from "next/image";
 
 function timeAgo(dateString) {
   const now = new Date();
@@ -160,7 +161,7 @@ export default function PostCardComponent({ post, onDelete, canInteract = true }
           {/* IMAGEM */}
           {post.post_img_url && (
             <div className={styles.media}>
-              <img src={post.post_img_url} alt="Imagem do post" loading="lazy" />
+              <Image src={post.post_img_url} alt="Imagem do post" loading="lazy" width={0} height={0} sizes="100vw" />
             </div>
           )}
 
