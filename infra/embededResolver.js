@@ -38,7 +38,7 @@ function extractLinks(text) {
 }
 
 function isYouTube(url) {
-  return /youtube\.com|youtu\.be/.test(url);
+  return /(?:youtube\.com|youtu\.be)/.test(url);
 }
 
 function isTwitch(url) {
@@ -50,27 +50,28 @@ function isInstagram(url) {
 }
 
 function resolveYouTube(url) {
-  const videoId = url.match(/v=([^&]+)/)?.[1] || url.match(/youtu\.be\/([^?]+)/)?.[1];
+  let videoId = null;
+
+  // youtube.com/watch?v=ID
+  videoId = url.match(/[?&]v=([^&]+)/)?.[1];
+
+  // youtu.be/ID
+  if (!videoId) {
+    videoId = url.match(/youtu\.be\/([^?]+)/)?.[1];
+  }
+
+  // youtube.com/shorts/ID
+  if (!videoId) {
+    videoId = url.match(/youtube\.com\/shorts\/([^?]+)/)?.[1];
+  }
 
   if (!videoId) return null;
 
   return {
     type: "youtube",
+    subtype: url.includes("/shorts/") ? "shorts" : "video",
     videoId,
     embedUrl: `https://www.youtube.com/embed/${videoId}`,
-    url,
-  };
-}
-
-function resolveTwitch(url) {
-  const channel = url.split("twitch.tv/")[1];
-  const webserverOrigin = webserver.origin;
-  if (!channel) return null;
-
-  return {
-    type: "twitch",
-    channel,
-    embedUrl: `https://player.twitch.tv/?channel=${channel}&parent=${webserverOrigin}`,
     url,
   };
 }

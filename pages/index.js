@@ -13,7 +13,13 @@ function Home() {
         image="/images/IndiesWhatsApp.jpeg"
         alt="Qr Code Convite Grupo WhatssApp"
         title="Conheça nossa comunidade"
-        description="Grupo focado em desenvolvedores independentes de jogos brasileiros. Compartilhamos dicas, recursos, oportunidades e apoio para ajudar você a crescer na indústria de jogos."
+        description="Grupo focado em desenvolvedores independentes de jogos brasileiros. Compartilhamos dicas, recursos, oportunidades e apoio para fomentar a indústria de jogos nacional."
+      />
+      <HorizontalCardComponent
+        image="/images/integraInstagram.png"
+        alt="Qr Code Convite Grupo WhatssApp"
+        title="Integração com o YouTube/Twitch/Instagram"
+        description="A aplicação agora suporta incorporação de vídeos do YouTube, transmissões ao vivo da Twitch e postagens do Instagram diretamente nas suas publicações. Compartilhe seu conteúdo multimídia favorito com facilidade!"
       />
     </>
   );

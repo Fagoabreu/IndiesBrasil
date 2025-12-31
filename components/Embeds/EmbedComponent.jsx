@@ -23,6 +23,7 @@ export default function EmbedComponent({ embeds }) {
   return (
     <div>
       {embeds.map((embed) => {
+        if (!embed) return null;
         if (embed.type === "youtube") {
           return <iframe key={embed.id} src={embed.embedUrl} height="400" width="100%" allowFullScreen />;
         }
