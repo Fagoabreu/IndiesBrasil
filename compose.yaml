@@ -25,20 +25,22 @@ services:
       dockerfile: Dockerfile
     container_name: indies-app
     env_file:
-      - .env.production.local
+      - .env.production
     networks:
       - private
       - public
     depends_on:
       - postgres
     restart: always
+    volumes:
+      - uploads-data:/app/public/uploads
 
   postgres:
     image: postgres:17.2-alpine3.20
-    conatainer_name: postgres
+    container_name: postgres
     restart: always
     env_file:
-      - .env.production.local
+      - .env.production
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
@@ -60,4 +62,5 @@ networks:
 
 volumes:
   postgres-data:
-  nginx_secret:
+  nginx_secrets:
+  uploads-data:

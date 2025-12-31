@@ -11,16 +11,17 @@ jobs:
     environment: production
 
     steps:
-      # 1️⃣ Checkout do código (somente no runner)
+      # 1️⃣ Checkout do código
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
-      # 2️⃣ Setup SSH Agent
+      # 2️⃣ SSH Agent
       - name: Setup SSH
         uses: webfactory/ssh-agent@a6f90b1f127823b31d4d4a8d96047790581349bd
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
+      # 3️⃣ Registrar host (necessário para rsync)
       - name: Add VPS to known_hosts
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
@@ -28,21 +29,19 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
 
-      # 3️⃣ Sincroniza arquivos com o servidor (DEPLOY REAL)
-      - name: Sync files to VPS
+      # 4️⃣ Enviar código para VPS
+      - name: Sync project to VPS
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
         run: |
           rsync -az --delete \
-            --exclude=".git" \
-            --exclude="node_modules" \
-            --exclude=".next" \
-            ./ \
-            $SSH_USER@$SSH_HOST:/var/www/indies
+          --filter=':- .dockerignore' \
+          ./ \
+          $SSH_USER@$SSH_HOST:/var/www/indies
 
-      # 4️⃣ Subir containers no servidor
-      - name: Run Docker Compose on VPS
+      # 5️⃣ Build e deploy via Docker Compose
+      - name: Build and run containers on VPS
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
@@ -58,29 +57,24 @@ jobs:
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
           EMAIL_SMTP_HOST: ${{ secrets.EMAIL_SMTP_HOST }}
           EMAIL_SMTP_PORT: ${{ secrets.EMAIL_SMTP_PORT }}
           EMAIL_SMTP_USER: ${{ secrets.EMAIL_SMTP_USER }}
           EMAIL_SMTP_PASSWORD: ${{ secrets.EMAIL_SMTP_PASSWORD }}
 
-          FILE_UPLOAD_BASE_FOLDER: ${{ secrets.FILE_UPLOAD_BASE_FOLDER }}
-
           CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
           CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
           CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
 
         run: |
-          ssh -T -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
+          ssh -T $SSH_USER@$SSH_HOST << 'EOF'
             set -e
-
             cd /var/www/indies
 
-            echo "📝 Criando .env.production"
-            cat > .env.production << EOL
+            echo "📝 Gerando .env.production"
+            cat > .env.production <<'EOL'
             NODE_ENV=production
-
             SESSION_SECRET=$SESSION_SECRET
             PEPPER=$PEPPER
             NEXT_PUBLIC_SITE_NAME=$NEXT_PUBLIC_SITE_NAME
@@ -91,22 +85,22 @@ jobs:
             POSTGRES_DB=$POSTGRES_DB
             POSTGRES_USER=$POSTGRES_USER
             POSTGRES_PASSWORD=$POSTGRES_PASSWORD
-            DATABASE_URL=$DATABASE_URL
 
             EMAIL_SMTP_HOST=$EMAIL_SMTP_HOST
             EMAIL_SMTP_PORT=$EMAIL_SMTP_PORT
             EMAIL_SMTP_USER=$EMAIL_SMTP_USER
             EMAIL_SMTP_PASSWORD=$EMAIL_SMTP_PASSWORD
 
-            FILE_UPLOAD_BASE_FOLDER=$FILE_UPLOAD_BASE_FOLDER
-
             CLOUDINARY_CLOUD_NAME=$CLOUDINARY_CLOUD_NAME
             CLOUDINARY_API_KEY=$CLOUDINARY_API_KEY
             CLOUDINARY_API_SECRET=$CLOUDINARY_API_SECRET
             EOL
 
-            echo "🐳 Buildando e subindo containers"
-            docker compose up -d --build
+            echo "🐳 Buildando imagens"
+            docker compose build
+
+            echo "🚀 Subindo containers"
+            docker compose up -d
 
             echo "🧹 Limpando imagens antigas"
             docker image prune -f
