@@ -8,47 +8,21 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: Production
+    environment: production
 
     steps:
       # 1️⃣ Checkout do código
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
-      # 2️⃣ SSH Agent
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@a6f90b1f127823b31d4d4a8d96047790581349bd
-        with:
-          ssh-private-key: ${{ secrets.SSH_KEY }}
-
-      # 3️⃣ Registrar host (necessário para rsync)
-      - name: Add VPS to known_hosts
+      # 2️⃣ Gerar .env.production NO RUNNER (onde secrets funcionam)
+      - name: Generate .env.production
         env:
-          SSH_HOST: ${{ vars.SSH_HOST }}
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
-
-      # 4️⃣ Enviar código para VPS
-      - name: Sync project to VPS
-        env:
-          SSH_USER: ${{ vars.SSH_USER }}
-          SSH_HOST: ${{ vars.SSH_HOST }}
-        run: |
-          rsync -az --delete \
-            --filter=':- .dockerignore' \
-            ./ \
-            $SSH_USER@$SSH_HOST:/var/www/indies
-
-      # 5️⃣ Build e deploy via Docker Compose
-      - name: Build and run containers
-        env:
-          SSH_USER: ${{ vars.SSH_USER }}
-          SSH_HOST: ${{ vars.SSH_HOST }}
-
           NODE_ENV: production
+
           SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
           PEPPER: ${{ secrets.PEPPER }}
+
           NEXT_PUBLIC_SITE_NAME: ${{ vars.NEXT_PUBLIC_SITE_NAME }}
           NEXT_PUBLIC_BASE_URL: ${{ vars.NEXT_PUBLIC_BASE_URL }}
 
@@ -57,6 +31,7 @@ jobs:
           POSTGRES_DB: ${{ vars.POSTGRES_DB }}
           POSTGRES_USER: ${{ vars.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
           EMAIL_SMTP_HOST: ${{ vars.EMAIL_SMTP_HOST }}
           EMAIL_SMTP_PORT: ${{ vars.EMAIL_SMTP_PORT }}
@@ -68,40 +43,65 @@ jobs:
           CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
 
         run: |
-          ssh -T $SSH_USER@$SSH_HOST << 'EOF'
+          {
+            echo "NODE_ENV=$NODE_ENV"
+            echo "SESSION_SECRET=$SESSION_SECRET"
+            echo "PEPPER=$PEPPER"
+            echo "NEXT_PUBLIC_SITE_NAME=$NEXT_PUBLIC_SITE_NAME"
+            echo "NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL"
+
+            echo "POSTGRES_HOST=$POSTGRES_HOST"
+            echo "POSTGRES_PORT=$POSTGRES_PORT"
+            echo "POSTGRES_DB=$POSTGRES_DB"
+            echo "POSTGRES_USER=$POSTGRES_USER"
+            echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD"
+            echo "DATABASE_URL=$DATABASE_URL"
+
+            echo "EMAIL_SMTP_HOST=$EMAIL_SMTP_HOST"
+            echo "EMAIL_SMTP_PORT=$EMAIL_SMTP_PORT"
+            echo "EMAIL_SMTP_USER=$EMAIL_SMTP_USER"
+            echo "EMAIL_SMTP_PASSWORD=$EMAIL_SMTP_PASSWORD"
+
+            echo "CLOUDINARY_CLOUD_NAME=$CLOUDINARY_CLOUD_NAME"
+            echo "CLOUDINARY_API_KEY=$CLOUDINARY_API_KEY"
+            echo "CLOUDINARY_API_SECRET=$CLOUDINARY_API_SECRET"
+          } > .env.production
+
+      # 3️⃣ Setup SSH
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@a6f90b1f127823b31d4d4a8d96047790581349bd
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      # 4️⃣ Registrar VPS no known_hosts
+      - name: Add VPS to known_hosts
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+
+      # 5️⃣ Enviar código + .env.production para a VPS
+      - name: Sync project to VPS
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          rsync -az --delete \
+            --filter=':- .dockerignore' \
+            ./ \
+            "$SSH_USER@$SSH_HOST:/var/www/indies"
+
+      # 6️⃣ Build e subir containers no servidor
+      - name: Build and run containers
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          ssh -T "$SSH_USER@$SSH_HOST" << 'EOF'
             set -e
             cd /var/www/indies
 
-            echo "📝 Criando .env.production"
-
-            : > .env.production
-            chmod 600 .env.production
-            printf "NODE_ENV=%s\n" "$NODE_ENV" >> .env.production
-            printf "SESSION_SECRET=%s\n" "$SESSION_SECRET" >> .env.production
-            printf "PEPPER=%s\n" "$PEPPER" >> .env.production
-            printf "NEXT_PUBLIC_SITE_NAME=%s\n" "$NEXT_PUBLIC_SITE_NAME" >> .env.production
-            printf "NEXT_PUBLIC_BASE_URL=%s\n" "$NEXT_PUBLIC_BASE_URL" >> .env.production
-
-            printf "POSTGRES_HOST=%s\n" "$POSTGRES_HOST" >> .env.production
-            printf "POSTGRES_PORT=%s\n" "$POSTGRES_PORT" >> .env.production
-            printf "POSTGRES_DB=%s\n" "$POSTGRES_DB" >> .env.production
-            printf "POSTGRES_USER=%s\n" "$POSTGRES_USER" >> .env.production
-            printf "POSTGRES_PASSWORD=%s\n" "$POSTGRES_PASSWORD" >> .env.production
-
-            printf "EMAIL_SMTP_HOST=%s\n" "$EMAIL_SMTP_HOST" >> .env.production
-            printf "EMAIL_SMTP_PORT=%s\n" "$EMAIL_SMTP_PORT" >> .env.production
-            printf "EMAIL_SMTP_USER=%s\n" "$EMAIL_SMTP_USER" >> .env.production
-            printf "EMAIL_SMTP_PASSWORD=%s\n" "$EMAIL_SMTP_PASSWORD" >> .env.production
-
-            printf "CLOUDINARY_CLOUD_NAME=%s\n" "$CLOUDINARY_CLOUD_NAME" >> .env.production
-            printf "CLOUDINARY_API_KEY=%s\n" "$CLOUDINARY_API_KEY" >> .env.production
-            printf "CLOUDINARY_API_SECRET=%s\n" "$CLOUDINARY_API_SECRET" >> .env.production
-
-            echo "🐳 Docker compose build"
-            docker compose build
-
-            echo "🚀 Docker compose up"
-            docker compose up -d
-
-            echo "✅ Deploy finalizado"
+            docker compose down
+            docker compose up -d --build
           EOF
