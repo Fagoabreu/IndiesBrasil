@@ -26,11 +26,13 @@
 .previewBox {
   position: relative;
   margin-top: 8px;
-  max-width: 320px;
+  width: fit-content;
 }
 
 .previewImg {
-  width: 100%;
+  width: auto;
+  height: 100%;
+  max-height: 320px;
   border-radius: 12px;
   border: 1px solid var(--borderColor-muted);
 }
@@ -39,7 +41,8 @@
   position: absolute;
   top: 6px;
   right: 6px;
-  background: var(--bgColor-default);
+  background: var(--button-danger-iconColor-rest);
+  color: var(--fgColor-onInverse);
 }
 
 .actionBar {

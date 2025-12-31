@@ -1,4 +1,4 @@
-.divImage {
+.card {
   display: flex;
   flex-direction: row;
   max-width: 800px;
@@ -15,10 +15,17 @@
   box-shadow: var(--shadow-floating-medium);
 }
 
+.imageWraper {
+  position: relative;
+  width: 38%;
+  height: 300px;
+}
+
 .cardBody {
   background-color: var(--bgColor-default);
   flex-grow: 1;
   padding: 24px;
+  width: 62%;
 }
 
 .cardTitle {

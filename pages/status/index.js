@@ -78,7 +78,8 @@ export default function StatusPage() {
             <div className="mt-3">
               {" "}
               <span className="text1">
-                {data.dependencies.database.opened_connections} Conexões <span className="text2">de {data.dependencies.database.max_connections}</span>
+                {data.dependencies.database.opened_connections} Conexões{" "}
+                <span className="text2">de {data.dependencies.database.max_connections}</span>
               </span>{" "}
             </div>
           </div>

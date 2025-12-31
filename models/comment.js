@@ -77,19 +77,17 @@ async function getCommentsByCommentId(comment_id, user_id) {
 }
 
 async function deleteById(comment_id) {
-  const postComments = await runDeleteQuery(comment_id);
-  return postComments;
+  await runDeleteQuery(comment_id);
+  return;
 
   async function runDeleteQuery(comment_id) {
-    const results = await database.query({
+    await database.query({
       text: `Delete from comments 
         WHERE
         id = $1
-        returning *
       `,
       values: [comment_id],
     });
-    return results.rows[0];
   }
 }
 

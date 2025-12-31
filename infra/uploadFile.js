@@ -18,13 +18,11 @@ export async function postFile(file, folder) {
       })
       .end(buffer);
   });
-
   return {
-    id: result.public_id,
-    //publicId: result.public_id,
+    id: result.asset_id,
+    publicId: result.public_id,
     displayName: result.display_name,
     filename: result.original_filename,
-    //folder:result.asset_folder,
     width: result.width,
     height: result.height,
     format: result.format,

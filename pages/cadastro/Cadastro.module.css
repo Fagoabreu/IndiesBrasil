@@ -1,0 +1,39 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card {
+  width: 100%;
+  max-width: 520px;
+  padding: 32px;
+  border-radius: 12px;
+  border: 1px solid var(--borderColor-default);
+  background: var(--bgColor-default);
+  box-shadow: var(--shadow-floating-medium);
+}
+
+.title {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.rules {
+  display: grid;
+  gap: 2px;
+  font-size: 12px;
+}
+
+.strength {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.strengthLabel {
+  font-size: 12px;
+  color: var(--fgColor-muted);
+}

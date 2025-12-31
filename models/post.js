@@ -10,8 +10,11 @@ SELECT
           p.img,
           p.created_at,
           p.parent_post_id,
+          p.embed,
+          pui.secure_url AS post_img_url,
           u.username AS author_username,
           u.avatar_image AS author_avatar_image,
+          uui.secure_url AS author_avatar_url,
           COALESCE(l.likes_count, 0) AS likes_count,
           COALESCE(c.comments_count, 0) AS comments_count,
           (pl.post_id IS NOT NULL) AS liked_by_user,
@@ -20,7 +23,11 @@ SELECT
           posts p
           INNER JOIN users u
             ON p.author_id = u.id
-
+          
+          -- UserAvatar
+          LEFT JOIN uploaded_images uui
+            ON uui.id = u.avatar_image 
+          
           -- Contagem de likes
           LEFT JOIN LATERAL (
             SELECT COUNT(*) AS likes_count
@@ -44,6 +51,10 @@ SELECT
                 AND pl2.user_id = $1
               LIMIT 1
           ) pl ON true
+
+          -- Se existem Imagem
+          LEFT JOIN uploaded_images pui
+            ON pui.id = p.img 
 `;
 
 const baseNoUserSelectQuery = `
@@ -55,8 +66,11 @@ SELECT
           p.img,
           p.created_at,
           p.parent_post_id,
+          p.embed,
+          pui.secure_url AS post_img_url,
           u.username AS author_username,
           u.avatar_image AS author_avatar_image,
+          uui.secure_url AS author_avatar_url,
           COALESCE(l.likes_count, 0) AS likes_count,
           COALESCE(c.comments_count, 0) AS comments_count,
           false AS liked_by_user,
@@ -65,6 +79,10 @@ SELECT
           posts p
           INNER JOIN users u
             ON p.author_id = u.id
+            
+          -- UserAvatar
+          LEFT JOIN uploaded_images uui
+            ON uui.id = u.avatar_image 
 
           -- Contagem de likes
           LEFT JOIN LATERAL (
@@ -79,6 +97,9 @@ SELECT
               FROM comments co
               WHERE co.post_id = p.id
           ) c ON true
+          -- Se existem Imagem
+          LEFT JOIN uploaded_images pui
+            ON pui.id = p.img 
 `;
 
 async function create(postInputValues) {
@@ -96,13 +117,23 @@ async function create(postInputValues) {
           img,
           created_at,
           visibility,
-          parent_post_id)
+          parent_post_id,
+          embed)
       values
-        ($1, $2, $3,$4, $5, timezone('utc',now()), $6, $7)
+        ($1, $2, $3,$4, $5, timezone('utc',now()), $6, $7, $8)
       returning
         *
       `,
-      values: [postInputValues.author_id, postInputValues.organization_id, postInputValues.event_id, postInputValues.content, postInputValues.img, postInputValues.visibility ?? "public", postInputValues.parent_post_id],
+      values: [
+        postInputValues.author_id,
+        postInputValues.organization_id,
+        postInputValues.event_id,
+        postInputValues.content,
+        postInputValues.img,
+        postInputValues.visibility ?? "public",
+        postInputValues.parent_post_id,
+        postInputValues.embed,
+      ],
     });
     return results.rows[0];
   }
@@ -116,6 +147,20 @@ async function deleteById(postId) {
       text: `
       delete from posts
       where id=$1
+      `,
+      values: [postId],
+    });
+  }
+}
+
+async function deleteCommentsByPostId(postId) {
+  await runDeleteQuery(postId);
+
+  async function runDeleteQuery(postId) {
+    await database.query({
+      text: `
+      delete from comments
+      where post_id=$1
       `,
       values: [postId],
     });
@@ -193,12 +238,88 @@ async function deletePostByIdAndAuthorId(userId, postId) {
   }
 }
 
+async function setPostLikes(postId, userId, liked) {
+  const post = await getPostById(userId, postId);
+  if (!post) {
+    throw new NotFoundError({
+      message: "O id do post informado não foi encontrado no sistema.",
+      action: "Verifique se o post não foi removido",
+    });
+  }
+
+  const { rowCount } = await database.query({
+    text: `
+    select 1
+    from 
+      post_likes pl
+    where 
+      pl.post_id = $1 
+      and pl.user_id = $2
+    `,
+    values: [postId, userId],
+  });
+
+  const alreadyLiked = rowCount > 0;
+
+  // 🔁 toggle automático
+  if (liked === undefined) {
+    if (alreadyLiked) {
+      await deletePostLike(postId, userId);
+      return { liked: false, action: "removed" };
+    } else {
+      await createPostLike(postId, userId);
+      return { liked: true, action: "created" };
+    }
+  }
+
+  // 👍 like explícito
+  if (liked === true && !alreadyLiked) {
+    await createPostLike(postId, userId);
+    return { liked: true, action: "created" };
+  }
+
+  // 👎 unlike explícito
+  if (liked === false && alreadyLiked) {
+    await deletePostLike(postId, userId);
+    return { liked: false, action: "removed" };
+  }
+
+  // 🔕 nada mudou
+  return { liked: alreadyLiked, action: "noop" };
+
+  async function createPostLike(postId, userId) {
+    await database.query({
+      text: `
+      insert into 
+      post_likes (post_id, user_id)
+      values ($1, $2)
+      `,
+      values: [postId, userId],
+    });
+  }
+
+  async function deletePostLike(postId, userId) {
+    await database.query({
+      text: `
+      delete from 
+        post_likes
+      where 
+        post_id=$1 
+        and user_id=$2
+      `,
+      values: [postId, userId],
+    });
+  }
+}
+
 const post = {
   create,
   deleteById,
   getPosts,
   getPostById,
   deletePostByIdAndAuthorId,
+  deleteCommentsByPostId,
+  setPostLikes,
 };
 
 export default post;

@@ -45,7 +45,13 @@ export default function MembersPage() {
 
       <PageLayout.Content width="full">
         <Stack direction="horizontal" gap={2} sx={{ marginBottom: 3 }}>
-          <TextInput placeholder="Pesquisar por nome..." value={search} onChange={(e) => handleSearch(e.target.value)} leadingVisual="search" sx={{ width: 300 }} />
+          <TextInput
+            placeholder="Pesquisar por nome..."
+            value={search}
+            onChange={(e) => handleSearch(e.target.value)}
+            leadingVisual="search"
+            sx={{ width: 300 }}
+          />
         </Stack>
 
         {/* GRID DE CARDS */}

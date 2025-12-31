@@ -1,0 +1,33 @@
+.actions {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  margin-top: 4px;
+}
+.actionItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.iconBtn {
+  color: var(--fgColor-muted);
+}
+
+.iconBtn:hover {
+  color: var(--fgColor-default);
+}
+
+.liked {
+  color: var(--fgColor-danger);
+}
+
+.counter {
+  font-size: 13px;
+  color: var(--fgColor-muted);
+}
+
+.replyBtn {
+  font-size: 13px;
+  color: var(--fgColor-accent);
+}

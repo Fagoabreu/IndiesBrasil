@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router";
-import { PageLayout, Heading, Button, FormControl, TextInput, Flash, Stack, Spinner } from "@primer/react";
-import { useUser } from "@/context/UserContext.js";
+import { Heading, Button, FormControl, TextInput, Stack, Spinner } from "@primer/react";
+import { useUser } from "@/context/UserContext";
+import styles from "./Login.module.css";
+import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
 
 export default function Login() {
   const router = useRouter();
@@ -10,11 +12,15 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errMsg, setErrMsg] = useState("");
+
+  // erro padronizado
+  const [error, setError] = useState(null);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setErrMsg("");
+    if (loading) return;
+
+    setError(null);
     setLoading(true);
 
     try {
@@ -24,30 +30,42 @@ export default function Login() {
         body: JSON.stringify({ email, password }),
       });
 
-      if (response.status === 201) {
+      if (response.ok) {
         await fetchUser();
         router.push("/");
-      } else {
-        const data = await response.json();
-        setErrMsg(data.message || "Credenciais inválidas.");
+        return;
       }
+
+      const data = await response.json();
+      setError({
+        name: data.name,
+        message: data.message,
+        action: data.action,
+        status_code: data.status_code,
+      });
     } catch {
-      setErrMsg("Erro de conexão com o servidor.");
+      setError({
+        name: "NetworkError",
+        message: "Erro de conexão com o servidor.",
+        action: "Verifique sua conexão com a internet e tente novamente.",
+        status_code: 0,
+      });
     }
 
     setLoading(false);
   }
 
   return (
-    <PageLayout padding="spacious">
-      <PageLayout.Header>
-        <Heading as="h2">Login</Heading>
-      </PageLayout.Header>
+    <div className={styles.page}>
+      <div className={styles.card}>
+        <Heading as="h1" className={styles.title}>
+          Login
+        </Heading>
 
-      <PageLayout.Content width="medium">
         <form onSubmit={handleSubmit}>
           <Stack gap={4}>
-            {errMsg && <Flash variant="danger">{errMsg}</Flash>}
+            {/* 🔴 ERRO GLOBAL */}
+            <StatusMessageComponent errorMsg={error} />
 
             {/* EMAIL */}
             <FormControl required>
@@ -65,16 +83,18 @@ export default function Login() {
               {loading ? <Spinner size="small" /> : "Entrar"}
             </Button>
 
-            <Button variant="invisible" block onClick={() => router.push("/cadastro")}>
-              Criar conta
-            </Button>
+            <div className={styles.links}>
+              <Button variant="invisible" onClick={() => router.push("/cadastro")}>
+                Criar conta
+              </Button>
 
-            <Button variant="invisible" block onClick={() => router.push("/cadastro/reset-password")}>
-              Esquecia a senha
-            </Button>
+              <Button variant="invisible" onClick={() => router.push("/cadastro/reset-password")}>
+                Esqueci a senha
+              </Button>
+            </div>
           </Stack>
         </form>
-      </PageLayout.Content>
-    </PageLayout>
+      </div>
+    </div>
   );
 }

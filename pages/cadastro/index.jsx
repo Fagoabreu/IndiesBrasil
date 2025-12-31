@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router";
-import { PageLayout, Heading, Button, FormControl, TextInput, Flash, Stack, Spinner, ProgressBar, IconButton } from "@primer/react";
+import { Heading, Button, FormControl, TextInput, Stack, Spinner, ProgressBar, IconButton } from "@primer/react";
 import { EyeIcon, EyeClosedIcon } from "@primer/octicons-react";
 import PasswordRule from "@/components/PasswordRule.js";
+import styles from "./Cadastro.module.css";
+import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
 
 export default function Cadastro() {
   const router = useRouter();
@@ -20,7 +22,7 @@ export default function Cadastro() {
   const [loading, setLoading] = useState(false);
 
   // messages
-  const [errorMsg, setErrorMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState(null);
   const [successMsg, setSuccessMsg] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
 
@@ -88,6 +90,8 @@ export default function Cadastro() {
   async function handleSubmit(e) {
     e.preventDefault();
 
+    if (loading) return;
+
     setErrorMsg("");
     setSuccessMsg("");
     setFieldErrors({});
@@ -95,12 +99,28 @@ export default function Cadastro() {
 
     const newErrors = {};
 
-    if (!username) newErrors.username = "Informe um nome de usuário.";
+    if (!username) {
+      newErrors.username = "Informe um nome de usuário.";
+    } else if (username.length < 3) {
+      newErrors.username = "O nome de usuário deve ter ao menos 3 caracteres.";
+    }
     if (!email) newErrors.email = "Informe um email.";
-    if (!password) newErrors.password = "Informe uma senha.";
-    if (password !== confirmPass) newErrors.confirmPass = "As senhas não coincidem.";
-    if (!isValidCPF(cpf)) newErrors.cpf = "CPF inválido.";
-    if (!strongEnough) newErrors.password = "A senha está muito fraca.";
+
+    if (!password) {
+      newErrors.password = "Informe uma senha.";
+    } else if (!strongEnough) {
+      newErrors.password = "A senha está muito fraca.";
+    }
+
+    if (password !== confirmPass) {
+      newErrors.confirmPass = "As senhas não coincidem.";
+    }
+
+    if (!cpf) {
+      newErrors.cpf = "Informe o CPF.";
+    } else if (!isValidCPF(cpf)) {
+      newErrors.cpf = "CPF inválido.";
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setFieldErrors(newErrors);
@@ -118,11 +138,15 @@ export default function Cadastro() {
       });
 
       if (response.status === 201) {
-        setSuccessMsg("Conta criada com sucesso! Verifique seu e-mail.");
-        setTimeout(() => router.push("/login"), 2500);
+        setSuccessMsg("Sua conta criada com sucesso!\no Link de ativação foi enviado ao email informado.");
+        setTimeout(() => router.push("/login"), 30000);
       } else {
         const data = await response.json();
-        setErrorMsg(data.message || "Erro ao criar conta.");
+        setErrorMsg({
+          statusCode: data.status_code,
+          message: data.message,
+          action: data.action,
+        });
       }
     } catch {
       setErrorMsg("Erro ao conectar ao servidor.");
@@ -131,96 +155,144 @@ export default function Cadastro() {
     setLoading(false);
   }
 
+  function cleanFieldError(field) {
+    setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
+  }
+
   // ======================================================
   // VALIDATION STATUS
   const statusUser = username ? "success" : undefined;
-  const statusEmail = email ? "success" : undefined;
+  const statusEmail = !fieldErrors.email && email ? "success" : undefined;
   const statusCpf = cpf && isValidCPF(cpf) ? "success" : undefined;
   const statusPass = password && strongEnough ? "success" : undefined;
   const statusConfirm = confirmPass && confirmPass === password ? "success" : undefined;
 
   return (
-    <PageLayout padding="spacious">
-      <PageLayout.Header>
-        <Heading as="h2">Criar Conta</Heading>
-      </PageLayout.Header>
+    <div className={styles.page}>
+      <div className={styles.card}>
+        <Heading as="h1" className={styles.title}>
+          Criar Conta
+        </Heading>
 
-      <PageLayout.Content width="medium">
         <form onSubmit={handleSubmit}>
           <Stack gap={4}>
-            {errorMsg && <Flash variant="danger">{errorMsg}</Flash>}
-            {successMsg && <Flash variant="success">{successMsg}</Flash>}
+            <StatusMessageComponent errorMsg={errorMsg} successMsg={successMsg} />
 
             {/* USERNAME */}
             <FormControl required validationStatus={fieldErrors.username ? "error" : statusUser}>
               <FormControl.Label>Nome de usuário</FormControl.Label>
-
-              <TextInput block value={username} onChange={(e) => setUsername(e.target.value)} />
-
+              <TextInput
+                block
+                value={username}
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  cleanFieldError("username");
+                }}
+              />
               {fieldErrors.username && <FormControl.Validation variant="error">{fieldErrors.username}</FormControl.Validation>}
             </FormControl>
 
             {/* EMAIL */}
             <FormControl required validationStatus={fieldErrors.email ? "error" : statusEmail}>
               <FormControl.Label>Email</FormControl.Label>
-
-              <TextInput type="email" block value={email} onChange={(e) => setEmail(e.target.value)} />
-
+              <TextInput
+                type="email"
+                block
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  cleanFieldError("email");
+                }}
+              />
               {fieldErrors.email && <FormControl.Validation variant="error">{fieldErrors.email}</FormControl.Validation>}
             </FormControl>
 
             {/* CPF */}
             <FormControl required validationStatus={fieldErrors.cpf ? "error" : statusCpf}>
               <FormControl.Label>CPF</FormControl.Label>
-
-              <TextInput block maxLength={14} value={cpf} onChange={(e) => setCpf(formatCPF(e.target.value))} placeholder="000.000.000-00" />
-
+              <TextInput
+                block
+                maxLength={14}
+                value={cpf}
+                onChange={(e) => {
+                  setCpf(formatCPF(e.target.value));
+                  cleanFieldError("cpf");
+                }}
+                placeholder="000.000.000-00"
+              />
               {fieldErrors.cpf && <FormControl.Validation variant="error">{fieldErrors.cpf}</FormControl.Validation>}
             </FormControl>
 
             {/* PASSWORD */}
             <FormControl required validationStatus={fieldErrors.password ? "error" : statusPass}>
               <FormControl.Label>Senha</FormControl.Label>
-
               <TextInput
                 block
                 type={showPass ? "text" : "password"}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                trailingAction={<IconButton aria-label="Mostrar" icon={showPass ? EyeClosedIcon : EyeIcon} onClick={() => setShowPass(!showPass)} />}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  cleanFieldError("password");
+                  cleanFieldError("confirmPass");
+                }}
+                trailingAction={
+                  <IconButton
+                    variant="invisible"
+                    aria-label="Mostrar senha"
+                    icon={showPass ? EyeClosedIcon : EyeIcon}
+                    onClick={() => setShowPass(!showPass)}
+                  />
+                }
               />
 
-              {/* Checklist */}
-              <Stack direction="vertical" gap={1} sx={{ fontSize: 13, marginTop: 2 }}>
+              {/* RULES */}
+              <div className={styles.rules}>
                 <PasswordRule ok={password.length >= 8} label="Mínimo de 8 caracteres" />
-                <PasswordRule ok={/[A-Z]/.test(password)} label="Pelo menos uma letra maiúscula" />
-                <PasswordRule ok={/[0-9]/.test(password)} label="Pelo menos um número" />
-                <PasswordRule ok={/[^A-Za-z0-9]/.test(password)} label="Pelo menos um caractere especial" />
-              </Stack>
+                <PasswordRule ok={/[A-Z]/.test(password)} label="Letra maiúscula" />
+                <PasswordRule ok={/[0-9]/.test(password)} label="Número" />
+                <PasswordRule ok={/[^A-Za-z0-9]/.test(password)} label="Caractere especial" />
+              </div>
 
-              {/* Caption (filho direto obrigatório) */}
-              <FormControl.Caption>Força: {strengthInfo[strength].label}</FormControl.Caption>
+              {/* STRENGTH */}
+              <div className={styles.strength}>
+                <span className={styles.strengthLabel} aria-live="polite">
+                  Força: {strengthInfo[strength].label}
+                </span>
 
-              {/* Progress */}
-              <div style={{ width: "100%", height: 12, marginTop: 4 }}>
-                <ProgressBar progress={strengthInfo[strength].percent} bg={strength <= 1 ? "danger.fg" : strength === 2 ? "attention.fg" : "success.fg"} barSize="large" aria-label={`Força da senha: ${strengthInfo[strength].label}`} />
+                <ProgressBar
+                  progress={strengthInfo[strength].percent}
+                  barSize="large"
+                  aria-label="Força da senha"
+                  sx={{
+                    bg: "var(--borderColor-muted)",
+                    color: strength <= 1 ? "var(--fgColor-danger)" : strength === 2 ? "var(--fgColor-attention)" : "var(--fgColor-success)",
+                  }}
+                />
               </div>
 
               {fieldErrors.password && <FormControl.Validation variant="error">{fieldErrors.password}</FormControl.Validation>}
             </FormControl>
 
-            {/* CONFIRM PASSWORD */}
+            {/* CONFIRM */}
             <FormControl required validationStatus={fieldErrors.confirmPass ? "error" : statusConfirm}>
               <FormControl.Label>Confirmar Senha</FormControl.Label>
-
               <TextInput
                 block
                 type={showConfirmPass ? "text" : "password"}
                 value={confirmPass}
-                onChange={(e) => setConfirmPass(e.target.value)}
-                trailingAction={<IconButton aria-label="Mostrar" icon={showConfirmPass ? EyeClosedIcon : EyeIcon} onClick={() => setShowConfirmPass(!showConfirmPass)} />}
+                onChange={(e) => {
+                  setConfirmPass(e.target.value);
+                  cleanFieldError("confirmPass");
+                }}
+                trailingAction={
+                  <IconButton
+                    variant="invisible"
+                    aria-label="Mostrar senha"
+                    icon={showConfirmPass ? EyeClosedIcon : EyeIcon}
+                    onClick={() => setShowConfirmPass(!showConfirmPass)}
+                  />
+                }
               />
-
               {fieldErrors.confirmPass && <FormControl.Validation variant="error">{fieldErrors.confirmPass}</FormControl.Validation>}
             </FormControl>
 
@@ -229,7 +301,7 @@ export default function Cadastro() {
             </Button>
           </Stack>
         </form>
-      </PageLayout.Content>
-    </PageLayout>
+      </div>
+    </div>
   );
 }
