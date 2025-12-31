@@ -69,30 +69,38 @@ jobs:
 
         run: |
           ssh -T $SSH_USER@$SSH_HOST << 'EOF'
-          set -e
+            set -e
+            cd /var/www/indies
 
-          cd /var/www/indies
+            echo "📝 Criando .env.production"
 
-          echo "📝 Criando .env.production"
-          cat > .env.production <<EOL
-NODE_ENV=production
-SESSION_SECRET=$SESSION_SECRET
-PEPPER=$PEPPER
-NEXT_PUBLIC_SITE_NAME=$NEXT_PUBLIC_SITE_NAME
-NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
+            : > .env.production
+            printf "NODE_ENV=%s\n" "$NODE_ENV" >> .env.production
+            printf "SESSION_SECRET=%s\n" "$SESSION_SECRET" >> .env.production
+            printf "PEPPER=%s\n" "$PEPPER" >> .env.production
+            printf "NEXT_PUBLIC_SITE_NAME=%s\n" "$NEXT_PUBLIC_SITE_NAME" >> .env.production
+            printf "NEXT_PUBLIC_BASE_URL=%s\n" "$NEXT_PUBLIC_BASE_URL" >> .env.production
 
-POSTGRES_HOST=$POSTGRES_HOST
-POSTGRES_PORT=$POSTGRES_PORT
-POSTGRES_DB=$POSTGRES_DB
-POSTGRES_USER=$POSTGRES_USER
-POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+            printf "POSTGRES_HOST=%s\n" "$POSTGRES_HOST" >> .env.production
+            printf "POSTGRES_PORT=%s\n" "$POSTGRES_PORT" >> .env.production
+            printf "POSTGRES_DB=%s\n" "$POSTGRES_DB" >> .env.production
+            printf "POSTGRES_USER=%s\n" "$POSTGRES_USER" >> .env.production
+            printf "POSTGRES_PASSWORD=%s\n" "$POSTGRES_PASSWORD" >> .env.production
 
-EMAIL_SMTP_HOST=$EMAIL_SMTP_HOST
-EMAIL_SMTP_PORT=$EMAIL_SMTP_PORT
-EMAIL_SMTP_USER=$EMAIL_SMTP_USER
-EMAIL_SMTP_PASSWORD=$EMAIL_SMTP_PASSWORD
+            printf "EMAIL_SMTP_HOST=%s\n" "$EMAIL_SMTP_HOST" >> .env.production
+            printf "EMAIL_SMTP_PORT=%s\n" "$EMAIL_SMTP_PORT" >> .env.production
+            printf "EMAIL_SMTP_USER=%s\n" "$EMAIL_SMTP_USER" >> .env.production
+            printf "EMAIL_SMTP_PASSWORD=%s\n" "$EMAIL_SMTP_PASSWORD" >> .env.production
 
-CLOUDINARY_CLOUD_NAME=$CLOUDINARY_CLOUD_NAME
-CLOUDINARY_API_KEY=$CLOUDINARY_API_KEY
-CLOUDINARY_API_SECRET=$CLOUDINARY_API_SECRET
-EOL
+            printf "CLOUDINARY_CLOUD_NAME=%s\n" "$CLOUDINARY_CLOUD_NAME" >> .env.production
+            printf "CLOUDINARY_API_KEY=%s\n" "$CLOUDINARY_API_KEY" >> .env.production
+            printf "CLOUDINARY_API_SECRET=%s\n" "$CLOUDINARY_API_SECRET" >> .env.production
+
+            echo "🐳 Docker compose build"
+            docker compose build
+
+            echo "🚀 Docker compose up"
+            docker compose up -d
+
+            echo "✅ Deploy finalizado"
+          EOF
