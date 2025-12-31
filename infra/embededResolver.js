@@ -1,5 +1,3 @@
-import webserver from "./webserver";
-
 async function getEmbededLinks(content) {
   const links = extractLinks(content);
   const embeds = [];
@@ -89,7 +87,9 @@ async function fetchLinkPreview(url) {
     const html = await res.text();
 
     const getMeta = (name) => {
-      const match = html.match(new RegExp(`<meta property="og:${name}" content="([^"]+)"`));
+      const regex = new RegExp(`<meta property="og:${name}" content="([^"]+)"`, "i");
+
+      const match = regex.exec(html);
       return match ? match[1] : null;
     };
 

@@ -25,11 +25,11 @@ export default function EmbedComponent({ embeds }) {
       {embeds.map((embed) => {
         if (!embed) return null;
         if (embed.type === "youtube") {
-          return <iframe key={embed.id} src={embed.embedUrl} height="400" width="100%" allowFullScreen />;
+          return <iframe key={embed.id} title={embed.title} src={embed.embedUrl} height="400" width="100%" allowFullScreen />;
         }
 
         if (embed.type === "twitch") {
-          return <iframe key={embed.id} src={embed.embedUrl} height="400" width="100%" allowFullScreen />;
+          return <iframe key={embed.id} title={embed.title} src={embed.embedUrl} height="400" width="100%" allowFullScreen />;
         }
 
         if (embed.type === "instagram") {

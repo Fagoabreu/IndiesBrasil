@@ -11,8 +11,8 @@ export default function InstagramEmbed({ url }) {
   const ref = useRef(null);
 
   useEffect(() => {
-    if (window.instgrm?.Embeds) {
-      window.instgrm.Embeds.process();
+    if (globalThis.instgrm?.Embeds) {
+      globalThis.instgrm.Embeds.process();
     }
   }, []);
 
@@ -23,7 +23,7 @@ export default function InstagramEmbed({ url }) {
         src="https://www.instagram.com/embed.js"
         strategy="lazyOnload"
         onLoad={() => {
-          window.instgrm?.Embeds.process();
+          globalThis.instgrm?.Embeds.process();
         }}
       />
       <blockquote ref={ref} className="instagram-media" data-instgrm-permalink={url} data-instgrm-version="14" />

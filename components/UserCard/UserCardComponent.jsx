@@ -1,5 +1,20 @@
 import { Avatar, Button, Text, Link } from "@primer/react";
 import styles from "./UserCardComponent.module.css";
+import PropTypes from "prop-types";
+
+UserCardComponent.propTypes = {
+  user: PropTypes.shape({
+    username: PropTypes.string.isRequired,
+    name: PropTypes.string,
+    avatar_image: PropTypes.string,
+    posts_count: PropTypes.number,
+    followers_count: PropTypes.number,
+    isFollowing: PropTypes.bool,
+  }).isRequired,
+
+  onToggleFollow: PropTypes.func,
+  canFollow: PropTypes.bool,
+};
 
 export default function UserCardComponent({ user, onToggleFollow, canFollow = true }) {
   return (

@@ -8,7 +8,6 @@ HorizontalCardComponent.propTypes = {
   alt: PropTypes.string,
   title: PropTypes.string,
   description: PropTypes.string,
-  tamanhoImagem: PropTypes.oneOf(["pequena", "media", "grande"]),
 };
 
 export default function HorizontalCardComponent({ image, alt, title, description }) {
