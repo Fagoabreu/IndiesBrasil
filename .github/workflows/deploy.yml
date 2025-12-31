@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: production
+    environment: Production
 
     steps:
       # 1️⃣ Checkout do código
@@ -75,6 +75,7 @@ jobs:
             echo "📝 Criando .env.production"
 
             : > .env.production
+            chmod 600 .env.production
             printf "NODE_ENV=%s\n" "$NODE_ENV" >> .env.production
             printf "SESSION_SECRET=%s\n" "$SESSION_SECRET" >> .env.production
             printf "PEPPER=%s\n" "$PEPPER" >> .env.production
