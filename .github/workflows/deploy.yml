@@ -41,7 +41,7 @@ jobs:
           $SSH_USER@$SSH_HOST:/var/www/indies
 
       # 5️⃣ Build e deploy via Docker Compose
-      - name: Build and run containers on VPS
+      - name: Build and run containers
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
@@ -69,39 +69,40 @@ jobs:
 
         run: |
           ssh -T $SSH_USER@$SSH_HOST << 'EOF'
-            set -e
-            cd /var/www/indies
+          set -e
 
-            echo "📝 Gerando .env.production"
-            cat > .env.production <<'EOL'
-            NODE_ENV=production
-            SESSION_SECRET=$SESSION_SECRET
-            PEPPER=$PEPPER
-            NEXT_PUBLIC_SITE_NAME=$NEXT_PUBLIC_SITE_NAME
-            NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
+          cd /var/www/indies
 
-            POSTGRES_HOST=$POSTGRES_HOST
-            POSTGRES_PORT=$POSTGRES_PORT
-            POSTGRES_DB=$POSTGRES_DB
-            POSTGRES_USER=$POSTGRES_USER
-            POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+          echo "📝 Criando .env.production"
+          cat > .env.production <<EOL
+          NODE_ENV=production
 
-            EMAIL_SMTP_HOST=$EMAIL_SMTP_HOST
-            EMAIL_SMTP_PORT=$EMAIL_SMTP_PORT
-            EMAIL_SMTP_USER=$EMAIL_SMTP_USER
-            EMAIL_SMTP_PASSWORD=$EMAIL_SMTP_PASSWORD
+          SESSION_SECRET=$SESSION_SECRET
+          PEPPER=$PEPPER
+          NEXT_PUBLIC_SITE_NAME=$NEXT_PUBLIC_SITE_NAME
+          NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
 
-            CLOUDINARY_CLOUD_NAME=$CLOUDINARY_CLOUD_NAME
-            CLOUDINARY_API_KEY=$CLOUDINARY_API_KEY
-            CLOUDINARY_API_SECRET=$CLOUDINARY_API_SECRET
-            EOL
+          POSTGRES_HOST=$POSTGRES_HOST
+          POSTGRES_PORT=$POSTGRES_PORT
+          POSTGRES_DB=$POSTGRES_DB
+          POSTGRES_USER=$POSTGRES_USER
+          POSTGRES_PASSWORD=$POSTGRES_PASSWORD
 
-            echo "🐳 Buildando imagens"
-            docker compose build
+          EMAIL_SMTP_HOST=$EMAIL_SMTP_HOST
+          EMAIL_SMTP_PORT=$EMAIL_SMTP_PORT
+          EMAIL_SMTP_USER=$EMAIL_SMTP_USER
+          EMAIL_SMTP_PASSWORD=$EMAIL_SMTP_PASSWORD
 
-            echo "🚀 Subindo containers"
-            docker compose up -d
+          CLOUDINARY_CLOUD_NAME=$CLOUDINARY_CLOUD_NAME
+          CLOUDINARY_API_KEY=$CLOUDINARY_API_KEY
+          CLOUDINARY_API_SECRET=$CLOUDINARY_API_SECRET
+          EOL
 
-            echo "🧹 Limpando imagens antigas"
-            docker image prune -f
+          echo "🐳 Docker compose build"
+          docker compose build
+
+          echo "🚀 Docker compose up"
+          docker compose up -d
+
+          echo "✅ Deploy finalizado"
           EOF
