@@ -76,7 +76,7 @@ jobs:
       # 4️⃣ Registrar VPS no known_hosts
       - name: Add VPS to known_hosts
         env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_HOST: ${{ vars.SSH_HOST }}
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
@@ -84,8 +84,8 @@ jobs:
       # 5️⃣ Enviar código + .env.production para a VPS
       - name: Sync project to VPS
         env:
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ vars.SSH_USER }}
+          SSH_HOST: ${{ vars.SSH_HOST }}
         run: |
           rsync -az --delete \
             --filter=':- .dockerignore' \
@@ -95,8 +95,8 @@ jobs:
       # 6️⃣ Build e subir containers no servidor
       - name: Build and run containers
         env:
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ vars.SSH_USER }}
+          SSH_HOST: ${{ vars.SSH_HOST }}
         run: |
           ssh -T "$SSH_USER@$SSH_HOST" << 'EOF'
             set -e
