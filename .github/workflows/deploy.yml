@@ -36,9 +36,9 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
         run: |
           rsync -az --delete \
-          --filter=':- .dockerignore' \
-          ./ \
-          $SSH_USER@$SSH_HOST:/var/www/indies
+            --filter=':- .dockerignore' \
+            ./ \
+            $SSH_USER@$SSH_HOST:/var/www/indies
 
       # 5️⃣ Build e deploy via Docker Compose
       - name: Build and run containers
