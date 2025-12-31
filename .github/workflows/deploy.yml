@@ -69,40 +69,40 @@ jobs:
 
         run: |
           ssh -T $SSH_USER@$SSH_HOST << 'EOF'
-set -e
+          set -e
 
-cd /var/www/indies
+          cd /var/www/indies
 
-echo "📝 Criando .env.production"
-cat > .env.production <<EOL
-NODE_ENV=production
+          echo "📝 Criando .env.production"
+          cat > .env.production <<EOL
+          NODE_ENV=production
 
-SESSION_SECRET=$SESSION_SECRET
-PEPPER=$PEPPER
-NEXT_PUBLIC_SITE_NAME=$NEXT_PUBLIC_SITE_NAME
-NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
+          SESSION_SECRET=$SESSION_SECRET
+          PEPPER=$PEPPER
+          NEXT_PUBLIC_SITE_NAME=$NEXT_PUBLIC_SITE_NAME
+          NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
 
-POSTGRES_HOST=$POSTGRES_HOST
-POSTGRES_PORT=$POSTGRES_PORT
-POSTGRES_DB=$POSTGRES_DB
-POSTGRES_USER=$POSTGRES_USER
-POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+          POSTGRES_HOST=$POSTGRES_HOST
+          POSTGRES_PORT=$POSTGRES_PORT
+          POSTGRES_DB=$POSTGRES_DB
+          POSTGRES_USER=$POSTGRES_USER
+          POSTGRES_PASSWORD=$POSTGRES_PASSWORD
 
-EMAIL_SMTP_HOST=$EMAIL_SMTP_HOST
-EMAIL_SMTP_PORT=$EMAIL_SMTP_PORT
-EMAIL_SMTP_USER=$EMAIL_SMTP_USER
-EMAIL_SMTP_PASSWORD=$EMAIL_SMTP_PASSWORD
+          EMAIL_SMTP_HOST=$EMAIL_SMTP_HOST
+          EMAIL_SMTP_PORT=$EMAIL_SMTP_PORT
+          EMAIL_SMTP_USER=$EMAIL_SMTP_USER
+          EMAIL_SMTP_PASSWORD=$EMAIL_SMTP_PASSWORD
 
-CLOUDINARY_CLOUD_NAME=$CLOUDINARY_CLOUD_NAME
-CLOUDINARY_API_KEY=$CLOUDINARY_API_KEY
-CLOUDINARY_API_SECRET=$CLOUDINARY_API_SECRET
-EOL
+          CLOUDINARY_CLOUD_NAME=$CLOUDINARY_CLOUD_NAME
+          CLOUDINARY_API_KEY=$CLOUDINARY_API_KEY
+          CLOUDINARY_API_SECRET=$CLOUDINARY_API_SECRET
+          EOL
 
-echo "🐳 Docker compose build"
-docker compose build
+          echo "🐳 Docker compose build"
+          docker compose build
 
-echo "🚀 Docker compose up"
-docker compose up -d
+          echo "🚀 Docker compose up"
+          docker compose up -d
 
-echo "✅ Deploy finalizado"
-EOF
+          echo "✅ Deploy finalizado"
+          EOF
