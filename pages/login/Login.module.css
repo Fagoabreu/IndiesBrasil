@@ -1,0 +1,28 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card {
+  width: 100%;
+  max-width: 480px;
+  padding: 32px;
+  border-radius: 12px;
+  border: 1px solid var(--borderColor-default);
+  background: var(--bgColor-default);
+}
+
+.title {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.links {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: center;
+}
