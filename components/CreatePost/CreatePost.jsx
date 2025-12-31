@@ -3,6 +3,15 @@ import { Avatar, Textarea, Button, Stack, IconButton } from "@primer/react";
 import { ImageIcon, TrashIcon } from "@primer/octicons-react";
 import Image from "next/image";
 import styles from "./CreatePost.module.css";
+import PropTypes from "prop-types";
+
+CreatePost.propTypes = {
+  user: PropTypes.shape({
+    avatarUrl: PropTypes.string,
+  }).isRequired,
+
+  onPost: PropTypes.func.isRequired,
+};
 
 export default function CreatePost({ user, onPost }) {
   const [content, setContent] = useState("");

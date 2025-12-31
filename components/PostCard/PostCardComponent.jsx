@@ -6,6 +6,7 @@ import PostActionsComponent from "../PostActions/PostActionsComponent";
 import CommentPanelComponent from "../CommentPanel/CommentPanelComponent";
 import EmbedComponent from "../Embeds/EmbedComponent";
 import Image from "next/image";
+import PropTypes from "prop-types";
 
 function timeAgo(dateString) {
   const now = new Date();
@@ -27,6 +28,30 @@ function timeAgo(dateString) {
   }
   return "agora";
 }
+
+PostCardComponent.propTypes = {
+  post: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    content: PropTypes.string.isRequired,
+
+    author_username: PropTypes.string.isRequired,
+    author_avatar_url: PropTypes.string,
+
+    created_at: PropTypes.string.isRequired,
+
+    liked_by_user: PropTypes.bool,
+    likes_count: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    comments_count: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+
+    is_current_user: PropTypes.bool,
+
+    post_img_url: PropTypes.string,
+    embed: PropTypes.array,
+  }).isRequired,
+
+  onDelete: PropTypes.func,
+  canInteract: PropTypes.bool,
+};
 
 export default function PostCardComponent({ post, onDelete, canInteract = true }) {
   const [hasLiked, setHasLiked] = useState(post.liked_by_user || false);

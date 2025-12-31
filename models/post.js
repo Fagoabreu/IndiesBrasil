@@ -239,7 +239,7 @@ async function deletePostByIdAndAuthorId(userId, postId) {
 }
 
 async function setPostLikes(postId, userId, liked) {
-  const post = getPostById(userId, postId);
+  const post = await getPostById(userId, postId);
   if (!post) {
     throw new NotFoundError({
       message: "O id do post informado não foi encontrado no sistema.",

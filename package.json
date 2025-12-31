@@ -48,6 +48,7 @@
     "node-pg-migrate": "7.9.1",
     "nodemailer": "7.0.10",
     "pg": "8.13.1",
+    "prop-types": "^15.8.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "styled-components": "6.1.19",

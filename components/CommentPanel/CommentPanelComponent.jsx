@@ -2,6 +2,26 @@ import { Button, ButtonGroup, Textarea } from "@primer/react";
 import { useState } from "react";
 import styles from "./CommentPanelComponent.module.css";
 import CommentComponent from "../Comment/CommentComponent";
+import PropTypes from "prop-types";
+
+CommentPanelComponent.propTypes = {
+  comments: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+      author_avatar_image: PropTypes.string,
+      author_username: PropTypes.string.isRequired,
+      content: PropTypes.string.isRequired,
+      is_current_user: PropTypes.bool.isRequired,
+    }),
+  ).isRequired,
+
+  showCommentBox: PropTypes.bool.isRequired,
+  showComments: PropTypes.bool.isRequired,
+
+  onCloseCommentBox: PropTypes.func.isRequired,
+  onSubmitComment: PropTypes.func.isRequired,
+  onDeleteComment: PropTypes.func.isRequired,
+};
 
 export default function CommentPanelComponent({ comments, showCommentBox, showComments, onCloseCommentBox, onSubmitComment, onDeleteComment }) {
   const [newComment, setNewComment] = useState("");

@@ -1,6 +1,11 @@
 import { useEffect, useRef } from "react";
 import styles from "./InstagramEmbed.module.css";
 import Script from "next/script";
+import PropTypes from "prop-types";
+
+InstagramEmbed.propTypes = {
+  url: PropTypes.string.isRequired,
+};
 
 export default function InstagramEmbed({ url }) {
   const ref = useRef(null);
