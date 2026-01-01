@@ -73,7 +73,7 @@ describe("GET /api/v1/user", () => {
         maxAge: session.EXPIRATION_IN_MILLISECONDS / 1000,
         path: "/",
         httpOnly: true,
-        sameSite: "Strict",
+        sameSite: "lax",
       });
     });
 
@@ -200,7 +200,7 @@ describe("GET /api/v1/user", () => {
         maxAge: session.EXPIRATION_IN_MILLISECONDS / 1000,
         path: "/",
         httpOnly: true,
-        sameSite: "Strict",
+        sameSite: "lax",
       });
     });
   });
