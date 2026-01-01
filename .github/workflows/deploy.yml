@@ -103,6 +103,10 @@ jobs:
             cd /var/www/indies
 
             docker compose down
+            if [ "$(docker volume ls -q --filter name=indies_nginx_secrets)" ]; then
+              echo "Volume indies_nginx_secrets exists, attempting to remove..."
+              docker volume rm indies_nginx_secrets
+            fi
             docker volume rm indies_nginx_secrets
             docker compose up -d --build
           EOF
