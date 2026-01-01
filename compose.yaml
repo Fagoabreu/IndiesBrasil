@@ -6,7 +6,7 @@ services:
       - 80:80
       - 443:443
     env_file:
-      - ./nginx-certbot.env
+      - ./nginx/nginx-certbot.env
     configs:
       - source: indies_config
         target: /etc/nginx/user_conf.d/indies.conf
@@ -48,7 +48,7 @@ services:
 
 configs:
   indies_config:
-    file: ./indies.conf
+    file: .nginx/indies.conf
 
 networks:
   public:
