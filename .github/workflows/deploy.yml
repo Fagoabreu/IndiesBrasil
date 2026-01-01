@@ -101,12 +101,15 @@ jobs:
           ssh -T "$SSH_USER@$SSH_HOST" << 'EOF'
             set -e
             cd /var/www/indies
-
+            echo "🛑 Parando containers"
             docker compose down
-            if [ "$(docker volume ls -q --filter name=indies_nginx_secrets)" ]; then
-              echo "Volume indies_nginx_secrets exists, attempting to remove..."
+            echo "🧹 Removendo volume nginx_secrets se existir"
+            if docker volume inspect indies_nginx_secrets >/dev/null 2>&1; then
               docker volume rm indies_nginx_secrets
+            else
+              echo "Volume indies_nginx_secrets não existe, ignorando"
             fi
-            docker volume rm indies_nginx_secrets
+
+            echo "🚀 Subindo stack novamente"
             docker compose up -d --build
           EOF
