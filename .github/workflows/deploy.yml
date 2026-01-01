@@ -103,5 +103,6 @@ jobs:
             cd /var/www/indies
 
             docker compose down
+            docker volume rm indies_nginx_secrets
             docker compose up -d --build
           EOF
