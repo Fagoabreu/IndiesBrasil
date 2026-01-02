@@ -55,7 +55,7 @@ services:
 
 configs:
   indies_config:
-    file: .deploy/nginx/indies.conf
+    file: ./deploy/nginx/indies.conf
 
 networks:
   public:
