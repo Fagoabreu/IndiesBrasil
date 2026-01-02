@@ -82,3 +82,10 @@ docker compose run --rm certbot certonly \ <br>
 <br>
 <h4>INFRA: COMO DEPLOYAR (1 ÚNICA VEZ)<h4>
 rsync -az deploy/infra/ user@vps:/var/www/infra/ <br>
+
+openssl req -x509 -new -nodes -key root.key -sha256 -days 3650 -subj "/CN=Indies Postgres CA" -out root.crt<br>
+openssl req -new -key server.key -subj "/CN=postgres" -out server.csr<br>
+openssl x509 -req -in server.csr -CA root.crt -CAkey root.key -CAcreateserial -out server.crt -days 3650 -sha256<br>
+chmod 600 /var/www/infra/certs/server.key<br>
+chmod 644 /var/www/infra/certs/server.crt<br>
+chmod 644 /var/www/infra/certs/root.crt<br>
