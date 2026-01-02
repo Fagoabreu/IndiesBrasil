@@ -55,3 +55,30 @@
 <br/>EMAIL_HTTP_HOST=localhost
 <br/>EMAIL_HTTP_PORT=1080
 <br/>NEXT_PUBLIC_BASE_URL=localhost
+
+<p>===================</p>
+<h2>Emissão de Certificado</h2>
+docker compose up -d nginx <br>
+docker compose run --rm certbot certonly \ <br>
+  --webroot \ <br>
+  -w /var/www/certbot \ <br>
+  -d jogos.social.br <br>
+`
+======================= <br>
+<h2>Pastas deploy no servidor</h2>
+<h4>Pastas<h4>
+/var/www/<br>
+├── infra/                 # Criado manualmente (scp/rsync UMA VEZ) <br>
+│   ├── docker-compose.yml<br>
+│   ├── nginx/<br>
+│   ├── certs/<br>
+│   └── .env.production    # secrets da infra <br>
+│<br>
+└── indies/<br>
+    ├── docker-compose.yml <br>
+    ├── .env.production    # secrets do app (gerado pelo CI) <br>
+    └── indies-app.tar.gz <br>
+<br>
+<br>
+<h4>INFRA: COMO DEPLOYAR (1 ÚNICA VEZ)<h4>
+rsync -az deploy/infra/ user@vps:/var/www/infra/ <br>

@@ -1,0 +1,53 @@
+name: Deploy Infra (Manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type DEPLOY to confirm infra deployment"
+        required: true
+
+jobs:
+  deploy-infra:
+    if: github.event.inputs.confirm == 'DEPLOY'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 🔐 SSH
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Add VPS to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ vars.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      # 📦 Sync infra (SEM git)
+      - name: Sync infra files
+        run: |
+          rsync -az --delete \
+            deploy/infra/ \
+            ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }}:/var/www/infra/
+
+      # 🚀 Apply infra
+      - name: Apply infra
+        run: |
+          ssh ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} << 'EOF'
+            set -e
+            cd /var/www/infra
+
+            echo "🔍 Checking .env.production"
+            test -f .env.production || {
+              echo "❌ .env.production NOT FOUND"
+              exit 1
+            }
+
+            echo "🚀 Deploying infra"
+            docker compose pull
+            docker compose up -d
+          EOF
