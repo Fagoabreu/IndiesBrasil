@@ -2,114 +2,48 @@ name: Deploy Indies Brasil
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: production
 
     steps:
-      # 1️⃣ Checkout do código
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        uses: actions/checkout@v4
 
-      # 2️⃣ Gerar .env.production NO RUNNER (onde secrets funcionam)
-      - name: Generate .env.production
-        env:
-          NODE_ENV: production
+      # 1️⃣ Build da imagem
+      - name: Build image
+        run: |
+          docker build -t indies-app:latest ./app
 
-          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
-          PEPPER: ${{ secrets.PEPPER }}
+      # 2️⃣ Exportar imagem
+      - name: Export image
+        run: docker save indies-app:latest | gzip > indies-app.tar.gz
 
-          NEXT_PUBLIC_SITE_NAME: ${{ vars.NEXT_PUBLIC_SITE_NAME }}
-          NEXT_PUBLIC_BASE_URL: ${{ vars.NEXT_PUBLIC_BASE_URL }}
-
-          POSTGRES_HOST: ${{ vars.POSTGRES_HOST }}
-          POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
-          POSTGRES_DB: ${{ vars.POSTGRES_DB }}
-          POSTGRES_USER: ${{ vars.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
-          EMAIL_SMTP_HOST: ${{ vars.EMAIL_SMTP_HOST }}
-          EMAIL_SMTP_PORT: ${{ vars.EMAIL_SMTP_PORT }}
-          EMAIL_SMTP_USER: ${{ vars.EMAIL_SMTP_USER }}
-          EMAIL_SMTP_PASSWORD: ${{ secrets.EMAIL_SMTP_PASSWORD }}
-
-          CLOUDINARY_CLOUD_NAME: ${{ vars.CLOUDINARY_CLOUD_NAME }}
-          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
-          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
-
+      # 3️⃣ Gerar .env.production (APP)
+      - name: Generate app env
         run: |
           {
-            echo "NODE_ENV=$NODE_ENV"
-            echo "SESSION_SECRET=$SESSION_SECRET"
-            echo "PEPPER=$PEPPER"
-            echo "NEXT_PUBLIC_SITE_NAME=$NEXT_PUBLIC_SITE_NAME"
-            echo "NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL"
-
-            echo "POSTGRES_HOST=$POSTGRES_HOST"
-            echo "POSTGRES_PORT=$POSTGRES_PORT"
-            echo "POSTGRES_DB=$POSTGRES_DB"
-            echo "POSTGRES_USER=$POSTGRES_USER"
-            echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD"
-            echo "DATABASE_URL=$DATABASE_URL"
-
-            echo "EMAIL_SMTP_HOST=$EMAIL_SMTP_HOST"
-            echo "EMAIL_SMTP_PORT=$EMAIL_SMTP_PORT"
-            echo "EMAIL_SMTP_USER=$EMAIL_SMTP_USER"
-            echo "EMAIL_SMTP_PASSWORD=$EMAIL_SMTP_PASSWORD"
-
-            echo "CLOUDINARY_CLOUD_NAME=$CLOUDINARY_CLOUD_NAME"
-            echo "CLOUDINARY_API_KEY=$CLOUDINARY_API_KEY"
-            echo "CLOUDINARY_API_SECRET=$CLOUDINARY_API_SECRET"
+            echo "NODE_ENV=production"
+            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}"
+            echo "NEXT_PUBLIC_BASE_URL=${{ vars.NEXT_PUBLIC_BASE_URL }}"
           } > .env.production
 
-      # 3️⃣ Setup SSH
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@a6f90b1f127823b31d4d4a8d96047790581349bd
-        with:
-          ssh-private-key: ${{ secrets.SSH_KEY }}
-
-      # 4️⃣ Registrar VPS no known_hosts
-      - name: Add VPS to known_hosts
-        env:
-          SSH_HOST: ${{ vars.SSH_HOST }}
+      # 4️⃣ Enviar arquivos
+      - name: Upload to VPS
         run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+          rsync -az \
+            indies-app.tar.gz \
+            .env.production \
+            deploy/app/docker-compose.yml \
+            ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }}:/var/www/indies/
 
-      # 5️⃣ Enviar código + .env.production para a VPS
-      - name: Sync project to VPS
-        env:
-          SSH_USER: ${{ vars.SSH_USER }}
-          SSH_HOST: ${{ vars.SSH_HOST }}
+      # 5️⃣ Deploy remoto
+      - name: Deploy
         run: |
-          rsync -az --delete \
-            --filter=':- .dockerignore' \
-            ./ \
-            "$SSH_USER@$SSH_HOST:/var/www/indies"
-
-      # 6️⃣ Build e subir containers no servidor
-      - name: Build and run containers
-        env:
-          SSH_USER: ${{ vars.SSH_USER }}
-          SSH_HOST: ${{ vars.SSH_HOST }}
-        run: |
-          ssh -T "$SSH_USER@$SSH_HOST" << 'EOF'
-            set -e
+          ssh ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} << 'EOF'
             cd /var/www/indies
-            echo "🛑 Parando containers"
-            docker compose down
-            echo "🧹 Removendo volume nginx_secrets se existir"
-            if docker volume inspect indies_nginx_secrets >/dev/null 2>&1; then
-              docker volume rm indies_nginx_secrets
-            else
-              echo "Volume indies_nginx_secrets não existe, ignorando"
-            fi
-
-            echo "🚀 Subindo stack novamente"
-            docker compose up -d --build
+            docker load < indies-app.tar.gz
+            docker compose up -d
           EOF

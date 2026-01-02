@@ -1,0 +1,22 @@
+services:
+  indies-app:
+    image: indies-app:latest
+    container_name: indies-app
+    restart: always
+
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env.production
+    networks:
+      - private
+    volumes:
+      - uploads-data:/app/public/uploads
+
+networks:
+  private:
+    external: true
+
+volumes:
+  uploads-data:
