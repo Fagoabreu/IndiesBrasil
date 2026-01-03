@@ -49,9 +49,9 @@ jobs:
       # 5️⃣ Deploy remoto
       - name: Deploy app
         run: |
-          ssh -o StrictHostKeyChecking=no \
-            ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} << 'EOF'
-              cd /var/www/indies
-              docker load < indies-app.tar.gz
-              docker compose up -d
-            EOF
+          ssh -o StrictHostKeyChecking=no ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} <<EOF
+          set -e
+          cd /var/www/indies
+          docker load < indies-app.tar.gz
+          docker compose -f compose.yaml up -d
+          EOF

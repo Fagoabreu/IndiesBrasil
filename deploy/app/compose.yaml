@@ -7,12 +7,12 @@ services:
     env_file:
       - .env.production
     networks:
-      - private
+      - infra_private
     volumes:
       - uploads-data:/app/public/uploads
 
 networks:
-  private:
+  infra_private:
     external: true
 
 volumes:
