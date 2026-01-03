@@ -73,8 +73,12 @@ jobs:
             indies-app.tar.gz \
             .env.production \
             deploy/compose.yaml \
-            deploy/nginx/ \
             ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }}:/var/www/indies/
+            
+          rsync -az --checksum \
+            -e "ssh -o StrictHostKeyChecking=no" \
+            deploy/nginx/ \
+            ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }}:/var/www/indies/nginx
 
       # 5️⃣ Deploy remoto
       - name: Deploy app
