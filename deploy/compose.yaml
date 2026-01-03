@@ -42,11 +42,12 @@ services:
       - "80:80"
       - "443:443"
     volumes:
+      - ./nginx:/etc/nginx/conf.d:ro
       - nginx_secrets:/etc/letsencrypt
       - certbot-webroot:/var/www/certbot
-      - ./nginx:/etc/nginx/conf.d
     networks:
       - public
+      - private
 
   certbot:
     image: certbot/certbot

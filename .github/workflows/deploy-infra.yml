@@ -28,15 +28,6 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H "${{ vars.SSH_HOST }}" >> ~/.ssh/known_hosts
 
-      # 📦 Sync infra (SEM git no VPS)
-      - name: Sync infra files
-        run: |
-          rsync -az --delete \
-            --exclude='.env.production' \
-            --exclude='certs/' \
-            deploy/infra/ \
-            "${{ vars.SSH_USER }}@${{ vars.SSH_HOST }}:/var/www/infra/"
-
       # 🚀 Apply infra
       - name: Apply infra
         run: |
