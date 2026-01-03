@@ -31,12 +31,13 @@ jobs:
             echo "NEXT_PUBLIC_BASE_URL=${{ vars.NEXT_PUBLIC_BASE_URL }}"
           } > .env.production
 
-      # 4️⃣ Enviar arquivos
+      # 4️⃣ Configurar SSH
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
+      #Enviar arquivos
       - name: Upload app artifacts
         run: |
           rsync -az \
@@ -54,4 +55,12 @@ jobs:
           cd /var/www/indies
           docker load < indies-app.tar.gz
           docker compose -f compose.yaml up -d
+          EOF
+
+      # Run Migrations
+      - name: Run database migrations
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} <<EOF
+          cd /var/www/indies
+          docker exec indies-app npm run migrations:up
           EOF
