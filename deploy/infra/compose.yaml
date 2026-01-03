@@ -1,4 +1,40 @@
 services:
+  postgres:
+    image: postgres:17.2-alpine3.20
+    container_name: postgres
+    restart: always
+    env_file:
+      - .env.production
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - postgres-certs:/var/lib/postgresql/data/certs:ro
+    command:
+      - "-c"
+      - "ssl=on"
+      - "-c"
+      - "ssl_cert_file=/var/lib/postgresql/data/certs/server.crt"
+      - "-c"
+      - "ssl_key_file=/var/lib/postgresql/data/certs/server.key"
+      - "-c"
+      - "ssl_ca_file=/var/lib/postgresql/data/certs/root.crt"
+    networks:
+      - private
+
+  services:
+  indies-app:
+    image: indies-app:latest
+    container_name: indies-app
+    restart: always
+    env_file:
+      - .env.production
+    volumes:
+      - uploads-data:/app/public/uploads
+      - postgres-certs:/etc/ssl/postgres:ro
+    depends_on:
+      - postgres
+    networks:
+      - private
+
   nginx:
     image: nginx:1.29
     container_name: nginx
@@ -11,8 +47,7 @@ services:
       - certbot-webroot:/var/www/certbot
       - ./nginx:/etc/nginx/conf.d
     networks:
-      - infra_public
-      - infra_private
+      - public
 
   certbot:
     image: certbot/certbot
@@ -25,35 +60,24 @@ services:
       - certbot-webroot:/var/www/certbot
     depends_on:
       - nginx
+    entrypoint: >
+      sh -c '
+      trap exit TERM;
+      while :; do
+        certbot renew --quiet;
+        sleep 12h;
+      done
+      '
     networks:
-      - infra_public
-
-  postgres:
-    image: postgres:17.2-alpine3.20
-    container_name: postgres
-    restart: always
-    env_file:
-      - .env.production
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    command:
-      - "-c"
-      - "ssl=on"
-      - "-c"
-      - "ssl_cert_file=/var/lib/postgresql/data/certs/server.crt"
-      - "-c"
-      - "ssl_key_file=/var/lib/postgresql/data/certs/server.key"
-      - "-c"
-      - "ssl_ca_file=/var/lib/postgresql/data/certs/root.crt"
-    networks:
-      - infra_private
+      - public
 
 networks:
-  infra_private:
-    external: true
-  infra_public:
+  private:
+  public:
 
 volumes:
   postgres-data:
+  postgres-certs:
+  uploads-data:
   nginx_secrets:
   certbot-webroot:
