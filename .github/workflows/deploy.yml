@@ -60,6 +60,7 @@ jobs:
       - name: Upload app artifacts
         run: |
           rsync -az --checksum \
+            --exclude='certs/' \
             -e "ssh -o StrictHostKeyChecking=no" \
             indies-app.tar.gz \
             .env.production \
@@ -96,8 +97,22 @@ jobs:
             exit 1
           }
 
+          echo "🔍 Checking nginx config files"
+          test -f nginx/indies.http.conf || {
+            echo "❌ indies.http.conf NOT FOUND"
+            exit 1
+          }
+
+          test -f nginx/indies.https.conf || {
+            echo "❌ indies.https.conf NOT FOUND"
+            exit 1
+          }
+
           docker load < indies-app.tar.gz
           docker compose -f compose.yaml up -d --no-deps indies-app
+
+          echo "🔄 Reloading nginx"
+          docker exec nginx nginx -s reload
           EOF
 
       # Run Migrations
