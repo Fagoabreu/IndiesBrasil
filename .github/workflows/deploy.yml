@@ -56,6 +56,14 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
+      # Pretara pastas
+      - name: Prepare directories on server
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} <<EOF
+            mkdir -p /var/www/indies/nginx
+            mkdir -p /var/www/indies/certs
+          EOF
+
       #Enviar arquivos
       - name: Upload app artifacts
         run: |
@@ -78,12 +86,6 @@ jobs:
           echo "🔍 Checking .env.production"
           test -f .env.production || {
             echo "❌ .env.production NOT FOUND"
-            exit 1
-          }
-
-          echo "🔍 Checking certificates directory"
-          test -d certs || {
-            echo "❌ certs directory NOT FOUND"
             exit 1
           }
 
