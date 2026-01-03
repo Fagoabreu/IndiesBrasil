@@ -157,10 +157,23 @@ jobs:
             docker compose -f compose.yaml up -d --no-deps indies-app
 
             echo "🔄 Reloading nginx"
-            if docker ps --format '{{.Names}}' | grep -q '^nginx$'; then
-              docker exec nginx nginx -s reload
+            if docker ps -a --format '{{.Names}}' | grep -q '^nginx$'; then
+              echo "⏳ Waiting for nginx to be running..."
+
+              for i in {1..15}; do
+                STATUS=$(docker inspect -f '{{.State.Status}}' nginx 2>/dev/null || true)
+
+                if [ "$STATUS" = "running" ]; then
+                  docker exec nginx nginx -s reload
+                  echo "✅ nginx reloaded"
+                  break
+                fi
+
+                echo "⏳ nginx status: $STATUS (retry $i)"
+                sleep 2
+              done
             else
-              echo "ℹ️ nginx container not running, skipping reload"
+              echo "ℹ️ nginx container not found, skipping reload"
             fi
           EOF
 
