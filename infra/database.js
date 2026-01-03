@@ -41,13 +41,8 @@ const database = {
 export default database;
 
 function getSSLValues() {
-  // TESTES: nunca SSL
-  if (process.env.NODE_ENV === "test") {
-    return false;
-  }
-
   // PRODUÇÃO com CA explícita
-  if (process.env.POSTGRES_CA_PATH) {
+  if (process.env.NODE_ENV === "production" && process.env.POSTGRES_CA_PATH) {
     return {
       ca: fs.readFileSync(process.env.POSTGRES_CA_PATH),
     };
@@ -60,6 +55,6 @@ function getSSLValues() {
     };
   }
 
-  // DEV default
+  // DEV e TESTES default
   return false;
 }
