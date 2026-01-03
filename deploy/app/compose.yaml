@@ -10,6 +10,7 @@ services:
       - infra_private
     volumes:
       - uploads-data:/app/public/uploads
+      - /var/www/infra/certs/root.crt:/etc/ssl/postgres/root.crt:ro
 
 networks:
   infra_private:

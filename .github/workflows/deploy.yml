@@ -26,8 +26,12 @@ jobs:
       - name: Generate app env
         run: |
           {
+
             echo "NODE_ENV=production"
-            echo "NEXT_PUBLIC_SITE_NAME=IndiesBrasil"
+            echo "CERTBOT_ENV=production"
+            echo "CERTBOT_DOMAIN=${{ vars.CERTBOT_DOMAIN }}"
+            echo "CERTBOT_EMAIL=${{ vars.EMAIL_SMTP_USER }}"
+            echo "NEXT_PUBLIC_SITE_NAME=${{ vars.NEXT_PUBLIC_SITE_NAME }}"
             echo "NEXT_PUBLIC_BASE_URL=${{ vars.NEXT_PUBLIC_BASE_URL }}"
             echo "PEPPER=${{ secrets.PEPPER }}"
             echo "POSTGRES_HOST=${{ vars.POSTGRES_HOST }}"
@@ -55,7 +59,7 @@ jobs:
       #Enviar arquivos
       - name: Upload app artifacts
         run: |
-          rsync -az \
+          rsync -az --checksum \
             -e "ssh -o StrictHostKeyChecking=no" \
             indies-app.tar.gz \
             .env.production \
@@ -68,8 +72,31 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} <<EOF
           set -e
           cd /var/www/indies
+
+          echo "🔍 Checking .env.production"
+          test -f .env.production || {
+            echo "❌ .env.production NOT FOUND"
+            exit 1
+          }
+
+          echo "🔍 Checking certificates directory"
+          test -d certs || {
+            echo "❌ certs directory NOT FOUND"
+            exit 1
+          }
+
+          test -f certs/root.crt || {
+            echo "❌ root.crt NOT FOUND"
+            exit 1
+          }
+
+          test -f certs/server.crt || {
+            echo "❌ server.crt NOT FOUND"
+            exit 1
+          }
+
           docker load < indies-app.tar.gz
-          docker compose -f compose.yaml up -d
+          docker compose -f compose.yaml up -d --no-deps indies-app
           EOF
 
       # Run Migrations

@@ -87,10 +87,14 @@ openssl req -x509 -new -nodes -key root.key -sha256 -days 3650 -subj "/CN=Indies
 openssl req -new -key server.key -subj "/CN=postgres" -out server.csr<br>
 openssl x509 -req -in server.csr -CA root.crt -CAkey root.key -CAcreateserial -out server.crt -days 3650 -sha256<br>
 <br>
-root@JOGOS:/var/www/infra/certs# chown 999:999 /var/www/infra/certs/server.key<br>
-root@JOGOS:/var/www/infra/certs# chmod 600 /var/www/infra/certs/server.key<br>
-root@JOGOS:/var/www/infra/certs# chmod 644 /var/www/infra/certs/server.crt<br>
-root@JOGOS:/var/www/infra/certs# chmod 644 /var/www/infra/certs/root.crt<br>
+mkdir -p /var/lib/docker/volumes/infra_postgres-data/\_data/certs<br>
+cp /var/www/infra/certs/server.key /var/lib/docker/volumes/infra_postgres-data/\_data/certs/<br>
+cp /var/www/infra/certs/server.crt /var/lib/docker/volumes/infra_postgres-data/\_data/certs/<br>
+cp /var/www/infra/certs/root.crt /var/lib/docker/volumes/infra_postgres-data/\_data/certs/<br>
+chown root:root /var/lib/docker/volumes/infra_postgres-data/\_data/certs/server.key<br>
+chmod 600 /var/lib/docker/volumes/infra_postgres-data/\_data/certs/server.key<br>
+chmod 644 /var/lib/docker/volumes/infra_postgres-data/\_data/certs/server.crt<br>
+chmod 644 /var/lib/docker/volumes/infra_postgres-data/\_data/certs/root.crt<br>
 <br>
 Ordem Execução:<br>
 
