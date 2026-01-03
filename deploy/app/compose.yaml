@@ -4,9 +4,6 @@ services:
     container_name: indies-app
     restart: always
 
-    build:
-      context: .
-      dockerfile: Dockerfile
     env_file:
       - .env.production
     networks:
