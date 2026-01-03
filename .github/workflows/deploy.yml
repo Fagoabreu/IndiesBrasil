@@ -43,7 +43,7 @@ jobs:
             -e "ssh -o StrictHostKeyChecking=no" \
             indies-app.tar.gz \
             .env.production \
-            deploy/app/compose.yml \
+            deploy/app/compose.yaml \
             ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }}:/var/www/indies/
 
       # 5️⃣ Deploy remoto
