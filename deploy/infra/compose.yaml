@@ -11,8 +11,8 @@ services:
       - certbot-webroot:/var/www/certbot
       - ./nginx:/etc/nginx/conf.d
     networks:
-      - public
-      - private
+      - infra_public
+      - infra_private
 
   certbot:
     image: certbot/certbot
@@ -23,24 +23,10 @@ services:
     volumes:
       - nginx_secrets:/etc/letsencrypt
       - certbot-webroot:/var/www/certbot
-    entrypoint: >
-      sh -c '
-      trap exit TERM;
-      while :; do
-        if [ "$$CERTBOT_ENV" = "staging" ]; then
-          STAGING_FLAG="--staging";
-        else
-          STAGING_FLAG="";
-        fi;
-
-        certbot renew $$STAGING_FLAG --quiet;
-        sleep 12h;
-      done
-      '
     depends_on:
       - nginx
     networks:
-      - public
+      - infra_public
 
   postgres:
     image: postgres:17.2-alpine3.20
@@ -60,16 +46,11 @@ services:
       - "-c"
       - "ssl_ca_file=/var/lib/postgresql/data/certs/root.crt"
     networks:
-      - private
+      - infra_private
 
 networks:
-  public:
-  private:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: "10.0.0.0/19"
-          gateway: "10.0.0.1"
+  infra_public:
+  infra_private:
 
 volumes:
   postgres-data:
