@@ -43,7 +43,7 @@ jobs:
           ssh "${{ vars.SSH_USER }}@${{ vars.SSH_HOST }}" << 'EOF'
             set -e
 
-            cd /var/www/infra
+            cd /var/www/indies
 
             echo "🔍 Checking .env.production"
             test -f .env.production || {
