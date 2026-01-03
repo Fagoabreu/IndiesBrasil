@@ -27,8 +27,22 @@ jobs:
         run: |
           {
             echo "NODE_ENV=production"
-            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}"
+            echo "NEXT_PUBLIC_SITE_NAME=IndiesBrasil"
             echo "NEXT_PUBLIC_BASE_URL=${{ vars.NEXT_PUBLIC_BASE_URL }}"
+            echo "PEPPER=${{ secrets.PEPPER }}"
+            echo "POSTGRES_HOST=${{ vars.POSTGRES_HOST }}"
+            echo "POSTGRES_PORT=${{ vars.POSTGRES_PORT }}"
+            echo "POSTGRES_DB=${{ vars.POSTGRES_DB }}"
+            echo "POSTGRES_USER=${{ vars.POSTGRES_USER }}"
+            echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}"
+            echo "EMAIL_SMTP_HOST=${{ vars.EMAIL_SMTP_HOST }}"
+            echo "EMAIL_SMTP_PORT=${{ vars.EMAIL_SMTP_PORT }}"
+            echo "EMAIL_SMTP_USER=${{ vars.EMAIL_SMTP_USER }}"
+            echo "EMAIL_SMTP_PASSWORD=${{ secrets.EMAIL_SMTP_PASSWORD }}"
+            echo "CLOUDINARY_CLOUD_NAME=${{ vars.CLOUDINARY_CLOUD_NAME }}"
+            echo "CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}"
+            echo "CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}"
+            echo "FILE_UPLOAD_BASE_FOLDER=${{ vars.FILE_UPLOAD_BASE_FOLDER }}"
           } > .env.production
 
       # 4️⃣ Configurar SSH

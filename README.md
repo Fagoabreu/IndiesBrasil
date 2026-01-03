@@ -93,8 +93,13 @@ root@JOGOS:/var/www/infra/certs# chmod 644 /var/www/infra/certs/server.crt<br>
 root@JOGOS:/var/www/infra/certs# chmod 644 /var/www/infra/certs/root.crt<br>
 <br>
 Ordem Execução:<br>
+
+docker network create infra_private<br>
 docker compose -f deploy/app/compose.yaml down<br>
 docker compose -f deploy/infra/compose.yaml down<br>
 <br>
 docker compose -f deploy/app/compose.yaml up -d<br>
 docker compose -f deploy/infra/compose.yaml up -d nginx<br>
+
+request certificate certbot: <br>
+docker compose run --rm certbot certonly --webroot -w /var/www/certbot -d jogos.social.br --email contato@indies.com --agree-tos --no-eff-email <br>
