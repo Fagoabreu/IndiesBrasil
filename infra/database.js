@@ -1,5 +1,6 @@
 import { Client } from "pg";
 import { ServiceError } from "./errors.js";
+import fs from "fs";
 
 async function query(queryObject) {
   let client;
@@ -40,11 +41,20 @@ const database = {
 export default database;
 
 function getSSLValues() {
-  if (process.env.POSTGREES_CA) {
+  // PRODUÇÃO com CA explícita
+  if (process.env.NODE_ENV === "production" && process.env.POSTGRES_CA_PATH) {
     return {
-      ca: process.env.POSTGREES_CA,
+      ca: fs.readFileSync(process.env.POSTGRES_CA_PATH),
     };
   }
 
-  return process.env.NODE_ENV === "production";
+  // PRODUÇÃO sem CA (self-signed)
+  if (process.env.NODE_ENV === "production") {
+    return {
+      rejectUnauthorized: false,
+    };
+  }
+
+  // DEV e TESTES default
+  return false;
 }

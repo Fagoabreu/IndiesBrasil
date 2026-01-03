@@ -35,6 +35,7 @@ jobs:
             echo "POSTGRES_DB=${{ vars.POSTGRES_DB }}"
             echo "POSTGRES_USER=${{ vars.POSTGRES_USER }}"
             echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}"
+            echo "POSTGRES_CA_PATH=${{ vars.POSTGRES_CA_PATH }}"
             echo "EMAIL_SMTP_HOST=${{ vars.EMAIL_SMTP_HOST }}"
             echo "EMAIL_SMTP_PORT=${{ vars.EMAIL_SMTP_PORT }}"
             echo "EMAIL_SMTP_USER=${{ vars.EMAIL_SMTP_USER }}"
