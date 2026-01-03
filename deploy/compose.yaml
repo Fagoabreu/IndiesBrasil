@@ -20,7 +20,6 @@ services:
     networks:
       - private
 
-  services:
   indies-app:
     image: indies-app:latest
     container_name: indies-app
