@@ -83,90 +83,85 @@ jobs:
       # 5️⃣ Deploy remoto
       - name: Deploy app
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} <<EOF
-          set -e
-          cd /var/www/indies
+          ssh -o StrictHostKeyChecking=no ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} << 'EOF'
+            set -e
+            cd /var/www/indies
 
-          echo "🔍 Checking .env.production"
-          test -f .env.production || {
-            echo "❌ .env.production NOT FOUND"
-            exit 1
-          }
+            echo "🔍 Checking .env.production"
+            test -f .env.production || {
+              echo "❌ .env.production NOT FOUND"
+              exit 1
+            }
 
-          CERTS_DIR="/var/lib/docker/volumes/infra_postgres-data/_data/certs"
+            CERTS_DIR="/var/lib/docker/volumes/infra_postgres-data/_data/certs"
 
-          echo "🔐 Ensuring Postgres SSL certificates"
+            echo "🔐 Ensuring Postgres SSL certificates"
+            echo "📁 CERTS_DIR=$CERTS_DIR"
 
-          # Criar diretório se não existir
-          mkdir -p "$CERTS_DIR"
+            mkdir -p "$CERTS_DIR"
 
-          # Gerar Root CA se não existir
-          if [ ! -f "$CERTS_DIR/root.key" ]; then
-            echo "🧾 Generating root CA"
-            openssl genrsa -out "$CERTS_DIR/root.key" 4096
-            openssl req -x509 -new -nodes \
-              -key "$CERTS_DIR/root.key" \
-              -sha256 -days 3650 \
-              -subj "/CN=Postgres Root CA" \
-              -out "$CERTS_DIR/root.crt"
-          fi
+            if [ ! -f "$CERTS_DIR/root.key" ]; then
+              echo "🧾 Generating root CA"
+              openssl genrsa -out "$CERTS_DIR/root.key" 4096
+              openssl req -x509 -new -nodes \
+                -key "$CERTS_DIR/root.key" \
+                -sha256 -days 3650 \
+                -subj "/CN=Postgres Root CA" \
+                -out "$CERTS_DIR/root.crt"
+            fi
 
-          # Gerar Server Key se não existir
-          if [ ! -f "$CERTS_DIR/server.key" ]; then
-            echo "🔑 Generating server key"
-            openssl genrsa -out "$CERTS_DIR/server.key" 4096
-          fi
+            if [ ! -f "$CERTS_DIR/server.key" ]; then
+              echo "🔑 Generating server key"
+              openssl genrsa -out "$CERTS_DIR/server.key" 4096
+            fi
 
-          # Gerar CSR se não existir
-          if [ ! -f "$CERTS_DIR/server.csr" ]; then
-            echo "📄 Generating server CSR"
-            openssl req -new \
-              -key "$CERTS_DIR/server.key" \
-              -subj "/CN=postgres" \
-              -out "$CERTS_DIR/server.csr"
-          fi
+            if [ ! -f "$CERTS_DIR/server.csr" ]; then
+              echo "📄 Generating server CSR"
+              openssl req -new \
+                -key "$CERTS_DIR/server.key" \
+                -subj "/CN=postgres" \
+                -out "$CERTS_DIR/server.csr"
+            fi
 
-          # Assinar certificado do servidor
-          if [ ! -f "$CERTS_DIR/server.crt" ]; then
-            echo "📜 Signing server certificate"
-            openssl x509 -req \
-              -in "$CERTS_DIR/server.csr" \
-              -CA "$CERTS_DIR/root.crt" \
-              -CAkey "$CERTS_DIR/root.key" \
-              -CAcreateserial \
-              -out "$CERTS_DIR/server.crt" \
-              -days 3650 -sha256
-          fi
+            if [ ! -f "$CERTS_DIR/server.crt" ]; then
+              echo "📜 Signing server certificate"
+              openssl x509 -req \
+                -in "$CERTS_DIR/server.csr" \
+                -CA "$CERTS_DIR/root.crt" \
+                -CAkey "$CERTS_DIR/root.key" \
+                -CAcreateserial \
+                -out "$CERTS_DIR/server.crt" \
+                -days 3650 -sha256
+            fi
 
-          # Permissões exigidas pelo Postgres
-          echo "🔒 Fixing permissions"
-          chown -R 999:999 "$CERTS_DIR"
-          chmod 700 "$CERTS_DIR"
-          chmod 600 "$CERTS_DIR/server.key"
-          chmod 644 "$CERTS_DIR/server.crt" "$CERTS_DIR/root.crt"
-          echo "✅ Postgres SSL certificates ready"
+            echo "🔒 Fixing permissions"
+            chown -R 999:999 "$CERTS_DIR"
+            chmod 700 "$CERTS_DIR"
+            chmod 600 "$CERTS_DIR/server.key"
+            chmod 644 "$CERTS_DIR/server.crt" "$CERTS_DIR/root.crt"
 
+            echo "✅ Postgres SSL certificates ready"
 
-          echo "🔍 Checking nginx config files"
-          test -f nginx/indies.http.conf || {
-            echo "❌ indies.http.conf NOT FOUND"
-            exit 1
-          }
+            echo "🔍 Checking nginx config files"
+            test -f nginx/indies.http.conf || {
+              echo "❌ indies.http.conf NOT FOUND"
+              exit 1
+            }
 
-          test -f nginx/indies.https.conf || {
-            echo "❌ indies.https.conf NOT FOUND"
-            exit 1
-          }
+            test -f nginx/indies.https.conf || {
+              echo "❌ indies.https.conf NOT FOUND"
+              exit 1
+            }
 
-          docker load < indies-app.tar.gz
-          docker compose -f compose.yaml up -d --no-deps indies-app
+            docker load < indies-app.tar.gz
+            docker compose -f compose.yaml up -d --no-deps indies-app
 
-          echo "🔄 Reloading nginx"
-          if docker ps --format '{{.Names}}' | grep -q '^nginx$'; then
-            docker exec nginx nginx -s reload
-          else
-            echo "ℹ️ nginx container not running, skipping reload"
-          fi
+            echo "🔄 Reloading nginx"
+            if docker ps --format '{{.Names}}' | grep -q '^nginx$'; then
+              docker exec nginx nginx -s reload
+            else
+              echo "ℹ️ nginx container not running, skipping reload"
+            fi
           EOF
 
       # Run Migrations
