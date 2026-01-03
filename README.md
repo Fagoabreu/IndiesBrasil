@@ -91,3 +91,10 @@ root@JOGOS:/var/www/infra/certs# chown 999:999 /var/www/infra/certs/server.key<b
 root@JOGOS:/var/www/infra/certs# chmod 600 /var/www/infra/certs/server.key<br>
 root@JOGOS:/var/www/infra/certs# chmod 644 /var/www/infra/certs/server.crt<br>
 root@JOGOS:/var/www/infra/certs# chmod 644 /var/www/infra/certs/root.crt<br>
+<br>
+Ordem Execução:<br>
+docker compose -f deploy/app/compose.yaml down<br>
+docker compose -f deploy/infra/compose.yaml down<br>
+<br>
+docker compose -f deploy/app/compose.yaml up -d<br>
+docker compose -f deploy/infra/compose.yaml up -d nginx<br>

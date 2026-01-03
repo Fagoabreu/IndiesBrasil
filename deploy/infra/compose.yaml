@@ -49,8 +49,9 @@ services:
       - infra_private
 
 networks:
-  infra_public:
   infra_private:
+    external: true
+  infra_public:
 
 volumes:
   postgres-data:
