@@ -93,7 +93,7 @@ jobs:
               exit 1
             }
 
-            CERTS_DIR="/var/lib/docker/volumes/infra_postgres-data/_data/certs"
+            CERTS_DIR="/var/lib/docker/volumes/postgres-certs/_data"
 
             echo "🔐 Ensuring Postgres SSL certificates"
             echo "📁 CERTS_DIR=$CERTS_DIR"
