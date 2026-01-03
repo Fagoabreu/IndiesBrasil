@@ -74,9 +74,7 @@ jobs:
             .env.production \
             deploy/compose.yaml \
             ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }}:/var/www/indies/
-
-      - name: Upload nginx artifacts
-        run: |
+            
           rsync -az --checksum \
             -e "ssh -o StrictHostKeyChecking=no" \
             deploy/nginx/ \
