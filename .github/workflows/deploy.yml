@@ -58,9 +58,9 @@ jobs:
           EOF
 
       # Run Migrations
-      - name: Run database migrations
-        run: |
-          ssh -o StrictHostKeyChecking=no ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} <<EOF
-          cd /var/www/indies
-          docker exec indies-app npx node-pg-migrate -m infra/migrations up
-          EOF
+      #- name: Run database migrations
+      #  run: |
+      #    ssh -o StrictHostKeyChecking=no ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} <<EOF
+      #    cd /var/www/indies
+      #    docker exec indies-app npx node-pg-migrate -m infra/migrations up
+      #    EOF
