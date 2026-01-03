@@ -40,9 +40,9 @@ const database = {
 export default database;
 
 function getSSLValues() {
-  if (process.env.POSTGREES_CA) {
+  if (process.env.POSTGRES_CA_PATH) {
     return {
-      ca: process.env.POSTGREES_CA,
+      ca: fs.readFileSync(process.env.POSTGRES_CA_PATH),
     };
   }
 
