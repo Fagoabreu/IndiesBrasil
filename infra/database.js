@@ -41,11 +41,25 @@ const database = {
 export default database;
 
 function getSSLValues() {
+  // TESTES: nunca SSL
+  if (process.env.NODE_ENV === "test") {
+    return false;
+  }
+
+  // PRODUÇÃO com CA explícita
   if (process.env.POSTGRES_CA_PATH) {
     return {
       ca: fs.readFileSync(process.env.POSTGRES_CA_PATH),
     };
   }
 
-  return process.env.NODE_ENV === "production";
+  // PRODUÇÃO sem CA (self-signed)
+  if (process.env.NODE_ENV === "production") {
+    return {
+      rejectUnauthorized: false,
+    };
+  }
+
+  // DEV default
+  return false;
 }
