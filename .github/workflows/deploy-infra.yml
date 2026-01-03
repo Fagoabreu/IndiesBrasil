@@ -49,6 +49,6 @@ jobs:
             }
 
             echo "🚀 Deploying infra"
-            docker compose pull
-            docker compose up -d
+            docker compose pull postgres nginx certbot
+            docker compose up -d postgres nginx certbot
           EOF
