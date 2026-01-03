@@ -55,3 +55,10 @@ jobs:
           docker load < indies-app.tar.gz
           docker compose -f compose.yaml up -d
           EOF
+
+      - name: Run database migrations
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} <<EOF
+          cd /var/www/indies
+          docker exec indies-app npm run migrations:up
+          EOF
