@@ -13,7 +13,7 @@
     "services:down": "docker compose -f infra/compose.yaml down",
     "Services:wait:database": "node infra/scripts/wait-for-postgres.js",
     "migrations:create": "node-pg-migrate -m infra/migrations create",
-    "migrations:up": "node-pg-migrate -m infra/migrations --envPath .env.development up",
+    "migrations:up": "npx node-pg-migrate -m infra/migrations --envPath .env.development up",
     "build": "next build",
     "lint": "eslint .",
     "lint:eslint:check": "eslint .",
