@@ -15,7 +15,7 @@ jobs:
       # 1️⃣ Build da imagem
       - name: Build image
         run: |
-          docker build -t indies-app:latest ./app
+          docker build -t indies-app:latest .
 
       # 2️⃣ Exportar imagem
       - name: Export image
