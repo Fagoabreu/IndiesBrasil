@@ -42,9 +42,12 @@ jobs:
               exit 1
             }
 
+            CERTS_DIR="/var/lib/docker/volumes/postgres-certs/_data"
+
             echo "🔍 Checking Postgres certificates"
-            test -f certs/server.crt || {
-              echo "❌ server.crt NOT FOUND"
+            test -f "$CERTS_DIR/server.crt" || {
+              echo "❌ server.crt NOT FOUND in $CERTS_DIR"
+              ls -l "$CERTS_DIR" || true
               exit 1
             }
 
