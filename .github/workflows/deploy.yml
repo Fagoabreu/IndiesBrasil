@@ -135,10 +135,10 @@ jobs:
             fi
 
             echo "🔒 Fixing permissions"
-            chown -R 999:999 "$CERTS_DIR"
+            chown -R 70:70 "$CERTS_DIR"
             chmod 700 "$CERTS_DIR"
             chmod 600 "$CERTS_DIR/server.key"
-            chmod 644 "$CERTS_DIR/server.crt" "$CERTS_DIR/root.crt"
+            chmod 644 "$CERTS_DIR/server.crt" "$CERTS_DIR/root.crt"crt"
 
             echo "✅ Postgres SSL certificates ready"
 
