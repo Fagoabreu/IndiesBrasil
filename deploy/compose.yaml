@@ -7,7 +7,7 @@ services:
       - .env.production
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - postgres-certs:/etc/postgres/certs:ro
+      - postgres-certs:/etc/postgres/certs
     command:
       - "-c"
       - "ssl=on"
