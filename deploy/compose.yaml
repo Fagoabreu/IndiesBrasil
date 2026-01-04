@@ -60,35 +60,35 @@ services:
       - public
       - private
 
-certbot:
-  image: certbot/certbot
-  container_name: certbot
-  env_file:
-    - .env.production
-  volumes:
-    - nginx_secrets:/etc/letsencrypt
-    - certbot-webroot:/var/www/certbot
-  depends_on:
-    - nginx
-  entrypoint: >
-    sh -c '
-    if [ ! -d "/etc/letsencrypt/live/${CERTBOT_DOMAIN}" ]; then
-      certbot certonly \
-        --webroot \
-        --webroot-path=/var/www/certbot \
-        --email ${CERTBOT_EMAIL} \
-        --agree-tos \
-        --no-eff-email \
-        -d ${CERTBOT_DOMAIN};
-    fi;
-    trap exit TERM;
-    while :; do
-      certbot renew --quiet;
-      sleep 12h;
-    done
-    '
-  networks:
-    - public
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    env_file:
+      - .env.production
+    volumes:
+      - nginx_secrets:/etc/letsencrypt
+      - certbot-webroot:/var/www/certbot
+    depends_on:
+      - nginx
+    entrypoint: >
+      sh -c '
+      if [ ! -d "/etc/letsencrypt/live/${CERTBOT_DOMAIN}" ]; then
+        certbot certonly \
+          --webroot \
+          --webroot-path=/var/www/certbot \
+          --email ${CERTBOT_EMAIL} \
+          --agree-tos \
+          --no-eff-email \
+          -d ${CERTBOT_DOMAIN};
+      fi;
+      trap exit TERM;
+      while :; do
+        certbot renew --quiet;
+        sleep 12h;
+      done
+      '
+    networks:
+      - public
 
 networks:
   private:
