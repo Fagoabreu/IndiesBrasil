@@ -93,9 +93,9 @@ jobs:
               exit 1
             }
 
-            echo "📦 Ensuring postgres-certs volume exists"
-            docker volume inspect postgres-certs >/dev/null 2>&1 || docker volume create postgres-certs
-            CERTS_DIR="/var/lib/docker/volumes/postgres-certs/_data"
+            echo "📦 Ensuring indies_postgres-certs volume exists"
+            docker volume inspect indies_postgres-certs >/dev/null 2>&1 || docker volume create indies_postgres-certs
+            CERTS_DIR="/var/lib/docker/volumes/indies_postgres-certs/_data"
             echo "📁 CERTS_DIR=$CERTS_DIR"
 
             mkdir -p "$CERTS_DIR"
