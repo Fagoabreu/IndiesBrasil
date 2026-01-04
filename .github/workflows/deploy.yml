@@ -136,7 +136,7 @@ jobs:
 
             echo "🔒 Fixing permissions"
             chown -R 70:70 "$CERTS_DIR"
-            chmod 700 "$CERTS_DIR"
+            chmod 755 "$CERTS_DIR"
             chmod 600 "$CERTS_DIR/server.key"
             chmod 644 "$CERTS_DIR/server.crt" "$CERTS_DIR/root.crt"
 
