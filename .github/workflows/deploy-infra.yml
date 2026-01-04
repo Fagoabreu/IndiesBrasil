@@ -42,7 +42,7 @@ jobs:
               exit 1
             }
 
-            CERTS_DIR="/var/lib/docker/volumes/postgres-certs/_data"
+            CERTS_DIR="/var/lib/docker/volumes/indies_postgres-certs/_data"
 
             echo "🔍 Checking Postgres certificates"
             test -f "$CERTS_DIR/server.crt" || {
