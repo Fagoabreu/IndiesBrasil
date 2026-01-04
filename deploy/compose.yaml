@@ -1,5 +1,6 @@
 services:
   postgres:
+    user: "70:70"
     image: postgres:17.2-alpine3.20
     container_name: postgres
     restart: always
@@ -19,6 +20,11 @@ services:
       - "ssl_ca_file=/etc/postgres/certs/root.crt"
     networks:
       - private
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   indies-app:
     image: indies-app:latest
@@ -33,6 +39,11 @@ services:
       - postgres
     networks:
       - private
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   nginx:
     image: nginx:1.29
@@ -42,7 +53,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx:/etc/nginx/conf.d:ro
+      - ./nginx:/etc/nginx/conf.d
       - nginx_secrets:/etc/letsencrypt
       - certbot-webroot:/var/www/certbot
     networks:
