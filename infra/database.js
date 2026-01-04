@@ -45,6 +45,7 @@ function getSSLValues() {
   if (process.env.NODE_ENV === "production" && process.env.POSTGRES_CA_PATH) {
     return {
       ca: fs.readFileSync(process.env.POSTGRES_CA_PATH),
+      rejectUnauthorized: true,
     };
   }
 
