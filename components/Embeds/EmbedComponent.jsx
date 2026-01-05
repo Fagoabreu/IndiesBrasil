@@ -7,7 +7,7 @@ EmbedComponent.propTypes = {
   embeds: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-      type: PropTypes.oneOf(["youtube", "twitch", "instagram", "preview"]).isRequired,
+      type: PropTypes.oneOf(["youtube", "twitch", "instagram", "preview", "steam"]).isRequired,
 
       embedUrl: PropTypes.string,
       url: PropTypes.string,
@@ -51,6 +51,26 @@ export default function EmbedComponent({ embeds }) {
             </div>
           );
         }
+
+        if (embed.type === "steam") {
+          return (
+            <iframe
+              key={embed.id}
+              src={embed.embedUrl}
+              width="100%"
+              height="190"
+              frameBorder="0"
+              allowTransparency
+              scrolling="no"
+              title="Steam Store Widget"
+              style={{
+                borderRadius: 8,
+                overflow: "hidden",
+              }}
+            />
+          );
+        }
+
         if (embed.type === "preview") {
           return (
             <a key={embed.id} href={embed.url} target="_blank" rel="noopener noreferrer" className={styles.previewCard}>

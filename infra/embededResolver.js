@@ -24,6 +24,10 @@ async function resolveEmbed(url) {
     return resolveInstagram(url);
   }
 
+  if (isSteamStore(url)) {
+    return resolveSteam(url);
+  }
+
   return fetchLinkPreview(url);
 }
 
@@ -45,6 +49,10 @@ function isTwitch(url) {
 
 function isInstagram(url) {
   return /instagram\.com\/(p|reel|tv)\//.test(url);
+}
+
+function isSteamStore(url) {
+  return /store\.steampowered\.com\/app\/\d+/.test(url);
 }
 
 function resolveYouTube(url) {
@@ -152,6 +160,22 @@ function resolveTwitch(url) {
   }
 
   return null;
+}
+
+function resolveSteam(url) {
+  const match = url.match(/store\.steampowered\.com\/app\/(\d+)/);
+
+  if (!match) return null;
+
+  const appId = match[1];
+
+  return {
+    type: "steam",
+    subtype: "store",
+    appId,
+    embedUrl: `https://store.steampowered.com/widget/${appId}/`,
+    url,
+  };
 }
 
 const embededResolver = {

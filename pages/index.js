@@ -27,7 +27,7 @@ function Home() {
       {/* DEMONSTRAÇÃO */}
       <section className={styles.section}>
         <header className={styles.sectionHeader}>
-          <h2>Links incorporados com YouTube, Twitch e Instagram</h2>
+          <h2>Links incorporados com YouTube, Twitch, Instagram e Steam</h2>
           <p>
             A plataforma permite incorporar vídeos, lives e posts diretamente nas publicações, facilitando o compartilhamento de conteúdo multimídia.
           </p>
@@ -40,6 +40,7 @@ function Home() {
             { content: "Instagram Imagem", image_src: "/images/instagramImage.png" },
             { content: "Instagram Vídeo", image_src: "/images/instagramVideo.png" },
             { content: "Canal Twitch", image_src: "/images/twitchChannel.png" },
+            { content: "Steam Widget", image_src: "/images/steamWidget.png" },
           ]}
         />
       </section>
