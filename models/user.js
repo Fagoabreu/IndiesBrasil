@@ -327,30 +327,38 @@ async function findUsers(userId, isfollowing) {
   }
 }
 
-async function toggleFollow(followerId, leaderId) {
-  const followResult = await runSelectQuery(followerId, leaderId);
-  return followResult;
+async function addFollow(followerId, leaderId) {
+  const result = await database.query({
+    text: `
+        INSERT INTO user_followers (follower_id, lead_user_id)
+        VALUES ($1, $2)
+        ON CONFLICT (follower_id, lead_user_id) DO NOTHING
+        RETURNING 'followed' AS action
+      `,
+    values: [followerId, leaderId],
+  });
 
-  async function runSelectQuery(followerId, leaderId) {
-    const results = await database.query({
-      text: `
-      WITH delete_attempt AS (
-        DELETE FROM user_followers
-        WHERE follower_id = $1 AND lead_user_id = $2
-        RETURNING *
-      )
-      INSERT INTO user_followers (follower_id, lead_user_id)
-      SELECT $1, $2
-      WHERE NOT EXISTS (SELECT 1 FROM delete_attempt)
-      RETURNING 'followed' AS action`,
-      values: [followerId, leaderId],
-    });
-    if (results.rowCount === 0) {
-      return { action: "unfollowed" };
-    }
-
-    return results.rows[0];
+  if (result.rowCount === 0) {
+    return { action: "already_following" };
   }
+  return result.rows[0];
+}
+
+async function removeFollow(followerId, leaderId) {
+  const result = await database.query({
+    text: `
+      DELETE FROM user_followers
+      WHERE follower_id = $1 AND lead_user_id = $2
+      RETURNING 'unfollowed' AS action
+    `,
+    values: [followerId, leaderId],
+  });
+
+  if (result.rowCount === 0) {
+    return { action: "not_following" };
+  }
+
+  return result.rows[0];
 }
 
 const user = {
@@ -361,7 +369,8 @@ const user = {
   findOneByEmail,
   setFeatures,
   findUsers,
-  toggleFollow,
+  addFollow,
+  removeFollow,
 };
 
 export default user;
