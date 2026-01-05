@@ -29,7 +29,19 @@ export default function EmbedComponent({ embeds }) {
         }
 
         if (embed.type === "twitch") {
-          return <iframe key={embed.id} title={embed.title} src={embed.embedUrl} height="400" width="100%" allowFullScreen />;
+          return (
+            <iframe
+              key={embed.id}
+              src={embed.embedUrl}
+              height="400"
+              width="100%"
+              frameBorder="0"
+              allowFullScreen
+              scrolling="no"
+              allow="autoplay; fullscreen"
+              title={embed.title}
+            />
+          );
         }
 
         if (embed.type === "instagram") {

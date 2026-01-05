@@ -1,4 +1,4 @@
-import { NotFoundError } from "@/infra/errors";
+import { NotFoundError, ValidationError } from "@/infra/errors";
 import database from "infra/database";
 
 const baseSelectQuery = `
@@ -245,6 +245,10 @@ async function setPostLikes(postId, userId, liked) {
       message: "O id do post informado não foi encontrado no sistema.",
       action: "Verifique se o post não foi removido",
     });
+  }
+
+  if (post.is_current_user) {
+    throw new ValidationError({ message: "O criador do post não pode marcar a propria postagem com gostei" });
   }
 
   const { rowCount } = await database.query({
