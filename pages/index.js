@@ -40,6 +40,7 @@ function Home() {
             { content: "Instagram Imagem", image_src: "/images/instagramImage.png" },
             { content: "Instagram Vídeo", image_src: "/images/instagramVideo.png" },
             { content: "Canal Twitch", image_src: "/images/twitchChannel.png" },
+            { content: "Steam Widget", image_src: "/images/steamWidget.png" },
           ]}
         />
       </section>
