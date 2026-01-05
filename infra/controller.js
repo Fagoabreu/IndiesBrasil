@@ -28,12 +28,13 @@ function onErrorHandler(error, request, response) {
 }
 
 async function setSessionCookie(sessionToken, response) {
+  const isProduction = process.env.NODE_ENV === "production";
   const setCookie = cookie.serialize("session_id", sessionToken, {
     path: "/",
     maxAge: session.EXPIRATION_IN_MILLISECONDS / 1000,
-    secure: process.env.NODE_ENV === "production",
+    secure: isProduction,
     httpOnly: true,
-    sameSite: "none",
+    sameSite: isProduction ? "none" : "lax",
   });
 
   response.setHeader("Set-Cookie", setCookie);

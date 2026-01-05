@@ -105,6 +105,55 @@ async function fetchLinkPreview(url) {
   }
 }
 
+function resolveTwitch(url) {
+  console.log("base url", process.env.NEXT_PUBLIC_BASE_URL);
+  const domain = process.env.NEXT_PUBLIC_BASE_URL ? new URL(process.env.NEXT_PUBLIC_BASE_URL).hostname : "localhost";
+
+  // Canal
+  const channelMatch = url.match(/twitch\.tv\/([^/?]+)/);
+  if (channelMatch && !url.includes("/videos/") && !url.includes("clips.twitch.tv")) {
+    const channel = channelMatch[1];
+
+    return {
+      type: "twitch",
+      subtype: "channel",
+      channel,
+      embedUrl: `https://player.twitch.tv/?channel=${channel}&parent=${domain}`,
+      url,
+    };
+  }
+
+  // Vídeo (VOD)
+  const videoMatch = url.match(/twitch\.tv\/videos\/(\d+)/);
+  if (videoMatch) {
+    const videoId = videoMatch[1];
+
+    return {
+      type: "twitch",
+      subtype: "video",
+      videoId,
+      embedUrl: `https://player.twitch.tv/?video=${videoId}&parent=${domain}`,
+      url,
+    };
+  }
+
+  // Clip
+  const clipMatch = url.match(/clips\.twitch\.tv\/([^/?]+)/);
+  if (clipMatch) {
+    const clipId = clipMatch[1];
+
+    return {
+      type: "twitch",
+      subtype: "clip",
+      clipId,
+      embedUrl: `https://clips.twitch.tv/embed?clip=${clipId}&parent=${domain}`,
+      url,
+    };
+  }
+
+  return null;
+}
+
 const embededResolver = {
   getEmbededLinks,
 };
