@@ -27,7 +27,7 @@ function Home() {
       {/* DEMONSTRAÇÃO */}
       <section className={styles.section}>
         <header className={styles.sectionHeader}>
-          <h2>Links incorporados com YouTube, Twitch e Instagram</h2>
+          <h2>Links incorporados com YouTube, Twitch, Instagram e Steam</h2>
           <p>
             A plataforma permite incorporar vídeos, lives e posts diretamente nas publicações, facilitando o compartilhamento de conteúdo multimídia.
           </p>
