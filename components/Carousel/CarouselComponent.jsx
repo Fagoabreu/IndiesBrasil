@@ -55,6 +55,7 @@ export default function CarouselComponent({ cards }) {
                 className={styles.image}
                 sizes="(max-width: 600px) 100vw, 320px"
                 priority={index === 0}
+                unoptimized
               />
             </div>
 

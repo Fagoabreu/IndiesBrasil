@@ -50,8 +50,9 @@ export async function GET(request) {
       return new UnauthorizedError();
     }
 
-    const posts = await post.getPosts(user.id);
-
+    const searchParams = request.nextUrl.searchParams;
+    const seachType = searchParams.get("search_type");
+    const posts = await post.getPosts(user.id, seachType);
     return Response.json(posts, { status: 200 });
   } catch (error) {
     return controller.onErrorHandler(error, request);

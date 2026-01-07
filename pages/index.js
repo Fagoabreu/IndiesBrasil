@@ -1,13 +1,19 @@
 import HorizontalCardComponent from "@/components/Card/HorizontalCardComponent";
 import CarouselComponent from "@/components/Carousel/CarouselComponent";
 import styles from "./index.module.css";
+import { Heading } from "@primer/react";
 
 function Home() {
   return (
     <main className={styles.page}>
+      <section className={styles.hero}>
+        <Heading as="h4">Atenção - ambiente de testes</Heading>
+        <p>Esta pagina está em versão de testes Beta, todo conteúdo aqui postado será apagado quando lançarmos a versão final</p>
+      </section>
+
       {/* HERO */}
       <section className={styles.hero}>
-        <h1>Bem-vindo ao Indies Brasil</h1>
+        <Heading as="h1">Bem-vindo ao Indies Brasil</Heading>
         <p>
           A rede social feita para artistas, desenvolvedores de jogos e programadores. Conecte-se, compartilhe projetos, construa portfólio e colabore
           com quem vive de criar tecnologia e experiências digitais.
@@ -35,12 +41,12 @@ function Home() {
 
         <CarouselComponent
           cards={[
-            { content: "YouTube Shorts", image_src: "/images/youtubeShorts.png" },
-            { content: "YouTube Vídeo", image_src: "/images/youtubeVideo.png" },
-            { content: "Instagram Imagem", image_src: "/images/instagramImage.png" },
-            { content: "Instagram Vídeo", image_src: "/images/instagramVideo.png" },
-            { content: "Canal Twitch", image_src: "/images/twitchChannel.png" },
-            { content: "Steam Widget", image_src: "/images/steamWidget.png" },
+            { content: "Instagram Imagem", image_src: "/images/instagramimage.png" },
+            { content: "Instagram Vídeo", image_src: "/images/instagramvideo.png" },
+            { content: "Steam Widget", image_src: "/images/steamwidget.png" },
+            { content: "Canal Twitch", image_src: "/images/twitchchannel.png" },
+            { content: "YouTube Shorts", image_src: "/images/youtubeshorts.png" },
+            { content: "YouTube Vídeo", image_src: "/images/youtubevideo.png" },
           ]}
         />
       </section>

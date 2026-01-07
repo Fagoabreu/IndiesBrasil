@@ -167,7 +167,12 @@ async function deleteCommentsByPostId(postId) {
   }
 }
 
-async function getPosts(user_id) {
+async function getPosts(user_id, seachType) {
+  if (user_id && seachType === "following") {
+    const userPosts = await runSelectFollowingsQuery(user_id);
+    return userPosts;
+  }
+
   if (user_id) {
     const userPosts = await runSelectQuery(user_id);
     return userPosts;
@@ -179,6 +184,20 @@ async function getPosts(user_id) {
     const results = await database.query({
       text: baseSelectQuery + ` ORDER BY p.created_at DESC;`,
       values: [user_id || null],
+    });
+    return results.rows;
+  }
+
+  async function runSelectFollowingsQuery(user_id) {
+    const results = await database.query({
+      text:
+        baseSelectQuery +
+        `
+        inner join user_followers uf
+          on uf.lead_user_id = u.id
+          and uf.follower_id=$1
+        ORDER BY p.created_at DESC;`,
+      values: [user_id],
     });
     return results.rows;
   }
