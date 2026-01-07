@@ -38,7 +38,7 @@ export default function EmbedComponent({ embeds }) {
               frameBorder="0"
               allowFullScreen
               scrolling="no"
-              allow="autoplay; fullscreen"
+              allow="fullscreen"
               title={embed.title}
             />
           );

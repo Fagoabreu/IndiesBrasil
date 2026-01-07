@@ -19,9 +19,7 @@ export default function Layout({ children, RightSidebar = null }) {
           <LeftSidebarComponent />
         </SplitPageLayout.Pane>
 
-        <SplitPageLayout.Content>
-          <div className="main-content">{children}</div>
-        </SplitPageLayout.Content>
+        <SplitPageLayout.Content className="main-content">{children}</SplitPageLayout.Content>
 
         {RightSidebar && <SplitPageLayout.Pane position="end">{RightSidebar}</SplitPageLayout.Pane>}
       </SplitPageLayout>

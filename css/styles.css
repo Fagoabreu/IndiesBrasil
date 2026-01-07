@@ -18,6 +18,8 @@ body {
   min-height: 100vh;
 }
 .main-content {
-  padding: 24px;
+  padding: 10px;
+  margin: 0;
+  width: auto;
   background-color: var(--color-bg-default);
 }

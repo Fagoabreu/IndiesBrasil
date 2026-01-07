@@ -1,13 +1,19 @@
 import HorizontalCardComponent from "@/components/Card/HorizontalCardComponent";
 import CarouselComponent from "@/components/Carousel/CarouselComponent";
 import styles from "./index.module.css";
+import { Heading } from "@primer/react";
 
 function Home() {
   return (
     <main className={styles.page}>
+      <section className={styles.hero}>
+        <Heading as="h4">Atenção - ambiente de testes</Heading>
+        <p>Esta pagina está em versão de testes Beta, todo conteúdo aqui postado será apagado quando lançarmos a versão final</p>
+      </section>
+
       {/* HERO */}
       <section className={styles.hero}>
-        <h1>Bem-vindo ao Indies Brasil</h1>
+        <Heading as="h1">Bem-vindo ao Indies Brasil</Heading>
         <p>
           A rede social feita para artistas, desenvolvedores de jogos e programadores. Conecte-se, compartilhe projetos, construa portfólio e colabore
           com quem vive de criar tecnologia e experiências digitais.
