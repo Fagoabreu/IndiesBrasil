@@ -1,0 +1,42 @@
+.trending-tags {
+  background-color: var(--bgColor-muted);
+  border: 1px solid var(--borderColor-default);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.trending-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.trending-tags ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.trending-tags li {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.rank {
+  color: var(--fgColor-muted);
+}
+
+.tag {
+  color: var(--accentColor-fg);
+}
+
+.count {
+  color: var(--fgColor-muted);
+}
+
+.trending-loading,
+.trending-error {
+  padding: 12px;
+  color: var(--fgColor-muted);
+}
