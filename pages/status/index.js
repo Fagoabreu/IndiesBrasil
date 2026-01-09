@@ -1,3 +1,6 @@
+import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
+import { Button, ButtonGroup } from "@primer/react";
+import { useState } from "react";
 import useSWR from "swr";
 
 async function fetchAPI(key) {
@@ -7,8 +10,52 @@ async function fetchAPI(key) {
 }
 
 export default function StatusPage() {
+  const [errorMsg, setErrorMsg] = useState(null);
+  const [successMsg, setSuccessMsg] = useState("");
+
+  async function postMigration() {
+    const response = await fetch("/api/v1/migrations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (response.ok) {
+      setSuccessMsg("Success");
+      setErrorMsg(null);
+    } else {
+      setSuccessMsg(null);
+      const data = await response.json();
+      setErrorMsg({
+        statusCode: data.status_code,
+        message: data.message,
+        action: data.action,
+      });
+    }
+  }
+
+  async function getMigration() {
+    const response = await fetch("/api/v1/migrations", {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (response.ok) {
+      setSuccessMsg(await response.json());
+      setErrorMsg(null);
+    } else {
+      setSuccessMsg(null);
+      const data = await response.json();
+      setErrorMsg({
+        statusCode: data.status_code,
+        message: data.message,
+        action: data.action,
+      });
+    }
+  }
+
   return (
     <div className="container mt-5 mb-3">
+      <StatusMessageComponent errorMsg={errorMsg} successMsg={successMsg} />
       <div className="row">
         <h1 className="heading">Server Status</h1>
       </div>
@@ -31,6 +78,10 @@ export default function StatusPage() {
             </div>
           </div>
         </div>
+        <ButtonGroup>
+          <Button onClick={getMigration}>GetMigrations</Button>
+          <Button onClick={postMigration}>PostMigrations</Button>
+        </ButtonGroup>
       </div>
     </div>
   );
