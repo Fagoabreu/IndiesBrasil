@@ -3,6 +3,7 @@ import controller from "@/infra/controller";
 import { UnauthorizedError } from "@/infra/errors";
 import uploadedImages from "@/models/uploadedImages";
 import embededResolver from "@/infra/embededResolver";
+import tags from "@/models/tags";
 
 export async function POST(request) {
   try {
@@ -30,6 +31,11 @@ export async function POST(request) {
     if (content) {
       const embeds = await embededResolver.getEmbededLinks(content);
       if (embeds.length > 0) userInputValues.embed = embeds;
+
+      const tagList = await tags.getTagsFromText(content);
+      if (Array.isArray(tagList) && tagList.length > 0) {
+        userInputValues.tags = tagList;
+      }
     }
 
     const createdPost = await post.create(userInputValues);
@@ -37,7 +43,8 @@ export async function POST(request) {
 
     return Response.json(resultPost, { status: 201 });
   } catch (error) {
-    return controller.onErrorHandler(error, request);
+    console.log(error);
+    return controller.onRouterErrorHandler(error, request);
   }
 }
 
@@ -55,6 +62,6 @@ export async function GET(request) {
     const posts = await post.getPosts(user.id, seachType);
     return Response.json(posts, { status: 200 });
   } catch (error) {
-    return controller.onErrorHandler(error, request);
+    return controller.onRouterErrorHandler(error, request);
   }
 }

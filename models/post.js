@@ -104,7 +104,15 @@ SELECT
 
 async function create(postInputValues) {
   const newPost = await runInsertQuery(postInputValues);
+  if (postInputValues.tags) {
+    await Promise.all(
+      postInputValues.tags.map(async (tag) => {
+        return await runAddTagsQuery(newPost.id, tag.id);
+      }),
+    );
+  }
   return newPost;
+
   async function runInsertQuery(postInputValues) {
     const results = await database.query({
       text: `
@@ -134,6 +142,24 @@ async function create(postInputValues) {
         postInputValues.parent_post_id,
         postInputValues.embed,
       ],
+    });
+    return results.rows[0];
+  }
+
+  async function runAddTagsQuery(post_id, tag_id) {
+    console.log("Post_tag", post_id, tag_id);
+    const results = await database.query({
+      text: `
+      insert into
+        post_tags  (
+          post_id,
+          tag_id)
+      values
+        ($1, $2)
+      returning
+        *
+      `,
+      values: [post_id, tag_id],
     });
     return results.rows[0];
   }

@@ -4,6 +4,7 @@ import { ImageIcon, TrashIcon } from "@primer/octicons-react";
 import Image from "next/image";
 import styles from "./CreatePost.module.css";
 import PropTypes from "prop-types";
+import { useTagSuggest } from "@/context/dataHooks/UseTagSuggest";
 
 CreatePost.propTypes = {
   user: PropTypes.shape({
@@ -19,6 +20,10 @@ export default function CreatePost({ user, onPost }) {
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const fileInputRef = useRef(null);
+
+  const match = content.match(/#(\w{2,})$/);
+  const query = match ? match[1] : null;
+  const { data: suggestions } = useTagSuggest(query);
 
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
@@ -58,6 +63,21 @@ export default function CreatePost({ user, onPost }) {
             disabled={isPosting}
             className={styles.textarea}
           />
+
+          {suggestions?.length > 0 && (
+            <ul className="tag-suggest">
+              {suggestions.map((tag) => (
+                <li
+                  key={tag.name}
+                  onClick={() => {
+                    setContent((prev) => prev.replace(/#\w*$/, `#${tag.name} `));
+                  }}
+                >
+                  #{tag.name}
+                </li>
+              ))}
+            </ul>
+          )}
 
           {imagePreview && (
             <div className={styles.previewBox}>

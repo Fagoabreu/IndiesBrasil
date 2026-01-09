@@ -27,6 +27,14 @@ function onErrorHandler(error, request, response) {
   response.status(publicErrorObject.statusCode).json(publicErrorObject);
 }
 
+function onRouterErrorHandler(error) {
+  if (error instanceof ValidationError || error instanceof NotFoundError || error instanceof ForbiddenError) {
+    return NextResponse.json({ status: error.statusCode, error });
+  }
+
+  NextResponse.json(data, { status: 200 });
+}
+
 async function setSessionCookie(sessionToken, response) {
   const isProduction = process.env.NODE_ENV === "production";
   const setCookie = cookie.serialize("session_id", sessionToken, {

@@ -51,9 +51,10 @@ PostCardComponent.propTypes = {
 
   onDelete: PropTypes.func,
   canInteract: PropTypes.bool,
+  onTagClick: PropTypes.func,
 };
 
-export default function PostCardComponent({ post, onDelete, canInteract = true }) {
+export default function PostCardComponent({ post, onDelete, canInteract = true, onTagClick }) {
   const [hasLiked, setHasLiked] = useState(post.liked_by_user || false);
   const [likesCount, setLikesCount] = useState(Number(post.likes_count) || 0);
   const [commentsCount, setCommentsCount] = useState(Number(post.comments_count));
@@ -149,6 +150,35 @@ export default function PostCardComponent({ post, onDelete, canInteract = true }
     }
   };
 
+  function renderRichText(text, { onTagClick }) {
+    const regex = /(https?:\/\/[^\s]+|#\w+)/g;
+
+    return text.split(regex).map((part, index) => {
+      // LINK
+      if (part.startsWith("http://") || part.startsWith("https://")) {
+        return (
+          <a key={index} href={part} target="_blank" rel="noopener noreferrer" className={styles.link}>
+            {part}
+          </a>
+        );
+      }
+
+      // TAG
+      if (part.startsWith("#")) {
+        const tag = part.slice(1).toLowerCase();
+
+        return (
+          <button key={index} type="button" className={styles.tag} onClick={() => onTagClick?.(tag)}>
+            {part}
+          </button>
+        );
+      }
+
+      // TEXTO NORMAL
+      return <span key={index}>{part}</span>;
+    });
+  }
+
   return (
     <article className={styles.postCard}>
       <div className={styles.postGrid}>
@@ -175,7 +205,7 @@ export default function PostCardComponent({ post, onDelete, canInteract = true }
 
           {/* TEXTO */}
           <div className={styles.text}>
-            {shownText}
+            {renderRichText(shownText, { onTagClick })}
             {isLong && (
               <button className={styles.showMoreBtn} onClick={() => setExpanded(!expanded)}>
                 {expanded ? "Mostrar menos" : "Mostrar mais"}

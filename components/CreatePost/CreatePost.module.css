@@ -57,3 +57,23 @@
 .fileInput {
   display: none;
 }
+
+.tag-suggest {
+  position: absolute;
+  background-color: var(--bgColor-default);
+  border: 1px solid var(--borderColor-default);
+  border-radius: 6px;
+  margin-top: 4px;
+  list-style: none;
+  padding: 4px 0;
+  z-index: 10;
+}
+
+.tag-suggest li {
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.tag-suggest li:hover {
+  background-color: var(--bgColor-muted);
+}

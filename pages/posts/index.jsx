@@ -1,11 +1,11 @@
 import { useEffect, useState, useCallback } from "react";
 import { Heading } from "@primer/react";
 import { useUser } from "@/context/UserContext";
-import WhoToFollow from "@/components/WhoToFollow";
 import PostCardComponent from "@/components/PostCard/PostCardComponent";
 import CreatePost from "@/components/CreatePost/CreatePost";
 
 import "./PostsPage.css";
+import PostLeftBarComponent from "@/components/LeftBar/PostLeftBarComponent";
 
 export default function PostsPage() {
   const { user, loadingUser } = useUser();
@@ -13,12 +13,20 @@ export default function PostsPage() {
   const [posts, setPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [tab, setTab] = useState("all");
+  const [activeTag, setActiveTag] = useState(null);
 
   const fetchPosts = useCallback(async () => {
     setLoadingPosts(true);
 
     try {
-      const endpoint = tab === "following" ? "/api/v1/posts?search_type=following" : "/api/v1/posts";
+      let endpoint;
+      if (tab === "following") {
+        endpoint = "/api/v1/posts?search_type=following";
+      } else if (tab === "tag") {
+        endpoint = `/api/v1/posts?search_type=tag,tag=${activeTag}`;
+      } else {
+        endpoint = "/api/v1/posts";
+      }
 
       const response = await fetch(endpoint, {
         method: "GET",
@@ -33,7 +41,7 @@ export default function PostsPage() {
     } finally {
       setLoadingPosts(false);
     }
-  }, [tab]);
+  }, [tab, activeTag]);
 
   useEffect(() => {
     if (!loadingUser) {
@@ -100,10 +108,17 @@ export default function PostsPage() {
           <button type="button" className={`feed-tab ${tab === "all" ? "active" : ""}`} onClick={() => setTab("all")}>
             Todos
           </button>
+          {user && (
+            <button type="button" className={`feed-tab ${tab === "following" ? "active" : ""}`} onClick={() => setTab("following")}>
+              Seguindo
+            </button>
+          )}
 
-          <button type="button" className={`feed-tab ${tab === "following" ? "active" : ""}`} onClick={() => setTab("following")}>
-            Seguindo
-          </button>
+          {activeTag && (
+            <button type="button" className={`feed-tab ${tab === "tag" ? "active" : ""}`} onClick={() => setTab("tag")}>
+              #{activeTag}
+            </button>
+          )}
         </div>
       </div>
 
@@ -116,11 +131,20 @@ export default function PostsPage() {
 
       {/* FEED */}
       {posts.map((post) => (
-        <PostCardComponent key={post.id} post={post} onDelete={handleDeletePost} canInteract={user} />
+        <PostCardComponent
+          key={post.id}
+          post={post}
+          onDelete={handleDeletePost}
+          canInteract={user}
+          onTagClick={(tag) => {
+            setActiveTag(tag);
+            setTab("tag");
+          }}
+        />
       ))}
     </>
   );
 }
 
 // Sidebar
-PostsPage.RightSidebar = <WhoToFollow />;
+PostsPage.RightSidebar = <PostLeftBarComponent />;
