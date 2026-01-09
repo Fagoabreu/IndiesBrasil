@@ -1,7 +1,3 @@
-const { unique } = require("next/dist/build/utils");
-
-exports.shorthands = undefined;
-
 exports.up = (pgm) => {
   pgm.createTable("tags", {
     id: {
