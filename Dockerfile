@@ -20,8 +20,11 @@ ENV NEXT_SHARP_PATH="/app/node_modules/sharp"
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=deps /app/public ./.next/standalone/public
+COPY --from=deps /app/public ./public
 COPY --from=deps /app/infra/migrations ./infra/migrations
+
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
 
 COPY --from=deps /app/next.config.js ./
 COPY --from=deps --chown=nextjs:nodejs /app/.next/standalone ./
