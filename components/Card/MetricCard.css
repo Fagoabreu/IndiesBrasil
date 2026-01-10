@@ -1,0 +1,55 @@
+.metric-card {
+  background-color: var(--bgColor-default);
+  border: 1px solid var(--borderColor-default);
+  border-radius: 8px;
+  padding: 12px;
+  width: 160px;
+}
+
+/* HEADER */
+.metric-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.metric-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+  text-transform: uppercase;
+}
+
+/* PERÍODO */
+.metric-period {
+  display: block;
+  font-size: 11px;
+  color: var(--fgColor-muted);
+  margin-top: 2px;
+}
+
+/* VALOR PRINCIPAL */
+.metric-value {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--fgColor-default);
+  margin: 8px 0;
+}
+
+/* COMPARAÇÃO */
+.metric-previous {
+  font-size: 11px;
+  color: var(--fgColor-muted);
+}
+
+/* ÍCONE */
+.metric-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background-color: var(--bgColor-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fgColor-default);
+}

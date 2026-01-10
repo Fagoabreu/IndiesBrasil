@@ -1,0 +1,43 @@
+.card {
+  display: flex;
+  flex-direction: column; /* 🔑 VERTICAL */
+  box-shadow: var(--shadow-floating-medium);
+  background-color: var(--bgColor-muted);
+  border: 1px solid var(--borderColor-default);
+  border-radius: 18px;
+  overflow: hidden;
+  margin: 20px 0;
+}
+
+/* IMAGEM NO TOPO */
+.imageWrapper {
+  position: relative;
+  width: 100%;
+  height: 300px; /* controla a altura do topo */
+  background-color: var(--bgColor-default);
+}
+
+.image {
+  object-fit: contain;
+}
+
+/* CORPO */
+.cardBody {
+  background-color: var(--bgColor-default);
+  padding: 20px;
+}
+
+/* TÍTULO */
+.cardTitle {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--fgColor-default);
+}
+
+/* TEXTO */
+.cardText {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--fgColor-muted);
+}

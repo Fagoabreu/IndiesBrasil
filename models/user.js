@@ -265,15 +265,27 @@ async function findUsers(userId, isfollowing) {
         u.id,
         u.username,
         u.avatar_image,
-        COUNT(f.follower_id) AS followers_count
+        COALESCE(f.followers_count, 0) AS followers_count,
+        COALESCE(p.posts_count, 0) AS posts_count
       FROM users u
-      -- Seguidores do usuário
-      LEFT JOIN user_followers f
-        ON f.lead_user_id = u.id
-      GROUP BY
-        u.id, u.username, u.avatar_image
-      ORDER BY 
-        u.username
+        -- Seguidores do usuário
+        LEFT JOIN (
+          SELECT
+            lead_user_id,
+            COUNT(*) AS followers_count
+          FROM user_followers
+          GROUP BY lead_user_id
+        ) f ON f.lead_user_id = u.id
+        -- Posts do Usuario
+        LEFT JOIN (
+          SELECT
+            author_id,
+            COUNT(*) AS posts_count
+          FROM posts
+          GROUP BY author_id
+        ) p ON p.author_id = u.id
+      ORDER BY RANDOM()
+      LIMIT 10;
       `,
     });
     return results.rows;
@@ -281,16 +293,30 @@ async function findUsers(userId, isfollowing) {
 
   async function runUserSelectQuery(userId, isfollowing) {
     let baseQuery = `
-        SELECT
-          u.id,
-          u.username,
-          u.avatar_image,
-          COUNT(f.follower_id) AS followers_count,
-          (uf.follower_id IS NOT NULL) AS is_following
-        FROM users u
+      SELECT
+        u.id,
+        u.username,
+        u.avatar_image,
+        COALESCE(f.followers_count, 0) AS followers_count,
+        COALESCE(p.posts_count, 0) AS posts_count,
+        (uf.follower_id IS NOT NULL) AS is_following
+      FROM users u
         -- Seguidores do usuário
-        LEFT JOIN user_followers f
-          ON f.lead_user_id = u.id
+        LEFT JOIN (
+            SELECT
+              lead_user_id,
+              COUNT(*) AS followers_count
+            FROM user_followers
+            GROUP BY lead_user_id
+          ) f ON f.lead_user_id = u.id
+        --Posts do Usuario
+        LEFT JOIN (
+          SELECT
+            author_id,
+            COUNT(*) AS posts_count
+          FROM posts
+          GROUP BY author_id
+        ) p ON p.author_id = u.id
         -- Verifica se o usuário atual segue esse usuário
         LEFT JOIN user_followers uf
           ON uf.lead_user_id = u.id
@@ -313,11 +339,12 @@ async function findUsers(userId, isfollowing) {
       `;
     }
     let endQuery = `
-        GROUP BY
-          u.id, u.username, u.avatar_image, uf.follower_id
         ORDER BY 
-          u.username;`;
+          RANDOM()
+        LIMIT 
+          10;`;
     const queryText = baseQuery + whereClause + endQuery;
+    console.log(queryText);
     const values = [userId];
     const results = await database.query({
       text: queryText,

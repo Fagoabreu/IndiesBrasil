@@ -1,7 +1,6 @@
 .card {
   display: flex;
   flex-direction: row;
-  max-width: 800px;
   box-shadow: var(--shadow-floating-medium);
   overflow: hidden;
   border-color: var(--borderColor-default);
