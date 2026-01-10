@@ -2,6 +2,7 @@ import * as cookie from "cookie";
 import session from "models/session.js";
 import user from "models/user.js";
 import authorization from "models/authorization.js";
+import { NextResponse } from "next/server";
 
 const { InternalServerError, MethodNotAllowedError, ValidationError, NotFoundError, UnauthorizedError, ForbiddenError } = require("./errors");
 
@@ -31,8 +32,8 @@ function onRouterErrorHandler(error) {
   if (error instanceof ValidationError || error instanceof NotFoundError || error instanceof ForbiddenError) {
     return NextResponse.json({ status: error.statusCode, error });
   }
-
-  NextResponse.json(data, { status: 200 });
+  console.log(error);
+  return NextResponse.json(error, { status: error.statusCode });
 }
 
 async function setSessionCookie(sessionToken, response) {
@@ -130,6 +131,7 @@ const controller = {
   injectAuthenticatedUser,
   injectApiUser,
   onErrorHandler,
+  onRouterErrorHandler,
 };
 
 export default controller;

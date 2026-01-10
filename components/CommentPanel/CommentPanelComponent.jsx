@@ -37,7 +37,12 @@ export default function CommentPanelComponent({ comments, showCommentBox, showCo
       {/* CAIXA DE COMENTÁRIO */}
       {showCommentBox && (
         <div className={styles.commentBox}>
-          <Textarea placeholder="Adicionar comentário..." value={newComment} onChange={(e) => setNewComment(e.target.value)} />
+          <Textarea
+            className={styles.textarea}
+            placeholder="Adicionar comentário..."
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+          />
           <ButtonGroup className={styles.commentActions} disabled={!newComment.trim()}>
             <Button variant="danger" onClick={onCloseCommentBox}>
               Cancelar

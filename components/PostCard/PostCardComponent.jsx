@@ -56,6 +56,7 @@ PostCardComponent.propTypes = {
 
 export default function PostCardComponent({ post, onDelete, canInteract = true, onTagClick }) {
   const [hasLiked, setHasLiked] = useState(post.liked_by_user || false);
+  const [actionMessage, setActionMessage] = useState(null);
   const [likesCount, setLikesCount] = useState(Number(post.likes_count) || 0);
   const [commentsCount, setCommentsCount] = useState(Number(post.comments_count));
 
@@ -70,17 +71,27 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
   const isLong = post.content.length > MAX_CHARS;
   const shownText = expanded ? post.content : post.content.slice(0, MAX_CHARS);
 
-  const handleLike = () => {
+  const handleLike = async () => {
+    const beforeLiked = hasLiked;
+    const beforeCount = likesCount;
     const liked = !hasLiked;
     setHasLiked(liked);
     setLikesCount((prev) => prev + (liked ? 1 : -1));
+    setActionMessage(null);
 
-    fetch(`/api/v1/posts/${post.id}/likes`, {
+    const res = await fetch(`/api/v1/posts/${post.id}/likes`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({ liked }),
     });
+
+    if (!res.ok) {
+      const data = await res.json();
+      setHasLiked(beforeLiked);
+      setLikesCount(beforeCount);
+      setActionMessage(data.message);
+    }
   };
 
   const toggleComments = async () => {
@@ -228,6 +239,7 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
             hasLiked={hasLiked}
             likesCount={likesCount}
             commentsCount={commentsCount}
+            actionMessage={actionMessage}
             canInteract={canInteract}
             onLike={handleLike}
             onToggleComments={toggleComments}

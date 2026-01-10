@@ -4,8 +4,12 @@
   padding-left: 12px;
   border-left: 2px solid var(--borderColor-muted);
 }
+.textarea {
+  width: 100%;
+}
 
 .commentActions {
+  margin-top: 10px;
   display: flex;
   justify-content: flex-end;
 }
