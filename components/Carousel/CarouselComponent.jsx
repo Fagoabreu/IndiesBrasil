@@ -40,6 +40,8 @@ export default function CarouselComponent({ cards }) {
     scrollToIndex(Math.min(activeIndex + 1, TOTAL_CARDS - 1));
   }
 
+  const noopImageLoader = ({ src }) => src;
+
   return (
     <div className={styles.wrapper}>
       <IconButton aria-label="Anterior" icon={ChevronLeftIcon} onClick={handlePrev} className={styles.navLeft} />
@@ -48,7 +50,15 @@ export default function CarouselComponent({ cards }) {
         {cards.map((card, index) => (
           <div className={styles.card} key={index}>
             <div className={styles.imageWrapper}>
-              <img src={card.image_src} alt={card.content} className={styles.image} loading={index === 0 ? "eager" : "lazy"} />
+              <Image
+                src={card.image_src}
+                alt={card.content}
+                loader={noopImageLoader}
+                fill
+                className={styles.image}
+                sizes="(max-width: 600px) 100vw, 320px"
+                priority={index === 0}
+              />
             </div>
 
             <div className={styles.content}>

@@ -20,7 +20,9 @@ export default function VerticalCardComponent({ image, alt, title, description }
       <div className={styles.cardBody}>
         <h3 className={styles.cardTitle}>{title}</h3>
 
-        <Text className={styles.cardText}>{description}</Text>
+        <Text size="medium" weight="light" className={styles.cardText}>
+          {description}
+        </Text>
       </div>
     </div>
   );

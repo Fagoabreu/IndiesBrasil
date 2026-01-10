@@ -3,8 +3,32 @@ import CarouselComponent from "@/components/Carousel/CarouselComponent";
 import styles from "./index.module.css";
 import { Heading } from "@primer/react";
 import VerticalCardComponent from "@/components/Card/VerticalCardComponent";
+import MetricCard from "@/components/Card/MetricCard";
+import { PeopleIcon } from "@primer/octicons-react";
+import { useEffect, useState } from "react";
 
 function Home() {
+  const [summary, setSummary] = useState(null);
+
+  useEffect(() => {
+    async function getSummary() {
+      try {
+        const response = await fetch("/api/v1/status/summary", {
+          method: "GET",
+          credentials: "include",
+        });
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+        setSummary(data);
+      } catch (error) {
+        console.error("Erro ao buscar summary:", error);
+      }
+    }
+    getSummary();
+  }, []);
+
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
@@ -19,6 +43,27 @@ function Home() {
           A rede social feita para artistas, desenvolvedores de jogos e programadores. Conecte-se, compartilhe projetos, construa portfólio e colabore
           com quem vive de criar tecnologia e experiências digitais.
         </p>
+        <div className={styles.metrics}>
+          <MetricCard
+            title="Usuarios"
+            period="Desde o inicio"
+            value={summary ? summary.user_accounts : "..."}
+            previousLabel="Ultimos 30 dias"
+            previousValue="1"
+            icon={<PeopleIcon />}
+          />
+          <MetricCard
+            title="Posts"
+            period="30 dias"
+            value={summary ? summary.posts : "..."}
+            previousLabel="Periodo Anterior"
+            previousValue={summary ? summary.previous_posts : "..."}
+            icon={<PeopleIcon />}
+          />
+          <MetricCard title="Eventos" period="Proximos 30 dias" value="..." icon={<PeopleIcon />} />
+          <MetricCard title="Estudios" period="Total" value="..." icon={<PeopleIcon />} />
+          <MetricCard title="Jogos" period="Total" value="..." previousLabel="Em Desenvolvimento" previousValue="..." icon={<PeopleIcon />} />
+        </div>
       </section>
 
       {/* COMUNIDADE */}
