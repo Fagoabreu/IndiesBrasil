@@ -58,10 +58,12 @@ export async function GET(request) {
     }
 
     const searchParams = request.nextUrl.searchParams;
-    const seachType = searchParams.get("search_type");
-    const posts = await post.getPosts(user.id, seachType);
+    const searchType = searchParams.get("search_type");
+    const tag = searchParams.get("tag");
+    console.log(`params: ${searchType}, tag: ${tag}`);
+    const posts = await post.getPosts(user.id, searchType, tag);
     return Response.json(posts, { status: 200 });
   } catch (error) {
-    return controller.onRouterErrorHandler(error, request);
+    return controller.onRouterErrorHandler(error);
   }
 }

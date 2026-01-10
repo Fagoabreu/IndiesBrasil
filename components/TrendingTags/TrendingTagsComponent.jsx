@@ -23,28 +23,32 @@ export default function TrendingTags() {
   }
 
   return (
-    <div className="trending-tags">
+    <aside className="trending-tags">
       <div className="trending-header">
-        <h3>Assuntos do momento</h3>
-        <ButtonGroup className="trending-filters">
-          <Button size="small" onClick={() => setPeriod("7d")}>
+        <h3 className="trending-title">Assuntos do momento</h3>
+
+        <ButtonGroup size="small" className="trending-filters">
+          <Button size="small" variant={period === "1d" ? "primary" : "default"} onClick={() => setPeriod("1d")}>
+            1 dia
+          </Button>
+          <Button size="small" variant={period === "7d" ? "primary" : "default"} onClick={() => setPeriod("7d")}>
             7 dias
           </Button>
-          <Button size="small" onClick={() => setPeriod("30d")}>
+          <Button size="small" variant={period === "30d" ? "primary" : "default"} onClick={() => setPeriod("30d")}>
             30 dias
           </Button>
         </ButtonGroup>
       </div>
 
-      <ul>
+      <ul className="trending-list">
         {data?.map((tag, index) => (
-          <li key={tag.name}>
+          <li key={tag.name} className="trending-item">
             <span className="rank">#{index + 1}</span>
             <span className="tag">#{tag.name}</span>
             <span className="count">{tag.usage_count}</span>
           </li>
         ))}
       </ul>
-    </div>
+    </aside>
   );
 }

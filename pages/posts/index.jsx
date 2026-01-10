@@ -23,7 +23,7 @@ export default function PostsPage() {
       if (tab === "following") {
         endpoint = "/api/v1/posts?search_type=following";
       } else if (tab === "tag") {
-        endpoint = `/api/v1/posts?search_type=tag,tag=${activeTag}`;
+        endpoint = `/api/v1/posts?search_type=tag&tag=${activeTag}`;
       } else {
         endpoint = "/api/v1/posts";
       }

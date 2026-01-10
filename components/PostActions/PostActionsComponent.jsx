@@ -11,9 +11,10 @@ PostActionsComponent.propTypes = {
   onLike: PropTypes.func.isRequired,
   onToggleComments: PropTypes.func.isRequired,
   onReply: PropTypes.func.isRequired,
+  actionMessage: PropTypes.string,
 };
 
-export default function PostActionsComponent({ hasLiked, likesCount, commentsCount, canInteract, onLike, onToggleComments, onReply }) {
+export default function PostActionsComponent({ hasLiked, likesCount, commentsCount, canInteract, onLike, onToggleComments, onReply, actionMessage }) {
   const LikeIcon = hasLiked ? HeartFillIcon : HeartIcon;
 
   return (
@@ -38,6 +39,8 @@ export default function PostActionsComponent({ hasLiked, likesCount, commentsCou
           Comentar
         </Button>
       )}
+      {/* Message */}
+      {actionMessage && <p>{actionMessage}</p>}
     </div>
   );
 }

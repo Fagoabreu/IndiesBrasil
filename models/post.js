@@ -1,46 +1,82 @@
 import { NotFoundError, ValidationError } from "@/infra/errors";
 import database from "infra/database";
 
+const camposBase = `
+  p.id,
+  p.organization_id,
+  p.event_id,
+  p.content,
+  p.img,
+  p.created_at,
+  p.parent_post_id,
+  p.embed,
+  pui.secure_url AS post_img_url,
+  u.username AS author_username,
+  u.avatar_image AS author_avatar_image,
+  uui.secure_url AS author_avatar_url,
+  COALESCE(l.likes_count, 0) AS likes_count,
+  COALESCE(c.comments_count, 0) AS comments_count,
+`;
+
+const joinsBase = `
+  INNER JOIN users u
+    ON p.author_id = u.id
+        
+  -- UserAvatar
+  LEFT JOIN uploaded_images uui
+    ON uui.id = u.avatar_image 
+        
+  -- Contagem de likes
+  LEFT JOIN LATERAL (
+    SELECT COUNT(*) AS likes_count
+    FROM post_likes pl
+    WHERE pl.post_id = p.id
+  ) l ON true
+
+  -- Contagem de comentários
+  LEFT JOIN LATERAL (
+    SELECT COUNT(*) AS comments_count
+    FROM comments co
+    WHERE co.post_id = p.id
+  ) c ON true
+
+  -- Se existem Imagem
+  LEFT JOIN uploaded_images pui
+    ON pui.id = p.img 
+`;
+
 const baseSelectQuery = `
+  SELECT
+    ${camposBase}
+    (pl.post_id IS NOT NULL) AS liked_by_user,
+    (u.id = $1) AS is_current_user
+  FROM 
+    posts p
+    ${joinsBase}
+
+    -- Se o usuário curtiu
+    LEFT JOIN LATERAL (
+        SELECT 1 AS liked, post_id
+        FROM post_likes pl2
+        WHERE 
+          pl2.post_id = p.id
+          AND pl2.user_id = $1
+        LIMIT 1
+    ) pl ON true
+`;
+
+const baseSelectQueryByTags = `
 SELECT
-          p.id,
-          p.organization_id,
-          p.event_id,
-          p.content,
-          p.img,
-          p.created_at,
-          p.parent_post_id,
-          p.embed,
-          pui.secure_url AS post_img_url,
-          u.username AS author_username,
-          u.avatar_image AS author_avatar_image,
-          uui.secure_url AS author_avatar_url,
-          COALESCE(l.likes_count, 0) AS likes_count,
-          COALESCE(c.comments_count, 0) AS comments_count,
+          ${camposBase}
           (pl.post_id IS NOT NULL) AS liked_by_user,
           (u.id = $1) AS is_current_user
-        FROM 
-          posts p
-          INNER JOIN users u
-            ON p.author_id = u.id
-          
-          -- UserAvatar
-          LEFT JOIN uploaded_images uui
-            ON uui.id = u.avatar_image 
-          
-          -- Contagem de likes
-          LEFT JOIN LATERAL (
-            SELECT COUNT(*) AS likes_count
-            FROM post_likes pl
-            WHERE pl.post_id = p.id
-          ) l ON true
-
-          -- Contagem de comentários
-          LEFT JOIN LATERAL (
-            SELECT COUNT(*) AS comments_count
-              FROM comments co
-              WHERE co.post_id = p.id
-          ) c ON true
+        FROM
+          tags t
+          inner join post_tags pt
+            on pt.tag_id=t.id
+          inner join posts p
+            on p.id = pt.post_id
+          ${joinsBase}
 
           -- Se o usuário curtiu
           LEFT JOIN LATERAL (
@@ -51,55 +87,16 @@ SELECT
                 AND pl2.user_id = $1
               LIMIT 1
           ) pl ON true
-
-          -- Se existem Imagem
-          LEFT JOIN uploaded_images pui
-            ON pui.id = p.img 
 `;
 
 const baseNoUserSelectQuery = `
 SELECT
-          p.id,
-          p.organization_id,
-          p.event_id,
-          p.content,
-          p.img,
-          p.created_at,
-          p.parent_post_id,
-          p.embed,
-          pui.secure_url AS post_img_url,
-          u.username AS author_username,
-          u.avatar_image AS author_avatar_image,
-          uui.secure_url AS author_avatar_url,
-          COALESCE(l.likes_count, 0) AS likes_count,
-          COALESCE(c.comments_count, 0) AS comments_count,
+          ${camposBase}
           false AS liked_by_user,
           false AS is_current_user
         FROM 
           posts p
-          INNER JOIN users u
-            ON p.author_id = u.id
-            
-          -- UserAvatar
-          LEFT JOIN uploaded_images uui
-            ON uui.id = u.avatar_image 
-
-          -- Contagem de likes
-          LEFT JOIN LATERAL (
-            SELECT COUNT(*) AS likes_count
-            FROM post_likes pl
-            WHERE pl.post_id = p.id
-          ) l ON true
-
-          -- Contagem de comentários
-          LEFT JOIN LATERAL (
-            SELECT COUNT(*) AS comments_count
-              FROM comments co
-              WHERE co.post_id = p.id
-          ) c ON true
-          -- Se existem Imagem
-          LEFT JOIN uploaded_images pui
-            ON pui.id = p.img 
+          ${joinsBase}
 `;
 
 async function create(postInputValues) {
@@ -193,9 +190,14 @@ async function deleteCommentsByPostId(postId) {
   }
 }
 
-async function getPosts(user_id, seachType) {
+async function getPosts(user_id, seachType, tag) {
   if (user_id && seachType === "following") {
     const userPosts = await runSelectFollowingsQuery(user_id);
+    return userPosts;
+  }
+
+  if (user_id && seachType === "tag") {
+    const userPosts = await runSelectTagQuery(user_id, tag);
     return userPosts;
   }
 
@@ -224,6 +226,18 @@ async function getPosts(user_id, seachType) {
           and uf.follower_id=$1
         ORDER BY p.created_at DESC;`,
       values: [user_id],
+    });
+    return results.rows;
+  }
+
+  async function runSelectTagQuery(user_id, tag) {
+    const results = await database.query({
+      text:
+        baseSelectQueryByTags +
+        `
+        where t.name=$2
+        ORDER BY p.created_at DESC;`,
+      values: [user_id, tag],
     });
     return results.rows;
   }
