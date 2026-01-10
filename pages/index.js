@@ -87,12 +87,12 @@ function Home() {
 
         <CarouselComponent
           cards={[
-            { content: "Instagram Imagem", image_src: "/images/instagramimage.png" },
-            { content: "Instagram Vídeo", image_src: "/images/instagramvideo.png" },
-            { content: "Steam Widget", image_src: "/images/steamwidget.png" },
-            { content: "Canal Twitch", image_src: "/images/twitchchannel.png" },
-            { content: "YouTube Shorts", image_src: "/images/youtubeshorts.png" },
-            { content: "YouTube Vídeo", image_src: "/images/youtubevideo.png" },
+            { content: "Instagram Imagem", image_src: "/images/instagram_image.png" },
+            { content: "Instagram Vídeo", image_src: "/images/instagram_video.png" },
+            { content: "Steam Widget", image_src: "/images/steam_widget.png" },
+            { content: "Canal Twitch", image_src: "/images/twitch_channel.png" },
+            { content: "YouTube Shorts", image_src: "/images/youtube_shorts.png" },
+            { content: "YouTube Vídeo", image_src: "/images/youtube_video.png" },
           ]}
         />
       </section>
