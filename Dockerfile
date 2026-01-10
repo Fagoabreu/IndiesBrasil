@@ -21,10 +21,7 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 COPY --from=deps /app/public ./.next/standalone/public
-COPY --from=deps /app/infra ./infra
-
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
+COPY --from=deps /app/infra/migrations ./infra/migrations
 
 COPY --from=deps /app/next.config.js ./
 COPY --from=deps --chown=nextjs:nodejs /app/.next/standalone ./
