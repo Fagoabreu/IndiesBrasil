@@ -48,15 +48,7 @@ export default function CarouselComponent({ cards }) {
         {cards.map((card, index) => (
           <div className={styles.card} key={index}>
             <div className={styles.imageWrapper}>
-              <Image
-                src={card.image_src}
-                alt={card.content}
-                fill
-                className={styles.image}
-                sizes="(max-width: 600px) 100vw, 320px"
-                priority={index === 0}
-                unoptimized
-              />
+              <img src={card.image_src} alt={card.content} className={styles.image} loading={index === 0 ? "eager" : "lazy"} />
             </div>
 
             <div className={styles.content}>
