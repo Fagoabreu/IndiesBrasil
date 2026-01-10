@@ -2,6 +2,7 @@ import HorizontalCardComponent from "@/components/Card/HorizontalCardComponent";
 import CarouselComponent from "@/components/Carousel/CarouselComponent";
 import styles from "./index.module.css";
 import { Heading } from "@primer/react";
+import VerticalCardComponent from "@/components/Card/VerticalCardComponent";
 
 function Home() {
   return (
@@ -48,6 +49,18 @@ function Home() {
             { content: "YouTube Shorts", image_src: "/images/youtubeshorts.png" },
             { content: "YouTube Vídeo", image_src: "/images/youtubevideo.png" },
           ]}
+        />
+      </section>
+      <section className={styles.section}>
+        <header className={styles.sectionHeader}>
+          <h2>Sistema de Tags</h2>
+          <p>Tags para identificar o assunto ou uma trending do post.</p>
+        </header>
+        <VerticalCardComponent
+          image="/images/sistematags.png"
+          alt="ranqueamento Tags"
+          title="Tags"
+          description="ranqueamento e localização de posts através de tags que auxiliam a classificação do assunto podendo iniciar uma trend ou uma conversa"
         />
       </section>
     </main>
