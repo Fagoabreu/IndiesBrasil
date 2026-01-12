@@ -38,11 +38,12 @@ function Home() {
 
       {/* HERO */}
       <section className={styles.hero}>
-        <Heading as="h1">Bem-vindo ao Indies Brasil</Heading>
+        <Heading as="h1">Bem-vindo a nossa comunidade</Heading>
+        <p>Comunidade criado por trabalhadores para trabalhadores</p>
         <p>
-          A rede social feita para artistas, desenvolvedores de jogos e programadores. Conecte-se, compartilhe projetos, construa portfólio e colabore
-          com quem vive de criar tecnologia e experiências digitais.
+          Foco em facilitar o trabalho de artistas, desenvolvedores de jogos, programadores, roteiristas, streamer. Conecte-se, compartilhe projetos.
         </p>
+        <p>Construa seu portfólio, compartilhe notícias, e colabore com quem vive de produzir entretenimento e educação.</p>
         <div className={styles.metrics}>
           <MetricCard
             title="Usuarios"

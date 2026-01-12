@@ -1,5 +1,5 @@
 import TrendingTags from "../TrendingTags/TrendingTagsComponent";
-import WhoToFollow from "../WhoToFollow";
+import WhoToFollow from "../WhoToFollow/WhoToFollow";
 
 export default function PostLeftBarComponent() {
   return (

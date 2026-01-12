@@ -8,7 +8,7 @@ export default function LeftSidebarComponent() {
     <ActionList>
       <ActionList.Item onSelect={() => router.push("/")}>Home</ActionList.Item>
       <ActionList.Item onSelect={() => router.push("/posts")}>Posts</ActionList.Item>
-      <ActionList.Item onSelect={() => router.push("/eventos")}>Eventos</ActionList.Item>
+      <ActionList.Item onSelect={() => router.push("/membros")}>Membros</ActionList.Item>
     </ActionList>
   );
 }

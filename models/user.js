@@ -105,9 +105,39 @@ async function findOneByUsername(username) {
     const results = await database.query({
       text: `
         select 
-          * 
+          username,
+          email,
+          created_at,
+          avatar_image,
+          COALESCE(f.followers_count, 0) AS followers_count,
+          COALESCE(f2.following_count,0) as following_count,
+          COALESCE(p.posts_count,0) as posts_count
         from 
-          users u 
+          users u
+          -- Seguidores do usuário
+          LEFT JOIN (
+            SELECT
+              lead_user_id,
+              COUNT(*) AS followers_count
+            FROM user_followers
+            GROUP BY lead_user_id
+          ) f ON f.lead_user_id = u.id
+          -- usuário seguindo
+          LEFT JOIN (
+            SELECT
+              follower_id,
+              COUNT(*) AS following_count
+            FROM user_followers
+            GROUP BY follower_id
+          ) f2 ON f2.follower_id = u.id
+          -- Posts do Usuario
+          LEFT JOIN (
+            SELECT
+              author_id,
+              COUNT(*) AS posts_count
+            FROM posts
+            GROUP BY author_id
+          ) p ON p.author_id = u.id
         where 
           LOWER(u.username) = LOWER($1)
         limit

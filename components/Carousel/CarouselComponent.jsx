@@ -40,7 +40,9 @@ export default function CarouselComponent({ cards }) {
     scrollToIndex(Math.min(activeIndex + 1, TOTAL_CARDS - 1));
   }
 
-  const noopImageLoader = ({ src }) => src;
+  const noopImageLoader = ({ src, width, quality }) => {
+    return `${src}?w=${width}&q=${quality || 75}`;
+  };
 
   return (
     <div className={styles.wrapper}>
