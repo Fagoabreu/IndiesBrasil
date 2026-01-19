@@ -1,6 +1,7 @@
 import { createRouter } from "next-connect";
 import controller from "infra/controller";
-import user from "models/user";
+import { ForbiddenError } from "@/infra/errors";
+import profile from "@/models/profile";
 
 const router = createRouter();
 router.use(controller.injectAnonymousOrUser);
@@ -11,14 +12,19 @@ export default router.handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const username = request.query.username;
-  const newFound = await user.findOneByUsernameSecured(username);
+  const newFound = await profile.findByUsername(username);
   return response.status(200).json(newFound);
 }
 
 async function patchHandler(request, response) {
+  const currentUser = request.context.user;
   const username = request.query.username;
   const userInputValues = request.body;
 
-  const updatedUser = await user.update(username, userInputValues);
+  if (currentUser.username !== username) {
+    throw new ForbiddenError({ message: "Alteração não autorizada", action: "Verifique sua permissões" });
+  }
+
+  const updatedUser = await profile.update(username, userInputValues);
   return response.status(200).json(updatedUser);
 }

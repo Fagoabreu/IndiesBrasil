@@ -75,8 +75,12 @@ async function findOneById(id) {
           email,
           cpf,
           features,
+          resumo,
+          bio,
+          visibility,
+          background_image,
           created_at,
-          updated_at 
+          updated_at
         from 
           users u 
         where 
@@ -104,11 +108,20 @@ async function findOneByUsername(username) {
   async function runSelectQuery(username) {
     const results = await database.query({
       text: `
-        select 
+        select
+          u.id,
           username,
           email,
+          updated_at,
           created_at,
           avatar_image,
+          cpf,
+          password,
+          features,
+          resumo,
+          bio,
+          visibility,
+          u.background_image,
           COALESCE(f.followers_count, 0) AS followers_count,
           COALESCE(f2.following_count,0) as following_count,
           COALESCE(p.posts_count,0) as posts_count
@@ -154,6 +167,34 @@ async function findOneByUsername(username) {
 
     return results.rows[0];
   }
+}
+
+function secureUserInterface(selectedUser) {
+  if (!selectedUser) {
+    return;
+  }
+
+  return {
+    id: selectedUser.id,
+    username: selectedUser.username,
+    email: selectedUser.email,
+    updated_at: selectedUser.updated_at,
+    created_at: selectedUser.created_at,
+    avatar_image: selectedUser.avatar_image,
+    followers_count: selectedUser.followers_count,
+    following_count: selectedUser.following_count,
+    posts_count: selectedUser.posts_count,
+    features: selectedUser.features,
+    resumo: selectedUser.resumo,
+    bio: selectedUser.bio,
+    visibility: selectedUser.visibility,
+    background_image: selectedUser.background_image,
+  };
+}
+
+async function findOneByUsernameSecured(username) {
+  const user = await findOneByUsername(username);
+  return secureUserInterface(user);
 }
 
 async function findOneByEmail(email) {
@@ -261,6 +302,30 @@ async function setFeatures(userId, features) {
   }
 }
 
+async function isFollowingUser(followerId, leaderId) {
+  const isFollowing = await runSelectQuery(followerId, leaderId);
+  return isFollowing.isFollowing;
+
+  async function runSelectQuery(followerId, leaderId) {
+    const results = await database.query({
+      text: `
+        select 
+          case when exists(
+            select 1 from user_followers
+            where 
+              follower_id = $1
+              and lead_user_id = $2
+            ) then true
+          else
+            false
+          end as isFollowing
+        `,
+      values: [followerId, leaderId],
+    });
+    return results.rows[0];
+  }
+}
+
 async function runUpdatedQuery(userWithNewValues) {
   const results = await database.query({
     text: `
@@ -279,6 +344,13 @@ async function runUpdatedQuery(userWithNewValues) {
     `,
     values: [userWithNewValues.id, userWithNewValues.username, userWithNewValues.email, userWithNewValues.password, userWithNewValues.cpf],
   });
+  if (results.rowCount === 0) {
+    throw new NotFoundError({
+      message: "Usuario não encontrado.",
+      action: "verifique se os dados enviados estão corretos.",
+    });
+  }
+
   return results.rows[0];
 }
 
@@ -295,6 +367,10 @@ async function findUsers(userId, isfollowing) {
         u.id,
         u.username,
         u.avatar_image,
+        u.resumo,
+        u.bio,
+        u.visibility,
+        u.background_image,
         COALESCE(f.followers_count, 0) AS followers_count,
         COALESCE(p.posts_count, 0) AS posts_count
       FROM users u
@@ -327,6 +403,10 @@ async function findUsers(userId, isfollowing) {
         u.id,
         u.username,
         u.avatar_image,
+        u.resumo,
+        u.bio,
+        u.visibility,
+        u.background_image,
         COALESCE(f.followers_count, 0) AS followers_count,
         COALESCE(p.posts_count, 0) AS posts_count,
         (uf.follower_id IS NOT NULL) AS is_following
@@ -421,13 +501,20 @@ async function removeFollow(followerId, leaderId) {
 const user = {
   create,
   update,
-  findOneById,
-  findOneByUsername,
-  findOneByEmail,
+  //permissions
   setFeatures,
-  findUsers,
+  //follow
   addFollow,
   removeFollow,
+  //select
+  findOneById,
+  findOneByUsername,
+  findOneByUsernameSecured,
+  findOneByEmail,
+  findUsers,
+  isFollowingUser,
+  //Security
+  secureUserInterface,
 };
 
 export default user;

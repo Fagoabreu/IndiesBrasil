@@ -25,6 +25,33 @@ describe("Patch /api/v1/users/[username]", () => {
   });
 
   describe("anonymous user", () => {
+    test("With unique 'Username'", async () => {
+      const user = await orchestrator.createUser({
+        username: "anonymousUser1",
+      });
+
+      const response = await fetch(`http://localhost:3000/api/v1/users/${user.username}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: "uniqueUser2",
+        }),
+      });
+
+      expect(response.status).toBe(403);
+      const responseBody = await response.json();
+      expect(responseBody).toEqual({
+        action: 'Verifique se o seu usuário possui a feature "update:user" para executar esta ação.',
+        message: "Você não possui permissão para executar esta ação",
+        name: "ForbiddenError",
+        status_code: 403,
+      });
+    });
+  });
+
+  describe("Default user", () => {
     test("With NonExist username", async () => {
       const response = await fetch("http://localhost:3000/api/v1/users/UsuarioInexistente", {
         method: "PATCH",
@@ -162,6 +189,7 @@ describe("Patch /api/v1/users/[username]", () => {
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
         features: ["read:activation_token"],
+        resumo: null,
       });
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
@@ -196,6 +224,7 @@ describe("Patch /api/v1/users/[username]", () => {
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
         features: ["read:activation_token"],
+        resumo: null,
       });
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
@@ -231,6 +260,7 @@ describe("Patch /api/v1/users/[username]", () => {
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
         features: ["read:activation_token"],
+        resumo: null,
       });
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();

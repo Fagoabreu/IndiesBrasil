@@ -5,7 +5,7 @@ import PostCardComponent from "@/components/PostCard/PostCardComponent";
 import CreatePost from "@/components/CreatePost/CreatePost";
 
 import "./PostsPage.css";
-import PostLeftBarComponent from "@/components/LeftBar/PostLeftBarComponent";
+import PostRightBarComponent from "@/components/RightBar/PostRightBarComponent";
 import { useRouter } from "next/router";
 
 export default function PostsPage() {
@@ -165,4 +165,4 @@ export default function PostsPage() {
 }
 
 // Sidebar
-PostsPage.RightSidebar = <PostLeftBarComponent />;
+PostsPage.RightSidebar = <PostRightBarComponent />;

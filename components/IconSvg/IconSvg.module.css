@@ -1,0 +1,7 @@
+.contactIcon {
+  margin-left: 8px;
+  vertical-align: middle;
+  background-color: var(--fgColor-onEmphasis);
+  border-radius: 4px;
+  padding: 1px;
+}

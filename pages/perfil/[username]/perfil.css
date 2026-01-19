@@ -32,7 +32,7 @@
   background: var(--bgColor-default);
   border: 1px solid var(--borderColor-default);
   border-radius: 8px;
-  padding: 0px;
+  padding: 8px;
   margin-bottom: 16px;
 }
 
@@ -64,4 +64,93 @@
 
 .profile-muted {
   color: var(--fgColor-muted);
+}
+
+/* ===== RESUME LAYOUT ===== */
+
+.profile-resume {
+  display: grid;
+  grid-template-columns: 2.5fr 1fr;
+  gap: 24px;
+  margin-top: 16px;
+}
+
+/* Coluna esquerda */
+.resume-main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Coluna direita */
+.resume-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Seções */
+.resume-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 5px;
+  border-bottom: solid;
+  margin-bottom: 12px;
+}
+.resume-section {
+  background: var(--bgColor-default);
+  border: 1px solid var(--borderColor-default);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.resume-section h3,
+.resume-section h4 {
+  margin-bottom: 0px;
+  font-size: large;
+}
+
+/* Itens */
+.resume-item {
+  margin-bottom: 16px;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.resume-sub {
+  font-size: 14px;
+  color: var(--fgColor-muted);
+}
+
+.resume-date {
+  font-size: 12px;
+  color: var(--fgColor-muted);
+  margin-bottom: 6px;
+}
+
+/* Listas laterais */
+.resume-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.resume-list li {
+  font-size: 14px;
+  padding: 4px 0;
+  color: var(--fgColor-default);
+}
+
+/* Responsivo */
+@media (max-width: 900px) {
+  .profile-resume {
+    grid-template-columns: 1fr;
+  }
 }
