@@ -4,18 +4,22 @@ import { PageLayout, Heading, Avatar, Text, Button } from "@primer/react";
 import Image from "next/image";
 import { useUser } from "@/context/UserContext";
 import "./perfil.css";
-import { PencilIcon } from "@primer/octicons-react";
+import { DiffAddedIcon, PencilIcon } from "@primer/octicons-react";
 import EditResumoModal from "@/components/Portfolio/EditResumoModal";
+import EditHistoricoModal from "@/components/Portfolio/EditHistoricoModal";
 
 export default function Perfil() {
   const router = useRouter();
   const { username } = router.query;
 
   const { user: authUser, loadingUser } = useUser();
-  const [perfilUser, setPerfilUser] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
 
+  const [perfilUser, setPerfilUser] = useState(null);
   const [editResumoOpen, setEditResumoOpen] = useState(false);
+
+  const [editHistoricoOpen, setEditHistoricoOpen] = useState(false);
+  const [editingHistorico, setEditingHistorico] = useState(null);
 
   // Carrega perfil visitado
   useEffect(() => {
@@ -61,7 +65,7 @@ export default function Perfil() {
   }
 
   async function saveResumo(payload) {
-    const res = await fetch(`/api/v1/users/${username}/profile`, {
+    const res = await fetch(`/api/v1/users/${username}`, {
       method: "PATCH",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
@@ -121,22 +125,21 @@ export default function Perfil() {
                   <Heading as="h2" variant="medium">
                     Descrição
                   </Heading>
+                  {editResumoOpen && (
+                    <EditResumoModal
+                      onClose={() => setEditResumoOpen(false)}
+                      initResume={perfilUser.user?.resumo}
+                      initBio={perfilUser.user?.bio}
+                      initVisibility={perfilUser.user?.visibility}
+                      onSave={saveResumo}
+                    />
+                  )}
                   {isOwnProfile && (
                     <Button size="small" variant="primary" onClick={() => setEditResumoOpen(true)}>
                       <PencilIcon /> Editar
                     </Button>
                   )}
                 </div>
-
-                {isOwnProfile && editResumoOpen && (
-                  <EditResumoModal
-                    onClose={() => setEditResumoOpen(false)}
-                    initResume={perfilUser.user?.resumo}
-                    initBio={perfilUser.user?.bio}
-                    initVisibility={perfilUser.user?.visibility}
-                    onSave={saveResumo}
-                  />
-                )}
                 <div className="resume-item row">
                   <Heading as="h3" variant="small">
                     Visibilidade
@@ -159,9 +162,52 @@ export default function Perfil() {
               </section>
               {/* Section  Experiencias*/}
               <section className="resume-section">
-                <Heading as="h3" variant="medium">
-                  Histórico Profissional
-                </Heading>
+                <div className="resume-header">
+                  {editHistoricoOpen && (
+                    <EditHistoricoModal
+                      initialData={editingHistorico}
+                      onClose={() => {
+                        setEditHistoricoOpen(false);
+                        setEditingHistorico(null);
+                      }}
+                      onSave={async (payload) => {
+                        const method = editingHistorico ? "PATCH" : "POST";
+
+                        const res = await fetch(`/api/v1/users/${username}/historico${editingHistorico ? `/${editingHistorico.id}` : ""}`, {
+                          method,
+                          credentials: "include",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify(payload),
+                        });
+
+                        if (!res.ok) return;
+
+                        const updated = await res.json();
+
+                        setPerfilUser((prev) => ({
+                          ...prev,
+                          portfolio_historico: updated,
+                        }));
+                      }}
+                    />
+                  )}
+
+                  <Heading as="h3" variant="medium">
+                    Histórico Profissional
+                  </Heading>
+                  {isOwnProfile && (
+                    <Button
+                      size="small"
+                      variant="primary"
+                      onClick={() => {
+                        setEditingHistorico(null);
+                        setEditHistoricoOpen(true);
+                      }}
+                    >
+                      <DiffAddedIcon /> experiência
+                    </Button>
+                  )}
+                </div>
 
                 {(!perfilUser.portfolio_historico || perfilUser.portfolio_historico.length === 0) && (
                   <Text variant="medium" className="profile-muted">
@@ -172,7 +218,22 @@ export default function Perfil() {
                 <ul className="resume-list">
                   {perfilUser.portfolio_historico?.map((historico) => (
                     <li key={historico.id} className="resume-item">
-                      <strong>{historico.cargo}</strong>
+                      <div className="resume-header">
+                        <strong>{historico.cargo}</strong>
+
+                        {isOwnProfile && (
+                          <Button
+                            size="small"
+                            variant="invisible"
+                            onClick={() => {
+                              setEditingHistorico(historico);
+                              setEditHistoricoOpen(true);
+                            }}
+                          >
+                            Editar
+                          </Button>
+                        )}
+                      </div>
 
                       <Text variant="medium" className="resume-sub">
                         {historico.company}

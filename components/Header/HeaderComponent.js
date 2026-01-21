@@ -5,8 +5,10 @@ import { SunIcon, MoonIcon } from "@primer/octicons-react";
 
 import styles from "./HeaderComponent.module.css";
 import { useUser } from "@/context/UserContext";
+import { useRouter } from "next/router";
 
 export default function HeaderComponent() {
+  const router = useRouter();
   const { colorMode, setColorMode } = useTheme();
   const { user, logout } = useUser();
 
@@ -41,7 +43,7 @@ export default function HeaderComponent() {
 
             <ActionMenu.Overlay>
               <ActionList>
-                <ActionList.Item onSelect={() => (window.location.href = `/perfil/${user.username}`)}>{usernameLabel}</ActionList.Item>
+                <ActionList.Item onSelect={() => router.push(`/perfil/${user.username}`)}>{usernameLabel}</ActionList.Item>
 
                 <ActionList.Item variant="danger" onSelect={logout}>
                   Sair

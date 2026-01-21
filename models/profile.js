@@ -31,7 +31,7 @@ async function findPortfolioHistoricoByPortfolioId(user_id) {
       text: `
         select
           ph.id,
-          ph.portfolio_id
+          ph.user_id,
           ph.ordem,
           ph.cargo,
           ph.init_date,
@@ -59,7 +59,7 @@ async function findPortfolioFormacaoByPortfolioId(user_id) {
       text: `
         select
           id,
-          portfolio_id,
+          user_id,
           ordem,
           nome,
           init_date,
@@ -67,7 +67,7 @@ async function findPortfolioFormacaoByPortfolioId(user_id) {
           instituicao
         from 
           portfolio_formacao
-        where p.user_id=$1
+        where user_id=$1
           `,
       values: [user_id],
     });
@@ -83,33 +83,23 @@ async function findPortfolioToolsByPortfolioId(user_id) {
     const results = await database.query({
       text: `
         select
-          ptf.portfolio_id,
+          ptf.user_id,
           ptf.portfolio_tool_id,
-          ptf.experience
-          pt.name,
+          ptf.experience,
+          pt.name
         from 
           portfolio_tool_ref ptf
-          inner join portfolio_tool pt
+          inner join portfolio_tools pt
             on pt.id=ptf.portfolio_tool_id
-        where p.user_id=$1
+        where ptf.user_id=$1
           `,
       values: [user_id],
     });
     return results.rows;
   }
 }
-
-async function update(username, profileInputValues) {
-  const updatedUser = await user.update(username, profileInputValues.user);
-
-  return {
-    user: updatedUser,
-  };
-}
-
 const profile = {
   findByUsername,
-  update,
 };
 
 export default profile;

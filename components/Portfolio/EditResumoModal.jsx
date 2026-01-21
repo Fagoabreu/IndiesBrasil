@@ -17,11 +17,9 @@ export default function EditResumoModal({ onClose, initVisibility, initResume, i
     setLoading(true);
 
     await onSave({
-      user: {
-        resumo: resume,
-        visibility_type: visibility,
-        bio,
-      },
+      resumo: resume,
+      visibility: visibility,
+      bio,
     });
 
     setLoading(false);

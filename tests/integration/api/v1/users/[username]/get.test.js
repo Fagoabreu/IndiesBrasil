@@ -35,7 +35,10 @@ describe("GET /api/v1/users/[username]", () => {
         followers_count: "0",
         following_count: "0",
         posts_count: "0",
-        resumo: null,
+        resumo: response2Body.resumo,
+        visibility: "public",
+        background_image: null,
+        bio: response2Body.bio,
       });
       expect(uuidVersion(response2Body.id)).toBe(4);
       expect(Date.parse(response2Body.created_at)).not.toBeNaN();
@@ -65,7 +68,10 @@ describe("GET /api/v1/users/[username]", () => {
         following_count: "0",
         posts_count: "0",
         features: ["read:activation_token"],
-        resumo: null,
+        resumo: response2Body.resumo,
+        visibility: "public",
+        background_image: null,
+        bio: response2Body.bio,
       });
       expect(uuidVersion(response2Body.id)).toBe(4);
       expect(Date.parse(response2Body.created_at)).not.toBeNaN();

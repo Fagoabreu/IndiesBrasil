@@ -148,6 +148,18 @@
   color: var(--fgColor-default);
 }
 
+.modal-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.date-row {
+  display: flex;
+  gap: 12px;
+}
+
 /* Responsivo */
 @media (max-width: 900px) {
   .profile-resume {

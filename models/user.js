@@ -10,27 +10,35 @@ async function create(userInputValues) {
   injectDefaultFeaturesInObject(userInputValues);
 
   const newUser = await runInsertQuery(userInputValues);
-  return {
-    username: newUser.username,
-    email: newUser.email,
-    id: newUser.id,
-    cpf: newUser.cpf,
-    features: newUser.features,
-    created_at: newUser.created_at,
-    updated_at: newUser.updated_at,
-    password: newUser.password,
-  };
+  return secureUserInterface(newUser);
 
   async function runInsertQuery(userInputValues) {
     const results = await database.query({
       text: `
       Insert into 
-        users (username,email,password,cpf,features) 
+        users (
+          username,
+          email,
+          password,
+          cpf,
+          features,
+          resumo,
+          visibility,
+          bio) 
       values
-        ($1,$2,$3,$4,$5)
+        ($1,$2,$3,$4,$5,$6,$7,$8)
       returning
         *`,
-      values: [userInputValues.username, userInputValues.email, userInputValues.password, userInputValues.cpf, userInputValues.features],
+      values: [
+        userInputValues.username,
+        userInputValues.email,
+        userInputValues.password,
+        userInputValues.cpf,
+        userInputValues.features,
+        userInputValues.resumo,
+        userInputValues.visibility || "public",
+        userInputValues.bio,
+      ],
     });
     return results.rows[0];
   }
@@ -180,7 +188,6 @@ function secureUserInterface(selectedUser) {
     email: selectedUser.email,
     updated_at: selectedUser.updated_at,
     created_at: selectedUser.created_at,
-    avatar_image: selectedUser.avatar_image,
     followers_count: selectedUser.followers_count,
     following_count: selectedUser.following_count,
     posts_count: selectedUser.posts_count,
@@ -188,6 +195,7 @@ function secureUserInterface(selectedUser) {
     resumo: selectedUser.resumo,
     bio: selectedUser.bio,
     visibility: selectedUser.visibility,
+    avatar_image: selectedUser.avatar_image,
     background_image: selectedUser.background_image,
   };
 }
@@ -302,6 +310,29 @@ async function setFeatures(userId, features) {
   }
 }
 
+async function addFeatures(userId, features) {
+  const updatedUser = await runUpdatedQuery(userId, features);
+  return updatedUser;
+
+  async function runUpdatedQuery(userId, features) {
+    const results = await database.query({
+      text: `
+      update
+        users
+      set
+        features = array_cat(features,$2),
+        updated_at = timezone('utc',now())
+      where 
+        id = $1
+      returning 
+        *
+      `,
+      values: [userId, features],
+    });
+    return results.rows[0];
+  }
+}
+
 async function isFollowingUser(followerId, leaderId) {
   const isFollowing = await runSelectQuery(followerId, leaderId);
   return isFollowing.isFollowing;
@@ -336,13 +367,25 @@ async function runUpdatedQuery(userWithNewValues) {
         email = $3,
         password = $4,
         cpf = $5,
+        resumo = $6,
+        bio = $7,
+        visibility= $8,
         updated_at = timezone('utc',now())
       where 
         id = $1
       returning
         *
     `,
-    values: [userWithNewValues.id, userWithNewValues.username, userWithNewValues.email, userWithNewValues.password, userWithNewValues.cpf],
+    values: [
+      userWithNewValues.id,
+      userWithNewValues.username,
+      userWithNewValues.email,
+      userWithNewValues.password,
+      userWithNewValues.cpf,
+      userWithNewValues.resumo,
+      userWithNewValues.bio,
+      userWithNewValues.visibility,
+    ],
   });
   if (results.rowCount === 0) {
     throw new NotFoundError({
@@ -454,7 +497,6 @@ async function findUsers(userId, isfollowing) {
         LIMIT 
           10;`;
     const queryText = baseQuery + whereClause + endQuery;
-    console.log(queryText);
     const values = [userId];
     const results = await database.query({
       text: queryText,
@@ -503,6 +545,7 @@ const user = {
   update,
   //permissions
   setFeatures,
+  addFeatures,
   //follow
   addFollow,
   removeFollow,

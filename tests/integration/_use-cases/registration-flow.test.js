@@ -38,8 +38,13 @@ describe("Use case: Registration Flow (all successful)", () => {
       password: createUserResponseBody.password,
       created_at: createUserResponseBody.created_at,
       updated_at: createUserResponseBody.updated_at,
-      cpf: "12312312312",
+      //cpf: "12312312312",
       features: ["read:activation_token"],
+      avatar_image: null,
+      background_image: null,
+      bio: null,
+      resumo: null,
+      visibility: "public",
     });
   });
 
