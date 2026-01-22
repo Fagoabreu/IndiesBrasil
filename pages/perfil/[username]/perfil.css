@@ -88,6 +88,9 @@
   flex-direction: column;
   gap: 24px;
 }
+.resume-sidebar .resume-section {
+  background: var(--bgColor-default);
+}
 
 /* Seções */
 .resume-header {
@@ -96,7 +99,7 @@
   align-items: center;
   justify-content: space-between;
   padding-bottom: 5px;
-  border-bottom: solid;
+  border-bottom: 1px solid var(--borderColor-muted);
   margin-bottom: 12px;
 }
 .resume-section {
@@ -112,9 +115,29 @@
   font-size: large;
 }
 
+.resume-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.resume-actions button {
+  padding: 4px;
+}
+
 /* Itens */
 .resume-item {
-  margin-bottom: 16px;
+  padding: 8px 0;
+}
+
+.resume-item + .resume-item {
+  border-top: 1px solid var(--borderColor-muted);
+}
+
+.resume-item strong {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fgColor-default);
 }
 
 .row {

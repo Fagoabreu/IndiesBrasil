@@ -1,6 +1,5 @@
 import { createRouter } from "next-connect";
 import controller from "infra/controller";
-import { ForbiddenError } from "@/infra/errors";
 import profile from "@/models/profile";
 
 const router = createRouter();
