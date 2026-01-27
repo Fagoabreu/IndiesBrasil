@@ -1,0 +1,44 @@
+.panelCard {
+  background: var(--bgColor-default);
+  border: 1px solid var(--borderColor-default);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.panelTitle {
+  margin-bottom: 0px;
+}
+
+.panelHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--borderColor-muted);
+  margin-bottom: 12px;
+}
+
+.panelBody {
+  padding: 0;
+}
+
+.panelItem {
+  list-style: none;
+  padding: 8px 0;
+  margin-bottom: 20px;
+}
+.panelItemActionLine {
+  display: flex;
+  justify-content: flex-end;
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+.panelItemActions {
+  padding: 0;
+  margin: 0;
+  width: 220px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 8px 8px 0 0;
+  /*background: var(--bgColor-neutral-emphasis);*/
+  background: var(--bgColor-inset);
+}

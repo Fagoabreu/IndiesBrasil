@@ -1,0 +1,34 @@
+.panelFrame {
+  background: var(--bgColor-default);
+  border: 1px solid var(--borderColor-default);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.cardHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--borderColor-muted);
+  margin-bottom: 12px;
+}
+
+.resumeItem {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+.resumeItem strong {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fgColor-default);
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}

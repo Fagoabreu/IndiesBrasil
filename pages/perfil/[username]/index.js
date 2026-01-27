@@ -2,14 +2,18 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { PageLayout, Heading, Avatar, Text, Button } from "@primer/react";
 import Image from "next/image";
-import { PencilIcon, DiffAddedIcon, ChevronUpIcon, ChevronDownIcon, TrashIcon } from "@primer/octicons-react";
 
 import { useUser } from "@/context/UserContext";
 import EditResumoModal from "@/components/Portfolio/EditResumoModal";
-import EditHistoricoModal from "@/components/Portfolio/EditHistoricoModal";
-import DeleteHistoricoConfirm from "@/components/Portfolio/DeleteHistoricoConfirm";
+import EditHistoricoModal from "@/components/Portfolio/Historico/EditHistoricoModal";
+import DeleteConfirm from "@/components/Portfolio/DeleteConfirm";
 
-import "./perfil.css";
+import ListableSectionPanel from "@/components/Panels/ListableSectionPanel/ListableSectionPanel";
+import HistoricoItem from "@/components/Portfolio/Historico/HistoricoItem";
+import SectionPanel from "@/components/Panels/SectionPanel/SectionPanel";
+import style from "./perfil.module.css";
+import FormacaoItem from "@/components/Portfolio/Formacao/FormacaoItem";
+import EditFormacaoModal from "@/components/Portfolio/Formacao/EditFormacaoModal";
 
 /* =====================
  * Utils
@@ -51,6 +55,11 @@ export default function Perfil() {
   const [resumoModalOpen, setResumoModalOpen] = useState(false);
 
   const [historicoModal, setHistoricoModal] = useState({
+    open: false,
+    editing: null,
+  });
+
+  const [formacaoModal, setFormacaoModal] = useState({
     open: false,
     editing: null,
   });
@@ -189,6 +198,51 @@ export default function Perfil() {
     setDeleteModal({ item: null, loading: false });
   }
 
+  async function saveFormacao(payload) {
+    const isEditing = Boolean(formacaoModal.editing);
+    const ordem = isEditing ? formacaoModal.editing.ordem : perfilUser.formacoes.length;
+
+    const updated = await fetchJSON(`/api/v1/users/${username}/formacoes${isEditing ? `/${formacaoModal.editing.id}` : ""}`, {
+      method: isEditing ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...payload, ordem }),
+    });
+
+    setPerfilUser((prev) => ({
+      ...prev,
+      formacoes: updated,
+    }));
+
+    setFormacaoModal({ open: false, editing: null });
+  }
+
+  async function moveFormacao(from, to) {
+    const sorted = [...perfilUser.formacoes].sort((a, b) => a.ordem - b.ordem);
+    if (to < 0 || to >= sorted.length) return;
+
+    const updated = [...sorted];
+    const [item] = updated.splice(from, 1);
+    updated.splice(to, 0, item);
+
+    const reordered = updated.map((f, index) => ({
+      ...f,
+      ordem: index,
+    }));
+
+    setPerfilUser((prev) => ({
+      ...prev,
+      formacoes: reordered,
+    }));
+
+    await fetchJSON(`/api/v1/users/${username}/formacoes/reorder`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        formacoes: reordered.map(({ id, ordem }) => ({ id, ordem })),
+      }),
+    });
+  }
+
   /* =====================
    * Render
    * ===================== */
@@ -197,27 +251,25 @@ export default function Perfil() {
     <PageLayout padding="none">
       <PageLayout.Content width="medium">
         {/* Header */}
-        <section className="profile-card profile-header-card">
-          <div className="image-wrapper">
+        <section className={`${style.profileCard} ${style.profileHeaderCard}`}>
+          <div className={style.imageWrapper}>
             <Image src="/images/sistematags.png" alt="Capa do perfil" fill unoptimized />
           </div>
 
-          <Avatar size={128} src={perfilUser.user.avatar_image || "/images/avatar.png"} className="profile-avatar" />
+          <Avatar size={128} src={perfilUser.user.avatar_image || "/images/avatar.png"} className={style.profileAvatar} />
 
-          <div className="profile-header-info">
+          <div className={style.profileHeaderInfo}>
             <Heading as="h2">{perfilUser.name || perfilUser.user.username}</Heading>
 
-            <Text size="medium" className="profile-headline">
-              Desde: {formatDateBR(perfilUser.user.created_at)}
-            </Text>
+            <Text size="medium">Desde: {formatDateBR(perfilUser.user.created_at)}</Text>
 
-            <Text size="medium" className="profile-meta">
+            <Text size="medium">
               <strong>{perfilUser.user.following_count ?? 0}</strong> acompanhando · <strong>{perfilUser.followers_count ?? 0}</strong> seguidores ·{" "}
               <strong>{perfilUser.user.posts_count ?? 0}</strong> postagens
             </Text>
 
             {!isOwnProfile && authUser && (
-              <div className="profile-actions">
+              <div>
                 <Button variant="primary">Seguir</Button>
                 <Button>Enviar mensagem</Button>
               </div>
@@ -225,178 +277,63 @@ export default function Perfil() {
           </div>
 
           {/* ===== RESUME ===== */}
-          <section className="profile-resume">
+          <section className={style.profileResume}>
             {/* COLUNA PRINCIPAL */}
-            <div className="resume-main">
+            <div className={style.resumeMain}>
               {/* Descrição */}
-              <section className="resume-section">
-                <div className="resume-header">
-                  <Heading as="h2" variant="medium">
-                    Descrição
-                  </Heading>
-
-                  {isOwnProfile && (
-                    <Button size="small" variant="primary" onClick={() => setResumoModalOpen(true)}>
-                      <PencilIcon /> Editar
-                    </Button>
-                  )}
-                </div>
-
-                <div className="resume-item row">
-                  <Heading as="h3" variant="small">
-                    Visibilidade
-                  </Heading>
-                  <Text size="medium">{perfilUser.user.visibility}</Text>
-                </div>
-
-                <div className="resume-item">
-                  <Heading as="h3" variant="small">
-                    Resumo
-                  </Heading>
-                  <Text size="medium">{perfilUser.user.resumo || "Resumo ainda não informado."}</Text>
-                </div>
-
-                <div className="resume-item">
-                  <Heading as="h3" variant="small">
-                    Bio
-                  </Heading>
-                  <Text size="medium">{perfilUser.user.bio || "Bio ainda não informada."}</Text>
-                </div>
-              </section>
+              <SectionPanel
+                title="Descrição"
+                canEdit={isOwnProfile}
+                OnEdit={() => setResumoModalOpen(true)}
+                atributes={[
+                  { title: "Visibilidade", content: perfilUser.user.visibility, alignment: "row" },
+                  { title: "Resumo", content: perfilUser.user.resumo || "Resumo ainda não informado." },
+                  { title: "Bio", content: perfilUser.user.bio || "Bio ainda não informada." },
+                ]}
+              />
 
               {/* Histórico Profissional */}
-              <section className="resume-section">
-                <div className="resume-header">
-                  <Heading as="h3" variant="medium">
-                    Histórico Profissional
-                  </Heading>
-
-                  {isOwnProfile && (
-                    <Button
-                      size="small"
-                      variant="primary"
-                      onClick={() =>
-                        setHistoricoModal({
-                          open: true,
-                          editing: null,
-                        })
-                      }
-                    >
-                      <DiffAddedIcon /> experiência
-                    </Button>
-                  )}
-                </div>
-
-                {perfilUser.historico.length === 0 && (
-                  <Text size="medium" className="profile-muted">
-                    Nenhuma experiência cadastrada.
-                  </Text>
-                )}
-
-                <ul className="resume-list">
-                  {[...perfilUser.historico]
-                    .sort((a, b) => a.ordem - b.ordem)
-                    .map((item, index, array) => (
-                      <li key={item.id} className="resume-item">
-                        <div className="resume-header">
-                          <strong>{item.cargo}</strong>
-
-                          {isOwnProfile && (
-                            <div className="resume-actions">
-                              <Button size="small" variant="invisible" disabled={index === 0} onClick={() => moveHistorico(index, index - 1)}>
-                                <ChevronUpIcon />
-                              </Button>
-
-                              <Button
-                                size="small"
-                                variant="invisible"
-                                disabled={index === array.length - 1}
-                                onClick={() => moveHistorico(index, index + 1)}
-                              >
-                                <ChevronDownIcon />
-                              </Button>
-
-                              <Button
-                                size="small"
-                                variant="invisible"
-                                onClick={() =>
-                                  setHistoricoModal({
-                                    open: true,
-                                    editing: item,
-                                  })
-                                }
-                              >
-                                Editar
-                              </Button>
-
-                              <Button
-                                size="small"
-                                variant="danger"
-                                onClick={() =>
-                                  setDeleteModal({
-                                    item,
-                                    loading: false,
-                                  })
-                                }
-                              >
-                                <TrashIcon />
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-
-                        <Text size="medium" className="resume-sub">
-                          {item.company}
-                          {item.cidade && ` · ${item.cidade}`}
-                          {item.estado && ` · ${item.estado}`}
-                        </Text>
-
-                        <Text size="small" className="resume-date">
-                          {formatDateBR(item.init_date)} — {item.end_date ? formatDateBR(item.end_date) : "Atual"}
-                        </Text>
-
-                        {Array.isArray(item.atribuicoes) && (
-                          <ul className="resume-attributes">
-                            {item.atribuicoes.map((a, i) => (
-                              <li key={i}>
-                                <Text size="medium">{a}</Text>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </li>
-                    ))}
-                </ul>
-              </section>
+              <ListableSectionPanel
+                title="Histórico Profissional"
+                items={perfilUser.historico}
+                canEdit={isOwnProfile}
+                OnAdd={() =>
+                  setHistoricoModal({
+                    open: true,
+                    editing: null,
+                  })
+                }
+                OnMove={moveHistorico}
+                OnEdit={(item) =>
+                  setHistoricoModal({
+                    open: true,
+                    editing: item,
+                  })
+                }
+                OnDelete={(item) =>
+                  setDeleteModal({
+                    item,
+                    loading: false,
+                  })
+                }
+                renderItem={(item) => <HistoricoItem item={item} />}
+              />
 
               {/* Formação Acadêmica */}
-              <section className="resume-section">
-                <Heading as="h3" variant="medium">
-                  Formação Acadêmica
-                </Heading>
-
-                {(perfilUser.formacoes || []).length === 0 && (
-                  <Text size="medium" className="profile-muted">
-                    Nenhuma formação cadastrada.
-                  </Text>
-                )}
-
-                {perfilUser.formacoes?.map((f) => (
-                  <div key={f.id} className="resume-item">
-                    <strong>{f.nome}</strong>
-                    <Text size="medium" className="resume-sub">
-                      {f.instituicao}
-                    </Text>
-                    <Text size="small" className="resume-date">
-                      {f.inicio} — {f.fim}
-                    </Text>
-                  </div>
-                ))}
-              </section>
+              <ListableSectionPanel
+                title="Formação Acadêmica"
+                items={perfilUser.formacoes}
+                canEdit={isOwnProfile}
+                emptyText="Nenhuma formação cadastrada."
+                OnAdd={() => setFormacaoModal({ open: true, editing: null })}
+                OnEdit={(item) => setFormacaoModal({ open: true, editing: item })}
+                OnMove={moveFormacao}
+                renderItem={(item) => <FormacaoItem item={item} />}
+              />
             </div>
 
             {/* COLUNA LATERAL */}
-            <aside className="resume-sidebar">
+            <aside className={style.resumeSidebar}>
               {/* Contato */}
               <section className="resume-section">
                 <Heading as="h4" variant="medium">
@@ -472,9 +409,17 @@ export default function Perfil() {
           />
         )}
 
+        {formacaoModal.open && (
+          <EditFormacaoModal
+            initialData={formacaoModal.editing}
+            onClose={() => setFormacaoModal({ open: false, editing: null })}
+            onSave={saveFormacao}
+          />
+        )}
+
         {deleteModal.item && (
-          <DeleteHistoricoConfirm
-            cargo={deleteModal.item.cargo}
+          <DeleteConfirm
+            itemName={deleteModal.item.cargo}
             loading={deleteModal.loading}
             onCancel={() => setDeleteModal({ item: null, loading: false })}
             onConfirm={deleteHistorico}

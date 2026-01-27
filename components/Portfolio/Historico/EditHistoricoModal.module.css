@@ -1,0 +1,20 @@
+.dateRow {
+  display: flex;
+  gap: 16px;
+}
+
+.addressRow {
+  display: flex;
+  gap: 16px;
+  flex: 1 1 auto;
+}
+
+.mediumInput {
+  flex: 2;
+  flex-basis: 300px;
+}
+
+.smallInput {
+  flex: 1;
+  flex-basis: 100px;
+}

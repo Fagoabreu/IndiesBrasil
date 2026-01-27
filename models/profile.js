@@ -11,14 +11,14 @@ async function findByUsername(username) {
     };
   }
   const profile_history = await findPortfolioHistoricoByUserId(currentUser.id);
-  const profile_study = await findPortfolioFormacaoByPortfolioId(currentUser.id);
+  const profile_formacoes = await findPortfolioFormacaoByUserId(currentUser.id);
   const profile_tools = await findPortfolioToolsByPortfolioId(currentUser.id);
   const profile_contacts = await findContactsByUserId(currentUser.id);
 
   return {
     user: currentUser,
     historico: profile_history,
-    study: profile_study,
+    formacoes: profile_formacoes,
     tools: profile_tools,
     contacts: profile_contacts,
     roles: [],
@@ -53,7 +53,7 @@ async function findPortfolioHistoricoByUserId(user_id) {
   }
 }
 
-async function findPortfolioFormacaoByPortfolioId(user_id) {
+async function findPortfolioFormacaoByUserId(user_id) {
   const userFound = await runSelectQuery(user_id);
   return userFound;
 
@@ -158,6 +158,34 @@ async function saveHistorico(userInputValues) {
   }
 }
 
+async function saveFormacao(userInputValues) {
+  if (userInputValues.id) {
+    return;
+  }
+  return await runInsertQuery(userInputValues);
+
+  async function runInsertQuery(userInputValues) {
+    const results = await database.query({
+      text: `
+        insert into portfolio_formacao
+        (user_id, ordem, nome, init_date, end_date, instituicao)
+        values(
+        $1,$2,$3,$4,$5,$6
+        )
+          `,
+      values: [
+        userInputValues.user_id,
+        userInputValues.ordem,
+        userInputValues.nome,
+        userInputValues.init_date,
+        userInputValues.end_date,
+        userInputValues.instituicao,
+      ],
+    });
+    return results.rows;
+  }
+}
+
 async function patchHistorico(userInputValues) {
   const currentHistory = await selectHistoricoById(userInputValues.id);
   const historyWithNewValues = {
@@ -166,6 +194,23 @@ async function patchHistorico(userInputValues) {
   };
   const updatedHistory = await updateHistoricoById(historyWithNewValues);
   return updatedHistory;
+}
+
+async function deleteHistoricoById(historico_id) {
+  const userFound = await runDeleteQuery(historico_id);
+  return userFound;
+
+  async function runDeleteQuery(historico_id) {
+    const results = await database.query({
+      text: `
+        delete from 
+          portfolio_historico ph
+        where ph.id=$1
+      `,
+      values: [historico_id],
+    });
+    return results.rows;
+  }
 }
 
 async function selectHistoricoById(historicoId) {
@@ -253,8 +298,11 @@ async function updateHistoricoById(userInputValues) {
 const profile = {
   findByUsername,
   saveHistorico,
+  saveFormacao,
   patchHistorico,
+  deleteHistoricoById,
   findPortfolioHistoricoByUserId,
+  findPortfolioFormacaoByUserId,
 };
 
 export default profile;

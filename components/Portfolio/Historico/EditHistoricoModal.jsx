@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Dialog, Button, TextInput, Textarea, FormControl } from "@primer/react";
+import styles from "./EditHistoricoModal.module.css";
 
 export default function EditHistoricoModal({ onClose, onSave, initialData }) {
   const [form, setForm] = useState({
@@ -52,8 +53,14 @@ export default function EditHistoricoModal({ onClose, onSave, initialData }) {
     onClose();
   }
 
+  function handleClose() {
+    if (typeof onClose === "function") {
+      onClose();
+    }
+  }
+
   return (
-    <Dialog onDismiss={onClose} aria-labelledby="edit-historico">
+    <Dialog onDismiss={handleClose} onClose={handleClose} aria-labelledby="edit-historico">
       <Dialog.Header id="edit-historico">Histórico profissional</Dialog.Header>
 
       <div className="modal-body">
@@ -67,17 +74,19 @@ export default function EditHistoricoModal({ onClose, onSave, initialData }) {
           <TextInput block value={form.company} onChange={(e) => update("company", e.target.value)} />
         </FormControl>
 
-        <FormControl>
-          <FormControl.Label>Cidade</FormControl.Label>
-          <TextInput block value={form.cidade} onChange={(e) => update("cidade", e.target.value)} />
-        </FormControl>
+        <div className={styles.addressRow}>
+          <FormControl className={styles.mediumInput}>
+            <FormControl.Label>Cidade</FormControl.Label>
+            <TextInput block value={form.cidade} onChange={(e) => update("cidade", e.target.value)} />
+          </FormControl>
 
-        <FormControl>
-          <FormControl.Label>Estado</FormControl.Label>
-          <TextInput block value={form.estado} onChange={(e) => update("estado", e.target.value)} />
-        </FormControl>
+          <FormControl className={styles.smallInput}>
+            <FormControl.Label>Estado</FormControl.Label>
+            <TextInput block value={form.estado} onChange={(e) => update("estado", e.target.value)} />
+          </FormControl>
+        </div>
 
-        <div className="date-row">
+        <div className={styles.dateRow}>
           <FormControl>
             <FormControl.Label>Início</FormControl.Label>
             <TextInput type="date" block value={form.init_date} onChange={(e) => update("init_date", e.target.value)} />

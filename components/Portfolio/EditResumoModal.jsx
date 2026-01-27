@@ -26,8 +26,14 @@ export default function EditResumoModal({ onClose, initVisibility, initResume, i
     onClose();
   }
 
+  function handleClose() {
+    if (typeof onClose === "function") {
+      onClose();
+    }
+  }
+
   return (
-    <Dialog onDismiss={onClose} aria-labelledby="edit-resumo">
+    <Dialog onDismiss={handleClose} onClose={handleClose} aria-labelledby="edit-resumo">
       <Dialog.Header id="edit-resumo">Editar resumo e bio</Dialog.Header>
 
       <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
