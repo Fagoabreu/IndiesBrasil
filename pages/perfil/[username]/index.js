@@ -82,22 +82,24 @@ export default function Perfil() {
    * Load profile
    * ===================== */
 
+  async function reloadProfile() {
+    if (!username) return;
+
+    const data = await fetchJSON(`/api/v1/users/${username}/profile`);
+    setPerfilUser(data);
+  }
+
   useEffect(() => {
     if (!username) return;
 
-    async function loadProfile() {
+    (async () => {
+      setLoadingProfile(true);
       try {
-        setLoadingProfile(true);
-        const data = await fetchJSON(`/api/v1/users/${username}/profile`);
-        setPerfilUser(data);
-      } catch (err) {
-        console.error("Erro ao carregar perfil:", err);
+        await reloadProfile();
       } finally {
         setLoadingProfile(false);
       }
-    }
-
-    loadProfile();
+    })();
   }, [username]);
 
   if (loadingUser || loadingProfile) {
@@ -121,21 +123,10 @@ export default function Perfil() {
       body: JSON.stringify(payload),
     });
 
-    setPerfilUser((prev) => ({
-      ...prev,
-      user: {
-        ...prev.user,
-        ...data.user,
-      },
-    }));
+    await reloadProfile();
   }
 
   async function persistHistoricoOrder(list) {
-    setPerfilUser((prev) => ({
-      ...prev,
-      historico: list,
-    }));
-
     await fetchJSON(`/api/v1/users/${username}/historico/reorder`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -146,6 +137,8 @@ export default function Perfil() {
         })),
       }),
     });
+
+    await reloadProfile();
   }
 
   async function confirmDelete() {
@@ -167,6 +160,8 @@ export default function Perfil() {
       default:
         break;
     }
+
+    await reloadProfile();
   }
 
   async function moveHistorico(from, to) {
@@ -191,7 +186,7 @@ export default function Perfil() {
 
     const ordem = isEditing ? historicoModal.editing.ordem : perfilUser.historico.length;
 
-    const updated = await fetchJSON(`/api/v1/users/${username}/historico${isEditing ? `/${historicoModal.editing.id}` : ""}`, {
+    await fetchJSON(`/api/v1/users/${username}/historico${isEditing ? `/${historicoModal.editing.id}` : ""}`, {
       method: isEditing ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -200,12 +195,8 @@ export default function Perfil() {
       }),
     });
 
-    setPerfilUser((prev) => ({
-      ...prev,
-      historico: updated,
-    }));
-
     setHistoricoModal({ open: false, editing: null });
+    await reloadProfile();
   }
 
   async function deleteHistorico() {
@@ -238,12 +229,8 @@ export default function Perfil() {
       body: JSON.stringify({ ...payload, ordem }),
     });
 
-    setPerfilUser((prev) => ({
-      ...prev,
-      formacoes: updated,
-    }));
-
     setFormacaoModal({ open: false, editing: null });
+    await reloadProfile();
   }
 
   async function moveFormacao(from, to) {
@@ -259,11 +246,6 @@ export default function Perfil() {
       ordem: index,
     }));
 
-    setPerfilUser((prev) => ({
-      ...prev,
-      formacoes: reordered,
-    }));
-
     await fetchJSON(`/api/v1/users/${username}/formacoes/reorder`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -271,6 +253,7 @@ export default function Perfil() {
         formacoes: reordered.map(({ id, ordem }) => ({ id, ordem })),
       }),
     });
+    await reloadProfile();
   }
 
   async function deleteFormacao() {
@@ -294,12 +277,8 @@ export default function Perfil() {
       body: JSON.stringify({ ...payload, ordem }),
     });
 
-    setPerfilUser((prev) => ({
-      ...prev,
-      contacts: updated,
-    }));
-
     setContatoModal({ open: false, editing: null });
+    await reloadProfile();
   }
 
   async function moveContato(from, to) {
@@ -315,11 +294,6 @@ export default function Perfil() {
       ordem: index,
     }));
 
-    setPerfilUser((prev) => ({
-      ...prev,
-      contacts: reordered,
-    }));
-
     await fetchJSON(`/api/v1/users/${username}/contacts/reorder`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -327,6 +301,7 @@ export default function Perfil() {
         contacts: reordered.map(({ id, ordem }) => ({ id, ordem })),
       }),
     });
+    await reloadProfile();
   }
 
   async function deleteContato() {
