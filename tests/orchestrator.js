@@ -60,7 +60,13 @@ async function createUser(userObject) {
     email: userObject?.email || faker.internet.email(),
     password: userObject?.password || faker.internet.password(),
     cpf: userObject?.cpf || fakerBR.br.cpf(),
+    avatar_url: userObject?.avatar_url || faker.internet.url(),
+    resumo: userObject?.resumo || faker.person.jobTitle(),
+    visibility: "public",
+    background_image: userObject?.background_image || faker.internet.url(),
+    bio: userObject?.bio || faker.person.bio(),
   });
+
   if (userObject?.features) {
     createdUser = await user.setFeatures(createdUser.id, userObject.features);
   }
@@ -69,6 +75,11 @@ async function createUser(userObject) {
 
 async function activateUser(inactiveUser) {
   return await activation.activateUserByUserId(inactiveUser.id);
+}
+
+async function addFeaturesToUser(userObject, features) {
+  const updatedUser = await user.addFeatures(userObject.id, features);
+  return updatedUser;
 }
 
 async function createSession(userId) {
@@ -113,6 +124,7 @@ const orchestrator = {
   deleteAllEmails,
   getLastEmail,
   extractUUID,
+  addFeaturesToUser,
 };
 
 export default orchestrator;

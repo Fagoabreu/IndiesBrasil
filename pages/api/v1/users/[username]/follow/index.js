@@ -13,7 +13,7 @@ export default router.handler(controller.errorHandlers);
 async function postHandler(request, response) {
   const logedUser = request.context.user;
   const username = request.query.username;
-  const userFound = await user.findOneByUsername(username);
+  const userFound = await user.findOneByUsernameSecured(username);
   if (logedUser.id === userFound.id) {
     throw new ValidationError({ message: "O usuário não pode seguir a si mesmo" });
   }
@@ -24,7 +24,7 @@ async function postHandler(request, response) {
 async function deleteHandler(request, response) {
   const logedUser = request.context.user;
   const username = request.query.username;
-  const userFound = await user.findOneByUsername(username);
+  const userFound = await user.findOneByUsernameSecured(username);
   const toggleFollow = await user.removeFollow(logedUser.id, userFound.id);
   return response.status(200).json(toggleFollow);
 }

@@ -1,0 +1,19 @@
+.resumeHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--borderColor-muted);
+  margin-bottom: 12px;
+}
+
+.resumeDate {
+  font-size: 14px;
+  color: var(--fgColor-muted);
+}
+
+.resumeSub {
+  font-size: 14px;
+  color: var(--fgColor-muted);
+}

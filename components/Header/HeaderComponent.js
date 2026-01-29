@@ -1,15 +1,16 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Avatar, ActionMenu, ActionList, TextInput, IconButton, useTheme, Button } from "@primer/react";
-import { SunIcon, MoonIcon, SearchIcon } from "@primer/octicons-react";
-
-import { useUser } from "@/context/UserContext";
+import { Avatar, ActionMenu, ActionList, IconButton, useTheme, Button, PageHeader } from "@primer/react";
+import { SunIcon, MoonIcon } from "@primer/octicons-react";
 
 import styles from "./HeaderComponent.module.css";
+import { useUser } from "@/context/UserContext";
+import { useRouter } from "next/router";
 
 export default function HeaderComponent() {
+  const router = useRouter();
   const { colorMode, setColorMode } = useTheme();
-  const { user, logout } = useUser(); // 🔥 USER + LOGOUT DO CONTEXTO
+  const { user, logout } = useUser();
 
   const toggleTheme = () => setColorMode(colorMode === "day" ? "night" : "day");
 
@@ -17,27 +18,22 @@ export default function HeaderComponent() {
   const usernameLabel = user?.name || user?.username || "Usuário";
 
   return (
-    <header className={styles.header}>
-      <div className={styles.left}>
-        <Link href="/" className={styles.logoArea}>
-          <div className={styles.logoWrapper}>
-            <Image src="/images/logo.png" alt="Logo Indies Brasil" fill sizes="40px" priority />
-          </div>
-          <span className={styles.logoText}>Indies Brasil</span>
-        </Link>
+    <PageHeader role="banner" aria-label="Title">
+      <PageHeader.TitleArea>
+        <PageHeader.Title>
+          <Link href="/" className={styles.logoArea}>
+            <div className={styles.logoWrapper}>
+              <Image src="/images/logo.png" alt="Logo Indies Brasil" fill sizes="40px" priority />
+            </div>
+            <span className={styles.logoText}>Indies Brasil</span>
+          </Link>
+        </PageHeader.Title>
+      </PageHeader.TitleArea>
+      <PageHeader.Description>
+        <span style={{ fontSize: "var(--text-body-size-medium)", color: "var(--fgColor-muted)" }}>comunidade dos jogos brasileiros</span>
+      </PageHeader.Description>
 
-        <nav className={styles.navDesktop}>
-          <Link href="/">Início</Link>
-          <Link href="/posts">Posts</Link>
-          <Link href="/membros">Membros</Link>
-        </nav>
-      </div>
-
-      <div className={styles.center}>
-        <TextInput leadingVisual={SearchIcon} placeholder="Pesquisar" />
-      </div>
-
-      <div className={styles.right}>
+      <PageHeader.Actions>
         <IconButton aria-label="Alternar tema" icon={colorMode === "day" ? MoonIcon : SunIcon} onClick={toggleTheme} />
         {user ? (
           <ActionMenu>
@@ -47,7 +43,7 @@ export default function HeaderComponent() {
 
             <ActionMenu.Overlay>
               <ActionList>
-                <ActionList.Item onSelect={() => (window.location.href = "/perfil")}>{usernameLabel}</ActionList.Item>
+                <ActionList.Item onSelect={() => router.push(`/perfil/${user.username}`)}>{usernameLabel}</ActionList.Item>
 
                 <ActionList.Item variant="danger" onSelect={logout}>
                   Sair
@@ -60,7 +56,7 @@ export default function HeaderComponent() {
             Entrar
           </Button>
         )}
-      </div>
-    </header>
+      </PageHeader.Actions>
+    </PageHeader>
   );
 }

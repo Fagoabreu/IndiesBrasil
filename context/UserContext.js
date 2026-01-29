@@ -1,3 +1,4 @@
+import { useRouter } from "next/router";
 import { createContext, useContext, useEffect, useState } from "react";
 
 const UserContext = createContext();
@@ -9,8 +10,8 @@ export function useUser() {
 export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
+  const router = useRouter();
 
-  // 🔹 fetchUser exposto para uso externo (ex: atualizar perfil)
   async function fetchUser() {
     try {
       const res = await fetch("/api/v1/user", {
@@ -38,9 +39,9 @@ export function UserProvider({ children }) {
     });
 
     setUser(null);
+    router.push("/login");
   }
 
-  // ✅ Correção do ESLint: recriar logic dentro do useEffect
   useEffect(() => {
     async function init() {
       try {

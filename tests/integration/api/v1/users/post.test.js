@@ -38,11 +38,16 @@ describe("POST /api/v1/users", () => {
         id: responseBody.id,
         username: testUser.username,
         email: "fagoabreu@gmail.com",
-        password: responseBody.password,
-        cpf: testUser.cpf,
+        //password: responseBody.password,
+        //cpf: testUser.cpf,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
         features: ["read:activation_token"],
+        avatar_image: null,
+        background_image: null,
+        bio: null,
+        resumo: null,
+        visibility: "public",
       });
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();

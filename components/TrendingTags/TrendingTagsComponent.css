@@ -33,12 +33,23 @@
 
 /* ITEM COM GRID FIXO */
 .trending-item {
+  padding: 8px 0;
+  border-top: 1px solid var(--borderColor-muted);
+}
+
+.trending-button {
+  all: unset;
+  width: 100%;
   display: grid;
   grid-template-columns: 32px 1fr auto;
   align-items: center;
   gap: 8px;
-  padding: 8px 0;
-  border-top: 1px solid var(--borderColor-muted);
+  cursor: pointer;
+}
+
+.trending-button:focus-visible {
+  outline: 2px solid var(--focus-outlineColor);
+  border-radius: 4px;
 }
 
 .trending-item:first-child {
@@ -59,6 +70,12 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: transform 0.3s ease-in-out;
+}
+
+.tag:hover {
+  transform: scale(1.2);
+  color: var(--focus-outlineColor);
 }
 
 /* CONTADOR */

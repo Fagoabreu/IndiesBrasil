@@ -20,6 +20,7 @@ export default function Cadastro() {
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(true);
 
   // messages
   const [errorMsg, setErrorMsg] = useState(null);
@@ -139,7 +140,8 @@ export default function Cadastro() {
 
       if (response.status === 201) {
         setSuccessMsg("Sua conta criada com sucesso!\no Link de ativação foi enviado ao email informado.");
-        setTimeout(() => router.push("/login"), 30000);
+        setShowForm(false);
+        setTimeout(() => router.push("/login"), 10000);
       } else {
         const data = await response.json();
         setErrorMsg({
@@ -147,6 +149,7 @@ export default function Cadastro() {
           message: data.message,
           action: data.action,
         });
+        setShowForm(true);
       }
     } catch {
       setErrorMsg("Erro ao conectar ao servidor.");
@@ -179,126 +182,148 @@ export default function Cadastro() {
             <StatusMessageComponent errorMsg={errorMsg} successMsg={successMsg} />
 
             {/* USERNAME */}
-            <FormControl required validationStatus={fieldErrors.username ? "error" : statusUser}>
-              <FormControl.Label>Nome de usuário</FormControl.Label>
-              <TextInput
-                block
-                value={username}
-                onChange={(e) => {
-                  setUsername(e.target.value);
-                  cleanFieldError("username");
-                }}
-              />
-              {fieldErrors.username && <FormControl.Validation variant="error">{fieldErrors.username}</FormControl.Validation>}
-            </FormControl>
-
-            {/* EMAIL */}
-            <FormControl required validationStatus={fieldErrors.email ? "error" : statusEmail}>
-              <FormControl.Label>Email</FormControl.Label>
-              <TextInput
-                type="email"
-                block
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  cleanFieldError("email");
-                }}
-              />
-              {fieldErrors.email && <FormControl.Validation variant="error">{fieldErrors.email}</FormControl.Validation>}
-            </FormControl>
-
-            {/* CPF */}
-            <FormControl required validationStatus={fieldErrors.cpf ? "error" : statusCpf}>
-              <FormControl.Label>CPF</FormControl.Label>
-              <TextInput
-                block
-                maxLength={14}
-                value={cpf}
-                onChange={(e) => {
-                  setCpf(formatCPF(e.target.value));
-                  cleanFieldError("cpf");
-                }}
-                placeholder="000.000.000-00"
-              />
-              {fieldErrors.cpf && <FormControl.Validation variant="error">{fieldErrors.cpf}</FormControl.Validation>}
-            </FormControl>
-
-            {/* PASSWORD */}
-            <FormControl required validationStatus={fieldErrors.password ? "error" : statusPass}>
-              <FormControl.Label>Senha</FormControl.Label>
-              <TextInput
-                block
-                type={showPass ? "text" : "password"}
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  cleanFieldError("password");
-                  cleanFieldError("confirmPass");
-                }}
-                trailingAction={
-                  <IconButton
-                    variant="invisible"
-                    aria-label="Mostrar senha"
-                    icon={showPass ? EyeClosedIcon : EyeIcon}
-                    onClick={() => setShowPass(!showPass)}
-                  />
-                }
-              />
-
-              {/* RULES */}
-              <div className={styles.rules}>
-                <PasswordRule ok={password.length >= 8} label="Mínimo de 8 caracteres" />
-                <PasswordRule ok={/[A-Z]/.test(password)} label="Letra maiúscula" />
-                <PasswordRule ok={/[0-9]/.test(password)} label="Número" />
-                <PasswordRule ok={/[^A-Za-z0-9]/.test(password)} label="Caractere especial" />
-              </div>
-
-              {/* STRENGTH */}
-              <div className={styles.strength}>
-                <span className={styles.strengthLabel} aria-live="polite">
-                  Força: {strengthInfo[strength].label}
-                </span>
-
-                <ProgressBar
-                  progress={strengthInfo[strength].percent}
-                  barSize="large"
-                  aria-label="Força da senha"
-                  sx={{
-                    bg: "var(--borderColor-muted)",
-                    color: strength <= 1 ? "var(--fgColor-danger)" : strength === 2 ? "var(--fgColor-attention)" : "var(--fgColor-success)",
+            {showForm && (
+              <FormControl required validationStatus={fieldErrors.username ? "error" : statusUser}>
+                <FormControl.Label>Nome de usuário</FormControl.Label>
+                <TextInput
+                  block
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    cleanFieldError("username");
                   }}
                 />
-              </div>
+                {fieldErrors.username && <FormControl.Validation variant="error">{fieldErrors.username}</FormControl.Validation>}
+              </FormControl>
+            )}
 
-              {fieldErrors.password && <FormControl.Validation variant="error">{fieldErrors.password}</FormControl.Validation>}
-            </FormControl>
+            {/* EMAIL */}
+            {showForm && (
+              <FormControl required validationStatus={fieldErrors.email ? "error" : statusEmail}>
+                <FormControl.Label>Email</FormControl.Label>
+                <TextInput
+                  type="email"
+                  block
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    cleanFieldError("email");
+                  }}
+                />
+                {fieldErrors.email && <FormControl.Validation variant="error">{fieldErrors.email}</FormControl.Validation>}
+              </FormControl>
+            )}
+
+            {/* CPF */}
+            {showForm && (
+              <FormControl required validationStatus={fieldErrors.cpf ? "error" : statusCpf}>
+                <FormControl.Label>CPF</FormControl.Label>
+                <TextInput
+                  block
+                  maxLength={14}
+                  value={cpf}
+                  onChange={(e) => {
+                    setCpf(formatCPF(e.target.value));
+                    cleanFieldError("cpf");
+                  }}
+                  placeholder="000.000.000-00"
+                />
+                {fieldErrors.cpf && <FormControl.Validation variant="error">{fieldErrors.cpf}</FormControl.Validation>}
+              </FormControl>
+            )}
+
+            {/* PASSWORD */}
+            {showForm && (
+              <FormControl required validationStatus={fieldErrors.password ? "error" : statusPass}>
+                <FormControl.Label>Senha</FormControl.Label>
+                <TextInput
+                  block
+                  type={showPass ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    cleanFieldError("password");
+                    cleanFieldError("confirmPass");
+                  }}
+                  trailingAction={
+                    <IconButton
+                      variant="invisible"
+                      aria-label="Mostrar senha"
+                      icon={showPass ? EyeClosedIcon : EyeIcon}
+                      onClick={() => setShowPass(!showPass)}
+                    />
+                  }
+                />
+
+                {/* RULES */}
+                <div className={styles.rules}>
+                  <PasswordRule ok={password.length >= 8} label="Mínimo de 8 caracteres" />
+                  <PasswordRule ok={/[A-Z]/.test(password)} label="Letra maiúscula" />
+                  <PasswordRule ok={/[0-9]/.test(password)} label="Número" />
+                  <PasswordRule ok={/[^A-Za-z0-9]/.test(password)} label="Caractere especial" />
+                </div>
+
+                {/* STRENGTH */}
+                <div className={styles.strength}>
+                  <span className={styles.strengthLabel} aria-live="polite">
+                    Força: {strengthInfo[strength].label}
+                  </span>
+
+                  <ProgressBar
+                    progress={strengthInfo[strength].percent}
+                    barSize="large"
+                    aria-label="Força da senha"
+                    sx={{
+                      bg: "var(--borderColor-muted)",
+                      color: strength <= 1 ? "var(--fgColor-danger)" : strength === 2 ? "var(--fgColor-attention)" : "var(--fgColor-success)",
+                    }}
+                  />
+                </div>
+
+                {fieldErrors.password && <FormControl.Validation variant="error">{fieldErrors.password}</FormControl.Validation>}
+              </FormControl>
+            )}
 
             {/* CONFIRM */}
-            <FormControl required validationStatus={fieldErrors.confirmPass ? "error" : statusConfirm}>
-              <FormControl.Label>Confirmar Senha</FormControl.Label>
-              <TextInput
-                block
-                type={showConfirmPass ? "text" : "password"}
-                value={confirmPass}
-                onChange={(e) => {
-                  setConfirmPass(e.target.value);
-                  cleanFieldError("confirmPass");
-                }}
-                trailingAction={
-                  <IconButton
-                    variant="invisible"
-                    aria-label="Mostrar senha"
-                    icon={showConfirmPass ? EyeClosedIcon : EyeIcon}
-                    onClick={() => setShowConfirmPass(!showConfirmPass)}
-                  />
-                }
-              />
-              {fieldErrors.confirmPass && <FormControl.Validation variant="error">{fieldErrors.confirmPass}</FormControl.Validation>}
-            </FormControl>
+            {showForm && (
+              <FormControl required validationStatus={fieldErrors.confirmPass ? "error" : statusConfirm}>
+                <FormControl.Label>Confirmar Senha</FormControl.Label>
+                <TextInput
+                  block
+                  type={showConfirmPass ? "text" : "password"}
+                  value={confirmPass}
+                  onChange={(e) => {
+                    setConfirmPass(e.target.value);
+                    cleanFieldError("confirmPass");
+                  }}
+                  trailingAction={
+                    <IconButton
+                      variant="invisible"
+                      aria-label="Mostrar senha"
+                      icon={showConfirmPass ? EyeClosedIcon : EyeIcon}
+                      onClick={() => setShowConfirmPass(!showConfirmPass)}
+                    />
+                  }
+                />
+                {fieldErrors.confirmPass && <FormControl.Validation variant="error">{fieldErrors.confirmPass}</FormControl.Validation>}
+              </FormControl>
+            )}
 
-            <Button type="submit" variant="primary" block disabled={loading}>
-              {loading ? <Spinner size="small" /> : "Criar Conta"}
-            </Button>
+            {showForm && (
+              <Button type="submit" variant="primary" block disabled={loading}>
+                {loading ? <Spinner size="small" /> : "Criar Conta"}
+              </Button>
+            )}
+            {!showForm && (
+              <Button
+                onClick={() => {
+                  router.push("/login");
+                }}
+                variant="primary"
+              >
+                Voltar
+              </Button>
+            )}
           </Stack>
         </form>
       </div>
