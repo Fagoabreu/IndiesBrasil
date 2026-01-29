@@ -2,12 +2,37 @@ import database from "infra/database";
 import user from "./user";
 import { NotFoundError } from "@/infra/errors";
 
-async function findByUsername(username) {
-  const currentUser = await user.findOneByUsernameSecured(username);
+async function canReadProfile(currentUser, readerUser) {
+  if (currentUser.id === readerUser.id) {
+    return true;
+  }
+  if (readerUser.features.includes("read:admin")) {
+    return true;
+  }
 
-  if (currentUser.visibility !== "public") {
+  switch (currentUser.visibility) {
+    case "public":
+      return true;
+    case "private":
+      return false;
+    case "followers":
+      return await user.isFollowingUser(readerUser.id, currentUser.id);
+  }
+  return false;
+}
+
+async function findByUsername(username, readerUser) {
+  const currentUser = await user.findOneByUsernameSecured(username);
+  const readableProfile = await canReadProfile(currentUser, readerUser);
+
+  if (!readableProfile) {
     return {
       user: currentUser,
+      historico: [],
+      formacoes: [],
+      tools: [],
+      contacts: [],
+      roles: [],
     };
   }
   const profile_history = await findPortfolioHistoricoByUserId(currentUser.id);
@@ -110,6 +135,7 @@ async function findContactsByUserId(user_id) {
     const results = await database.query({
       text: `
         select
+          uc.id,
           uc.user_id,
           uc.contact_value,
           uc.contact_type_id,
@@ -186,6 +212,27 @@ async function saveFormacao(userInputValues) {
   }
 }
 
+async function saveContato(userInputValues) {
+  if (userInputValues.id) {
+    return;
+  }
+  return await runInsertQuery(userInputValues);
+
+  async function runInsertQuery(userInputValues) {
+    const results = await database.query({
+      text: `
+        insert into users_contacts
+        (user_id, contact_value, contact_type_id)
+        values(
+        $1,$2,$3
+        )
+          `,
+      values: [userInputValues.user_id, userInputValues.contact_value, userInputValues.contact_type_id],
+    });
+    return results.rows;
+  }
+}
+
 async function patchHistorico(userInputValues) {
   const currentHistory = await selectHistoricoById(userInputValues.id);
   const historyWithNewValues = {
@@ -194,6 +241,16 @@ async function patchHistorico(userInputValues) {
   };
   const updatedHistory = await updateHistoricoById(historyWithNewValues);
   return updatedHistory;
+}
+
+async function patchContacts(userInputValues) {
+  const currentContact = await selectContatoById(userInputValues.id);
+  const contactWithNewValues = {
+    ...currentContact,
+    ...userInputValues,
+  };
+  const updatedContact = await updateContatoById(contactWithNewValues);
+  return updatedContact;
 }
 
 async function deleteHistoricoById(historico_id) {
@@ -295,14 +352,93 @@ async function updateHistoricoById(userInputValues) {
   }
 }
 
+async function selectContatoById(contatoId) {
+  const selectedContact = await runselectQuery(contatoId);
+  return selectedContact;
+
+  async function runselectQuery(contatoId) {
+    const results = await database.query({
+      text: `
+      select 
+        id,
+        user_id, 
+        contact_type_id, 
+        contact_value
+      from 
+        users_contacts
+      where id = $1
+        `,
+      values: [contatoId],
+    });
+    if (results.rowCount === 0) {
+      throw new NotFoundError({
+        message: "O id informado não foi encontrado no sistema.",
+        action: "Verifique se o id foi digitado corretamente",
+      });
+    }
+
+    return results.rows[0];
+  }
+}
+
+async function updateContatoById(userInputValues) {
+  const updatedContact = await runUpdateQuery(userInputValues);
+  return updatedContact;
+
+  async function runUpdateQuery(userInputValues) {
+    const results = await database.query({
+      text: `
+      update 
+        users_contacts
+      set 
+        user_id=$2, 
+        contact_type_id=$3, 
+        contact_value=$4
+      where 
+        id = $1
+      returning *
+        `,
+      values: [userInputValues.id, userInputValues.user_id, userInputValues.contact_type_id, userInputValues.contact_value],
+    });
+    if (results.rowCount === 0) {
+      throw new NotFoundError({
+        message: "O id informado não foi encontrado no sistema.",
+        action: "Verifique se o id foi digitado corretamente",
+      });
+    }
+
+    return results.rows[0];
+  }
+}
+
+async function deleteContatoById(contact_id) {
+  const userFound = await runDeleteQuery(contact_id);
+  return userFound;
+
+  async function runDeleteQuery(contact_id) {
+    const results = await database.query({
+      text: `
+        delete from 
+          users_contacts uc
+        where uc.id=$1
+      `,
+      values: [contact_id],
+    });
+    return results.rows;
+  }
+}
+
 const profile = {
   findByUsername,
+  findPortfolioHistoricoByUserId,
   saveHistorico,
-  saveFormacao,
   patchHistorico,
   deleteHistoricoById,
-  findPortfolioHistoricoByUserId,
   findPortfolioFormacaoByUserId,
+  saveFormacao,
+  saveContato,
+  patchContacts,
+  deleteContatoById,
 };
 
 export default profile;

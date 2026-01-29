@@ -25,14 +25,30 @@
 
 .panelItem {
   list-style: none;
+}
+
+/* variantes */
+.normal {
   padding: 8px 0;
   margin-bottom: 20px;
 }
+
+.small {
+  padding: 5px 0;
+  margin-bottom: 0;
+}
+
 .panelItemActionLine {
   display: flex;
   justify-content: flex-end;
   border-bottom: 1px solid var(--borderColor-muted);
 }
+
+.panelItemActionLineSmall {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .panelItemActions {
   padding: 0;
   margin: 0;

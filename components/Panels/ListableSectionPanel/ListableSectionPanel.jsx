@@ -12,6 +12,7 @@ export default function ListablePanel({
   OnDelete,
   OnMove,
   renderItem,
+  variant = "normal",
 }) {
   const safeItems = Array.isArray(items) ? items : [];
 
@@ -39,8 +40,8 @@ export default function ListablePanel({
 
       <ul className={style.panelBody}>
         {sortedItems.map((item, index) => (
-          <li key={item.id} className={style.panelItem}>
-            <div className={style.panelItemActionLine}>
+          <li key={item.id} className={`${style.panelItem} ${style[variant] || style.normal}`}>
+            <div className={variant === "small" ? style.panelItemActionLineSmall : style.panelItemActionLine}>
               {canEdit && (
                 <ActionBar className={style.panelItemActions}>
                   {OnMove && (

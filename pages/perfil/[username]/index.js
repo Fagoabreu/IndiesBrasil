@@ -14,6 +14,8 @@ import SectionPanel from "@/components/Panels/SectionPanel/SectionPanel";
 import style from "./perfil.module.css";
 import FormacaoItem from "@/components/Portfolio/Formacao/FormacaoItem";
 import EditFormacaoModal from "@/components/Portfolio/Formacao/EditFormacaoModal";
+import ContatoItem from "@/components/Portfolio/Contatos/ContatoItem";
+import EditContatoModal from "@/components/Portfolio/Contatos/EditContatoModal";
 
 /* =====================
  * Utils
@@ -64,9 +66,16 @@ export default function Perfil() {
     editing: null,
   });
 
+  const [contatoModal, setContatoModal] = useState({
+    open: false,
+    editing: null,
+  });
+
   const [deleteModal, setDeleteModal] = useState({
     item: null,
+    itemName: "",
     loading: false,
+    type: null,
   });
 
   /* =====================
@@ -137,6 +146,27 @@ export default function Perfil() {
         })),
       }),
     });
+  }
+
+  async function confirmDelete() {
+    if (!deleteModal.item || !deleteModal.type) return;
+
+    switch (deleteModal.type) {
+      case "historico":
+        await deleteHistorico();
+        break;
+
+      case "formacao":
+        await deleteFormacao();
+        break;
+
+      case "contato":
+        await deleteContato();
+        break;
+
+      default:
+        break;
+    }
   }
 
   async function moveHistorico(from, to) {
@@ -243,6 +273,73 @@ export default function Perfil() {
     });
   }
 
+  async function deleteFormacao() {
+    const item = deleteModal.item;
+    if (!item) return;
+
+    setDeleteModal((s) => ({ ...s, loading: true }));
+
+    await fetchJSON(`/api/v1/users/${username}/formacoes/${item.id}`, { method: "DELETE" });
+
+    setDeleteModal({ item: null, loading: false });
+  }
+
+  async function saveContato(payload) {
+    const isEditing = Boolean(contatoModal.editing);
+    const ordem = isEditing ? contatoModal.editing.ordem : perfilUser.contacts.length;
+    console.log("Saving contato:", { payload, isEditing, ordem });
+    const updated = await fetchJSON(`/api/v1/users/${username}/contacts${isEditing ? `/${contatoModal.editing.id}` : ""}`, {
+      method: isEditing ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...payload, ordem }),
+    });
+
+    setPerfilUser((prev) => ({
+      ...prev,
+      contacts: updated,
+    }));
+
+    setContatoModal({ open: false, editing: null });
+  }
+
+  async function moveContato(from, to) {
+    const sorted = [...perfilUser.contacts].sort((a, b) => a.ordem - b.ordem);
+    if (to < 0 || to >= sorted.length) return;
+
+    const updated = [...sorted];
+    const [item] = updated.splice(from, 1);
+    updated.splice(to, 0, item);
+
+    const reordered = updated.map((c, index) => ({
+      ...c,
+      ordem: index,
+    }));
+
+    setPerfilUser((prev) => ({
+      ...prev,
+      contacts: reordered,
+    }));
+
+    await fetchJSON(`/api/v1/users/${username}/contacts/reorder`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contacts: reordered.map(({ id, ordem }) => ({ id, ordem })),
+      }),
+    });
+  }
+
+  async function deleteContato() {
+    const item = deleteModal.item;
+    if (!item) return;
+
+    setDeleteModal((s) => ({ ...s, loading: true }));
+
+    await fetchJSON(`/api/v1/users/${username}/contacts/${item.id}`, { method: "DELETE" });
+
+    setDeleteModal({ item: null, loading: false });
+  }
+
   /* =====================
    * Render
    * ===================== */
@@ -313,7 +410,9 @@ export default function Perfil() {
                 OnDelete={(item) =>
                   setDeleteModal({
                     item,
+                    itemName: item.cargo,
                     loading: false,
+                    type: "historico",
                   })
                 }
                 renderItem={(item) => <HistoricoItem item={item} />}
@@ -328,6 +427,14 @@ export default function Perfil() {
                 OnAdd={() => setFormacaoModal({ open: true, editing: null })}
                 OnEdit={(item) => setFormacaoModal({ open: true, editing: item })}
                 OnMove={moveFormacao}
+                OnDelete={(item) =>
+                  setDeleteModal({
+                    item,
+                    itemName: item.curso,
+                    loading: false,
+                    type: "formacao",
+                  })
+                }
                 renderItem={(item) => <FormacaoItem item={item} />}
               />
             </div>
@@ -335,20 +442,18 @@ export default function Perfil() {
             {/* COLUNA LATERAL */}
             <aside className={style.resumeSidebar}>
               {/* Contato */}
-              <section className="resume-section">
-                <Heading as="h4" variant="medium">
-                  Contato
-                </Heading>
-                <ul className="resume-list">
-                  {perfilUser.contacts.map((c) => (
-                    <li key={c.id}>
-                      <Text size="medium">
-                        {c.key} — {c.value}
-                      </Text>
-                    </li>
-                  ))}
-                </ul>
-              </section>
+              <ListableSectionPanel
+                title="Contatos"
+                items={perfilUser.contacts}
+                canEdit={isOwnProfile}
+                emptyText="Nenhum contato cadastrado."
+                OnAdd={() => setContatoModal({ open: true, editing: null })}
+                OnEdit={(item) => setContatoModal({ open: true, editing: item })}
+                OnMove={moveContato}
+                OnDelete={(item) => setDeleteModal({ item, itemName: item.nome, loading: false, type: "contato" })}
+                renderItem={(item) => <ContatoItem item={item} />}
+                variant="small"
+              />
 
               {/* Especializações */}
               <section className="resume-section">
@@ -417,12 +522,16 @@ export default function Perfil() {
           />
         )}
 
+        {contatoModal.open && (
+          <EditContatoModal initialData={contatoModal.editing} onClose={() => setContatoModal({ open: false, editing: null })} onSave={saveContato} />
+        )}
+
         {deleteModal.item && (
           <DeleteConfirm
-            itemName={deleteModal.item.cargo}
+            itemName={deleteModal.itemName}
             loading={deleteModal.loading}
             onCancel={() => setDeleteModal({ item: null, loading: false })}
-            onConfirm={deleteHistorico}
+            onConfirm={() => confirmDelete()}
           />
         )}
       </PageLayout.Content>
