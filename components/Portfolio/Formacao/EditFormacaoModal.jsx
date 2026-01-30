@@ -1,26 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Dialog, Button, TextInput, FormControl } from "@primer/react";
 
 export default function EditFormacaoModal({ onClose, onSave, initialData }) {
-  const [form, setForm] = useState({
-    nome: "",
-    instituicao: "",
-    init_date: "",
-    end_date: "",
-  });
+  const [form, setForm] = useState(() => ({
+    nome: initialData?.nome || "",
+    instituicao: initialData?.instituicao || "",
+    init_date: initialData?.init_date?.slice(0, 10) || "",
+    end_date: initialData?.end_date?.slice(0, 10) || "",
+  }));
 
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (initialData) {
-      setForm({
-        nome: initialData.nome || "",
-        instituicao: initialData.instituicao || "",
-        init_date: initialData.init_date?.slice(0, 10) || "",
-        end_date: initialData.end_date?.slice(0, 10) || "",
-      });
-    }
-  }, [initialData]);
 
   function update(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -44,7 +33,14 @@ export default function EditFormacaoModal({ onClose, onSave, initialData }) {
     <Dialog onDismiss={onClose} onClose={onClose}>
       <Dialog.Header>Formação acadêmica</Dialog.Header>
 
-      <div style={{ padding: 16, display: "flex", gap: 12, flexDirection: "column" }}>
+      <div
+        style={{
+          padding: 16,
+          display: "flex",
+          gap: 12,
+          flexDirection: "column",
+        }}
+      >
         <FormControl>
           <FormControl.Label>Curso</FormControl.Label>
           <TextInput block value={form.nome} onChange={(e) => update("nome", e.target.value)} />

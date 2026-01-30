@@ -1,24 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Dialog, Button, Textarea, TextInput, FormControl, Select } from "@primer/react";
 
 export default function EditResumoModal({ onClose, initVisibility, initResume, initBio, onSave }) {
-  const [visibility, setVisibility] = useState("public");
-  const [resume, setResume] = useState("");
-  const [bio, setBio] = useState("");
+  const [visibility, setVisibility] = useState(initVisibility || "public");
+  const [resume, setResume] = useState(initResume || "");
+  const [bio, setBio] = useState(initBio || "");
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    setVisibility(initVisibility || "public");
-    setResume(initResume || "");
-    setBio(initBio || "");
-  }, [initVisibility, initResume, initBio]);
 
   async function handleSave() {
     setLoading(true);
 
     await onSave({
       resumo: resume,
-      visibility: visibility,
+      visibility,
       bio,
     });
 
@@ -26,17 +20,18 @@ export default function EditResumoModal({ onClose, initVisibility, initResume, i
     onClose();
   }
 
-  function handleClose() {
-    if (typeof onClose === "function") {
-      onClose();
-    }
-  }
-
   return (
-    <Dialog onDismiss={handleClose} onClose={handleClose} aria-labelledby="edit-resumo">
+    <Dialog onDismiss={onClose} onClose={onClose} aria-labelledby="edit-resumo">
       <Dialog.Header id="edit-resumo">Editar resumo e bio</Dialog.Header>
 
-      <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+      <div
+        style={{
+          padding: 16,
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+        }}
+      >
         <FormControl>
           <FormControl.Label>Visibilidade</FormControl.Label>
           <Select value={visibility} onChange={(e) => setVisibility(e.target.value)}>

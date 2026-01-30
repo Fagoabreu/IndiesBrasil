@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { PageLayout, Heading, TextInput, Button, Flash } from "@primer/react";
 
 import "./ContactTypes.css";
-import Image from "next/image";
 import IconSvg from "@/components/IconSvg/IconSvg";
 
 export default function ContactTypesPage() {

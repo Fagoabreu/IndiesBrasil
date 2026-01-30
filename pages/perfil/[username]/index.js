@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { PageLayout, Heading, Avatar, Text, Button } from "@primer/react";
 import Image from "next/image";
@@ -82,12 +82,12 @@ export default function Perfil() {
    * Load profile
    * ===================== */
 
-  async function reloadProfile() {
+  const reloadProfile = useCallback(async () => {
     if (!username) return;
 
     const data = await fetchJSON(`/api/v1/users/${username}/profile`);
     setPerfilUser(data);
-  }
+  }, [username]);
 
   useEffect(() => {
     if (!username) return;
@@ -100,7 +100,7 @@ export default function Perfil() {
         setLoadingProfile(false);
       }
     })();
-  }, [username]);
+  }, [username, reloadProfile]);
 
   if (loadingUser || loadingProfile) {
     return <div>Carregando...</div>;
@@ -117,7 +117,7 @@ export default function Perfil() {
    * ===================== */
 
   async function saveResumo(payload) {
-    const data = await fetchJSON(`/api/v1/users/${username}`, {
+    await fetchJSON(`/api/v1/users/${username}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -223,7 +223,7 @@ export default function Perfil() {
     const isEditing = Boolean(formacaoModal.editing);
     const ordem = isEditing ? formacaoModal.editing.ordem : perfilUser.formacoes.length;
 
-    const updated = await fetchJSON(`/api/v1/users/${username}/formacoes${isEditing ? `/${formacaoModal.editing.id}` : ""}`, {
+    await fetchJSON(`/api/v1/users/${username}/formacoes${isEditing ? `/${formacaoModal.editing.id}` : ""}`, {
       method: isEditing ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...payload, ordem }),
@@ -271,7 +271,7 @@ export default function Perfil() {
     const isEditing = Boolean(contatoModal.editing);
     const ordem = isEditing ? contatoModal.editing.ordem : perfilUser.contacts.length;
     console.log("Saving contato:", { payload, isEditing, ordem });
-    const updated = await fetchJSON(`/api/v1/users/${username}/contacts${isEditing ? `/${contatoModal.editing.id}` : ""}`, {
+    await fetchJSON(`/api/v1/users/${username}/contacts${isEditing ? `/${contatoModal.editing.id}` : ""}`, {
       method: isEditing ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...payload, ordem }),
@@ -478,6 +478,7 @@ export default function Perfil() {
 
         {historicoModal.open && (
           <EditHistoricoModal
+            key={historicoModal.editing?.id || "new"}
             initialData={historicoModal.editing}
             onClose={() =>
               setHistoricoModal({
@@ -491,6 +492,7 @@ export default function Perfil() {
 
         {formacaoModal.open && (
           <EditFormacaoModal
+            key={formacaoModal.editing?.id || "new"}
             initialData={formacaoModal.editing}
             onClose={() => setFormacaoModal({ open: false, editing: null })}
             onSave={saveFormacao}

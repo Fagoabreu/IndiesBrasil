@@ -1,33 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Dialog, Button, TextInput, Textarea, FormControl } from "@primer/react";
 import styles from "./EditHistoricoModal.module.css";
 
 export default function EditHistoricoModal({ onClose, onSave, initialData }) {
-  const [form, setForm] = useState({
-    cargo: "",
-    company: "",
-    cidade: "",
-    estado: "",
-    init_date: "",
-    end_date: "",
-    atribuicoes: "",
-  });
+  const [form, setForm] = useState(() => ({
+    cargo: initialData?.cargo || "",
+    company: initialData?.company || "",
+    cidade: initialData?.cidade || "",
+    estado: initialData?.estado || "",
+    init_date: initialData?.init_date?.slice(0, 10) || "",
+    end_date: initialData?.end_date?.slice(0, 10) || "",
+    atribuicoes: Array.isArray(initialData?.atribuicoes) ? initialData.atribuicoes.join("\n") : "",
+  }));
 
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (initialData) {
-      setForm({
-        cargo: initialData.cargo || "",
-        company: initialData.company || "",
-        cidade: initialData.cidade || "",
-        estado: initialData.estado || "",
-        init_date: initialData.init_date?.slice(0, 10) || "",
-        end_date: initialData.end_date?.slice(0, 10) || "",
-        atribuicoes: (initialData.atribuicoes || []).join("\n"),
-      });
-    }
-  }, [initialData]);
 
   function update(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -53,14 +39,8 @@ export default function EditHistoricoModal({ onClose, onSave, initialData }) {
     onClose();
   }
 
-  function handleClose() {
-    if (typeof onClose === "function") {
-      onClose();
-    }
-  }
-
   return (
-    <Dialog onDismiss={handleClose} onClose={handleClose} aria-labelledby="edit-historico">
+    <Dialog onDismiss={onClose} onClose={onClose} aria-labelledby="edit-historico">
       <Dialog.Header id="edit-historico">Histórico profissional</Dialog.Header>
 
       <div className="modal-body">
