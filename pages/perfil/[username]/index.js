@@ -16,6 +16,8 @@ import FormacaoItem from "@/components/Portfolio/Formacao/FormacaoItem";
 import EditFormacaoModal from "@/components/Portfolio/Formacao/EditFormacaoModal";
 import ContatoItem from "@/components/Portfolio/Contatos/ContatoItem";
 import EditContatoModal from "@/components/Portfolio/Contatos/EditContatoModal";
+import FerramentaItem from "@/components/Portfolio/Ferramentas/FerramentaItem";
+import EditFerramentaModal from "@/components/Portfolio/Ferramentas/EditFerramentaModal";
 
 /* =====================
  * Utils
@@ -78,6 +80,12 @@ export default function Perfil() {
     type: null,
   });
 
+  const [toolsCatalog, setToolsCatalog] = useState([]);
+  const [ferramentaModal, setFerramentaModal] = useState({
+    open: false,
+    editing: null,
+  });
+
   /* =====================
    * Load profile
    * ===================== */
@@ -101,6 +109,10 @@ export default function Perfil() {
       }
     })();
   }, [username, reloadProfile]);
+
+  useEffect(() => {
+    fetchJSON("/api/v1/tools").then(setToolsCatalog);
+  }, []);
 
   if (loadingUser || loadingProfile) {
     return <div>Carregando...</div>;
@@ -155,6 +167,10 @@ export default function Perfil() {
 
       case "contato":
         await deleteContato();
+        break;
+
+      case "ferramenta":
+        await deleteFerramenta();
         break;
 
       default:
@@ -315,6 +331,28 @@ export default function Perfil() {
     setDeleteModal({ item: null, loading: false });
   }
 
+  async function saveFerramenta(payload) {
+    const isEditing = Boolean(ferramentaModal.editing);
+
+    await fetchJSON(`/api/v1/users/${username}/tools${isEditing ? `/${ferramentaModal.editing.id}` : ""}`, {
+      method: isEditing ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    setFerramentaModal({ open: false, editing: null });
+    await reloadProfile();
+  }
+
+  async function deleteFerramenta() {
+    if (!deleteModal.item) return;
+
+    await fetchJSON(`/api/v1/users/${username}/tools/${deleteModal.item.id}`, { method: "DELETE" });
+
+    setDeleteModal({ item: null, loading: false, type: null });
+    await reloadProfile();
+  }
+
   /* =====================
    * Render
    * ===================== */
@@ -447,20 +485,23 @@ export default function Perfil() {
               </section>
 
               {/* Ferramentas */}
-              <section className="resume-section">
-                <Heading as="h4" variant="medium">
-                  Ferramentas
-                </Heading>
-                <ul className="resume-list">
-                  {perfilUser.tools.map((t) => (
-                    <li key={t.id}>
-                      <Text size="medium">
-                        {t.name} · {t.experience}
-                      </Text>
-                    </li>
-                  ))}
-                </ul>
-              </section>
+              <ListableSectionPanel
+                title="Ferramentas"
+                items={perfilUser.tools}
+                canEdit={isOwnProfile}
+                emptyText="Nenhuma ferramenta cadastrada."
+                OnAdd={() => setFerramentaModal({ open: true, editing: null })}
+                OnEdit={(item) => setFerramentaModal({ open: true, editing: item })}
+                OnDelete={(item) =>
+                  setDeleteModal({
+                    item,
+                    itemName: item.tool.nome,
+                    loading: false,
+                    type: "ferramenta",
+                  })
+                }
+                renderItem={(item) => <FerramentaItem item={item} />}
+              />
             </aside>
           </section>
         </section>
@@ -501,6 +542,16 @@ export default function Perfil() {
 
         {contatoModal.open && (
           <EditContatoModal initialData={contatoModal.editing} onClose={() => setContatoModal({ open: false, editing: null })} onSave={saveContato} />
+        )}
+
+        {ferramentaModal.open && (
+          <EditFerramentaModal
+            key={ferramentaModal.editing?.id || "new"}
+            tools={toolsCatalog}
+            initialData={ferramentaModal.editing}
+            onClose={() => setFerramentaModal({ open: false, editing: null })}
+            onSave={saveFerramenta}
+          />
         )}
 
         {deleteModal.item && (

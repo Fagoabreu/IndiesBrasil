@@ -114,7 +114,8 @@ async function findPortfolioToolsByPortfolioId(user_id) {
           ptf.user_id,
           ptf.portfolio_tool_id,
           ptf.experience,
-          pt.name
+          pt.name,
+          pt.icon_img
         from 
           portfolio_tool_ref ptf
           inner join portfolio_tools pt
@@ -228,6 +229,27 @@ async function saveContato(userInputValues) {
         )
           `,
       values: [userInputValues.user_id, userInputValues.contact_value, userInputValues.contact_type_id],
+    });
+    return results.rows;
+  }
+}
+
+async function saveTools(userInputValues) {
+  if (userInputValues.id) {
+    return;
+  }
+  return await runInsertQuery(userInputValues);
+
+  async function runInsertQuery(userInputValues) {
+    const results = await database.query({
+      text: `
+        insert into portfolio_tool_ref
+        (user_id, portfolio_tool_id, experience)
+        values(
+        $1,$2,$3
+        )
+          `,
+      values: [userInputValues.user_id, userInputValues.portfolio_tool_id, userInputValues.experience],
     });
     return results.rows;
   }
@@ -439,6 +461,8 @@ const profile = {
   saveContato,
   patchContacts,
   deleteContatoById,
+  saveTools,
+  findPortfolioToolsByPortfolioId,
 };
 
 export default profile;
