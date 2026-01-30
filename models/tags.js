@@ -84,9 +84,10 @@ async function getTrendingByPeriod(period, limit = 30) {
       t.name,
       COUNT(pt.post_id) AS usage_count
     FROM post_tags pt
-    JOIN tags t ON t.id = pt.tag_id
+      inner JOIN tags t 
+        ON t.id = pt.tag_id
     WHERE pt.created_at >= NOW() - INTERVAL '${matchPeriod}'
-    GROUP BY t.name
+    GROUP BY t.name,pt.tag_id
     ORDER BY usage_count DESC
     LIMIT $1
     `,

@@ -1,7 +1,8 @@
 import { Stack, Text } from "@primer/react";
 import { useEffect, useState } from "react";
 import { useUser } from "@/context/UserContext";
-import UserCardComponent from "./UserCard/UserCardComponent";
+import UserCardComponent from "../UserCard/UserCardComponent";
+import styles from "./WhotoFollow.module.css";
 
 export default function WhoToFollow() {
   const { user } = useUser();
@@ -69,14 +70,16 @@ export default function WhoToFollow() {
   if (!users.length) return null;
 
   return (
-    <Stack direction="vertical" gap={3}>
-      <Text fontWeight="bold">Sugestões de quem seguir</Text>
+    <Stack className={styles.followPanel} direction="vertical" gap={3}>
+      <Text className={styles.followTitle} fontWeight="bold">
+        Quem seguir
+      </Text>
 
-      {users.map((u) => (
-        <Stack direction="horizontal" gap={2} sx={{ alignItems: "center" }} key={u.username}>
-          <UserCardComponent user={u} onToggleFollow={handleToggleFollow} canFollow={user} />
-        </Stack>
-      ))}
+      <Stack className={styles.followStack} gap="condensed" direction="vertical" justify="start">
+        {users.map((u) => (
+          <UserCardComponent user={u} onToggleFollow={handleToggleFollow} canFollow={user} key={u.username} />
+        ))}
+      </Stack>
     </Stack>
   );
 }

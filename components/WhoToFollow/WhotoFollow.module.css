@@ -1,0 +1,20 @@
+.followPanel {
+  border: 1px solid var(--borderColor-default);
+  background-color: var(--bgColor-muted);
+  margin-top: 20px;
+  border-radius: 8px;
+}
+
+.followTitle {
+  margin: 12px 12px 0px 12px;
+  border: 0;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fgColor-default);
+}
+
+.followStack {
+  vertical-align: top;
+  align-items: "stretch";
+}

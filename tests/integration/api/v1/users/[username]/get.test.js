@@ -26,12 +26,19 @@ describe("GET /api/v1/users/[username]", () => {
         id: response2Body.id,
         username: "MesmoCase",
         email: "mesmo.case@gmail.com",
-        password: response2Body.password,
-        cpf: "32454643231",
+        //password: response2Body.password,
+        //cpf: "32454643231",
         created_at: response2Body.created_at,
         updated_at: response2Body.updated_at,
         features: ["read:activation_token"],
         avatar_image: null,
+        followers_count: "0",
+        following_count: "0",
+        posts_count: "0",
+        resumo: response2Body.resumo,
+        visibility: "public",
+        background_image: null,
+        bio: response2Body.bio,
       });
       expect(uuidVersion(response2Body.id)).toBe(4);
       expect(Date.parse(response2Body.created_at)).not.toBeNaN();
@@ -54,12 +61,17 @@ describe("GET /api/v1/users/[username]", () => {
         id: response2Body.id,
         username: "CaseDiferente",
         email: "diferente.case@gmail.com",
-        password: response2Body.password,
-        cpf: "32454643232",
         created_at: response2Body.created_at,
         updated_at: response2Body.updated_at,
-        features: ["read:activation_token"],
         avatar_image: null,
+        followers_count: "0",
+        following_count: "0",
+        posts_count: "0",
+        features: ["read:activation_token"],
+        resumo: response2Body.resumo,
+        visibility: "public",
+        background_image: null,
+        bio: response2Body.bio,
       });
       expect(uuidVersion(response2Body.id)).toBe(4);
       expect(Date.parse(response2Body.created_at)).not.toBeNaN();

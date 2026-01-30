@@ -3,8 +3,10 @@ import { Button, ButtonGroup } from "@primer/react";
 
 import "./TrendingTagsComponent.css";
 import { useTrendingTags } from "@/context/dataHooks/UseTrendingTags";
+import { useRouter } from "next/router";
 
 export default function TrendingTags() {
+  const router = useRouter();
   const [period, setPeriod] = useState("7d");
   const { data, error, isLoading } = useTrendingTags(period);
 
@@ -14,11 +16,22 @@ export default function TrendingTags() {
     return <div className="trending-loading">Carregando…</div>;
   }
 
-  if (error) {
+  if (error && error.status_code !== 404) {
     return (
       <div className="trending-error">
         <p>{error.message}</p>
       </div>
+    );
+  }
+
+  function handleTagClick(tagName) {
+    router.push(
+      {
+        pathname: "/posts",
+        query: { tag: tagName },
+      },
+      undefined,
+      { shallow: false },
     );
   }
 
@@ -43,9 +56,11 @@ export default function TrendingTags() {
       <ul className="trending-list">
         {data?.map((tag, index) => (
           <li key={tag.name} className="trending-item">
-            <span className="rank">#{index + 1}</span>
-            <span className="tag">#{tag.name}</span>
-            <span className="count">{tag.usage_count}</span>
+            <button type="button" className="trending-button" onClick={() => handleTagClick(tag.name)}>
+              <span className="rank">#{index + 1}</span>
+              <span className="tag">#{tag.name}</span>
+              <span className="count">{tag.usage_count}</span>
+            </button>
           </li>
         ))}
       </ul>

@@ -10,27 +10,35 @@ async function create(userInputValues) {
   injectDefaultFeaturesInObject(userInputValues);
 
   const newUser = await runInsertQuery(userInputValues);
-  return {
-    username: newUser.username,
-    email: newUser.email,
-    id: newUser.id,
-    cpf: newUser.cpf,
-    features: newUser.features,
-    created_at: newUser.created_at,
-    updated_at: newUser.updated_at,
-    password: newUser.password,
-  };
+  return secureUserInterface(newUser);
 
   async function runInsertQuery(userInputValues) {
     const results = await database.query({
       text: `
       Insert into 
-        users (username,email,password,cpf,features) 
+        users (
+          username,
+          email,
+          password,
+          cpf,
+          features,
+          resumo,
+          visibility,
+          bio) 
       values
-        ($1,$2,$3,$4,$5)
+        ($1,$2,$3,$4,$5,$6,$7,$8)
       returning
         *`,
-      values: [userInputValues.username, userInputValues.email, userInputValues.password, userInputValues.cpf, userInputValues.features],
+      values: [
+        userInputValues.username,
+        userInputValues.email,
+        userInputValues.password,
+        userInputValues.cpf,
+        userInputValues.features,
+        userInputValues.resumo,
+        userInputValues.visibility || "public",
+        userInputValues.bio,
+      ],
     });
     return results.rows[0];
   }
@@ -75,8 +83,12 @@ async function findOneById(id) {
           email,
           cpf,
           features,
+          resumo,
+          bio,
+          visibility,
+          background_image,
           created_at,
-          updated_at 
+          updated_at
         from 
           users u 
         where 
@@ -104,10 +116,49 @@ async function findOneByUsername(username) {
   async function runSelectQuery(username) {
     const results = await database.query({
       text: `
-        select 
-          * 
+        select
+          u.id,
+          username,
+          email,
+          updated_at,
+          created_at,
+          avatar_image,
+          cpf,
+          password,
+          features,
+          resumo,
+          bio,
+          visibility,
+          u.background_image,
+          COALESCE(f.followers_count, 0) AS followers_count,
+          COALESCE(f2.following_count,0) as following_count,
+          COALESCE(p.posts_count,0) as posts_count
         from 
-          users u 
+          users u
+          -- Seguidores do usuário
+          LEFT JOIN (
+            SELECT
+              lead_user_id,
+              COUNT(*) AS followers_count
+            FROM user_followers
+            GROUP BY lead_user_id
+          ) f ON f.lead_user_id = u.id
+          -- usuário seguindo
+          LEFT JOIN (
+            SELECT
+              follower_id,
+              COUNT(*) AS following_count
+            FROM user_followers
+            GROUP BY follower_id
+          ) f2 ON f2.follower_id = u.id
+          -- Posts do Usuario
+          LEFT JOIN (
+            SELECT
+              author_id,
+              COUNT(*) AS posts_count
+            FROM posts
+            GROUP BY author_id
+          ) p ON p.author_id = u.id
         where 
           LOWER(u.username) = LOWER($1)
         limit
@@ -124,6 +175,34 @@ async function findOneByUsername(username) {
 
     return results.rows[0];
   }
+}
+
+function secureUserInterface(selectedUser) {
+  if (!selectedUser) {
+    return;
+  }
+
+  return {
+    id: selectedUser.id,
+    username: selectedUser.username,
+    email: selectedUser.email,
+    updated_at: selectedUser.updated_at,
+    created_at: selectedUser.created_at,
+    followers_count: selectedUser.followers_count,
+    following_count: selectedUser.following_count,
+    posts_count: selectedUser.posts_count,
+    features: selectedUser.features,
+    resumo: selectedUser.resumo,
+    bio: selectedUser.bio,
+    visibility: selectedUser.visibility,
+    avatar_image: selectedUser.avatar_image,
+    background_image: selectedUser.background_image,
+  };
+}
+
+async function findOneByUsernameSecured(username) {
+  const user = await findOneByUsername(username);
+  return secureUserInterface(user);
 }
 
 async function findOneByEmail(email) {
@@ -231,6 +310,53 @@ async function setFeatures(userId, features) {
   }
 }
 
+async function addFeatures(userId, features) {
+  const updatedUser = await runUpdatedQuery(userId, features);
+  return updatedUser;
+
+  async function runUpdatedQuery(userId, features) {
+    const results = await database.query({
+      text: `
+      update
+        users
+      set
+        features = array_cat(features,$2),
+        updated_at = timezone('utc',now())
+      where 
+        id = $1
+      returning 
+        *
+      `,
+      values: [userId, features],
+    });
+    return results.rows[0];
+  }
+}
+
+async function isFollowingUser(followerId, leaderId) {
+  const isFollowing = await runSelectQuery(followerId, leaderId);
+  return isFollowing.isFollowing;
+
+  async function runSelectQuery(followerId, leaderId) {
+    const results = await database.query({
+      text: `
+        select 
+          case when exists(
+            select 1 from user_followers
+            where 
+              follower_id = $1
+              and lead_user_id = $2
+            ) then true
+          else
+            false
+          end as isFollowing
+        `,
+      values: [followerId, leaderId],
+    });
+    return results.rows[0];
+  }
+}
+
 async function runUpdatedQuery(userWithNewValues) {
   const results = await database.query({
     text: `
@@ -241,14 +367,33 @@ async function runUpdatedQuery(userWithNewValues) {
         email = $3,
         password = $4,
         cpf = $5,
+        resumo = $6,
+        bio = $7,
+        visibility= $8,
         updated_at = timezone('utc',now())
       where 
         id = $1
       returning
         *
     `,
-    values: [userWithNewValues.id, userWithNewValues.username, userWithNewValues.email, userWithNewValues.password, userWithNewValues.cpf],
+    values: [
+      userWithNewValues.id,
+      userWithNewValues.username,
+      userWithNewValues.email,
+      userWithNewValues.password,
+      userWithNewValues.cpf,
+      userWithNewValues.resumo,
+      userWithNewValues.bio,
+      userWithNewValues.visibility,
+    ],
   });
+  if (results.rowCount === 0) {
+    throw new NotFoundError({
+      message: "Usuario não encontrado.",
+      action: "verifique se os dados enviados estão corretos.",
+    });
+  }
+
   return results.rows[0];
 }
 
@@ -265,6 +410,10 @@ async function findUsers(userId, isfollowing) {
         u.id,
         u.username,
         u.avatar_image,
+        u.resumo,
+        u.bio,
+        u.visibility,
+        u.background_image,
         COALESCE(f.followers_count, 0) AS followers_count,
         COALESCE(p.posts_count, 0) AS posts_count
       FROM users u
@@ -297,6 +446,10 @@ async function findUsers(userId, isfollowing) {
         u.id,
         u.username,
         u.avatar_image,
+        u.resumo,
+        u.bio,
+        u.visibility,
+        u.background_image,
         COALESCE(f.followers_count, 0) AS followers_count,
         COALESCE(p.posts_count, 0) AS posts_count,
         (uf.follower_id IS NOT NULL) AS is_following
@@ -344,7 +497,6 @@ async function findUsers(userId, isfollowing) {
         LIMIT 
           10;`;
     const queryText = baseQuery + whereClause + endQuery;
-    console.log(queryText);
     const values = [userId];
     const results = await database.query({
       text: queryText,
@@ -391,13 +543,21 @@ async function removeFollow(followerId, leaderId) {
 const user = {
   create,
   update,
-  findOneById,
-  findOneByUsername,
-  findOneByEmail,
+  //permissions
   setFeatures,
-  findUsers,
+  addFeatures,
+  //follow
   addFollow,
   removeFollow,
+  //select
+  findOneById,
+  findOneByUsername,
+  findOneByUsernameSecured,
+  findOneByEmail,
+  findUsers,
+  isFollowingUser,
+  //Security
+  secureUserInterface,
 };
 
 export default user;

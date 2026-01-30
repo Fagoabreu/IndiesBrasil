@@ -45,11 +45,14 @@ describe("GET /api/v1/user", () => {
       expect(responseBody).toEqual({
         id: createdUser.id,
         username: "UserWithValidSession",
-        email: createdUser.email,
-        //password: createdUser.password,
-        cpf: createdUser.cpf,
+        cpf: activatedUser.cpf,
+        email: activatedUser.email,
         created_at: createdUser.created_at.toISOString(),
         updated_at: activatedUser.updated_at.toISOString(),
+        visibility: "public",
+        resumo: activatedUser.resumo,
+        background_image: null,
+        bio: activatedUser.bio,
         features: ["create:session", "read:session", "read:post", "create:post", "read:user", "update:user"],
       });
       expect(uuidVersion(responseBody.id)).toBe(4);
@@ -176,10 +179,13 @@ describe("GET /api/v1/user", () => {
         id: createdUser.id,
         username: "UserWithHalfwayExpiredSession",
         email: createdUser.email,
-        //password: createdUser.password,
         created_at: createdUser.created_at.toISOString(),
         updated_at: updatedUser.updated_at.toISOString(),
-        cpf: createdUser.cpf,
+        cpf: updatedUser.cpf,
+        resumo: createdUser.resumo,
+        visibility: "public",
+        background_image: null,
+        bio: createdUser.bio,
         features: ["create:session", "read:session", "read:post", "create:post", "read:user", "update:user"],
       });
       expect(uuidVersion(responseBody.id)).toBe(4);
