@@ -5,15 +5,25 @@ import PostCardComponent from "@/components/PostCard/PostCardComponent";
 import CreatePost from "@/components/CreatePost/CreatePost";
 
 import "./PostsPage.css";
-import PostLeftBarComponent from "@/components/LeftBar/PostLeftBarComponent";
+import PostRightBarComponent from "@/components/RightBar/PostRightBarComponent";
+import { useRouter } from "next/router";
 
 export default function PostsPage() {
+  const router = useRouter();
   const { user, loadingUser } = useUser();
-
   const [posts, setPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [tab, setTab] = useState("all");
-  const [activeTag, setActiveTag] = useState(null);
+  const [activeTag, setActiveTag] = useState();
+
+  useEffect(() => {
+    if (!router.isReady) return;
+
+    if (router.query.tag) {
+      setActiveTag(router.query.tag);
+      setTab("tag");
+    }
+  }, [router.isReady, router.query.tag]);
 
   const fetchPosts = useCallback(async () => {
     setLoadingPosts(true);
@@ -139,6 +149,14 @@ export default function PostsPage() {
           onTagClick={(tag) => {
             setActiveTag(tag);
             setTab("tag");
+            router.push(
+              {
+                pathname: router.pathname,
+                query: { tag },
+              },
+              undefined,
+              { shallow: true },
+            );
           }}
         />
       ))}
@@ -147,4 +165,4 @@ export default function PostsPage() {
 }
 
 // Sidebar
-PostsPage.RightSidebar = <PostLeftBarComponent />;
+PostsPage.RightSidebar = <PostRightBarComponent />;

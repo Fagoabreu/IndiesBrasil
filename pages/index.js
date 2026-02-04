@@ -6,8 +6,10 @@ import VerticalCardComponent from "@/components/Card/VerticalCardComponent";
 import MetricCard from "@/components/Card/MetricCard";
 import { PeopleIcon } from "@primer/octicons-react";
 import { useEffect, useState } from "react";
+import TyperwriterComponent from "@/components/TypeWriter/TyperwriterComponent";
 
 function Home() {
+  const frases = ["Gamers.", "Programadores.", "Roteiristas.", "Animadores.", "Produtores de Conteúdo.", "Ilustradores.", "Designers.", "Artistas."];
   const [summary, setSummary] = useState(null);
 
   useEffect(() => {
@@ -35,13 +37,19 @@ function Home() {
         <Heading as="h4">Atenção - ambiente de testes</Heading>
         <p>Esta pagina está em versão de testes Beta, todo conteúdo aqui postado será apagado quando lançarmos a versão final</p>
       </section>
-
+      {/* Apresentacao */}
       {/* HERO */}
       <section className={styles.hero}>
-        <Heading as="h1">Bem-vindo ao Indies Brasil</Heading>
+        <Heading as="h1">
+          Bem-vindo. <TyperwriterComponent initText="Somos" frases={frases} />
+        </Heading>
         <p>
-          A rede social feita para artistas, desenvolvedores de jogos e programadores. Conecte-se, compartilhe projetos, construa portfólio e colabore
-          com quem vive de criar tecnologia e experiências digitais.
+          Um espaço feito para artistas, desenvolvedores de jogos, programadores, roteiristas e streamers que vivem de criar, aprender e compartilhar.
+        </p>
+        <p>Aqui você se conecta com pessoas que entendem seu trabalho, seus desafios e suas ambições.</p>
+        <p>
+          Construa seu portfólio, divulgue seus projetos, compartilhe conhecimento e colabore com quem produz entretenimento, tecnologia e educação
+          todos os dias.
         </p>
         <div className={styles.metrics}>
           <MetricCard
@@ -65,7 +73,6 @@ function Home() {
           <MetricCard title="Jogos" period="Total" value="..." previousLabel="Em Desenvolvimento" previousValue="..." icon={<PeopleIcon />} />
         </div>
       </section>
-
       {/* COMUNIDADE */}
       <section className={styles.section}>
         <HorizontalCardComponent
@@ -75,7 +82,6 @@ function Home() {
           description="Grupo focado em desenvolvedores independentes de jogos brasileiros. Compartilhamos dicas, recursos, oportunidades e apoio para fomentar a indústria nacional."
         />
       </section>
-
       {/* DEMONSTRAÇÃO */}
       <section className={styles.section}>
         <header className={styles.sectionHeader}>

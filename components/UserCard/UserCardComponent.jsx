@@ -20,8 +20,19 @@ export default function UserCardComponent({ user, onToggleFollow, canFollow = tr
   return (
     <div className={styles.card}>
       <div className={styles.mainRow}>
-        <Avatar size={40} src={user.avatar_image || "/images/avatar.png"} className={styles.avatar} />
-
+        <div className={styles.avatarSection}>
+          <Avatar size={40} src={user.avatar_image || "/images/avatar.png"} className={styles.avatar} />
+          {canFollow && (
+            <Button
+              size="small"
+              variant={user.isFollowing ? "default" : "primary"}
+              onClick={() => onToggleFollow(user.username, !user.isFollowing)}
+              className={styles.followBtn}
+            >
+              {user.isFollowing ? "Seguindo" : "Seguir"}
+            </Button>
+          )}
+        </div>
         <div className={styles.info}>
           <Link href={`/perfil/${user.username}`} className={styles.username}>
             {user.name || user.username}
@@ -37,17 +48,6 @@ export default function UserCardComponent({ user, onToggleFollow, canFollow = tr
             <span>{user.followers_count ?? 0} seguidores</span>
           </div>
         </div>
-
-        {canFollow && (
-          <Button
-            size="small"
-            variant={user.isFollowing ? "default" : "primary"}
-            onClick={() => onToggleFollow(user.username, !user.isFollowing)}
-            className={styles.followBtn}
-          >
-            {user.isFollowing ? "Seguindo" : "Seguir"}
-          </Button>
-        )}
       </div>
     </div>
   );

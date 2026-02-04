@@ -1,0 +1,53 @@
+.panelCard {
+  background: var(--bgColor-default);
+  border: 1px solid var(--borderColor-default);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.panelTitle {
+  margin-bottom: 0px;
+}
+
+.panelHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--borderColor-muted);
+  margin-bottom: 12px;
+}
+
+.panelBody {
+  padding: 0;
+}
+
+.panelItem {
+  list-style: none;
+}
+
+.panelItemActionLine {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.panelItemActions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0;
+  margin: 0;
+  background: var(--bgColor-inset);
+}
+
+/* variantes */
+.normal {
+  padding: 8px 0;
+  margin-bottom: 20px;
+}
+
+.small {
+  padding: 5px 0;
+  margin-bottom: 0;
+  border-bottom: 0;
+}

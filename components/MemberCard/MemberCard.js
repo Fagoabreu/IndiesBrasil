@@ -1,10 +1,24 @@
 // components/MemberCard.jsx
 import { Avatar, Link } from "@primer/react";
 import styles from "./MemberCard.module.css";
+import PropTypes from "prop-types";
+
+MemberCard.propTypes = {
+  user: PropTypes.shape({
+    avatar_image: PropTypes.string,
+    name: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired,
+    role: PropTypes.string,
+    bio: PropTypes.string,
+    email: PropTypes.string,
+    github: PropTypes.string,
+    linkedin: PropTypes.string,
+  }).isRequired,
+};
 
 export default function MemberCard({ user }) {
   return (
-    <div className={styles.card}>
+    <Link className={styles.card} href={`/perfil/${user.username}`} inline={true}>
       {/* Avatar */}
       <div className={styles.avatarWrapper}>
         <Avatar src={user.avatar_image || "/images/avatar.png"} size={96} className={styles.avatar} />
@@ -41,6 +55,6 @@ export default function MemberCard({ user }) {
           </Link>
         )}
       </div>
-    </div>
+    </Link>
   );
 }

@@ -1,0 +1,18 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--borderColor-muted);
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+
+.date {
+  color: var(--fgColor-muted);
+  font-size: 14px;
+}
+
+.sub {
+  color: var(--fgColor-muted);
+  font-size: 14px;
+}

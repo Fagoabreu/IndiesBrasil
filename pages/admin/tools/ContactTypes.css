@@ -1,0 +1,39 @@
+.contact-form {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.contact-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.contact-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px;
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px;
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+.contact-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 8px;
+  min-width: 150px;
+}
+
+.contact-item:hover .contact-icon {
+  color: var(--accentColor-fg);
+}
