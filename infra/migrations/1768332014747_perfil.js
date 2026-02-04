@@ -147,6 +147,15 @@ exports.up = (pgm) => {
       ('Twitch','twitch'),
       ('WhatsApp','whatsapp'),
       ('Youtube','youtube');
+  `);
+
+  pgm.addColumn("portfolio_tools", {
+    icon_img: {
+      type: "varchar(256)",
+    },
+  });
+
+  pgm.sql(`
     INSERT INTO public.portfolio_tools ("name",icon_img) VALUES
       ('blender','blender'),
       ('gamemaker','gamemaker'),
@@ -157,10 +166,4 @@ exports.up = (pgm) => {
       ('Unreal','unrealengine');
 
   `);
-
-  pgm.addColumn("portfolio_tools", {
-    icon_img: {
-      type: "varchar(256)",
-    },
-  });
 };
