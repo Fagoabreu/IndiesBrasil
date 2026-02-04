@@ -19,9 +19,9 @@
     }
     .arrowDetail {
       position: absolute;
-      right: -90px;
+      right: -50px;
       height: 130px;
-      top: 10px;
+      top: w0px;
       transform: rotate(-10deg);
     }
   }

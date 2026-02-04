@@ -3,6 +3,7 @@ import { UploadIcon } from "@primer/octicons-react";
 import styles from "./qrgen.module.css";
 import { Select } from "@primer/react";
 import { useRef, useState } from "react";
+import Image from "next/image";
 
 export default function QrGen() {
   const [linkValue, setLinkValue] = useState("");
@@ -41,7 +42,7 @@ export default function QrGen() {
         <h1 className={styles.pageTitle}>
           Gere e customize QR Codes <span>dinâmicos</span>
         </h1>
-        <img src="/arrow.svg" alt="detail" className={styles.arrowDetail} />
+        <Image src="/images/qr_code.png" alt="detail" width="120" height="200" className={styles.arrowDetail} />
       </section>
       <section className={styles.qrCodeContainer}>
         <div className={styles.qrCode}>

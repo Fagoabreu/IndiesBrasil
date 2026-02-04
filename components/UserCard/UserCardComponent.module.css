@@ -18,6 +18,13 @@
 }
 
 /* Avatar */
+.avatarSection {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  gap: 4px;
+}
+
 .avatar {
   flex-shrink: 0;
 }
@@ -62,4 +69,8 @@
 /* Botão */
 .followBtn {
   white-space: nowrap;
+  padding: 0px 4px;
+  font-size: 11px;
+  margin: 0;
+  height: auto;
 }

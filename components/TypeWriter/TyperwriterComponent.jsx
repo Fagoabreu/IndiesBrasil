@@ -1,14 +1,22 @@
 import { useEffect, useRef, useState } from "react";
 import style from "./TyperwriterComponent.module.css";
+import PropTypes from "prop-types";
 
-export default function TyperwriterComponent({ initText, frases = [] }) {
+TyperwriterComponent.propTypes = {
+  initText: PropTypes.string,
+  frases: PropTypes.arrayOf(PropTypes.string),
+};
+
+export default function TyperwriterComponent({ initText, frases }) {
   const [text, setText] = useState("");
+
+  const frasesRef = useRef(frases);
   const fraseIndex = useRef(0);
   const charIndex = useRef(0);
   const isDeleting = useRef(false);
 
   useEffect(() => {
-    const currentFrase = frases[fraseIndex.current];
+    const currentFrase = frasesRef.current[fraseIndex.current];
 
     const timeout = setTimeout(
       () => {
@@ -24,7 +32,7 @@ export default function TyperwriterComponent({ initText, frases = [] }) {
           isDeleting.current = true;
         } else if (isDeleting.current && charIndex.current === 0) {
           isDeleting.current = false;
-          fraseIndex.current = (fraseIndex.current + 1) % frases.length;
+          fraseIndex.current = (fraseIndex.current + 1) % frasesRef.current.length;
         }
       },
       isDeleting.current ? 100 : 200,
