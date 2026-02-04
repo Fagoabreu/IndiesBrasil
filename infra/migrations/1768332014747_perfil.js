@@ -147,6 +147,14 @@ exports.up = (pgm) => {
       ('Twitch','twitch'),
       ('WhatsApp','whatsapp'),
       ('Youtube','youtube');
+    INSERT INTO public.portfolio_tools ("name",icon_img) VALUES
+      ('blender','blender'),
+      ('gamemaker','gamemaker'),
+      ('Godot','godotengine'),
+      ('Scratch','scratch'),
+      ('Maya','autodeskmaya'),
+      ('Unity','unity'),
+      ('Unreal','unrealengine');
 
   `);
 

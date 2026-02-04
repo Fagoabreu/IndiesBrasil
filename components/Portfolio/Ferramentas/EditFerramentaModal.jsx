@@ -1,10 +1,35 @@
 import { Dialog, Button, FormControl, Select, ActionMenu, ActionList } from "@primer/react";
 import IconSvg from "@/components/IconSvg/IconSvg";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const EXPERIENCES = ["Estudante", "Junior", "Pleno", "Senior", "Especialista"];
 
-export default function EditFerramentaModal({ onClose, onSave, tools = [], initialData }) {
+export default function EditFerramentaModal({ onClose, onSave, initialData }) {
+  const [toolsCatalog, setToolsCatalog] = useState([]);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function loadCatalog() {
+      try {
+        const res = await fetch("/api/v1/tools", {
+          credentials: "include",
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || "Erro de API");
+        }
+
+        setToolsCatalog(data);
+      } catch (err) {
+        setError(err.message);
+      }
+    }
+
+    loadCatalog();
+  }, []);
+
   const [form, setForm] = useState(() => ({
     tool_id: initialData?.tool_id || "",
     experience: initialData?.experience || "Estudante",
@@ -28,11 +53,13 @@ export default function EditFerramentaModal({ onClose, onSave, tools = [], initi
     onClose();
   }
 
-  const selectedTool = tools.find((t) => t.id === form.tool_id);
+  const selectedTool = toolsCatalog.find((t) => t.id === form.tool_id);
 
   return (
     <Dialog onDismiss={onClose} onClose={onClose}>
       <Dialog.Header>Ferramenta</Dialog.Header>
+
+      {error && <p style={{ color: "red" }}>{error}</p>}
 
       <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
         <FormControl>
@@ -43,7 +70,7 @@ export default function EditFerramentaModal({ onClose, onSave, tools = [], initi
 
             <ActionMenu.Overlay width="medium">
               <ActionList>
-                {tools.map((t) => (
+                {toolsCatalog.map((t) => (
                   <ActionList.Item key={t.id} selected={form.tool_id === t.id} onSelect={() => update("tool_id", t.id)}>
                     <ActionList.LeadingVisual>
                       <IconSvg src={`/images/tools/${t.icon_img}.svg`} alt={t.name} size={16} />

@@ -1,4 +1,4 @@
-import { ActionBar, Button, Heading, Text } from "@primer/react";
+import { Button, ButtonGroup, Heading, Text } from "@primer/react";
 import { ChevronDownIcon, ChevronUpIcon, DiffAddedIcon, PencilIcon, TrashIcon } from "@primer/octicons-react";
 import style from "./ListableSectionPanel.module.css";
 
@@ -41,11 +41,12 @@ export default function ListablePanel({
       <ul className={style.panelBody}>
         {sortedItems.map((item, index) => (
           <li key={item.id} className={`${style.panelItem} ${style[variant] || style.normal}`}>
-            <div className={variant === "small" ? style.panelItemActionLineSmall : style.panelItemActionLine}>
+            <div className={style.panelItemActionLine}>
               {canEdit && (
-                <ActionBar className={style.panelItemActions}>
+                <ButtonGroup className={style.panelItemActions}>
                   {OnMove && (
-                    <ActionBar.IconButton
+                    <Button
+                      size="small"
                       icon={ChevronUpIcon}
                       aria-label="Levantar Item"
                       disabled={index === 0}
@@ -53,17 +54,17 @@ export default function ListablePanel({
                     />
                   )}
                   {OnMove && (
-                    <ActionBar.IconButton
+                    <Button
+                      size="small"
                       icon={ChevronDownIcon}
                       aria-label="Baixar Item"
                       disabled={index === sortedItems.length - 1}
                       onClick={() => OnMove(index, index + 1)}
                     />
                   )}
-                  <ActionBar.Divider />
-                  {OnEdit && <ActionBar.IconButton icon={PencilIcon} variant="primary" aria-label="Editar Item" onClick={() => OnEdit(item)} />}
-                  {OnDelete && <ActionBar.IconButton icon={TrashIcon} variant="danger" aria-label="Excluir Item" onClick={() => OnDelete(item)} />}
-                </ActionBar>
+                  {OnEdit && <Button size="small" icon={PencilIcon} variant="primary" aria-label="Editar Item" onClick={() => OnEdit(item)} />}
+                  {OnDelete && <Button size="small" icon={TrashIcon} variant="danger" aria-label="Excluir Item" onClick={() => OnDelete(item)} />}
+                </ButtonGroup>
               )}
             </div>
             <div className="panel-item-content">{renderItem(item)}</div>

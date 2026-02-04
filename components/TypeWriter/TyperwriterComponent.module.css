@@ -1,0 +1,35 @@
+.TypewriterContainer {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.header {
+  font-size: 25px;
+}
+
+.typingText {
+  color: var(--fgColor-sponsors);
+  border-right: 3px solid var(--fgColor-sponsors);
+  padding-right: 5px;
+  text-shadow: 0 0 10pc #0ef;
+  animation:
+    blink 0.5s infinite,
+    colorful 6s infinite;
+}
+
+@keyframes blink {
+  100% {
+    border-color: var(--fgColor-sponsors);
+  }
+  0%,
+  50% {
+    border-color: transparent;
+  }
+}
+
+@keyframes colorful {
+  100% {
+    filter: hue-rotate(360deg);
+  }
+}

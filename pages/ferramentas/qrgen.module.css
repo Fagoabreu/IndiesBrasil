@@ -1,0 +1,189 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  min-height: 80vh;
+  gap: 32px;
+
+  .titleContainer {
+    position: relative;
+    .pageTitle {
+      font-weight: 600;
+      text-align: center;
+      font-size: 32px;
+
+      span {
+        color: var(--fgColor-accent);
+      }
+    }
+    .arrowDetail {
+      position: absolute;
+      right: -90px;
+      height: 130px;
+      top: 10px;
+      transform: rotate(-10deg);
+    }
+  }
+
+  .qrCodeContainer {
+    background-color: var(--bgColor-muted);
+    padding: 12px;
+    border-radius: 12px;
+    display: flex;
+    gap: 12px;
+    width: 700px;
+    box-shadow: var(--shadow-floating-medium);
+
+    .qrCode,
+    .qrCodeCustomization {
+      background-color: var(--bgColor-default);
+      padding: 18px;
+      border-radius: 8px;
+      width: 50%;
+    }
+
+    .qrCode {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      .linkInput {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+
+        label {
+          font-weight: 600;
+          font-size: 14px;
+        }
+
+        input {
+          padding: 10px;
+          border-radius: 8px;
+          border: 1px solid var(--borderColor-default);
+
+          &:focus {
+            outline: 1px solid var(--borderColor-accent-emphasis);
+          }
+        }
+      }
+
+      .qrCodePreview {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+      }
+    }
+
+    .qrCodeCustomization {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+
+      .customizationContainer {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        .inputContainer {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+
+          .inputBox {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+          }
+
+          label {
+            font-weight: 400;
+            font-size: 14px;
+          }
+
+          .inputFile {
+            opacity: 0;
+            position: absolute;
+            z-index: 2;
+            height: 60px;
+            cursor: pointer;
+          }
+
+          .inputFileButton {
+            position: relative;
+            z-index: 1;
+            background-color: var(--bgColor-accent-emphasis);
+            border-radius: 8px;
+            border: none;
+            padding: 8px 12px;
+            color: var(--fgColor-onEmphasis);
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            width: fit-content;
+          }
+
+          #logoSize {
+            background-color: var(--bgColor-muted);
+          }
+        }
+      }
+      .inputContainer.colors {
+        flex-direction: row;
+        gap: 32px;
+        .inputColor {
+          border: none;
+          background-color: transparent;
+          height: 30px;
+          width: 100%;
+          cursor: pointer;
+        }
+      }
+      .downloadButton {
+        background-color: var(--bgColor-accent-emphasis);
+        color: var(--fgColor-onEmphasis);
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s;
+
+        &:hover {
+          background-color: var(--bgColor-done-emphasis);
+        }
+      }
+    }
+  }
+}
+
+@media screen and (max-width: 920px) {
+  .container {
+    padding: 32px 5%;
+    gap: 16px;
+    max-width: 100vw;
+
+    .titleContainer {
+      .arrowDetail {
+        display: none;
+      }
+    }
+
+    .qrCodeContainer {
+      flex-direction: column;
+      width: 100%;
+
+      .qrCode{
+        width: 100%;
+      }
+      .qrCodeCustomization {
+        width: 100%;
+        gap: 12px;
+      }
+  }
+}

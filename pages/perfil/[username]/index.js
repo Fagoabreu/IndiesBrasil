@@ -80,7 +80,6 @@ export default function Perfil() {
     type: null,
   });
 
-  const [toolsCatalog, setToolsCatalog] = useState([]);
   const [ferramentaModal, setFerramentaModal] = useState({
     open: false,
     editing: null,
@@ -109,10 +108,6 @@ export default function Perfil() {
       }
     })();
   }, [username, reloadProfile]);
-
-  useEffect(() => {
-    fetchJSON("/api/v1/tools").then(setToolsCatalog);
-  }, []);
 
   if (loadingUser || loadingProfile) {
     return <div>Carregando...</div>;
@@ -501,6 +496,7 @@ export default function Perfil() {
                   })
                 }
                 renderItem={(item) => <FerramentaItem item={item} />}
+                variant="small"
               />
             </aside>
           </section>
@@ -547,7 +543,6 @@ export default function Perfil() {
         {ferramentaModal.open && (
           <EditFerramentaModal
             key={ferramentaModal.editing?.id || "new"}
-            tools={toolsCatalog}
             initialData={ferramentaModal.editing}
             onClose={() => setFerramentaModal({ open: false, editing: null })}
             onSave={saveFerramenta}
