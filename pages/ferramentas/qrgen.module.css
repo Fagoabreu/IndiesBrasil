@@ -178,12 +178,13 @@
       flex-direction: column;
       width: 100%;
 
-      .qrCode{
+      .qrCode {
         width: 100%;
       }
       .qrCodeCustomization {
         width: 100%;
         gap: 12px;
       }
+    }
   }
 }
