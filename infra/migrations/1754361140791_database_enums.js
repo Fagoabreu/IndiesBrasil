@@ -200,7 +200,7 @@ CREATE TYPE "developer_role" AS ENUM (
 	'Tester QA',
 	'Writer',
 	'UI UX Designer',
-	' Community Manager'
+	'Community Manager'
 );
 
 CREATE TABLE "user_followers" (

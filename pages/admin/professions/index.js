@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { PageLayout, Heading, TextInput, Button, Flash } from "@primer/react";
 
-import "./Tools.css";
 import IconSvg from "@/components/IconSvg/IconSvg";
+import "./Professions.css";
 
 export default function ContactTypesPage() {
   const [name, setName] = useState("");
@@ -14,7 +14,7 @@ export default function ContactTypesPage() {
     let isMounted = true;
 
     async function loadTypes() {
-      const res = await fetch("/api/v1/tools", {
+      const res = await fetch("/api/v1/professions", {
         credentials: "include",
       });
 
@@ -41,7 +41,7 @@ export default function ContactTypesPage() {
       return;
     }
 
-    const res = await fetch("/api/v1/tools", {
+    const res = await fetch("/api/v1/professions", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
@@ -58,18 +58,18 @@ export default function ContactTypesPage() {
     setIconImg("");
 
     // recarrega lista
-    const refreshed = await fetch("/api/v1/tools", {
+    const refreshed = await fetch("/api/v1/professions", {
       credentials: "include",
     });
     setItems(await refreshed.json());
   }
 
-  async function handleDelete(toolId) {
-    const confirmed = window.confirm("Tem certeza que deseja remover esta ferramenta?");
+  async function handleDelete(name) {
+    const confirmed = window.confirm("Tem certeza que deseja remover esta profissão?");
     if (!confirmed) return;
 
     try {
-      const res = await fetch(`/api/v1/tools/${toolId}`, {
+      const res = await fetch(`/api/v1/professions/${name}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -80,7 +80,7 @@ export default function ContactTypesPage() {
       }
 
       // Atualização otimista do estado
-      setItems((prev) => prev.filter((item) => item.id !== toolId));
+      setItems((prev) => prev.filter((item) => item.name !== name));
     } catch (err) {
       setError(err.message);
     }
@@ -89,13 +89,13 @@ export default function ContactTypesPage() {
   return (
     <PageLayout>
       <PageLayout.Content width="medium">
-        <Heading as="h2">Tipos de Ferramenta</Heading>
+        <Heading as="h2">Profissões</Heading>
 
         {error && <Flash variant="danger">{error}</Flash>}
 
         <form onSubmit={handleSubmit} className="contact-form">
-          <TextInput placeholder="Nome (ex: Unity)" value={name} onChange={(e) => setName(e.target.value)} />
-          <TextInput placeholder="Ícone (ex: Unity)" value={iconImg} onChange={(e) => setIconImg(e.target.value)} />
+          <TextInput placeholder="Profissão (ex: 2d Artist)" value={name} onChange={(e) => setName(e.target.value)} />
+          <TextInput placeholder="Ícone (ex: 2DArtist)" value={iconImg} onChange={(e) => setIconImg(e.target.value)} />
 
           <Button type="submit" variant="primary">
             Adicionar
@@ -106,13 +106,13 @@ export default function ContactTypesPage() {
           {items.map((item) => (
             <li key={item.id}>
               <div className="contact-info">
+                <IconSvg src={`/images/professions/${item.icon_img}.png`} alt={item.name} />
                 <strong>{item.name}</strong>
-                <IconSvg src={`/images/tools/${item.icon_img}.svg`} alt={item.name} />
-              </div>
 
-              <Button size="small" variant="danger" onClick={() => handleDelete(item.id)}>
-                Remover
-              </Button>
+                <Button size="small" variant="danger" onClick={() => handleDelete(item.name)}>
+                  Remover
+                </Button>
+              </div>
             </li>
           ))}
         </ul>

@@ -18,6 +18,8 @@ import ContatoItem from "@/components/Portfolio/Contatos/ContatoItem";
 import EditContatoModal from "@/components/Portfolio/Contatos/EditContatoModal";
 import FerramentaItem from "@/components/Portfolio/Ferramentas/FerramentaItem";
 import EditFerramentaModal from "@/components/Portfolio/Ferramentas/EditFerramentaModal";
+import RoleItem from "@/components/Portfolio/Roles/RoleItem";
+import EditRoleModal from "@/components/Portfolio/Roles/EditRoleModal";
 
 /* =====================
  * Utils
@@ -73,16 +75,21 @@ export default function Perfil() {
     editing: null,
   });
 
-  const [deleteModal, setDeleteModal] = useState({
-    item: null,
-    itemName: "",
-    loading: false,
-    type: null,
+  const [roleModal, setRoleModal] = useState({
+    open: false,
+    editing: null,
   });
 
   const [ferramentaModal, setFerramentaModal] = useState({
     open: false,
     editing: null,
+  });
+
+  const [deleteModal, setDeleteModal] = useState({
+    item: null,
+    itemName: "",
+    loading: false,
+    type: null,
   });
 
   /* =====================
@@ -166,6 +173,10 @@ export default function Perfil() {
 
       case "ferramenta":
         await deleteFerramenta();
+        break;
+
+      case "role":
+        await deleteRole();
         break;
 
       default:
@@ -348,6 +359,30 @@ export default function Perfil() {
     await reloadProfile();
   }
 
+  async function saveRole(payload) {
+    const isEditing = Boolean(roleModal.editing);
+    const ordem = isEditing ? roleModal.editing.ordem : perfilUser.roles.length;
+
+    await fetchJSON(`/api/v1/users/${username}/roles${isEditing ? `/${roleModal.editing.id}` : ""}`, {
+      method: isEditing ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...payload, ordem }),
+    });
+
+    setRoleModal({ open: false, editing: null });
+    await reloadProfile();
+  }
+
+  async function deleteRole() {
+    const item = deleteModal.item;
+    if (!item) return;
+
+    await fetchJSON(`/api/v1/users/${username}/roles/${item.id}`, { method: "DELETE" });
+
+    setDeleteModal({ item: null, loading: false, type: null });
+    await reloadProfile();
+  }
+
   /* =====================
    * Render
    * ===================== */
@@ -374,7 +409,7 @@ export default function Perfil() {
             </Text>
 
             {!isOwnProfile && authUser && (
-              <div>
+              <div className={style.profileHeaderActions}>
                 <Button variant="primary">Seguir</Button>
                 <Button>Enviar mensagem</Button>
               </div>
@@ -464,20 +499,24 @@ export default function Perfil() {
               />
 
               {/* Especializações */}
-              <section className="resume-section">
-                <Heading as="h4" variant="medium">
-                  Especializações
-                </Heading>
-                <ul className="resume-list">
-                  {perfilUser.roles.map((r) => (
-                    <li key={r.id}>
-                      <Text size="medium">
-                        {r.name} · {r.experience}
-                      </Text>
-                    </li>
-                  ))}
-                </ul>
-              </section>
+              <ListableSectionPanel
+                title="Especializações"
+                items={perfilUser.roles}
+                canEdit={isOwnProfile}
+                emptyText="Nenhuma especialização cadastrada."
+                OnAdd={() => setRoleModal({ open: true, editing: null })}
+                OnEdit={(item) => setRoleModal({ open: true, editing: item })}
+                OnDelete={(item) =>
+                  setDeleteModal({
+                    item,
+                    itemName: item.role_name,
+                    loading: false,
+                    type: "role",
+                  })
+                }
+                renderItem={(item) => <RoleItem item={item} />}
+                variant="small"
+              />
 
               {/* Ferramentas */}
               <ListableSectionPanel
@@ -538,6 +577,15 @@ export default function Perfil() {
 
         {contatoModal.open && (
           <EditContatoModal initialData={contatoModal.editing} onClose={() => setContatoModal({ open: false, editing: null })} onSave={saveContato} />
+        )}
+
+        {roleModal.open && (
+          <EditRoleModal
+            key={roleModal.editing?.id || "new"}
+            initialData={roleModal.editing}
+            onClose={() => setRoleModal({ open: false, editing: null })}
+            onSave={saveRole}
+          />
         )}
 
         {ferramentaModal.open && (

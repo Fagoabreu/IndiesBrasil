@@ -1,0 +1,10 @@
+.roleItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.roleInfo {
+  display: flex;
+  flex-direction: column;
+}
