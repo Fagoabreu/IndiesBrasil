@@ -117,6 +117,3 @@ utilize os dados do servidor para conectar na aba ssh do dbeaver e coloque no ho
 <img width="794" height="759" alt="image" src="https://github.com/user-attachments/assets/94c6d6bd-0a34-446b-9a5b-d7924d9d2d57" /> <br/>
 Em seguida adiciona as configurações de conexão que utilizamos na aplicação colocando a porta que configuramos no encaminhamento ssh <br/>
 <img width="794" height="761" alt="image" src="https://github.com/user-attachments/assets/461322c7-15f4-4131-8c2b-ae3909602e02" /> <br/>
-
-
-
