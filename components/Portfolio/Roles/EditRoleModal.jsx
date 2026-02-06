@@ -1,30 +1,30 @@
 import { useEffect, useState } from "react";
-import { Dialog, Button, FormControl, ActionMenu, ActionList } from "@primer/react";
+import { Button, Dialog, FormControl, ActionMenu, ActionList } from "@primer/react";
 import IconSvg from "@/components/IconSvg/IconSvg";
 import StarExperienceSelector from "@/components/Selectors/StarExperienceSelector";
-import styles from "./EditFerramentaModal.module.css";
+import styles from "./EditRoleModal.module.css";
 
-export default function EditFerramentaModal({ onClose, onSave, initialData }) {
-  const [toolsCatalog, setToolsCatalog] = useState([]);
+export default function EditRoleModal({ initialData, onSave, onClose }) {
+  const [professionsCatalog, setProfessionsCatalog] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState(() => ({
-    tool_id: initialData?.tool_id || null,
+    name: initialData?.name || "",
     experience: initialData?.experience || "Estudante",
   }));
 
   useEffect(() => {
     async function loadCatalog() {
       try {
-        const res = await fetch("/api/v1/tools", {
+        const res = await fetch("/api/v1/professions", {
           credentials: "include",
         });
 
         const data = await res.json();
-        if (!res.ok) throw new Error(data.message);
+        if (!res.ok) throw new Error(data.message || "Erro de API");
 
-        setToolsCatalog(Array.isArray(data) ? data : []);
+        setProfessionsCatalog(Array.isArray(data) ? data : []);
       } catch (err) {
         setError(err.message);
       }
@@ -32,8 +32,6 @@ export default function EditFerramentaModal({ onClose, onSave, initialData }) {
 
     loadCatalog();
   }, []);
-
-  const selectedTool = toolsCatalog.find((t) => t.id === form.tool_id);
 
   function update(field, value) {
     setForm((s) => ({ ...s, [field]: value }));
@@ -43,7 +41,7 @@ export default function EditFerramentaModal({ onClose, onSave, initialData }) {
     setLoading(true);
 
     await onSave({
-      portfolio_tool_id: form.tool_id,
+      name: form.name,
       experience: form.experience,
     });
 
@@ -51,25 +49,29 @@ export default function EditFerramentaModal({ onClose, onSave, initialData }) {
     onClose();
   }
 
+  const selectedProfession = professionsCatalog.find((p) => p.name === form.name);
+
   return (
     <Dialog onDismiss={onClose}>
-      <Dialog.Header>Ferramenta</Dialog.Header>
+      <Dialog.Header>Especialização</Dialog.Header>
 
       {error && <p>{error}</p>}
 
       <div className={styles.body}>
         <FormControl className={styles.formControl}>
-          <FormControl.Label>Ferramenta</FormControl.Label>
+          <FormControl.Label>Especialização</FormControl.Label>
+
           <ActionMenu>
-            <ActionMenu.Button block>{selectedTool ? selectedTool.name : "Selecionar ferramenta"}</ActionMenu.Button>
-            <ActionMenu.Overlay className={styles.toolsOverlay}>
+            <ActionMenu.Button block>{selectedProfession ? selectedProfession.name : "Selecionar especialização"}</ActionMenu.Button>
+
+            <ActionMenu.Overlay className={styles.professionsOverlay}>
               <ActionList>
-                {toolsCatalog.map((t) => (
-                  <ActionList.Item key={t.id} selected={form.tool_id === t.id} onSelect={() => update("tool_id", t.id)}>
+                {professionsCatalog.map((p) => (
+                  <ActionList.Item key={p.name} selected={form.name === p.name} onSelect={() => update("name", p.name)}>
                     <ActionList.LeadingVisual>
-                      <IconSvg src={`/images/tools/${t.icon_img}.svg`} alt={t.name} size={16} />
+                      <IconSvg src={`/images/professions/${p.icon_img}.png`} alt={p.name} size={16} />
                     </ActionList.LeadingVisual>
-                    {t.name}
+                    {p.name}
                   </ActionList.Item>
                 ))}
               </ActionList>
@@ -85,7 +87,7 @@ export default function EditFerramentaModal({ onClose, onSave, initialData }) {
 
       <Dialog.Footer>
         <Button onClick={onClose}>Cancelar</Button>
-        <Button variant="primary" loading={loading} disabled={!form.tool_id} onClick={handleSave}>
+        <Button variant="primary" loading={loading} disabled={!form.name} onClick={handleSave}>
           Salvar
         </Button>
       </Dialog.Footer>

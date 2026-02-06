@@ -1,0 +1,29 @@
+.container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stars {
+  display: flex;
+  gap: 4px;
+}
+
+.starButton {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.starActive {
+  color: var(--accentColor-fg);
+}
+
+.starInactive {
+  color: var(--fgColor-muted);
+}
+
+.label {
+  color: var(--fgColor-muted);
+}

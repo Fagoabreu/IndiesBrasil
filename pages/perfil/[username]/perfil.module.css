@@ -36,6 +36,12 @@
   gap: 6px;
 }
 
+.profileHeaderActions {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+}
+
 /* ===== RESUME LAYOUT ===== */
 
 .profileResume {

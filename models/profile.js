@@ -39,6 +39,7 @@ async function findByUsername(username, readerUser) {
   const profile_formacoes = await findPortfolioFormacaoByUserId(currentUser.id);
   const profile_tools = await findPortfolioToolsByPortfolioId(currentUser.id);
   const profile_contacts = await findContactsByUserId(currentUser.id);
+  const profile_roles = await findRolesByUserId(currentUser.id);
 
   return {
     user: currentUser,
@@ -46,7 +47,7 @@ async function findByUsername(username, readerUser) {
     formacoes: profile_formacoes,
     tools: profile_tools,
     contacts: profile_contacts,
-    roles: [],
+    roles: profile_roles,
   };
 }
 
@@ -154,6 +155,31 @@ async function findContactsByUserId(user_id) {
   }
 }
 
+async function findRolesByUserId(user_id) {
+  const rolesFound = await runSelectQuery(user_id);
+  return rolesFound;
+
+  async function runSelectQuery(user_id) {
+    const results = await database.query({
+      text: `
+        select
+          prr.user_id,
+          prr.portfolio_role_name,
+          prr.experience,
+          prr.ordem,
+          pr.icon_img
+        from 
+          portfolio_role_ref prr
+          inner join portfolio_roles pr
+          on pr.name = prr.portfolio_role_name
+        where prr.user_id=$1
+          `,
+      values: [user_id],
+    });
+    return results.rows;
+  }
+}
+
 async function saveHistorico(userInputValues) {
   if (userInputValues.id) {
     return;
@@ -250,6 +276,27 @@ async function saveTools(userInputValues) {
         )
           `,
       values: [userInputValues.user_id, userInputValues.portfolio_tool_id, userInputValues.experience],
+    });
+    return results.rows;
+  }
+}
+
+async function saveRoles(userInputValues) {
+  if (userInputValues.id) {
+    return;
+  }
+  return await runInsertQuery(userInputValues);
+
+  async function runInsertQuery(userInputValues) {
+    const results = await database.query({
+      text: `
+        insert into portfolio_role_ref
+        (user_id, portfolio_role_name, experience, ordem)
+        values(
+        $1,$2,$3,$4
+        )
+          `,
+      values: [userInputValues.user_id, userInputValues.name, userInputValues.experience, userInputValues.ordem],
     });
     return results.rows;
   }
@@ -453,16 +500,19 @@ async function deleteContatoById(contact_id) {
 const profile = {
   findByUsername,
   findPortfolioHistoricoByUserId,
-  saveHistorico,
-  patchHistorico,
-  deleteHistoricoById,
   findPortfolioFormacaoByUserId,
+  findPortfolioToolsByPortfolioId,
+  findRolesByUserId,
+
+  saveHistorico,
   saveFormacao,
   saveContato,
-  patchContacts,
-  deleteContatoById,
   saveTools,
-  findPortfolioToolsByPortfolioId,
+  saveRoles,
+  patchHistorico,
+  patchContacts,
+  deleteHistoricoById,
+  deleteContatoById,
 };
 
 export default profile;

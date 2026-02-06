@@ -33,8 +33,9 @@ export default function LeftSidebarComponent() {
 
           {adminOpen && (
             <>
-              <NavList.Item href="/admin/contact-types">Contact Types</NavList.Item>
-              <NavList.Item href="/admin/tools">Tools</NavList.Item>
+              <NavList.Item href="/admin/contact-types">Contatos</NavList.Item>
+              <NavList.Item href="/admin/tools">Ferramentas</NavList.Item>
+              <NavList.Item href="/admin/professions">Profissões</NavList.Item>
             </>
           )}
         </NavList.Group>
