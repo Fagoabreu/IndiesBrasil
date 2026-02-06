@@ -97,13 +97,22 @@ chmod 644 /var/lib/docker/volumes/infra_postgres-data/\_data/certs/server.crt<br
 chmod 644 /var/lib/docker/volumes/infra_postgres-data/\_data/certs/root.crt<br>
 <br>
 Ordem Execução:<br>
-
 docker network create infra_private<br>
 docker compose -f deploy/app/compose.yaml down<br>
 docker compose -f deploy/infra/compose.yaml down<br>
 <br>
 docker compose -f deploy/app/compose.yaml up -d<br>
 docker compose -f deploy/infra/compose.yaml up -d nginx<br>
-
 request certificate certbot: <br>
 docker compose run --rm certbot certonly --webroot -w /var/www/certbot -d jogos.social.br --email contato@indies.com --agree-tos --no-eff-email <br>
+
+<h3>Conectando dbeaver</h3>
+primeiro fazer o tunelamento ssh
+<br>
+segundo conecte-se no servidor e descubra o ip interno do container de postgress: <br>
+utilize o comando docker ps para verificar o id do container <br>
+depois utilize o comando para descobrir o ip do container docker inspect id_container | grep IPAddress <br>
+utilize os dados do servidor para conectar na aba ssh do dbeaver e coloque no host remoto o ip do container <br>
+<img width="794" height="759" alt="image" src="https://github.com/user-attachments/assets/94c6d6bd-0a34-446b-9a5b-d7924d9d2d57" /> <br>
+Em seguida adiciona as configurações de conexão que utilizamos na aplicação colocando a porta que configuramos no encaminhamento ssh <br>
+<img width="794" height="761" alt="image" src="https://github.com/user-attachments/assets/461322c7-15f4-4131-8c2b-ae3909602e02" /> <br>
