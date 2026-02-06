@@ -52,7 +52,7 @@ exports.up = (pgm) => {
       ('3D Artist','3DArtist'),
       ('Animator','Animator'),
       ('Associate Producer','AssociateProducer'),
-      (' Community Manager','CommunityManager'),
+      ('Community Manager','CommunityManager'),
       ('Composer','Composer'),
       ('Engine Programmer','EngineProgrammer'),
       ('Game Designer','GameDesigner'),
@@ -74,8 +74,8 @@ exports.up = (pgm) => {
     ALTER TYPE developer_role RENAME VALUE '2D Artist' TO 'Artista 2D';
     ALTER TYPE developer_role RENAME VALUE '3D Artist' TO 'Artista 3D';  
     ALTER TYPE developer_role RENAME VALUE 'Animator' TO 'Animador';  
-    ALTER TYPE developer_role RENAME VALUE 'Associate Producer' TO 'Produtor';  
-    ALTER TYPE developer_role RENAME VALUE ' Community Manager' TO 'Gestor de Comunidade';  
+    ALTER TYPE developer_role RENAME VALUE 'Associate Producer' TO 'Socio';  
+    ALTER TYPE developer_role RENAME VALUE 'Community Manager' TO 'Gestor de Comunidade';  
     ALTER TYPE developer_role RENAME VALUE 'Composer' TO 'Compositor';  
     ALTER TYPE developer_role RENAME VALUE 'Engine Programmer' TO 'Programador de Motor';  
     ALTER TYPE developer_role RENAME VALUE 'Game Designer' TO 'Designer de Jogos';  
@@ -94,15 +94,17 @@ exports.up = (pgm) => {
     ALTER TYPE developer_role RENAME VALUE 'UI UX Designer' TO 'Designer de UI UX';
     ALTER TYPE developer_role RENAME VALUE 'Writer' TO 'Escritor';
 
-    ALTER TYPE developer_role ADD VALUE 'Educador';
-    ALTER TYPE developer_role ADD VALUE 'Produtor Digital';
-    ALTER TYPE developer_role ADD VALUE 'Jornalista';
+    ALTER TYPE developer_role ADD VALUE IF NOT EXISTS 'Educador';
+    ALTER TYPE developer_role ADD VALUE IF NOT EXISTS 'Produtor Digital';
+    ALTER TYPE developer_role ADD VALUE IF NOT EXISTS 'Jornalista';
+
+    commit;
     
-    insert into portfolio_roles (name,icon_img)
-      values
-      ('Educador','Educador'),
-      ('Produtor Digital','Influencer'),
-      ('Jornalista','Journal');
+    INSERT INTO portfolio_roles (name, icon_img)
+    VALUES
+      ('Educador', 'Educador'),
+      ('Produtor Digital', 'Influencer'),
+      ('Jornalista', 'Journal');
 
     ALTER TABLE public.portfolio_role_ref
       ALTER COLUMN portfolio_role_name SET NOT NULL;
