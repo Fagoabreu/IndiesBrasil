@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
 import { Button, Dialog, FormControl, ActionMenu, ActionList } from "@primer/react";
-import ExperienceSelector from "@/components/Selectors/ExperienceSelector";
 import IconSvg from "@/components/IconSvg/IconSvg";
+import StarExperienceSelector from "@/components/Selectors/StarExperienceSelector";
+import styles from "./EditRoleModal.module.css";
 
 export default function EditRoleModal({ initialData, onSave, onClose }) {
   const [professionsCatalog, setProfessionsCatalog] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const [form, setForm] = useState(() => ({
+    name: initialData?.name || "",
+    experience: initialData?.experience || "Estudante",
+  }));
 
   useEffect(() => {
     async function loadCatalog() {
@@ -16,12 +22,9 @@ export default function EditRoleModal({ initialData, onSave, onClose }) {
         });
 
         const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Erro de API");
 
-        if (!res.ok) {
-          throw new Error(data.message || "Erro de API");
-        }
-
-        setProfessionsCatalog(data);
+        setProfessionsCatalog(Array.isArray(data) ? data : []);
       } catch (err) {
         setError(err.message);
       }
@@ -30,14 +33,8 @@ export default function EditRoleModal({ initialData, onSave, onClose }) {
     loadCatalog();
   }, []);
 
-  const [form, setForm] = useState(() => ({
-    name: initialData?.name || "",
-    experience: initialData?.experience || "Estudante",
-    icon: initialData?.icon_img || "",
-  }));
-
   function update(field, value) {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((s) => ({ ...s, [field]: value }));
   }
 
   async function handleSave() {
@@ -52,29 +49,29 @@ export default function EditRoleModal({ initialData, onSave, onClose }) {
     onClose();
   }
 
-  const selectedProfession = professionsCatalog.find((t) => t.name === form.name);
+  const selectedProfession = professionsCatalog.find((p) => p.name === form.name);
 
   return (
-    <Dialog onDismiss={onClose} onClose={onClose}>
-      <Dialog.Header>Ferramenta</Dialog.Header>
+    <Dialog onDismiss={onClose}>
+      <Dialog.Header>Especialização</Dialog.Header>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && <p>{error}</p>}
 
-      <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-        <FormControl>
-          <FormControl.Label>Ferramenta</FormControl.Label>
+      <div className={styles.body}>
+        <FormControl className={styles.formControl}>
+          <FormControl.Label>Especialização</FormControl.Label>
 
           <ActionMenu>
-            <ActionMenu.Button block>{selectedProfession ? selectedProfession.name : "Selecionar ferramenta"}</ActionMenu.Button>
+            <ActionMenu.Button block>{selectedProfession ? selectedProfession.name : "Selecionar especialização"}</ActionMenu.Button>
 
-            <ActionMenu.Overlay width="medium">
+            <ActionMenu.Overlay className={styles.professionsOverlay}>
               <ActionList>
-                {professionsCatalog.map((t) => (
-                  <ActionList.Item key={t.id} selected={form.profession_name === t.name} onSelect={() => update("name", t.name)}>
+                {professionsCatalog.map((p) => (
+                  <ActionList.Item key={p.name} selected={form.name === p.name} onSelect={() => update("name", p.name)}>
                     <ActionList.LeadingVisual>
-                      <IconSvg src={`/images/professions/${t.icon_img}.png`} alt={t.name} size={16} />
+                      <IconSvg src={`/images/professions/${p.icon_img}.png`} alt={p.name} size={16} />
                     </ActionList.LeadingVisual>
-                    {t.name}
+                    {p.name}
                   </ActionList.Item>
                 ))}
               </ActionList>
@@ -82,15 +79,15 @@ export default function EditRoleModal({ initialData, onSave, onClose }) {
           </ActionMenu>
         </FormControl>
 
-        <FormControl>
+        <FormControl className={styles.formControl}>
           <FormControl.Label>Nível de experiência</FormControl.Label>
-          <ExperienceSelector value={form.experience} onChange={(val) => update("experience", val)} />
+          <StarExperienceSelector value={form.experience} onChange={(v) => update("experience", v)} />
         </FormControl>
       </div>
 
       <Dialog.Footer>
         <Button onClick={onClose}>Cancelar</Button>
-        <Button variant="primary" loading={loading} disabled={!form.tool_id} onClick={handleSave}>
+        <Button variant="primary" loading={loading} disabled={!form.name} onClick={handleSave}>
           Salvar
         </Button>
       </Dialog.Footer>

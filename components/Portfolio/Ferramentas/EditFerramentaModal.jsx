@@ -1,12 +1,18 @@
-import { Dialog, Button, FormControl, Select, ActionMenu, ActionList } from "@primer/react";
-import IconSvg from "@/components/IconSvg/IconSvg";
 import { useEffect, useState } from "react";
-
-const EXPERIENCES = ["Estudante", "Junior", "Pleno", "Senior", "Especialista"];
+import { Dialog, Button, FormControl, ActionMenu, ActionList } from "@primer/react";
+import IconSvg from "@/components/IconSvg/IconSvg";
+import StarExperienceSelector from "@/components/Selectors/StarExperienceSelector";
+import styles from "./EditFerramentaModal.module.css";
 
 export default function EditFerramentaModal({ onClose, onSave, initialData }) {
   const [toolsCatalog, setToolsCatalog] = useState([]);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const [form, setForm] = useState(() => ({
+    tool_id: initialData?.tool_id || null,
+    experience: initialData?.experience || "Estudante",
+  }));
 
   useEffect(() => {
     async function loadCatalog() {
@@ -16,12 +22,9 @@ export default function EditFerramentaModal({ onClose, onSave, initialData }) {
         });
 
         const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
 
-        if (!res.ok) {
-          throw new Error(data.message || "Erro de API");
-        }
-
-        setToolsCatalog(data);
+        setToolsCatalog(Array.isArray(data) ? data : []);
       } catch (err) {
         setError(err.message);
       }
@@ -30,15 +33,10 @@ export default function EditFerramentaModal({ onClose, onSave, initialData }) {
     loadCatalog();
   }, []);
 
-  const [form, setForm] = useState(() => ({
-    tool_id: initialData?.tool_id || "",
-    experience: initialData?.experience || "Estudante",
-  }));
-
-  const [loading, setLoading] = useState(false);
+  const selectedTool = toolsCatalog.find((t) => t.id === form.tool_id);
 
   function update(field, value) {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((s) => ({ ...s, [field]: value }));
   }
 
   async function handleSave() {
@@ -53,29 +51,24 @@ export default function EditFerramentaModal({ onClose, onSave, initialData }) {
     onClose();
   }
 
-  const selectedTool = toolsCatalog.find((t) => t.id === form.tool_id);
-
   return (
-    <Dialog onDismiss={onClose} onClose={onClose}>
+    <Dialog onDismiss={onClose}>
       <Dialog.Header>Ferramenta</Dialog.Header>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && <p>{error}</p>}
 
-      <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-        <FormControl>
+      <div className={styles.body}>
+        <FormControl className={styles.formControl}>
           <FormControl.Label>Ferramenta</FormControl.Label>
-
           <ActionMenu>
             <ActionMenu.Button block>{selectedTool ? selectedTool.name : "Selecionar ferramenta"}</ActionMenu.Button>
-
-            <ActionMenu.Overlay width="medium">
+            <ActionMenu.Overlay className={styles.toolsOverlay}>
               <ActionList>
                 {toolsCatalog.map((t) => (
                   <ActionList.Item key={t.id} selected={form.tool_id === t.id} onSelect={() => update("tool_id", t.id)}>
                     <ActionList.LeadingVisual>
                       <IconSvg src={`/images/tools/${t.icon_img}.svg`} alt={t.name} size={16} />
                     </ActionList.LeadingVisual>
-
                     {t.name}
                   </ActionList.Item>
                 ))}
@@ -84,15 +77,9 @@ export default function EditFerramentaModal({ onClose, onSave, initialData }) {
           </ActionMenu>
         </FormControl>
 
-        <FormControl>
+        <FormControl className={styles.formControl}>
           <FormControl.Label>Nível de experiência</FormControl.Label>
-          <Select value={form.experience} onChange={(e) => update("experience", e.target.value)}>
-            {EXPERIENCES.map((e) => (
-              <Select.Option key={e} value={e}>
-                {e}
-              </Select.Option>
-            ))}
-          </Select>
+          <StarExperienceSelector value={form.experience} onChange={(v) => update("experience", v)} />
         </FormControl>
       </div>
 

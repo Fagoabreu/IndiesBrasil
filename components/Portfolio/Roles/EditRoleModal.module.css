@@ -1,0 +1,16 @@
+.body {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+}
+
+.professionsOverlay {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.formControl {
+  width: 350vw;
+}

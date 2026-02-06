@@ -1,5 +1,6 @@
 import { Text, Avatar } from "@primer/react";
 import styles from "./RoleItem.module.css";
+import IconSvg from "@/components/IconSvg/IconSvg";
 
 const EXPERIENCE_LABELS = {
   estudante: "⭐ Estudante",
@@ -16,10 +17,10 @@ export default function RoleItem({ item }) {
 
   return (
     <div className={styles.roleItem}>
-      <Avatar src={item.role_icon_img} size={32} alt={item.role_name} />
+      {item.icon_img && <IconSvg src={`/images/professions/${item.icon_img}.png`} alt={item.name} width={20} height={20} />}
 
       <div className={styles.roleInfo}>
-        <Text weight="bold">{item.role_name}</Text>
+        <Text weight="bold">{item.portfolio_role_name}</Text>
         <Text size="small" color="fg.muted">
           {EXPERIENCE_LABELS[experienceKey] || "Nível não informado"}
         </Text>

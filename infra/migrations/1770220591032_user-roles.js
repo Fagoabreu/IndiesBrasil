@@ -71,6 +71,45 @@ exports.up = (pgm) => {
       ('UI UX Designer','UIUXDesigner'),
       ('Writer','Writer');
 
+    ALTER TYPE developer_role RENAME VALUE '2D Artist' TO 'Artista 2D';
+    ALTER TYPE developer_role RENAME VALUE '3D Artist' TO 'Artista 3D';  
+    ALTER TYPE developer_role RENAME VALUE 'Animator' TO 'Animador';  
+    ALTER TYPE developer_role RENAME VALUE 'Associate Producer' TO 'Produtor';  
+    ALTER TYPE developer_role RENAME VALUE ' Community Manager' TO 'Gestor de Comunidade';  
+    ALTER TYPE developer_role RENAME VALUE 'Composer' TO 'Compositor';  
+    ALTER TYPE developer_role RENAME VALUE 'Engine Programmer' TO 'Programador de Motor';  
+    ALTER TYPE developer_role RENAME VALUE 'Game Designer' TO 'Designer de Jogos';  
+    ALTER TYPE developer_role RENAME VALUE 'Gameplay Programmer' TO 'Programador de Jogabilidade';  
+    ALTER TYPE developer_role RENAME VALUE 'Game Producer' TO 'Produtor';
+    ALTER TYPE developer_role RENAME VALUE 'Game Programmer' TO 'Programador de Jogos'; 
+    ALTER TYPE developer_role RENAME VALUE 'Graphics Programmer' TO 'Prgramador Grafico'; 
+    ALTER TYPE developer_role RENAME VALUE 'Level Designer' TO 'Designer de Nivel'; 
+    ALTER TYPE developer_role RENAME VALUE 'Narrative Designer' TO 'Desenvolvedor de Narrativa'; 
+    ALTER TYPE developer_role RENAME VALUE 'Sound Designer' TO 'Desenvolvedor de Audio'; 
+    ALTER TYPE developer_role RENAME VALUE 'System Designer' TO 'Desenvolvedor de Sistema';
+    ALTER TYPE developer_role RENAME VALUE 'Technical Artist' TO 'Artista Técnico';
+    ALTER TYPE developer_role RENAME VALUE 'Technical Designer' TO 'Designer Tecnico';
+    ALTER TYPE developer_role RENAME VALUE 'Technical Director' TO 'Diretor Tecnico';
+    ALTER TYPE developer_role RENAME VALUE 'Tester QA' TO 'Analista QA';
+    ALTER TYPE developer_role RENAME VALUE 'UI UX Designer' TO 'Designer de UI UX';
+    ALTER TYPE developer_role RENAME VALUE 'Writer' TO 'Escritor';
+
+    ALTER TYPE developer_role ADD VALUE 'Educador';
+    ALTER TYPE developer_role ADD VALUE 'Produtor Digital';
+    ALTER TYPE developer_role ADD VALUE 'Jornalista';
+    
+    insert into portfolio_roles (name,icon_img)
+      values
+      ('Educador','Educador'),
+      ('Produtor Digital','Influencer'),
+      ('Jornalista','Journal');
+
+    ALTER TABLE public.portfolio_role_ref
+      ALTER COLUMN portfolio_role_name SET NOT NULL;
+    
+    ALTER TABLE public.portfolio_role_ref
+      ADD CONSTRAINT portfolio_role_ref_pkey
+      PRIMARY KEY (user_id, portfolio_role_name);
     
   `;
   pgm.sql(sql);
