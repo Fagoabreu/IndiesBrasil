@@ -144,7 +144,6 @@ async function create(postInputValues) {
   }
 
   async function runAddTagsQuery(post_id, tag_id) {
-    console.log("Post_tag", post_id, tag_id);
     const results = await database.query({
       text: `
       insert into
