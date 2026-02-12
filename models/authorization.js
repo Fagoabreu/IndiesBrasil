@@ -22,6 +22,11 @@ const availableFeatures = [
   //STATUS
   "read:status",
   "read:status:all",
+
+  //POST
+  "create:post",
+  "read:post",
+  "read:post:all",
 ];
 
 function can(user, feature, resource) {
@@ -134,6 +139,35 @@ function filterOutput(user, feature, resource) {
 
     return output;
   }
+
+  if (feature === "read:post") {
+    return getPostResource(resource);
+  }
+
+  if (feature === "read:post:all") {
+    return resource.map((resourceItem) => {
+      return getPostResource(resourceItem);
+    });
+  }
+}
+
+function getPostResource(resource) {
+  return {
+    id: resource.id,
+    organization_id: resource.organization_id,
+    event_id: resource.organization_id,
+    content: resource.content,
+    img: resource.img,
+    created_at: resource.created_at,
+    parent_post_id: resource.parent_post_id,
+    embed: resource.embed,
+    post_img_url: resource.post_img_url,
+    author_username: resource.author_username,
+    author_avatar_image: resource.author_avatar_image,
+    author_avatar_url: resource.author_avatar_url,
+    likes_count: resource.likes_count,
+    comments_count: resource.comments_count,
+  };
 }
 
 function validateUser(user) {
