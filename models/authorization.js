@@ -341,6 +341,8 @@ function getPostResource(resource) {
     author_avatar_url: resource.author_avatar_url,
     likes_count: resource.likes_count,
     comments_count: resource.comments_count,
+    liked_by_user: resource.liked_by_user,
+    is_current_user: resource.is_current_user,
   };
 }
 
