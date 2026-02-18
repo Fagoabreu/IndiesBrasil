@@ -3,15 +3,17 @@ import styles from "./FerramentaItem.module.css";
 import IconSvg from "@/components/IconSvg/IconSvg";
 
 const EXPERIENCE_STARS = {
-  Estudante: 1,
-  Junior: 2,
-  Pleno: 3,
-  Senior: 4,
-  Especialista: 5,
+  estudante: "⭐ Estudante",
+  junior: "⭐⭐ Junior",
+  pleno: "⭐⭐⭐ Pleno",
+  senior: "⭐⭐⭐⭐ Senior",
+  especialista: "⭐⭐⭐⭐⭐ Especialista",
 };
 
 export default function FerramentaItem({ item }) {
-  const stars = EXPERIENCE_STARS[item.experience] || 0;
+  if (!item) return null;
+
+  const experienceKey = item.experience?.toLowerCase();
 
   return (
     <div className={styles.item}>
@@ -19,11 +21,9 @@ export default function FerramentaItem({ item }) {
 
       <div className={styles.info}>
         <Text size="medium">{item.name}</Text>
-
-        <div className={styles.stars}>
-          {"★".repeat(stars)}
-          {"☆".repeat(5 - stars)}
-        </div>
+        <Text size="small" color="fg.muted">
+          {EXPERIENCE_STARS[experienceKey] || "Nível não informado"}
+        </Text>
       </div>
     </div>
   );

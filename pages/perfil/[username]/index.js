@@ -344,7 +344,7 @@ export default function Perfil() {
   async function saveFerramenta(payload) {
     const isEditing = Boolean(ferramentaModal.editing);
 
-    await fetchJSON(`/api/v1/users/${username}/tools${isEditing ? `/${ferramentaModal.editing.id}` : ""}`, {
+    await fetchJSON(`/api/v1/users/${username}/tools${isEditing ? `/${ferramentaModal.editing.portfolio_tool_id}` : ""}`, {
       method: isEditing ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -357,7 +357,7 @@ export default function Perfil() {
   async function deleteFerramenta() {
     if (!deleteModal.item) return;
 
-    await fetchJSON(`/api/v1/users/${username}/tools/${deleteModal.item.id}`, { method: "DELETE" });
+    await fetchJSON(`/api/v1/users/${username}/tools/${deleteModal.item.portfolio_tool_id}`, { method: "DELETE" });
 
     setDeleteModal({ item: null, loading: false, type: null });
     await reloadProfile();
@@ -535,7 +535,7 @@ export default function Perfil() {
                 OnDelete={(item) =>
                   setDeleteModal({
                     item,
-                    itemName: item.tool.nome,
+                    itemName: item.name,
                     loading: false,
                     type: "ferramenta",
                   })
