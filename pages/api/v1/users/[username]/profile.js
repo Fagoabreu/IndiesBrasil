@@ -1,6 +1,7 @@
 import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import profile from "@/models/profile";
+import authorization from "@/models/authorization";
 
 const router = createRouter();
 router.use(controller.injectAnonymousOrUser);
@@ -12,5 +13,6 @@ async function getHandler(request, response) {
   const readUser = request.context.user;
   const username = request.query.username;
   const newFound = await profile.findByUsername(username, readUser);
-  return response.status(200).json(newFound);
+  const secureOutputValues = authorization.filterOutput(readUser, "read:profile", newFound);
+  return response.status(200).json(secureOutputValues);
 }

@@ -1,5 +1,6 @@
 import controller from "@/infra/controller.js";
 import { NotFoundError } from "@/infra/errors";
+import authorization from "@/models/authorization";
 import post from "@/models/post.js";
 import uploadedImages from "@/models/uploadedImages";
 import { createRouter } from "next-connect";
@@ -12,7 +13,8 @@ export default router.handler(controller.errorHandlers);
 
 async function deleteHandler(request, response) {
   const post_id = request.query.post_id;
-  const author_id = request.context.user.id;
+  const userTryingToDelete = request.context.user;
+  const author_id = userTryingToDelete.id;
 
   const postToDelete = await post.getPostById(author_id, post_id);
   if (!postToDelete) {
@@ -31,5 +33,7 @@ async function deleteHandler(request, response) {
     await uploadedImages.deleteImage(imgId);
   }
 
-  return response.status(200).json(resultPost);
+  const secureOutputValues = authorization.filterOutput(userTryingToDelete, "read:post", resultPost);
+
+  return response.status(200).json(secureOutputValues);
 }

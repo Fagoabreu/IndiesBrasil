@@ -39,7 +39,6 @@ export default function MembersPage() {
   return (
     <PageLayout padding="spacious">
       <PageLayout.Header>
-        {console.log(filtered)}
         <Heading as="h2">Membros ({filtered?.length.toLocaleString() || 0})</Heading>
       </PageLayout.Header>
 

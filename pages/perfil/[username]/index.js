@@ -20,6 +20,7 @@ import FerramentaItem from "@/components/Portfolio/Ferramentas/FerramentaItem";
 import EditFerramentaModal from "@/components/Portfolio/Ferramentas/EditFerramentaModal";
 import RoleItem from "@/components/Portfolio/Roles/RoleItem";
 import EditRoleModal from "@/components/Portfolio/Roles/EditRoleModal";
+import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
 
 /* =====================
  * Utils
@@ -28,21 +29,6 @@ import EditRoleModal from "@/components/Portfolio/Roles/EditRoleModal";
 function formatDateBR(date) {
   if (!date) return "";
   return new Intl.DateTimeFormat("pt-BR").format(new Date(date));
-}
-
-async function fetchJSON(url, options = {}) {
-  const res = await fetch(url, {
-    credentials: "include",
-    ...options,
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    throw new Error(data.message || "Erro de API");
-  }
-
-  return data;
 }
 
 /* =====================
@@ -92,6 +78,24 @@ export default function Perfil() {
     type: null,
   });
 
+  const [errorMessage, setErrorMessage] = useState(null);
+
+  async function fetchJSON(url, options = {}) {
+    const res = await fetch(url, {
+      credentials: "include",
+      ...options,
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setErrorMessage(data);
+    } else {
+      setErrorMessage(null);
+      return data;
+    }
+  }
+
   /* =====================
    * Load profile
    * ===================== */
@@ -124,7 +128,7 @@ export default function Perfil() {
     return <div>Perfil não encontrado.</div>;
   }
 
-  const isOwnProfile = authUser?.username === perfilUser.user.username;
+  const isOwnProfile = authUser?.username === perfilUser?.user?.username;
 
   /* =====================
    * API actions
@@ -392,6 +396,8 @@ export default function Perfil() {
       <PageLayout.Content width="medium">
         {/* Header */}
         <section className={`${style.profileCard} ${style.profileHeaderCard}`}>
+          <StatusMessageComponent errorMsg={errorMessage} />
+
           <div className={style.imageWrapper}>
             <Image src="/images/sistematags.png" alt="Capa do perfil" fill unoptimized />
           </div>

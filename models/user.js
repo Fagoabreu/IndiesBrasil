@@ -512,13 +512,13 @@ async function addFollow(followerId, leaderId) {
         INSERT INTO user_followers (follower_id, lead_user_id)
         VALUES ($1, $2)
         ON CONFLICT (follower_id, lead_user_id) DO NOTHING
-        RETURNING 'followed' AS action
+        RETURNING 'followed' AS action, true as followed
       `,
     values: [followerId, leaderId],
   });
 
   if (result.rowCount === 0) {
-    return { action: "already_following" };
+    return { followed: "true", action: "already_following" };
   }
   return result.rows[0];
 }
@@ -528,13 +528,13 @@ async function removeFollow(followerId, leaderId) {
     text: `
       DELETE FROM user_followers
       WHERE follower_id = $1 AND lead_user_id = $2
-      RETURNING 'unfollowed' AS action
+      RETURNING 'unfollowed' AS action, false as followed
     `,
     values: [followerId, leaderId],
   });
 
   if (result.rowCount === 0) {
-    return { action: "not_following" };
+    return { followed: "false", action: "not_following" };
   }
 
   return result.rows[0];

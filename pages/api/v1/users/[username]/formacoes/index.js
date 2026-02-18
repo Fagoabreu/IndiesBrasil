@@ -27,12 +27,15 @@ async function postHandler(request, response) {
 
   userInputValues.user_id = targetUser.id;
   const postedHistory = await profile.saveFormacao(userInputValues, targetUser.id);
-  return response.status(200).json(postedHistory);
+  const secureOutputValues = authorization.filterOutput(userTryingToPatch, "read:profile_formacoes", postedHistory);
+  return response.status(200).json(secureOutputValues);
 }
 
 async function getHandler(request, response) {
+  const userTryingToGet = request.context.user;
   const username = request.query.username;
   const targetUser = await user.findOneByUsernameSecured(username);
-  const newFound = await profile.findPortfolioFormacaoByUserId(targetUser.id);
-  return response.status(200).json(newFound);
+  const profileFormacoesFound = await profile.findPortfolioFormacaoByUserId(targetUser.id);
+  const secureOutputValues = authorization.filterOutput(userTryingToGet, "read:profile_formacoes:all", profileFormacoesFound);
+  return response.status(200).json(secureOutputValues);
 }

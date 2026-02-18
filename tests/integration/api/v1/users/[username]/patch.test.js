@@ -270,9 +270,6 @@ describe("Patch /api/v1/users/[username]", () => {
       expect(responseBody).toEqual({
         id: responseBody.id,
         username: user1.username,
-        email: "uniqueEmail2@gmail.com",
-        password: responseBody.password,
-        cpf: responseBody.cpf,
         avatar_image: responseBody.avatar_image,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
@@ -312,9 +309,9 @@ describe("Patch /api/v1/users/[username]", () => {
       expect(responseBody).toEqual({
         id: responseBody.id,
         username: createdUser.username,
-        email: createdUser.email,
-        password: responseBody.password,
-        cpf: responseBody.cpf,
+        //email: createdUser.email,
+        //password: responseBody.password,
+        //cpf: responseBody.cpf,
         avatar_image: responseBody.avatar_image,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,

@@ -4,6 +4,7 @@ import { UnauthorizedError } from "@/infra/errors";
 import uploadedImages from "@/models/uploadedImages";
 import embededResolver from "@/infra/embededResolver";
 import tags from "@/models/tags";
+import authorization from "@/models/authorization";
 
 export async function POST(request) {
   try {
@@ -41,7 +42,9 @@ export async function POST(request) {
     const createdPost = await post.create(userInputValues);
     const resultPost = await post.getPostById(user.id, createdPost.id);
 
-    return Response.json(resultPost, { status: 201 });
+    const secureOutputValues = await authorization.filterOutput(user, "read:post", resultPost);
+
+    return Response.json(secureOutputValues, { status: 201 });
   } catch (error) {
     console.log(error);
     return controller.onRouterErrorHandler(error, request);
@@ -62,7 +65,8 @@ export async function GET(request) {
     const tag = searchParams.get("tag");
     console.log(`params: ${searchType}, tag: ${tag}`);
     const posts = await post.getPosts(user.id, searchType, tag);
-    return Response.json(posts, { status: 200 });
+    const secureOutputValues = await authorization.filterOutput(user, "read:post:all", posts);
+    return Response.json(secureOutputValues, { status: 200 });
   } catch (error) {
     return controller.onRouterErrorHandler(error);
   }

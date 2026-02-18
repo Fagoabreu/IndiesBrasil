@@ -490,6 +490,7 @@ async function deleteContatoById(contact_id) {
         delete from 
           users_contacts uc
         where uc.id=$1
+        returning *
       `,
       values: [contact_id],
     });
@@ -502,6 +503,7 @@ const profile = {
   findPortfolioHistoricoByUserId,
   findPortfolioFormacaoByUserId,
   findPortfolioToolsByPortfolioId,
+  findContactsByUserId,
   findRolesByUserId,
 
   saveHistorico,
