@@ -18,7 +18,7 @@ async function getHandler(request, response) {
   const userTryingToGet = request.context.user;
   const user_id = userTryingToGet.id;
   const resultPost = await comment.getCommentsByPostId(post_id, user_id);
-  const secureOutputValues = authorization.filterOutput(userTryingToGet, "read:comment", resultPost);
+  const secureOutputValues = authorization.filterOutput(userTryingToGet, "read:comment:all", resultPost);
 
   return response.status(200).json(secureOutputValues);
 }
