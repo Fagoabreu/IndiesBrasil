@@ -27,12 +27,15 @@ async function postHandler(request, response) {
 
   userInputValues.user_id = targetUser.id;
   const postedContact = await profile.saveContato(userInputValues);
-  return response.status(200).json(postedContact);
+  const secureOutputValues = authorization.filterOutput(postedContact, "read:profile_contact");
+  return response.status(200).json(secureOutputValues);
 }
 
 async function getHandler(request, response) {
+  const userTryingToGet = request.context.use;
   const username = request.query.username;
   const targetUser = await user.findOneByUsernameSecured(username);
   const newFound = await profile.findContactsByUserId(targetUser.id);
-  return response.status(200).json(newFound);
+  const secureOutputValues = authorization.filterOutput(userTryingToGet, "read:profile_contact:all", newFound);
+  return response.status(200).json(secureOutputValues);
 }

@@ -28,22 +28,24 @@ async function patchHandler(request, response) {
 
   userInputValues.id = historicoId;
   const postedHistory = await profile.patchHistorico(userInputValues);
-  return response.status(200).json(postedHistory);
+  const secureOutputValues = authorization.filterOutput(userTryingToPatch, "read:profile_history", postedHistory);
+  return response.status(200).json(secureOutputValues);
 }
 
 async function deleteHandler(request, response) {
   const username = request.query.username;
   const historicoId = request.query.historicoId;
 
-  const userTryingToPatch = request.context.user;
+  const userTryingToDelete = request.context.user;
   const targetUser = await user.findOneByUsername(username);
-  if (!authorization.can(userTryingToPatch, "update:user", targetUser)) {
+  if (!authorization.can(userTryingToDelete, "update:user", targetUser)) {
     throw new ForbiddenError({
       message: "Você não possui permissão para atualizar outro usuário.",
       action: "Verifique se você possui a feature necessária para atualizar outro usuário",
     });
   }
 
-  const postedHistory = await profile.deleteHistoricoById(historicoId);
-  return response.status(200).json(postedHistory);
+  const deletedHistory = await profile.deleteHistoricoById(historicoId);
+  const secureOutputValues = authorization.filterOutput(userTryingToDelete, "read:profile_history", deletedHistory);
+  return response.status(200).json(secureOutputValues);
 }

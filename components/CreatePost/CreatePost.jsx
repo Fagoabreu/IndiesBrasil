@@ -35,7 +35,7 @@ export default function CreatePost({ user, onPost }) {
   };
 
   const handleSubmit = async () => {
-    if (!content.trim()) return;
+    if (!content.trim() && !imageFile) return;
 
     setIsPosting(true);
     try {

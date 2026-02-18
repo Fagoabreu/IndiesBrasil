@@ -29,6 +29,6 @@ async function patchHandler(request, response) {
       return await profile.patchHistorico(historyValues);
     }),
   );
-
-  return response.status(200).json(postedHistory);
+  const secureOutputValues = authorization.filterOutput(userTryingToPatch, "read:profile_history:all", postedHistory);
+  return response.status(200).json(secureOutputValues);
 }

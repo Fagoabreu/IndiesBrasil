@@ -28,7 +28,8 @@ async function patchHandler(request, response) {
 
   userInputValues.id = contactId;
   const postedContact = await profile.patchContacts(userInputValues);
-  return response.status(200).json(postedContact);
+  const secureOutputValues = authorization.filterOutput(userTryingToPatch, "read:profile_contact", postedContact);
+  return response.status(200).json(secureOutputValues);
 }
 
 async function deleteHandler(request, response) {
@@ -45,5 +46,7 @@ async function deleteHandler(request, response) {
   }
 
   const postedContact = await profile.deleteContatoById(contactId);
-  return response.status(200).json(postedContact);
+  const secureOutputValues = authorization.filterOutput(userTryingToPatch, "read:profile_contact", postedContact);
+
+  return response.status(200).json(secureOutputValues);
 }
