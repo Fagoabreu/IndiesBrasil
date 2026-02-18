@@ -10,7 +10,7 @@ export default function EditFerramentaModal({ onClose, onSave, initialData }) {
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState(() => ({
-    tool_id: initialData?.tool_id || null,
+    tool_id: initialData?.portfolio_tool_id || null,
     experience: initialData?.experience || "Estudante",
   }));
 

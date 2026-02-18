@@ -322,6 +322,17 @@ async function patchContacts(userInputValues) {
   return updatedContact;
 }
 
+async function patchTools(user_id, portfolio_tool_id, userInputValues) {
+  const currentTool = await selectToolByUserAndTool(user_id, portfolio_tool_id);
+  console.log(currentTool);
+  const toolWithNewValues = {
+    ...currentTool,
+    ...userInputValues,
+  };
+  const updatedContact = await updateToolByUserAndTool(toolWithNewValues);
+  return updatedContact;
+}
+
 async function deleteHistoricoById(historico_id) {
   const userFound = await runDeleteQuery(historico_id);
   return userFound;
@@ -498,6 +509,85 @@ async function deleteContatoById(contact_id) {
   }
 }
 
+async function selectToolByUserAndTool(user_id, portfolio_tool_id) {
+  const toolFound = await runSelectQuery(user_id, portfolio_tool_id);
+  return toolFound;
+
+  async function runSelectQuery(user_id, portfolio_tool_id) {
+    const results = await database.query({
+      text: `
+        Select
+          portfolio_tool_id,
+          user_id,
+          experience
+        from 
+          portfolio_tool_ref
+        where
+          user_id=$1
+          and portfolio_tool_id=$2
+      `,
+      values: [user_id, portfolio_tool_id],
+    });
+    if (results.rowCount === 0) {
+      throw new NotFoundError({
+        message: "A relação de usuario e ferramenta não encontrada.",
+        action: "Verifique se os ids foram digitados corretamente",
+      });
+    }
+
+    return results.rows[0];
+  }
+}
+
+async function updateToolByUserAndTool(userInputValues) {
+  const selectedTool = await runUpdateQuery(userInputValues);
+  return selectedTool;
+
+  async function runUpdateQuery(userInputValues) {
+    const results = await database.query({
+      text: `
+      update 
+        portfolio_tool_ref
+      set 
+        experience = $3
+      where 
+        user_id = $1
+        and portfolio_tool_id = $2
+      returning *
+        `,
+      values: [userInputValues.user_id, userInputValues.portfolio_tool_id, userInputValues.experience],
+    });
+    if (results.rowCount === 0) {
+      throw new NotFoundError({
+        message: "Os ids informados não foi encontrado no sistema.",
+        action: "Verifique se os ids foram digitados corretamente",
+      });
+    }
+
+    return results.rows[0];
+  }
+}
+
+async function deleteToolByUserAndTool(user_id, portfolio_tool_id) {
+  const userDeleted = await runDeleteQuery(user_id, portfolio_tool_id);
+  return userDeleted;
+
+  async function runDeleteQuery(user_id, portfolio_tool_id) {
+    const results = await database.query({
+      text: `
+        delete from 
+          portfolio_tool_ref
+        where 
+          user_id=$1
+          and portfolio_tool_id = $2
+        returning *
+      `,
+      values: [user_id, portfolio_tool_id],
+    });
+    return results.rows;
+  }
+}
+
 const profile = {
   findByUsername,
   findPortfolioHistoricoByUserId,
@@ -511,10 +601,14 @@ const profile = {
   saveContato,
   saveTools,
   saveRoles,
+
   patchHistorico,
   patchContacts,
+  patchTools,
+
   deleteHistoricoById,
   deleteContatoById,
+  deleteToolByUserAndTool,
 };
 
 export default profile;
