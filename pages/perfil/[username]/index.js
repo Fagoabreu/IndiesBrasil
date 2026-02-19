@@ -367,7 +367,7 @@ export default function Perfil() {
     const isEditing = Boolean(roleModal.editing);
     const ordem = isEditing ? roleModal.editing.ordem : perfilUser.roles.length;
 
-    await fetchJSON(`/api/v1/users/${username}/roles${isEditing ? `/${roleModal.editing.id}` : ""}`, {
+    await fetchJSON(`/api/v1/users/${username}/roles${isEditing ? `/${roleModal.editing.portfolio_role_name}` : ""}`, {
       method: isEditing ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...payload, ordem }),
@@ -381,7 +381,7 @@ export default function Perfil() {
     const item = deleteModal.item;
     if (!item) return;
 
-    await fetchJSON(`/api/v1/users/${username}/roles/${item.id}`, { method: "DELETE" });
+    await fetchJSON(`/api/v1/users/${username}/roles/${item.portfolio_role_name}`, { method: "DELETE" });
 
     setDeleteModal({ item: null, loading: false, type: null });
     await reloadProfile();
