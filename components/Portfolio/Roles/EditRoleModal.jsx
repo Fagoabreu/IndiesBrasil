@@ -10,7 +10,7 @@ export default function EditRoleModal({ initialData, onSave, onClose }) {
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState(() => ({
-    name: initialData?.name || "",
+    name: initialData?.portfolio_role_name || "",
     experience: initialData?.experience || "Estudante",
   }));
 

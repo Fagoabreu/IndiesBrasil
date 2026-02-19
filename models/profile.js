@@ -51,34 +51,7 @@ async function findByUsername(username, readerUser) {
   };
 }
 
-async function findPortfolioHistoricoByUserId(user_id) {
-  const userFound = await runSelectQuery(user_id);
-  return userFound;
-
-  async function runSelectQuery(user_id) {
-    const results = await database.query({
-      text: `
-        select
-          ph.id,
-          ph.user_id,
-          ph.ordem,
-          ph.cargo,
-          ph.init_date,
-          ph.end_date,
-          ph.company,
-          ph.cidade,
-          ph.estado,
-          ph.atribuicoes
-        from 
-          portfolio_historico ph
-        where ph.user_id=$1
-          `,
-      values: [user_id],
-    });
-    return results.rows;
-  }
-}
-
+//Formacao
 async function findPortfolioFormacaoByUserId(user_id) {
   const userFound = await runSelectQuery(user_id);
   return userFound;
@@ -104,54 +77,232 @@ async function findPortfolioFormacaoByUserId(user_id) {
   }
 }
 
-async function findPortfolioToolsByPortfolioId(user_id) {
-  const userFound = await runSelectQuery(user_id);
-  return userFound;
+async function patchFormacoes(user_id, formacao_id, userInputValues) {
+  const currentFormacao = await selectFormacaoByUserAndId(user_id, formacao_id);
+  const formacaoWithNewValues = {
+    ...currentFormacao,
+    ...userInputValues,
+  };
+  const updatedFormacao = await updateFormacao(formacaoWithNewValues);
+  return updatedFormacao;
+}
 
-  async function runSelectQuery(user_id) {
+async function selectFormacaoByUserAndId(user_id, formacao_id) {
+  const selectedFunction = await runSelectQuery(user_id, formacao_id);
+  return selectedFunction;
+
+  async function runSelectQuery(user_id, formacao_id) {
     const results = await database.query({
       text: `
-        select
-          ptf.user_id,
-          ptf.portfolio_tool_id,
-          ptf.experience,
-          pt.name,
-          pt.icon_img
-        from 
-          portfolio_tool_ref ptf
-          inner join portfolio_tools pt
-            on pt.id=ptf.portfolio_tool_id
-        where ptf.user_id=$1
+        Select
+          id,
+          ordem,
+          nome,
+          init_date,
+          end_date,
+          instituicao,
+          created_at,
+          user_id
+        from
+          portfolio_formacao
+        where
+          user_id=$1
+          and id=$2
+      `,
+      values: [user_id, formacao_id],
+    });
+    if (results.rowCount === 0) {
+      throw new NotFoundError({
+        message: "A relação de usuario e formação não encontrada.",
+        action: "Verifique se os ids foram digitados corretamente",
+      });
+    }
+
+    return results.rows[0];
+  }
+}
+
+async function updateFormacao(userInputValues) {
+  console.log("formacao update:", userInputValues);
+  const updatedFormacao = await runUpdateQuery(userInputValues);
+  return updatedFormacao;
+
+  async function runUpdateQuery(userInputValues) {
+    const results = await database.query({
+      text: `
+        UPDATE 
+          portfolio_formacao
+        SET 
+          nome=$3, 
+          instituicao=$4,
+          init_date=$5, 
+          end_date=$6, 
+          ordem=$7
+        WHERE 
+          id=$1
+          and user_id=$2
+        returning *
+      `,
+      values: [
+        userInputValues.id,
+        userInputValues.user_id,
+        userInputValues.nome,
+        userInputValues.instituicao,
+        userInputValues.init_date,
+        userInputValues.end_date,
+        userInputValues.ordem,
+      ],
+    });
+    if (results.rowCount === 0) {
+      throw new NotFoundError({
+        message: "A relação de usuario e formação não encontrada.",
+        action: "Verifique se os ids foram digitados corretamente",
+      });
+    }
+
+    return results.rows[0];
+  }
+}
+
+async function saveFormacao(userInputValues) {
+  if (userInputValues.id) {
+    return;
+  }
+  return await runInsertQuery(userInputValues);
+
+  async function runInsertQuery(userInputValues) {
+    const results = await database.query({
+      text: `
+        insert into portfolio_formacao
+        (user_id, ordem, nome, init_date, end_date, instituicao)
+        values(
+        $1,$2,$3,$4,$5,$6
+        )
           `,
-      values: [user_id],
+      values: [
+        userInputValues.user_id,
+        userInputValues.ordem,
+        userInputValues.nome,
+        userInputValues.init_date,
+        userInputValues.end_date,
+        userInputValues.instituicao,
+      ],
     });
     return results.rows;
   }
 }
 
-async function findContactsByUserId(user_id) {
-  const userFound = await runSelectQuery(user_id);
-  return userFound;
+async function deleteFormacaoByUserAndId(user_id, formacao_id) {
+  const deletedFormacao = await runDeleteQuery(user_id, formacao_id);
+  return deletedFormacao;
 
-  async function runSelectQuery(user_id) {
+  async function runDeleteQuery(user_id, formacao_id) {
     const results = await database.query({
       text: `
-        select
-          uc.id,
-          uc.user_id,
-          uc.contact_value,
-          uc.contact_type_id,
-          ct.icon_img,
-          ct.icon_key
-        from 
-          users_contacts uc
-          inner join contact_type ct
-          on ct.id = uc.contact_type_id
-        where uc.user_id=$1
-          `,
-      values: [user_id],
+        delete from 
+          portfolio_formacao
+        where 
+          user_id=$1
+          and id = $2
+        returning *
+      `,
+      values: [user_id, formacao_id],
     });
     return results.rows;
+  }
+}
+
+//Roles
+async function saveRoles(userInputValues) {
+  if (userInputValues.id) {
+    return;
+  }
+  return await runInsertQuery(userInputValues);
+
+  async function runInsertQuery(userInputValues) {
+    const results = await database.query({
+      text: `
+        insert into portfolio_role_ref
+        (user_id, portfolio_role_name, experience, ordem)
+        values(
+        $1,$2,$3,$4
+        )
+          `,
+      values: [userInputValues.user_id, userInputValues.name, userInputValues.experience, userInputValues.ordem],
+    });
+    return results.rows;
+  }
+}
+
+async function patchRoles(user_id, portfolio_role_name, userInputValues) {
+  const currentRole = await selectRoleByUserAndRole(user_id, portfolio_role_name);
+  const roleWithNewValues = {
+    ...currentRole,
+    ...userInputValues,
+  };
+  const updatedRole = await updateRoleByUserAndTool(roleWithNewValues);
+  return updatedRole;
+}
+
+async function selectRoleByUserAndRole(user_id, portfolio_role_name) {
+  const foundRole = await runSelectQuery(user_id, portfolio_role_name);
+  return foundRole;
+
+  async function runSelectQuery(user_id, portfolio_role_name) {
+    const results = await database.query({
+      text: `
+        Select
+          user_id,
+          portfolio_role_name,
+          experience,
+          ordem
+        from 
+          portfolio_role_ref
+        where
+          user_id=$1
+          and portfolio_role_name=$2
+      `,
+      values: [user_id, portfolio_role_name],
+    });
+    if (results.rowCount === 0) {
+      throw new NotFoundError({
+        message: "A relação de usuario e cargo não encontrada.",
+        action: "Verifique se os ids foram digitados corretamente",
+      });
+    }
+
+    return results.rows[0];
+  }
+}
+
+async function updateRoleByUserAndTool(userInputValues) {
+  const updatedRole = await runUpdateQuery(userInputValues);
+  return updatedRole;
+
+  async function runUpdateQuery(userInputValues) {
+    const results = await database.query({
+      text: `
+        Update
+          portfolio_role_ref
+        set
+          experience=$3,
+          ordem=$4
+        where
+          user_id=$1
+          and portfolio_role_name=$2
+        returning *
+      `,
+      values: [userInputValues.user_id, userInputValues.portfolio_role_name, userInputValues.experience, userInputValues.ordem],
+    });
+
+    if (results.rowCount === 0) {
+      throw new NotFoundError({
+        message: "A relação de usuario e cargo não encontrada.",
+        action: "Verifique se os ids foram digitados corretamente",
+      });
+    }
+
+    return results.rows[0];
   }
 }
 
@@ -173,6 +324,55 @@ async function findRolesByUserId(user_id) {
           inner join portfolio_roles pr
           on pr.name = prr.portfolio_role_name
         where prr.user_id=$1
+          `,
+      values: [user_id],
+    });
+    return results.rows;
+  }
+}
+
+async function deleteRoleByUserAndRole(user_id, portfolio_role_name) {
+  const roleDeleted = await runDeleteQuery(user_id, portfolio_role_name);
+  return roleDeleted;
+
+  async function runDeleteQuery(user_id, portfolio_role_name) {
+    const results = await database.query({
+      text: `
+        delete from 
+          portfolio_role_ref
+        where 
+          user_id=$1
+          and portfolio_role_name = $2
+        returning *
+      `,
+      values: [user_id, portfolio_role_name],
+    });
+    return results.rows;
+  }
+}
+
+//Historico
+async function findPortfolioHistoricoByUserId(user_id) {
+  const userFound = await runSelectQuery(user_id);
+  return userFound;
+
+  async function runSelectQuery(user_id) {
+    const results = await database.query({
+      text: `
+        select
+          ph.id,
+          ph.user_id,
+          ph.ordem,
+          ph.cargo,
+          ph.init_date,
+          ph.end_date,
+          ph.company,
+          ph.cidade,
+          ph.estado,
+          ph.atribuicoes
+        from 
+          portfolio_historico ph
+        where ph.user_id=$1
           `,
       values: [user_id],
     });
@@ -211,97 +411,6 @@ async function saveHistorico(userInputValues) {
   }
 }
 
-async function saveFormacao(userInputValues) {
-  if (userInputValues.id) {
-    return;
-  }
-  return await runInsertQuery(userInputValues);
-
-  async function runInsertQuery(userInputValues) {
-    const results = await database.query({
-      text: `
-        insert into portfolio_formacao
-        (user_id, ordem, nome, init_date, end_date, instituicao)
-        values(
-        $1,$2,$3,$4,$5,$6
-        )
-          `,
-      values: [
-        userInputValues.user_id,
-        userInputValues.ordem,
-        userInputValues.nome,
-        userInputValues.init_date,
-        userInputValues.end_date,
-        userInputValues.instituicao,
-      ],
-    });
-    return results.rows;
-  }
-}
-
-async function saveContato(userInputValues) {
-  if (userInputValues.id) {
-    return;
-  }
-  return await runInsertQuery(userInputValues);
-
-  async function runInsertQuery(userInputValues) {
-    const results = await database.query({
-      text: `
-        insert into users_contacts
-        (user_id, contact_value, contact_type_id)
-        values(
-        $1,$2,$3
-        )
-          `,
-      values: [userInputValues.user_id, userInputValues.contact_value, userInputValues.contact_type_id],
-    });
-    return results.rows;
-  }
-}
-
-async function saveTools(userInputValues) {
-  if (userInputValues.id) {
-    return;
-  }
-  return await runInsertQuery(userInputValues);
-
-  async function runInsertQuery(userInputValues) {
-    const results = await database.query({
-      text: `
-        insert into portfolio_tool_ref
-        (user_id, portfolio_tool_id, experience)
-        values(
-        $1,$2,$3
-        )
-          `,
-      values: [userInputValues.user_id, userInputValues.portfolio_tool_id, userInputValues.experience],
-    });
-    return results.rows;
-  }
-}
-
-async function saveRoles(userInputValues) {
-  if (userInputValues.id) {
-    return;
-  }
-  return await runInsertQuery(userInputValues);
-
-  async function runInsertQuery(userInputValues) {
-    const results = await database.query({
-      text: `
-        insert into portfolio_role_ref
-        (user_id, portfolio_role_name, experience, ordem)
-        values(
-        $1,$2,$3,$4
-        )
-          `,
-      values: [userInputValues.user_id, userInputValues.name, userInputValues.experience, userInputValues.ordem],
-    });
-    return results.rows;
-  }
-}
-
 async function patchHistorico(userInputValues) {
   const currentHistory = await selectHistoricoById(userInputValues.id);
   const historyWithNewValues = {
@@ -310,27 +419,6 @@ async function patchHistorico(userInputValues) {
   };
   const updatedHistory = await updateHistoricoById(historyWithNewValues);
   return updatedHistory;
-}
-
-async function patchContacts(userInputValues) {
-  const currentContact = await selectContatoById(userInputValues.id);
-  const contactWithNewValues = {
-    ...currentContact,
-    ...userInputValues,
-  };
-  const updatedContact = await updateContatoById(contactWithNewValues);
-  return updatedContact;
-}
-
-async function patchTools(user_id, portfolio_tool_id, userInputValues) {
-  const currentTool = await selectToolByUserAndTool(user_id, portfolio_tool_id);
-  console.log(currentTool);
-  const toolWithNewValues = {
-    ...currentTool,
-    ...userInputValues,
-  };
-  const updatedContact = await updateToolByUserAndTool(toolWithNewValues);
-  return updatedContact;
 }
 
 async function deleteHistoricoById(historico_id) {
@@ -432,6 +520,64 @@ async function updateHistoricoById(userInputValues) {
   }
 }
 
+//Contato
+async function findContactsByUserId(user_id) {
+  const userFound = await runSelectQuery(user_id);
+  return userFound;
+
+  async function runSelectQuery(user_id) {
+    const results = await database.query({
+      text: `
+        select
+          uc.id,
+          uc.user_id,
+          uc.contact_value,
+          uc.contact_type_id,
+          ct.icon_img,
+          ct.icon_key
+        from 
+          users_contacts uc
+          inner join contact_type ct
+          on ct.id = uc.contact_type_id
+        where uc.user_id=$1
+          `,
+      values: [user_id],
+    });
+    return results.rows;
+  }
+}
+
+async function saveContato(userInputValues) {
+  if (userInputValues.id) {
+    return;
+  }
+  return await runInsertQuery(userInputValues);
+
+  async function runInsertQuery(userInputValues) {
+    const results = await database.query({
+      text: `
+        insert into users_contacts
+        (user_id, contact_value, contact_type_id)
+        values(
+        $1,$2,$3
+        )
+          `,
+      values: [userInputValues.user_id, userInputValues.contact_value, userInputValues.contact_type_id],
+    });
+    return results.rows;
+  }
+}
+
+async function patchContacts(userInputValues) {
+  const currentContact = await selectContatoById(userInputValues.id);
+  const contactWithNewValues = {
+    ...currentContact,
+    ...userInputValues,
+  };
+  const updatedContact = await updateContatoById(contactWithNewValues);
+  return updatedContact;
+}
+
 async function selectContatoById(contatoId) {
   const selectedContact = await runselectQuery(contatoId);
   return selectedContact;
@@ -507,6 +653,64 @@ async function deleteContatoById(contact_id) {
     });
     return results.rows;
   }
+}
+
+//Tool
+async function findPortfolioToolsByPortfolioId(user_id) {
+  const userFound = await runSelectQuery(user_id);
+  return userFound;
+
+  async function runSelectQuery(user_id) {
+    const results = await database.query({
+      text: `
+        select
+          ptf.user_id,
+          ptf.portfolio_tool_id,
+          ptf.experience,
+          pt.name,
+          pt.icon_img
+        from 
+          portfolio_tool_ref ptf
+          inner join portfolio_tools pt
+            on pt.id=ptf.portfolio_tool_id
+        where ptf.user_id=$1
+          `,
+      values: [user_id],
+    });
+    return results.rows;
+  }
+}
+
+async function saveTools(userInputValues) {
+  if (userInputValues.id) {
+    return;
+  }
+  return await runInsertQuery(userInputValues);
+
+  async function runInsertQuery(userInputValues) {
+    const results = await database.query({
+      text: `
+        insert into portfolio_tool_ref
+        (user_id, portfolio_tool_id, experience)
+        values(
+        $1,$2,$3
+        )
+          `,
+      values: [userInputValues.user_id, userInputValues.portfolio_tool_id, userInputValues.experience],
+    });
+    return results.rows;
+  }
+}
+
+async function patchTools(user_id, portfolio_tool_id, userInputValues) {
+  const currentTool = await selectToolByUserAndTool(user_id, portfolio_tool_id);
+  console.log(currentTool);
+  const toolWithNewValues = {
+    ...currentTool,
+    ...userInputValues,
+  };
+  const updatedContact = await updateToolByUserAndTool(toolWithNewValues);
+  return updatedContact;
 }
 
 async function selectToolByUserAndTool(user_id, portfolio_tool_id) {
@@ -605,10 +809,14 @@ const profile = {
   patchHistorico,
   patchContacts,
   patchTools,
+  patchRoles,
+  patchFormacoes,
 
   deleteHistoricoById,
   deleteContatoById,
   deleteToolByUserAndTool,
+  deleteRoleByUserAndRole,
+  deleteFormacaoByUserAndId,
 };
 
 export default profile;
