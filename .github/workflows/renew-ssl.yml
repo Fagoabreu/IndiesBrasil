@@ -59,7 +59,9 @@ jobs:
             docker compose up -d nginx
 
             echo "Requesting/renewing certificate if needed"
-            set -- certonly \
+            echo "Certbot cert-name: $PRIMARY_DOMAIN"
+            echo "Certbot domains: $CERTBOT_DOMAINS_CSV"
+            docker compose run --rm certbot certonly \
               --webroot \
               --webroot-path=/var/www/certbot \
               --non-interactive \
@@ -67,16 +69,10 @@ jobs:
               --no-eff-email \
               --keep-until-expiring \
               --expand \
+              --renew-with-new-domains \
               --cert-name "$PRIMARY_DOMAIN" \
-              --email "$CERTBOT_EMAIL"
-
-            IFS=','
-            for domain in $CERTBOT_DOMAINS_CSV; do
-              [ -n "$domain" ] && set -- "$@" -d "$domain"
-            done
-            unset IFS
-
-            docker compose run --rm certbot "$@"
+              --email "$CERTBOT_EMAIL" \
+              -d "$CERTBOT_DOMAINS_CSV"
 
             echo "Reloading nginx"
             docker exec nginx nginx -s reload
