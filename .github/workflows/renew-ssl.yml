@@ -48,9 +48,19 @@ jobs:
               exit 1
             fi
 
+            CERTBOT_DOMAINS_CSV=$(echo "$CERTBOT_DOMAIN" | tr -d '[:space:]')
+            PRIMARY_DOMAIN="${CERTBOT_DOMAINS_CSV%%,*}"
+
+            if [ -z "$PRIMARY_DOMAIN" ]; then
+              echo "❌ Invalid CERTBOT_DOMAIN value: '$CERTBOT_DOMAIN'"
+              exit 1
+            fi
+
             docker compose up -d nginx
 
             echo "Requesting/renewing certificate if needed"
+            echo "Certbot cert-name: $PRIMARY_DOMAIN"
+            echo "Certbot domains: $CERTBOT_DOMAINS_CSV"
             docker compose run --rm certbot certonly \
               --webroot \
               --webroot-path=/var/www/certbot \
@@ -58,8 +68,11 @@ jobs:
               --agree-tos \
               --no-eff-email \
               --keep-until-expiring \
+              --expand \
+              --renew-with-new-domains \
+              --cert-name "$PRIMARY_DOMAIN" \
               --email "$CERTBOT_EMAIL" \
-              -d "$CERTBOT_DOMAIN"
+              -d "$CERTBOT_DOMAINS_CSV"
 
             echo "Reloading nginx"
             docker exec nginx nginx -s reload

@@ -19,7 +19,7 @@ jobs:
 
       # 🔐 Setup SSH
       - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.9.0
+        uses: webfactory/ssh-agent@dc588b651fe13675774614f8e6a936a468676387
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
@@ -56,6 +56,14 @@ jobs:
               exit 1
             fi
 
+            CERTBOT_DOMAINS_CSV=$(echo "$CERTBOT_DOMAIN" | tr -d '[:space:]')
+            PRIMARY_DOMAIN="${CERTBOT_DOMAINS_CSV%%,*}"
+
+            if [ -z "$PRIMARY_DOMAIN" ]; then
+              echo "❌ Invalid CERTBOT_DOMAIN value: '$CERTBOT_DOMAIN'"
+              exit 1
+            fi
+
             CERTS_DIR="/var/lib/docker/volumes/indies_postgres-certs/_data"
 
             echo "🔍 Checking Postgres certificates"
@@ -65,7 +73,7 @@ jobs:
               exit 1
             }
 
-            LE_LIVE_DIR="/var/lib/docker/volumes/indies_nginx_secrets/_data/live/$CERTBOT_DOMAIN"
+            LE_LIVE_DIR="/var/lib/docker/volumes/indies_nginx_secrets/_data/live/$PRIMARY_DOMAIN"
             mkdir -p "$LE_LIVE_DIR"
 
             if [ ! -f "$LE_LIVE_DIR/fullchain.pem" ] || [ ! -f "$LE_LIVE_DIR/privkey.pem" ]; then
@@ -73,7 +81,7 @@ jobs:
               openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
                 -keyout "$LE_LIVE_DIR/privkey.pem" \
                 -out "$LE_LIVE_DIR/fullchain.pem" \
-                -subj "/CN=$CERTBOT_DOMAIN"
+                -subj "/CN=$PRIMARY_DOMAIN"
             fi
 
             echo "🚀 Deploying infra"
@@ -81,6 +89,8 @@ jobs:
             docker compose up -d postgres nginx
 
             echo "📜 Requesting or renewing public TLS certificate"
+            echo "ℹ️ Certbot cert-name: $PRIMARY_DOMAIN"
+            echo "ℹ️ Certbot domains: $CERTBOT_DOMAINS_CSV"
             docker compose run --rm certbot certonly \
               --webroot \
               --webroot-path=/var/www/certbot \
@@ -88,8 +98,11 @@ jobs:
               --agree-tos \
               --no-eff-email \
               --keep-until-expiring \
+              --expand \
+              --renew-with-new-domains \
+              --cert-name "$PRIMARY_DOMAIN" \
               --email "$CERTBOT_EMAIL" \
-              -d "$CERTBOT_DOMAIN"
+              -d "$CERTBOT_DOMAINS_CSV"
 
             echo "🔄 Reloading nginx with the latest certificates"
             docker exec nginx nginx -s reload
