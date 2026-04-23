@@ -42,6 +42,20 @@ jobs:
               exit 1
             }
 
+            set -a
+            . ./.env.production
+            set +a
+
+            if [ -z "$CERTBOT_DOMAIN" ]; then
+              echo "❌ CERTBOT_DOMAIN is empty in .env.production"
+              exit 1
+            fi
+
+            if [ -z "$CERTBOT_EMAIL" ]; then
+              echo "❌ CERTBOT_EMAIL is empty in .env.production"
+              exit 1
+            fi
+
             CERTS_DIR="/var/lib/docker/volumes/indies_postgres-certs/_data"
 
             echo "🔍 Checking Postgres certificates"
@@ -51,7 +65,32 @@ jobs:
               exit 1
             }
 
+            LE_LIVE_DIR="/var/lib/docker/volumes/indies_nginx_secrets/_data/live/$CERTBOT_DOMAIN"
+            mkdir -p "$LE_LIVE_DIR"
+
+            if [ ! -f "$LE_LIVE_DIR/fullchain.pem" ] || [ ! -f "$LE_LIVE_DIR/privkey.pem" ]; then
+              echo "🧩 Creating temporary self-signed certificate for nginx bootstrap"
+              openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
+                -keyout "$LE_LIVE_DIR/privkey.pem" \
+                -out "$LE_LIVE_DIR/fullchain.pem" \
+                -subj "/CN=$CERTBOT_DOMAIN"
+            fi
+
             echo "🚀 Deploying infra"
             docker compose pull postgres nginx certbot
-            docker compose up -d postgres nginx certbot
+            docker compose up -d postgres nginx
+
+            echo "📜 Requesting or renewing public TLS certificate"
+            docker compose run --rm certbot certonly \
+              --webroot \
+              --webroot-path=/var/www/certbot \
+              --non-interactive \
+              --agree-tos \
+              --no-eff-email \
+              --keep-until-expiring \
+              --email "$CERTBOT_EMAIL" \
+              -d "$CERTBOT_DOMAIN"
+
+            echo "🔄 Reloading nginx with the latest certificates"
+            docker exec nginx nginx -s reload
           EOF
