@@ -1,5 +1,6 @@
 import { InternalServerError } from "@/infra/errors.js";
 import authorization from "@/models/authorization.js";
+import TEST_CREDENTIALS from "tests/helpers/testCredentials.js";
 
 describe("models/authorization.js", () => {
   describe(".can()", () => {
@@ -87,7 +88,7 @@ describe("models/authorization.js", () => {
         created_at: "2026-01-01T00:00:00.000Z",
         updated_at: "2026-01-01T00:00:00.000Z",
         email: "resource@resource.com",
-        password: "resource",
+        password: TEST_CREDENTIALS.userDefault,
         cpf: "000.000.000-00",
       };
 

@@ -2,6 +2,7 @@ import webserver from "infra/webserver.js";
 import activation from "models/activation.js";
 import user from "models/user.js";
 import orchestrator from "tests/orchestrator.js";
+import TEST_CREDENTIALS from "tests/helpers/testCredentials.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -24,7 +25,7 @@ describe("Use case: Registration Flow (all successful)", () => {
       body: JSON.stringify({
         username: "RegistrationFlow",
         email: "registration.flow@curso.dev",
-        password: "RegistrationFlowPassword",
+        password: TEST_CREDENTIALS.registrationFlow,
         cpf: "12312312312",
       }),
     });
@@ -82,7 +83,7 @@ describe("Use case: Registration Flow (all successful)", () => {
       },
       body: JSON.stringify({
         email: "registration.flow@curso.dev",
-        password: "RegistrationFlowPassword",
+        password: TEST_CREDENTIALS.registrationFlow,
       }),
     });
     expect(createSessionResponse.status).toBe(201);

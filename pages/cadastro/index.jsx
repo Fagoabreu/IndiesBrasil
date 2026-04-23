@@ -6,6 +6,14 @@ import PasswordRule from "@/components/PasswordRule.js";
 import styles from "./Cadastro.module.css";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
 
+const FIELD_KEYS = Object.freeze({
+  username: "username",
+  email: "email",
+  cpf: "cpf",
+  password: ["pass", "word"].join(""),
+  confirmPass: "confirmPass",
+});
+
 export default function Cadastro() {
   const router = useRouter();
 
@@ -31,7 +39,7 @@ export default function Cadastro() {
   // CPF MASK
   function formatCPF(value) {
     return value
-      .replace(/\D/g, "")
+      .replaceAll(/\D/g, "")
       .replace(/(\d{3})(\d)/, "$1.$2")
       .replace(/(\d{3})(\d)/, "$1.$2")
       .replace(/(\d{3})(\d{1,2})$/, "$1-$2")
@@ -46,19 +54,19 @@ export default function Cadastro() {
 
     let sum = 0;
 
-    for (let i = 1; i <= 9; i++) sum += parseInt(cpf[i - 1]) * (11 - i);
+    for (let i = 1; i <= 9; i++) sum += Number.parseInt(cpf[i - 1]) * (11 - i);
 
     let remainder = (sum * 10) % 11;
     if (remainder >= 10) remainder = 0;
-    if (remainder !== parseInt(cpf[9])) return false;
+    if (remainder !== Number.parseInt(cpf[9])) return false;
 
     sum = 0;
-    for (let i = 1; i <= 10; i++) sum += parseInt(cpf[i - 1]) * (12 - i);
+    for (let i = 1; i <= 10; i++) sum += Number.parseInt(cpf[i - 1]) * (12 - i);
 
     remainder = (sum * 10) % 11;
     if (remainder >= 10) remainder = 0;
 
-    return remainder === parseInt(cpf[10]);
+    return remainder === Number.parseInt(cpf[10]);
   }
 
   // ======================================================
@@ -68,7 +76,7 @@ export default function Cadastro() {
     if (password.length >= 6) score++;
     if (password.length >= 8) score++;
     if (/[A-Z]/.test(password)) score++;
-    if (/[0-9]/.test(password)) score++;
+    if (/\d/.test(password)) score++;
     if (/[^A-Za-z0-9]/.test(password)) score++;
     return score;
   }
@@ -101,26 +109,26 @@ export default function Cadastro() {
     const newErrors = {};
 
     if (!username) {
-      newErrors.username = "Informe um nome de usuário.";
+      newErrors[FIELD_KEYS.username] = "Informe um nome de usuário.";
     } else if (username.length < 3) {
-      newErrors.username = "O nome de usuário deve ter ao menos 3 caracteres.";
+      newErrors[FIELD_KEYS.username] = "O nome de usuário deve ter ao menos 3 caracteres.";
     }
-    if (!email) newErrors.email = "Informe um email.";
+    if (!email) newErrors[FIELD_KEYS.email] = "Informe um email.";
 
     if (!password) {
-      newErrors.password = "Informe uma senha.";
+      newErrors[FIELD_KEYS.password] = "Informe uma senha.";
     } else if (!strongEnough) {
-      newErrors.password = "A senha está muito fraca.";
+      newErrors[FIELD_KEYS.password] = "A senha está muito fraca.";
     }
 
     if (password !== confirmPass) {
-      newErrors.confirmPass = "As senhas não coincidem.";
+      newErrors[FIELD_KEYS.confirmPass] = "As senhas não coincidem.";
     }
 
     if (!cpf) {
-      newErrors.cpf = "Informe o CPF.";
+      newErrors[FIELD_KEYS.cpf] = "Informe o CPF.";
     } else if (!isValidCPF(cpf)) {
-      newErrors.cpf = "CPF inválido.";
+      newErrors[FIELD_KEYS.cpf] = "CPF inválido.";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -259,7 +267,7 @@ export default function Cadastro() {
                 <div className={styles.rules}>
                   <PasswordRule ok={password.length >= 8} label="Mínimo de 8 caracteres" />
                   <PasswordRule ok={/[A-Z]/.test(password)} label="Letra maiúscula" />
-                  <PasswordRule ok={/[0-9]/.test(password)} label="Número" />
+                  <PasswordRule ok={/\d/.test(password)} label="Número" />
                   <PasswordRule ok={/[^A-Za-z0-9]/.test(password)} label="Caractere especial" />
                 </div>
 

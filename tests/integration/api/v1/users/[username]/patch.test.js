@@ -2,6 +2,7 @@ import password from "models/password";
 import user from "models/user";
 import orchestrator from "tests/orchestrator";
 import { version as uuidVersion } from "uuid";
+import TEST_CREDENTIALS from "tests/helpers/testCredentials.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -287,7 +288,7 @@ describe("Patch /api/v1/users/[username]", () => {
 
     test("With new 'Password'", async () => {
       const createdUser = await orchestrator.createUser({
-        password: "newPassword1",
+        password: TEST_CREDENTIALS.newOne,
       });
 
       const activatedUser = await orchestrator.activateUser(createdUser);
@@ -300,7 +301,7 @@ describe("Patch /api/v1/users/[username]", () => {
           cookie: `session_id=${sessionObject.token}`,
         },
         body: JSON.stringify({
-          password: "newPassword2",
+          password: TEST_CREDENTIALS.newTwo,
         }),
       });
 
@@ -327,8 +328,8 @@ describe("Patch /api/v1/users/[username]", () => {
       expect(responseBody.updated_at > responseBody.created_at).toBe(true);
 
       const userInDatabase = await user.findOneByUsername(createdUser.username);
-      const correctPasswordMatch = await password.compare("newPassword2", userInDatabase.password);
-      const incorrectPasswordMatch = await password.compare("Senha Errada", userInDatabase.password);
+      const correctPasswordMatch = await password.compare(TEST_CREDENTIALS.newTwo, userInDatabase.password);
+      const incorrectPasswordMatch = await password.compare(TEST_CREDENTIALS.wrongCheck, userInDatabase.password);
       expect(correctPasswordMatch).toBe(true);
       expect(incorrectPasswordMatch).toBe(false);
     });

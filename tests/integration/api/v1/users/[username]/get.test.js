@@ -1,5 +1,6 @@
 import orchestrator from "tests/orchestrator";
 import { version as uuidVersion } from "uuid";
+import TEST_CREDENTIALS from "tests/helpers/testCredentials.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -13,7 +14,7 @@ describe("GET /api/v1/users/[username]", () => {
       await orchestrator.createUser({
         username: "MesmoCase",
         email: "mesmo.case@gmail.com",
-        password: "password",
+        password: TEST_CREDENTIALS.userDefault,
         cpf: 32454643231,
         avatar_image: "https://avatars.com/mesmocase",
       });
@@ -46,7 +47,7 @@ describe("GET /api/v1/users/[username]", () => {
       await orchestrator.createUser({
         username: "CaseDiferente",
         email: "diferente.case@gmail.com",
-        password: "password",
+        password: TEST_CREDENTIALS.userDefault,
         cpf: 32454643232,
       });
 

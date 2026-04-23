@@ -1,0 +1,43 @@
+.container {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  background: var(--bgColor-default);
+  color: var(--fgColor-default);
+}
+
+.cropContainer {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  background: var(--bgColor-muted);
+}
+
+.presets {
+  display: flex;
+  gap: 12px;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.preview img {
+  max-width: 420px;
+  border: 1px solid var(--borderColor-default);
+}

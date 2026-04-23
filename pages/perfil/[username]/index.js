@@ -21,6 +21,7 @@ import EditFerramentaModal from "@/components/Portfolio/Ferramentas/EditFerramen
 import RoleItem from "@/components/Portfolio/Roles/RoleItem";
 import EditRoleModal from "@/components/Portfolio/Roles/EditRoleModal";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
+import ProfileImageUploader from "@/components/Portfolio/ProfileImageUploader";
 
 /* =====================
  * Utils
@@ -399,10 +400,22 @@ export default function Perfil() {
           <StatusMessageComponent errorMsg={errorMessage} />
 
           <div className={style.imageWrapper}>
-            <Image src="/images/sistematags.png" alt="Capa do perfil" fill unoptimized />
+            <Image src={perfilUser.user.cover_image || "/images/sistematags.png"} alt="Capa do perfil" fill unoptimized />
+            {isOwnProfile && (
+              <div className={style.coverUploader}>
+                <ProfileImageUploader endpoint={`/api/v1/users/${username}/cover`} onUploaded={reloadProfile} label="Alterar capa" type="cover" />
+              </div>
+            )}
           </div>
 
-          <Avatar size={128} src={perfilUser.user.avatar_image || "/images/avatar.png"} className={style.profileAvatar} />
+          <div className={style.avatarContainer}>
+            <Avatar size={128} src={perfilUser.user.avatar_image || "/images/avatar.png"} className={style.profileAvatar} />
+            {isOwnProfile && (
+              <div className={style.avatarUploader}>
+                <ProfileImageUploader endpoint={`/api/v1/users/${username}/avatar`} onUploaded={reloadProfile} label="Alterar avatar" type="avatar" />
+              </div>
+            )}
+          </div>
 
           <div className={style.profileHeaderInfo}>
             <Heading as="h2">{perfilUser.name || perfilUser.user.username}</Heading>

@@ -1,0 +1,66 @@
+name: Renew SSL Certificate
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  renew-ssl:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@dc588b651fe13675774614f8e6a936a468676387
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Add VPS to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "${{ vars.SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Renew SSL on VPS
+        run: |
+          ssh "${{ vars.SSH_USER }}@${{ vars.SSH_HOST }}" << 'EOF'
+            set -e
+
+            cd /var/www/indies
+
+            echo "Checking .env.production"
+            test -f .env.production || {
+              echo "❌ .env.production NOT FOUND"
+              exit 1
+            }
+
+            set -a
+            . ./.env.production
+            set +a
+
+            if [ -z "$CERTBOT_DOMAIN" ]; then
+              echo "❌ CERTBOT_DOMAIN is empty in .env.production"
+              exit 1
+            fi
+
+            if [ -z "$CERTBOT_EMAIL" ]; then
+              echo "❌ CERTBOT_EMAIL is empty in .env.production"
+              exit 1
+            fi
+
+            docker compose up -d nginx
+
+            echo "Requesting/renewing certificate if needed"
+            docker compose run --rm certbot certonly \
+              --webroot \
+              --webroot-path=/var/www/certbot \
+              --non-interactive \
+              --agree-tos \
+              --no-eff-email \
+              --keep-until-expiring \
+              --email "$CERTBOT_EMAIL" \
+              -d "$CERTBOT_DOMAIN"
+
+            echo "Reloading nginx"
+            docker exec nginx nginx -s reload
+          EOF

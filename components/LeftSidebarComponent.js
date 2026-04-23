@@ -46,7 +46,12 @@ export default function LeftSidebarComponent() {
           {toolsOpen ? <ChevronDownIcon /> : <ChevronRightIcon />} Ferramentas
         </NavList.GroupHeading>
 
-        {toolsOpen && <NavList.Item href="/ferramentas/qrgen">Gerador QR</NavList.Item>}
+        {toolsOpen && (
+          <>
+            <NavList.Item href="/ferramentas/qrgen">Gerador QR</NavList.Item>
+            <NavList.Item href="/ferramentas/cropimage">Recortar Imagem</NavList.Item>
+          </>
+        )}
       </NavList.Group>
     </NavList>
   );
