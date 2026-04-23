@@ -2,6 +2,7 @@ const { default: orchestrator } = require("tests/orchestrator");
 import session from "models/session";
 import { version as uuidVersion } from "uuid";
 import setCookieParser from "set-cookie-parser";
+import TEST_CREDENTIALS from "tests/helpers/testCredentials.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -13,7 +14,7 @@ describe("Post /api/v1/sessions", () => {
   describe("Anonymous user", () => {
     test("With correct `email` but incorrect `password`", async () => {
       await orchestrator.createUser({
-        password: "senha-correta",
+        password: TEST_CREDENTIALS.correctLogin,
       });
 
       const response = await fetch("http://localhost:3000/api/v1/sessions", {
@@ -23,7 +24,7 @@ describe("Post /api/v1/sessions", () => {
         },
         body: JSON.stringify({
           email: "email.errado@gmail.com",
-          password: "senha-correta",
+          password: TEST_CREDENTIALS.correctLogin,
         }),
       });
 
@@ -49,7 +50,7 @@ describe("Post /api/v1/sessions", () => {
         },
         body: JSON.stringify({
           email: "email.correto@gmail.com",
-          password: "senha-errada",
+          password: TEST_CREDENTIALS.wrongLogin,
         }),
       });
 
@@ -73,7 +74,7 @@ describe("Post /api/v1/sessions", () => {
         },
         body: JSON.stringify({
           email: "email.errado@gmail.com",
-          password: "senha-errada",
+          password: TEST_CREDENTIALS.wrongLogin,
         }),
       });
 
@@ -90,7 +91,7 @@ describe("Post /api/v1/sessions", () => {
     test("With correct `email` and correct `password`", async () => {
       const createdUser = await orchestrator.createUser({
         email: "tudo.correto@gmail.com",
-        password: "tudocorretopwd",
+        password: TEST_CREDENTIALS.allCorrect,
       });
       await orchestrator.activateUser(createdUser);
 
@@ -101,7 +102,7 @@ describe("Post /api/v1/sessions", () => {
         },
         body: JSON.stringify({
           email: "tudo.correto@gmail.com",
-          password: "tudocorretopwd",
+          password: TEST_CREDENTIALS.allCorrect,
         }),
       });
 

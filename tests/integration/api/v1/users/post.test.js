@@ -2,6 +2,7 @@ import orchestrator from "tests/orchestrator";
 import { version as uuidVersion } from "uuid";
 import user from "models/user";
 import password from "models/password";
+import TEST_CREDENTIALS from "tests/helpers/testCredentials.js";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -13,7 +14,7 @@ describe("POST /api/v1/users", () => {
   describe("anonymous user", () => {
     test("With Unique and valid data", async () => {
       const testUser = {
-        password: "password",
+        password: TEST_CREDENTIALS.userDefault,
         username: "fagoabreu",
         cpf: "11111111111",
       };
@@ -53,7 +54,7 @@ describe("POST /api/v1/users", () => {
       const userInDatabase = await user.findOneByUsername(responseBody.username);
 
       const correctPasswordMatch = await password.compare(testUser.password, userInDatabase.password);
-      const incorrectPasswordMatch = await password.compare("Senha Errada", userInDatabase.password);
+      const incorrectPasswordMatch = await password.compare(TEST_CREDENTIALS.wrongCheck, userInDatabase.password);
       expect(correctPasswordMatch).toBe(true);
       expect(incorrectPasswordMatch).toBe(false);
     });
@@ -67,7 +68,7 @@ describe("POST /api/v1/users", () => {
         body: JSON.stringify({
           username: "duplicado1",
           email: "duplicado@gmail.com",
-          password: "password",
+          password: TEST_CREDENTIALS.userDefault,
           cpf: 22222222222,
         }),
       });
@@ -82,7 +83,7 @@ describe("POST /api/v1/users", () => {
         body: JSON.stringify({
           username: "duplicado2",
           email: "Duplicado@gmail.com",
-          password: "password",
+          password: TEST_CREDENTIALS.userDefault,
           cpf: 33333333333,
         }),
       });
@@ -106,7 +107,7 @@ describe("POST /api/v1/users", () => {
         body: JSON.stringify({
           username: "Duplicado1",
           email: "duplicadouser@gmail.com",
-          password: "password",
+          password: TEST_CREDENTIALS.userDefault,
           cpf: 44444444444,
         }),
       });
@@ -130,7 +131,7 @@ describe("POST /api/v1/users", () => {
         body: JSON.stringify({
           username: "duplicadocpf2",
           email: "duplicadocpf2@gmail.com",
-          password: "password",
+          password: TEST_CREDENTIALS.userDefault,
           cpf: 11111111111,
         }),
       });
@@ -161,7 +162,7 @@ describe("POST /api/v1/users", () => {
         body: JSON.stringify({
           username: "usuariologado",
           email: "usuariologado@curso.dev",
-          password: "senha123",
+          password: TEST_CREDENTIALS.userAlt,
         }),
       });
 
