@@ -90,6 +90,7 @@ export async function generateImage({
         resolve({
           url: URL.createObjectURL(blob),
           size: Math.round(blob.size / 1024),
+          blob,
         });
       },
       format,
