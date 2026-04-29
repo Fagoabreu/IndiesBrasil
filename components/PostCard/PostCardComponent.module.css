@@ -1,6 +1,7 @@
 .postCard {
   padding: 12px;
   border-bottom: 1px solid var(--borderColor-muted);
+  background-color: var(--bgColor-default);
 }
 
 .postGrid {
@@ -25,6 +26,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 8px;
 }
 
 .authorName {
@@ -45,6 +47,7 @@
   line-height: 1.5;
   color: var(--fgColor-default);
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .showMoreBtn {
@@ -120,4 +123,35 @@
 .link:focus-visible {
   outline: 2px solid var(--fgColor-accent);
   outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .postCard {
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid var(--borderColor-muted);
+    margin-bottom: 10px;
+  }
+
+  .postGrid {
+    grid-template-columns: 40px 1fr;
+    gap: 10px;
+  }
+
+  .authorName {
+    font-size: 13px;
+  }
+
+  .subInfo {
+    font-size: 11px;
+  }
+
+  .text {
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .media img {
+    max-height: 280px;
+  }
 }

@@ -1,25 +1,100 @@
 * {
   margin: 0;
-  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
 }
 
 body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  min-width: 100vh;
+  min-width: 100%;
+  line-height: 1.45;
+  overflow-x: hidden;
+  /* Sem background aqui: body fica fora do ThemeProvider do Primer.
+     As variáveis CSS de cor só ficam disponíveis dentro da div
+     renderizada pelo ThemeProvider (data-color-mode). */
+}
+
+.layout-body {
+  /* Layout fica dentro do ThemeProvider — variáveis de cor funcionam aqui. */
+  background:
+    radial-gradient(circle at 0% 0%, var(--bgColor-accent-muted), transparent 28%),
+    radial-gradient(circle at 100% 100%, var(--bgColor-muted), transparent 22%), var(--bgColor-inset);
+  color: var(--fgColor-default);
+  min-height: 100vh;
   transition:
     background-color 0.25s ease,
     color 0.25s ease;
 }
-.layout-body {
-  background-color: var(--bgColor-inset);
-  color: var(--fgColor-default);
-  min-height: 100vh;
-}
+
 .main-content {
-  padding: 10px;
+  padding: clamp(10px, 2.3vw, 20px);
   margin: 0;
-  width: auto;
-  background-color: var(--color-bg-default);
+  width: 100%;
+  background-color: transparent;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 10px;
+  }
+
+  /* Hide Primer's desktop left pane on mobile */
+  .desktop-sidebar-pane {
+    display: none !important;
+  }
+}
+
+/* ========== Mobile Drawer ========== */
+.mobile-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 100dvh;
+  background-color: var(--bgColor-default);
+  border-right: 1px solid var(--borderColor-muted);
+  box-shadow: var(--shadow-floating-large);
+  z-index: 9999;
+  overflow-y: auto;
+  padding: 16px 8px;
+  transform: translateX(-110%);
+  transition: transform 220ms ease;
+}
+
+.mobile-drawer.open {
+  transform: translateX(0);
+}
+
+.mobile-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.42);
+  z-index: 9998;
+  backdrop-filter: blur(1px);
+  animation: overlayFadeIn 180ms ease;
+}
+
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Show hamburger only on mobile */
+.mobile-drawer,
+.mobile-drawer-overlay {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-drawer,
+  .mobile-drawer-overlay {
+    display: block;
+  }
 }

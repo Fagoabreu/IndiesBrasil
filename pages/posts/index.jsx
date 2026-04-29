@@ -105,27 +105,54 @@ export default function PostsPage() {
   };
 
   if (loadingUser || loadingPosts) {
-    return <div className="posts-loading">Carregando...</div>;
+    return (
+      <div className="posts-page">
+        <div className="posts-loading" role="status" aria-live="polite">
+          Carregando posts...
+        </div>
+      </div>
+    );
   }
 
   return (
-    <>
+    <div className="posts-page">
       {/* HEADER DO FEED */}
       <div className="social-feed-header">
-        <Heading as="h4">Posts</Heading>
+        <div className="feed-title-block">
+          <Heading as="h2">Posts</Heading>
+          <p className="feed-subtitle">Acompanhe a comunidade e compartilhe atualizacoes com seu feed.</p>
+        </div>
 
-        <div className="feed-tabs">
-          <button type="button" className={`feed-tab ${tab === "all" ? "active" : ""}`} onClick={() => setTab("all")}>
+        <div className="feed-tabs" role="tablist" aria-label="Filtros de posts">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "all"}
+            className={`feed-tab ${tab === "all" ? "active" : ""}`}
+            onClick={() => setTab("all")}
+          >
             Todos
           </button>
           {user && (
-            <button type="button" className={`feed-tab ${tab === "following" ? "active" : ""}`} onClick={() => setTab("following")}>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === "following"}
+              className={`feed-tab ${tab === "following" ? "active" : ""}`}
+              onClick={() => setTab("following")}
+            >
               Seguindo
             </button>
           )}
 
           {activeTag && (
-            <button type="button" className={`feed-tab ${tab === "tag" ? "active" : ""}`} onClick={() => setTab("tag")}>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === "tag"}
+              className={`feed-tab ${tab === "tag" ? "active" : ""}`}
+              onClick={() => setTab("tag")}
+            >
               #{activeTag}
             </button>
           )}
@@ -140,27 +167,34 @@ export default function PostsPage() {
       )}
 
       {/* FEED */}
-      {posts.map((post) => (
-        <PostCardComponent
-          key={post.id}
-          post={post}
-          onDelete={handleDeletePost}
-          canInteract={user}
-          onTagClick={(tag) => {
-            setActiveTag(tag);
-            setTab("tag");
-            router.push(
-              {
-                pathname: router.pathname,
-                query: { tag },
-              },
-              undefined,
-              { shallow: true },
-            );
-          }}
-        />
-      ))}
-    </>
+      {posts.length === 0 ? (
+        <div className="posts-empty" role="status" aria-live="polite">
+          <p className="posts-empty-title">Nenhum post encontrado</p>
+          <p className="posts-empty-description">Tente trocar o filtro ou volte mais tarde para ver novas publicacoes.</p>
+        </div>
+      ) : (
+        posts.map((post) => (
+          <PostCardComponent
+            key={post.id}
+            post={post}
+            onDelete={handleDeletePost}
+            canInteract={user}
+            onTagClick={(tag) => {
+              setActiveTag(tag);
+              setTab("tag");
+              router.push(
+                {
+                  pathname: router.pathname,
+                  query: { tag },
+                },
+                undefined,
+                { shallow: true },
+              );
+            }}
+          />
+        ))
+      )}
+    </div>
   );
 }
 
