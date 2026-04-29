@@ -1,42 +1,282 @@
 .page {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 0 1rem 5rem;
 }
 
+/* ========================================
+   HERO
+======================================== */
 .hero {
-  margin-bottom: 3rem;
+  position: relative;
+  padding: 4.5rem 0 3.5rem;
+  margin-bottom: 5rem;
 }
 
-.hero h1 {
-  margin-bottom: 0.75rem;
+/* Ambient glow behind hero */
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: -60px -50vw;
+  background:
+    radial-gradient(ellipse 70% 55% at 15% 45%, rgba(149, 74, 255, 0.14), transparent),
+    radial-gradient(ellipse 55% 45% at 85% 15%, rgba(255, 74, 160, 0.11), transparent);
+  pointer-events: none;
+  z-index: 0;
 }
 
-.hero p {
-  color: var(--fgColor-muted);
-  max-width: 720px;
-}
-
-.section {
-  margin-bottom: 4rem;
-}
-
-.sectionHeader {
+.heroBadge {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+  border: 1px solid var(--brand-active-ring);
+  background: rgba(149, 74, 255, 0.07);
+  border-radius: 100px;
+  padding: 5px 14px;
   margin-bottom: 1.5rem;
 }
 
-.sectionHeader h2 {
-  margin-bottom: 0.5rem;
+.heroHeading {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(2.4rem, 5.5vw, 3.75rem);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  margin-bottom: 1.25rem;
+  color: var(--fgColor-default);
 }
 
-.sectionHeader p {
+.heroSub {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(1rem, 1.8vw, 1.15rem);
   color: var(--fgColor-muted);
-  max-width: 640px;
+  max-width: 560px;
+  line-height: 1.7;
+  margin-bottom: 2.25rem;
+}
+
+.heroCta {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 3rem;
+}
+
+.ctaPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 24px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  background: var(--brand-gradient);
+  color: #fff;
+  transition:
+    opacity 0.17s ease,
+    transform 0.15s ease,
+    box-shadow 0.17s ease;
+  box-shadow: 0 4px 22px rgba(149, 74, 255, 0.38);
+}
+
+.ctaPrimary:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: var(--brand-btn-shadow-hover);
+}
+
+.ctaSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 24px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  background: transparent;
+  color: var(--fgColor-default);
+  border: 1px solid var(--borderColor-default);
+  transition:
+    border-color 0.17s ease,
+    background 0.17s ease,
+    color 0.17s ease;
+}
+
+.ctaSecondary:hover {
+  border-color: var(--brand-primary);
+  background: var(--brand-hover-bg);
+  color: var(--brand-primary);
 }
 
 .metrics {
+  position: relative;
+  z-index: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 16px;
-  margin-top: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 12px;
+}
+
+/* ========================================
+   SECTION SHARED TYPOGRAPHY
+======================================== */
+.sectionLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+  margin-bottom: 0.4rem;
+}
+
+.sectionTitle {
+  font-size: clamp(1.45rem, 3vw, 2.1rem);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--fgColor-default);
+  margin-bottom: 0.5rem;
+}
+
+.sectionSub {
+  color: var(--fgColor-muted);
+  font-size: 0.95rem;
+  line-height: 1.65;
+  max-width: 540px;
+  margin-bottom: 2rem;
+}
+
+/* ========================================
+   FEATURES STRIP
+======================================== */
+.featuresStrip {
+  margin-bottom: 5rem;
+}
+
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+}
+
+.featureCard {
+  background: var(--bgColor-default);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 12px;
+  padding: 22px 20px;
+  position: relative;
+  overflow: hidden;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* gradient top-line on hover */
+.featureCard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--brand-gradient-h);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.featureCard:hover {
+  border-color: var(--brand-hover-border);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(149, 74, 255, 0.13);
+}
+
+.featureCard:hover::before {
+  opacity: 1;
+}
+
+.featureIcon {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  font-size: 22px;
+  background: var(--brand-icon-bg);
+  border: 1px solid var(--brand-icon-border);
+}
+
+.featureTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--fgColor-default);
+  margin-bottom: 6px;
+}
+
+.featureDesc {
+  font-size: 13px;
+  color: var(--fgColor-muted);
+  line-height: 1.55;
+}
+
+/* ========================================
+   GENERIC SECTION
+======================================== */
+.section {
+  margin-bottom: 4.5rem;
+}
+
+.sectionHeader {
+  margin-bottom: 1.75rem;
+}
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+@media (max-width: 640px) {
+  .hero {
+    padding: 3rem 0 2rem;
+    margin-bottom: 3rem;
+  }
+
+  .heroCta {
+    flex-direction: column;
+  }
+
+  .ctaPrimary,
+  .ctaSecondary {
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+  }
+
+  .featureGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .featuresStrip {
+    margin-bottom: 3rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .featureGrid {
+    grid-template-columns: 1fr;
+  }
 }

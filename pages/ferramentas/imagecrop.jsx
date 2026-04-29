@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import Cropper from "react-easy-crop";
-import { Button, Heading } from "@primer/react";
+import { Button } from "@primer/react";
 
 import styles from "./imagecrop.module.css";
 import { generateImage } from "@/utils/ImageUtils";
@@ -100,9 +100,20 @@ export default function FerramentasPage() {
 
   return (
     <div className={styles.container}>
-      <Heading as="h1">Editor de Imagem</Heading>
+      {/* Page header */}
+      <header className={styles.pageHeader}>
+        <h1 className={styles.pageTitle}>Editor de Imagem</h1>
+        <p className={styles.pageSubtitle}>Recorte, ajuste e exporte imagens para qualquer formato.</p>
+      </header>
 
-      <input type="file" accept="image/*" onChange={handleFile} />
+      {/* File input */}
+      <div className={styles.fileInputWrapper}>
+        <label className={styles.fileLabel}>
+          📁 Escolher imagem
+          <input type="file" accept="image/*" onChange={handleFile} />
+        </label>
+        {imageSrc && <span style={{ fontSize: 13, color: "var(--fgColor-muted)" }}>Imagem carregada</span>}
+      </div>
 
       {imageSrc && (
         <>
@@ -166,16 +177,14 @@ export default function FerramentasPage() {
                 <option value="image/webp">WEBP</option>
               </select>
             </label>
-            <Button onClick={reset} href={preview} download="imagem-editada">
-              Reset
-            </Button>
+            <Button onClick={reset}>Reset</Button>
           </div>
         </>
       )}
 
       {preview && (
         <div className={styles.preview}>
-          <Heading as="h3">Preview</Heading>
+          <h3 style={{ fontWeight: 700, fontSize: "1rem" }}>Preview</h3>
 
           <img src={preview} alt="preview" />
 

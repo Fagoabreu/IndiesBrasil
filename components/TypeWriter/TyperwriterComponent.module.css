@@ -1,35 +1,20 @@
-.TypewriterContainer {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-}
-
-.header {
-  font-size: 25px;
+.typewriterRoot {
+  display: inline;
 }
 
 .typingText {
-  color: var(--fgColor-sponsors);
-  border-right: 3px solid var(--fgColor-sponsors);
-  padding-right: 5px;
-  text-shadow: 0 0 10pc #0ef;
-  animation:
-    blink 0.5s infinite,
-    colorful 6s infinite;
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  border-right: 3px solid var(--brand-primary);
+  padding-right: 4px;
+  filter: drop-shadow(0 0 12px rgba(149, 74, 255, 0.55));
+  animation: blink 0.65s step-end infinite;
 }
 
 @keyframes blink {
-  100% {
-    border-color: var(--fgColor-sponsors);
-  }
-  0%,
   50% {
     border-color: transparent;
-  }
-}
-
-@keyframes colorful {
-  100% {
-    filter: hue-rotate(360deg);
   }
 }
