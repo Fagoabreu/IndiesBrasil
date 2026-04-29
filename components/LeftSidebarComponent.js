@@ -49,7 +49,7 @@ export default function LeftSidebarComponent() {
         {toolsOpen && (
           <>
             <NavList.Item href="/ferramentas/qrgen">Gerador QR</NavList.Item>
-            <NavList.Item href="/ferramentas/cropimage">Recortar Imagem</NavList.Item>
+            <NavList.Item href="/ferramentas/imagecrop">Recortar Imagem</NavList.Item>
           </>
         )}
       </NavList.Group>

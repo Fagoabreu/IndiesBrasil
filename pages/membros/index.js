@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { PageLayout, Heading, TextInput, Stack } from "@primer/react";
+import { Heading, TextInput, Spinner } from "@primer/react";
 import MemberCard from "@/components/MemberCard/MemberCard";
 import styles from "./MembersPage.module.css";
 
@@ -7,6 +7,7 @@ export default function MembersPage() {
   const [members, setMembers] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
@@ -21,6 +22,8 @@ export default function MembersPage() {
         }
       } catch (e) {
         console.error("Erro ao carregar membros", e);
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -36,30 +39,61 @@ export default function MembersPage() {
     setFiltered(results);
   }
 
-  return (
-    <PageLayout padding="spacious">
-      <PageLayout.Header>
-        <Heading as="h2">Membros ({filtered?.length.toLocaleString() || 0})</Heading>
-      </PageLayout.Header>
+  const memberCount = filtered.length.toLocaleString("pt-BR");
+  const memberWord = filtered.length === 1 ? "membro" : "membros";
 
-      <PageLayout.Content width="full">
-        <Stack direction="horizontal" gap={2} sx={{ marginBottom: 3 }}>
+  return (
+    <div className={styles.page}>
+      {/* PAGE HEADER */}
+      <header className={styles.pageHeader}>
+        <div className={styles.headerTitle}>
+          <Heading as="h2">Membros</Heading>
+          {!loading && (
+            <span className={styles.memberCount} aria-live="polite">
+              {memberCount} {memberWord}
+            </span>
+          )}
+        </div>
+        <p className={styles.pageSubtitle}>Conheça as pessoas que constroem jogos indie no Brasil.</p>
+
+        <div className={styles.searchWrapper}>
           <TextInput
-            placeholder="Pesquisar por nome..."
+            aria-label="Pesquisar membros"
+            placeholder="Pesquisar por nome ou username..."
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
             leadingVisual="search"
-            sx={{ width: 300 }}
+            className={styles.searchInput}
           />
-        </Stack>
+        </div>
+      </header>
 
-        {/* GRID DE CARDS */}
+      {/* LOADING */}
+      {loading && (
+        <div className={styles.loadingState} role="status" aria-live="polite">
+          <Spinner size="medium" />
+          <span>Carregando membros...</span>
+        </div>
+      )}
+
+      {/* EMPTY STATE */}
+      {!loading && filtered.length === 0 && (
+        <div className={styles.emptyState} role="status" aria-live="polite">
+          <p className={styles.emptyTitle}>{search ? "Nenhum membro encontrado" : "Ainda não há membros"}</p>
+          <p className={styles.emptyDescription}>
+            {search ? `Nenhum resultado para "${search}". Tente outro termo.` : "Seja o primeiro a fazer parte da comunidade!"}
+          </p>
+        </div>
+      )}
+
+      {/* GRID DE CARDS */}
+      {!loading && filtered.length > 0 && (
         <div className={styles.grid}>
           {filtered.map((user) => (
             <MemberCard key={user.id} user={user} />
           ))}
         </div>
-      </PageLayout.Content>
-    </PageLayout>
+      )}
+    </div>
   );
 }

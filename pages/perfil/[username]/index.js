@@ -122,11 +122,20 @@ export default function Perfil() {
   }, [username, reloadProfile]);
 
   if (loadingUser || loadingProfile) {
-    return <div>Carregando...</div>;
+    return (
+      <div className={style.stateCard} role="status" aria-live="polite">
+        <p className={style.stateTitle}>Carregando perfil...</p>
+      </div>
+    );
   }
 
   if (!perfilUser) {
-    return <div>Perfil não encontrado.</div>;
+    return (
+      <div className={style.stateCard}>
+        <p className={style.stateTitle}>Perfil não encontrado</p>
+        <p className={style.stateDescription}>Esse usuário não existe ou foi removido.</p>
+      </div>
+    );
   }
 
   const isOwnProfile = authUser?.username === perfilUser?.user?.username;

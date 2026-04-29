@@ -80,9 +80,55 @@
   gap: 24px;
 }
 
-/* Responsivo */
+/* ===== ESTADO GENÉRICO (loading / not-found) ===== */
+.stateCard {
+  border: 1px dashed var(--borderColor-default);
+  background: linear-gradient(160deg, var(--bgColor-muted), var(--bgColor-default));
+  border-radius: 14px;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.stateTitle {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--fgColor-default);
+}
+
+.stateDescription {
+  margin-top: 8px;
+  font-size: 0.95rem;
+  color: var(--fgColor-muted);
+}
+
+/* ===== Responsivo ===== */
 @media (max-width: 900px) {
-  .profile-resume {
+  .profileResume {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .profileCard {
+    border-radius: 10px;
+    padding: 6px;
+  }
+
+  .profileHeaderInfo {
+    margin: 12px;
+    margin-top: 44px;
+  }
+
+  .imageWrapper {
+    height: 120px;
+  }
+
+  .avatarContainer {
+    top: 60px;
+  }
+
+  .profileHeaderActions {
+    flex-wrap: wrap;
+    gap: 8px;
   }
 }

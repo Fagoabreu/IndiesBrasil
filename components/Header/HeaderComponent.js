@@ -1,13 +1,14 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Avatar, ActionMenu, ActionList, IconButton, useTheme, Button, PageHeader } from "@primer/react";
-import { SunIcon, MoonIcon } from "@primer/octicons-react";
+import { SunIcon, MoonIcon, ThreeBarsIcon } from "@primer/octicons-react";
 
 import styles from "./HeaderComponent.module.css";
 import { useUser } from "@/context/UserContext";
+import PropTypes from "prop-types";
 import { useRouter } from "next/router";
 
-export default function HeaderComponent() {
+export default function HeaderComponent({ onMenuClick }) {
   const router = useRouter();
   const { colorMode, setColorMode } = useTheme();
   const { user, logout } = useUser();
@@ -20,6 +21,15 @@ export default function HeaderComponent() {
   return (
     <PageHeader role="banner" aria-label="Title">
       <PageHeader.TitleArea>
+        <PageHeader.LeadingAction>
+          <IconButton
+            aria-label="Abrir menu de navegação"
+            icon={ThreeBarsIcon}
+            onClick={onMenuClick}
+            className={styles.mobileMenuBtn}
+            variant="invisible"
+          />
+        </PageHeader.LeadingAction>
         <PageHeader.Title>
           <Link href="/" className={styles.logoArea}>
             <div className={styles.logoWrapper}>
@@ -60,3 +70,7 @@ export default function HeaderComponent() {
     </PageHeader>
   );
 }
+
+HeaderComponent.propTypes = {
+  onMenuClick: PropTypes.func.isRequired,
+};

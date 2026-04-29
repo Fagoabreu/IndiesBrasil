@@ -1,15 +1,37 @@
+.posts-page {
+  width: min(100%, 920px);
+  margin: 0 auto;
+  padding: 12px 0 28px;
+}
+
 .social-feed-header {
   display: flex;
-  align-items: center;
-  gap: 24px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
   box-shadow:
     inset 1px 1px 5px var(--bgColor-default),
     inset -1px -1px 5px var(--bgColor-inset);
-  background-color: var(--bgColor-muted);
+  background: radial-gradient(circle at top right, var(--bgColor-accent-muted), transparent 45%), var(--bgColor-muted);
   margin-bottom: 24px;
-  border-radius: 10px;
-  border-width: 2px 0px 2px 0px;
-  padding: 15px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.feed-title-block {
+  min-width: 0;
+}
+
+.feed-title-block h2 {
+  margin: 0;
+  font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.6rem);
+}
+
+.feed-subtitle {
+  margin-top: 6px;
+  color: var(--fgColor-muted);
+  font-size: 0.93rem;
 }
 
 .feed-tabs {
@@ -18,25 +40,32 @@
   padding: 4px;
   background-color: var(--bgColor-muted);
   border-radius: 999px;
+  border: 1px solid var(--borderColor-muted);
+  flex-shrink: 0;
+  overflow-x: auto;
+  max-width: 100%;
 }
 
 /* Aba */
 .feed-tab {
   all: unset;
   cursor: pointer;
-  padding: 8px 18px;
+  padding: 8px 14px;
   border-radius: 999px;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--fgColor-muted);
+  white-space: nowrap;
   transition:
     background-color 120ms ease,
-    color 120ms ease;
+    color 120ms ease,
+    transform 120ms ease;
 }
 
 /* Hover */
 .feed-tab:hover {
   color: var(--fgColor-default);
+  transform: translateY(-1px);
 }
 
 /* Aba ativa */
@@ -76,10 +105,80 @@
 }
 
 .social-feed-create {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .posts-loading {
-  padding: 32px;
+  border: 1px solid var(--borderColor-muted);
+  background-color: var(--bgColor-default);
+  border-radius: 14px;
+  padding: 24px;
   color: var(--fgColor-muted);
+  text-align: center;
+}
+
+.posts-empty {
+  border: 1px dashed var(--borderColor-default);
+  background: linear-gradient(160deg, var(--bgColor-muted), var(--bgColor-default));
+  border-radius: 14px;
+  padding: 28px 20px;
+  text-align: center;
+}
+
+.posts-empty-title {
+  color: var(--fgColor-default);
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.posts-empty-description {
+  margin-top: 8px;
+  color: var(--fgColor-muted);
+  font-size: 0.95rem;
+}
+
+@media (max-width: 900px) {
+  .posts-page {
+    width: 100%;
+  }
+
+  .social-feed-header {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 760px) {
+  .social-feed-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .feed-tabs {
+    width: 100%;
+    padding: 6px;
+  }
+
+  .feed-tab {
+    text-align: center;
+    flex: 1 0 auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .posts-page {
+    padding: 8px 0 20px;
+  }
+
+  .social-feed-header {
+    margin-bottom: 14px;
+    border-radius: 14px;
+  }
+
+  .feed-subtitle {
+    font-size: 0.88rem;
+  }
+
+  .posts-empty {
+    padding: 24px 14px;
+  }
 }

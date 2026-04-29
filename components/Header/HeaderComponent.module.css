@@ -1,3 +1,13 @@
+.mobileMenuBtn {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobileMenuBtn {
+    display: inline-flex;
+  }
+}
+
 .logoArea {
   display: flex;
   align-items: center;

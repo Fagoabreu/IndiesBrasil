@@ -188,3 +188,29 @@
     }
   }
 }
+
+@media screen and (max-width: 480px) {
+  .container {
+    min-height: unset;
+    padding: 20px 4%;
+    gap: 12px;
+
+    .titleContainer {
+      .pageTitle {
+        font-size: 22px;
+      }
+    }
+
+    .qrCodeContainer {
+      border-radius: 10px;
+      padding: 10px;
+      gap: 10px;
+
+      .qrCode,
+      .qrCodeCustomization {
+        padding: 14px;
+        border-radius: 8px;
+      }
+    }
+  }
+}
