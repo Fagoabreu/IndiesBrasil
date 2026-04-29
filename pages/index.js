@@ -1,15 +1,48 @@
+import Link from "next/link";
 import HorizontalCardComponent from "@/components/Card/HorizontalCardComponent";
 import CarouselComponent from "@/components/Carousel/CarouselComponent";
 import styles from "./index.module.css";
-import { Heading } from "@primer/react";
 import VerticalCardComponent from "@/components/Card/VerticalCardComponent";
 import MetricCard from "@/components/Card/MetricCard";
-import { PeopleIcon } from "@primer/octicons-react";
+import { PeopleIcon, StarIcon, PeopleIcon as TeamIcon, TagIcon, VideoIcon } from "@primer/octicons-react";
 import { useEffect, useState } from "react";
 import TyperwriterComponent from "@/components/TypeWriter/TyperwriterComponent";
 
+const FEATURES = [
+  {
+    icon: "🎮",
+    title: "Portfólio Profissional",
+    desc: "Monte um perfil completo com seus projetos, habilidades e histórico de atuação na indústria.",
+  },
+  {
+    icon: "🤝",
+    title: "Rede de Talentos",
+    desc: "Conecte-se com devs, artistas, músicos e designers que constroem jogos independentes.",
+  },
+  {
+    icon: "📢",
+    title: "Feed Social",
+    desc: "Compartilhe atualizações de projetos, conquistas e conteúdo com toda a comunidade.",
+  },
+  {
+    icon: "🏷️",
+    title: "Sistema de Tags",
+    desc: "Descubra e acompanhe tópicos em alta como #GameDev, #PixelArt e #IndieGame.",
+  },
+  {
+    icon: "🎬",
+    title: "Embeds Multimídia",
+    desc: "Incorpore vídeos do YouTube, lives da Twitch, widgets da Steam e posts do Instagram.",
+  },
+  {
+    icon: "💬",
+    title: "Comunidade Ativa",
+    desc: "Participe de discussões, dê feedback em projetos e colabore com outros criadores.",
+  },
+];
+
 function Home() {
-  const frases = ["Gamers.", "Programadores.", "Roteiristas.", "Animadores.", "Produtores de Conteúdo.", "Ilustradores.", "Designers.", "Artistas."];
+  const frases = ["Gamers.", "Programadores.", "Roteiristas.", "Animadores.", "Produtores.", "Ilustradores.", "Designers.", "Artistas."];
   const [summary, setSummary] = useState(null);
 
   useEffect(() => {
@@ -33,24 +66,27 @@ function Home() {
 
   return (
     <main className={styles.page}>
-      <section className={styles.hero}>
-        <Heading as="h4">Atenção - ambiente de testes</Heading>
-        <p>Esta pagina está em versão de testes Beta, todo conteúdo aqui postado será apagado quando lançarmos a versão final</p>
-      </section>
-      {/* Apresentacao */}
       {/* HERO */}
       <section className={styles.hero}>
-        <Heading as="h1">
+        <span className={styles.heroBadge}>🎮 A comunidade indie do Brasil</span>
+
+        <h1 className={styles.heroHeading}>
           Bem-vindo. <TyperwriterComponent initText="Somos" frases={frases} />
-        </Heading>
-        <p>
-          Um espaço feito para artistas, desenvolvedores de jogos, programadores, roteiristas e streamers que vivem de criar, aprender e compartilhar.
+        </h1>
+
+        <p className={styles.heroSub}>
+          Conecte-se com desenvolvedores, artistas, gamers e criadores que constroem o futuro dos jogos independentes no Brasil.
         </p>
-        <p>Aqui você se conecta com pessoas que entendem seu trabalho, seus desafios e suas ambições.</p>
-        <p>
-          Construa seu portfólio, divulgue seus projetos, compartilhe conhecimento e colabore com quem produz entretenimento, tecnologia e educação
-          todos os dias.
-        </p>
+
+        <div className={styles.heroCta}>
+          <Link href="/cadastro" className={styles.ctaPrimary}>
+            Criar conta grátis
+          </Link>
+          <Link href="/posts" className={styles.ctaSecondary}>
+            Explorar comunidade →
+          </Link>
+        </div>
+
         <div className={styles.metrics}>
           <MetricCard
             title="Usuarios"
@@ -66,15 +102,37 @@ function Home() {
             value={summary ? summary.posts : "..."}
             previousLabel="Periodo Anterior"
             previousValue={summary ? summary.previous_posts : "..."}
-            icon={<PeopleIcon />}
+            icon={<StarIcon />}
           />
-          <MetricCard title="Eventos" period="Proximos 30 dias" value="..." icon={<PeopleIcon />} />
-          <MetricCard title="Estudios" period="Total" value="..." icon={<PeopleIcon />} />
-          <MetricCard title="Jogos" period="Total" value="..." previousLabel="Em Desenvolvimento" previousValue="..." icon={<PeopleIcon />} />
+          <MetricCard title="Eventos" period="Proximos 30 dias" value="..." icon={<TeamIcon />} />
+          <MetricCard title="Estudios" period="Total" value="..." icon={<TagIcon />} />
+          <MetricCard title="Jogos" period="Total" value="..." previousLabel="Em Desenvolvimento" previousValue="..." icon={<VideoIcon />} />
         </div>
       </section>
+
+      {/* FEATURES STRIP */}
+      <section className={styles.featuresStrip}>
+        <p className={styles.sectionLabel}>Plataforma</p>
+        <h2 className={styles.sectionTitle}>Tudo que você precisa, num só lugar</h2>
+        <p className={styles.sectionSub}>Ferramentas pensadas para profissionais e entusiastas da indústria indie brasileira.</p>
+
+        <div className={styles.featureGrid}>
+          {FEATURES.map((feature) => (
+            <div key={feature.title} className={styles.featureCard}>
+              <div className={styles.featureIcon}>{feature.icon}</div>
+              <p className={styles.featureTitle}>{feature.title}</p>
+              <p className={styles.featureDesc}>{feature.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* COMUNIDADE */}
       <section className={styles.section}>
+        <header className={styles.sectionHeader}>
+          <p className={styles.sectionLabel}>Comunidade</p>
+          <h2 className={styles.sectionTitle}>Junte-se ao grupo</h2>
+        </header>
         <HorizontalCardComponent
           image="/images/IndiesWhatsApp.jpeg"
           alt="Qr Code Convite Grupo WhatsApp"
@@ -82,12 +140,14 @@ function Home() {
           description="Grupo focado em desenvolvedores independentes de jogos brasileiros. Compartilhamos dicas, recursos, oportunidades e apoio para fomentar a indústria nacional."
         />
       </section>
-      {/* DEMONSTRAÇÃO */}
+
+      {/* INTEGRAÇÕES */}
       <section className={styles.section}>
         <header className={styles.sectionHeader}>
-          <h2>Links incorporados com YouTube, Twitch, Instagram e Steam</h2>
-          <p>
-            A plataforma permite incorporar vídeos, lives e posts diretamente nas publicações, facilitando o compartilhamento de conteúdo multimídia.
+          <p className={styles.sectionLabel}>Integrações</p>
+          <h2 className={styles.sectionTitle}>YouTube, Twitch, Instagram e Steam</h2>
+          <p className={styles.sectionSub}>
+            Incorpore vídeos, lives e posts diretamente nas publicações para compartilhar conteúdo multimídia com a comunidade.
           </p>
         </header>
 
@@ -102,16 +162,19 @@ function Home() {
           ]}
         />
       </section>
+
+      {/* TAGS */}
       <section className={styles.section}>
         <header className={styles.sectionHeader}>
-          <h2>Sistema de Tags</h2>
-          <p>Tags para identificar o assunto ou uma trending do post.</p>
+          <p className={styles.sectionLabel}>Descoberta</p>
+          <h2 className={styles.sectionTitle}>Sistema de Tags</h2>
+          <p className={styles.sectionSub}>Tags para identificar o assunto ou uma trending do post.</p>
         </header>
         <VerticalCardComponent
           image="/images/sistematags.png"
           alt="ranqueamento Tags"
           title="Tags"
-          description="ranqueamento e localização de posts através de tags que auxiliam a classificação do assunto podendo iniciar uma trend ou uma conversa"
+          description="Ranqueamento e localização de posts através de tags que auxiliam a classificação do assunto, podendo iniciar uma trend ou uma conversa."
         />
       </section>
     </main>

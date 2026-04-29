@@ -416,12 +416,17 @@ export default function Perfil() {
               </div>
             )}
           </div>
-
           <div className={style.avatarContainer}>
             <Avatar size={128} src={perfilUser.user.avatar_image || "/images/avatar.png"} className={style.profileAvatar} />
             {isOwnProfile && (
               <div className={style.avatarUploader}>
-                <ProfileImageUploader endpoint={`/api/v1/users/${username}/avatar`} onUploaded={reloadProfile} label="Alterar avatar" type="avatar" />
+                <ProfileImageUploader
+                  endpoint={`/api/v1/users/${username}/avatar`}
+                  onUploaded={reloadProfile}
+                  label="Alterar avatar"
+                  type="avatar"
+                  withCrop
+                />
               </div>
             )}
           </div>

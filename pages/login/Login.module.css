@@ -3,20 +3,39 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
+  padding-top: 3rem;
 }
 
 .card {
   width: 100%;
   max-width: 480px;
-  padding: 32px;
-  border-radius: 12px;
-  border: 1px solid var(--borderColor-default);
+  padding: 36px;
+  border-radius: 14px;
+  border: 1px solid var(--borderColor-muted);
   background: var(--bgColor-default);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--brand-card-glow);
+}
+
+/* Gradient top accent line */
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--brand-gradient-h);
 }
 
 .title {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   text-align: center;
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .links {

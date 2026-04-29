@@ -50,6 +50,7 @@ export default function LeftSidebarComponent() {
           <>
             <NavList.Item href="/ferramentas/qrgen">Gerador QR</NavList.Item>
             <NavList.Item href="/ferramentas/imagecrop">Recortar Imagem</NavList.Item>
+            <NavList.Item href="/ferramentas/viewer">Visualizador XML/JSON</NavList.Item>
           </>
         )}
       </NavList.Group>

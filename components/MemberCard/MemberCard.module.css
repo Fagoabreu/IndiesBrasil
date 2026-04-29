@@ -1,6 +1,6 @@
 .card {
   background-color: var(--bgColor-default);
-  border-radius: 16px;
+  border-radius: 14px;
   padding: 20px 18px;
   max-width: 280px;
   text-align: center;
@@ -8,18 +8,36 @@
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  border: 1px solid var(--borderColor-default);
-  box-shadow: var(--shadow-floating-small);
+  border: 1px solid var(--borderColor-muted);
+  position: relative;
+  overflow: hidden;
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease,
     border-color 0.2s ease;
 }
 
+/* gradient top line on hover */
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--brand-gradient-h);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
 .card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-floating-medium);
-  border-color: var(--borderColor-emphasis);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(149, 74, 255, 0.13);
+  border-color: var(--brand-hover-border);
+}
+
+.card:hover::before {
+  opacity: 1;
 }
 
 /* Avatar */
@@ -28,10 +46,11 @@
   width: 110px;
   height: 110px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-accent-emphasis), var(--color-accent-fg));
+  background: var(--brand-gradient);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: var(--brand-glow-sm);
 }
 
 .avatar {
@@ -43,7 +62,7 @@
 
 .name {
   font-size: 17px;
-  font-weight: 600;
+  font-weight: 700;
   margin: 6px 0 0;
   color: var(--fgColor-default);
 }
@@ -51,7 +70,7 @@
 .role {
   font-size: 13px;
   font-weight: 500;
-  color: var(--fgColor-muted);
+  color: var(--brand-primary);
   margin: 0;
 }
 

@@ -42,10 +42,9 @@ export default function TyperwriterComponent({ initText, frases }) {
   }, [text]);
 
   return (
-    <div className={style.TypewriterContainer}>
-      <h1 className={style.header}>
-        {initText} <span className={style.typingText}>{text}</span>
-      </h1>
-    </div>
+    <span className={style.typewriterRoot}>
+      {initText && <span>{initText} </span>}
+      <span className={style.typingText}>{text}</span>
+    </span>
   );
 }

@@ -1,9 +1,31 @@
 .metric-card {
   background-color: var(--bgColor-default);
-  border: 1px solid var(--borderColor-default);
-  border-radius: 8px;
-  padding: 12px;
-  width: 160px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 10px;
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.metric-card::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--brand-gradient-h);
+  opacity: 0.55;
+}
+
+.metric-card:hover {
+  border-color: var(--brand-hover-border);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(149, 74, 255, 0.13);
 }
 
 /* HEADER */
@@ -14,10 +36,11 @@
 }
 
 .metric-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--fgColor-muted);
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: var(--fgColor-muted) !important;
   text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 /* PERÍODO */
@@ -30,10 +53,14 @@
 
 /* VALOR PRINCIPAL */
 .metric-value {
-  font-size: 28px;
-  font-weight: 600;
-  color: var(--fgColor-default);
-  margin: 8px 0;
+  font-size: 30px;
+  font-weight: 700;
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 10px 0 4px;
+  line-height: 1;
 }
 
 /* COMPARAÇÃO */
@@ -44,12 +71,13 @@
 
 /* ÍCONE */
 .metric-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  background-color: var(--bgColor-muted);
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--brand-icon-bg);
+  border: 1px solid var(--brand-icon-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--fgColor-default);
+  color: var(--brand-primary);
 }

@@ -9,18 +9,29 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  box-shadow:
-    inset 1px 1px 5px var(--bgColor-default),
-    inset -1px -1px 5px var(--bgColor-inset);
-  background: radial-gradient(circle at top right, var(--bgColor-accent-muted), transparent 45%), var(--bgColor-muted);
+  background: var(--brand-ambient-bg);
   margin-bottom: 24px;
   border: 1px solid var(--borderColor-muted);
   border-radius: 16px;
   padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* gradient left accent */
+.social-feed-header::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--brand-gradient-v);
 }
 
 .feed-title-block {
   min-width: 0;
+  padding-left: 8px;
 }
 
 .feed-title-block h2 {
@@ -36,7 +47,7 @@
 
 .feed-tabs {
   display: inline-flex;
-  gap: 8px;
+  gap: 6px;
   padding: 4px;
   background-color: var(--bgColor-muted);
   border-radius: 999px;
@@ -46,62 +57,30 @@
   max-width: 100%;
 }
 
-/* Aba */
 .feed-tab {
   all: unset;
   cursor: pointer;
-  padding: 8px 14px;
+  padding: 7px 16px;
   border-radius: 999px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--fgColor-muted);
   white-space: nowrap;
   transition:
     background-color 120ms ease,
-    color 120ms ease,
-    transform 120ms ease;
+    color 120ms ease;
 }
 
-/* Hover */
 .feed-tab:hover {
-  color: var(--fgColor-default);
-  transform: translateY(-1px);
+  color: var(--brand-primary);
 }
 
-/* Aba ativa */
+/* Active tab */
 .feed-tab.active {
-  background-color: var(--bgColor-default);
-  color: var(--fgColor-default);
-  box-shadow: 0 0 0 1px var(--borderColor-default);
-}
-
-.social-feed-tabs.emphasis {
-  background-color: var(--bgColor-muted);
-  padding: 4px;
-  border-radius: 999px;
-}
-
-.social-feed-tabs.emphasis ul {
-  display: flex;
-  gap: 4px;
-}
-
-.social-feed-tabs.emphasis li {
-  padding: 8px 16px;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--fgColor-muted);
-}
-
-.social-feed-tabs.emphasis li[aria-selected="true"] {
-  background-color: var(--bgColor-default);
-  color: var(--fgColor-default);
-  box-shadow: 0 0 0 1px var(--borderColor-default);
-}
-
-.social-feed-tabs.emphasis li:hover {
-  color: var(--fgColor-default);
+  background: var(--brand-active-bg);
+  color: var(--brand-primary);
+  box-shadow: 0 0 0 1px var(--brand-active-ring);
+  background-clip: padding-box;
 }
 
 .social-feed-create {
@@ -112,16 +91,16 @@
   border: 1px solid var(--borderColor-muted);
   background-color: var(--bgColor-default);
   border-radius: 14px;
-  padding: 24px;
+  padding: 32px;
   color: var(--fgColor-muted);
   text-align: center;
 }
 
 .posts-empty {
-  border: 1px dashed var(--borderColor-default);
-  background: linear-gradient(160deg, var(--bgColor-muted), var(--bgColor-default));
+  border: var(--brand-empty-border);
+  background: var(--brand-empty-bg);
   border-radius: 14px;
-  padding: 28px 20px;
+  padding: 40px 20px;
   text-align: center;
 }
 
@@ -179,6 +158,6 @@
   }
 
   .posts-empty {
-    padding: 24px 14px;
+    padding: 28px 14px;
   }
 }

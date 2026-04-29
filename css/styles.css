@@ -5,6 +5,144 @@
   font-family: "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
 }
 
+/* ========================================
+   BRAND TOKENS
+   Usados em toda a aplicação para manter
+   a identidade visual gaming consistente.
+======================================== */
+:root {
+  /* Core palette */
+  --brand-primary: #954aff;
+  --brand-secondary: #ff4aa0;
+
+  /* Gradients */
+  --brand-gradient: linear-gradient(135deg, #954aff 0%, #ff4aa0 100%);
+  --brand-gradient-h: linear-gradient(90deg, #954aff 0%, #ff4aa0 100%);
+  --brand-gradient-v: linear-gradient(180deg, #954aff 0%, #ff4aa0 100%);
+
+  /* Glows / shadows */
+  --brand-glow-sm: 0 4px 16px rgba(149, 74, 255, 0.28);
+  --brand-glow-md: 0 8px 28px rgba(149, 74, 255, 0.18);
+  --brand-glow-lg: 0 12px 40px rgba(149, 74, 255, 0.32);
+  --brand-card-glow: 0 8px 32px rgba(149, 74, 255, 0.08);
+  --brand-btn-shadow: 0 4px 16px rgba(149, 74, 255, 0.32);
+  --brand-btn-shadow-hover: 0 8px 30px rgba(149, 74, 255, 0.52);
+
+  /* Backgrounds */
+  --brand-ambient-bg:
+    radial-gradient(ellipse 70% 100% at 5% 50%, rgba(149, 74, 255, 0.08), transparent),
+    radial-gradient(ellipse 55% 80% at 95% 20%, rgba(255, 74, 160, 0.06), transparent), var(--bgColor-default);
+  --brand-empty-bg: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(149, 74, 255, 0.04), transparent), var(--bgColor-default);
+  --brand-icon-bg: linear-gradient(135deg, rgba(149, 74, 255, 0.1), rgba(255, 74, 160, 0.08));
+  --brand-active-bg: linear-gradient(135deg, rgba(149, 74, 255, 0.12), rgba(255, 74, 160, 0.08));
+
+  /* Borders */
+  --brand-empty-border: 1px dashed rgba(149, 74, 255, 0.3);
+  --brand-hover-border: rgba(149, 74, 255, 0.35);
+  --brand-active-ring: rgba(149, 74, 255, 0.3);
+  --brand-icon-border: rgba(149, 74, 255, 0.18);
+
+  /* Interactive states */
+  --brand-hover-bg: rgba(149, 74, 255, 0.06);
+}
+
+/* ========================================
+   UTILITY CLASSES
+   Padrões recorrentes da identidade visual.
+   Use className="u-xxx" no JSX para compor.
+======================================== */
+
+/* Header de seção com ambient glow + barra lateral */
+.u-section-header {
+  background: var(--brand-ambient-bg);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 16px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.u-section-header::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--brand-gradient-v);
+}
+
+/* Card de autenticação com borda superior gradiente */
+.u-auth-card {
+  border-radius: 14px;
+  border: 1px solid var(--borderColor-muted);
+  background: var(--bgColor-default);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--brand-card-glow);
+}
+
+.u-auth-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--brand-gradient-h);
+}
+
+/* Texto com gradiente roxo → rosa */
+.u-gradient-text {
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Estado vazio / zero-state */
+.u-empty-state {
+  border: var(--brand-empty-border);
+  background: var(--brand-empty-bg);
+  border-radius: 14px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+/* Botão primário com gradiente */
+.u-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  background: var(--brand-gradient);
+  color: #fff;
+  box-shadow: var(--brand-btn-shadow);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.u-btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Label de seção (uppercase, cor primária) */
+.u-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+}
+
 body {
   margin: 0;
   padding: 0;
