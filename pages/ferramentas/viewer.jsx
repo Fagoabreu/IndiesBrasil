@@ -4,6 +4,10 @@ import { CopyIcon, CheckIcon, TrashIcon, CodeIcon } from "@primer/octicons-react
 
 import styles from "./viewer.module.css";
 
+// Maximum input size (bytes) accepted before any regex runs.
+// Prevents ReDoS via excessively large payloads.
+const MAX_INPUT_LENGTH = 200_000;
+
 function detectType(raw) {
   const t = raw.trimStart();
   if (t.startsWith("{") || t.startsWith("[")) return "json";
@@ -16,16 +20,26 @@ function formatJSON(raw) {
   return JSON.stringify(parsed, null, 2);
 }
 
+// Returns true when token[i] is an opening tag followed by
+// plain text and immediately closed: <tag>value</tag>.
+function isInlineElement(tokens, i) {
+  const next = tokens[i + 1];
+  const afterNext = tokens[i + 2];
+  return next !== undefined && !next.startsWith("<") && afterNext !== undefined && afterNext.startsWith("</");
+}
+
 function formatXML(raw) {
   let formatted = "";
   let indent = 0;
   const TAB = "  ";
 
-  // Collapse whitespace between tags then tokenize
-  const normalized = raw.replaceAll(/>\s+</g, "><").trim();
-  const tokens = normalized.split(/(<[^>]+>)/g).filter(Boolean);
+  // Collapse whitespace between tags then tokenize.
+  // \s{1,500} and [^>]{0,2000} use bounded quantifiers to prevent ReDoS.
+  const normalized = raw.replaceAll(/>\s{1,500}</g, "><").trim();
+  const tokens = normalized.split(/(<[^>]{0,2000}>)/g).filter(Boolean);
 
-  for (const token of tokens) {
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
     if (!token.trim()) continue;
 
     const isClosing = token.startsWith("</");
@@ -33,6 +47,13 @@ function formatXML(raw) {
     const isOpening = token.startsWith("<") && !isClosing && !isSelfClosing;
 
     if (isClosing) indent = Math.max(0, indent - 1);
+
+    // Inline pattern: <tag>text content</tag> → emit on a single line.
+    if (isOpening && isInlineElement(tokens, i)) {
+      formatted += TAB.repeat(indent) + token + tokens[i + 1].trim() + tokens[i + 2] + "\n";
+      i += 2;
+      continue;
+    }
 
     formatted += TAB.repeat(indent) + token + "\n";
 
@@ -52,13 +73,10 @@ function escapeHtml(s) {
 
 function highlightJSON(code, hlKey, hlString, hlNumber, hlBool, hlNull) {
   const esc = escapeHtml(code);
-  // Split into segments to avoid complex single-pass regex
   const result = [];
-  let i = 0;
   const lines = esc.split("\n");
 
   for (const line of lines) {
-    // Match JSON line patterns individually for simplicity
     const keyMatch = /^(\s*)("(?:[^"\\]|\\.)*")(\s*:)(.*)$/.exec(line);
     if (keyMatch) {
       result.push(
@@ -67,7 +85,6 @@ function highlightJSON(code, hlKey, hlString, hlNumber, hlBool, hlNull) {
       continue;
     }
     result.push(colorValue(line, hlString, hlNumber, hlBool, hlNull));
-    i++;
   }
 
   return result.join("\n");
@@ -90,12 +107,13 @@ function highlight(code, type, s) {
 
   if (type === "xml") {
     const esc = escapeHtml(code);
+    // Bounded quantifiers {1,N} prevent super-linear backtracking (ReDoS).
     return esc
-      .replaceAll(/(&lt;\/?)([\w:.-]+)/g, `$1<span class="${s.hlTag}">$2</span>`)
-      .replaceAll(/([\w:.-]+)(=&quot;)/g, `<span class="${s.hlAttr}">$1</span>$2`)
-      .replaceAll(/(&quot;[^&]*&quot;)/g, `<span class="${s.hlString}">$1</span>`)
-      .replaceAll(/(&lt;\?[^&]*\?&gt;)/g, `<span class="${s.hlDecl}">$1</span>`)
-      .replaceAll(/(&lt;!--[\s\S]*?--&gt;)/g, `<span class="${s.hlComment}">$1</span>`);
+      .replaceAll(/(&lt;\/?[\w:.-]{1,200})/g, `<span class="${s.hlTag}">$1</span>`)
+      .replaceAll(/([\w:.-]{1,200})(=&quot;)/g, `<span class="${s.hlAttr}">$1</span>$2`)
+      .replaceAll(/(&quot;[^&]{0,2000}&quot;)/g, `<span class="${s.hlString}">$1</span>`)
+      .replaceAll(/(&lt;\?[^&]{0,2000}\?&gt;)/g, `<span class="${s.hlDecl}">$1</span>`)
+      .replaceAll(/(&lt;!--[\s\S]{0,5000}?--&gt;)/g, `<span class="${s.hlComment}">$1</span>`);
   }
 
   return escapeHtml(code);
@@ -115,6 +133,12 @@ export default function ViewerPage() {
 
     const raw = input.trim();
     if (!raw) return;
+
+    // Guard against excessively large inputs before any regex runs (ReDoS prevention).
+    if (raw.length > MAX_INPUT_LENGTH) {
+      setError(`Entrada muito grande. O limite é ${(MAX_INPUT_LENGTH / 1000).toFixed(0)} KB.`);
+      return;
+    }
 
     const detected = detectType(raw);
 
