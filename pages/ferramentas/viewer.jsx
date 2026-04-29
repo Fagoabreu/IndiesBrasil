@@ -64,11 +64,7 @@ function formatXML(raw) {
 }
 
 function escapeHtml(s) {
-  return s
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
+  return s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 }
 
 function highlightJSON(code, hlKey, hlString, hlNumber, hlBool, hlNull) {
@@ -80,7 +76,7 @@ function highlightJSON(code, hlKey, hlString, hlNumber, hlBool, hlNull) {
     const keyMatch = /^(\s*)("(?:[^"\\]|\\.)*")(\s*:)(.*)$/.exec(line);
     if (keyMatch) {
       result.push(
-        `${keyMatch[1]}<span class="${hlKey}">${keyMatch[2]}</span>${keyMatch[3]}${colorValue(keyMatch[4], hlString, hlNumber, hlBool, hlNull)}`
+        `${keyMatch[1]}<span class="${hlKey}">${keyMatch[2]}</span>${keyMatch[3]}${colorValue(keyMatch[4], hlString, hlNumber, hlBool, hlNull)}`,
       );
       continue;
     }
@@ -194,9 +190,7 @@ export default function ViewerPage() {
       {/* Page header */}
       <header className={styles.pageHeader}>
         <h1 className={styles.pageTitle}>Visualizador XML / JSON</h1>
-        <p className={styles.pageSubtitle}>
-          Cole um texto sem formatação e visualize com identação e syntax highlighting.
-        </p>
+        <p className={styles.pageSubtitle}>Cole um texto sem formatação e visualize com identação e syntax highlighting.</p>
       </header>
 
       <div className={styles.workspace}>

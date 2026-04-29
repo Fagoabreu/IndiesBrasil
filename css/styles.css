@@ -31,8 +31,7 @@
   /* Backgrounds */
   --brand-ambient-bg:
     radial-gradient(ellipse 70% 100% at 5% 50%, rgba(149, 74, 255, 0.08), transparent),
-    radial-gradient(ellipse 55% 80% at 95% 20%, rgba(255, 74, 160, 0.06), transparent),
-    var(--bgColor-default);
+    radial-gradient(ellipse 55% 80% at 95% 20%, rgba(255, 74, 160, 0.06), transparent), var(--bgColor-default);
   --brand-empty-bg: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(149, 74, 255, 0.04), transparent), var(--bgColor-default);
   --brand-icon-bg: linear-gradient(135deg, rgba(149, 74, 255, 0.1), rgba(255, 74, 160, 0.08));
   --brand-active-bg: linear-gradient(135deg, rgba(149, 74, 255, 0.12), rgba(255, 74, 160, 0.08));
