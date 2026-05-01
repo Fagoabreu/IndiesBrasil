@@ -1,8 +1,12 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "infra/*": ["./infra/*"],
+      "models/*": ["./models/*"],
+      "lib/*": ["./lib/*"],
+      "utils/*": ["./utils/*"],
+      "context/*": ["./context/*"]
     },
     "jsx": "react-jsx",
     "module": "CommonJS",
