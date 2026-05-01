@@ -1,3 +1,4 @@
+import SeoHead from "@/components/SeoHead";
 import Link from "next/link";
 import HorizontalCardComponent from "@/components/Card/HorizontalCardComponent";
 import CarouselComponent from "@/components/Carousel/CarouselComponent";
@@ -7,6 +8,42 @@ import MetricCard from "@/components/Card/MetricCard";
 import { PeopleIcon, StarIcon, PeopleIcon as TeamIcon, TagIcon, VideoIcon } from "@primer/octicons-react";
 import { useEffect, useState } from "react";
 import TyperwriterComponent from "@/components/TypeWriter/TyperwriterComponent";
+import { SITE_URL, SITE_NAME } from "@/lib/seo";
+
+const PAGE_TITLE = "Indies Brasil — Rede Social de Desenvolvedores Indie Brasileiros";
+const PAGE_DESCRIPTION =
+  "Conecte-se com desenvolvedores, artistas e gamers da cena indie do Brasil. Portfólio profissional, feed social, sistema de tags e ferramentas para criadores de jogos.";
+const PAGE_URL = SITE_URL;
+
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: SITE_NAME,
+      description: PAGE_DESCRIPTION,
+      inLanguage: "pt-BR",
+      potentialAction: {
+        "@type": "SearchAction",
+        target: { "@type": "EntryPoint", urlTemplate: `${SITE_URL}/membros?q={search_term_string}` },
+        "query-input": "required name=search_term_string",
+      },
+    },
+    {
+      "@type": "SoftwareApplication",
+      name: SITE_NAME,
+      applicationCategory: "SocialNetworkingApplication",
+      operatingSystem: "Web",
+      url: SITE_URL,
+      description: PAGE_DESCRIPTION,
+      inLanguage: "pt-BR",
+      offers: { "@type": "Offer", price: "0", priceCurrency: "BRL" },
+      audience: { "@type": "Audience", geographicArea: { "@type": "Country", name: "Brasil" } },
+    },
+  ],
+};
 
 const FEATURES = [
   {
@@ -66,6 +103,8 @@ function Home() {
 
   return (
     <main className={styles.page}>
+      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} jsonLd={JSON_LD} />
+
       {/* HERO */}
       <section className={styles.hero}>
         <span className={styles.heroBadge}>🎮 A comunidade indie do Brasil</span>

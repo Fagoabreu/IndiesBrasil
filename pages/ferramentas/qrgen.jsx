@@ -1,9 +1,27 @@
+import SeoHead from "@/components/SeoHead";
 import { QRCodeCanvas } from "qrcode.react";
 import { UploadIcon } from "@primer/octicons-react";
 import styles from "./qrgen.module.css";
 import { Select } from "@primer/react";
 import { useRef, useState } from "react";
 import Image from "next/image";
+import { SITE_URL } from "@/lib/seo";
+
+const PAGE_TITLE = "Gerador de QR Code Grátis Online | Indies Brasil";
+const PAGE_DESCRIPTION =
+  "Crie QR Codes personalizados com logo e cores personalizadas. Baixe em PNG gratuitamente, sem cadastro. Ferramenta online para desenvolvedores e criadores.";
+const PAGE_URL = `${SITE_URL}/ferramentas/qrgen`;
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Gerador de QR Code — Indies Brasil",
+  url: PAGE_URL,
+  applicationCategory: "UtilitiesApplication",
+  operatingSystem: "Web",
+  inLanguage: "pt-BR",
+  description: PAGE_DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "BRL" },
+};
 
 export default function QrGen() {
   const [linkValue, setLinkValue] = useState("");
@@ -38,6 +56,8 @@ export default function QrGen() {
   };
   return (
     <main className={styles.container}>
+      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} jsonLd={JSON_LD} />
+
       <section className={styles.titleContainer}>
         <h1 className={styles.pageTitle}>
           Gere e customize QR Codes <span>dinâmicos</span>

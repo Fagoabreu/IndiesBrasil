@@ -1,19 +1,22 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Avatar, ActionMenu, ActionList, IconButton, useTheme, Button, PageHeader } from "@primer/react";
-import { SunIcon, MoonIcon, ThreeBarsIcon } from "@primer/octicons-react";
+import dynamic from "next/dynamic";
+import { Avatar, ActionMenu, ActionList, IconButton, Button, PageHeader } from "@primer/react";
+import { ThreeBarsIcon } from "@primer/octicons-react";
 
 import styles from "./HeaderComponent.module.css";
 import { useUser } from "@/context/UserContext";
 import PropTypes from "prop-types";
 import { useRouter } from "next/router";
 
+// ThemeSwitcher depende de window.matchMedia e localStorage — estado exclusivo do cliente.
+// ssr: false impede que seja renderizado no servidor, eliminando o hydration mismatch.
+// Documentação: https://nextjs.org/docs/pages/guides/lazy-loading#with-no-ssr
+const ThemeSwitcher = dynamic(() => import("../ThemeSwitcher"), { ssr: false });
+
 export default function HeaderComponent({ onMenuClick }) {
   const router = useRouter();
-  const { colorMode, setColorMode } = useTheme();
   const { user, logout } = useUser();
-
-  const toggleTheme = () => setColorMode(colorMode === "day" ? "night" : "day");
 
   const avatarSrc = user?.avatarUrl || "/images/avatar.png";
   const usernameLabel = user?.name || user?.username || "Usuário";
@@ -44,7 +47,7 @@ export default function HeaderComponent({ onMenuClick }) {
       </PageHeader.Description>
 
       <PageHeader.Actions>
-        <IconButton aria-label="Alternar tema" icon={colorMode === "day" ? MoonIcon : SunIcon} onClick={toggleTheme} />
+        <ThemeSwitcher />
         {user ? (
           <ActionMenu>
             <ActionMenu.Button>

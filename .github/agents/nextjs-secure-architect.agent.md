@@ -32,6 +32,7 @@ This project uses the following exact versions. Always use their current APIs â€
 
 ## Constraints
 
+- ALWAYS prioritize officially documented solutions, recommended patterns, and best practices over simpler workarounds or hacks. If a documented API or approach exists, use it â€” even if a quicker alternative would work.
 - DO NOT introduce insecure defaults, hardcoded secrets, or weak input handling.
 - DO NOT bypass architecture boundaries between UI, application, domain, and infrastructure layers.
 - DO NOT add unnecessary dependencies when existing project libraries can solve the problem.

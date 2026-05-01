@@ -1,9 +1,28 @@
+import SeoHead from "@/components/SeoHead";
 import { useState, useCallback, useEffect } from "react";
 import Cropper from "react-easy-crop";
 import { Button } from "@primer/react";
 
 import styles from "./imagecrop.module.css";
 import { generateImage } from "@/utils/ImageUtils";
+import { SITE_URL } from "@/lib/seo";
+
+const PAGE_TITLE = "Editor e Recorte de Imagem Online Grátis | Indies Brasil";
+const PAGE_DESCRIPTION =
+  "Recorte, redimensione, ajuste brilho, contraste e saturação de imagens online. Exporte em PNG, JPG ou WebP. Sem cadastro, grátis e direto no navegador.";
+const PAGE_URL = `${SITE_URL}/ferramentas/imagecrop`;
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Editor de Imagem — Indies Brasil",
+  url: PAGE_URL,
+  applicationCategory: "UtilitiesApplication",
+  operatingSystem: "Web",
+  inLanguage: "pt-BR",
+  description: PAGE_DESCRIPTION,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "BRL" },
+  featureList: "recortar imagem, ajuste de brilho, contraste, saturação, exportar PNG JPG WebP",
+};
 
 export default function FerramentasPage() {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -100,6 +119,8 @@ export default function FerramentasPage() {
 
   return (
     <div className={styles.container}>
+      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} jsonLd={JSON_LD} />
+
       {/* Page header */}
       <header className={styles.pageHeader}>
         <h1 className={styles.pageTitle}>Editor de Imagem</h1>

@@ -1,7 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
-  // Let Next.js transpile @primer packages so their CSS imports are handled correctly
+  i18n: {
+    locales: ["pt-BR", "en-US", "fr", "es"],
+    defaultLocale: "pt-BR",
+    localeDetection: false,
+  },
   transpilePackages: ["@primer/react", "@primer/primitives"],
   compiler: {
     styledComponents: true,
