@@ -1,10 +1,10 @@
-import Head from "next/head";
+import SeoHead from "@/components/SeoHead";
 import { useState, useCallback } from "react";
 import { Button } from "@primer/react";
 import { CopyIcon, CheckIcon, TrashIcon, CodeIcon } from "@primer/octicons-react";
 
 import styles from "./viewer.module.css";
-import { SITE_URL, SITE_NAME, SITE_LOCALE, DEFAULT_OG_IMAGE, TWITTER_HANDLE } from "@/lib/seo";
+import { SITE_URL } from "@/lib/seo";
 
 // Maximum input size (bytes) accepted before any regex runs.
 // Prevents ReDoS via excessively large payloads.
@@ -205,26 +205,12 @@ export default function ViewerPage() {
 
   return (
     <div className={styles.container}>
-      <Head>
-        <title>{PAGE_TITLE}</title>
-        <meta name="description" content={PAGE_DESCRIPTION} />
-        <meta name="keywords" content="json viewer online, xml viewer online, formatar json, visualizar xml, json formatter, xml formatter, json validator, xml validator, formatar xml online grátis, formatar json online grátis" />
-        <link rel="canonical" href={PAGE_URL} />
-        <meta name="robots" content="index, follow" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={PAGE_URL} />
-        <meta property="og:title" content={PAGE_TITLE} />
-        <meta property="og:description" content={PAGE_DESCRIPTION} />
-        <meta property="og:image" content={DEFAULT_OG_IMAGE} />
-        <meta property="og:locale" content={SITE_LOCALE} />
-        <meta property="og:site_name" content={SITE_NAME} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content={TWITTER_HANDLE} />
-        <meta name="twitter:title" content={PAGE_TITLE} />
-        <meta name="twitter:description" content={PAGE_DESCRIPTION} />
-        <meta name="twitter:image" content={DEFAULT_OG_IMAGE} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
-      </Head>
+      <SeoHead
+        title={PAGE_TITLE}
+        description={PAGE_DESCRIPTION}
+        canonical={PAGE_URL}
+        jsonLd={JSON_LD}
+      />
 
       {/* Page header */}
       <header className={styles.pageHeader}>

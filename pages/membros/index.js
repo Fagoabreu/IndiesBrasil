@@ -1,9 +1,9 @@
-import Head from "next/head";
+import SeoHead from "@/components/SeoHead";
 import { useEffect, useState } from "react";
 import { Heading, TextInput, Spinner } from "@primer/react";
 import MemberCard from "@/components/MemberCard/MemberCard";
 import styles from "./MembersPage.module.css";
-import { SITE_URL, SITE_NAME, SITE_LOCALE, DEFAULT_OG_IMAGE, TWITTER_HANDLE } from "@/lib/seo";
+import { SITE_URL } from "@/lib/seo";
 
 const PAGE_TITLE = "Membros da Comunidade Indie Brasileira | Indies Brasil";
 const PAGE_DESCRIPTION = "Conheça desenvolvedores, artistas, designers e criadores de jogos independentes do Brasil. Encontre talentos e parceiros para seu próximo projeto indie.";
@@ -50,25 +50,11 @@ export default function MembersPage() {
 
   return (
     <div className={styles.page}>
-      <Head>
-        <title>{PAGE_TITLE}</title>
-        <meta name="description" content={PAGE_DESCRIPTION} />
-        <meta name="keywords" content="desenvolvedores indie brasil, artistas gamedev, comunidade jogos independentes, rede social gamedev, encontrar parceiro indie game, talentos jogos brasil" />
-        <link rel="canonical" href={PAGE_URL} />
-        <meta name="robots" content="index, follow" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={PAGE_URL} />
-        <meta property="og:title" content={PAGE_TITLE} />
-        <meta property="og:description" content={PAGE_DESCRIPTION} />
-        <meta property="og:image" content={DEFAULT_OG_IMAGE} />
-        <meta property="og:locale" content={SITE_LOCALE} />
-        <meta property="og:site_name" content={SITE_NAME} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content={TWITTER_HANDLE} />
-        <meta name="twitter:title" content={PAGE_TITLE} />
-        <meta name="twitter:description" content={PAGE_DESCRIPTION} />
-        <meta name="twitter:image" content={DEFAULT_OG_IMAGE} />
-      </Head>
+      <SeoHead
+        title={PAGE_TITLE}
+        description={PAGE_DESCRIPTION}
+        canonical={PAGE_URL}
+      />
 
       {/* PAGE HEADER */}
       <header className={styles.pageHeader}>

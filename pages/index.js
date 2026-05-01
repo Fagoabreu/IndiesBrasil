@@ -1,4 +1,4 @@
-import Head from "next/head";
+import SeoHead from "@/components/SeoHead";
 import Link from "next/link";
 import HorizontalCardComponent from "@/components/Card/HorizontalCardComponent";
 import CarouselComponent from "@/components/Carousel/CarouselComponent";
@@ -8,7 +8,7 @@ import MetricCard from "@/components/Card/MetricCard";
 import { PeopleIcon, StarIcon, PeopleIcon as TeamIcon, TagIcon, VideoIcon } from "@primer/octicons-react";
 import { useEffect, useState } from "react";
 import TyperwriterComponent from "@/components/TypeWriter/TyperwriterComponent";
-import { SITE_URL, SITE_NAME, SITE_LOCALE, DEFAULT_OG_IMAGE, TWITTER_HANDLE } from "@/lib/seo";
+import { SITE_URL, SITE_NAME } from "@/lib/seo";
 
 const PAGE_TITLE = "Indies Brasil — Rede Social de Desenvolvedores Indie Brasileiros";
 const PAGE_DESCRIPTION =
@@ -103,30 +103,12 @@ function Home() {
 
   return (
     <main className={styles.page}>
-      <Head>
-        <title>{PAGE_TITLE}</title>
-        <meta name="description" content={PAGE_DESCRIPTION} />
-        <meta name="keywords" content="jogos indie brasil, desenvolvedores indie brasileiros, rede social gamedev, game development brasil, indie game community, comunidade jogos independentes, gamedev br" />
-        <link rel="canonical" href={PAGE_URL} />
-        <meta name="robots" content="index, follow" />
-        <meta httpEquiv="content-language" content="pt-BR" />
-        {/* Open Graph */}
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={PAGE_URL} />
-        <meta property="og:title" content={PAGE_TITLE} />
-        <meta property="og:description" content={PAGE_DESCRIPTION} />
-        <meta property="og:image" content={DEFAULT_OG_IMAGE} />
-        <meta property="og:locale" content={SITE_LOCALE} />
-        <meta property="og:site_name" content={SITE_NAME} />
-        {/* Twitter Card */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content={TWITTER_HANDLE} />
-        <meta name="twitter:title" content={PAGE_TITLE} />
-        <meta name="twitter:description" content={PAGE_DESCRIPTION} />
-        <meta name="twitter:image" content={DEFAULT_OG_IMAGE} />
-        {/* JSON-LD */}
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
-      </Head>
+      <SeoHead
+        title={PAGE_TITLE}
+        description={PAGE_DESCRIPTION}
+        canonical={PAGE_URL}
+        jsonLd={JSON_LD}
+      />
 
       {/* HERO */}
       <section className={styles.hero}>
