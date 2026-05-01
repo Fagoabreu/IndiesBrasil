@@ -1,3 +1,4 @@
+import Head from "next/head";
 import { useEffect, useState, useCallback } from "react";
 import { Heading } from "@primer/react";
 import { useUser } from "@/context/UserContext";
@@ -7,6 +8,11 @@ import CreatePost from "@/components/CreatePost/CreatePost";
 import "./PostsPage.css";
 import PostRightBarComponent from "@/components/RightBar/PostRightBarComponent";
 import { useRouter } from "next/router";
+import { SITE_URL, SITE_NAME, SITE_LOCALE, DEFAULT_OG_IMAGE, TWITTER_HANDLE } from "@/lib/seo";
+
+const PAGE_TITLE = "Feed da Comunidade Indie | Indies Brasil";
+const PAGE_DESCRIPTION = "Acompanhe posts e atualizações de desenvolvedores, artistas e criadores de jogos independentes brasileiros. Compartilhe projetos, conquistas e conteúdo.";
+const PAGE_URL = `${SITE_URL}/posts`;
 
 export default function PostsPage() {
   const router = useRouter();
@@ -116,6 +122,26 @@ export default function PostsPage() {
 
   return (
     <div className="posts-page">
+      <Head>
+        <title>{PAGE_TITLE}</title>
+        <meta name="description" content={PAGE_DESCRIPTION} />
+        <meta name="keywords" content="jogos indie brasil, feed gamedev, posts desenvolvedores indie, comunidade indie games, game dev social brasil, projetos indie brasileiros" />
+        <link rel="canonical" href={PAGE_URL} />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={PAGE_URL} />
+        <meta property="og:title" content={PAGE_TITLE} />
+        <meta property="og:description" content={PAGE_DESCRIPTION} />
+        <meta property="og:image" content={DEFAULT_OG_IMAGE} />
+        <meta property="og:locale" content={SITE_LOCALE} />
+        <meta property="og:site_name" content={SITE_NAME} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content={TWITTER_HANDLE} />
+        <meta name="twitter:title" content={PAGE_TITLE} />
+        <meta name="twitter:description" content={PAGE_DESCRIPTION} />
+        <meta name="twitter:image" content={DEFAULT_OG_IMAGE} />
+      </Head>
+
       {/* HEADER DO FEED */}
       <div className="social-feed-header">
         <div className="feed-title-block">
