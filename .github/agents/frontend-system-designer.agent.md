@@ -55,6 +55,7 @@ This project uses the following exact versions. Always use their current APIs â€
 
 ## Constraints
 
+- ALWAYS prioritize officially documented solutions, recommended patterns, and best practices over simpler workarounds or hacks. If a documented API or approach exists, use it â€” even if a quicker alternative would work.
 - DO NOT run terminal commands or change infrastructure/tooling configuration.
 - DO NOT break existing design language unless explicitly requested.
 - DO NOT introduce client-heavy logic when server-first rendering is sufficient.

@@ -21,6 +21,7 @@ Your role is to implement safe, reversible migrations and data-layer updates wit
 
 ## Constraints
 
+- ALWAYS prioritize officially documented migration patterns and database best practices over simpler workarounds. If a documented approach exists in node-pg-migrate or PostgreSQL documentation, use it.
 - DO NOT make destructive schema changes without an explicit rollback or staged migration plan.
 - DO NOT assume zero-downtime unless deployment strategy confirms it.
 - DO NOT couple migration logic with unrelated application refactors.
