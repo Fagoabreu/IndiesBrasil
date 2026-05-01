@@ -22,7 +22,7 @@ function buildSitemap(routes) {
     <lastmod>${now}</lastmod>
     <changefreq>${changefreq}</changefreq>
     <priority>${priority}</priority>
-  </url>`
+  </url>`,
     )
     .join("");
 

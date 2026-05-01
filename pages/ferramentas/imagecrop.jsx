@@ -8,7 +8,8 @@ import { generateImage } from "@/utils/ImageUtils";
 import { SITE_URL } from "@/lib/seo";
 
 const PAGE_TITLE = "Editor e Recorte de Imagem Online Grátis | Indies Brasil";
-const PAGE_DESCRIPTION = "Recorte, redimensione, ajuste brilho, contraste e saturação de imagens online. Exporte em PNG, JPG ou WebP. Sem cadastro, grátis e direto no navegador.";
+const PAGE_DESCRIPTION =
+  "Recorte, redimensione, ajuste brilho, contraste e saturação de imagens online. Exporte em PNG, JPG ou WebP. Sem cadastro, grátis e direto no navegador.";
 const PAGE_URL = `${SITE_URL}/ferramentas/imagecrop`;
 const JSON_LD = {
   "@context": "https://schema.org",
@@ -118,12 +119,7 @@ export default function FerramentasPage() {
 
   return (
     <div className={styles.container}>
-      <SeoHead
-        title={PAGE_TITLE}
-        description={PAGE_DESCRIPTION}
-        canonical={PAGE_URL}
-        jsonLd={JSON_LD}
-      />
+      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} jsonLd={JSON_LD} />
 
       {/* Page header */}
       <header className={styles.pageHeader}>

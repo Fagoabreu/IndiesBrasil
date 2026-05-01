@@ -6,7 +6,8 @@ import styles from "./MembersPage.module.css";
 import { SITE_URL } from "@/lib/seo";
 
 const PAGE_TITLE = "Membros da Comunidade Indie Brasileira | Indies Brasil";
-const PAGE_DESCRIPTION = "Conheça desenvolvedores, artistas, designers e criadores de jogos independentes do Brasil. Encontre talentos e parceiros para seu próximo projeto indie.";
+const PAGE_DESCRIPTION =
+  "Conheça desenvolvedores, artistas, designers e criadores de jogos independentes do Brasil. Encontre talentos e parceiros para seu próximo projeto indie.";
 const PAGE_URL = `${SITE_URL}/membros`;
 
 export default function MembersPage() {
@@ -50,11 +51,7 @@ export default function MembersPage() {
 
   return (
     <div className={styles.page}>
-      <SeoHead
-        title={PAGE_TITLE}
-        description={PAGE_DESCRIPTION}
-        canonical={PAGE_URL}
-      />
+      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} />
 
       {/* PAGE HEADER */}
       <header className={styles.pageHeader}>

@@ -8,7 +8,8 @@ import Image from "next/image";
 import { SITE_URL } from "@/lib/seo";
 
 const PAGE_TITLE = "Gerador de QR Code Grátis Online | Indies Brasil";
-const PAGE_DESCRIPTION = "Crie QR Codes personalizados com logo e cores personalizadas. Baixe em PNG gratuitamente, sem cadastro. Ferramenta online para desenvolvedores e criadores.";
+const PAGE_DESCRIPTION =
+  "Crie QR Codes personalizados com logo e cores personalizadas. Baixe em PNG gratuitamente, sem cadastro. Ferramenta online para desenvolvedores e criadores.";
 const PAGE_URL = `${SITE_URL}/ferramentas/qrgen`;
 const JSON_LD = {
   "@context": "https://schema.org",
@@ -55,12 +56,7 @@ export default function QrGen() {
   };
   return (
     <main className={styles.container}>
-      <SeoHead
-        title={PAGE_TITLE}
-        description={PAGE_DESCRIPTION}
-        canonical={PAGE_URL}
-        jsonLd={JSON_LD}
-      />
+      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} jsonLd={JSON_LD} />
 
       <section className={styles.titleContainer}>
         <h1 className={styles.pageTitle}>

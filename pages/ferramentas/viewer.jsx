@@ -11,7 +11,8 @@ import { SITE_URL } from "@/lib/seo";
 const MAX_INPUT_LENGTH = 200_000;
 
 const PAGE_TITLE = "Visualizador e Formatador de JSON e XML Online | Indies Brasil";
-const PAGE_DESCRIPTION = "Formate, visualize e valide JSON e XML com syntax highlighting e indentação automática. Ferramenta online grátis, sem cadastro e sem instalação.";
+const PAGE_DESCRIPTION =
+  "Formate, visualize e valide JSON e XML com syntax highlighting e indentação automática. Ferramenta online grátis, sem cadastro e sem instalação.";
 const PAGE_URL = `${SITE_URL}/ferramentas/viewer`;
 const JSON_LD = {
   "@context": "https://schema.org",
@@ -205,12 +206,7 @@ export default function ViewerPage() {
 
   return (
     <div className={styles.container}>
-      <SeoHead
-        title={PAGE_TITLE}
-        description={PAGE_DESCRIPTION}
-        canonical={PAGE_URL}
-        jsonLd={JSON_LD}
-      />
+      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} jsonLd={JSON_LD} />
 
       {/* Page header */}
       <header className={styles.pageHeader}>

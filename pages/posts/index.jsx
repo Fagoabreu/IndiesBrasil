@@ -11,7 +11,8 @@ import { useRouter } from "next/router";
 import { SITE_URL } from "@/lib/seo";
 
 const PAGE_TITLE = "Feed da Comunidade Indie | Indies Brasil";
-const PAGE_DESCRIPTION = "Acompanhe posts e atualizações de desenvolvedores, artistas e criadores de jogos independentes brasileiros. Compartilhe projetos, conquistas e conteúdo.";
+const PAGE_DESCRIPTION =
+  "Acompanhe posts e atualizações de desenvolvedores, artistas e criadores de jogos independentes brasileiros. Compartilhe projetos, conquistas e conteúdo.";
 const PAGE_URL = `${SITE_URL}/posts`;
 
 export default function PostsPage() {
@@ -122,11 +123,7 @@ export default function PostsPage() {
 
   return (
     <div className="posts-page">
-      <SeoHead
-        title={PAGE_TITLE}
-        description={PAGE_DESCRIPTION}
-        canonical={PAGE_URL}
-      />
+      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} />
 
       {/* HEADER DO FEED */}
       <div className="social-feed-header">
