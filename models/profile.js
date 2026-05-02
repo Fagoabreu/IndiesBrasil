@@ -234,6 +234,48 @@ async function saveRoles(userInputValues) {
   }
 }
 
+async function saveImages(userInputValues) {
+  const currentImages = await runSelectQuery(userInputValues.user_id);
+  const imagesNewValues = {
+    ...currentImages,
+    ...userInputValues,
+  };
+
+  const updatedImages = await runUpdateQuery(imagesNewValues);
+  return updatedImages;
+
+  async function runSelectQuery(user_id) {
+    const results = await database.query({
+      text: `
+        select
+          id as user_id,
+          avatar_image,
+          background_image
+        from
+          users
+        where id=$1
+        `,
+      values: [user_id],
+    });
+    return results.rows[0];
+  }
+
+  async function runUpdateQuery(userInputValues) {
+    const results = await database.query({
+      text: `
+        update users
+        set
+          avatar_image=$1,
+          background_image=$2
+        where id=$3
+          returning id as user_id, avatar_image, background_image
+        `,
+      values: [userInputValues.avatar_image, userInputValues.background_image, userInputValues.id],
+    });
+    return results.rows[0];
+  }
+}
+
 async function patchRoles(user_id, portfolio_role_name, userInputValues) {
   const currentRole = await selectRoleByUserAndRole(user_id, portfolio_role_name);
   const roleWithNewValues = {
@@ -805,6 +847,7 @@ const profile = {
   saveContato,
   saveTools,
   saveRoles,
+  saveImages,
 
   patchHistorico,
   patchContacts,
