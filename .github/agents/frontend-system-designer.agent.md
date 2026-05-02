@@ -62,6 +62,61 @@ This project uses the following exact versions. Always use their current APIs �
 - DO NOT use deprecated APIs from any installed library — always use the API matching the exact installed version above.
 - ONLY modify frontend code paths (pages, app routes, components, styles) relevant to the request.
 
+## Code Quality (SonarQube)
+
+All UI code produced must pass SonarQube quality gates. Treat violations as blocking — not optional.
+
+### Duplication (≤ 3% on new code)
+
+- **Never copy JSX blocks across pages or components.** Extract any repeated structure (Head tags, card layouts, form sections, error states) into a dedicated component before use.
+- Before creating a component, search the existing `components/` tree for a re-usable fit. Extend or compose before duplicating.
+- Shared metadata/SEO patterns must use `SeoHead` (or equivalent shared component) — never inline raw `<Head>` blocks.
+
+### Complexity & Maintainability
+
+- Keep cyclomatic complexity ≤ 10 per function/component handler.
+- Split event handlers, data transforms, and render logic into named helpers.
+- No `TODO`/`FIXME` comments in committed code.
+- Cognitive complexity: use early returns, guard clauses, and named predicates over nested conditions.
+
+### Reliability
+
+- Never use empty `catch {}` blocks — log or surface errors.
+- All async operations in `useEffect` must handle errors and cleanup.
+
+### JavaScript Rules
+
+- `const` over `let`; never `var`.
+- Remove unused imports before committing.
+- Use `Number.parseInt`, `Number.isNaN` (qualified forms).
+- Prefer `globalThis` over `window`.
+- Always `===` — never `==`.
+
+### CSS / Styling
+
+- No duplicate CSS rules within the same module.
+- No hard-coded hex color values — use design tokens (`--fgColor-*`, `--bgColor-*`) exclusively.
+
+## Project Lint Rules (eslint.config.mjs)
+
+All generated UI code must comply with the project's ESLint configuration **before** considering a task done.
+
+**Active rule sets:**
+
+- `@eslint/js` recommended — baseline JS rules
+- `eslint-config-next` — Next.js Pages Router rules; includes `react-hooks` plugin
+- `eslint-plugin-primer-react` recommended — enforces correct Primer React component usage (e.g. Dialog props, deprecated patterns)
+- `eslint-config-prettier` — disables formatting rules conflicting with Prettier
+- Custom globals: `no-unused-vars: warn`, `no-undef: error`
+
+**Mandatory practices:**
+
+- After implementing any UI change, mentally validate that code passes `eslint .` with zero errors.
+- Remove all unused imports and variables — `no-unused-vars` is active.
+- Respect `eslint-plugin-primer-react` rules: they catch incorrect component API usage that would otherwise fail at runtime.
+- Never add `// eslint-disable` without an explicit justification comment on the same line.
+- Prettier is enforced via `lint:prettier:check` — produce code consistent with the project's Prettier config (no manual formatting choices).
+
 ## Approach
 
 1. Understand UX intent, data dependencies, and interactive requirements.
