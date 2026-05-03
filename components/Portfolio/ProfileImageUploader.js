@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import PropTypes from "prop-types";
-import { Button, Avatar } from "@primer/react";
+import { Button, Avatar, IconButton } from "@primer/react";
+import { PencilIcon } from "@primer/octicons-react";
 import styles from "./ProfileImageUploader.module.css";
 import ImageCropModal from "@/components/ImageTools/ImageCropTool/ImageCropModal";
 
@@ -35,7 +36,7 @@ export default function ProfileImageUploader({
     // Reset input so the same file can be re-selected after cancel
     event.target.value = "";
 
-    if (withCrop) {
+    if (withCrop || type === "cover") {
       const reader = new FileReader();
       reader.onload = () => setCropSrc(reader.result);
       reader.readAsDataURL(selectedFile);
@@ -89,10 +90,14 @@ export default function ProfileImageUploader({
       )}
 
       {/* Trigger button */}
-      {!previewUrl && (
-        <Button size="small" variant="outline" onClick={openFileDialog} disabled={disabled || loading}>
+      {!previewUrl && type === "cover" && (
+        <Button size="small" variant="primary" onClick={openFileDialog} disabled={disabled || loading}>
           {label}
         </Button>
+      )}
+
+      {!previewUrl && type !== "cover" && (
+        <IconButton icon={PencilIcon} size="small" variant="primary" aria-label={label} onClick={openFileDialog} disabled={disabled || loading} />
       )}
 
       {/* Plain preview (withCrop=false) */}

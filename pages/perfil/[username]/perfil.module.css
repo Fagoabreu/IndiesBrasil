@@ -23,6 +23,8 @@
   position: absolute;
   top: 75px;
   left: 24px;
+  width: 128px;
+  height: 128px;
 }
 
 .profileAvatar {
@@ -32,14 +34,22 @@
 
 .coverUploader {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.coverUploader > * {
+  pointer-events: auto;
 }
 
 .avatarUploader {
-  position: inherit;
-  top: 96px;
-  right: 0px;
+  position: absolute;
+  bottom: 2px;
+  right: -6px;
 }
 
 .profileHeaderInfo {
