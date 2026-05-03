@@ -10,6 +10,7 @@ const FIELD_KEYS = Object.freeze({
   username: "username",
   email: "email",
   cpf: "cpf",
+  birthDate: "birthDate",
   password: ["pass", "word"].join(""),
   confirmPass: "confirmPass",
 });
@@ -21,6 +22,7 @@ export default function Cadastro() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [cpf, setCpf] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
 
@@ -131,6 +133,18 @@ export default function Cadastro() {
       newErrors[FIELD_KEYS.cpf] = "CPF inválido.";
     }
 
+    if (birthDate) {
+      const today = new Date();
+      const birth = new Date(birthDate);
+      if (Number.isNaN(birth.getTime())) {
+        newErrors[FIELD_KEYS.birthDate] = "Data de nascimento inválida.";
+      } else if (birth >= today) {
+        newErrors[FIELD_KEYS.birthDate] = "A data de nascimento deve ser no passado.";
+      }
+    } else {
+      newErrors[FIELD_KEYS.birthDate] = "Informe a data de nascimento.";
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setFieldErrors(newErrors);
       setLoading(false);
@@ -143,7 +157,7 @@ export default function Cadastro() {
       const response = await fetch("/api/v1/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password, cpf: rawCpf }),
+        body: JSON.stringify({ username, email, password, cpf: rawCpf, birth_date: birthDate }),
       });
 
       if (response.status === 201) {
@@ -175,6 +189,7 @@ export default function Cadastro() {
   const statusUser = username ? "success" : undefined;
   const statusEmail = !fieldErrors.email && email ? "success" : undefined;
   const statusCpf = cpf && isValidCPF(cpf) ? "success" : undefined;
+  const statusBirthDate = birthDate && !fieldErrors.birthDate ? "success" : undefined;
   const statusPass = password && strongEnough ? "success" : undefined;
   const statusConfirm = confirmPass && confirmPass === password ? "success" : undefined;
 
@@ -237,6 +252,23 @@ export default function Cadastro() {
                   placeholder="000.000.000-00"
                 />
                 {fieldErrors.cpf && <FormControl.Validation variant="error">{fieldErrors.cpf}</FormControl.Validation>}
+              </FormControl>
+            )}
+
+            {/* BIRTH DATE */}
+            {showForm && (
+              <FormControl required validationStatus={fieldErrors.birthDate ? "error" : statusBirthDate}>
+                <FormControl.Label>Data de nascimento</FormControl.Label>
+                <TextInput
+                  block
+                  type="date"
+                  value={birthDate}
+                  onChange={(e) => {
+                    setBirthDate(e.target.value);
+                    cleanFieldError("birthDate");
+                  }}
+                />
+                {fieldErrors.birthDate && <FormControl.Validation variant="error">{fieldErrors.birthDate}</FormControl.Validation>}
               </FormControl>
             )}
 
