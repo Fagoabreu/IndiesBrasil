@@ -118,18 +118,18 @@ async function findOneByUsername(username) {
       text: `
         select
           u.id,
-          username,
-          email,
-          updated_at,
-          created_at,
-          avatar_image,
-          cpf,
-          password,
-          features,
-          resumo,
-          bio,
-          visibility,
-          u.background_image,
+          u.username,
+          u.email,
+          u.updated_at,
+          u.created_at,
+          ui.secure_url as avatar_image,
+          u.cpf,
+          u.password,
+          u.features,
+          u.resumo,
+          u.bio,
+          u.visibility,
+          ub.secure_url as background_image,
           COALESCE(f.followers_count, 0) AS followers_count,
           COALESCE(f2.following_count,0) as following_count,
           COALESCE(p.posts_count,0) as posts_count
@@ -159,6 +159,9 @@ async function findOneByUsername(username) {
             FROM posts
             GROUP BY author_id
           ) p ON p.author_id = u.id
+          -- busca imagens
+          left join uploaded_images ui on ui.id = u.avatar_image
+          left join uploaded_images ub on ub.id = u.background_image
         where 
           LOWER(u.username) = LOWER($1)
         limit

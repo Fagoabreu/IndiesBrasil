@@ -71,9 +71,10 @@ export default function ProfileImageUploader({
   // ── shared upload ──────────────────────────────────────
   async function uploadBlob(data) {
     const formData = new FormData();
-    formData.append("image", data);
+    formData.append("file", data);
+    formData.append("imgType", type === "cover" ? "background_image" : "avatar_image");
     setLoading(true);
-    await fetch(endpoint, { method: "PATCH", credentials: "include", body: formData });
+    await fetch(endpoint, { method: "POST", credentials: "include", body: formData });
     setLoading(false);
     if (onUploaded) await onUploaded();
   }

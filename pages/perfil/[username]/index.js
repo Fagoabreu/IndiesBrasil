@@ -306,7 +306,6 @@ export default function Perfil() {
   async function saveContato(payload) {
     const isEditing = Boolean(contatoModal.editing);
     const ordem = isEditing ? contatoModal.editing.ordem : perfilUser.contacts.length;
-    console.log("Saving contato:", { payload, isEditing, ordem });
     await fetchJSON(`/api/v1/users/${username}/contacts${isEditing ? `/${contatoModal.editing.id}` : ""}`, {
       method: isEditing ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },

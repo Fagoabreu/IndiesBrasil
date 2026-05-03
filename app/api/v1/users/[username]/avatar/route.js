@@ -5,14 +5,13 @@ import authorization from "@/models/authorization";
 import profile from "@/models/profile";
 import user from "@/models/user";
 
-export async function POST(request) {
+export async function POST(request, context) {
   try {
     await controller.injectApiUser(request);
     const requestUser = request.context.user;
 
-    const searchParams = request.nextUrl.searchParams;
-    const targetUserName = searchParams.get("username");
-    const targetUser = await user.getUserByUsername(targetUserName);
+    const { username: targetUserName } = await context.params;
+    const targetUser = await user.findOneByUsername(targetUserName);
 
     if (!authorization.can(requestUser, "update:user", targetUser)) {
       throw new ForbiddenError({
@@ -37,9 +36,8 @@ export async function POST(request) {
         userInputValues.background_image = imageData.id;
       }
     }
-
-    const resultImage = await profile.saveImages(userInputValues, targetUser.id);
-    const secureOutputValues = await authorization.filterOutput(user, "read:user", resultImage);
+    const resultImage = await profile.saveImages(userInputValues);
+    const secureOutputValues = await authorization.filterOutput(requestUser, "read:user", resultImage);
 
     return Response.json(secureOutputValues, { status: 201 });
   } catch (error) {

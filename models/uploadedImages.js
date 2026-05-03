@@ -63,10 +63,23 @@ async function deleteImage(id) {
   return results.rows[0];
 }
 
+async function findById(id) {
+  const results = await database.query({
+    text: `
+      select *
+      from uploaded_images
+      where id = $1
+    `,
+    values: [id],
+  });
+  return results.rows[0];
+}
+
 const uploadedImages = {
   uploadImage,
   deleteImage,
   saveImage,
+  findById,
 };
 
 export default uploadedImages;

@@ -1,6 +1,7 @@
 import database from "infra/database";
 import user from "./user";
 import { NotFoundError } from "@/infra/errors";
+import uploadedImages from "./uploadedImages";
 
 async function canReadProfile(currentUser, readerUser) {
   if (currentUser.id === readerUser.id) {
@@ -240,8 +241,8 @@ async function saveImages(userInputValues) {
     ...currentImages,
     ...userInputValues,
   };
-
   const updatedImages = await runUpdateQuery(imagesNewValues);
+  console.log("Updated images:", updatedImages);
   return updatedImages;
 
   async function runSelectQuery(user_id) {
@@ -260,7 +261,7 @@ async function saveImages(userInputValues) {
     return results.rows[0];
   }
 
-  async function runUpdateQuery(userInputValues) {
+  async function runUpdateQuery(imagesNewValues) {
     const results = await database.query({
       text: `
         update users
@@ -270,7 +271,7 @@ async function saveImages(userInputValues) {
         where id=$3
           returning id as user_id, avatar_image, background_image
         `,
-      values: [userInputValues.avatar_image, userInputValues.background_image, userInputValues.id],
+      values: [imagesNewValues.avatar_image, imagesNewValues.background_image, imagesNewValues.user_id],
     });
     return results.rows[0];
   }
