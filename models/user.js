@@ -87,6 +87,7 @@ async function findOneById(id) {
           bio,
           visibility,
           background_image,
+          avatar_image,
           created_at,
           updated_at
         from 

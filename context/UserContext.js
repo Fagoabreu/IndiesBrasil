@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 const UserContext = createContext();
 
@@ -12,7 +12,7 @@ export function UserProvider({ children }) {
   const [loadingUser, setLoadingUser] = useState(true);
   const router = useRouter();
 
-  async function fetchUser() {
+  const fetchUser = useCallback(async () => {
     try {
       const res = await fetch("/api/v1/user", {
         method: "GET",
@@ -30,9 +30,9 @@ export function UserProvider({ children }) {
     }
 
     setLoadingUser(false);
-  }
+  }, []);
 
-  async function logout() {
+  const logout = useCallback(async () => {
     await fetch("/api/v1/sessions", {
       method: "DELETE",
       credentials: "include",
@@ -40,45 +40,19 @@ export function UserProvider({ children }) {
 
     setUser(null);
     router.push("/login");
-  }
+  }, [router]);
 
   useEffect(() => {
-    async function init() {
-      try {
-        const res = await fetch("/api/v1/user", {
-          method: "GET",
-          credentials: "include",
-        });
+    fetchUser();
+  }, [fetchUser]);
 
-        if (res.status === 200) {
-          const data = await res.json();
-          setUser(data);
-        } else {
-          setUser(null);
-        }
-      } catch {
-        setUser(null);
-      }
-
-      setLoadingUser(false);
-    }
-
-    init(); // agora está válido
-  }, []);
-
-  return (
-    <UserContext.Provider
-      value={{
-        user,
-        setUser,
-        fetchUser, // ainda disponível externamente
-        logout,
-        loadingUser,
-      }}
-    >
-      {children}
-    </UserContext.Provider>
+  const contextValue = useMemo(
+    () => ({ user, setUser, fetchUser, logout, loadingUser }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [user, loadingUser],
   );
+
+  return <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>;
 }
 
 export { UserContext };
