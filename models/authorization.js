@@ -299,6 +299,16 @@ function filterOutput(user, feature, resource) {
     });
   }
 
+  if (feature === "read:profile_images") {
+    return getProfileImagesResource(resource);
+  }
+
+  if (feature === "read:profile_images:all") {
+    return resource.map((resourceItem) => {
+      return getProfileImagesResource(resourceItem);
+    });
+  }
+
   if (feature === "read:user_follow") {
     return {
       followed: resource.followed,
@@ -467,6 +477,13 @@ function getProfileToolResource(resource) {
     experience: resource.experience,
     name: resource.name,
     icon_img: resource.icon_img,
+  };
+}
+
+function getProfileImagesResource(resource) {
+  return {
+    avatar_image: resource.avatar_image,
+    background_image: resource.background_image,
   };
 }
 

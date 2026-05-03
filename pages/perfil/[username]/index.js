@@ -306,7 +306,6 @@ export default function Perfil() {
   async function saveContato(payload) {
     const isEditing = Boolean(contatoModal.editing);
     const ordem = isEditing ? contatoModal.editing.ordem : perfilUser.contacts.length;
-    console.log("Saving contato:", { payload, isEditing, ordem });
     await fetchJSON(`/api/v1/users/${username}/contacts${isEditing ? `/${contatoModal.editing.id}` : ""}`, {
       method: isEditing ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
@@ -412,7 +411,7 @@ export default function Perfil() {
             <Image src={perfilUser.user.cover_image || "/images/sistematags.png"} alt="Capa do perfil" fill unoptimized />
             {isOwnProfile && (
               <div className={style.coverUploader}>
-                <ProfileImageUploader endpoint={`/api/v1/users/${username}/cover`} onUploaded={reloadProfile} label="Alterar capa" type="cover" />
+                <ProfileImageUploader endpoint={`/api/v1/users/${username}/avatar`} onUploaded={reloadProfile} label="Alterar capa" type="cover" />
               </div>
             )}
           </div>

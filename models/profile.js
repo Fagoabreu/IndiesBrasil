@@ -1,6 +1,7 @@
 import database from "infra/database";
 import user from "./user";
 import { NotFoundError } from "@/infra/errors";
+import uploadedImages from "./uploadedImages";
 
 async function canReadProfile(currentUser, readerUser) {
   if (currentUser.id === readerUser.id) {
@@ -231,6 +232,48 @@ async function saveRoles(userInputValues) {
       values: [userInputValues.user_id, userInputValues.name, userInputValues.experience, userInputValues.ordem],
     });
     return results.rows;
+  }
+}
+
+async function saveImages(userInputValues) {
+  const currentImages = await runSelectQuery(userInputValues.user_id);
+  const imagesNewValues = {
+    ...currentImages,
+    ...userInputValues,
+  };
+  const updatedImages = await runUpdateQuery(imagesNewValues);
+  console.log("Updated images:", updatedImages);
+  return updatedImages;
+
+  async function runSelectQuery(user_id) {
+    const results = await database.query({
+      text: `
+        select
+          id as user_id,
+          avatar_image,
+          background_image
+        from
+          users
+        where id=$1
+        `,
+      values: [user_id],
+    });
+    return results.rows[0];
+  }
+
+  async function runUpdateQuery(imagesNewValues) {
+    const results = await database.query({
+      text: `
+        update users
+        set
+          avatar_image=$1,
+          background_image=$2
+        where id=$3
+          returning id as user_id, avatar_image, background_image
+        `,
+      values: [imagesNewValues.avatar_image, imagesNewValues.background_image, imagesNewValues.user_id],
+    });
+    return results.rows[0];
   }
 }
 
@@ -805,6 +848,7 @@ const profile = {
   saveContato,
   saveTools,
   saveRoles,
+  saveImages,
 
   patchHistorico,
   patchContacts,

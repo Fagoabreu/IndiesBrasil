@@ -27,6 +27,39 @@ Your role is to implement safe, reversible migrations and data-layer updates wit
 - DO NOT couple migration logic with unrelated application refactors.
 - ONLY change database/migration/data-access code required for the requested evolution.
 
+## Code Quality (SonarQube)
+
+Migration and data-layer code must also pass SonarQube gates.
+
+### Duplication
+
+- Extract repeated SQL fragments into named query builders or constants — never copy-paste SQL blocks.
+- Shared migration utilities (e.g. index creation helpers, enum pattern) must live in a shared migration helper, not duplicated per file.
+
+### Reliability
+
+- Every `async` function in data-access code must have explicit error handling — no silent `catch {}`.
+- Always use parameterized queries — never string-interpolated SQL.
+- Use `Number.parseInt(x, 10)` for any numeric coercion from query results.
+
+### Complexity
+
+- Migration scripts should be single-purpose. One concern per file.
+- Complex data transforms must be extracted to named helpers, not inlined in migration scripts.
+
+## Project Lint Rules (eslint.config.mjs)
+
+Migration and data-layer code must comply with the project's ESLint configuration.
+
+**Note:** `infra/**/*.js` is excluded from lint by `eslint.config.mjs`. However, code in `models/`, `lib/`, and `pages/api/` is fully linted — ensure those files are clean.
+
+**Mandatory practices:**
+
+- Run `npm run lint` after any change to `models/`, `lib/`, or `pages/api/` files.
+- No `no-unused-vars` or `no-undef` violations in data-access code.
+- Never inline `// eslint-disable` without a justification comment.
+- Commit messages must follow Conventional Commits (`fix:`, `feat:`, `chore:`, `refactor:`) per `commitlint.config.js`.
+
 ## Approach
 
 1. Assess current schema usage and compatibility constraints.
