@@ -8,7 +8,7 @@ import { useTagSuggest } from "@/context/dataHooks/UseTagSuggest";
 
 CreatePost.propTypes = {
   user: PropTypes.shape({
-    avatarUrl: PropTypes.string,
+    avatar_image: PropTypes.string,
   }).isRequired,
 
   onPost: PropTypes.func.isRequired,
@@ -53,7 +53,7 @@ export default function CreatePost({ user, onPost }) {
   return (
     <div className={styles.container}>
       <Stack direction="horizontal" gap={2} align="flex-start">
-        <Avatar src={user.avatarUrl || "/images/avatar.png"} size={40} />
+        <Avatar src={user.avatar_image || "/images/avatar.png"} size={40} />
 
         <div className={styles.contentArea}>
           <Textarea

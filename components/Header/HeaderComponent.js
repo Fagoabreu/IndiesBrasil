@@ -18,7 +18,7 @@ export default function HeaderComponent({ onMenuClick }) {
   const router = useRouter();
   const { user, logout } = useUser();
 
-  const avatarSrc = user?.avatarUrl || "/images/avatar.png";
+  const avatarSrc = user?.avatar_image || "/images/avatar.png";
   const usernameLabel = user?.name || user?.username || "Usuário";
 
   return (

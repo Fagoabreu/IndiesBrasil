@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 import { NavList } from "@primer/react";
 import { ChevronDownIcon, ChevronRightIcon } from "@primer/octicons-react";
 import { useUser } from "@/context/UserContext";
@@ -13,15 +14,15 @@ export default function LeftSidebarComponent() {
 
   return (
     <NavList>
-      <NavList.Item href="/" aria-current={router.pathname === "/"}>
+      <NavList.Item as={Link} href="/" aria-current={router.pathname === "/"}>
         Home
       </NavList.Item>
 
-      <NavList.Item href="/posts" aria-current={router.pathname.startsWith("/posts")}>
+      <NavList.Item as={Link} href="/posts" aria-current={router.pathname.startsWith("/posts")}>
         Posts
       </NavList.Item>
 
-      <NavList.Item href="/membros" aria-current={router.pathname.startsWith("/membros")}>
+      <NavList.Item as={Link} href="/membros" aria-current={router.pathname.startsWith("/membros")}>
         Membros
       </NavList.Item>
 
@@ -33,9 +34,15 @@ export default function LeftSidebarComponent() {
 
           {adminOpen && (
             <>
-              <NavList.Item href="/admin/contact-types">Contatos</NavList.Item>
-              <NavList.Item href="/admin/tools">Ferramentas</NavList.Item>
-              <NavList.Item href="/admin/professions">Profissões</NavList.Item>
+              <NavList.Item as={Link} href="/admin/contact-types">
+                Contatos
+              </NavList.Item>
+              <NavList.Item as={Link} href="/admin/tools">
+                Ferramentas
+              </NavList.Item>
+              <NavList.Item as={Link} href="/admin/professions">
+                Profissões
+              </NavList.Item>
             </>
           )}
         </NavList.Group>
@@ -48,9 +55,15 @@ export default function LeftSidebarComponent() {
 
         {toolsOpen && (
           <>
-            <NavList.Item href="/ferramentas/qrgen">Gerador QR</NavList.Item>
-            <NavList.Item href="/ferramentas/imagecrop">Recortar Imagem</NavList.Item>
-            <NavList.Item href="/ferramentas/viewer">Visualizador XML/JSON</NavList.Item>
+            <NavList.Item as={Link} href="/ferramentas/qrgen">
+              Gerador QR
+            </NavList.Item>
+            <NavList.Item as={Link} href="/ferramentas/imagecrop">
+              Recortar Imagem
+            </NavList.Item>
+            <NavList.Item as={Link} href="/ferramentas/viewer">
+              Visualizador XML/JSON
+            </NavList.Item>
           </>
         )}
       </NavList.Group>
