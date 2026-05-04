@@ -21,12 +21,13 @@ async function create(userInputValues) {
           email,
           password,
           cpf,
+          birth_date,
           features,
           resumo,
           visibility,
           bio) 
       values
-        ($1,$2,$3,$4,$5,$6,$7,$8)
+        ($1,$2,$3,$4,$5,$6,$7,$8,$9)
       returning
         *`,
       values: [
@@ -34,6 +35,7 @@ async function create(userInputValues) {
         userInputValues.email,
         userInputValues.password,
         userInputValues.cpf,
+        userInputValues.birth_date,
         userInputValues.features,
         userInputValues.resumo,
         userInputValues.visibility || "public",
@@ -58,6 +60,9 @@ async function update(username, userInputValues) {
   }
   if ("cpf" in userInputValues) {
     await validateUniqueCPF(userInputValues.cpf);
+  }
+  if ("birth_date" in userInputValues) {
+    validateBirthDate(userInputValues.birth_date);
   }
   if ("password" in userInputValues) {
     await hashPasswordInObject(userInputValues);
@@ -235,6 +240,15 @@ async function findOneByEmail(email) {
     }
 
     return results.rows[0];
+  }
+}
+
+function validateBirthDate(birthDate) {
+  if (Number.isNaN(birthDate.getTime())) {
+    throw new ValidationError({
+      message: "Data de nascimento inválida.",
+      action: "Verifique se a data de nascimento foi digitada corretamente",
+    });
   }
 }
 

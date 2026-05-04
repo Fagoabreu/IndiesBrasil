@@ -172,7 +172,29 @@ Always move client-only UI into a Client Component and import it directly in you
 
 Do not create example/demo files (like ModalExample.tsx) in the main codebase unless the user specifically requests a live example, Storybook story, or explicit documentation component. Keep the repository clean and production-focused by default.
 
-## 10. Always Use the Latest Documentation and Guides
+## 10. Styling — Never Use the `sx` Prop
+
+- **Do not use the `sx` prop** (from Primer React or Theme UI) for any styling, even for one-off layout adjustments.
+- **Always use CSS** — preferably CSS Modules (`.module.css`) colocated with the component, or the global stylesheet (`css/styles.css`).
+- This applies to all components, including Primer React components. Use `className` with a CSS Module class instead.
+
+**Wrong:**
+
+```tsx
+<Select sx={{ minWidth: "90px", flexShrink: 0 }} />
+```
+
+**Correct:**
+
+```tsx
+// Component.module.css
+.selectDay { min-width: 90px; flex-shrink: 0; }
+
+// Component.tsx
+<Select className={styles.selectDay} />
+```
+
+## 11. Always Use the Latest Documentation and Guides
 
 - For every Next.js related request, begin by searching for the most up-to-date Next.js documentation, guides, and examples.
 - Use the following tools to fetch and search documentation if they are available:

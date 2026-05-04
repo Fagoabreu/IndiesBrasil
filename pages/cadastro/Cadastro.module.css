@@ -55,3 +55,23 @@
   font-size: 12px;
   color: var(--fgColor-muted);
 }
+
+.birthDateRow {
+  display: flex;
+  gap: 8px;
+}
+
+.selectDay {
+  min-width: 65px;
+  flex-shrink: 0;
+}
+
+.selectMonth {
+  min-width: 140px;
+  flex-shrink: 0;
+}
+
+.selectYear {
+  min-width: 80px;
+  flex-shrink: 0;
+}

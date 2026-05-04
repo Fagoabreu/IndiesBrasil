@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router";
-import { Heading, Button, FormControl, TextInput, Stack, Spinner, ProgressBar, IconButton } from "@primer/react";
+import { Heading, Button, FormControl, TextInput, Select, Stack, Spinner, ProgressBar, IconButton } from "@primer/react";
 import { EyeIcon, EyeClosedIcon } from "@primer/octicons-react";
 import PasswordRule from "@/components/PasswordRule.js";
 import styles from "./Cadastro.module.css";
@@ -10,6 +10,7 @@ const FIELD_KEYS = Object.freeze({
   username: "username",
   email: "email",
   cpf: "cpf",
+  birthDate: "birthDate",
   password: ["pass", "word"].join(""),
   confirmPass: "confirmPass",
 });
@@ -21,6 +22,10 @@ export default function Cadastro() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [cpf, setCpf] = useState("");
+  const [birthDay, setBirthDay] = useState("");
+  const [birthMonth, setBirthMonth] = useState("");
+  const [birthYear, setBirthYear] = useState("");
+  const birthDateValue = birthDay && birthMonth && birthYear ? `${birthYear}-${birthMonth}-${birthDay}` : "";
   const [password, setPassword] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
 
@@ -81,6 +86,11 @@ export default function Cadastro() {
     return score;
   }
 
+  function getMaxDays(month, year) {
+    if (!month) return 31;
+    return new Date(parseInt(year) || 2000, parseInt(month), 0).getDate();
+  }
+
   const strength = getPasswordStrength(password);
 
   const strengthInfo = {
@@ -131,6 +141,18 @@ export default function Cadastro() {
       newErrors[FIELD_KEYS.cpf] = "CPF inválido.";
     }
 
+    if (birthDateValue) {
+      const birth = new Date(birthDateValue);
+      const today = new Date();
+      if (Number.isNaN(birth.getTime())) {
+        newErrors[FIELD_KEYS.birthDate] = "Data de nascimento inválida.";
+      } else if (birth >= today) {
+        newErrors[FIELD_KEYS.birthDate] = "A data de nascimento deve ser no passado.";
+      }
+    } else {
+      newErrors[FIELD_KEYS.birthDate] = "Informe a data de nascimento.";
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setFieldErrors(newErrors);
       setLoading(false);
@@ -143,7 +165,7 @@ export default function Cadastro() {
       const response = await fetch("/api/v1/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password, cpf: rawCpf }),
+        body: JSON.stringify({ username, email, password, cpf: rawCpf, birth_date: birthDateValue }),
       });
 
       if (response.status === 201) {
@@ -175,6 +197,7 @@ export default function Cadastro() {
   const statusUser = username ? "success" : undefined;
   const statusEmail = !fieldErrors.email && email ? "success" : undefined;
   const statusCpf = cpf && isValidCPF(cpf) ? "success" : undefined;
+  const statusBirthDate = birthDateValue && !fieldErrors.birthDate ? "success" : undefined;
   const statusPass = password && strongEnough ? "success" : undefined;
   const statusConfirm = confirmPass && confirmPass === password ? "success" : undefined;
 
@@ -237,6 +260,96 @@ export default function Cadastro() {
                   placeholder="000.000.000-00"
                 />
                 {fieldErrors.cpf && <FormControl.Validation variant="error">{fieldErrors.cpf}</FormControl.Validation>}
+              </FormControl>
+            )}
+
+            {/* BIRTH DATE */}
+            {showForm && (
+              <FormControl required validationStatus={fieldErrors.birthDate ? "error" : statusBirthDate}>
+                <FormControl.Label>Data de nascimento</FormControl.Label>
+                <div className={styles.birthDateRow}>
+                  <Select
+                    aria-label="Dia"
+                    value={birthDay}
+                    className={styles.selectDay}
+                    onChange={(e) => {
+                      setBirthDay(e.target.value);
+                      cleanFieldError("birthDate");
+                    }}
+                  >
+                    <Select.Option value="" disabled>
+                      Dia
+                    </Select.Option>
+                    {Array.from({ length: getMaxDays(birthMonth, birthYear) }, (_, i) => {
+                      const d = String(i + 1).padStart(2, "0");
+                      return (
+                        <Select.Option key={d} value={d}>
+                          {i + 1}
+                        </Select.Option>
+                      );
+                    })}
+                  </Select>
+                  <Select
+                    aria-label="Mês"
+                    value={birthMonth}
+                    className={styles.selectMonth}
+                    onChange={(e) => {
+                      const newMonth = e.target.value;
+                      setBirthMonth(newMonth);
+                      if (birthDay && parseInt(birthDay) > getMaxDays(newMonth, birthYear)) setBirthDay("");
+                      cleanFieldError("birthDate");
+                    }}
+                  >
+                    <Select.Option value="" disabled>
+                      Mês
+                    </Select.Option>
+                    {[
+                      "Janeiro",
+                      "Fevereiro",
+                      "Março",
+                      "Abril",
+                      "Maio",
+                      "Junho",
+                      "Julho",
+                      "Agosto",
+                      "Setembro",
+                      "Outubro",
+                      "Novembro",
+                      "Dezembro",
+                    ].map((m, i) => {
+                      const val = String(i + 1).padStart(2, "0");
+                      return (
+                        <Select.Option key={val} value={val}>
+                          {m}
+                        </Select.Option>
+                      );
+                    })}
+                  </Select>
+                  <Select
+                    aria-label="Ano"
+                    value={birthYear}
+                    className={styles.selectYear}
+                    onChange={(e) => {
+                      const newYear = e.target.value;
+                      setBirthYear(newYear);
+                      if (birthDay && parseInt(birthDay) > getMaxDays(birthMonth, newYear)) setBirthDay("");
+                      cleanFieldError("birthDate");
+                    }}
+                  >
+                    <Select.Option value="" disabled>
+                      Ano
+                    </Select.Option>
+                    {Array.from({ length: new Date().getFullYear() - 1899 }, (_, i) => {
+                      const y = String(new Date().getFullYear() - i);
+                      return (
+                        <Select.Option key={y} value={y}>
+                          {y}
+                        </Select.Option>
+                      );
+                    })}
+                  </Select>
+                </div>
+                {fieldErrors.birthDate && <FormControl.Validation variant="error">{fieldErrors.birthDate}</FormControl.Validation>}
               </FormControl>
             )}
 
