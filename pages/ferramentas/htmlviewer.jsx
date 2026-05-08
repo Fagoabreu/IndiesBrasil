@@ -3,6 +3,7 @@ import { useState, useCallback, useRef } from "react";
 import { Button } from "@primer/react";
 import { PlayIcon, TrashIcon } from "@primer/octicons-react";
 
+import shared from "./toolPage.module.css";
 import styles from "./htmlviewer.module.css";
 import { SITE_URL } from "@/lib/seo";
 
@@ -53,22 +54,22 @@ export default function HtmlViewerPage() {
   }, []);
 
   return (
-    <div className={styles.container}>
+    <div className={shared.container}>
       <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} jsonLd={JSON_LD} />
 
       {/* Page header */}
-      <header className={styles.pageHeader}>
-        <h1 className={styles.pageTitle}>Visualizador de HTML</h1>
-        <p className={styles.pageSubtitle}>
+      <header className={shared.pageHeader}>
+        <h1 className={shared.pageTitle}>Visualizador de HTML</h1>
+        <p className={shared.pageSubtitle}>
           Cole seu código HTML e clique em <strong>Renderizar</strong> para ver a página. A prévia é completamente isolada do site.
         </p>
       </header>
 
-      <div className={styles.workspace}>
+      <div className={shared.workspace}>
         {/* Input panel */}
         <section className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <span className={styles.panelLabel}>Código HTML</span>
+          <div className={shared.panelHeader}>
+            <span className={shared.panelLabel}>Código HTML</span>
             <Button size="small" variant="invisible" onClick={clear} aria-label="Limpar">
               <TrashIcon size={14} />
               Limpar
@@ -85,8 +86,8 @@ export default function HtmlViewerPage() {
             autoCorrect="off"
           />
 
-          <div className={styles.panelFooter}>
-            <span className={styles.charCount}>{input.length > 0 ? `${input.length} caracteres` : ""}</span>
+          <div className={shared.panelFooter}>
+            <span className={shared.charCount}>{input.length > 0 ? `${input.length} caracteres` : ""}</span>
             <Button onClick={render} disabled={!input.trim()}>
               <PlayIcon size={14} />
               Renderizar
@@ -96,16 +97,16 @@ export default function HtmlViewerPage() {
 
         {/* Preview panel */}
         <section className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <span className={styles.panelLabel}>
-              Prévia
+          <div className={shared.panelHeader}>
+            <span className={shared.panelLabel}>
+              {"Prévia"}
               <span className={styles.sandboxBadge} title="Executado em sandbox isolada — sem acesso a cookies, localStorage ou ao site">
                 sandbox
               </span>
             </span>
           </div>
 
-          {error && <div className={styles.errorBox}>{error}</div>}
+          {error && <div className={shared.errorBox}>{error}</div>}
 
           {!error && rendered && (
             /*
@@ -133,7 +134,7 @@ export default function HtmlViewerPage() {
             />
           )}
 
-          {!error && !rendered && <div className={styles.emptyOutput}>A prévia renderizada aparecerá aqui.</div>}
+          {!error && !rendered && <div className={shared.emptyOutput}>A prévia renderizada aparecerá aqui.</div>}
         </section>
       </div>
     </div>

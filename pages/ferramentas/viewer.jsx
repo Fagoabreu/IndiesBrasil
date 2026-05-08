@@ -3,6 +3,7 @@ import { useState, useCallback } from "react";
 import { Button } from "@primer/react";
 import { CopyIcon, CheckIcon, TrashIcon, CodeIcon } from "@primer/octicons-react";
 
+import shared from "./toolPage.module.css";
 import styles from "./viewer.module.css";
 import { SITE_URL } from "@/lib/seo";
 
@@ -190,7 +191,7 @@ export default function ViewerPage() {
 
   function renderOutput() {
     if (error) {
-      return <div className={styles.errorBox}>{error}</div>;
+      return <div className={shared.errorBox}>{error}</div>;
     }
     if (output) {
       return (
@@ -201,24 +202,24 @@ export default function ViewerPage() {
         />
       );
     }
-    return <div className={styles.emptyOutput}>O resultado formatado aparecerá aqui.</div>;
+    return <div className={shared.emptyOutput}>O resultado formatado aparecerá aqui.</div>;
   }
 
   return (
-    <div className={styles.container}>
+    <div className={shared.container}>
       <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} jsonLd={JSON_LD} />
 
       {/* Page header */}
-      <header className={styles.pageHeader}>
-        <h1 className={styles.pageTitle}>Visualizador XML / JSON</h1>
-        <p className={styles.pageSubtitle}>Cole um texto sem formatação e visualize com identação e syntax highlighting.</p>
+      <header className={shared.pageHeader}>
+        <h1 className={shared.pageTitle}>Visualizador XML / JSON</h1>
+        <p className={shared.pageSubtitle}>Cole um texto sem formatação e visualize com identação e syntax highlighting.</p>
       </header>
 
-      <div className={styles.workspace}>
+      <div className={shared.workspace}>
         {/* Input panel */}
-        <section className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <span className={styles.panelLabel}>Entrada</span>
+        <section className={shared.panel}>
+          <div className={shared.panelHeader}>
+            <span className={shared.panelLabel}>Entrada</span>
             <Button size="small" variant="invisible" onClick={clear} aria-label="Limpar">
               <TrashIcon size={14} />
               Limpar
@@ -226,7 +227,7 @@ export default function ViewerPage() {
           </div>
 
           <textarea
-            className={styles.textarea}
+            className={shared.textarea}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={'Cole seu JSON ou XML aqui...\n\n{"exemplo":true}\n<root><item id="1">texto</item></root>'}
@@ -235,8 +236,8 @@ export default function ViewerPage() {
             autoCorrect="off"
           />
 
-          <div className={styles.panelFooter}>
-            <span className={styles.charCount}>{input.length > 0 ? `${input.length} caracteres` : ""}</span>
+          <div className={shared.panelFooter}>
+            <span className={shared.charCount}>{input.length > 0 ? `${input.length} caracteres` : ""}</span>
             <Button onClick={format} disabled={!input.trim()}>
               <CodeIcon size={14} />
               Formatar
@@ -245,9 +246,9 @@ export default function ViewerPage() {
         </section>
 
         {/* Output panel */}
-        <section className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <span className={styles.panelLabel}>
+        <section className={shared.panel}>
+          <div className={shared.panelHeader}>
+            <span className={shared.panelLabel}>
               Resultado
               {type && <span className={styles.typeBadge}>{type.toUpperCase()}</span>}
             </span>
