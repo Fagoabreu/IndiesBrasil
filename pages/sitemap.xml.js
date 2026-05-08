@@ -8,6 +8,7 @@ const STATIC_ROUTES = [
   { path: "/ferramentas/qrgen", changefreq: "monthly", priority: "0.7" },
   { path: "/ferramentas/imagecrop", changefreq: "monthly", priority: "0.7" },
   { path: "/ferramentas/viewer", changefreq: "monthly", priority: "0.7" },
+  { path: "/ferramentas/htmlviewer", changefreq: "monthly", priority: "0.7" },
   { path: "/cadastro", changefreq: "yearly", priority: "0.5" },
   { path: "/login", changefreq: "yearly", priority: "0.4" },
 ];

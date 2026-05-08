@@ -64,6 +64,9 @@ export default function LeftSidebarComponent() {
             <NavList.Item as={Link} href="/ferramentas/viewer">
               Visualizador XML/JSON
             </NavList.Item>
+            <NavList.Item as={Link} href="/ferramentas/htmlviewer">
+              Visualizador HTML
+            </NavList.Item>
           </>
         )}
       </NavList.Group>
