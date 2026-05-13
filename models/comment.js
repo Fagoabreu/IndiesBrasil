@@ -1,4 +1,5 @@
 import database from "infra/database.js";
+import notification from "./notification";
 
 const baseSelectQuery = `
 SELECT
@@ -17,6 +18,12 @@ FROM
 
 async function create(commentInputValues) {
   const postComment = await runInsertQuery(commentInputValues);
+  await notification.createPostNotification({
+    user_id: commentInputValues.author_id,
+    source_user_id: commentInputValues.author_id,
+    post_id: commentInputValues.post_id,
+    type: "post_commented",
+  });
   return postComment;
 
   async function runInsertQuery(commentInputValues) {

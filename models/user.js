@@ -1,6 +1,7 @@
 import database from "infra/database";
 import password from "models/password";
 import { ValidationError, NotFoundError } from "infra/errors.js";
+import notification from "./notification";
 
 async function create(userInputValues) {
   await validateUniqueUsename(userInputValues.username);
@@ -538,6 +539,12 @@ async function addFollow(followerId, leaderId) {
   if (result.rowCount === 0) {
     return { followed: "true", action: "already_following" };
   }
+  await notification.createPostNotification({
+    user_id: followerId,
+    source_user_id: followerId,
+    post_id: null,
+    type: "new_follower",
+  });
   return result.rows[0];
 }
 

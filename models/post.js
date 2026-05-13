@@ -1,5 +1,6 @@
 import { NotFoundError, ValidationError } from "@/infra/errors";
 import database from "infra/database";
+import notification from "./notification";
 
 const camposBase = `
   p.id,
@@ -306,7 +307,10 @@ async function setPostLikes(postId, userId, liked) {
   }
 
   if (post.is_current_user) {
-    throw new ValidationError({ message: "O criador do post não pode marcar a propria postagem com gostei" });
+    throw new ValidationError({
+      message: "O criador do post não pode marcar a propria postagem com gostei",
+      action: "Verifique se o post não é seu",
+    });
   }
 
   const { rowCount } = await database.query({
@@ -322,26 +326,22 @@ async function setPostLikes(postId, userId, liked) {
   });
 
   const alreadyLiked = rowCount > 0;
+  const shouldLike = liked === undefined ? !alreadyLiked : liked;
 
-  // 🔁 toggle automático
-  if (liked === undefined) {
-    if (alreadyLiked) {
-      await deletePostLike(postId, userId);
-      return { liked: false, action: "removed" };
-    } else {
-      await createPostLike(postId, userId);
-      return { liked: true, action: "created" };
-    }
-  }
-
-  // 👍 like explícito
-  if (liked === true && !alreadyLiked) {
+  // Liked
+  if (shouldLike && !alreadyLiked) {
     await createPostLike(postId, userId);
+    await notification.createPostNotification({
+      user_id: userId,
+      source_user_id: post.author_id,
+      post_id: postId,
+      type: "post_liked",
+    });
     return { liked: true, action: "created" };
   }
 
-  // 👎 unlike explícito
-  if (liked === false && alreadyLiked) {
+  // Unliked
+  if (!shouldLike && alreadyLiked) {
     await deletePostLike(postId, userId);
     return { liked: false, action: "removed" };
   }
