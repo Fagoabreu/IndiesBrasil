@@ -539,10 +539,9 @@ async function addFollow(followerId, leaderId) {
   if (result.rowCount === 0) {
     return { followed: "true", action: "already_following" };
   }
-  await notification.createPostNotification({
-    user_id: followerId,
+  await notification.createUserNotification({
+    user_id: leaderId,
     source_user_id: followerId,
-    post_id: null,
     type: "new_follower",
   });
   return result.rows[0];

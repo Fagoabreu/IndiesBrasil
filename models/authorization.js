@@ -315,6 +315,26 @@ function filterOutput(user, feature, resource) {
       action: resource.action,
     };
   }
+
+  if (feature === "read:post_notifications") {
+    return getPostNotificationsResource(resource);
+  }
+
+  if (feature === "read:post_notifications:all") {
+    return resource.map((resourceItem) => {
+      return getPostNotificationsResource(resourceItem);
+    });
+  }
+
+  if (feature === "read:user_notifications") {
+    return getUserNotificationsResource(resource);
+  }
+
+  if (feature === "read:user_notifications:all") {
+    return resource.map((resourceItem) => {
+      return getUserNotificationsResource(resourceItem);
+    });
+  }
 }
 
 function getUserResource(resource) {
@@ -487,8 +507,33 @@ function getProfileImagesResource(resource) {
   };
 }
 
+function getUserNotificationsResource(resource) {
+  return {
+    user_id: resource.user_id,
+    type: resource.type,
+    source_user_id: resource.source_user_id,
+    is_read: resource.is_read,
+    created_at: resource.created_at,
+    title: resource.title,
+    message: resource.message,
+  };
+}
+
+function getPostNotificationsResource(resource) {
+  return {
+    user_id: resource.user_id,
+    type: resource.type,
+    source_user_id: resource.source_user_id,
+    post_id: resource.post_id,
+    is_read: resource.is_read,
+    created_at: resource.created_at,
+    title: resource.title,
+    message: resource.message,
+  };
+}
+
 function validateUser(user) {
-  if (!user || !user.features) {
+  if (!user?.features) {
     throw new InternalServerError({
       cause: "É necessário fornecer `user` no model authorization.",
     });

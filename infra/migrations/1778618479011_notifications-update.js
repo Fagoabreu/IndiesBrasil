@@ -29,6 +29,7 @@ exports.up = (pgm) => {
       type notification_type not null,
       source_user_id uuid not null,
       is_read boolean default false,
+      created_at timestamptz default now(),
 
       PRIMARY KEY(user_id, type, source_user_id),
       FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
