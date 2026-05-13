@@ -41,7 +41,7 @@ async function findByUsername(username, readerUser) {
   const profile_tools = await findPortfolioToolsByPortfolioId(currentUser.id);
   const profile_contacts = await findContactsByUserId(currentUser.id);
   const profile_roles = await findRolesByUserId(currentUser.id);
-  const is_following = readerUser?.id ? await user.isFollowingUser(readerUser.id, currentUser.id) : false;
+  const is_following = await user.isFollowingUser(readerUser.id, currentUser.id);
 
   return {
     user: { ...currentUser, is_following },

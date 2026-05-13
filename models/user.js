@@ -353,27 +353,16 @@ async function addFeatures(userId, features) {
 }
 
 async function isFollowingUser(followerId, leaderId) {
-  const isFollowing = await runSelectQuery(followerId, leaderId);
-  return isFollowing.isFollowing;
-
-  async function runSelectQuery(followerId, leaderId) {
-    const results = await database.query({
-      text: `
-        select 
-          case when exists(
-            select 1 from user_followers
-            where 
-              follower_id = $1
-              and lead_user_id = $2
-            ) then true
-          else
-            false
-          end as isFollowing
-        `,
-      values: [followerId, leaderId],
-    });
-    return results.rows[0];
-  }
+  const results = await database.query({
+    text: `
+      SELECT EXISTS (
+        SELECT 1 FROM user_followers
+        WHERE follower_id = $1 AND lead_user_id = $2
+      ) AS is_following
+      `,
+    values: [followerId, leaderId],
+  });
+  return results.rows[0].is_following;
 }
 
 async function runUpdatedQuery(userWithNewValues) {

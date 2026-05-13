@@ -337,8 +337,8 @@ function filterOutput(user, feature, resource) {
   }
 }
 
-function getUserResource(resource) {
-  return {
+function getUserResource(resource, showFeatures = true) {
+  const userData = {
     id: resource.id,
     username: resource.username,
     features: resource.features,
@@ -352,7 +352,14 @@ function getUserResource(resource) {
     visibility: resource.visibility,
     avatar_image: resource.avatar_image,
     background_image: resource.background_image,
+    is_following: resource.is_following,
   };
+
+  if (!showFeatures) {
+    delete userData.features;
+  }
+
+  return userData;
 }
 
 function getPostResource(resource) {
@@ -428,7 +435,7 @@ function getToolResource(resource) {
 
 function getProfileResource(resource) {
   return {
-    user: getUserResource(resource.user),
+    user: getUserResource(resource.user, false),
     historico: resource.historico.map((historicoItem) => {
       return getProfileHistoryResource(historicoItem);
     }),

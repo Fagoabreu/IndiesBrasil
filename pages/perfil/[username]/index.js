@@ -437,8 +437,8 @@ export default function Perfil() {
             <Text size="medium">Desde: {formatDateBR(perfilUser.user.created_at)}</Text>
 
             <Text size="medium">
-              <strong>{perfilUser.user.following_count ?? 0}</strong> acompanhando · <strong>{perfilUser.followers_count ?? 0}</strong> seguidores ·{" "}
-              <strong>{perfilUser.user.posts_count ?? 0}</strong> postagens
+              <strong>{perfilUser.user.following_count ?? 0}</strong> acompanhando · <strong>{perfilUser.user.followers_count ?? 0}</strong>{" "}
+              seguidores · <strong>{perfilUser.user.posts_count ?? 0}</strong> postagens
             </Text>
 
             {!isOwnProfile && authUser && (
