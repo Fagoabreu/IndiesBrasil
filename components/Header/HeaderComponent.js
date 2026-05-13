@@ -25,7 +25,7 @@ export default function HeaderComponent({ onMenuClick }) {
   return (
     <PageHeader role="banner" aria-label="Title">
       <PageHeader.TitleArea>
-        <PageHeader.LeadingAction>
+        <PageHeader.LeadingAction hidden={false}>
           <IconButton
             aria-label="Abrir menu de navegação"
             icon={ThreeBarsIcon}

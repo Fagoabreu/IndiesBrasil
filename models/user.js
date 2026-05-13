@@ -417,11 +417,11 @@ async function findUsers(userId, isfollowing) {
       SELECT
         u.id,
         u.username,
-        u.avatar_image,
+        ui.secure_url as avatar_image,
         u.resumo,
         u.bio,
         u.visibility,
-        u.background_image,
+        ub.secure_url as background_image,
         COALESCE(f.followers_count, 0) AS followers_count,
         COALESCE(p.posts_count, 0) AS posts_count
       FROM users u
@@ -441,6 +441,11 @@ async function findUsers(userId, isfollowing) {
           FROM posts
           GROUP BY author_id
         ) p ON p.author_id = u.id
+        --busca imagens
+        left join uploaded_images ui 
+          on ui.id = u.avatar_image
+        left join uploaded_images ub 
+          on ub.id = u.background_image
       ORDER BY RANDOM()
       LIMIT 10;
       `,
@@ -453,11 +458,11 @@ async function findUsers(userId, isfollowing) {
       SELECT
         u.id,
         u.username,
-        u.avatar_image,
+        ui.secure_url as avatar_image,
         u.resumo,
         u.bio,
         u.visibility,
-        u.background_image,
+        ub.secure_url as background_image,
         COALESCE(f.followers_count, 0) AS followers_count,
         COALESCE(p.posts_count, 0) AS posts_count,
         (uf.follower_id IS NOT NULL) AS is_following
@@ -482,6 +487,11 @@ async function findUsers(userId, isfollowing) {
         LEFT JOIN user_followers uf
           ON uf.lead_user_id = u.id
           AND uf.follower_id = $1
+        --busca imagens
+        left join uploaded_images ui 
+          on ui.id = u.avatar_image
+        left join uploaded_images ub 
+          on ub.id = u.background_image
     `;
 
     let whereClause = `
