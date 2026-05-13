@@ -1,0 +1,40 @@
+.bellWrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.badge {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  background-color: var(--bgColor-danger-emphasis);
+  color: var(--fgColor-onEmphasis);
+  border-radius: 10px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  border: 1.5px solid var(--bgColor-default);
+  line-height: 1;
+}
+
+.unreadItem {
+  background-color: var(--bgColor-accent-subtle);
+}
+
+.notifTitle {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--fgColor-default);
+}
+
+.notifDate {
+  font-size: 0.75rem;
+  color: var(--fgColor-muted);
+}

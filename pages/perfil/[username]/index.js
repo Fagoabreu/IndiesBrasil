@@ -7,6 +7,7 @@ import { useUser } from "@/context/UserContext";
 import EditResumoModal from "@/components/Portfolio/EditResumoModal";
 import EditHistoricoModal from "@/components/Portfolio/Historico/EditHistoricoModal";
 import DeleteConfirm from "@/components/Portfolio/DeleteConfirm";
+import FollowButton from "@/components/FollowButton";
 
 import ListableSectionPanel from "@/components/Panels/ListableSectionPanel/ListableSectionPanel";
 import HistoricoItem from "@/components/Portfolio/Historico/HistoricoItem";
@@ -442,7 +443,7 @@ export default function Perfil() {
 
             {!isOwnProfile && authUser && (
               <div className={style.profileHeaderActions}>
-                <Button variant="primary">Seguir</Button>
+                <FollowButton username={username} isFollowing={perfilUser.user.is_following ?? false} />
                 <Button>Enviar mensagem</Button>
               </div>
             )}

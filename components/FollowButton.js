@@ -1,23 +1,24 @@
 import { useState } from "react";
 import { Button } from "@primer/react";
+import PropTypes from "prop-types";
 
-export default function FollowButton({ username, isFollowing = false, onToggle = () => {} }) {
+export default function FollowButton({ username, isFollowing = false, onToggle = () => {}, className }) {
   const [loading, setLoading] = useState(false);
   const [following, setFollowing] = useState(isFollowing);
 
   const handleToggle = async () => {
+    const nextFollowing = !following;
     setLoading(true);
     try {
       const res = await fetch(`/api/v1/users/${username}/follow`, {
-        method: "POST",
+        method: nextFollowing ? "POST" : "DELETE",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
       });
 
       if (!res.ok) throw new Error("Erro na requisição");
 
-      setFollowing((prev) => !prev);
-      onToggle(username, !following); // avisa o componente pai
+      setFollowing(nextFollowing);
+      onToggle(username, nextFollowing);
     } catch (error) {
       console.error("Erro ao seguir/deixar de seguir:", error);
     } finally {
@@ -26,8 +27,15 @@ export default function FollowButton({ username, isFollowing = false, onToggle =
   };
 
   return (
-    <Button size="small" variant={following ? "default" : "primary"} onClick={handleToggle} disabled={loading} sx={{ width: 100 }}>
+    <Button size="small" variant={following ? "default" : "primary"} onClick={handleToggle} disabled={loading} className={className}>
       {loading ? "..." : following ? "Seguindo" : "Seguir"}
     </Button>
   );
 }
+
+FollowButton.propTypes = {
+  username: PropTypes.string.isRequired,
+  isFollowing: PropTypes.bool,
+  onToggle: PropTypes.func,
+  className: PropTypes.string,
+};

@@ -1,6 +1,7 @@
-import { Avatar, Button, Text, Link } from "@primer/react";
+import { Avatar, Text, Link } from "@primer/react";
 import styles from "./UserCardComponent.module.css";
 import PropTypes from "prop-types";
+import FollowButton from "@/components/FollowButton";
 
 UserCardComponent.propTypes = {
   user: PropTypes.shape({
@@ -23,14 +24,12 @@ export default function UserCardComponent({ user, onToggleFollow, canFollow = tr
         <div className={styles.avatarSection}>
           <Avatar size={40} src={user.avatar_image || "/images/avatar.png"} className={styles.avatar} />
           {canFollow && (
-            <Button
-              size="small"
-              variant={user.isFollowing ? "default" : "primary"}
-              onClick={() => onToggleFollow(user.username, !user.isFollowing)}
+            <FollowButton
+              username={user.username}
+              isFollowing={user.isFollowing}
+              onToggle={onToggleFollow}
               className={styles.followBtn}
-            >
-              {user.isFollowing ? "Seguindo" : "Seguir"}
-            </Button>
+            />
           )}
         </div>
         <div className={styles.info}>

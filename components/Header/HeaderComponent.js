@@ -8,6 +8,7 @@ import styles from "./HeaderComponent.module.css";
 import { useUser } from "@/context/UserContext";
 import PropTypes from "prop-types";
 import { useRouter } from "next/router";
+import NotificationButton from "./NotificationButton";
 
 // ThemeSwitcher depende de window.matchMedia e localStorage — estado exclusivo do cliente.
 // ssr: false impede que seja renderizado no servidor, eliminando o hydration mismatch.
@@ -49,7 +50,9 @@ export default function HeaderComponent({ onMenuClick }) {
       <PageHeader.Actions>
         <ThemeSwitcher />
         {user ? (
-          <ActionMenu>
+          <>
+            <NotificationButton />
+            <ActionMenu>
             <ActionMenu.Button>
               <Avatar src={avatarSrc} size={32} />
             </ActionMenu.Button>
@@ -64,6 +67,7 @@ export default function HeaderComponent({ onMenuClick }) {
               </ActionList>
             </ActionMenu.Overlay>
           </ActionMenu>
+          </>
         ) : (
           <Button type="submit" variant="primary" as={Link} href="/login">
             Entrar
