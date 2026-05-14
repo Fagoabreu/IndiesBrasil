@@ -15,6 +15,24 @@ async function loadNotifications(username) {
   };
 }
 
+async function markNotificationRead(username, n) {
+  const isPost = n.post_id != null;
+  const url = isPost ? `/api/v1/users/${username}/notifications/post` : `/api/v1/users/${username}/notifications`;
+  const body = {
+    user_id: n.user_id,
+    type: n.type,
+    source_user_id: n.source_user_id,
+    is_read: true,
+    ...(isPost && { post_id: n.post_id }),
+  };
+  await fetch(url, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(body),
+  });
+}
+
 export default function NotificationButton() {
   const { user } = useUser();
   const [userNotifs, setUserNotifs] = useState([]);
@@ -41,6 +59,24 @@ export default function NotificationButton() {
     });
   }
 
+  function handleMarkRead(n) {
+    if (n.is_read) return;
+    if (n.post_id != null) {
+      setPostNotifs((prev) =>
+        prev.map((p) =>
+          p.user_id === n.user_id && p.type === n.type && p.source_user_id === n.source_user_id && p.post_id === n.post_id
+            ? { ...p, is_read: true }
+            : p,
+        ),
+      );
+    } else {
+      setUserNotifs((prev) =>
+        prev.map((u) => (u.user_id === n.user_id && u.type === n.type && u.source_user_id === n.source_user_id ? { ...u, is_read: true } : u)),
+      );
+    }
+    markNotificationRead(user.username, n);
+  }
+
   const all = [...userNotifs, ...postNotifs].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   const unreadCount = all.filter((n) => !n.is_read).length;
 
@@ -60,6 +96,7 @@ export default function NotificationButton() {
                 <ActionList.Item
                   key={`${n.user_id}_${n.type}_${n.source_user_id}${n.post_id != null ? `_${n.post_id}` : ""}`}
                   className={!n.is_read ? styles.unreadItem : undefined}
+                  onSelect={() => handleMarkRead(n)}
                 >
                   <span className={styles.notifTitle}>{n.title || n.type}</span>
                   {n.message && <ActionList.Description variant="block">{n.message}</ActionList.Description>}
