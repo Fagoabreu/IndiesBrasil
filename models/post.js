@@ -4,6 +4,7 @@ import notification from "./notification";
 
 const camposBase = `
   p.id,
+  p.author_id,
   p.organization_id,
   p.event_id,
   p.content,
@@ -332,8 +333,8 @@ async function setPostLikes(postId, userId, liked) {
   if (shouldLike && !alreadyLiked) {
     await createPostLike(postId, userId);
     await notification.createPostNotification({
-      user_id: userId,
-      source_user_id: post.author_id,
+      user_id: post.author_id,
+      source_user_id: userId,
       post_id: postId,
       type: "post_liked",
     });

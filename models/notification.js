@@ -49,36 +49,21 @@ async function createPostNotification(userInputValues) {
 }
 
 async function updatePostNotification(userInputValues) {
-  const currentNotification = await findPostNotificationsById(userInputValues.id);
-  const notificationWithNewValues = {
-    ...currentNotification,
-    ...userInputValues,
-  };
-
-  const updatedNotification = await runUpdateQuery(notificationWithNewValues);
+  const updatedNotification = await runUpdateQuery(userInputValues);
   return updatedNotification;
 
   async function runUpdateQuery(userInputValues) {
     const results = await database.query({
       text: `
-      Update post_notifications 
-      set
-        user_id=$1,
-        type=$2,
-        source_user_id=$3,
-        post_id=$4,
-        is_read=$5,
-      where id=$6
-      returning
-        *`,
-      values: [
-        userInputValues.user_id,
-        userInputValues.type,
-        userInputValues.source_user_id,
-        userInputValues.post_id,
-        userInputValues.is_read,
-        userInputValues.id,
-      ],
+      UPDATE post_notifications
+      SET is_read = $5
+      WHERE
+        user_id = $1
+        AND type = $2
+        AND source_user_id = $3
+        AND post_id = $4
+      RETURNING *`,
+      values: [userInputValues.user_id, userInputValues.type, userInputValues.source_user_id, userInputValues.post_id, userInputValues.is_read],
     });
     return results.rows[0];
   }
@@ -112,24 +97,28 @@ async function updateUserNotification(userInputValues) {
   }
 }
 
-async function findPostNotificationsById(id) {
-  const userFound = await runSelectQuery(id);
-  return userFound;
+async function findPostNotificationByKey({ user_id, type, source_user_id, post_id }) {
+  const notification = await runSelectQuery();
+  return notification;
 
-  async function runSelectQuery(id) {
+  async function runSelectQuery() {
     const results = await database.query({
       text: `
-      Select *
-      from post_notifications
-      where id = $1
+      SELECT *
+      FROM post_notifications
+      WHERE
+        user_id = $1
+        AND type = $2
+        AND source_user_id = $3
+        AND post_id = $4
     `,
-      values: [id],
+      values: [user_id, type, source_user_id, post_id],
     });
 
     if (results.rowCount === 0) {
       throw new NotFoundError({
         message: "Notificação não encontrada no sistema.",
-        action: "Verifique se o id foi digitado corretamente",
+        action: "Verifique se os campos da chave primária estão corretos",
       });
     }
     return results.rows[0];
@@ -217,7 +206,7 @@ async function findUserNotificationsByUserId(userId) {
 const notification = {
   createPostNotification,
   updatePostNotification,
-  findPostNotificationsById,
+  findPostNotificationByKey,
   findPostNotificationsByUserId,
 
   createUserNotification,

@@ -69,6 +69,12 @@ const availableFeatures = [
 
   //server status
   "read:summary",
+
+  //notification
+  "read:user_notifications",
+  "read:user_notifications:all",
+  "read:post_notifications",
+  "read:post_notifications:all",
 ];
 
 function can(user, feature, resource) {
