@@ -1,4 +1,4 @@
-import { Text, Avatar } from "@primer/react";
+import { Text } from "@primer/react";
 import styles from "./RoleItem.module.css";
 import IconSvg from "@/components/IconSvg/IconSvg";
 

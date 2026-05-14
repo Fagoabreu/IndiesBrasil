@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Cropper from "react-easy-crop";
 import { Dialog, Avatar } from "@primer/react";
 import PropTypes from "prop-types";
+import Image from "next/image";
 
 import styles from "./ImageCropModal.module.css";
 import { generateImage } from "@/utils/ImageUtils";
@@ -122,7 +123,7 @@ export default function ImageCropModal({ imageSrc, preset = "avatar", onConfirm,
         {preview && (
           <div className={styles.previewRow}>
             <span className={styles.previewLabel}>Pré-visualização</span>
-            {initialShape === 100 ? <Avatar src={preview} size={80} /> : <img src={preview} alt="pré-visualização" className={styles.previewImage} />}
+            {initialShape === 100 ? <Avatar src={preview} size={80} /> : <Image src={preview} alt="pré-visualização" unoptimized width={200} height={Math.round(200 / initialAspect)} className={styles.previewImage} />}
           </div>
         )}
       </div>

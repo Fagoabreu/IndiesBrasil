@@ -2,6 +2,7 @@ import SeoHead from "@/components/SeoHead";
 import { useState, useCallback, useEffect } from "react";
 import Cropper from "react-easy-crop";
 import { Button } from "@primer/react";
+import Image from "next/image";
 
 import styles from "./imagecrop.module.css";
 import { generateImage } from "@/utils/ImageUtils";
@@ -207,7 +208,7 @@ export default function FerramentasPage() {
         <div className={styles.preview}>
           <h3 style={{ fontWeight: 700, fontSize: "1rem" }}>Preview</h3>
 
-          <img src={preview} alt="preview" />
+          <Image src={preview} alt="preview" unoptimized width={300} height={Math.round(300 / aspect)} />
 
           {isProcessing ? <span>Atualizando preview...</span> : <span>Tamanho: {fileSize} KB</span>}
 

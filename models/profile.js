@@ -1,7 +1,6 @@
 import database from "infra/database";
 import user from "./user";
 import { NotFoundError } from "@/infra/errors";
-import uploadedImages from "./uploadedImages";
 
 async function canReadProfile(currentUser, readerUser) {
   if (currentUser.id === readerUser.id) {
