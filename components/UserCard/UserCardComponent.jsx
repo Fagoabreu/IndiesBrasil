@@ -24,12 +24,7 @@ export default function UserCardComponent({ user, onToggleFollow, canFollow = tr
         <div className={styles.avatarSection}>
           <Avatar size={40} src={user.avatar_image || "/images/avatar.png"} className={styles.avatar} />
           {canFollow && (
-            <FollowButton
-              username={user.username}
-              isFollowing={user.isFollowing}
-              onToggle={onToggleFollow}
-              className={styles.followBtn}
-            />
+            <FollowButton username={user.username} isFollowing={user.isFollowing} onToggle={onToggleFollow} className={styles.followBtn} />
           )}
         </div>
         <div className={styles.info}>

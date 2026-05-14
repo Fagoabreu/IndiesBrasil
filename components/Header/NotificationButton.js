@@ -31,11 +31,7 @@ export default function NotificationButton() {
     <div className={styles.bellWrapper}>
       <ActionMenu onOpenChange={(open) => open && fetchNotifications()}>
         <ActionMenu.Anchor>
-          <IconButton
-            icon={BellIcon}
-            variant="invisible"
-            aria-label={`Notificações${unreadCount > 0 ? `, ${unreadCount} não lidas` : ""}`}
-          />
+          <IconButton icon={BellIcon} variant="invisible" aria-label={`Notificações${unreadCount > 0 ? `, ${unreadCount} não lidas` : ""}`} />
         </ActionMenu.Anchor>
 
         <ActionMenu.Overlay width="medium">

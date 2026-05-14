@@ -53,20 +53,20 @@ export default function HeaderComponent({ onMenuClick }) {
           <>
             <NotificationButton />
             <ActionMenu>
-            <ActionMenu.Button>
-              <Avatar src={avatarSrc} size={32} />
-            </ActionMenu.Button>
+              <ActionMenu.Button>
+                <Avatar src={avatarSrc} size={32} />
+              </ActionMenu.Button>
 
-            <ActionMenu.Overlay>
-              <ActionList>
-                <ActionList.Item onSelect={() => router.push(`/perfil/${user.username}`)}>{usernameLabel}</ActionList.Item>
+              <ActionMenu.Overlay>
+                <ActionList>
+                  <ActionList.Item onSelect={() => router.push(`/perfil/${user.username}`)}>{usernameLabel}</ActionList.Item>
 
-                <ActionList.Item variant="danger" onSelect={logout}>
-                  Sair
-                </ActionList.Item>
-              </ActionList>
-            </ActionMenu.Overlay>
-          </ActionMenu>
+                  <ActionList.Item variant="danger" onSelect={logout}>
+                    Sair
+                  </ActionList.Item>
+                </ActionList>
+              </ActionMenu.Overlay>
+            </ActionMenu>
           </>
         ) : (
           <Button type="submit" variant="primary" as={Link} href="/login">
