@@ -70,28 +70,20 @@ async function updatePostNotification(userInputValues) {
 }
 
 async function updateUserNotification(userInputValues) {
-  const currentNotification = await findUserNotificationsById(userInputValues.id);
-  const notificationWithNewValues = {
-    ...currentNotification,
-    ...userInputValues,
-  };
-
-  const updatedNotification = await runUpdateQuery(notificationWithNewValues);
+  const updatedNotification = await runUpdateQuery(userInputValues);
   return updatedNotification;
 
   async function runUpdateQuery(userInputValues) {
     const results = await database.query({
       text: `
-      Update user_notifications 
-      set
-        user_id=$1,
-        type=$2,
-        source_user_id=$3,
-        is_read=$4
-      where id=$5
-      returning
-        *`,
-      values: [userInputValues.user_id, userInputValues.type, userInputValues.source_user_id, userInputValues.is_read, userInputValues.id],
+      UPDATE user_notifications
+      SET is_read = $4
+      WHERE
+        user_id = $1
+        AND type = $2
+        AND source_user_id = $3
+      RETURNING *`,
+      values: [userInputValues.user_id, userInputValues.type, userInputValues.source_user_id, userInputValues.is_read],
     });
     return results.rows[0];
   }
@@ -125,18 +117,20 @@ async function findPostNotificationByKey({ user_id, type, source_user_id, post_i
   }
 }
 
-async function findUserNotificationsById(id) {
-  const notificationFound = await runSelectQuery(id);
+async function findUserNotificationsByKey(userInputValues) {
+  const notificationFound = await runSelectQuery(userInputValues);
   return notificationFound;
 
-  async function runSelectQuery(id) {
+  async function runSelectQuery(userInputValues) {
     const results = await database.query({
       text: `
       Select *
       from user_notifications
-      where id = $1
+      where user_id = $1
+        AND type = $2
+        AND source_user_id = $3
     `,
-      values: [id],
+      values: [userInputValues.user_id, userInputValues.type, userInputValues.source_user_id],
     });
 
     if (results.rowCount === 0) {
@@ -211,7 +205,7 @@ const notification = {
 
   createUserNotification,
   updateUserNotification,
-  findUserNotificationsById,
+  findUserNotificationsByKey,
   findUserNotificationsByUserId,
 };
 
