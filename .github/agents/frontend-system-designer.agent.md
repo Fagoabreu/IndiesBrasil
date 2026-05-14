@@ -58,6 +58,7 @@ This project uses the following exact versions. Always use their current APIs �
 - ALWAYS prioritize officially documented solutions, recommended patterns, and best practices over simpler workarounds or hacks. If a documented API or approach exists, use it — even if a quicker alternative would work.
 - DO NOT run terminal commands or change infrastructure/tooling configuration.
 - DO NOT break existing design language unless explicitly requested.
+- **Never use a bare `<img>` element.** Always use `<Image>` from `next/image` instead. For images with non-optimizable sources (blob URLs, `URL.createObjectURL`, data URIs, canvas exports), add the `unoptimized` prop and provide explicit `width` and `height` derived from the known aspect ratio.
 - DO NOT introduce client-heavy logic when server-first rendering is sufficient.
 - DO NOT use deprecated APIs from any installed library — always use the API matching the exact installed version above.
 - ONLY modify frontend code paths (pages, app routes, components, styles) relevant to the request.

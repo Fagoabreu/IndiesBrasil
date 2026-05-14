@@ -33,37 +33,8 @@ export default function WhoToFollow() {
   }, []);
 
   async function handleToggleFollow(username, nowFollowing) {
-    // snapshot para rollback
-    const previousUsers = users;
-
-    // optimistic update
-    setUsers((prev) =>
-      prev
-        .map((u) =>
-          u.username === username
-            ? {
-                ...u,
-                isFollowing: nowFollowing,
-                followers_count: u.followers_count + (nowFollowing ? 1 : -1),
-              }
-            : u,
-        )
-        // regra atual: remove da lista quem passou a seguir
-        .filter((u) => !u.isFollowing),
-    );
-
-    try {
-      const res = await fetch(`/api/v1/users/${username}/follow`, {
-        method: nowFollowing ? "POST" : "DELETE",
-        credentials: "include",
-      });
-      if (!res.ok) {
-        throw new Error("Erro ao seguir usuário");
-      }
-    } catch (error) {
-      console.error("Erro ao seguir usuário:", error);
-      // rollback em caso de erro
-      setUsers(previousUsers);
+    if (nowFollowing) {
+      setUsers((prev) => prev.filter((u) => u.username !== username));
     }
   }
 

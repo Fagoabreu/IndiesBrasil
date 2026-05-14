@@ -79,7 +79,17 @@ const FEATURES = [
 ];
 
 function Home() {
-  const frases = ["Gamers.", "Programadores.", "Roteiristas.", "Animadores.", "Produtores.", "Ilustradores.", "Designers.", "Artistas."];
+  const frases = [
+    "Gamers.",
+    "Programadores.",
+    "Roteiristas.",
+    "Animadores.",
+    "Produtores.",
+    "Ilustradores.",
+    "Designers.",
+    "Streamers.",
+    "Artistas.",
+  ];
   const [summary, setSummary] = useState(null);
 
   useEffect(() => {
@@ -110,7 +120,8 @@ function Home() {
         <span className={styles.heroBadge}>🎮 A comunidade indie do Brasil</span>
 
         <h1 className={styles.heroHeading}>
-          Bem-vindo. <TyperwriterComponent initText="Somos" frases={frases} />
+          Bem-vindo.
+          <br /> <TyperwriterComponent initText="Somos" frases={frases} />
         </h1>
 
         <p className={styles.heroSub}>

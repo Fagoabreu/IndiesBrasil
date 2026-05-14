@@ -174,7 +174,7 @@ body {
   background-color: transparent;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1012px) {
   .main-content {
     padding: 10px;
   }
@@ -230,7 +230,7 @@ body {
   display: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1012px) {
   .mobile-drawer,
   .mobile-drawer-overlay {
     display: block;

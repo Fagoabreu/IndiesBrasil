@@ -7,6 +7,7 @@ import { useUser } from "@/context/UserContext";
 import EditResumoModal from "@/components/Portfolio/EditResumoModal";
 import EditHistoricoModal from "@/components/Portfolio/Historico/EditHistoricoModal";
 import DeleteConfirm from "@/components/Portfolio/DeleteConfirm";
+import FollowButton from "@/components/FollowButton";
 
 import ListableSectionPanel from "@/components/Panels/ListableSectionPanel/ListableSectionPanel";
 import HistoricoItem from "@/components/Portfolio/Historico/HistoricoItem";
@@ -436,13 +437,13 @@ export default function Perfil() {
             <Text size="medium">Desde: {formatDateBR(perfilUser.user.created_at)}</Text>
 
             <Text size="medium">
-              <strong>{perfilUser.user.following_count ?? 0}</strong> acompanhando · <strong>{perfilUser.followers_count ?? 0}</strong> seguidores ·{" "}
-              <strong>{perfilUser.user.posts_count ?? 0}</strong> postagens
+              <strong>{perfilUser.user.following_count ?? 0}</strong> acompanhando · <strong>{perfilUser.user.followers_count ?? 0}</strong>{" "}
+              seguidores · <strong>{perfilUser.user.posts_count ?? 0}</strong> postagens
             </Text>
 
             {!isOwnProfile && authUser && (
               <div className={style.profileHeaderActions}>
-                <Button variant="primary">Seguir</Button>
+                <FollowButton username={username} isFollowing={perfilUser.user.is_following ?? false} />
                 <Button>Enviar mensagem</Button>
               </div>
             )}
