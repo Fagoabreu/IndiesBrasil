@@ -1,0 +1,23 @@
+.wrapper {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.qrBox {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--borderColor-muted);
+  box-shadow: var(--brand-card-glow);
+  /* branco fixo: QR code precisa de fundo claro para leitura */
+  background: #ffffff;
+  padding: 8px;
+  line-height: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 2px;
+}

@@ -23,6 +23,7 @@ import RoleItem from "@/components/Portfolio/Roles/RoleItem";
 import EditRoleModal from "@/components/Portfolio/Roles/EditRoleModal";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
 import ProfileImageUploader from "@/components/Portfolio/ProfileImageUploader";
+import ProfileQrCode from "@/components/Portfolio/ProfileQrCode";
 
 /* =====================
  * Utils
@@ -431,22 +432,26 @@ export default function Perfil() {
             )}
           </div>
 
-          <div className={style.profileHeaderInfo}>
-            <Heading as="h2">{perfilUser.name || perfilUser.user.username}</Heading>
+          <div className={style.profileHeaderRow}>
+            <div className={style.profileHeaderInfo}>
+              <Heading as="h2">{perfilUser.name || perfilUser.user.username}</Heading>
 
-            <Text size="medium">Desde: {formatDateBR(perfilUser.user.created_at)}</Text>
+              <Text size="medium">Desde: {formatDateBR(perfilUser.user.created_at)}</Text>
 
-            <Text size="medium">
-              <strong>{perfilUser.user.following_count ?? 0}</strong> acompanhando · <strong>{perfilUser.user.followers_count ?? 0}</strong>{" "}
-              seguidores · <strong>{perfilUser.user.posts_count ?? 0}</strong> postagens
-            </Text>
+              <Text size="medium" className={style.profileStats}>
+                <strong>{perfilUser.user.following_count ?? 0}</strong> acompanhando · <strong>{perfilUser.user.followers_count ?? 0}</strong>{" "}
+                seguidores · <strong>{perfilUser.user.posts_count ?? 0}</strong> postagens
+              </Text>
 
-            {!isOwnProfile && authUser && (
-              <div className={style.profileHeaderActions}>
-                <FollowButton username={username} isFollowing={perfilUser.user.is_following ?? false} />
-                <Button>Enviar mensagem</Button>
-              </div>
-            )}
+              {!isOwnProfile && authUser && (
+                <div className={style.profileHeaderActions}>
+                  <FollowButton username={username} isFollowing={perfilUser.user.is_following ?? false} />
+                  <Button>Enviar mensagem</Button>
+                </div>
+              )}
+            </div>
+
+            <ProfileQrCode username={username} isOwnProfile={isOwnProfile} />
           </div>
 
           {/* ===== RESUME ===== */}

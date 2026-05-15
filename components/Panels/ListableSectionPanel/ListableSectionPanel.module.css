@@ -1,12 +1,26 @@
 .panelCard {
   background: var(--bgColor-default);
-  border: 1px solid var(--borderColor-default);
-  border-radius: 8px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 12px;
   padding: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--brand-card-glow);
+}
+
+/* Accent gradient line sempre visível — painel de conteúdo primário */
+.panelCard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--brand-gradient-h);
 }
 
 .panelTitle {
-  margin-bottom: 0px;
+  margin-bottom: 0;
 }
 
 .panelHeader {
@@ -14,9 +28,9 @@
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 5px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--borderColor-muted);
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .panelBody {
@@ -38,16 +52,29 @@
   padding: 0;
   margin: 0;
   background: var(--bgColor-inset);
+  border-radius: 6px;
 }
 
 /* variantes */
 .normal {
-  padding: 8px 0;
-  margin-bottom: 20px;
+  padding: 10px 0;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--borderColor-muted);
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.normal:last-child {
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+.normal:hover {
+  background: var(--brand-hover-bg);
 }
 
 .small {
-  padding: 5px 0;
+  padding: 6px 0;
   margin-bottom: 0;
   border-bottom: 0;
 }
