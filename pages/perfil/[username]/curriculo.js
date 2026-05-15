@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
+import Image from "next/image";
 import { QRCodeSVG } from "qrcode.react";
 import styles from "./curriculo.module.css";
 import DateUtils from "@/utils/DateUtils";
@@ -21,16 +22,16 @@ export default function CurriculoPage() {
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [qrSettings, setQrSettings] = useState({ ...DEFAULT_QR_SETTINGS });
 
-  useEffect(() => {
-    if (!username) return;
+  const qrSettings = useMemo(() => {
+    if (!username || globalThis.window === undefined) return { ...DEFAULT_QR_SETTINGS };
     try {
       const raw = localStorage.getItem(`qr_settings_${username}`);
-      if (raw) setQrSettings({ ...DEFAULT_QR_SETTINGS, ...JSON.parse(raw) });
+      if (raw) return { ...DEFAULT_QR_SETTINGS, ...JSON.parse(raw) };
     } catch {
       // localStorage indisponível
     }
+    return { ...DEFAULT_QR_SETTINGS };
   }, [username]);
 
   useEffect(() => {
@@ -92,7 +93,7 @@ export default function CurriculoPage() {
         {/* ===== CABEÇALHO ===== */}
         <header className={styles.cvHeader}>
           {/* Avatar */}
-          <img src={user.avatar_image || "/images/avatar.png"} alt={fullName} className={styles.cvAvatar} />
+          <Image src={user.avatar_image || "/images/avatar.png"} alt={fullName} width={82} height={82} className={styles.cvAvatar} />
 
           {/* Nome / Especializações / Bio */}
           <div className={styles.cvHeaderMain}>
