@@ -18,6 +18,7 @@ function readThemeFromCookie(cookieHeader) {
 
 export default function MyApp({ Component, pageProps, colorMode }) {
   const RightSidebar = Component.RightSidebar || null;
+  const noLayout = Component.noLayout || false;
 
   return (
     // colorMode vem do cookie (server) ou localStorage (client) via getInitialProps.
@@ -26,9 +27,13 @@ export default function MyApp({ Component, pageProps, colorMode }) {
     <ThemeProvider colorMode={colorMode}>
       <BaseStyles>
         <UserProvider>
-          <Layout RightSidebar={RightSidebar}>
+          {noLayout ? (
             <Component {...pageProps} />
-          </Layout>
+          ) : (
+            <Layout RightSidebar={RightSidebar}>
+              <Component {...pageProps} />
+            </Layout>
+          )}
         </UserProvider>
       </BaseStyles>
     </ThemeProvider>

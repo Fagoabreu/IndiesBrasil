@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { PageLayout, Heading, Avatar, Text, Button } from "@primer/react";
+import { DownloadIcon } from "@primer/octicons-react";
 import Image from "next/image";
 
 import { useUser } from "@/context/UserContext";
@@ -402,6 +403,10 @@ export default function Perfil() {
    * Render
    * ===================== */
 
+  function handlePrint() {
+    globalThis.open(`/perfil/${username}/curriculo`, "_blank");
+  }
+
   return (
     <PageLayout padding="none">
       <PageLayout.Content width="medium">
@@ -449,9 +454,18 @@ export default function Perfil() {
                   <Button>Enviar mensagem</Button>
                 </div>
               )}
+
+              <div className={style.profilePrintActions}>
+                <button type="button" className={style.printBtn} onClick={handlePrint}>
+                  <DownloadIcon size={14} />
+                  Exportar PDF
+                </button>
+              </div>
             </div>
 
-            <ProfileQrCode username={username} isOwnProfile={isOwnProfile} />
+            <div className={style.profileQrWrapper}>
+              <ProfileQrCode username={username} isOwnProfile={isOwnProfile} />
+            </div>
           </div>
 
           {/* ===== RESUME ===== */}

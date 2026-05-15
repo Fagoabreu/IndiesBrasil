@@ -297,3 +297,25 @@ body {
     display: block;
   }
 }
+
+/* ===== IMPRESSÃO / EXPORTAR PDF ===== */
+@media print {
+  /* Esconder chrome de navegação */
+  .layout-header,
+  .desktop-sidebar-pane,
+  .mobile-drawer,
+  .mobile-drawer-overlay {
+    display: none !important;
+  }
+
+  /* Remover acentos de borda gradiente nos painéis */
+  .desktop-sidebar-pane::after,
+  .mobile-drawer::after {
+    display: none !important;
+  }
+
+  /* Fundo branco para impressão */
+  .layout-body {
+    background: #fff !important;
+  }
+}

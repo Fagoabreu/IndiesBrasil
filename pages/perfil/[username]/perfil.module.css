@@ -194,3 +194,78 @@
     gap: 8px;
   }
 }
+
+/* ===== BOTÃO DE EXPORTAR PDF ===== */
+
+.profileQrWrapper {
+  /* apenas wrapper para isolamento de print */
+}
+
+.profilePrintActions {
+  margin-top: 4px;
+}
+
+.printBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(var(--brand-rgb-primary), 0.4);
+  background: rgba(var(--brand-rgb-primary), 0.06);
+  color: var(--brand-primary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    box-shadow 0.15s,
+    transform 0.1s;
+}
+
+.printBtn:hover {
+  background: var(--brand-hover-bg);
+  box-shadow: var(--brand-btn-shadow);
+  transform: translateY(-1px);
+}
+
+.printBtn:active {
+  transform: translateY(0);
+}
+
+/* ===== IMPRESSÃO / EXPORTAR PDF ===== */
+
+@media print {
+  /* Remover elementos interativos e decorativos */
+  .coverUploader,
+  .avatarUploader,
+  .profilePrintActions,
+  .profileHeaderActions,
+  .profileQrWrapper {
+    display: none !important;
+  }
+
+  /* Cards sem sombra/brilho */
+  .profileCard,
+  .profileHeaderCard {
+    box-shadow: none !important;
+    border-color: #ccc !important;
+  }
+
+  /* Remover linha gradiente decorativa */
+  .profileHeaderCard::before {
+    display: none;
+  }
+
+  /* Anel do avatar: borda simples */
+  .avatarContainer {
+    background: #ccc !important;
+    box-shadow: none !important;
+  }
+
+  /* Layout de uma coluna */
+  .profileResume {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+}
