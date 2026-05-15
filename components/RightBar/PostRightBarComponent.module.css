@@ -1,0 +1,7 @@
+/* Wrapper do painel lateral direito */
+.rightBar {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 8px 0;
+}

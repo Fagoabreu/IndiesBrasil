@@ -23,7 +23,7 @@ export default function HeaderComponent({ onMenuClick }) {
   const usernameLabel = user?.name || user?.username || "Usuário";
 
   return (
-    <PageHeader role="banner" aria-label="Title">
+    <PageHeader className={styles.headerRoot} role="banner" aria-label="Title">
       <PageHeader.TitleArea>
         <PageHeader.LeadingAction hidden={false}>
           <IconButton

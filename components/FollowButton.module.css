@@ -1,0 +1,18 @@
+/* Override dos tokens Primer para o botão "Seguir" usar a cor da marca */
+.btn {
+  --bgColor-accent-emphasis: var(--brand-primary);
+  --fgColor-onEmphasis: #fff;
+  transition:
+    opacity 0.15s,
+    box-shadow 0.15s,
+    transform 0.1s;
+}
+
+.btn:hover:not(:disabled) {
+  box-shadow: var(--brand-btn-shadow);
+  transform: translateY(-1px);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+}

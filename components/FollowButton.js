@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@primer/react";
 import PropTypes from "prop-types";
+import baseStyles from "./FollowButton.module.css";
 
 export default function FollowButton({ username, isFollowing = false, onToggle = () => {}, className }) {
   const [loading, setLoading] = useState(false);
@@ -26,9 +27,14 @@ export default function FollowButton({ username, isFollowing = false, onToggle =
     }
   };
 
+  const btnClass = [baseStyles.btn, className].filter(Boolean).join(" ");
+
+  let label = following ? "Seguindo" : "Seguir";
+  if (loading) label = "...";
+
   return (
-    <Button size="small" variant={following ? "default" : "primary"} onClick={handleToggle} disabled={loading} className={className}>
-      {loading ? "..." : following ? "Seguindo" : "Seguir"}
+    <Button size="small" variant={following ? "default" : "primary"} onClick={handleToggle} disabled={loading} className={btnClass}>
+      {label}
     </Button>
   );
 }

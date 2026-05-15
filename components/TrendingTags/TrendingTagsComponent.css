@@ -1,8 +1,33 @@
 .trending-tags {
+  /* Override do botão de filtro ativo para usar a cor da marca */
+  --bgColor-accent-emphasis: var(--brand-primary);
+  --fgColor-onEmphasis: #fff;
+
   background-color: var(--bgColor-muted);
-  border: 1px solid var(--borderColor-default);
+  border: 1px solid rgba(var(--brand-rgb-primary), 0.25);
   border-radius: 8px;
   padding: 12px;
+  position: relative;
+  overflow: hidden;
+  transition:
+    box-shadow 0.2s,
+    border-color 0.2s;
+}
+
+/* Linha de acento gradiente no topo do card */
+.trending-tags::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--brand-gradient-h);
+}
+
+.trending-tags:hover {
+  box-shadow: var(--brand-card-glow);
+  border-color: rgba(var(--brand-rgb-primary), 0.4);
 }
 
 /* HEADER */
@@ -16,7 +41,10 @@
 .trending-title {
   font-size: 14px;
   font-weight: 600;
-  color: var(--fgColor-default);
+  background: var(--brand-gradient-h);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* FILTROS */
@@ -66,16 +94,18 @@
 .tag {
   font-size: 13px;
   font-weight: 500;
-  color: var(--accentColor-fg);
+  color: var(--brand-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: transform 0.3s ease-in-out;
+  transition:
+    color 0.15s,
+    transform 0.2s ease-in-out;
 }
 
 .tag:hover {
-  transform: scale(1.2);
-  color: var(--focus-outlineColor);
+  transform: scale(1.05);
+  color: var(--brand-secondary);
 }
 
 /* CONTADOR */
