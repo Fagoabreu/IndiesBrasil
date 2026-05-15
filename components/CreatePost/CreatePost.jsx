@@ -53,7 +53,9 @@ export default function CreatePost({ user, onPost }) {
   return (
     <div className={styles.container}>
       <Stack direction="horizontal" gap={2} align="flex-start">
-        <Avatar src={user.avatar_image || "/images/avatar.png"} size={40} />
+        <div className={styles.avatarRing}>
+          <Avatar src={user.avatar_image || "/images/avatar.png"} size={40} />
+        </div>
 
         <div className={styles.contentArea}>
           <Textarea
@@ -65,15 +67,16 @@ export default function CreatePost({ user, onPost }) {
           />
 
           {suggestions?.length > 0 && (
-            <ul className="tag-suggest">
+            <ul className={styles.tagSuggest}>
               {suggestions.map((tag) => (
-                <li
-                  key={tag.name}
-                  onClick={() => {
-                    setContent((prev) => prev.replace(/#\w*$/, `#${tag.name} `));
-                  }}
-                >
-                  #{tag.name}
+                <li key={tag.name}>
+                  <button
+                    type="button"
+                    className={styles.tagSuggestItem}
+                    onClick={() => setContent((prev) => prev.replace(/#\w*$/, `#${tag.name} `))}
+                  >
+                    #{tag.name}
+                  </button>
                 </li>
               ))}
             </ul>

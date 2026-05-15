@@ -1,7 +1,39 @@
 .postCard {
-  padding: 12px;
-  border-bottom: 1px solid var(--borderColor-muted);
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--borderColor-muted);
   background-color: var(--bgColor-default);
+  box-shadow: var(--brand-card-glow);
+  margin-bottom: 10px;
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+/* gradient top accent on hover */
+.postCard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--brand-gradient-h);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.postCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(var(--brand-rgb-primary), 0.1);
+  border-color: var(--brand-hover-border);
+}
+
+.postCard:hover::before {
+  opacity: 1;
 }
 
 .postGrid {
@@ -13,12 +45,19 @@
 .avatarCol {
   display: flex;
   justify-content: center;
+  align-items: flex-start;
 }
 
 .avatarLink {
   display: flex;
   border-radius: 50%;
-  outline-offset: 2px;
+  padding: 2px;
+  background: var(--brand-gradient);
+  transition: box-shadow 0.2s ease;
+}
+
+.avatarLink:hover {
+  box-shadow: var(--brand-glow-sm);
 }
 
 .contentCol {
@@ -41,10 +80,11 @@
   font-size: 14px;
   color: var(--fgColor-default);
   text-decoration: none;
+  transition: color 0.15s ease;
 }
 
 .authorName:hover {
-  text-decoration: underline;
+  color: var(--brand-primary);
 }
 
 .subInfo {
@@ -65,10 +105,16 @@
 .showMoreBtn {
   margin-left: 6px;
   font-size: 12px;
-  color: var(--fgColor-accent);
+  font-weight: 500;
+  color: var(--brand-primary);
   background: none;
   border: none;
   cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.showMoreBtn:hover {
+  opacity: 0.75;
 }
 
 /* MÍDIA */
@@ -139,10 +185,9 @@
 
 @media (max-width: 640px) {
   .postCard {
-    padding: 10px;
+    padding: 12px 14px;
     border-radius: 12px;
-    border: 1px solid var(--borderColor-muted);
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
 
   .postGrid {

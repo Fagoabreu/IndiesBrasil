@@ -9,7 +9,7 @@
   background-clip: text;
   border-right: 3px solid var(--brand-primary);
   padding-right: 4px;
-  filter: drop-shadow(0 0 12px rgba(149, 74, 255, 0.55));
+  filter: drop-shadow(0 0 12px rgba(var(--brand-rgb-primary), 0.38));
   animation: blink 0.65s step-end infinite;
 }
 

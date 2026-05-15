@@ -200,3 +200,62 @@ Do not create example/demo files (like ModalExample.tsx) in the main codebase un
 - Use the following tools to fetch and search documentation if they are available:
   - `resolve_library_id` to resolve the package/library name in the docs.
   - `get_library_docs` for up-to-date documentation.
+
+## 12. Color System — Always Use CSS Variables (Light & Dark Mode)
+
+This site supports **light and dark mode** via Primer React's `ThemeProvider`. The active mode is reflected as `data-color-mode="light"` or `data-color-mode="dark"` on the ThemeProvider wrapper div. **Never hardcode hex or rgb color values outside the designated token files.**
+
+### 12.1. Token Hierarchy
+
+| Layer                       | Variables                                                                                                                                                                                                                                                       | Source                                                                 |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Brand identity              | `--brand-primary`, `--brand-secondary`, `--brand-gradient-*`, `--brand-glow-*`, `--brand-card-glow`, `--brand-btn-shadow`, `--brand-ambient-bg`, `--brand-hover-bg`, `--brand-active-bg`, `--brand-hover-border`, `--brand-active-ring`, `--brand-empty-border` | `css/styles.css :root`                                                 |
+| Brand RGB channels          | `--brand-rgb-primary`, `--brand-rgb-secondary`                                                                                                                                                                                                                  | `css/styles.css :root`                                                 |
+| Semantic UI text/bg/borders | `--fgColor-default`, `--fgColor-muted`, `--fgColor-onInverse`, `--bgColor-default`, `--bgColor-muted`, `--bgColor-inset`, `--bgColor-accent-muted`, `--borderColor-default`, `--borderColor-muted`                                                              | Primer primitives (light/dark auto-switches)                           |
+| Syntax highlighting         | `--syntax-key`, `--syntax-string`, `--syntax-number`, `--syntax-bool`, `--syntax-null`, `--syntax-attr`                                                                                                                                                         | `css/styles.css` (dark default + `[data-color-mode="light"]` override) |
+
+### 12.2. Rules
+
+- **Brand colors** — always reference `--brand-primary`, `--brand-secondary`, etc. from `css/styles.css`. Never duplicate their hex values.
+- **rgba() with brand colors** — always use the RGB channel variables:
+
+  ```css
+  /* Correct */
+  background: rgba(var(--brand-rgb-primary), 0.08);
+
+  /* Wrong */
+  background: rgba(149, 74, 255, 0.08);
+  ```
+
+- **Text & backgrounds** — always use Primer's semantic tokens (`--fgColor-*`, `--bgColor-*`). These automatically adapt to light/dark mode.
+- **Borders** — use `--borderColor-muted`, `--borderColor-default`, or `--brand-hover-border` / `--brand-active-ring`.
+- **Syntax highlighting** — use `--syntax-*` variables (defined in `css/styles.css`). Never hardcode editor color tokens directly in component CSS.
+- **New brand colors** — if a new brand color is needed, add it to `css/styles.css :root` first, then reference it everywhere via the variable.
+- **New syntax tokens** — if a new highlighting token is needed, add the variable to `css/styles.css` with both a dark default and a `[data-color-mode="light"]` override.
+
+### 12.3. Allowed Exceptions
+
+The following hardcoded colors are explicitly allowed:
+
+| Value                 | Context                                    | Reason                                                          |
+| --------------------- | ------------------------------------------ | --------------------------------------------------------------- |
+| `color: #fff`         | Text on brand gradient buttons/badges      | Background is always colored — white is correct in both modes   |
+| `background: #ffffff` | HTML preview `<iframe>` in the viewer tool | Iframe renders user-authored HTML; white is the browser default |
+
+### 12.4. Light/Dark Overrides Pattern
+
+For anything that must differ between modes, use Primer's `data-color-mode` attribute selector:
+
+```css
+/* Default (dark mode) */
+.myClass {
+  color: var(--syntax-key);
+}
+
+/* Override for light mode */
+[data-color-mode="light"] .myClass {
+  color: var(--fgColor-default);
+}
+```
+
+> **Do not add a `prefers-color-scheme` media query** — the site controls the theme via cookie, not via OS preference. Use `[data-color-mode="..."]` selectors instead.

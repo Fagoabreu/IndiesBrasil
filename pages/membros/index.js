@@ -19,6 +19,7 @@ export default function MembersPage() {
   const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState([]);
   const [loadingFollowing, setLoadingFollowing] = useState(false);
+  const [tab, setTab] = useState("all");
 
   useEffect(() => {
     async function load() {
@@ -71,10 +72,32 @@ export default function MembersPage() {
     setFiltered(results);
   }
 
-  const discoverCount = filtered.length.toLocaleString("pt-BR");
-  const discoverWord = filtered.length === 1 ? "membro" : "membros";
-  const followingCount = following.length.toLocaleString("pt-BR");
-  const followingWord = following.length === 1 ? "pessoa" : "pessoas";
+  const activeList = tab === "following" ? following : filtered;
+  const isLoading = tab === "following" ? loadingFollowing : loading;
+
+  const countNum = activeList.length;
+  const countStr = countNum.toLocaleString("pt-BR");
+  const singular = tab === "following" ? "pessoa" : "membro";
+  const plural = tab === "following" ? "pessoas" : "membros";
+  const countWord = countNum === 1 ? singular : plural;
+
+  let emptyTitle;
+  if (tab === "following") {
+    emptyTitle = "Você ainda não segue ninguém";
+  } else if (search) {
+    emptyTitle = "Nenhum membro encontrado";
+  } else {
+    emptyTitle = "Ainda não há membros";
+  }
+
+  let emptyDescription;
+  if (tab === "following") {
+    emptyDescription = 'Vá para "Descubra" e comece a seguir!';
+  } else if (search) {
+    emptyDescription = `Nenhum resultado para "${search}". Tente outro termo.`;
+  } else {
+    emptyDescription = "Seja o primeiro a fazer parte da comunidade!";
+  }
 
   return (
     <div className={styles.page}>
@@ -82,98 +105,79 @@ export default function MembersPage() {
 
       {/* PAGE HEADER */}
       <header className={styles.pageHeader}>
-        <div className={styles.headerTitle}>
-          <Heading as="h2">Membros</Heading>
-        </div>
-        <p className={styles.pageSubtitle}>Conheça as pessoas que constroem jogos indie no Brasil.</p>
-
-        <div className={styles.searchWrapper}>
-          <TextInput
-            aria-label="Pesquisar membros"
-            placeholder="Pesquisar por nome ou username..."
-            value={search}
-            onChange={(e) => handleSearch(e.target.value)}
-            leadingVisual="search"
-            className={styles.searchInput}
-          />
-        </div>
-      </header>
-
-      {/* SEGUINDO */}
-      {user && (
-        <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <div className={styles.sectionTitleRow}>
-              <span className={styles.sectionLabel}>Seguindo</span>
-              {!loadingFollowing && (
-                <span className={styles.sectionCount} aria-live="polite">
-                  {followingCount} {followingWord}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {loadingFollowing && (
-            <div className={styles.loadingState} role="status" aria-live="polite">
-              <Spinner size="medium" />
-              <span>Carregando...</span>
-            </div>
-          )}
-
-          {!loadingFollowing && following.length === 0 && (
-            <div className={styles.emptyState} role="status" aria-live="polite">
-              <p className={styles.emptyTitle}>Você ainda não segue ninguém</p>
-              <p className={styles.emptyDescription}>Descubra novos membros abaixo e comece a seguir!</p>
-            </div>
-          )}
-
-          {!loadingFollowing && following.length > 0 && (
-            <div className={styles.grid}>
-              {following.map((u) => (
-                <MemberCard key={u.id} user={u} />
-              ))}
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* DESCUBRA */}
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <div className={styles.sectionTitleRow}>
-            <span className={styles.sectionLabel}>Descubra</span>
-            {!loading && (
-              <span className={styles.sectionCount} aria-live="polite">
-                {discoverCount} {discoverWord}
+        <div className={styles.headerBlock}>
+          <div className={styles.headerTitle}>
+            <Heading as="h2">Membros</Heading>
+            {!isLoading && (
+              <span className={styles.memberCount} aria-live="polite">
+                {countStr} {countWord}
               </span>
             )}
           </div>
+          <p className={styles.pageSubtitle}>Conheça as pessoas que constroem jogos indie no Brasil.</p>
+
+          {tab === "all" && (
+            <div className={styles.searchWrapper}>
+              <TextInput
+                aria-label="Pesquisar membros"
+                placeholder="Pesquisar por nome ou username..."
+                value={search}
+                onChange={(e) => handleSearch(e.target.value)}
+                leadingVisual="search"
+                className={styles.searchInput}
+              />
+            </div>
+          )}
         </div>
 
-        {loading && (
-          <div className={styles.loadingState} role="status" aria-live="polite">
-            <Spinner size="medium" />
-            <span>Carregando membros...</span>
+        {user && (
+          <div className={styles.feedTabs} role="tablist" aria-label="Filtros de membros">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === "all"}
+              className={`${styles.feedTab} ${tab === "all" ? styles.feedTabActive : ""}`}
+              onClick={() => setTab("all")}
+            >
+              Descubra
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === "following"}
+              className={`${styles.feedTab} ${tab === "following" ? styles.feedTabActive : ""}`}
+              onClick={() => setTab("following")}
+            >
+              Seguindo
+            </button>
           </div>
         )}
+      </header>
 
-        {!loading && filtered.length === 0 && (
-          <div className={styles.emptyState} role="status" aria-live="polite">
-            <p className={styles.emptyTitle}>{search ? "Nenhum membro encontrado" : "Ainda não há membros"}</p>
-            <p className={styles.emptyDescription}>
-              {search ? `Nenhum resultado para "${search}". Tente outro termo.` : "Seja o primeiro a fazer parte da comunidade!"}
-            </p>
-          </div>
-        )}
+      {/* LOADING */}
+      {isLoading && (
+        <div className={styles.loadingState} role="status" aria-live="polite">
+          <Spinner size="medium" />
+          <span>Carregando...</span>
+        </div>
+      )}
 
-        {!loading && filtered.length > 0 && (
-          <div className={styles.grid}>
-            {filtered.map((u) => (
-              <MemberCard key={u.id} user={u} />
-            ))}
-          </div>
-        )}
-      </section>
+      {/* EMPTY STATE */}
+      {!isLoading && activeList.length === 0 && (
+        <div className={styles.emptyState} role="status" aria-live="polite">
+          <p className={styles.emptyTitle}>{emptyTitle}</p>
+          <p className={styles.emptyDescription}>{emptyDescription}</p>
+        </div>
+      )}
+
+      {/* GRID */}
+      {!isLoading && activeList.length > 0 && (
+        <div className={styles.grid}>
+          {activeList.map((u) => (
+            <MemberCard key={u.id} user={u} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

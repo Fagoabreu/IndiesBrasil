@@ -12,38 +12,45 @@
 ======================================== */
 :root {
   /* Core palette */
-  --brand-primary: #954aff;
-  --brand-secondary: #ff4aa0;
+  --brand-primary: #8b5cf6;
+  --brand-secondary: #e879b8;
+
+  /*
+   * RGB channels — use para criar rgba() sem hardcode de cor:
+   * rgba(var(--brand-rgb-primary), 0.12)
+   */
+  --brand-rgb-primary: 139, 92, 246;
+  --brand-rgb-secondary: 232, 121, 184;
 
   /* Gradients */
-  --brand-gradient: linear-gradient(135deg, #954aff 0%, #ff4aa0 100%);
-  --brand-gradient-h: linear-gradient(90deg, #954aff 0%, #ff4aa0 100%);
-  --brand-gradient-v: linear-gradient(180deg, #954aff 0%, #ff4aa0 100%);
+  --brand-gradient: linear-gradient(135deg, #8b5cf6 0%, #e879b8 100%);
+  --brand-gradient-h: linear-gradient(90deg, #8b5cf6 0%, #e879b8 100%);
+  --brand-gradient-v: linear-gradient(180deg, #8b5cf6 0%, #e879b8 100%);
 
-  /* Glows / shadows */
-  --brand-glow-sm: 0 4px 16px rgba(149, 74, 255, 0.28);
-  --brand-glow-md: 0 8px 28px rgba(149, 74, 255, 0.18);
-  --brand-glow-lg: 0 12px 40px rgba(149, 74, 255, 0.32);
-  --brand-card-glow: 0 8px 32px rgba(149, 74, 255, 0.08);
-  --brand-btn-shadow: 0 4px 16px rgba(149, 74, 255, 0.32);
-  --brand-btn-shadow-hover: 0 8px 30px rgba(149, 74, 255, 0.52);
+  /* Glows / shadows — opacidades reduzidas para menor fadiga visual */
+  --brand-glow-sm: 0 4px 16px rgba(139, 92, 246, 0.2);
+  --brand-glow-md: 0 8px 28px rgba(139, 92, 246, 0.13);
+  --brand-glow-lg: 0 12px 40px rgba(139, 92, 246, 0.22);
+  --brand-card-glow: 0 8px 32px rgba(139, 92, 246, 0.06);
+  --brand-btn-shadow: 0 4px 16px rgba(139, 92, 246, 0.24);
+  --brand-btn-shadow-hover: 0 8px 30px rgba(139, 92, 246, 0.38);
 
   /* Backgrounds */
   --brand-ambient-bg:
-    radial-gradient(ellipse 70% 100% at 5% 50%, rgba(149, 74, 255, 0.08), transparent),
-    radial-gradient(ellipse 55% 80% at 95% 20%, rgba(255, 74, 160, 0.06), transparent), var(--bgColor-default);
-  --brand-empty-bg: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(149, 74, 255, 0.04), transparent), var(--bgColor-default);
-  --brand-icon-bg: linear-gradient(135deg, rgba(149, 74, 255, 0.1), rgba(255, 74, 160, 0.08));
-  --brand-active-bg: linear-gradient(135deg, rgba(149, 74, 255, 0.12), rgba(255, 74, 160, 0.08));
+    radial-gradient(ellipse 70% 100% at 5% 50%, rgba(139, 92, 246, 0.06), transparent),
+    radial-gradient(ellipse 55% 80% at 95% 20%, rgba(232, 121, 184, 0.04), transparent), var(--bgColor-default);
+  --brand-empty-bg: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(139, 92, 246, 0.03), transparent), var(--bgColor-default);
+  --brand-icon-bg: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(232, 121, 184, 0.06));
+  --brand-active-bg: linear-gradient(135deg, rgba(139, 92, 246, 0.09), rgba(232, 121, 184, 0.06));
 
   /* Borders */
-  --brand-empty-border: 1px dashed rgba(149, 74, 255, 0.3);
-  --brand-hover-border: rgba(149, 74, 255, 0.35);
-  --brand-active-ring: rgba(149, 74, 255, 0.3);
-  --brand-icon-border: rgba(149, 74, 255, 0.18);
+  --brand-empty-border: 1px dashed rgba(139, 92, 246, 0.22);
+  --brand-hover-border: rgba(139, 92, 246, 0.28);
+  --brand-active-ring: rgba(139, 92, 246, 0.25);
+  --brand-icon-border: rgba(139, 92, 246, 0.14);
 
   /* Interactive states */
-  --brand-hover-bg: rgba(149, 74, 255, 0.06);
+  --brand-hover-bg: rgba(139, 92, 246, 0.05);
 }
 
 /* ========================================
@@ -141,6 +148,31 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--brand-primary);
+}
+
+/* ========================================
+   SYNTAX HIGHLIGHTING TOKENS
+   Padrão dark (Dracula-inspired) como
+   default — override para light mode via
+   [data-color-mode="light"].
+   Use em qualquer componente de código/viewer.
+======================================== */
+:root {
+  --syntax-key: #7c9eff; /* chaves JSON, tags XML */
+  --syntax-string: #a8d8a8; /* strings */
+  --syntax-number: #ffb86c; /* números */
+  --syntax-bool: #ff79c6; /* booleanos */
+  --syntax-null: #bd93f9; /* null / nil */
+  --syntax-attr: #50fa7b; /* atributos XML */
+}
+
+[data-color-mode="light"] {
+  --syntax-key: #0550ae; /* Primer blue */
+  --syntax-string: #116329; /* Primer green */
+  --syntax-number: #953800; /* Primer orange */
+  --syntax-bool: #cf222e; /* Primer red */
+  --syntax-null: #6e40c9; /* Primer purple */
+  --syntax-attr: #0a3069; /* Primer dark blue */
 }
 
 body {

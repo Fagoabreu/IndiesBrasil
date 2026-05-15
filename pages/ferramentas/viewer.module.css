@@ -13,7 +13,7 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--brand-primary);
-  background: rgba(149, 74, 255, 0.1);
+  background: rgba(var(--brand-rgb-primary), 0.07);
   border: 1px solid var(--brand-active-ring);
   border-radius: 999px;
   padding: 1px 8px;
@@ -40,31 +40,31 @@
 
 /* JSON */
 .hlKey {
-  color: #7c9eff;
+  color: var(--syntax-key);
   font-weight: 600;
 }
 .hlString {
-  color: #a8d8a8;
+  color: var(--syntax-string);
 }
 .hlNumber {
-  color: #ffb86c;
+  color: var(--syntax-number);
 }
 .hlBool {
-  color: #ff79c6;
+  color: var(--syntax-bool);
   font-weight: 600;
 }
 .hlNull {
-  color: #bd93f9;
+  color: var(--syntax-null);
   font-style: italic;
 }
 
 /* XML */
 .hlTag {
-  color: #7c9eff;
+  color: var(--syntax-key);
   font-weight: 600;
 }
 .hlAttr {
-  color: #50fa7b;
+  color: var(--syntax-attr);
 }
 .hlDecl {
   color: var(--fgColor-muted);

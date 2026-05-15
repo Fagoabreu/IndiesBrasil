@@ -25,7 +25,7 @@
 .metric-card:hover {
   border-color: var(--brand-hover-border);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(149, 74, 255, 0.13);
+  box-shadow: 0 6px 20px rgba(var(--brand-rgb-primary), 0.1);
 }
 
 /* HEADER */

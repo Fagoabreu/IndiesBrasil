@@ -26,7 +26,7 @@
 
 .card:hover {
   border-color: var(--brand-hover-border);
-  box-shadow: 0 8px 28px rgba(149, 74, 255, 0.12);
+  box-shadow: 0 8px 28px rgba(var(--brand-rgb-primary), 0.1);
 }
 
 .qrImage {

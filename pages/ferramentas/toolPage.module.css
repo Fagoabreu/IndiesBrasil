@@ -71,7 +71,7 @@
 
 .panel:focus-within {
   border-color: var(--brand-hover-border);
-  box-shadow: 0 0 0 3px rgba(149, 74, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb-primary), 0.06);
 }
 
 .panelHeader {
