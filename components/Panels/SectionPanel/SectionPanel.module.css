@@ -1,8 +1,22 @@
 .panelFrame {
   background: var(--bgColor-default);
-  border: 1px solid var(--borderColor-default);
-  border-radius: 8px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 12px;
   padding: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--brand-card-glow);
+}
+
+/* Accent gradient line sempre visível — painel de conteúdo primário */
+.panelFrame::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--brand-gradient-h);
 }
 
 .cardHeader {
@@ -10,14 +24,18 @@
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 5px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--borderColor-muted);
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .resumeItem {
-  padding: 8px 0;
+  padding: 10px 0;
   border-bottom: 1px solid var(--borderColor-muted);
+}
+
+.resumeItem:last-child {
+  border-bottom: none;
 }
 
 .resumeItem strong {

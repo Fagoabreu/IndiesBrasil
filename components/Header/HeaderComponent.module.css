@@ -1,3 +1,21 @@
+.headerRoot {
+  position: relative;
+  border-bottom: 1px solid var(--borderColor-muted) !important;
+}
+
+/* Linha de destaque gradiente na base do header */
+.headerRoot::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--brand-gradient-h);
+  pointer-events: none;
+  z-index: 1;
+}
+
 .mobileMenuBtn {
   display: none;
 }
@@ -13,21 +31,36 @@
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  color: var(--color-fg-default);
+  color: var(--fgColor-default);
 }
 
+/* Anel de destaque ao redor do logo */
 .logoWrapper {
   position: relative;
   width: 40px;
   height: 40px;
   border-radius: 10px;
   overflow: hidden;
+  box-shadow:
+    0 0 0 2px rgba(var(--brand-rgb-primary), 0.35),
+    var(--brand-glow-sm);
+  transition: box-shadow 0.25s ease;
 }
 
+.logoArea:hover .logoWrapper {
+  box-shadow:
+    0 0 0 2px rgba(var(--brand-rgb-primary), 0.6),
+    var(--brand-glow-md);
+}
+
+/* Texto com gradiente de marca */
 .logoText {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 18px;
-  color: var(--color-fg-default);
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .navDesktop {

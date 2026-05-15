@@ -5,6 +5,11 @@
 }
 
 .pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
   background: var(--brand-ambient-bg);
   border: 1px solid var(--borderColor-muted);
   border-radius: 16px;
@@ -12,6 +17,11 @@
   margin-bottom: 24px;
   position: relative;
   overflow: hidden;
+}
+
+.headerBlock {
+  min-width: 0;
+  flex: 1;
 }
 
 /* gradient left accent */
@@ -37,7 +47,7 @@
   font-size: 0.82rem;
   font-weight: 700;
   color: var(--brand-primary);
-  background: rgba(149, 74, 255, 0.08);
+  background: rgba(var(--brand-rgb-primary), 0.07);
   border: 1px solid var(--brand-active-ring);
   border-radius: 999px;
   padding: 2px 12px;
@@ -58,6 +68,42 @@
 .searchInput {
   width: 100%;
   max-width: 400px;
+}
+
+.feedTabs {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  background-color: var(--bgColor-muted);
+  border-radius: 999px;
+  border: 1px solid var(--borderColor-muted);
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.feedTab {
+  all: unset;
+  cursor: pointer;
+  padding: 7px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+  white-space: nowrap;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.feedTab:hover {
+  color: var(--brand-primary);
+}
+
+.feedTabActive {
+  background: var(--brand-active-bg);
+  color: var(--brand-primary);
+  box-shadow: 0 0 0 1px var(--brand-active-ring);
+  background-clip: padding-box;
 }
 
 .grid {
@@ -106,6 +152,12 @@
   .pageHeader {
     padding: 14px;
     border-radius: 14px;
+    flex-direction: column;
+  }
+
+  .feedTabs {
+    width: 100%;
+    justify-content: center;
   }
 
   .searchInput {

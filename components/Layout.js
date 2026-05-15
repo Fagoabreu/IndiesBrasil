@@ -22,7 +22,7 @@ export default function Layout({ children, RightSidebar = null }) {
       </nav>
 
       <SplitPageLayout className="layout-body">
-        <SplitPageLayout.Header>
+        <SplitPageLayout.Header className="layout-header">
           <HeaderComponent onMenuClick={() => setMobileNavOpen((v) => !v)} />
         </SplitPageLayout.Header>
 

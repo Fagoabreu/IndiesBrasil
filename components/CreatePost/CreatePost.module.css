@@ -1,9 +1,40 @@
 .container {
-  padding: 12px;
-  border: 1px solid var(--borderColor-default);
-  border-radius: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 14px;
   background: var(--bgColor-default);
   margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--brand-card-glow);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* gradient top accent — sempre visível para destacar como área de criação */
+.container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--brand-gradient-h);
+}
+
+.container:focus-within {
+  border-color: var(--brand-hover-border);
+  box-shadow: 0 8px 28px rgba(var(--brand-rgb-primary), 0.1);
+}
+
+.avatarRing {
+  display: flex;
+  flex-shrink: 0;
+  align-self: flex-start;
+  border-radius: 50%;
+  padding: 2px;
+  background: var(--brand-gradient);
 }
 
 .contentArea {
@@ -58,22 +89,40 @@
   display: none;
 }
 
-.tag-suggest {
+.tagSuggest {
   position: absolute;
   background-color: var(--bgColor-default);
-  border: 1px solid var(--borderColor-default);
-  border-radius: 6px;
+  border: 1px solid var(--brand-active-ring);
+  border-radius: 10px;
   margin-top: 4px;
   list-style: none;
   padding: 4px 0;
   z-index: 10;
+  box-shadow: var(--brand-card-glow);
 }
 
-.tag-suggest li {
+.tagSuggest li {
+  padding: 0;
+}
+
+.tagSuggestItem {
+  all: unset;
+  display: block;
+  width: 100%;
   padding: 6px 12px;
   cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--brand-primary);
+  transition: background-color 0.1s ease;
+  box-sizing: border-box;
 }
 
-.tag-suggest li:hover {
-  background-color: var(--bgColor-muted);
+.tagSuggestItem:hover {
+  background-color: var(--brand-hover-bg);
+}
+
+.tagSuggestItem:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: -2px;
 }

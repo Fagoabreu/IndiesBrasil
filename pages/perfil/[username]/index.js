@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { PageLayout, Heading, Avatar, Text, Button } from "@primer/react";
+import { DownloadIcon } from "@primer/octicons-react";
 import Image from "next/image";
 
 import { useUser } from "@/context/UserContext";
@@ -23,6 +24,7 @@ import RoleItem from "@/components/Portfolio/Roles/RoleItem";
 import EditRoleModal from "@/components/Portfolio/Roles/EditRoleModal";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
 import ProfileImageUploader from "@/components/Portfolio/ProfileImageUploader";
+import ProfileQrCode from "@/components/Portfolio/ProfileQrCode";
 
 /* =====================
  * Utils
@@ -401,6 +403,10 @@ export default function Perfil() {
    * Render
    * ===================== */
 
+  function handlePrint() {
+    globalThis.open(`/perfil/${username}/curriculo`, "_blank");
+  }
+
   return (
     <PageLayout padding="none">
       <PageLayout.Content width="medium">
@@ -409,7 +415,7 @@ export default function Perfil() {
           <StatusMessageComponent errorMsg={errorMessage} />
 
           <div className={style.imageWrapper}>
-            <Image src={perfilUser.user.background_image || "/images/sistematags.png"} alt="Capa do perfil" fill unoptimized />
+            <Image src={perfilUser.user.background_image || "/images/default_header.png"} alt="Capa do perfil" fill unoptimized />
             {isOwnProfile && (
               <div className={style.coverUploader}>
                 <ProfileImageUploader endpoint={`/api/v1/users/${username}/avatar`} onUploaded={reloadProfile} label="Alterar capa" type="cover" />
@@ -431,22 +437,35 @@ export default function Perfil() {
             )}
           </div>
 
-          <div className={style.profileHeaderInfo}>
-            <Heading as="h2">{perfilUser.name || perfilUser.user.username}</Heading>
+          <div className={style.profileHeaderRow}>
+            <div className={style.profileHeaderInfo}>
+              <Heading as="h2">{perfilUser.name || perfilUser.user.username}</Heading>
 
-            <Text size="medium">Desde: {formatDateBR(perfilUser.user.created_at)}</Text>
+              <Text size="medium">Desde: {formatDateBR(perfilUser.user.created_at)}</Text>
 
-            <Text size="medium">
-              <strong>{perfilUser.user.following_count ?? 0}</strong> acompanhando · <strong>{perfilUser.user.followers_count ?? 0}</strong>{" "}
-              seguidores · <strong>{perfilUser.user.posts_count ?? 0}</strong> postagens
-            </Text>
+              <Text size="medium" className={style.profileStats}>
+                <strong>{perfilUser.user.following_count ?? 0}</strong> acompanhando · <strong>{perfilUser.user.followers_count ?? 0}</strong>{" "}
+                seguidores · <strong>{perfilUser.user.posts_count ?? 0}</strong> postagens
+              </Text>
 
-            {!isOwnProfile && authUser && (
-              <div className={style.profileHeaderActions}>
-                <FollowButton username={username} isFollowing={perfilUser.user.is_following ?? false} />
-                <Button>Enviar mensagem</Button>
+              {!isOwnProfile && authUser && (
+                <div className={style.profileHeaderActions}>
+                  <FollowButton username={username} isFollowing={perfilUser.user.is_following ?? false} />
+                  <Button>Enviar mensagem</Button>
+                </div>
+              )}
+
+              <div className={style.profilePrintActions}>
+                <button type="button" className={style.printBtn} onClick={handlePrint}>
+                  <DownloadIcon size={14} />
+                  Exportar PDF
+                </button>
               </div>
-            )}
+            </div>
+
+            <div className={style.profileQrWrapper}>
+              <ProfileQrCode username={username} isOwnProfile={isOwnProfile} />
+            </div>
           </div>
 
           {/* ===== RESUME ===== */}

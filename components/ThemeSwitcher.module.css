@@ -1,0 +1,65 @@
+/* ===== Toggle track ===== */
+.toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 52px;
+  height: 28px;
+  border-radius: 14px;
+  border: 1px solid var(--borderColor-muted);
+  background: var(--bgColor-inset);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+  outline: none;
+}
+
+.toggle:focus-visible {
+  box-shadow: 0 0 0 3px var(--brand-active-ring);
+}
+
+.toggle[data-mode="day"] {
+  background: rgba(var(--brand-rgb-primary), 0.16);
+  border-color: rgba(var(--brand-rgb-primary), 0.45);
+  box-shadow: 0 0 8px rgba(var(--brand-rgb-primary), 0.18);
+}
+
+/* ===== Sliding knob ===== */
+.knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bgColor-default);
+  color: var(--fgColor-muted);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
+  pointer-events: none;
+  /* spring-like animation */
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* Night mode: knob on the left */
+.knobNight {
+  transform: translateX(0);
+}
+
+/* Day mode: knob slides to the right, uses brand gradient */
+.knobDay {
+  transform: translateX(24px);
+  background: var(--brand-gradient);
+  color: #fff;
+  box-shadow: var(--brand-glow-sm);
+}

@@ -1,6 +1,7 @@
 // components/PostCardComponent.jsx
 import { useState } from "react";
 import { Avatar, Button } from "@primer/react";
+import Link from "next/link";
 import styles from "./PostCardComponent.module.css";
 import PostActionsComponent from "../PostActions/PostActionsComponent";
 import CommentPanelComponent from "../CommentPanel/CommentPanelComponent";
@@ -195,14 +196,18 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
       <div className={styles.postGrid}>
         {/* COLUNA AVATAR */}
         <div className={styles.avatarCol}>
-          <Avatar src={post.author_avatar_url || "/images/avatar.png"} size={40} />
+          <Link href={`/perfil/${post.author_username}`} className={styles.avatarLink}>
+            <Avatar src={post.author_avatar_url || "/images/avatar.png"} size={40} />
+          </Link>
         </div>
         {/* COLUNA CONTEÚDO */}
         <div className={styles.contentCol}>
           {/* HEADER */}
           <div className={styles.header}>
             <div>
-              <strong className={styles.authorName}>{post.author_username}</strong>
+              <Link href={`/perfil/${post.author_username}`} className={styles.authorName}>
+                <strong>{post.author_username}</strong>
+              </Link>
               <span className={styles.subInfo}>
                 @{post.author_username} · {timeAgo(post.created_at)}
               </span>

@@ -4,6 +4,7 @@ import { Heading, TextInput, Spinner } from "@primer/react";
 import MemberCard from "@/components/MemberCard/MemberCard";
 import styles from "./MembersPage.module.css";
 import { SITE_URL } from "@/lib/seo";
+import { useUser } from "@/context/UserContext";
 
 const PAGE_TITLE = "Membros da Comunidade Indie Brasileira | Indies Brasil";
 const PAGE_DESCRIPTION =
@@ -11,10 +12,14 @@ const PAGE_DESCRIPTION =
 const PAGE_URL = `${SITE_URL}/membros`;
 
 export default function MembersPage() {
+  const { user } = useUser();
   const [members, setMembers] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [following, setFollowing] = useState([]);
+  const [loadingFollowing, setLoadingFollowing] = useState(false);
+  const [tab, setTab] = useState("all");
 
   useEffect(() => {
     async function load() {
@@ -37,6 +42,27 @@ export default function MembersPage() {
     load();
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+    setLoadingFollowing(true);
+
+    async function loadFollowing() {
+      try {
+        const res = await fetch("/api/v1/users?isfollowing=true", { credentials: "include" });
+        const data = await res.json();
+        if (res.ok) {
+          setFollowing(data || []);
+        }
+      } catch (e) {
+        console.error("Erro ao carregar seguindo", e);
+      } finally {
+        setLoadingFollowing(false);
+      }
+    }
+
+    loadFollowing();
+  }, [user]);
+
   function handleSearch(value) {
     setSearch(value);
     const term = value.toLowerCase();
@@ -46,8 +72,32 @@ export default function MembersPage() {
     setFiltered(results);
   }
 
-  const memberCount = filtered.length.toLocaleString("pt-BR");
-  const memberWord = filtered.length === 1 ? "membro" : "membros";
+  const activeList = tab === "following" ? following : filtered;
+  const isLoading = tab === "following" ? loadingFollowing : loading;
+
+  const countNum = activeList.length;
+  const countStr = countNum.toLocaleString("pt-BR");
+  const singular = tab === "following" ? "pessoa" : "membro";
+  const plural = tab === "following" ? "pessoas" : "membros";
+  const countWord = countNum === 1 ? singular : plural;
+
+  let emptyTitle;
+  if (tab === "following") {
+    emptyTitle = "Você ainda não segue ninguém";
+  } else if (search) {
+    emptyTitle = "Nenhum membro encontrado";
+  } else {
+    emptyTitle = "Ainda não há membros";
+  }
+
+  let emptyDescription;
+  if (tab === "following") {
+    emptyDescription = 'Vá para "Descubra" e comece a seguir!';
+  } else if (search) {
+    emptyDescription = `Nenhum resultado para "${search}". Tente outro termo.`;
+  } else {
+    emptyDescription = "Seja o primeiro a fazer parte da comunidade!";
+  }
 
   return (
     <div className={styles.page}>
@@ -55,51 +105,76 @@ export default function MembersPage() {
 
       {/* PAGE HEADER */}
       <header className={styles.pageHeader}>
-        <div className={styles.headerTitle}>
-          <Heading as="h2">Membros</Heading>
-          {!loading && (
-            <span className={styles.memberCount} aria-live="polite">
-              {memberCount} {memberWord}
-            </span>
+        <div className={styles.headerBlock}>
+          <div className={styles.headerTitle}>
+            <Heading as="h2">Membros</Heading>
+            {!isLoading && (
+              <span className={styles.memberCount} aria-live="polite">
+                {countStr} {countWord}
+              </span>
+            )}
+          </div>
+          <p className={styles.pageSubtitle}>Conheça as pessoas que constroem jogos indie no Brasil.</p>
+
+          {tab === "all" && (
+            <div className={styles.searchWrapper}>
+              <TextInput
+                aria-label="Pesquisar membros"
+                placeholder="Pesquisar por nome ou username..."
+                value={search}
+                onChange={(e) => handleSearch(e.target.value)}
+                leadingVisual="search"
+                className={styles.searchInput}
+              />
+            </div>
           )}
         </div>
-        <p className={styles.pageSubtitle}>Conheça as pessoas que constroem jogos indie no Brasil.</p>
 
-        <div className={styles.searchWrapper}>
-          <TextInput
-            aria-label="Pesquisar membros"
-            placeholder="Pesquisar por nome ou username..."
-            value={search}
-            onChange={(e) => handleSearch(e.target.value)}
-            leadingVisual="search"
-            className={styles.searchInput}
-          />
-        </div>
+        {user && (
+          <div className={styles.feedTabs} role="tablist" aria-label="Filtros de membros">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === "all"}
+              className={`${styles.feedTab} ${tab === "all" ? styles.feedTabActive : ""}`}
+              onClick={() => setTab("all")}
+            >
+              Descubra
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === "following"}
+              className={`${styles.feedTab} ${tab === "following" ? styles.feedTabActive : ""}`}
+              onClick={() => setTab("following")}
+            >
+              Seguindo
+            </button>
+          </div>
+        )}
       </header>
 
       {/* LOADING */}
-      {loading && (
+      {isLoading && (
         <div className={styles.loadingState} role="status" aria-live="polite">
           <Spinner size="medium" />
-          <span>Carregando membros...</span>
+          <span>Carregando...</span>
         </div>
       )}
 
       {/* EMPTY STATE */}
-      {!loading && filtered.length === 0 && (
+      {!isLoading && activeList.length === 0 && (
         <div className={styles.emptyState} role="status" aria-live="polite">
-          <p className={styles.emptyTitle}>{search ? "Nenhum membro encontrado" : "Ainda não há membros"}</p>
-          <p className={styles.emptyDescription}>
-            {search ? `Nenhum resultado para "${search}". Tente outro termo.` : "Seja o primeiro a fazer parte da comunidade!"}
-          </p>
+          <p className={styles.emptyTitle}>{emptyTitle}</p>
+          <p className={styles.emptyDescription}>{emptyDescription}</p>
         </div>
       )}
 
-      {/* GRID DE CARDS */}
-      {!loading && filtered.length > 0 && (
+      {/* GRID */}
+      {!isLoading && activeList.length > 0 && (
         <div className={styles.grid}>
-          {filtered.map((user) => (
-            <MemberCard key={user.id} user={user} />
+          {activeList.map((u) => (
+            <MemberCard key={u.id} user={u} />
           ))}
         </div>
       )}

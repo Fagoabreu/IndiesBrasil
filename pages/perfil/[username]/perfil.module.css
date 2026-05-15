@@ -2,13 +2,29 @@
 .profileHeaderCard {
   position: relative;
   padding-top: 72px;
+  overflow: hidden;
+  isolation: isolate;
 }
+
+/* Accent gradient line no topo do card principal */
+.profileHeaderCard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--brand-gradient-h);
+  z-index: 3;
+}
+
 .profileCard {
   background: var(--bgColor-default);
-  border: 1px solid var(--borderColor-default);
-  border-radius: 8px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 14px;
   padding: 8px;
   margin-bottom: 16px;
+  box-shadow: var(--brand-card-glow);
 }
 
 .imageWrapper {
@@ -16,19 +32,35 @@
   height: 150px;
   position: relative;
   overflow: hidden;
-  border-radius: 10px 10px 0 0;
+  border-radius: 12px 12px 0 0;
 }
 
+/* Overlay sutil de profundidade no rodapé da capa */
+.imageWrapper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 55%, rgba(var(--brand-rgb-primary), 0.07) 100%);
+  pointer-events: none;
+}
+
+/* Anel gradiente ao redor do avatar */
 .avatarContainer {
   position: absolute;
-  top: 75px;
-  left: 24px;
-  width: 128px;
-  height: 128px;
+  top: 73px;
+  left: 22px;
+  width: 134px;
+  height: 134px;
+  border-radius: 50%;
+  background: var(--brand-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--brand-glow-md);
+  z-index: 2;
 }
 
 .profileAvatar {
-  border: 4px solid var(--bgColor-default);
   background: var(--bgColor-default);
 }
 
@@ -52,19 +84,36 @@
   right: -6px;
 }
 
-.profileHeaderInfo {
+/* Wrapper em linha: info à esquerda, QR à direita */
+.profileHeaderRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
   margin: 20px;
-  margin-top: 50px;
-  padding: 0px;
+  margin-top: 52px;
+}
+
+.profileHeaderInfo {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+}
+
+/* Destaque nos números de estatísticas (seguindo / seguidores / posts) */
+.profileStats strong {
+  color: var(--brand-primary);
+  font-weight: 700;
 }
 
 .profileHeaderActions {
   display: flex;
   flex-direction: row;
   gap: 12px;
+  margin-top: 4px;
 }
 
 /* ===== RESUME LAYOUT ===== */
@@ -92,8 +141,8 @@
 
 /* ===== ESTADO GENÉRICO (loading / not-found) ===== */
 .stateCard {
-  border: 1px dashed var(--borderColor-default);
-  background: linear-gradient(160deg, var(--bgColor-muted), var(--bgColor-default));
+  border: var(--brand-empty-border);
+  background: var(--brand-empty-bg);
   border-radius: 14px;
   padding: 40px 24px;
   text-align: center;
@@ -124,9 +173,12 @@
     padding: 6px;
   }
 
-  .profileHeaderInfo {
+  .profileHeaderRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
     margin: 12px;
-    margin-top: 44px;
+    margin-top: 46px;
   }
 
   .imageWrapper {
@@ -134,11 +186,86 @@
   }
 
   .avatarContainer {
-    top: 60px;
+    top: 58px;
   }
 
   .profileHeaderActions {
     flex-wrap: wrap;
     gap: 8px;
+  }
+}
+
+/* ===== BOTÃO DE EXPORTAR PDF ===== */
+
+.profileQrWrapper {
+  /* apenas wrapper para isolamento de print */
+}
+
+.profilePrintActions {
+  margin-top: 4px;
+}
+
+.printBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(var(--brand-rgb-primary), 0.4);
+  background: rgba(var(--brand-rgb-primary), 0.06);
+  color: var(--brand-primary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    box-shadow 0.15s,
+    transform 0.1s;
+}
+
+.printBtn:hover {
+  background: var(--brand-hover-bg);
+  box-shadow: var(--brand-btn-shadow);
+  transform: translateY(-1px);
+}
+
+.printBtn:active {
+  transform: translateY(0);
+}
+
+/* ===== IMPRESSÃO / EXPORTAR PDF ===== */
+
+@media print {
+  /* Remover elementos interativos e decorativos */
+  .coverUploader,
+  .avatarUploader,
+  .profilePrintActions,
+  .profileHeaderActions,
+  .profileQrWrapper {
+    display: none !important;
+  }
+
+  /* Cards sem sombra/brilho */
+  .profileCard,
+  .profileHeaderCard {
+    box-shadow: none !important;
+    border-color: #ccc !important;
+  }
+
+  /* Remover linha gradiente decorativa */
+  .profileHeaderCard::before {
+    display: none;
+  }
+
+  /* Anel do avatar: borda simples */
+  .avatarContainer {
+    background: #ccc !important;
+    box-shadow: none !important;
+  }
+
+  /* Layout de uma coluna */
+  .profileResume {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
   }
 }

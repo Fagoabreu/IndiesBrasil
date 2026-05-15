@@ -7,7 +7,7 @@ async function uploadImage(file, subfolder) {
     process.env.FILE_UPLOAD_BASE_FOLDER + "/" + (process.env.NODE_ENV === "production" ? "PROD" : "DEV") + "/" + (subfolder ?? "DEFAULT");
   const uploadedResult = await uploadFile.postFile(file, uploadFolder);
 
-  return await saveImage(uploadedResult, subfolder);
+  return await saveImage(uploadedResult);
 }
 
 async function saveImage(uploadedResult) {

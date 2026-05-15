@@ -1,0 +1,370 @@
+/* ================================================
+   Página de Currículo — layout para impressão/PDF
+   Sem Layout wrapper. Usa cores e medidas fixas
+   para garantir fidelidade ao imprimir/salvar PDF.
+   ================================================ */
+
+/* --- Estado de loading --- */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: sans-serif;
+  font-size: 14px;
+  color: #555;
+  background: #f8f8f8;
+}
+
+/* ===== BARRA DE AÇÃO (visível na tela, oculta no print) ===== */
+
+.printBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 24px;
+  background: #f3f0ff;
+  border-bottom: 3px solid #8b5cf6;
+  font-size: 13px;
+  color: #333;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.printHint {
+  margin: 0;
+  color: #555;
+}
+
+.printHint a {
+  color: #8b5cf6;
+  text-decoration: none;
+}
+
+.printHint a:hover {
+  text-decoration: underline;
+}
+
+.printBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 20px;
+  background: #8b5cf6;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.printBtn:hover {
+  background: #7c3aed;
+}
+
+/* ===== DOCUMENTO DO CURRÍCULO ===== */
+
+.page {
+  max-width: 820px;
+  margin: 32px auto;
+  padding: 48px 56px;
+  background: #fff;
+  color: #111;
+  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+  font-size: 11pt;
+  line-height: 1.55;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}
+
+/* ===== CABEÇALHO ===== */
+
+.cvHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #111;
+  margin-bottom: 24px;
+}
+
+/* Avatar circular */
+.cvAvatar {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ddd;
+  flex-shrink: 0;
+}
+
+.cvHeaderMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.cvName {
+  font-size: 22pt;
+  font-weight: 700;
+  color: #111;
+  margin: 0 0 4px;
+  line-height: 1.1;
+}
+
+.cvRoles {
+  font-size: 11pt;
+  color: #555;
+  margin: 0 0 8px;
+  font-weight: 500;
+}
+
+.cvBio {
+  font-size: 10pt;
+  color: #333;
+  margin: 8px 0 0;
+}
+
+/* Coluna direita do cabeçalho: contatos + QR */
+.cvHeaderRight {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* Contatos no cabeçalho */
+.cvHeaderContacts {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  text-align: right;
+  font-size: 9pt;
+  color: #333;
+  line-height: 1.9;
+}
+
+.cvHeaderContacts li {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.cvContactLabel {
+  font-weight: 600;
+  color: #555;
+  font-size: 8.5pt;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* QR code no cabeçalho */
+.cvQr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.cvQrLabel {
+  font-size: 7pt;
+  color: #888;
+  text-align: center;
+}
+
+/* ===== CORPO (2 colunas) ===== */
+
+.cvBody {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+/* Coluna principal */
+.cvMain {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* Coluna lateral */
+.cvSidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* ===== SEÇÕES ===== */
+
+.cvSection {
+  break-inside: avoid;
+}
+
+.cvSectionTitle {
+  font-size: 8.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #8b5cf6;
+  margin: 0 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+/* ===== ENTRADA (histórico / formação) ===== */
+
+.cvEntry {
+  margin-bottom: 14px;
+  break-inside: avoid;
+}
+
+.cvEntry:last-child {
+  margin-bottom: 0;
+}
+
+.cvEntryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.cvEntryTitle {
+  font-size: 10.5pt;
+  font-weight: 700;
+  color: #111;
+}
+
+.cvDate {
+  font-size: 9pt;
+  color: #666;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cvEntrySub {
+  font-size: 9.5pt;
+  color: #444;
+  margin-top: 2px;
+}
+
+.cvEntryList {
+  margin: 6px 0 0 14px;
+  padding: 0;
+  font-size: 9.5pt;
+  color: #333;
+}
+
+.cvEntryList li {
+  margin-bottom: 3px;
+}
+
+/* ===== LISTAS LATERAIS ===== */
+
+.cvSideList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cvSideItem {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.cvSideItemName {
+  font-size: 9.5pt;
+  font-weight: 600;
+  color: #111;
+}
+
+.cvSideItemLevel {
+  font-size: 8.5pt;
+  color: #666;
+}
+
+/* ===== RODAPÉ ===== */
+
+.cvFooter {
+  margin-top: 32px;
+  padding-top: 10px;
+  border-top: 1px solid #e0e0e0;
+  font-size: 8pt;
+  color: #aaa;
+  text-align: center;
+}
+
+/* ===== IMPRESSÃO / PDF ===== */
+
+@media print {
+  /* Ocultar barra de ação */
+  .printBar {
+    display: none !important;
+  }
+
+  /* Remover sombra/borda da página */
+  .page {
+    margin: 0;
+    padding: 0;
+    max-width: 100%;
+    border: none;
+    border-radius: 0;
+    font-size: 10pt;
+  }
+
+  /* Títulos de seção: manter cor para PDF colorido */
+  .cvSectionTitle {
+    color: #6d28d9;
+  }
+
+  /* Garantir que entradas não quebrem a meio */
+  .cvEntry,
+  .cvSection {
+    break-inside: avoid;
+  }
+}
+
+/* Configuração da página para impressão */
+@page {
+  size: A4 portrait;
+  margin: 14mm 16mm 14mm 20mm;
+}
+
+/* ===== RESPONSIVO (tela mobile) ===== */
+
+@media (max-width: 640px) {
+  .page {
+    padding: 24px 20px;
+    margin: 0;
+    border: none;
+  }
+
+  .cvHeader {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .cvHeaderContacts {
+    text-align: center;
+  }
+
+  .cvHeaderContacts li {
+    justify-content: center;
+  }
+
+  .cvBody {
+    grid-template-columns: 1fr;
+  }
+}

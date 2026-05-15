@@ -2,8 +2,35 @@
   padding: 10px 12px;
   border-radius: 5px;
   background-color: var(--bgColor-default);
-  border: 1px solid var(--borderColor-default);
+  border: 1px solid rgba(var(--brand-rgb-primary), 0.15);
   margin: 0px 8px 8px 8px;
+  position: relative;
+  overflow: hidden;
+  transition:
+    box-shadow 0.2s,
+    border-color 0.2s;
+}
+
+/* Linha gradiente no topo, aparece no hover */
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--brand-gradient-h);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
+.card:hover {
+  box-shadow: var(--brand-card-glow);
+  border-color: rgba(var(--brand-rgb-primary), 0.35);
 }
 
 .card + .card {
@@ -27,6 +54,15 @@
 
 .avatar {
   flex-shrink: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(var(--brand-rgb-primary), 0.2);
+  transition: box-shadow 0.2s;
+}
+
+.card:hover .avatar {
+  box-shadow:
+    0 0 0 2px var(--brand-primary),
+    var(--brand-glow-sm);
 }
 
 /* Info */
@@ -46,10 +82,12 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: color 0.15s;
 }
 
 .username:hover {
-  text-decoration: underline;
+  color: var(--brand-primary);
+  text-decoration: none;
 }
 
 .subtitle {
@@ -64,6 +102,11 @@
   display: flex;
   gap: 4px;
   align-items: center;
+}
+
+.stats span:nth-child(2) {
+  color: var(--brand-primary);
+  opacity: 0.5;
 }
 
 /* Botão */

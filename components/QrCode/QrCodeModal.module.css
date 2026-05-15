@@ -1,0 +1,4 @@
+.body {
+  padding: 12px;
+  background-color: var(--bgColor-muted);
+}

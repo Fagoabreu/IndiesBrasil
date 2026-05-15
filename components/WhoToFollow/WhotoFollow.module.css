@@ -1,17 +1,41 @@
 .followPanel {
-  border: 1px solid var(--borderColor-default);
+  border: 1px solid rgba(var(--brand-rgb-primary), 0.25);
   background-color: var(--bgColor-muted);
   margin-top: 20px;
   border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  transition:
+    box-shadow 0.2s,
+    border-color 0.2s;
+}
+
+/* Linha de acento gradiente no topo do card */
+.followPanel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--brand-gradient-h);
+}
+
+.followPanel:hover {
+  box-shadow: var(--brand-card-glow);
+  border-color: rgba(var(--brand-rgb-primary), 0.4);
 }
 
 .followTitle {
-  margin: 12px 12px 0px 12px;
+  margin: 14px 12px 0px 12px;
   border: 0;
   padding: 0;
   font-size: 14px;
   font-weight: 600;
-  color: var(--fgColor-default);
+  background: var(--brand-gradient-h);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .followStack {

@@ -1,0 +1,69 @@
+/* ===================================================
+   Override dos tokens de destaque do Primer React
+   dentro do escopo do sidebar — aplica a identidade
+   da marca nos itens ativos/hover do NavList.
+   =================================================== */
+.sidebar {
+  /* Cor de fundo do item ativo */
+  --bgColor-accent-muted: rgba(var(--brand-rgb-primary), 0.1);
+  /* Cor do texto do item ativo */
+  --fgColor-accent: var(--brand-primary);
+  /* Cor do indicador lateral (borda esquerda ativa) */
+  --borderColor-accent-emphasis: var(--brand-primary);
+  /* Hover dos itens */
+  --control-transparent-bgColor-hover: var(--brand-hover-bg);
+
+  position: relative;
+  padding-top: 4px;
+}
+
+/* Linha de acento gradiente no topo */
+.sidebar::before {
+  content: "";
+  display: block;
+  height: 2px;
+  background: var(--brand-gradient-h);
+  border-radius: 2px;
+  margin-bottom: 10px;
+  opacity: 0.8;
+}
+
+/* ===== Cabeçalhos de seção ===== */
+.groupHeading {
+  display: flex !important;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.07em !important;
+  color: var(--fgColor-muted) !important;
+  padding: 6px 8px 4px !important;
+  user-select: none;
+  transition: color 0.15s;
+}
+
+.groupHeading:hover {
+  color: var(--brand-primary) !important;
+}
+
+/* ===== Fallback: active item via aria-current ===== *
+   Garante que o item ativo use as cores da marca
+   independente de qual token o Primer usa internamente. */
+.sidebar :global(a[aria-current]:not([aria-current="false"])),
+.sidebar :global(button[aria-current]:not([aria-current="false"])) {
+  background-color: rgba(var(--brand-rgb-primary), 0.1) !important;
+  color: var(--brand-primary) !important;
+}
+
+/* Indicador lateral esquerdo do item ativo */
+.sidebar :global(a[aria-current]:not([aria-current="false"]))::before,
+.sidebar :global(button[aria-current]:not([aria-current="false"]))::before {
+  background-color: var(--brand-primary) !important;
+}
+
+/* Hover em itens não-ativos */
+.sidebar :global(a:not([aria-current]):hover),
+.sidebar :global(button:not([aria-current]):hover) {
+  background-color: var(--brand-hover-bg) !important;
+}
