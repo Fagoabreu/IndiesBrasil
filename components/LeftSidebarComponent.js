@@ -24,6 +24,10 @@ export default function LeftSidebarComponent() {
           Posts
         </NavList.Item>
 
+        <NavList.Item as={Link} href="/agenda" aria-current={router.pathname.startsWith("/agenda")}>
+          Agenda
+        </NavList.Item>
+
         <NavList.Item as={Link} href="/membros" aria-current={router.pathname.startsWith("/membros")}>
           Membros
         </NavList.Item>

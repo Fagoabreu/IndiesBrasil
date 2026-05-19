@@ -1,0 +1,371 @@
+.pageWrapper {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--fgColor-default);
+  margin: 0;
+  background: var(--brand-gradient-h);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Navegação de mês */
+.monthNav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.monthLabel {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+  min-width: 160px;
+  text-align: center;
+}
+
+.monthBtn {
+  background: var(--bgColor-muted);
+  border: 1px solid var(--borderColor-muted);
+  color: var(--fgColor-default);
+  border-radius: 6px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s;
+}
+
+.monthBtn:hover {
+  background: var(--brand-hover-bg);
+  border-color: var(--brand-hover-border);
+  color: var(--brand-primary);
+}
+
+/* Filtros de tipo */
+.filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.filterBtn {
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--borderColor-muted);
+  background: var(--bgColor-muted);
+  color: var(--fgColor-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-weight: 500;
+}
+
+.filterBtn:hover {
+  border-color: var(--brand-hover-border);
+  color: var(--brand-primary);
+}
+
+.filterBtnActive {
+  background: rgba(var(--brand-rgb-primary), 0.12);
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+/* Lista de eventos */
+.eventList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.eventCard {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background: var(--bgColor-default);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+
+.eventCard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--brand-gradient-h);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.eventCard:hover {
+  border-color: rgba(var(--brand-rgb-primary), 0.4);
+  box-shadow: var(--brand-card-glow);
+}
+
+.eventCard:hover::before {
+  opacity: 1;
+}
+
+/* Bloco de data */
+.dateBadge {
+  flex-shrink: 0;
+  width: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--brand-rgb-primary), 0.08);
+  border-radius: 8px;
+  padding: 8px 4px;
+  border: 1px solid rgba(var(--brand-rgb-primary), 0.15);
+}
+
+.dateDay {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--brand-primary);
+  line-height: 1;
+}
+
+.dateMonth {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: var(--fgColor-muted);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+/* Corpo do card */
+.eventBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eventTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.typeBadge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid currentColor;
+}
+
+.typeBadge.general {
+  color: #6366f1;
+  background: rgba(99, 102, 241, 0.08);
+}
+.typeBadge.game_launch {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+}
+.typeBadge.game_jam {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+}
+.typeBadge.stream_marathon {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+.typeBadge.meeting {
+  color: var(--brand-primary);
+  background: rgba(var(--brand-rgb-primary), 0.08);
+}
+.typeBadge.studio {
+  color: var(--brand-secondary);
+  background: rgba(var(--brand-rgb-secondary), 0.08);
+}
+
+.privateBadge {
+  font-size: 0.7rem;
+  color: var(--fgColor-muted);
+  border: 1px solid var(--borderColor-muted);
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.eventTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.eventCard:hover .eventTitle {
+  color: var(--brand-primary);
+}
+
+.eventMeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.8rem;
+  color: var(--fgColor-muted);
+  flex-wrap: wrap;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.onlineBadge {
+  font-size: 0.7rem;
+  color: #10b981;
+  font-weight: 600;
+}
+
+/* Lado direito: banner de capa */
+.eventBanner {
+  flex-shrink: 0;
+  width: 220px;
+  margin: -16px -16px -16px 0;
+  overflow: hidden;
+}
+
+.bannerThumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.eventCard:hover .bannerThumb {
+  transform: scale(1.04);
+}
+
+/* Legado — mantido caso referenciado em outro lugar */
+.eventRight {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  justify-content: center;
+}
+
+.rsvpCount {
+  font-size: 0.78rem;
+  color: var(--fgColor-muted);
+  white-space: nowrap;
+}
+
+.rsvpCountGoing {
+  color: var(--brand-primary);
+  font-weight: 600;
+}
+
+/* Empty state */
+.emptyState {
+  text-align: center;
+  padding: 64px 24px;
+  color: var(--fgColor-muted);
+}
+
+.emptyIcon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+}
+
+.emptyText {
+  font-size: 0.95rem;
+}
+
+/* Botão criar evento */
+.createBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 6px;
+  background: var(--brand-primary);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
+}
+
+.createBtn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.spinner {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+@media (max-width: 600px) {
+  .eventCard {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .eventBanner {
+    width: calc(100% + 32px);
+    height: 140px;
+    margin: 0 -16px -16px;
+    order: -1;
+  }
+
+  .dateBadge {
+    width: auto;
+    flex-direction: row;
+    gap: 6px;
+    padding: 6px 12px;
+    justify-content: flex-start;
+  }
+
+  .eventRight {
+    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}

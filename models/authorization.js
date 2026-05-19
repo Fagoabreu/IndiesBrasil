@@ -75,6 +75,15 @@ const availableFeatures = [
   "read:user_notifications:all",
   "read:post_notifications",
   "read:post_notifications:all",
+
+  //event / calendar
+  "read:event",
+  "read:event:all",
+  "create:event",
+  "update:event",
+  "delete:event",
+  "create:event:rsvp",
+  "create:event:invitation",
 ];
 
 function can(user, feature, resource) {
@@ -372,7 +381,9 @@ function getPostResource(resource) {
   return {
     id: resource.id,
     organization_id: resource.organization_id,
-    event_id: resource.organization_id,
+    event_id: resource.event_id,
+    event_title: resource.event_title,
+    event_slug: resource.event_slug,
     content: resource.content,
     img: resource.img,
     created_at: resource.created_at,

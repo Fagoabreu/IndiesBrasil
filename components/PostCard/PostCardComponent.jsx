@@ -48,6 +48,10 @@ PostCardComponent.propTypes = {
 
     post_img_url: PropTypes.string,
     embed: PropTypes.array,
+
+    event_id: PropTypes.string,
+    event_title: PropTypes.string,
+    event_slug: PropTypes.string,
   }).isRequired,
 
   onDelete: PropTypes.func,
@@ -218,6 +222,14 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
               </Button>
             )}
           </div>
+
+          {/* EVENTO RELACIONADO */}
+          {post.event_id && (
+            <Link href={post.event_slug ? `/agenda/${post.event_slug}` : `/agenda/${post.event_id}`} className={styles.eventBadge}>
+              <span className={styles.eventBadgeIcon}>📅</span>
+              <span className={styles.eventBadgeLabel}>{post.event_title || "Ver evento"}</span>
+            </Link>
+          )}
 
           {/* TEXTO */}
           <div className={styles.text}>
