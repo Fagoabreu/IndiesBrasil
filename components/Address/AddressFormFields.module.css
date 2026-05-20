@@ -1,0 +1,131 @@
+/* ================================================================
+   AddressFormFields — campos de endereço reutilizáveis
+   Estilos coerentes com os formulários da agenda (criar/editar).
+================================================================ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Campo genérico ── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.required {
+  color: var(--brand-primary);
+}
+
+.input,
+.select {
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  background: var(--bgColor-inset);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 7px;
+  color: var(--fgColor-default);
+  transition: border-color 0.15s ease;
+  width: 100%;
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb-primary), 0.12);
+}
+
+.input:disabled,
+.select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.select {
+  cursor: pointer;
+  appearance: auto;
+}
+
+/* ── Linha CEP ── */
+.cepRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.cepRow .field {
+  flex: 0 0 160px;
+}
+
+.cepBtn {
+  flex-shrink: 0;
+  height: 37px;
+  padding: 0 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: rgba(var(--brand-rgb-primary), 0.08);
+  color: var(--brand-primary);
+  border: 1px solid rgba(var(--brand-rgb-primary), 0.25);
+  border-radius: 7px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.cepBtn:hover:not(:disabled) {
+  background: rgba(var(--brand-rgb-primary), 0.15);
+  border-color: rgba(var(--brand-rgb-primary), 0.45);
+}
+
+.cepBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cepError {
+  font-size: 0.78rem;
+  color: #ef4444;
+  margin-top: -6px;
+}
+
+/* ── Linha rua + número ── */
+.streetRow {
+  display: grid;
+  grid-template-columns: 1fr 120px;
+  gap: 10px;
+}
+
+/* ── Linha bairro + cidade + UF ── */
+.cityRow {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 72px;
+  gap: 10px;
+}
+
+@media (max-width: 600px) {
+  .streetRow {
+    grid-template-columns: 1fr;
+  }
+
+  .cityRow {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .cityRow .field:last-child {
+    grid-column: span 2;
+  }
+}
