@@ -169,11 +169,11 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
   function renderRichText(text, { onTagClick }) {
     const regex = /(https?:\/\/[^\s]+|#\w+)/g;
 
-    return text.split(regex).map((part, index) => {
+    return text.split(regex).map((part) => {
       // LINK
       if (part.startsWith("http://") || part.startsWith("https://")) {
         return (
-          <a key={index} href={part} target="_blank" rel="noopener noreferrer" className={styles.link}>
+          <a key={`link-${part}`} href={part} target="_blank" rel="noopener noreferrer" className={styles.link}>
             {part}
           </a>
         );
@@ -184,14 +184,14 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
         const tag = part.slice(1).toLowerCase();
 
         return (
-          <button key={index} type="button" className={styles.tag} onClick={() => onTagClick?.(tag)}>
+          <button key={`tag-${part}`} type="button" className={styles.tag} onClick={() => onTagClick?.(tag)}>
             {part}
           </button>
         );
       }
 
       // TEXTO NORMAL
-      return <span key={index}>{part}</span>;
+      return <span key={`text-${part}`}>{part}</span>;
     });
   }
 
