@@ -4,6 +4,11 @@ import { BellIcon } from "@primer/octicons-react";
 import { useUser } from "@/context/UserContext";
 import styles from "./NotificationButton.module.css";
 
+function resolveMessage(n) {
+  if (!n.message) return null;
+  return n.message.replace("%userId", n.source_username || "alguém").replace("%postId", n.post_id ? String(n.post_id).slice(0, 8) : "um post");
+}
+
 async function loadNotifications(username) {
   const [userRes, postRes] = await Promise.all([
     fetch(`/api/v1/users/${username}/notifications`, { credentials: "include" }),
@@ -98,13 +103,13 @@ export default function NotificationButton() {
                   className={!n.is_read ? styles.unreadItem : undefined}
                   onSelect={() => handleMarkRead(n)}
                 >
-                  <span className={styles.notifTitle}>{n.title || n.type}</span>
-                  {n.message && <ActionList.Description variant="block">{n.message}</ActionList.Description>}
-                  <ActionList.TrailingVisual>
+                  <span className={styles.notifRow}>
+                    <span className={styles.notifTitle}>{n.title || n.type}</span>
                     <span className={styles.notifDate}>
                       {new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(new Date(n.created_at))}
                     </span>
-                  </ActionList.TrailingVisual>
+                  </span>
+                  {resolveMessage(n) && <span className={styles.notifMessage}>{resolveMessage(n)}</span>}
                 </ActionList.Item>
               ))
             )}

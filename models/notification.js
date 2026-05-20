@@ -150,12 +150,13 @@ async function findPostNotificationsByUserId(userId) {
   async function runSelectQuery(userId) {
     const results = await database.query({
       text: `
-      Select *
-      from post_notifications
-      left join notification_messages 
-      on post_notifications.type = notification_messages.type
-      where user_id = $1
-    `,
+        SELECT pn.*, nm.title, nm.message, u.username AS source_username
+        FROM post_notifications pn
+        LEFT JOIN notification_messages nm ON nm.type = pn.type
+        LEFT JOIN users u ON u.id = pn.source_user_id
+        WHERE pn.user_id = $1
+        ORDER BY pn.created_at DESC
+      `,
       values: [userId],
     });
 
@@ -177,12 +178,13 @@ async function findUserNotificationsByUserId(userId) {
   async function runSelectQuery(userId) {
     const results = await database.query({
       text: `
-      Select *
-      from user_notifications
-      left join notification_messages 
-      on user_notifications.type = notification_messages.type
-      where user_id = $1
-    `,
+        SELECT un.*, nm.title, nm.message, u.username AS source_username
+        FROM user_notifications un
+        LEFT JOIN notification_messages nm ON nm.type = un.type
+        LEFT JOIN users u ON u.id = un.source_user_id
+        WHERE un.user_id = $1
+        ORDER BY un.created_at DESC
+      `,
       values: [userId],
     });
 

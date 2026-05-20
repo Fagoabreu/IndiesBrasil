@@ -25,7 +25,7 @@ export default function HeaderComponent({ onMenuClick }) {
   return (
     <PageHeader className={styles.headerRoot} role="banner" aria-label="Title">
       <PageHeader.TitleArea>
-        <PageHeader.LeadingAction hidden={false}>
+        <PageHeader.LeadingAction hidden={{ narrow: false, regular: true, wide: true }}>
           <IconButton
             aria-label="Abrir menu de navegação"
             icon={ThreeBarsIcon}
@@ -43,9 +43,6 @@ export default function HeaderComponent({ onMenuClick }) {
           </Link>
         </PageHeader.Title>
       </PageHeader.TitleArea>
-      <PageHeader.Description>
-        <span style={{ fontSize: "var(--text-body-size-medium)", color: "var(--fgColor-muted)" }}>comunidade dos jogos brasileiros</span>
-      </PageHeader.Description>
 
       <PageHeader.Actions>
         <ThemeSwitcher />
@@ -54,13 +51,18 @@ export default function HeaderComponent({ onMenuClick }) {
             <NotificationButton />
             <ActionMenu>
               <ActionMenu.Button>
-                <Avatar src={avatarSrc} size={32} />
+                <div className={styles.avatarBtn}>
+                  <span className={styles.avatarRing}>
+                    <Avatar src={avatarSrc} size={32} />
+                  </span>
+                  <span className={styles.avatarUsername}>{usernameLabel}</span>
+                </div>
               </ActionMenu.Button>
 
               <ActionMenu.Overlay>
                 <ActionList>
-                  <ActionList.Item onSelect={() => router.push(`/perfil/${user.username}`)}>{usernameLabel}</ActionList.Item>
-
+                  <ActionList.Item onSelect={() => router.push(`/perfil/${user.username}`)}>Meu perfil</ActionList.Item>
+                  <ActionList.Divider />
                   <ActionList.Item variant="danger" onSelect={logout}>
                     Sair
                   </ActionList.Item>

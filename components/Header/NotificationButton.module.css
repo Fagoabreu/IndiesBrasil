@@ -28,13 +28,35 @@
   background-color: var(--bgColor-accent-subtle);
 }
 
+.notifRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  width: 100%;
+  gap: 8px;
+}
+
 .notifTitle {
   font-weight: 600;
   font-size: 0.875rem;
   color: var(--fgColor-default);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .notifDate {
   font-size: 0.75rem;
   color: var(--fgColor-muted);
+  flex-shrink: 0;
+}
+
+.notifMessage {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--fgColor-muted);
+  margin-top: 2px;
+  white-space: normal;
 }
