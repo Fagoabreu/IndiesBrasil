@@ -154,7 +154,14 @@ function Home() {
             previousValue={summary ? summary.previous_posts : "..."}
             icon={<StarIcon />}
           />
-          <MetricCard title="Eventos" period="Proximos 30 dias" value="..." icon={<TeamIcon />} />
+          <MetricCard
+            title="Eventos"
+            period="Proximos 30 dias"
+            value={summary ? summary.events : "..."}
+            previousLabel="Periodo Anterior"
+            previousValue={summary ? summary.previous_events : "..."}
+            icon={<TeamIcon />}
+          />
           <MetricCard title="Estudios" period="Total" value="..." icon={<TagIcon />} />
           <MetricCard title="Jogos" period="Total" value="..." previousLabel="Em Desenvolvimento" previousValue="..." icon={<VideoIcon />} />
         </div>

@@ -189,21 +189,57 @@ body {
 
 .layout-body {
   /* Layout fica dentro do ThemeProvider — variáveis de cor funcionam aqui. */
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
   background:
     radial-gradient(circle at 0% 0%, var(--bgColor-accent-muted), transparent 28%),
     radial-gradient(circle at 100% 100%, var(--bgColor-muted), transparent 22%), var(--bgColor-inset);
   color: var(--fgColor-default);
-  min-height: 100vh;
   transition:
     background-color 0.25s ease,
     color 0.25s ease;
 }
 
+/* Barra de topo — ocupa toda a largura, empurra o conteúdo para baixo */
+.layout-header {
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+/* Área de três colunas abaixo do header */
+.layout-row {
+  flex: 1;
+  min-height: 0; /* permite que o flex-child encolha e role internamente */
+  display: flex;
+}
+
+/* Coluna central — rola de forma independente */
 .main-content {
+  flex: 1;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: clamp(10px, 2.3vw, 20px);
   margin: 0;
-  width: 100%;
   background-color: transparent;
+}
+
+/* Painel lateral direito */
+.layout-right-pane {
+  flex-shrink: 0;
+  width: 280px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px 0;
+}
+
+@media (max-width: 1280px) {
+  .layout-right-pane {
+    display: none;
+  }
 }
 
 @media (max-width: 1012px) {
@@ -211,15 +247,18 @@ body {
     padding: 10px;
   }
 
-  /* Hide Primer's desktop left pane on mobile */
   .desktop-sidebar-pane {
     display: none !important;
   }
 }
 
-/* Linha de acento gradiente na borda direita do painel desktop */
+/* Painel lateral esquerdo — rola de forma independente */
 .desktop-sidebar-pane {
   position: relative;
+  flex-shrink: 0;
+  width: 240px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .desktop-sidebar-pane::after {
@@ -249,6 +288,25 @@ body {
   padding: 16px 8px;
   transform: translateX(-110%);
   transition: transform 220ms ease;
+}
+
+/* Botão de fechar o drawer */
+.mobile-drawer-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--fgColor-muted);
+  padding: 4px 6px 12px;
+  margin-bottom: 4px;
+  transition: color 0.15s ease;
+}
+
+.mobile-drawer-close-btn:hover {
+  color: var(--fgColor-default);
 }
 
 /* Linha de acento gradiente na borda direita do drawer */
@@ -300,9 +358,27 @@ body {
 
 /* ===== IMPRESSÃO / EXPORTAR PDF ===== */
 @media print {
+  /* Resetar layout full-height para impressão linear */
+  .layout-body {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  .layout-row {
+    display: block !important;
+  }
+
+  .main-content {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
   /* Esconder chrome de navegação */
   .layout-header,
   .desktop-sidebar-pane,
+  .layout-right-pane,
   .mobile-drawer,
   .mobile-drawer-overlay {
     display: none !important;
@@ -312,10 +388,5 @@ body {
   .desktop-sidebar-pane::after,
   .mobile-drawer::after {
     display: none !important;
-  }
-
-  /* Fundo branco para impressão */
-  .layout-body {
-    background: #fff !important;
   }
 }
