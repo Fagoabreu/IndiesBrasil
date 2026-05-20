@@ -235,6 +235,8 @@ function filterOutput(user, feature, resource) {
       user_accounts: resource.user_accounts,
       posts: resource.posts,
       previous_posts: resource.previous_posts,
+      events: resource.events,
+      previous_events: resource.previous_events,
     };
   }
 

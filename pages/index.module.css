@@ -17,7 +17,7 @@
 .hero::before {
   content: "";
   position: absolute;
-  inset: -60px -50vw;
+  inset: -60px -4rem;
   background:
     radial-gradient(ellipse 70% 55% at 15% 45%, rgba(var(--brand-rgb-primary), 0.1), transparent),
     radial-gradient(ellipse 55% 45% at 85% 15%, rgba(var(--brand-rgb-secondary), 0.08), transparent);

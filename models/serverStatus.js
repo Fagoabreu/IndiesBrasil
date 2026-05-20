@@ -23,7 +23,18 @@ async function getSummary() {
             FROM posts
             WHERE created_at BETWEEN (NOW() - INTERVAL '60 days')
                                   AND (NOW() - INTERVAL '30 days')
-          ) AS previous_posts;
+          ) AS previous_posts,
+          (
+            SELECT COUNT(*)
+            FROM events
+            WHERE created_at BETWEEN (NOW() - INTERVAL '60 days')
+                                  AND (NOW() - INTERVAL '30 days')
+          ) AS previous_events,
+          (
+            SELECT COUNT(*)
+            FROM events
+            WHERE created_at >= NOW() - INTERVAL '30 days'
+          ) AS events;
 
       `,
     });
