@@ -242,6 +242,7 @@ export default function CriarEventoPage() {
 
             {(bannerFilePreview || (bannerMode === "url" && bannerExternalUrl)) && (
               <div className={styles.bannerPreviewWrap}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={bannerFilePreview || bannerExternalUrl} alt="Preview da capa" className={styles.bannerImg} />
                 <button type="button" className={styles.removeBannerBtn} onClick={handleClearBanner}>
                   Remover

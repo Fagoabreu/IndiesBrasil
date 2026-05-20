@@ -282,6 +282,7 @@ export default function EditarEventoPage() {
 
             {currentBannerUrl && (
               <div className={styles.bannerPreviewWrap}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={currentBannerUrl} alt="Capa do evento" className={styles.bannerImg} />
                 <button type="button" className={styles.removeBannerBtn} onClick={handleRemoveBanner} disabled={bannerLoading}>
                   {bannerLoading ? "..." : "Remover"}

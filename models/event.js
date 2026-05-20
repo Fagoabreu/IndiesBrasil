@@ -181,14 +181,6 @@ async function createRecurrenceRule(rule) {
   return result.rows[0];
 }
 
-async function getRuleById(id) {
-  const result = await database.query({
-    text: `SELECT * FROM event_recurrence_rules WHERE id = $1`,
-    values: [id],
-  });
-  return result.rows[0] ?? null;
-}
-
 async function insertInstances(eventId, instanceDates) {
   if (!instanceDates.length) return;
 
@@ -756,7 +748,9 @@ async function setBannerImage(id, file, userId) {
   if (ev.banner_image_id) {
     try {
       await uploadedImages.deleteImage(ev.banner_image_id);
-    } catch {}
+    } catch {
+      // deletion of previous banner is best-effort; proceed regardless
+    }
   }
   const imageData = await uploadedImages.uploadImage(file, `events/${id}`);
   await database.query({
@@ -775,7 +769,9 @@ async function setBannerExternalUrl(id, url, userId) {
   if (ev.banner_image_id) {
     try {
       await uploadedImages.deleteImage(ev.banner_image_id);
-    } catch {}
+    } catch {
+      // deletion of previous banner is best-effort; proceed regardless
+    }
   }
   await database.query({
     text: `UPDATE events SET banner_image_id = NULL, banner_external_url = $2, updated_at = NOW() WHERE id = $1`,
@@ -792,7 +788,9 @@ async function removeBanner(id, userId) {
   if (ev.banner_image_id) {
     try {
       await uploadedImages.deleteImage(ev.banner_image_id);
-    } catch {}
+    } catch {
+      // deletion of previous banner is best-effort; proceed regardless
+    }
   }
   await database.query({
     text: `UPDATE events SET banner_image_id = NULL, banner_external_url = NULL, updated_at = NOW() WHERE id = $1`,
