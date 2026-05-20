@@ -204,6 +204,7 @@ body {
 
 /* Barra de topo — ocupa toda a largura, empurra o conteúdo para baixo */
 .layout-header {
+  margin-top: 15px;
   flex-shrink: 0;
   z-index: 100;
 }
@@ -225,15 +226,40 @@ body {
   padding: clamp(10px, 2.3vw, 20px);
   margin: 0;
   background-color: transparent;
+  /* Scrollbar fino estilo Twitter */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--brand-rgb-primary), 0.3) transparent;
 }
 
-/* Painel lateral direito */
+.main-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.main-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.main-content::-webkit-scrollbar-thumb {
+  background: rgba(var(--brand-rgb-primary), 0.3);
+  border-radius: 100px;
+}
+
+.main-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--brand-rgb-primary), 0.55);
+}
+
+/* Painel lateral direito — sem scrollbar visível */
 .layout-right-pane {
   flex-shrink: 0;
   width: 280px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 8px 0;
+  padding: 8px 12px;
+  scrollbar-width: none;
+}
+
+.layout-right-pane::-webkit-scrollbar {
+  display: none;
 }
 
 @media (max-width: 1280px) {
@@ -252,13 +278,18 @@ body {
   }
 }
 
-/* Painel lateral esquerdo — rola de forma independente */
+/* Painel lateral esquerdo — rola de forma independente, sem scrollbar visível */
 .desktop-sidebar-pane {
   position: relative;
   flex-shrink: 0;
   width: 240px;
   overflow-y: auto;
   overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.desktop-sidebar-pane::-webkit-scrollbar {
+  display: none;
 }
 
 .desktop-sidebar-pane::after {
