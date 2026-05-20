@@ -1,6 +1,6 @@
 import { InternalServerError } from "@/infra/errors.js";
 
-const availableFeatures = [
+const availableFeatures = new Set([
   //USER
   "create:user",
   "read:user",
@@ -75,7 +75,16 @@ const availableFeatures = [
   "read:user_notifications:all",
   "read:post_notifications",
   "read:post_notifications:all",
-];
+
+  //event / calendar
+  "read:event",
+  "read:event:all",
+  "create:event",
+  "update:event",
+  "delete:event",
+  "create:event:rsvp",
+  "create:event:invitation",
+]);
 
 function can(user, feature, resource) {
   validateUser(user);
@@ -372,7 +381,9 @@ function getPostResource(resource) {
   return {
     id: resource.id,
     organization_id: resource.organization_id,
-    event_id: resource.organization_id,
+    event_id: resource.event_id,
+    event_title: resource.event_title,
+    event_slug: resource.event_slug,
     content: resource.content,
     img: resource.img,
     created_at: resource.created_at,
@@ -554,7 +565,7 @@ function validateUser(user) {
 }
 
 function validateFeature(feature) {
-  if (!feature || !availableFeatures.includes(feature)) {
+  if (!feature || !availableFeatures.has(feature)) {
     throw new InternalServerError({
       cause: "É necessário fornecer uma `feature` conhecida no model authorization.",
     });

@@ -54,7 +54,17 @@ describe("GET /api/v1/user", () => {
         avatar_image: null,
         background_image: null,
         bio: activatedUser.bio,
-        features: ["create:session", "read:session", "read:post", "create:post", "read:user", "update:user"],
+        features: [
+          "create:session",
+          "read:session",
+          "read:post",
+          "create:post",
+          "read:user",
+          "update:user",
+          "read:event",
+          "create:event",
+          "update:event",
+        ],
       });
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
@@ -188,7 +198,17 @@ describe("GET /api/v1/user", () => {
         avatar_image: null,
         background_image: null,
         bio: createdUser.bio,
-        features: ["create:session", "read:session", "read:post", "create:post", "read:user", "update:user"],
+        features: [
+          "create:session",
+          "read:session",
+          "read:post",
+          "create:post",
+          "read:user",
+          "update:user",
+          "read:event",
+          "create:event",
+          "update:event",
+        ],
       });
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();

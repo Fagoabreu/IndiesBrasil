@@ -1,0 +1,358 @@
+.pageWrapper {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--fgColor-muted);
+  text-decoration: none;
+  margin-bottom: 20px;
+}
+
+.backLink:hover {
+  color: var(--brand-primary);
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 28px;
+  background: var(--brand-gradient-h);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+}
+
+.required {
+  color: var(--brand-secondary);
+  margin-left: 2px;
+}
+
+.hint {
+  font-size: 0.78rem;
+  color: var(--fgColor-muted);
+  margin-top: 2px;
+}
+
+.input,
+.textarea,
+.select {
+  background: var(--bgColor-inset);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 6px;
+  color: var(--fgColor-default);
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb-primary), 0.15);
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+.select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.checkboxField {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkboxField input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--brand-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.checkboxLabel {
+  font-size: 0.875rem;
+  color: var(--fgColor-default);
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--borderColor-muted);
+  margin: 4px 0;
+}
+
+.sectionTitle {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--fgColor-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 4px 0 0;
+}
+
+.recurrenceBox {
+  background: var(--bgColor-muted);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 8px;
+}
+
+.submitBtn {
+  background: var(--brand-gradient-h);
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 10px 24px;
+  transition:
+    opacity 0.15s,
+    box-shadow 0.15s;
+  box-shadow: var(--brand-btn-shadow);
+}
+
+.submitBtn:hover:not(:disabled) {
+  opacity: 0.9;
+  box-shadow: var(--brand-glow-sm, 0 0 12px rgba(var(--brand-rgb-primary), 0.4));
+}
+
+.submitBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cancelBtn {
+  background: transparent;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 6px;
+  color: var(--fgColor-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 10px 20px;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.cancelBtn:hover {
+  background: var(--bgColor-muted);
+  border-color: var(--borderColor-default);
+  color: var(--fgColor-default);
+}
+
+.error {
+  background: rgba(220, 50, 50, 0.08);
+  border: 1px solid rgba(220, 50, 50, 0.3);
+  border-radius: 6px;
+  color: #e05555;
+  font-size: 0.875rem;
+  padding: 10px 14px;
+}
+
+.daysGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dayToggle {
+  background: var(--bgColor-inset);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 20px;
+  color: var(--fgColor-muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 4px 12px;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.dayToggle.active {
+  background: rgba(var(--brand-rgb-primary), 0.15);
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+  }
+
+  .cancelBtn,
+  .submitBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ===== Imagem de Capa (Banner) ===== */
+.hiddenInput {
+  display: none;
+}
+
+.bannerPreviewWrap {
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.bannerImg {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--borderColor-muted);
+  display: block;
+}
+
+.removeBannerBtn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.removeBannerBtn:hover:not(:disabled) {
+  background: rgba(200, 0, 0, 0.8);
+}
+
+.bannerControls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bannerInputGroup {
+  display: flex;
+  gap: 8px;
+}
+
+.bannerInputGroup .input {
+  flex: 1;
+}
+
+.bannerBtn {
+  background: var(--bgColor-muted);
+  border: 1px solid var(--borderColor-default);
+  border-radius: 6px;
+  color: var(--fgColor-default);
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 7px 14px;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+  white-space: nowrap;
+}
+
+.bannerBtn:hover:not(:disabled) {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.bannerBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.bannerModeToggle {
+  display: flex;
+  gap: 8px;
+}
+
+.bannerModeBtn {
+  flex: 1;
+  background: var(--bgColor-muted);
+  border: 1px solid var(--borderColor-default);
+  border-radius: 6px;
+  color: var(--fgColor-muted);
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 7px 14px;
+  transition:
+    border-color 0.15s,
+    color 0.15s,
+    background 0.15s;
+}
+
+.bannerModeBtn:hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.bannerModeBtnActive {
+  background: rgba(var(--brand-rgb-primary), 0.1);
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+  font-weight: 600;
+}

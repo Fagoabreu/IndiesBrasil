@@ -18,6 +18,8 @@ const camposBase = `
   uui.secure_url AS author_avatar_url,
   COALESCE(l.likes_count, 0) AS likes_count,
   COALESCE(c.comments_count, 0) AS comments_count,
+  ev.title AS event_title,
+  ev.slug AS event_slug,
 `;
 
 const joinsBase = `
@@ -42,9 +44,13 @@ const joinsBase = `
     WHERE co.post_id = p.id
   ) c ON true
 
-  -- Se existem Imagem
+  -- Se existe imagem
   LEFT JOIN uploaded_images pui
-    ON pui.id = p.img 
+    ON pui.id = p.img
+
+  -- Evento relacionado
+  LEFT JOIN events ev
+    ON ev.id = p.event_id
 `;
 
 const baseSelectQuery = `

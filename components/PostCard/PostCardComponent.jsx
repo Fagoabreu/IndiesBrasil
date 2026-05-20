@@ -48,6 +48,10 @@ PostCardComponent.propTypes = {
 
     post_img_url: PropTypes.string,
     embed: PropTypes.array,
+
+    event_id: PropTypes.string,
+    event_title: PropTypes.string,
+    event_slug: PropTypes.string,
   }).isRequired,
 
   onDelete: PropTypes.func,
@@ -165,11 +169,11 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
   function renderRichText(text, { onTagClick }) {
     const regex = /(https?:\/\/[^\s]+|#\w+)/g;
 
-    return text.split(regex).map((part, index) => {
+    return text.split(regex).map((part) => {
       // LINK
       if (part.startsWith("http://") || part.startsWith("https://")) {
         return (
-          <a key={index} href={part} target="_blank" rel="noopener noreferrer" className={styles.link}>
+          <a key={`link-${part}`} href={part} target="_blank" rel="noopener noreferrer" className={styles.link}>
             {part}
           </a>
         );
@@ -180,14 +184,14 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
         const tag = part.slice(1).toLowerCase();
 
         return (
-          <button key={index} type="button" className={styles.tag} onClick={() => onTagClick?.(tag)}>
+          <button key={`tag-${part}`} type="button" className={styles.tag} onClick={() => onTagClick?.(tag)}>
             {part}
           </button>
         );
       }
 
       // TEXTO NORMAL
-      return <span key={index}>{part}</span>;
+      return <span key={`text-${part}`}>{part}</span>;
     });
   }
 
@@ -218,6 +222,14 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
               </Button>
             )}
           </div>
+
+          {/* EVENTO RELACIONADO */}
+          {post.event_id && (
+            <Link href={post.event_slug ? `/agenda/${post.event_slug}` : `/agenda/${post.event_id}`} className={styles.eventBadge}>
+              <span className={styles.eventBadgeIcon}>📅</span>
+              <span className={styles.eventBadgeLabel}>{post.event_title || "Ver evento"}</span>
+            </Link>
+          )}
 
           {/* TEXTO */}
           <div className={styles.text}>

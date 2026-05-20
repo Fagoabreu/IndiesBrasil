@@ -21,8 +21,10 @@ export async function POST(request) {
     const formData = await request.formData();
     const content = formData.get("content");
     const file = formData.get("file");
+    const event_id = formData.get("event_id") || undefined;
 
     const userInputValues = { content, author_id: user.id };
+    if (event_id) userInputValues.event_id = event_id;
 
     if (file) {
       const imageData = await uploadedImages.uploadImage(file, "posts");
@@ -66,6 +68,7 @@ export async function GET(request) {
     const tag = searchParams.get("tag");
 
     const posts = await post.getPosts(user.id, searchType, tag);
+    console.log("Posts encontrados:", posts);
     const secureOutputValues = await authorization.filterOutput(user, "read:post:all", posts);
     return Response.json(secureOutputValues, { status: 200 });
   } catch (error) {
