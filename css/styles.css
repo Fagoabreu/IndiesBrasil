@@ -202,11 +202,36 @@ body {
     color 0.25s ease;
 }
 
+/* Portal do Primer React — garante que todos os overlays (ActionMenu,
+   notificações, diálogos) apareçam acima de qualquer elemento da página.
+   O Primer cria cada portal com z-index: 1; dar z-index alto ao root
+   eleva todos de uma vez. */
+#__primerPortalRoot__ {
+  z-index: 9999;
+}
+
 /* Barra de topo — ocupa toda a largura, empurra o conteúdo para baixo */
 .layout-header {
-  margin-top: 15px;
   flex-shrink: 0;
   z-index: 100;
+  position: relative;
+  background: rgba(var(--brand-rgb-primary), 0.025);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+/* Linha gradiente de acento na base do header */
+.layout-header::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--brand-gradient-h);
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 /* Área de três colunas abaixo do header */

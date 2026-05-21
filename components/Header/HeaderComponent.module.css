@@ -1,28 +1,11 @@
 .headerRoot {
   position: relative;
-  border-bottom: 1px solid var(--borderColor-muted) !important;
+  padding: 6px 20px;
 }
 
-/* Linha de destaque gradiente na base do header */
-.headerRoot::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--brand-gradient-h);
-  pointer-events: none;
-  z-index: 1;
-}
-
-.mobileMenuBtn {
-  display: none;
-}
-
-@media (max-width: 1012px) {
-  .mobileMenuBtn {
-    display: inline-flex;
+@media (max-width: 768px) {
+  .headerRoot {
+    padding: 6px 12px;
   }
 }
 
@@ -89,4 +72,44 @@
 
 .navDesktop a:hover::after {
   width: 100%;
+}
+
+/* ===== Avatar + username button ===== */
+.avatarBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Anel de glow ao redor do avatar */
+.avatarRing {
+  display: inline-flex;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px rgba(var(--brand-rgb-primary), 0.4),
+    var(--brand-glow-sm);
+  transition: box-shadow 0.2s ease;
+}
+
+.avatarRing:hover {
+  box-shadow:
+    0 0 0 2px rgba(var(--brand-rgb-primary), 0.7),
+    var(--brand-glow-md);
+}
+
+/* Nome do usuário — visível a partir de 480 px */
+.avatarUsername {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fgColor-default);
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .avatarUsername {
+    display: none;
+  }
 }

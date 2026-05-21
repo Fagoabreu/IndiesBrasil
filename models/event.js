@@ -1,6 +1,7 @@
 import database from "infra/database";
 import { NotFoundError, ValidationError, ForbiddenError } from "@/infra/errors";
 import uploadedImages from "@/models/uploadedImages";
+import addressModel from "@/models/address";
 
 /* ================================================================
  * HELPERS
@@ -202,11 +203,23 @@ const BASE_EVENT_QUERY = `
     COALESCE(bi.secure_url, e.banner_external_url) AS banner_url,
     COALESCE(rc.going,    0) AS rsvp_going,
     COALESCE(rc.maybe,    0) AS rsvp_maybe,
-    COALESCE(rc.not_going, 0) AS rsvp_not_going
+    COALESCE(rc.not_going, 0) AS rsvp_not_going,
+    CASE WHEN a.id IS NOT NULL THEN json_build_object(
+      'id',           a.id,
+      'street',       a.street,
+      'number',       a.number,
+      'complement',   a.complement,
+      'neighborhood', a.neighborhood,
+      'city',         a.city,
+      'state',        a.state,
+      'zip_code',     a.zip_code,
+      'country',      a.country
+    ) END AS address
   FROM events e
   INNER JOIN users u  ON u.id = e.created_by
   LEFT JOIN  uploaded_images ui ON ui.id = u.avatar_image
   LEFT JOIN  uploaded_images bi ON bi.id = e.banner_image_id
+  LEFT JOIN  addresses a        ON a.id  = e.address_id
   LEFT JOIN LATERAL (
     SELECT
       COUNT(*) FILTER (WHERE status = 'going')     AS going,
@@ -251,13 +264,21 @@ async function create(data, userId) {
     recurrenceRuleId = rule.id;
   }
 
+  /* Endereço estruturado (apenas para eventos presenciais) */
+  let addressId = null;
+  if (!data.is_online && data.address?.city) {
+    const addr = await addressModel.create(data.address);
+    addressId = addr.id;
+  }
+
   const result = await database.query({
     text: `
       INSERT INTO events (
         title, slug, description, event_type, visibility, status,
         created_by, location_name, location_url, is_online, online_url,
-        starts_at, ends_at, is_all_day, is_recurring, recurrence_rule_id, banner_image_id, banner_external_url
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+        starts_at, ends_at, is_all_day, is_recurring, recurrence_rule_id, banner_image_id, banner_external_url,
+        address_id
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
       RETURNING *
     `,
     values: [
@@ -279,6 +300,7 @@ async function create(data, userId) {
       recurrenceRuleId,
       data.banner_image_id || null,
       data.banner_external_url || null,
+      addressId,
     ],
   });
 
@@ -443,6 +465,29 @@ async function findAll({ from, to, userId, type, status = "published" }) {
 /**
  * Atualiza campos de um evento (somente o criador pode editar).
  */
+/**
+ * Gerencia a criação/atualização/remoção do endereço associado ao evento.
+ * Retorna o novo addressId a ser salvo, ou undefined se não houve mudança de FK.
+ *
+ * @param {{ address_id?: string }} event
+ * @param {object|null} addressData
+ */
+async function handleAddressUpdate(event, addressData) {
+  if (addressData && addressData.city) {
+    if (event.address_id) {
+      await addressModel.update(event.address_id, addressData);
+      return undefined; // FK não muda
+    }
+    const addr = await addressModel.create(addressData);
+    return addr.id;
+  }
+  if (addressData === null && event.address_id) {
+    await addressModel.remove(event.address_id);
+    return null;
+  }
+  return undefined;
+}
+
 async function update(id, data, userId) {
   const event = await findById(id, userId);
 
@@ -474,6 +519,15 @@ async function update(id, data, userId) {
     if (key in data) {
       values.push(data[key]);
       sets.push(`${key} = $${values.length}`);
+    }
+  }
+
+  /* Endereço estruturado: criar, atualizar ou limpar */
+  if ("address" in data) {
+    const newAddressId = await handleAddressUpdate(event, data.address);
+    if (newAddressId !== undefined) {
+      values.push(newAddressId);
+      sets.push(`address_id = $${values.length}`);
     }
   }
 

@@ -6,6 +6,7 @@ import { Spinner } from "@primer/react";
 import { ArrowLeftIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
+import AddressFormFields from "@/components/Address/AddressFormFields";
 import styles from "./criar.module.css";
 
 const EVENT_TYPES = [
@@ -64,6 +65,16 @@ export default function CriarEventoPage() {
   const [onlineUrl, setOnlineUrl] = useState("");
   const [locationName, setLocationName] = useState("");
   const [locationUrl, setLocationUrl] = useState("");
+  const [address, setAddress] = useState({
+    street: "",
+    number: "",
+    complement: "",
+    neighborhood: "",
+    city: "",
+    state: "",
+    zip_code: "",
+    country: "Brasil",
+  });
   const [isRecurring, setIsRecurring] = useState(false);
 
   // Recurrence rule fields
@@ -105,6 +116,10 @@ export default function CriarEventoPage() {
     setDaysOfWeek((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
   }, []);
 
+  function handleAddressChange(field, value) {
+    setAddress((prev) => ({ ...prev, [field]: value }));
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
@@ -131,6 +146,7 @@ export default function CriarEventoPage() {
       online_url: isOnline && onlineUrl.trim() ? onlineUrl.trim() : null,
       location_name: !isOnline && locationName.trim() ? locationName.trim() : null,
       location_url: !isOnline && locationUrl.trim() ? locationUrl.trim() : null,
+      address: !isOnline && address.city ? address : undefined,
       is_recurring: isRecurring,
       banner_external_url: bannerMode === "url" && bannerExternalUrl.trim() ? bannerExternalUrl.trim() : undefined,
     };
@@ -379,36 +395,43 @@ export default function CriarEventoPage() {
           )}
 
           {!isOnline && (
-            <div className={styles.row}>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="locationName">
-                  Nome do local
-                </label>
-                <input
-                  id="locationName"
-                  type="text"
-                  className={styles.input}
-                  value={locationName}
-                  onChange={(e) => setLocationName(e.target.value)}
-                  placeholder="Ex: Centro de Convenções"
-                  maxLength={255}
-                />
+            <>
+              <div className={styles.row}>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="locationName">
+                    Nome do local
+                  </label>
+                  <input
+                    id="locationName"
+                    type="text"
+                    className={styles.input}
+                    value={locationName}
+                    onChange={(e) => setLocationName(e.target.value)}
+                    placeholder="Ex: Centro de Convenções"
+                    maxLength={255}
+                  />
+                </div>
+
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="locationUrl">
+                    Link do local (mapa)
+                  </label>
+                  <input
+                    id="locationUrl"
+                    type="url"
+                    className={styles.input}
+                    value={locationUrl}
+                    onChange={(e) => setLocationUrl(e.target.value)}
+                    placeholder="https://maps.google.com/..."
+                  />
+                </div>
               </div>
 
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="locationUrl">
-                  Link do local (mapa)
-                </label>
-                <input
-                  id="locationUrl"
-                  type="url"
-                  className={styles.input}
-                  value={locationUrl}
-                  onChange={(e) => setLocationUrl(e.target.value)}
-                  placeholder="https://maps.google.com/..."
-                />
-              </div>
-            </div>
+              <p className={styles.sectionTitle} style={{ marginTop: 8 }}>
+                Endereço
+              </p>
+              <AddressFormFields value={address} onChange={handleAddressChange} />
+            </>
           )}
 
           <hr className={styles.divider} />

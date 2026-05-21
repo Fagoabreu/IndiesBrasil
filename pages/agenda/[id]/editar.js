@@ -5,6 +5,7 @@ import { Spinner } from "@primer/react";
 import { ArrowLeftIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
+import AddressFormFields from "@/components/Address/AddressFormFields";
 import styles from "./editar.module.css";
 
 const EVENT_TYPES = [
@@ -55,6 +56,16 @@ export default function EditarEventoPage() {
   const [onlineUrl, setOnlineUrl] = useState("");
   const [locationName, setLocationName] = useState("");
   const [locationUrl, setLocationUrl] = useState("");
+  const [address, setAddress] = useState({
+    street: "",
+    number: "",
+    complement: "",
+    neighborhood: "",
+    city: "",
+    state: "",
+    zip_code: "",
+    country: "Brasil",
+  });
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -75,6 +86,18 @@ export default function EditarEventoPage() {
     setOnlineUrl(ev.online_url || "");
     setLocationName(ev.location_name || "");
     setLocationUrl(ev.location_url || "");
+    setAddress(
+      ev.address || {
+        street: "",
+        number: "",
+        complement: "",
+        neighborhood: "",
+        city: "",
+        state: "",
+        zip_code: "",
+        country: "Brasil",
+      },
+    );
     setStartsAt(ev.is_all_day ? toDateOnly(ev.starts_at) : toDatetimeLocal(ev.starts_at));
     setEndsAt(ev.is_all_day ? toDateOnly(ev.ends_at) : toDatetimeLocal(ev.ends_at));
     setCurrentBannerUrl(ev.banner_url || null);
@@ -181,6 +204,7 @@ export default function EditarEventoPage() {
       online_url: isOnline && onlineUrl.trim() ? onlineUrl.trim() : null,
       location_name: !isOnline && locationName.trim() ? locationName.trim() : null,
       location_url: !isOnline && locationUrl.trim() ? locationUrl.trim() : null,
+      address: !isOnline && address.city ? address : null,
     };
 
     setSubmitting(true);
@@ -404,34 +428,41 @@ export default function EditarEventoPage() {
           )}
 
           {!isOnline && (
-            <div className={styles.row}>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="locationName">
-                  Nome do local
-                </label>
-                <input
-                  id="locationName"
-                  type="text"
-                  className={styles.input}
-                  value={locationName}
-                  onChange={(e) => setLocationName(e.target.value)}
-                  maxLength={255}
-                />
+            <>
+              <div className={styles.row}>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="locationName">
+                    Nome do local
+                  </label>
+                  <input
+                    id="locationName"
+                    type="text"
+                    className={styles.input}
+                    value={locationName}
+                    onChange={(e) => setLocationName(e.target.value)}
+                    maxLength={255}
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="locationUrl">
+                    Link do local (mapa)
+                  </label>
+                  <input
+                    id="locationUrl"
+                    type="url"
+                    className={styles.input}
+                    value={locationUrl}
+                    onChange={(e) => setLocationUrl(e.target.value)}
+                    placeholder="https://maps.google.com/..."
+                  />
+                </div>
               </div>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="locationUrl">
-                  Link do local (mapa)
-                </label>
-                <input
-                  id="locationUrl"
-                  type="url"
-                  className={styles.input}
-                  value={locationUrl}
-                  onChange={(e) => setLocationUrl(e.target.value)}
-                  placeholder="https://maps.google.com/..."
-                />
-              </div>
-            </div>
+
+              <p className={styles.sectionTitle} style={{ marginTop: 8 }}>
+                Endereço
+              </p>
+              <AddressFormFields value={address} onChange={(f, v) => setAddress((p) => ({ ...p, [f]: v }))} disabled={submitting} />
+            </>
           )}
 
           <div className={styles.actions}>

@@ -8,6 +8,7 @@ import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL } from "@/lib/seo";
 import CreatePost from "@/components/CreatePost/CreatePost";
+import AddressDisplay from "@/components/Address/AddressDisplay";
 import styles from "./index.module.css";
 
 const TYPE_LABELS = {
@@ -54,7 +55,6 @@ export default function EventDetailPage() {
   const [rsvpLoading, setRsvpLoading] = useState(false);
   const [userRsvp, setUserRsvp] = useState(null);
   const [counts, setCounts] = useState({ going: 0, maybe: 0, not_going: 0 });
-
   useEffect(() => {
     if (!id) return;
 
@@ -291,18 +291,12 @@ export default function EventDetailPage() {
                   </div>
                 </div>
               )}
-              {!ev.is_online && ev.location_name && (
+              {!ev.is_online && (ev.location_name || ev.address) && (
                 <div className={styles.infoRow}>
                   <LocationIcon size={16} className={styles.infoIcon} />
-                  <div>
+                  <div style={{ width: "100%" }}>
                     <div className={styles.infoLabel}>Local</div>
-                    {ev.location_url ? (
-                      <a href={ev.location_url} className={styles.infoLink} target="_blank" rel="noopener noreferrer">
-                        {ev.location_name} ↗
-                      </a>
-                    ) : (
-                      ev.location_name
-                    )}
+                    <AddressDisplay address={ev.address} locationName={ev.location_name} locationUrl={ev.location_url} />
                   </div>
                 </div>
               )}
