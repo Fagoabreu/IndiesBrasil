@@ -64,6 +64,9 @@ export default function StudioPage() {
   const logoInputRef = useRef(null);
   const bannerInputRef = useRef(null);
 
+  // Games
+  const [studioGames, setStudioGames] = useState([]);
+
   // Video URL editing
   const [editingVideoUrl, setEditingVideoUrl] = useState(false);
   const [videoUrlDraft, setVideoUrlDraft] = useState("");
@@ -88,9 +91,23 @@ export default function StudioPage() {
     }
   }, [slug]);
 
+  const fetchStudioGames = useCallback(async () => {
+    if (!slug) return;
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/games`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setStudioGames(data.games ?? []);
+      }
+    } catch {
+      // ignore
+    }
+  }, [slug]);
+
   useEffect(() => {
     fetchStudio();
-  }, [fetchStudio]);
+    fetchStudioGames();
+  }, [fetchStudio, fetchStudioGames]);
 
   const handleFollowChange = useCallback((nowFollowing) => {
     setViewer((v) => ({ ...v, isFollowing: nowFollowing }));
@@ -353,10 +370,29 @@ export default function StudioPage() {
               </SectionPanel>
             )}
 
-            {/* JOGOS — placeholder para implementação futura */}
-            <SectionPanel title="Jogos">
-              <p className={styles.emptyHint}>Os jogos deste estúdio aparecerão aqui quando a funcionalidade de games for implementada.</p>
-            </SectionPanel>
+            {/* JOGOS */}
+            {studioGames.length > 0 && (
+              <SectionPanel title="Jogos">
+                <ul className={styles.gameCardList}>
+                  {studioGames.map((g) => (
+                    <li key={g.id}>
+                      <Link href={`/jogos/${g.slug}`} className={styles.gameCard}>
+                        {g.cover_url ? (
+                          <img src={g.cover_url} alt={g.name} className={styles.gameCardCover} />
+                        ) : (
+                          <div className={styles.gameCardCoverPlaceholder} />
+                        )}
+                        <div className={styles.gameCardInfo}>
+                          <span className={styles.gameCardName}>{g.name}</span>
+                          {g.short_description && <span className={styles.gameCardTagline}>{g.short_description}</span>}
+                          {g.genre && <span className={styles.gameCardGenre}>{g.genre}</span>}
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </SectionPanel>
+            )}
           </main>
 
           {/* BARRA LATERAL */}

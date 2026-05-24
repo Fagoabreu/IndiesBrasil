@@ -11,6 +11,41 @@ import AddressFormFields from "@/components/Address/AddressFormFields";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
 import styles from "./configuracoes.module.css";
 
+const PLATFORM_OPTIONS = [
+  ["windows", "Windows"],
+  ["macos", "macOS"],
+  ["linux", "Linux"],
+  ["ps5", "PlayStation 5"],
+  ["ps4", "PlayStation 4"],
+  ["xbox_series", "Xbox Series"],
+  ["xbox_one", "Xbox One"],
+  ["switch", "Nintendo Switch"],
+  ["ios", "iOS"],
+  ["android", "Android"],
+  ["browser", "Navegador"],
+];
+
+const STORE_TYPES = [
+  { id: 1, name: "Steam" },
+  { id: 2, name: "itch.io" },
+  { id: 3, name: "Epic Games Store" },
+  { id: 4, name: "GOG" },
+  { id: 5, name: "Google Play" },
+  { id: 6, name: "App Store" },
+  { id: 7, name: "Xbox" },
+  { id: 8, name: "PlayStation" },
+];
+
+const STAGE_LABELS = {
+  concept: "Conceito",
+  prototype: "Protótipo",
+  alpha: "Alpha",
+  beta: "Beta",
+  early_access: "Acesso Antecipado",
+  released: "Lançado",
+  cancelled: "Cancelado",
+};
+
 const EMPTY_ADDRESS = {
   street: "",
   number: "",
@@ -79,6 +114,21 @@ export default function ConfiguracoesPage() {
   const [addingContact, setAddingContact] = useState(false);
   const [deletingContactId, setDeletingContactId] = useState(null);
 
+  // Jogos
+  const [games, setGames] = useState([]);
+  const [newGameName, setNewGameName] = useState("");
+  const [newGameGenre, setNewGameGenre] = useState("");
+  const [newGameStage, setNewGameStage] = useState("concept");
+  const [creatingGame, setCreatingGame] = useState(false);
+  const [gameMsg, setGameMsg] = useState({ type: null, text: "" });
+
+  // Edição de jogo
+  const [editingGameSlug, setEditingGameSlug] = useState(null);
+  const [editGameForm, setEditGameForm] = useState(null);
+  const [loadingGameEdit, setLoadingGameEdit] = useState(false);
+  const [savingGame, setSavingGame] = useState(false);
+  const [editGameMsg, setEditGameMsg] = useState({ type: null, text: "" });
+
   const fetchStudio = useCallback(async () => {
     if (!slug) return;
     try {
@@ -134,6 +184,16 @@ export default function ConfiguracoesPage() {
     }
   }, [slug]);
 
+  const fetchGames = useCallback(async () => {
+    if (!slug) return;
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/games`, { credentials: "include" });
+      if (res.ok) setGames(await res.json());
+    } catch {
+      // silently ignore
+    }
+  }, [slug]);
+
   useEffect(() => {
     fetch("/api/v1/contact-types", { credentials: "include" })
       .then((r) => r.json())
@@ -145,7 +205,8 @@ export default function ConfiguracoesPage() {
     fetchStudio();
     fetchInvites();
     fetchContacts();
-  }, [fetchStudio, fetchInvites, fetchContacts]);
+    fetchGames();
+  }, [fetchStudio, fetchInvites, fetchContacts, fetchGames]);
 
   function handleAddressChange(field, value) {
     setAddress((prev) => ({ ...prev, [field]: value }));
@@ -176,6 +237,148 @@ export default function ConfiguracoesPage() {
     } finally {
       setInviting(false);
     }
+  }
+
+  async function handleCreateGame(e) {
+    e.preventDefault();
+    if (!newGameName.trim()) return;
+    setGameMsg({ type: null, text: "" });
+    setCreatingGame(true);
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/games`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          name: newGameName.trim(),
+          genre: newGameGenre || "Indefinido",
+          stage: newGameStage,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setGameMsg({ type: "error", text: data.message || "Erro ao criar jogo." });
+        return;
+      }
+      setNewGameName("");
+      setNewGameGenre("");
+      setNewGameStage("concept");
+      setGameMsg({ type: "success", text: `Jogo "${data.name}" criado!` });
+      fetchGames();
+      // Abrir o formulário de edição do jogo recém-criado
+      handleOpenGameEdit(data.slug);
+    } catch {
+      setGameMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+    } finally {
+      setCreatingGame(false);
+    }
+  }
+
+  async function handleOpenGameEdit(gameSlug) {
+    if (editingGameSlug === gameSlug) {
+      setEditingGameSlug(null);
+      setEditGameForm(null);
+      return;
+    }
+    setEditingGameSlug(gameSlug);
+    setEditGameForm(null);
+    setEditGameMsg({ type: null, text: "" });
+    setLoadingGameEdit(true);
+    try {
+      const res = await fetch(`/api/v1/games/${gameSlug}`, { credentials: "include" });
+      const data = await res.json();
+      if (!res.ok) {
+        setEditGameMsg({ type: "error", text: data.message || "Erro ao carregar jogo." });
+        return;
+      }
+      setEditGameForm({
+        name: data.name || "",
+        short_description: data.short_description || "",
+        description: data.description || "",
+        genre: data.genre === "Indefinido" ? "" : data.genre || "",
+        engine: data.engine || "",
+        stage: data.stage || "concept",
+        release_date: data.release_date ? data.release_date.slice(0, 10) : "",
+        website_url: data.website_url || "",
+        trailer_url: data.trailer_url || "",
+        platforms: data.platforms || [],
+        store_pages:
+          data.store_pages?.map((sp) => ({
+            store_type_id: sp.store_type_id,
+            page_url: sp.page_url || "",
+            price: sp.price == null ? "" : String(sp.price),
+          })) || [],
+      });
+    } finally {
+      setLoadingGameEdit(false);
+    }
+  }
+
+  async function handleSaveGame(e) {
+    e.preventDefault();
+    if (!editGameForm.name.trim()) return;
+    setEditGameMsg({ type: null, text: "" });
+    setSavingGame(true);
+    try {
+      const payload = {
+        ...editGameForm,
+        name: editGameForm.name.trim(),
+        genre: editGameForm.genre.trim() || "Indefinido",
+        store_pages: editGameForm.store_pages
+          .filter((sp) => sp.store_type_id && sp.page_url.trim())
+          .map((sp) => ({
+            store_type_id: Number(sp.store_type_id),
+            page_url: sp.page_url.trim(),
+            price: sp.price === "" ? null : Number(sp.price),
+          })),
+      };
+      const res = await fetch(`/api/v1/games/${editingGameSlug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setEditGameMsg({ type: "error", text: data.message || "Erro ao salvar jogo." });
+        return;
+      }
+      setEditGameMsg({ type: "success", text: "Jogo atualizado com sucesso!" });
+      fetchGames();
+      // Atualizar slug se o nome mudou
+      if (data.slug && data.slug !== editingGameSlug) {
+        setEditingGameSlug(data.slug);
+      }
+    } catch {
+      setEditGameMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+    } finally {
+      setSavingGame(false);
+    }
+  }
+
+  function togglePlatform(platform) {
+    setEditGameForm((f) => ({
+      ...f,
+      platforms: f.platforms.includes(platform) ? f.platforms.filter((p) => p !== platform) : [...f.platforms, platform],
+    }));
+  }
+
+  function addStorePage() {
+    setEditGameForm((f) => ({
+      ...f,
+      store_pages: [...f.store_pages, { store_type_id: "", page_url: "", price: "" }],
+    }));
+  }
+
+  function updateStorePage(idx, field, value) {
+    setEditGameForm((f) => {
+      const updated = f.store_pages.map((sp, i) => (i === idx ? { ...sp, [field]: value } : sp));
+      return { ...f, store_pages: updated };
+    });
+  }
+
+  function removeStorePage(idx) {
+    setEditGameForm((f) => ({ ...f, store_pages: f.store_pages.filter((_, i) => i !== idx) }));
   }
 
   async function handleRemoveMember(username) {
@@ -520,6 +723,273 @@ export default function ConfiguracoesPage() {
           )}
 
           {memberMsg.text && <StatusMessageComponent type={memberMsg.type} message={memberMsg.text} />}
+        </section>
+
+        {/* JOGOS */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Jogos</h2>
+
+          {/* Lista de jogos existentes */}
+          {games.length > 0 && (
+            <ul className={styles.gameList}>
+              {games.map((g) => (
+                <li key={g.id} className={styles.gameListItem}>
+                  <div className={styles.gameListRow}>
+                    <Link href={`/jogos/${g.slug}`} className={styles.gameLink} target="_blank" rel="noopener noreferrer">
+                      {g.name}
+                    </Link>
+                    <span className={styles.gameStageBadge}>{STAGE_LABELS[g.stage] ?? g.stage}</span>
+                    <button
+                      type="button"
+                      className={`${styles.btnEditGame} ${editingGameSlug === g.slug ? styles.btnEditGameActive : ""}`}
+                      onClick={() => handleOpenGameEdit(g.slug)}
+                    >
+                      {editingGameSlug === g.slug ? "Fechar" : "Editar"}
+                    </button>
+                  </div>
+
+                  {/* Formulário de edição expandido */}
+                  {editingGameSlug === g.slug && (
+                    <div className={styles.gameEditPanel}>
+                      {loadingGameEdit && (
+                        <div className={styles.gameEditLoading}>
+                          <Spinner size="small" />
+                        </div>
+                      )}
+                      {!loadingGameEdit && editGameForm && (
+                        <form onSubmit={handleSaveGame} className={styles.gameEditForm}>
+                          <div className={styles.gameEditGrid}>
+                            {/* Nome */}
+                            <label className={styles.fieldLabel}>
+                              <span>Nome do jogo *</span>
+                              <input
+                                type="text"
+                                className={styles.input}
+                                value={editGameForm.name}
+                                onChange={(e) => setEditGameForm((f) => ({ ...f, name: e.target.value }))}
+                                maxLength={255}
+                                required
+                              />
+                            </label>
+
+                            {/* Tagline */}
+                            <label className={styles.fieldLabel}>
+                              <span>Tagline</span>
+                              <input
+                                type="text"
+                                className={styles.input}
+                                placeholder="Frase curta sobre o jogo"
+                                value={editGameForm.short_description}
+                                onChange={(e) => setEditGameForm((f) => ({ ...f, short_description: e.target.value }))}
+                                maxLength={255}
+                              />
+                            </label>
+
+                            {/* Gênero */}
+                            <label className={styles.fieldLabel}>
+                              <span>Gênero</span>
+                              <input
+                                type="text"
+                                className={styles.input}
+                                placeholder="Ex: Plataforma, RPG, Puzzle"
+                                value={editGameForm.genre}
+                                onChange={(e) => setEditGameForm((f) => ({ ...f, genre: e.target.value }))}
+                                maxLength={50}
+                              />
+                            </label>
+
+                            {/* Engine */}
+                            <label className={styles.fieldLabel}>
+                              <span>Engine</span>
+                              <input
+                                type="text"
+                                className={styles.input}
+                                placeholder="Ex: Unity, Godot, Unreal"
+                                value={editGameForm.engine}
+                                onChange={(e) => setEditGameForm((f) => ({ ...f, engine: e.target.value }))}
+                                maxLength={50}
+                              />
+                            </label>
+
+                            {/* Status */}
+                            <label className={styles.fieldLabel}>
+                              <span>Status de desenvolvimento</span>
+                              <select
+                                className={styles.input}
+                                value={editGameForm.stage}
+                                onChange={(e) => setEditGameForm((f) => ({ ...f, stage: e.target.value }))}
+                              >
+                                <option value="concept">Conceito</option>
+                                <option value="prototype">Protótipo</option>
+                                <option value="alpha">Alpha</option>
+                                <option value="beta">Beta</option>
+                                <option value="early_access">Acesso Antecipado</option>
+                                <option value="released">Lançado</option>
+                                <option value="cancelled">Cancelado</option>
+                              </select>
+                            </label>
+
+                            {/* Data de lançamento */}
+                            <label className={styles.fieldLabel}>
+                              <span>Data de lançamento</span>
+                              <input
+                                type="date"
+                                className={styles.input}
+                                value={editGameForm.release_date}
+                                onChange={(e) => setEditGameForm((f) => ({ ...f, release_date: e.target.value }))}
+                              />
+                            </label>
+
+                            {/* Website */}
+                            <label className={styles.fieldLabel}>
+                              <span>Site oficial</span>
+                              <input
+                                type="url"
+                                className={styles.input}
+                                placeholder="https://"
+                                value={editGameForm.website_url}
+                                onChange={(e) => setEditGameForm((f) => ({ ...f, website_url: e.target.value }))}
+                                maxLength={512}
+                              />
+                            </label>
+
+                            {/* Trailer */}
+                            <label className={styles.fieldLabel}>
+                              <span>URL do trailer</span>
+                              <input
+                                type="url"
+                                className={styles.input}
+                                placeholder="https://youtube.com/..."
+                                value={editGameForm.trailer_url}
+                                onChange={(e) => setEditGameForm((f) => ({ ...f, trailer_url: e.target.value }))}
+                                maxLength={512}
+                              />
+                            </label>
+                          </div>
+
+                          {/* Descrição completa */}
+                          <label className={styles.fieldLabel}>
+                            <span>Sobre o jogo</span>
+                            <textarea
+                              className={`${styles.input} ${styles.textarea}`}
+                              placeholder="Descreva o jogo em detalhes..."
+                              value={editGameForm.description}
+                              onChange={(e) => setEditGameForm((f) => ({ ...f, description: e.target.value }))}
+                              rows={5}
+                            />
+                          </label>
+
+                          {/* Plataformas */}
+                          <fieldset className={styles.fieldset}>
+                            <legend className={styles.fieldsetLegend}>Plataformas</legend>
+                            <div className={styles.platformsGrid}>
+                              {PLATFORM_OPTIONS.map(([key, label]) => (
+                                <label key={key} className={styles.checkboxLabel}>
+                                  <input type="checkbox" checked={editGameForm.platforms.includes(key)} onChange={() => togglePlatform(key)} />
+                                  {label}
+                                </label>
+                              ))}
+                            </div>
+                          </fieldset>
+
+                          {/* Links de lojas */}
+                          <fieldset className={styles.fieldset}>
+                            <legend className={styles.fieldsetLegend}>Links de lojas</legend>
+                            {editGameForm.store_pages.map((sp, idx) => (
+                              <div key={`store-${sp.store_type_id ?? ""}-${idx}`} className={styles.storePageRow}>
+                                <select
+                                  className={styles.input}
+                                  value={sp.store_type_id}
+                                  onChange={(e) => updateStorePage(idx, "store_type_id", e.target.value)}
+                                >
+                                  <option value="">Selecione a loja</option>
+                                  {STORE_TYPES.map((st) => (
+                                    <option key={st.id} value={st.id}>
+                                      {st.name}
+                                    </option>
+                                  ))}
+                                </select>
+                                <input
+                                  type="url"
+                                  className={styles.input}
+                                  placeholder="URL da página na loja"
+                                  value={sp.page_url}
+                                  onChange={(e) => updateStorePage(idx, "page_url", e.target.value)}
+                                />
+                                <input
+                                  type="number"
+                                  className={`${styles.input} ${styles.priceInput}`}
+                                  placeholder="Preço (0 = grátis)"
+                                  value={sp.price}
+                                  min="0"
+                                  step="0.01"
+                                  onChange={(e) => updateStorePage(idx, "price", e.target.value)}
+                                />
+                                <button type="button" className={styles.btnRemoveStore} onClick={() => removeStorePage(idx)} aria-label="Remover">
+                                  ✕
+                                </button>
+                              </div>
+                            ))}
+                            <button type="button" className={styles.btnAddStore} onClick={addStorePage}>
+                              + Adicionar loja
+                            </button>
+                          </fieldset>
+
+                          {editGameMsg.text && <StatusMessageComponent type={editGameMsg.type} message={editGameMsg.text} />}
+
+                          <div className={styles.gameEditActions}>
+                            <Link href={`/jogos/${g.slug}`} target="_blank" rel="noopener noreferrer" className={styles.btnOutlineSmall}>
+                              Ver página
+                            </Link>
+                            <button type="submit" className={styles.btnSave} disabled={savingGame || !editGameForm.name.trim()}>
+                              {savingGame ? <Spinner size="small" /> : "Salvar alterações"}
+                            </button>
+                          </div>
+                        </form>
+                      )}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {/* Criar novo jogo */}
+          <form onSubmit={handleCreateGame} className={styles.gameForm}>
+            <p className={styles.pendingTitle}>Criar novo jogo</p>
+            <input
+              type="text"
+              className={styles.input}
+              placeholder="Nome do jogo"
+              value={newGameName}
+              onChange={(e) => setNewGameName(e.target.value)}
+              maxLength={120}
+              required
+            />
+            <div className={styles.gameFormRow}>
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="Gênero (ex: Plataforma, RPG)"
+                value={newGameGenre}
+                onChange={(e) => setNewGameGenre(e.target.value)}
+                maxLength={60}
+              />
+              <select className={styles.input} value={newGameStage} onChange={(e) => setNewGameStage(e.target.value)}>
+                <option value="concept">Conceito</option>
+                <option value="prototype">Protótipo</option>
+                <option value="alpha">Alpha</option>
+                <option value="beta">Beta</option>
+                <option value="early_access">Acesso Antecipado</option>
+                <option value="released">Lançado</option>
+              </select>
+            </div>
+            <button type="submit" className={styles.btnSave} disabled={creatingGame || !newGameName.trim()}>
+              {creatingGame ? <Spinner size="small" /> : "Criar jogo"}
+            </button>
+          </form>
+
+          {gameMsg.text && <StatusMessageComponent type={gameMsg.type} message={gameMsg.text} />}
         </section>
 
         {/* CONVIDAR MEMBROS */}

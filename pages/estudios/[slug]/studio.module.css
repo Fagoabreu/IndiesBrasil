@@ -462,3 +462,77 @@
     margin-left: 0;
   }
 }
+
+/* JOGOS */
+.gameCardList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gameCard {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  text-decoration: none;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--borderColor-muted);
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.gameCard:hover {
+  border-color: var(--brand-hover-border);
+  background: var(--brand-hover-bg);
+}
+
+.gameCardCover {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.gameCardCoverPlaceholder {
+  width: 64px;
+  height: 64px;
+  border-radius: 6px;
+  background: var(--bgColor-muted);
+  flex-shrink: 0;
+}
+
+.gameCardInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.gameCardName {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+}
+
+.gameCardTagline {
+  font-size: 0.8rem;
+  color: var(--fgColor-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gameCardGenre {
+  font-size: 0.75rem;
+  color: var(--fgColor-muted);
+  background: var(--bgColor-muted);
+  border-radius: 4px;
+  padding: 1px 7px;
+  align-self: flex-start;
+}

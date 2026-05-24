@@ -126,6 +126,15 @@ async function activateUserByUserId(userId) {
     "create:studio:invitation",
     "read:studio:follow",
     "create:studio:follow",
+    "read:game",
+    "read:game:all",
+    "create:game",
+    "update:game",
+    "delete:game",
+    "create:game:follow",
+    "read:game:follow",
+    "create:game:review",
+    "update:game:review",
   ]);
   return activatedUser;
 }
