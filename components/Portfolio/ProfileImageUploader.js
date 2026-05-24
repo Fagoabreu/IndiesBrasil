@@ -86,7 +86,12 @@ export default function ProfileImageUploader({
 
       {/* Crop modal (withCrop flow) */}
       {cropSrc && (
-        <ImageCropModal imageSrc={cropSrc} preset={type === "cover" ? "cover" : "avatar"} onConfirm={handleCropConfirm} onClose={handleCropClose} />
+        <ImageCropModal
+          imageSrc={cropSrc}
+          preset={type === "cover" ? "profileBanner" : "avatar"}
+          onConfirm={handleCropConfirm}
+          onClose={handleCropClose}
+        />
       )}
 
       {/* Trigger button */}

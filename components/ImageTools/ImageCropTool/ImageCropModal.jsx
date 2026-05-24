@@ -12,6 +12,12 @@ const PRESETS = {
   cover: { aspect: 3, shape: 0, label: "Capa" },
   banner: { aspect: 16 / 9, shape: 0, label: "Banner" },
   thumbnail: { aspect: 1, shape: 0, label: "Thumbnail" },
+  // Logo de organização: quadrado com cantos arredondados (não circular)
+  squareLogo: { aspect: 1, shape: 0, label: "Logo" },
+  // Banner do cabeçalho de página (max-width 1000px, padding 32px → 968px / 150px altura)
+  headerBanner: { aspect: 968 / 150, shape: 0, label: "Banner de cabeçalho" },
+  // Capa do perfil de membro (PageLayout.Content width=medium → 768px - profileCard padding 16px = 752px / 150px altura)
+  profileBanner: { aspect: 752 / 150, shape: 0, label: "Capa do perfil" },
 };
 
 export default function ImageCropModal({ imageSrc, preset = "avatar", onConfirm, onClose }) {
@@ -144,7 +150,7 @@ export default function ImageCropModal({ imageSrc, preset = "avatar", onConfirm,
 
 ImageCropModal.propTypes = {
   imageSrc: PropTypes.string.isRequired,
-  preset: PropTypes.oneOf(["avatar", "cover", "banner", "thumbnail"]),
+  preset: PropTypes.oneOf(["avatar", "cover", "banner", "thumbnail", "squareLogo", "headerBanner", "profileBanner"]),
   onConfirm: PropTypes.func.isRequired,
   onClose: PropTypes.func.isRequired,
 };

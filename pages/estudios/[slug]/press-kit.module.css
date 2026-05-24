@@ -1,0 +1,293 @@
+/* Press Kit — layout para impressão/PDF
+   Sem Layout wrapper. Cores fixas para fidelidade ao imprimir. */
+
+/* ── Loading ───────────────────────────────────────── */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: sans-serif;
+  font-size: 14px;
+  color: #555;
+  background: #f8f8f8;
+}
+
+/* ── Barra de ação (oculta no print) ───────────────── */
+.printBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 24px;
+  background: #f3f0ff;
+  border-bottom: 3px solid #8b5cf6;
+  font-size: 13px;
+  color: #333;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  font-family: sans-serif;
+}
+
+.printHint {
+  margin: 0;
+  color: #555;
+}
+
+.printBtn {
+  padding: 7px 18px;
+  background: #8b5cf6;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.printBtn:hover {
+  background: #7c3aed;
+}
+
+@media print {
+  .printBar {
+    display: none;
+  }
+}
+
+/* ── Página ────────────────────────────────────────── */
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 36px 36px 56px;
+  font-family: Georgia, "Times New Roman", serif;
+  color: #1a1a2e;
+  background: #ffffff;
+}
+
+/* ── Cabeçalho hero ────────────────────────────────── */
+.pkHeader {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-bottom: 24px;
+  border-bottom: 3px solid #8b5cf6;
+  margin-bottom: 32px;
+}
+
+.pkLogo {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  border-radius: 10px;
+  border: 1px solid #e5e0f5;
+  flex-shrink: 0;
+}
+
+.pkHeaderText {
+  flex: 1;
+}
+
+.pkName {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: #1a1a2e;
+  line-height: 1.2;
+}
+
+.pkPitch {
+  font-size: 1rem;
+  color: #555;
+  margin: 0;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+/* ── Corpo: conteúdo + factsheet ───────────────────── */
+.body {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 40px;
+  align-items: start;
+}
+
+@media (max-width: 680px) {
+  .body {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Coluna principal ──────────────────────────────── */
+.mainCol {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.section {
+  page-break-inside: avoid;
+}
+
+.sectionTitle {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #8b5cf6;
+  border-bottom: 1px solid #e0d6f7;
+  padding-bottom: 5px;
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: sans-serif;
+}
+
+.bodyText {
+  font-size: 0.92rem;
+  line-height: 1.7;
+  margin: 0;
+  color: #2c2c3e;
+  white-space: pre-line;
+}
+
+/* Equipe */
+.memberList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.memberItem {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.memberName {
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.memberRole {
+  color: #777;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.emptyHint {
+  font-size: 0.85rem;
+  color: #aaa;
+  font-style: italic;
+  margin: 0;
+}
+
+/* ── Factsheet (sidebar) ───────────────────────────── */
+.factsheet {
+  background: #faf8ff;
+  border: 1px solid #e0d6f7;
+  border-radius: 10px;
+  padding: 20px;
+  page-break-inside: avoid;
+  font-family: sans-serif;
+}
+
+.factsheetTitle {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #8b5cf6;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 14px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #e0d6f7;
+}
+
+.factList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+}
+
+.factRow {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.factRow dt {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.factRow dd {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #2c2c3e;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.addrLine {
+  display: block;
+  line-height: 1.4;
+}
+
+/* QR Code */
+.qrBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e0d6f7;
+}
+
+.qrLabel {
+  font-size: 0.6rem;
+  color: #aaa;
+  text-align: center;
+  word-break: break-all;
+  max-width: 100px;
+}
+
+/* ── Rodapé ────────────────────────────────────────── */
+.pkFooter {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: #bbb;
+  border-top: 1px solid #eee;
+  padding-top: 14px;
+  margin-top: 40px;
+  font-family: sans-serif;
+}
+
+/* ── Print overrides ───────────────────────────────── */
+@media print {
+  .page {
+    padding: 0;
+    max-width: 100%;
+  }
+
+  .body {
+    grid-template-columns: 1fr 220px;
+    gap: 24px;
+  }
+
+  .pkFooter {
+    margin-top: 24px;
+  }
+}

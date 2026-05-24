@@ -1,12 +1,30 @@
 import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import { ActionMenu, ActionList, IconButton } from "@primer/react";
 import { BellIcon } from "@primer/octicons-react";
 import { useUser } from "@/context/UserContext";
 import styles from "./NotificationButton.module.css";
 
+// Tipos de notificação cujas mensagens não estão na tabela notification_messages
+// (não podem ser inseridas via migration pelo limite de snapshot do PostgreSQL).
+const CLIENT_NOTIF_DEFS = {
+  studio_invitation: {
+    title: "Convite de estúdio",
+    message: "%userId te convidou para o estúdio %orgSlug.",
+  },
+};
+
+function resolveTitle(n) {
+  return n.title || CLIENT_NOTIF_DEFS[n.type]?.title || n.type;
+}
+
 function resolveMessage(n) {
-  if (!n.message) return null;
-  return n.message.replace("%userId", n.source_username || "alguém").replace("%postId", n.post_id ? String(n.post_id).slice(0, 8) : "um post");
+  const template = n.message || CLIENT_NOTIF_DEFS[n.type]?.message;
+  if (!template) return null;
+  return template
+    .replace("%userId", n.source_username || "alguém")
+    .replace("%postId", n.post_id ? String(n.post_id).slice(0, 8) : "um post")
+    .replace("%orgSlug", n.org_slug || "estúdio");
 }
 
 async function loadNotifications(username) {
@@ -28,6 +46,7 @@ async function markNotificationRead(username, n) {
     type: n.type,
     source_user_id: n.source_user_id,
     is_read: true,
+    org_slug: n.org_slug ?? "",
     ...(isPost && { post_id: n.post_id }),
   };
   await fetch(url, {
@@ -39,6 +58,7 @@ async function markNotificationRead(username, n) {
 }
 
 export default function NotificationButton() {
+  const router = useRouter();
   const { user } = useUser();
   const [userNotifs, setUserNotifs] = useState([]);
   const [postNotifs, setPostNotifs] = useState([]);
@@ -76,10 +96,17 @@ export default function NotificationButton() {
       );
     } else {
       setUserNotifs((prev) =>
-        prev.map((u) => (u.user_id === n.user_id && u.type === n.type && u.source_user_id === n.source_user_id ? { ...u, is_read: true } : u)),
+        prev.map((u) =>
+          u.user_id === n.user_id && u.type === n.type && u.source_user_id === n.source_user_id && u.org_slug === n.org_slug
+            ? { ...u, is_read: true }
+            : u,
+        ),
       );
     }
     markNotificationRead(user.username, n);
+    if (n.type === "studio_invitation" && n.org_slug) {
+      router.push(`/estudios/${n.org_slug}`);
+    }
   }
 
   const all = [...userNotifs, ...postNotifs].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -104,7 +131,7 @@ export default function NotificationButton() {
                   onSelect={() => handleMarkRead(n)}
                 >
                   <span className={styles.notifRow}>
-                    <span className={styles.notifTitle}>{n.title || n.type}</span>
+                    <span className={styles.notifTitle}>{resolveTitle(n)}</span>
                     <span className={styles.notifDate}>
                       {new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(new Date(n.created_at))}
                     </span>

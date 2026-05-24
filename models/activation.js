@@ -115,6 +115,17 @@ async function activateUserByUserId(userId) {
     "read:event",
     "create:event",
     "update:event",
+    "read:studio",
+    "create:studio",
+    "update:studio",
+    "delete:studio",
+    "read:studio:member",
+    "create:studio:member",
+    "delete:studio:member",
+    "read:studio:invitation",
+    "create:studio:invitation",
+    "read:studio:follow",
+    "create:studio:follow",
   ]);
   return activatedUser;
 }

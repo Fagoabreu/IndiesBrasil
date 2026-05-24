@@ -2,7 +2,7 @@ import { Button, Heading, Text } from "@primer/react";
 import { PencilIcon } from "@primer/octicons-react";
 import style from "./SectionPanel.module.css";
 
-export default function SectionPanel({ title, canEdit, OnEdit, atributes }) {
+export default function SectionPanel({ title, canEdit, OnEdit, atributes, children }) {
   return (
     <section className={style.panelFrame}>
       <div className={style.cardHeader}>
@@ -17,7 +17,7 @@ export default function SectionPanel({ title, canEdit, OnEdit, atributes }) {
         )}
       </div>
 
-      {atributes.map((item, index) => (
+      {atributes?.map((item, index) => (
         <div key={index} className={`${style.resumeItem} ${item.alignment === "row" ? style.row : ""}`}>
           <Heading as="h3" variant="small">
             {item.title}
@@ -25,6 +25,8 @@ export default function SectionPanel({ title, canEdit, OnEdit, atributes }) {
           <Text size="medium">{item.content}</Text>
         </div>
       ))}
+
+      {children}
     </section>
   );
 }

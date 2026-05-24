@@ -1,0 +1,284 @@
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 80px 0;
+}
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+
+/* Barra superior */
+.topBar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  color: var(--fgColor-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.backLink:hover {
+  color: var(--brand-primary);
+}
+
+.pageTitle {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--fgColor-default);
+}
+
+/* Formulário */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.section {
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--bgColor-muted);
+}
+
+.sectionTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--fgColor-default);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+/* Campos */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 500px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+}
+
+.required {
+  color: var(--fgColor-danger, #cf222e);
+}
+
+.input,
+.textarea {
+  padding: 8px 12px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 6px;
+  background: var(--bgColor-default);
+  color: var(--fgColor-default);
+  font-size: 0.875rem;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb-primary), 0.15);
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Endereço */
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--fgColor-default);
+  cursor: pointer;
+  user-select: none;
+}
+
+.addressBlock {
+  border-top: 1px solid var(--borderColor-muted);
+  padding-top: 16px;
+  margin-top: 4px;
+}
+
+.fieldHint {
+  font-size: 0.78rem;
+  color: var(--fgColor-muted);
+  margin: 4px 0 0;
+  font-style: italic;
+}
+
+/* Ações */
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.btnCancel {
+  padding: 8px 18px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid var(--borderColor-default);
+  color: var(--fgColor-default);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnCancel:hover {
+  background: var(--brand-hover-bg);
+}
+
+.btnSave {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  border-radius: 6px;
+  background: var(--brand-primary);
+  border: none;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnSave:hover:not(:disabled) {
+  background: var(--brand-secondary);
+}
+
+.btnSave:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Convites */
+.inviteRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.inviteRow .input {
+  flex: 1;
+}
+
+.pendingTitle {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+  margin: 4px 0 0;
+}
+
+.pendingList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pendingItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--bgColor-default);
+  border: 1px solid var(--borderColor-muted);
+}
+
+.pendingUsername {
+  font-size: 0.875rem;
+  color: var(--fgColor-default);
+  font-weight: 500;
+}
+
+.btnCancelInvite {
+  padding: 4px 10px;
+  border-radius: 5px;
+  background: transparent;
+  border: 1px solid var(--borderColor-default);
+  color: var(--fgColor-muted);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.btnCancelInvite:hover:not(:disabled) {
+  border-color: var(--fgColor-danger, #cf222e);
+  color: var(--fgColor-danger, #cf222e);
+}
+
+.btnCancelInvite:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ownerBadge {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--fgColor-muted);
+}
+
+/* Contatos */
+.contactRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.contactRow select.input {
+  min-width: 140px;
+  flex-shrink: 0;
+}
+
+.contactRow .input:not(select) {
+  flex: 1;
+  min-width: 120px;
+}
