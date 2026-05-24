@@ -15,6 +15,20 @@
 
 exports.up = (pgm) => {
   /* ---------------------------------------------------------------
+   * Drop legacy draft tables created by the database_enums migration
+   * (1754361140791) that are replaced by the proper tables below.
+   * Using IF EXISTS so this is safe on a clean database too.
+   * --------------------------------------------------------------- */
+  pgm.sql(`
+    DROP TABLE IF EXISTS "store_page" CASCADE;
+    DROP TABLE IF EXISTS "review" CASCADE;
+    DROP TABLE IF EXISTS "game_platforms" CASCADE;
+    DROP TABLE IF EXISTS "games_teams" CASCADE;
+    DROP TABLE IF EXISTS "games" CASCADE;
+    DROP TABLE IF EXISTS "game_store" CASCADE;
+  `);
+
+  /* ---------------------------------------------------------------
    * 1. game_store: catálogo de tipos de loja
    * --------------------------------------------------------------- */
   pgm.createTable("game_store", {
