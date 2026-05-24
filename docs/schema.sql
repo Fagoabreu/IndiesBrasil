@@ -511,3 +511,69 @@ CREATE TABLE post_tags (
     CONSTRAINT post_tags_post_id_fkey FOREIGN KEY (post_id) REFERENCES posts(id),
     CONSTRAINT post_tags_tag_id_fkey FOREIGN KEY (tag_id) REFERENCES tags(id)
 );
+
+-- ======================================================
+-- Estúdios (organizations v2) — migration 1779580800000
+-- ======================================================
+
+CREATE TYPE org_member_role AS ENUM ('admin', 'member');
+CREATE TYPE org_invitation_status AS ENUM ('pending', 'accepted', 'declined', 'cancelled');
+CREATE TYPE org_transfer_status AS ENUM ('pending', 'accepted', 'declined', 'cancelled');
+
+-- A tabela organizations já existe; colunas adicionadas pela migration:
+ALTER TABLE organizations
+    ADD COLUMN slug              VARCHAR(255) NOT NULL DEFAULT '',
+    ADD COLUMN cnpj              VARCHAR(18),
+    ADD COLUMN pitch             TEXT,
+    ADD COLUMN founded_at        DATE,
+    ADD COLUMN banner_image_id   VARCHAR(256) REFERENCES uploaded_images(id) ON DELETE SET NULL,
+    ADD COLUMN banner_video_url  VARCHAR(512),
+    ADD COLUMN address_id        UUID REFERENCES addresses(id) ON DELETE SET NULL;
+
+CREATE UNIQUE INDEX organizations_slug_unique_idx    ON organizations (slug);
+CREATE UNIQUE INDEX organizations_owner_id_unique_idx ON organizations (owner_id);
+
+-- org_members: remove roles TEXT, adiciona joined_at e status
+ALTER TABLE org_members
+    DROP COLUMN IF EXISTS roles,
+    ADD COLUMN joined_at TIMESTAMPTZ NOT NULL DEFAULT (timezone('utc', now())),
+    ADD COLUMN status    VARCHAR(20)  NOT NULL DEFAULT 'active';
+
+CREATE TABLE org_roles (
+    org_id      UUID            NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    member_id   UUID            NOT NULL REFERENCES users(id)         ON DELETE CASCADE,
+    role        org_member_role NOT NULL,
+    granted_at  TIMESTAMPTZ     NOT NULL DEFAULT (timezone('utc', now())),
+    granted_by  UUID            REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT org_roles_pkey PRIMARY KEY (org_id, member_id, role)
+);
+
+CREATE TABLE org_invitations (
+    id              UUID                    PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          UUID                    NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    invited_user_id UUID                    NOT NULL REFERENCES users(id)         ON DELETE CASCADE,
+    invited_by      UUID                    NOT NULL REFERENCES users(id)         ON DELETE CASCADE,
+    role            org_member_role         NOT NULL DEFAULT 'member',
+    status          org_invitation_status   NOT NULL DEFAULT 'pending',
+    message         VARCHAR(500),
+    created_at      TIMESTAMPTZ             NOT NULL DEFAULT (timezone('utc', now())),
+    updated_at      TIMESTAMPTZ             NOT NULL DEFAULT (timezone('utc', now()))
+);
+
+CREATE UNIQUE INDEX org_invitations_pending_unique_idx
+    ON org_invitations (org_id, invited_user_id)
+    WHERE status = 'pending';
+
+CREATE TABLE org_ownership_transfers (
+    id              UUID                    PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id          UUID                    NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    from_user_id    UUID                    NOT NULL REFERENCES users(id)         ON DELETE CASCADE,
+    to_user_id      UUID                    NOT NULL REFERENCES users(id)         ON DELETE CASCADE,
+    status          org_transfer_status     NOT NULL DEFAULT 'pending',
+    requested_at    TIMESTAMPTZ             NOT NULL DEFAULT (timezone('utc', now())),
+    responded_at    TIMESTAMPTZ
+);
+
+CREATE UNIQUE INDEX org_transfers_pending_unique_idx
+    ON org_ownership_transfers (org_id)
+    WHERE status = 'pending';

@@ -84,6 +84,31 @@ const availableFeatures = new Set([
   "delete:event",
   "create:event:rsvp",
   "create:event:invitation",
+
+  //studio / organization
+  "read:studio",
+  "read:studio:all",
+  "create:studio",
+  "update:studio",
+  "delete:studio",
+  "read:studio:member",
+  "create:studio:member",
+  "delete:studio:member",
+  "read:studio:invitation",
+  "create:studio:invitation",
+  "read:studio:follow",
+  "create:studio:follow",
+
+  //game
+  "read:game",
+  "read:game:all",
+  "create:game",
+  "update:game",
+  "delete:game",
+  "create:game:follow",
+  "read:game:follow",
+  "create:game:review",
+  "update:game:review",
 ]);
 
 function can(user, feature, resource) {

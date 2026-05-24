@@ -3,7 +3,7 @@ import { Button } from "@primer/react";
 import PropTypes from "prop-types";
 import baseStyles from "./FollowButton.module.css";
 
-export default function FollowButton({ username, isFollowing = false, onToggle = () => {}, className }) {
+export default function FollowButton({ username, endpoint, isFollowing = false, onToggle = () => {}, className }) {
   const [loading, setLoading] = useState(false);
   const [following, setFollowing] = useState(isFollowing);
 
@@ -11,7 +11,8 @@ export default function FollowButton({ username, isFollowing = false, onToggle =
     const nextFollowing = !following;
     setLoading(true);
     try {
-      const res = await fetch(`/api/v1/users/${username}/follow`, {
+      const url = endpoint ?? `/api/v1/users/${username}/follow`;
+      const res = await fetch(url, {
         method: nextFollowing ? "POST" : "DELETE",
         credentials: "include",
       });
@@ -19,7 +20,11 @@ export default function FollowButton({ username, isFollowing = false, onToggle =
       if (!res.ok) throw new Error("Erro na requisição");
 
       setFollowing(nextFollowing);
-      onToggle(username, nextFollowing);
+      if (endpoint) {
+        onToggle(nextFollowing);
+      } else {
+        onToggle(username, nextFollowing);
+      }
     } catch (error) {
       console.error("Erro ao seguir/deixar de seguir:", error);
     } finally {
@@ -40,7 +45,8 @@ export default function FollowButton({ username, isFollowing = false, onToggle =
 }
 
 FollowButton.propTypes = {
-  username: PropTypes.string.isRequired,
+  username: PropTypes.string,
+  endpoint: PropTypes.string,
   isFollowing: PropTypes.bool,
   onToggle: PropTypes.func,
   className: PropTypes.string,

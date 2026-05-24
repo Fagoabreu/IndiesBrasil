@@ -6,19 +6,21 @@ async function createUserNotification(userInputValues) {
   return newNotification;
 
   async function runInsertQuery(userInputValues) {
+    const orgSlug = userInputValues.org_slug ?? "";
     const results = await database.query({
       text: `
       INSERT INTO user_notifications (
         user_id,
         type,
         source_user_id,
+        org_slug,
         is_read,
         created_at
       )
-      VALUES ($1,$2,$3,false,NOW())
-      ON CONFLICT (user_id, source_user_id, type) DO NOTHING
+      VALUES ($1,$2,$3,$4,false,NOW())
+      ON CONFLICT (user_id, type, source_user_id, org_slug) DO NOTHING
       RETURNING *`,
-      values: [userInputValues.user_id, userInputValues.type, userInputValues.source_user_id],
+      values: [userInputValues.user_id, userInputValues.type, userInputValues.source_user_id, orgSlug],
     });
     return results.rows[0] ?? null;
   }
@@ -74,16 +76,18 @@ async function updateUserNotification(userInputValues) {
   return updatedNotification;
 
   async function runUpdateQuery(userInputValues) {
+    const orgSlug = userInputValues.org_slug ?? "";
     const results = await database.query({
       text: `
       UPDATE user_notifications
-      SET is_read = $4
+      SET is_read = $5
       WHERE
         user_id = $1
         AND type = $2
         AND source_user_id = $3
+        AND org_slug = $4
       RETURNING *`,
-      values: [userInputValues.user_id, userInputValues.type, userInputValues.source_user_id, userInputValues.is_read],
+      values: [userInputValues.user_id, userInputValues.type, userInputValues.source_user_id, orgSlug, userInputValues.is_read],
     });
     return results.rows[0];
   }
@@ -161,10 +165,7 @@ async function findPostNotificationsByUserId(userId) {
     });
 
     if (results.rowCount === 0) {
-      throw new NotFoundError({
-        message: "Notificação não encontrada no sistema.",
-        action: "Verifique se o id foi digitado corretamente",
-      });
+      return [];
     }
 
     return results.rows;
@@ -187,13 +188,6 @@ async function findUserNotificationsByUserId(userId) {
       `,
       values: [userId],
     });
-
-    if (results.rowCount === 0) {
-      throw new NotFoundError({
-        message: "Notificação não encontrada no sistema.",
-        action: "Verifique se o id foi digitado corretamente",
-      });
-    }
 
     return results.rows;
   }

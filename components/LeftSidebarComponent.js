@@ -32,6 +32,13 @@ export default function LeftSidebarComponent() {
           Membros
         </NavList.Item>
 
+        <NavList.Item as={Link} href="/estudios" aria-current={router.pathname.startsWith("/estudios")}>
+          Estúdios
+        </NavList.Item>
+        <NavList.Item as={Link} href="/jogos" aria-current={router.pathname.startsWith("/jogos")}>
+          Jogos
+        </NavList.Item>
+
         {user?.features.includes("read:admin") && (
           <NavList.Group>
             <NavList.GroupHeading className={styles.groupHeading} onClick={() => setAdminOpen((v) => !v)} style={{ cursor: "pointer" }}>

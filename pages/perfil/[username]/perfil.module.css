@@ -35,6 +35,10 @@
   border-radius: 12px 12px 0 0;
 }
 
+.coverImage {
+  object-fit: cover;
+}
+
 /* Overlay sutil de profundidade no rodapé da capa */
 .imageWrapper::after {
   content: "";

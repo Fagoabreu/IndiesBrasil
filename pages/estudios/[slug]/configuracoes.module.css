@@ -1,0 +1,551 @@
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 80px 0;
+}
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+
+/* Barra superior */
+.topBar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  color: var(--fgColor-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.backLink:hover {
+  color: var(--brand-primary);
+}
+
+.pageTitle {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--fgColor-default);
+}
+
+/* Formulário */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.section {
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--bgColor-muted);
+}
+
+.sectionTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--fgColor-default);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+/* Campos */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 500px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+}
+
+.required {
+  color: var(--fgColor-danger, #cf222e);
+}
+
+.input,
+.textarea {
+  padding: 8px 12px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 6px;
+  background: var(--bgColor-default);
+  color: var(--fgColor-default);
+  font-size: 0.875rem;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb-primary), 0.15);
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Endereço */
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--fgColor-default);
+  cursor: pointer;
+  user-select: none;
+}
+
+.addressBlock {
+  border-top: 1px solid var(--borderColor-muted);
+  padding-top: 16px;
+  margin-top: 4px;
+}
+
+.fieldHint {
+  font-size: 0.78rem;
+  color: var(--fgColor-muted);
+  margin: 4px 0 0;
+  font-style: italic;
+}
+
+/* Ações */
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.btnCancel {
+  padding: 8px 18px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid var(--borderColor-default);
+  color: var(--fgColor-default);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnCancel:hover {
+  background: var(--brand-hover-bg);
+}
+
+.btnSave {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  border-radius: 6px;
+  background: var(--brand-primary);
+  border: none;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnSave:hover:not(:disabled) {
+  background: var(--brand-secondary);
+}
+
+.btnSave:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Convites */
+.inviteRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.inviteRow .input {
+  flex: 1;
+}
+
+.pendingTitle {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+  margin: 4px 0 0;
+}
+
+.pendingList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pendingItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--bgColor-default);
+  border: 1px solid var(--borderColor-muted);
+}
+
+.pendingUsername {
+  font-size: 0.875rem;
+  color: var(--fgColor-default);
+  font-weight: 500;
+}
+
+.btnCancelInvite {
+  padding: 4px 10px;
+  border-radius: 5px;
+  background: transparent;
+  border: 1px solid var(--borderColor-default);
+  color: var(--fgColor-muted);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.btnCancelInvite:hover:not(:disabled) {
+  border-color: var(--fgColor-danger, #cf222e);
+  color: var(--fgColor-danger, #cf222e);
+}
+
+.btnCancelInvite:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ownerBadge {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--fgColor-muted);
+}
+
+/* Contatos */
+.contactRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.contactRow select.input {
+  min-width: 140px;
+  flex-shrink: 0;
+}
+
+.contactRow .input:not(select) {
+  flex: 1;
+  min-width: 120px;
+}
+
+/* Jogos */
+.gameForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.gameFormRow {
+  display: flex;
+  gap: 10px;
+}
+
+.gameFormRow .input {
+  flex: 1;
+}
+
+.gameLink {
+  text-decoration: none;
+  color: var(--fgColor-default);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.gameLink:hover {
+  color: var(--brand-primary);
+}
+
+.gameStageBadge {
+  font-size: 0.72rem;
+  color: var(--fgColor-muted);
+  background: var(--bgColor-inset);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 4px;
+  padding: 2px 7px;
+  margin-left: auto;
+}
+
+/* Game list */
+.gameList {
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gameListItem {
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.gameListRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bgColor-muted);
+}
+
+.btnEditGame {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 5px;
+  border: 1px solid var(--borderColor-default);
+  background: transparent;
+  color: var(--fgColor-muted);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.btnEditGame:hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.btnEditGameActive {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+  background: rgba(var(--brand-rgb-primary), 0.08);
+}
+
+/* Game edit panel */
+.gameEditPanel {
+  border-top: 1px solid var(--borderColor-muted);
+  background: var(--bgColor-default);
+  padding: 20px 16px;
+}
+
+.gameEditLoading {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+}
+
+.gameEditForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.gameEditGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 560px) {
+  .gameEditGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fieldLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+}
+
+.fieldLabel .input {
+  margin-top: 2px;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+}
+
+/* Fieldset (plataformas, lojas) */
+.fieldset {
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin: 0;
+}
+
+.fieldsetLegend {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--fgColor-muted);
+  padding: 0 6px;
+}
+
+.platformsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+@media (max-width: 560px) {
+  .platformsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.82rem;
+  color: var(--fgColor-default);
+  cursor: pointer;
+}
+
+.checkboxLabel input[type="checkbox"] {
+  accent-color: var(--brand-primary);
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* Store pages */
+.storePageRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.storePageRow .input:first-child {
+  min-width: 130px;
+  flex-shrink: 0;
+}
+
+.storePageRow .input:nth-child(2) {
+  flex: 1;
+  min-width: 140px;
+}
+
+.priceInput {
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.btnRemoveStore {
+  background: none;
+  border: none;
+  color: var(--fgColor-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.btnRemoveStore:hover {
+  color: var(--fgColor-danger, #cf222e);
+}
+
+.btnAddStore {
+  background: none;
+  border: 1px dashed var(--borderColor-default);
+  color: var(--fgColor-muted);
+  font-size: 0.78rem;
+  padding: 5px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 4px;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.btnAddStore:hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+/* Game edit actions */
+.gameEditActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  align-items: center;
+  padding-top: 4px;
+}
+
+.btnOutlineSmall {
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--borderColor-default);
+  color: var(--fgColor-muted);
+  text-decoration: none;
+  font-size: 0.8rem;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.btnOutlineSmall:hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}

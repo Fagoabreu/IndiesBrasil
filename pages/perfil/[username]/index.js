@@ -415,7 +415,13 @@ export default function Perfil() {
           <StatusMessageComponent errorMsg={errorMessage} />
 
           <div className={style.imageWrapper}>
-            <Image src={perfilUser.user.background_image || "/images/default_header.png"} alt="Capa do perfil" fill unoptimized />
+            <Image
+              src={perfilUser.user.background_image || "/images/default_header.png"}
+              alt="Capa do perfil"
+              fill
+              unoptimized
+              className={style.coverImage}
+            />
             {isOwnProfile && (
               <div className={style.coverUploader}>
                 <ProfileImageUploader endpoint={`/api/v1/users/${username}/avatar`} onUploaded={reloadProfile} label="Alterar capa" type="cover" />
