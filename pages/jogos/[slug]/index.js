@@ -104,9 +104,11 @@ export default function GamePage() {
         setReviewContent(data.viewer.userReview.content || "");
       }
 
-      // Set first media as active
+      // Set first media as active (trailer_url counts as a virtual media entry)
       if (data.media?.length > 0) {
         setActiveMedia(data.media[0]);
+      } else if (data.trailer_url) {
+        setActiveMedia({ id: "__trailer__", media_type: "video", url: data.trailer_url, caption: "Trailer" });
       }
     } finally {
       setLoading(false);
@@ -207,6 +209,13 @@ export default function GamePage() {
   const hasUserReview = !!viewer?.userReview;
   const showReviewForm = user && (!hasUserReview || editingReview);
 
+  // Merge trailer_url (if any) as a virtual first entry so it appears in the hero strip
+  const trailerEntry =
+    gameData.trailer_url && !gameData.media?.some((m) => m.url === gameData.trailer_url)
+      ? [{ id: "__trailer__", media_type: "video", url: gameData.trailer_url, caption: "Trailer" }]
+      : [];
+  const allMedia = [...trailerEntry, ...(gameData.media || [])];
+
   return (
     <>
       <Head>
@@ -215,14 +224,6 @@ export default function GamePage() {
       </Head>
 
       <div className={styles.page}>
-        {/* ── Banner ── */}
-        {gameData.banner_url && (
-          <div className={styles.bannerWrap}>
-            <Image src={gameData.banner_url} alt={`Banner de ${gameData.name}`} fill priority sizes="100vw" className={styles.bannerImg} />
-            <div className={styles.bannerOverlay} />
-          </div>
-        )}
-
         <div className={styles.content}>
           {/* ── Breadcrumb ── */}
           <nav className={styles.breadcrumb}>
@@ -231,60 +232,132 @@ export default function GamePage() {
             <span>{gameData.name}</span>
           </nav>
 
+          {/* ── Hero ao estilo Steam ── */}
+          <div className={styles.gameHero}>
+            {/* Painel esquerdo: player de mídia */}
+            <div className={styles.heroMedia}>
+              <div className={styles.heroMediaMain}>
+                {activeMedia?.media_type === "video" ? (
+                  <div className={styles.videoWrap}>
+                    <iframe
+                      src={toEmbedUrl(activeMedia.url)}
+                      title={activeMedia.caption || "Trailer"}
+                      allow="autoplay; encrypted-media"
+                      allowFullScreen
+                      className={styles.videoFrame}
+                    />
+                  </div>
+                ) : activeMedia ? (
+                  <Image
+                    src={activeMedia.url}
+                    alt={activeMedia.caption || gameData.name}
+                    fill
+                    sizes="(max-width: 860px) 100vw, 640px"
+                    className={styles.heroMediaImg}
+                  />
+                ) : gameData.banner_url ? (
+                  <Image
+                    src={gameData.banner_url}
+                    alt={gameData.name}
+                    fill
+                    priority
+                    sizes="(max-width: 860px) 100vw, 640px"
+                    className={styles.heroMediaImg}
+                  />
+                ) : null}
+              </div>
+              {allMedia.length > 0 && (
+                <div className={styles.heroMediaThumbs}>
+                  {allMedia.map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      className={`${styles.heroThumb} ${activeMedia?.id === m.id ? styles.heroThumbActive : ""}`}
+                      onClick={() => setActiveMedia(m)}
+                    >
+                      {m.media_type === "video" ? (
+                        <span className={styles.heroThumbVideo}>▶</span>
+                      ) : (
+                        <Image src={m.url} alt={m.caption || ""} fill sizes="120px" className={styles.heroThumbImg} />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Painel direito: informações do jogo */}
+            <div className={styles.heroInfo}>
+              {(gameData.banner_url || gameData.cover_url) && (
+                <div className={styles.heroCoverWrap}>
+                  <Image
+                    src={gameData.banner_url || gameData.cover_url}
+                    alt={gameData.name}
+                    fill
+                    sizes="320px"
+                    priority
+                    className={styles.heroCoverImg}
+                  />
+                </div>
+              )}
+              <h1 className={styles.heroGameName}>{gameData.name}</h1>
+              {gameData.short_description && <p className={styles.heroTagline}>{gameData.short_description}</p>}
+              <hr className={styles.heroDivider} />
+              <dl className={styles.heroMeta}>
+                <div className={styles.heroMetaRow}>
+                  <dt className={styles.heroMetaLabel}>Todas as análises</dt>
+                  <dd className={styles.heroMetaValue}>
+                    {gameData.review_count > 0
+                      ? `${Number(gameData.avg_rating).toFixed(1)} ★ (${gameData.review_count})`
+                      : "Nenhuma análise de usuário"}
+                  </dd>
+                </div>
+                <div className={styles.heroMetaRow}>
+                  <dt className={styles.heroMetaLabel}>Lançamento</dt>
+                  <dd className={styles.heroMetaValue}>
+                    {gameData.release_date ? new Date(gameData.release_date).toLocaleDateString("pt-BR") : (STAGES[gameData.stage] ?? gameData.stage)}
+                  </dd>
+                </div>
+                {gameData.studio_slug && (
+                  <>
+                    <div className={styles.heroMetaRow}>
+                      <dt className={styles.heroMetaLabel}>Desenvolvedor</dt>
+                      <dd className={styles.heroMetaValue}>
+                        <Link href={`/estudios/${gameData.studio_slug}`} className={styles.heroMetaLink}>
+                          {gameData.studio_name}
+                        </Link>
+                      </dd>
+                    </div>
+                    <div className={styles.heroMetaRow}>
+                      <dt className={styles.heroMetaLabel}>Distribuidora</dt>
+                      <dd className={styles.heroMetaValue}>
+                        <Link href={`/estudios/${gameData.studio_slug}`} className={styles.heroMetaLink}>
+                          {gameData.studio_name}
+                        </Link>
+                      </dd>
+                    </div>
+                  </>
+                )}
+              </dl>
+              {gameData.tags?.length > 0 && (
+                <div className={styles.heroTagsSection}>
+                  <p className={styles.heroTagsLabel}>Marcadores populares para este produto:</p>
+                  <div className={styles.heroTags}>
+                    {gameData.tags.map((t) => (
+                      <Link key={t.id} href={`/jogos?search=${encodeURIComponent(t.name)}`} className={styles.heroTag}>
+                        {t.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* ── Layout principal ── */}
           <div className={styles.layout}>
             {/* ── Coluna esquerda: mídia ── */}
             <main className={styles.main}>
-              {/* Título + tagline mobile */}
-              <div className={styles.titleBlockMobile}>
-                <h1 className={styles.gameName}>{gameData.name}</h1>
-                {gameData.short_description && <p className={styles.tagline}>{gameData.short_description}</p>}
-              </div>
-
-              {/* Galeria de mídia */}
-              {gameData.media?.length > 0 && (
-                <section className={styles.mediaSection}>
-                  <div className={styles.mediaMain}>
-                    {activeMedia?.media_type === "video" ? (
-                      <div className={styles.videoWrap}>
-                        <iframe
-                          src={toEmbedUrl(activeMedia.url)}
-                          title={activeMedia.caption || "Trailer"}
-                          allow="autoplay; encrypted-media"
-                          allowFullScreen
-                          className={styles.videoFrame}
-                        />
-                      </div>
-                    ) : activeMedia ? (
-                      <Image
-                        src={activeMedia.url}
-                        alt={activeMedia.caption || gameData.name}
-                        fill
-                        sizes="(max-width: 900px) 100vw, 640px"
-                        className={styles.mediaMainImg}
-                      />
-                    ) : null}
-                  </div>
-
-                  <div className={styles.mediaThumbs}>
-                    {gameData.media.map((m) => (
-                      <button
-                        key={m.id}
-                        type="button"
-                        className={`${styles.thumb} ${activeMedia?.id === m.id ? styles.thumbActive : ""}`}
-                        onClick={() => setActiveMedia(m)}
-                      >
-                        {m.media_type === "video" ? (
-                          <span className={styles.thumbVideo}>▶</span>
-                        ) : (
-                          <Image src={m.url} alt={m.caption || ""} fill sizes="120px" className={styles.thumbImg} />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </section>
-              )}
-
               {/* Descrição */}
               {gameData.description && (
                 <section className={styles.section}>
@@ -392,17 +465,6 @@ export default function GamePage() {
 
             {/* ── Coluna direita: sidebar ── */}
             <aside className={styles.sidebar}>
-              {/* Cover + título desktop */}
-              <div className={styles.sidebarHeader}>
-                {gameData.cover_url && (
-                  <div className={styles.coverWrap}>
-                    <Image src={gameData.cover_url} alt={gameData.name} fill sizes="300px" className={styles.coverImg} />
-                  </div>
-                )}
-                <h1 className={styles.gameNameDesktop}>{gameData.name}</h1>
-                {gameData.short_description && <p className={styles.taglineDesktop}>{gameData.short_description}</p>}
-              </div>
-
               {/* Follow */}
               <button
                 type="button"
@@ -430,13 +492,6 @@ export default function GamePage() {
                     </a>
                   ))}
                 </div>
-              )}
-
-              {/* Trailer */}
-              {gameData.trailer_url && (
-                <a href={gameData.trailer_url} target="_blank" rel="noopener noreferrer" className={styles.trailerLink}>
-                  ▶ Assistir trailer
-                </a>
               )}
 
               {/* Site */}
@@ -491,17 +546,6 @@ export default function GamePage() {
                   )}
                 </dl>
               </div>
-
-              {/* Tags */}
-              {gameData.tags?.length > 0 && (
-                <div className={styles.tags}>
-                  {gameData.tags.map((t) => (
-                    <Link key={t.id} href={`/jogos?search=${encodeURIComponent(t.name)}`} className={styles.tag}>
-                      {t.name}
-                    </Link>
-                  ))}
-                </div>
-              )}
 
               {/* Estúdio */}
               {gameData.studio_slug && (

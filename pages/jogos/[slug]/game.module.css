@@ -849,3 +849,230 @@
   border-color: var(--brand-primary);
   color: var(--brand-primary);
 }
+
+/* ── Hero ao estilo Steam ── */
+.gameHero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 0;
+  margin-bottom: 32px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 4px;
+  overflow: hidden;
+  background: #000;
+}
+
+@media (max-width: 860px) {
+  .gameHero {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Hero: painel esquerdo (player) ── */
+.heroMedia {
+  display: flex;
+  flex-direction: column;
+  background: #000;
+  min-height: 0;
+}
+
+.heroMediaMain {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  flex-shrink: 0;
+}
+
+.heroMediaImg {
+  object-fit: cover;
+  object-position: center;
+}
+
+.heroMediaThumbs {
+  display: flex;
+  gap: 4px;
+  padding: 6px 8px;
+  background: rgba(0, 0, 0, 0.5);
+  overflow-x: auto;
+  flex-shrink: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.heroThumb {
+  position: relative;
+  flex-shrink: 0;
+  width: 116px;
+  aspect-ratio: 16 / 9;
+  border-radius: 2px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  background: #1a1a2e;
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.12s;
+}
+
+.heroThumb:hover {
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.heroThumbActive {
+  border-color: var(--brand-primary);
+}
+
+.heroThumbImg {
+  object-fit: cover;
+}
+
+.heroThumbVideo {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* ── Hero: painel direito (info) ── */
+.heroInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: var(--bgColor-muted);
+  border-left: 1px solid var(--borderColor-muted);
+  min-width: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 860px) {
+  .heroInfo {
+    border-left: none;
+    border-top: 1px solid var(--borderColor-muted);
+  }
+}
+
+.heroCoverWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 460 / 215;
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--bgColor-inset);
+  flex-shrink: 0;
+}
+
+.heroCoverImg {
+  object-fit: cover;
+  object-position: center;
+}
+
+.heroGameName {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin: 0;
+  color: var(--fgColor-default);
+  line-height: 1.3;
+}
+
+.heroTagline {
+  font-size: 0.775rem;
+  color: var(--fgColor-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.heroDivider {
+  border: none;
+  border-top: 1px solid var(--borderColor-muted);
+  margin: 2px 0;
+}
+
+/* Meta table */
+.heroMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+
+.heroMetaRow {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.heroMetaLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fgColor-muted);
+  min-width: 100px;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
+.heroMetaValue {
+  font-size: 0.775rem;
+  color: var(--fgColor-default);
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.heroMetaLink {
+  font-size: 0.775rem;
+  color: var(--brand-primary);
+  text-decoration: none;
+  transition: color 0.12s;
+}
+
+.heroMetaLink:hover {
+  text-decoration: underline;
+}
+
+/* Tags */
+.heroTagsSection {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--borderColor-muted);
+}
+
+.heroTagsLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fgColor-muted);
+  margin: 0 0 6px;
+}
+
+.heroTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.heroTag {
+  padding: 3px 9px;
+  border-radius: 2px;
+  font-size: 0.72rem;
+  background: var(--bgColor-default);
+  color: var(--fgColor-muted);
+  border: 1px solid var(--borderColor-muted);
+  text-decoration: none;
+  transition:
+    border-color 0.12s,
+    color 0.12s;
+}
+
+.heroTag:hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}

@@ -13,6 +13,7 @@ import ContatoItem from "@/components/Portfolio/Contatos/ContatoItem";
 import StudioQrCode from "@/components/Portfolio/StudioQrCode";
 import SectionPanel from "@/components/Panels/SectionPanel/SectionPanel";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
+import GameCard from "@/components/Card/GameCard";
 import ImageCropModal from "@/components/ImageTools/ImageCropTool/ImageCropModal";
 import PropTypes from "prop-types";
 import { SITE_URL } from "@/lib/seo";
@@ -97,7 +98,7 @@ export default function StudioPage() {
       const res = await fetch(`/api/v1/studios/${slug}/games`, { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
-        setStudioGames(data.games ?? []);
+        setStudioGames(Array.isArray(data) ? data : (data.games ?? []));
       }
     } catch {
       // ignore
@@ -373,24 +374,11 @@ export default function StudioPage() {
             {/* JOGOS */}
             {studioGames.length > 0 && (
               <SectionPanel title="Jogos">
-                <ul className={styles.gameCardList}>
+                <div className={styles.gameCardList}>
                   {studioGames.map((g) => (
-                    <li key={g.id}>
-                      <Link href={`/jogos/${g.slug}`} className={styles.gameCard}>
-                        {g.cover_url ? (
-                          <img src={g.cover_url} alt={g.name} className={styles.gameCardCover} />
-                        ) : (
-                          <div className={styles.gameCardCoverPlaceholder} />
-                        )}
-                        <div className={styles.gameCardInfo}>
-                          <span className={styles.gameCardName}>{g.name}</span>
-                          {g.short_description && <span className={styles.gameCardTagline}>{g.short_description}</span>}
-                          {g.genre && <span className={styles.gameCardGenre}>{g.genre}</span>}
-                        </div>
-                      </Link>
-                    </li>
+                    <GameCard key={g.id} game={g} />
                   ))}
-                </ul>
+                </div>
               </SectionPanel>
             )}
           </main>

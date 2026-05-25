@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { Spinner } from "@primer/react";
@@ -9,6 +9,7 @@ import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
 import AddressFormFields from "@/components/Address/AddressFormFields";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
+import ImageCropModal from "@/components/ImageTools/ImageCropTool/ImageCropModal";
 import styles from "./configuracoes.module.css";
 
 const PLATFORM_OPTIONS = [
@@ -128,6 +129,12 @@ export default function ConfiguracoesPage() {
   const [loadingGameEdit, setLoadingGameEdit] = useState(false);
   const [savingGame, setSavingGame] = useState(false);
   const [editGameMsg, setEditGameMsg] = useState({ type: null, text: "" });
+
+  // Upload de imagem do jogo
+  const [gameImgCropSrc, setGameImgCropSrc] = useState(null);
+  const [pendingGameImgSlug, setPendingGameImgSlug] = useState(null);
+  const [uploadingGameImg, setUploadingGameImg] = useState(false);
+  const gameImgInputRef = useRef(null);
 
   const fetchStudio = useCallback(async () => {
     if (!slug) return;
@@ -353,6 +360,42 @@ export default function ConfiguracoesPage() {
       setEditGameMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
     } finally {
       setSavingGame(false);
+    }
+  }
+
+  function openGameImgPicker(gameSlug) {
+    setPendingGameImgSlug(gameSlug);
+    gameImgInputRef.current?.click();
+  }
+
+  function handleGameFileSelected(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    const reader = new FileReader();
+    reader.onload = () => setGameImgCropSrc(reader.result);
+    reader.readAsDataURL(file);
+  }
+
+  async function handleGameCropConfirm(blob) {
+    setGameImgCropSrc(null);
+    if (!pendingGameImgSlug) return;
+    setUploadingGameImg(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", blob);
+      formData.append("imgType", "banner");
+      const res = await fetch(`/api/v1/games/${pendingGameImgSlug}/images`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Falha no upload da imagem.");
+      fetchGames();
+    } catch {
+      setEditGameMsg({ type: "error", text: "Erro ao enviar imagem do jogo." });
+    } finally {
+      setUploadingGameImg(false);
     }
   }
 
@@ -937,6 +980,30 @@ export default function ConfiguracoesPage() {
 
                           {editGameMsg.text && <StatusMessageComponent type={editGameMsg.type} message={editGameMsg.text} />}
 
+                          {/* Imagem do card */}
+                          <div className={styles.gameImgUpload}>
+                            <span className={styles.gameImgLabel}>Imagem do card (460 × 215)</span>
+                            <div className={styles.gameImgPreviewWrap}>
+                              {games.find((g) => g.slug === editingGameSlug)?.banner_url ? (
+                                <img
+                                  src={games.find((g) => g.slug === editingGameSlug).banner_url}
+                                  alt="Card atual"
+                                  className={styles.gameImgPreview}
+                                />
+                              ) : (
+                                <div className={styles.gameImgPlaceholder}>Sem imagem</div>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              className={styles.btnOutlineSmall}
+                              onClick={() => openGameImgPicker(editingGameSlug)}
+                              disabled={uploadingGameImg}
+                            >
+                              {uploadingGameImg ? <Spinner size="small" /> : "Enviar imagem"}
+                            </button>
+                          </div>
+
                           <div className={styles.gameEditActions}>
                             <Link href={`/jogos/${g.slug}`} target="_blank" rel="noopener noreferrer" className={styles.btnOutlineSmall}>
                               Ver página
@@ -1034,6 +1101,12 @@ export default function ConfiguracoesPage() {
           )}
         </section>
       </div>
+
+      {/* Upload de imagem do jogo */}
+      <input ref={gameImgInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleGameFileSelected} />
+      {gameImgCropSrc && (
+        <ImageCropModal imageSrc={gameImgCropSrc} preset="gameCapsule" onConfirm={handleGameCropConfirm} onClose={() => setGameImgCropSrc(null)} />
+      )}
     </>
   );
 }
