@@ -141,15 +141,17 @@ async function findByOrg(orgId) {
         g.id, g.slug, g.name, g.short_description, g.genre, g.stage,
         g.release_date, g.created_at,
         ui_cover.secure_url AS cover_url,
+        ui_ban.secure_url   AS banner_url,
         COUNT(DISTINCT gf.follower_id) AS follower_count,
         ROUND(AVG(gr.rating), 1)       AS avg_rating,
         COUNT(DISTINCT gr.id)          AS review_count
       FROM games g
       LEFT JOIN uploaded_images ui_cover ON ui_cover.id = g.cover_image_id
+      LEFT JOIN uploaded_images ui_ban   ON ui_ban.id   = g.banner_image_id
       LEFT JOIN game_followers gf ON gf.game_id = g.id
       LEFT JOIN game_reviews   gr ON gr.game_id = g.id
       WHERE g.owner_org_id = $1
-      GROUP BY g.id, ui_cover.secure_url
+      GROUP BY g.id, ui_cover.secure_url, ui_ban.secure_url
       ORDER BY g.created_at DESC
     `,
     values: [orgId],

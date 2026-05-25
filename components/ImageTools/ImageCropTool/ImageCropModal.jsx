@@ -18,6 +18,8 @@ const PRESETS = {
   headerBanner: { aspect: 968 / 150, shape: 0, label: "Banner de cabeçalho" },
   // Capa do perfil de membro (PageLayout.Content width=medium → 768px - profileCard padding 16px = 752px / 150px altura)
   profileBanner: { aspect: 752 / 150, shape: 0, label: "Capa do perfil" },
+  // Imagem de card de jogo — proporção Steam header capsule (460 × 215)
+  gameCapsule: { aspect: 460 / 215, shape: 0, label: "Imagem do Card" },
 };
 
 export default function ImageCropModal({ imageSrc, preset = "avatar", onConfirm, onClose }) {
@@ -150,7 +152,7 @@ export default function ImageCropModal({ imageSrc, preset = "avatar", onConfirm,
 
 ImageCropModal.propTypes = {
   imageSrc: PropTypes.string.isRequired,
-  preset: PropTypes.oneOf(["avatar", "cover", "banner", "thumbnail", "squareLogo", "headerBanner", "profileBanner"]),
+  preset: PropTypes.oneOf(["avatar", "cover", "banner", "thumbnail", "squareLogo", "headerBanner", "profileBanner", "gameCapsule"]),
   onConfirm: PropTypes.func.isRequired,
   onClose: PropTypes.func.isRequired,
 };
