@@ -1,0 +1,347 @@
+/* ============================================================
+   Profile Settings Page — configuracoes.module.css
+   ============================================================ */
+
+.page {
+  max-width: 840px;
+  margin: 32px auto;
+  padding: 0 16px;
+}
+
+/* ---- top bar ---- */
+.topBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--fgColor-muted);
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+
+.backLink:hover {
+  color: var(--fgColor-default);
+}
+
+.pageTitle {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--fgColor-default);
+  margin: 0;
+}
+
+/* ---- tab bar ---- */
+.tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--borderColor-muted);
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.tab {
+  padding: 10px 18px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--fgColor-muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  color: var(--fgColor-default);
+}
+
+.tabActive {
+  color: var(--fgColor-default);
+  border-bottom-color: var(--brand-primary);
+  font-weight: 700;
+}
+
+/* ---- generic section ---- */
+.section {
+  background: var(--bgColor-default);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--fgColor-default);
+  margin: 0 0 16px 0;
+}
+
+/* ---- form fields ---- */
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.fieldRow {
+  display: flex;
+  gap: 12px;
+}
+
+.fieldRow > * {
+  flex: 1;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.input,
+.textarea,
+.select {
+  background: var(--bgColor-inset);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--fgColor-default);
+  font-size: 0.9rem;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+/* ---- buttons ---- */
+.btnSave {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  background: var(--brand-primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btnSave:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnOutline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: transparent;
+  color: var(--fgColor-default);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.btnOutline:hover {
+  border-color: var(--brand-hover-border);
+  background: var(--brand-hover-bg);
+}
+
+.btnDanger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: transparent;
+  color: var(--color-danger-fg, #e03939);
+  border: 1px solid var(--color-danger-fg, #e03939);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnDanger:hover {
+  background: rgba(224, 57, 57, 0.08);
+}
+
+.btnDanger:disabled,
+.btnOutline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- status message ---- */
+.statusMsg {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  margin-bottom: 16px;
+}
+
+.statusMsgOk {
+  background: rgba(63, 185, 80, 0.12);
+  color: var(--color-success-fg, #3fb950);
+  border: 1px solid rgba(63, 185, 80, 0.3);
+}
+
+.statusMsgErr {
+  background: rgba(224, 57, 57, 0.12);
+  color: var(--color-danger-fg, #e03939);
+  border: 1px solid rgba(224, 57, 57, 0.3);
+}
+
+/* ---- list items (historico, formacao, etc.) ---- */
+.itemList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.itemRow {
+  background: var(--bgColor-inset);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.itemHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  gap: 8px;
+}
+
+.itemTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemSubtitle {
+  font-size: 0.8rem;
+  color: var(--fgColor-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemMeta {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemActions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* expanded inline edit form */
+.itemEditForm {
+  border-top: 1px solid var(--borderColor-muted);
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--bgColor-default);
+}
+
+.itemEditActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ---- add item form ---- */
+.addForm {
+  background: var(--bgColor-inset);
+  border: 1px dashed var(--borderColor-muted);
+  border-radius: 8px;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.addFormTitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+  margin: 0 0 4px 0;
+}
+
+.addFormActions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ---- empty state ---- */
+.empty {
+  font-size: 0.875rem;
+  color: var(--fgColor-muted);
+  font-style: italic;
+  margin-bottom: 12px;
+}
+
+/* ---- loading/error state ---- */
+.stateBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--fgColor-muted);
+  font-size: 0.9rem;
+}
+
+/* ---- light mode overrides ---- */
+[data-color-mode="light"] .input,
+[data-color-mode="light"] .textarea,
+[data-color-mode="light"] .select {
+  background: #fff;
+}

@@ -27,7 +27,7 @@ async function postHandler(request, response) {
 
   userInputValues.user_id = targetUser.id;
   const postedContact = await profile.saveContato(userInputValues);
-  const secureOutputValues = authorization.filterOutput(postedContact, "read:profile_contact");
+  const secureOutputValues = authorization.filterOutput(userTryingToPatch, "read:profile_contact", postedContact);
   return response.status(200).json(secureOutputValues);
 }
 
