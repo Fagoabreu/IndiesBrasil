@@ -555,6 +555,7 @@ const game = {
   updateStorePages,
   saveCover,
   saveBanner,
+  findMedia,
   addMedia,
   removeMedia,
   followGame,
