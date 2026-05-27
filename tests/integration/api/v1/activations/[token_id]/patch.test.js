@@ -133,6 +133,13 @@ describe("PATCH /api/v1/activations/[token_id]", () => {
         "read:game:follow",
         "create:game:review",
         "update:game:review",
+        "read:boardgame",
+        "read:boardgame:all",
+        "create:boardgame",
+        "update:boardgame",
+        "delete:boardgame",
+        "create:boardgame:follow",
+        "read:boardgame:follow",
       ]);
     });
     test("With valid token but user already activated", async () => {
