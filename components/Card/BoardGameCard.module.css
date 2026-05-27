@@ -1,0 +1,152 @@
+/* Card */
+.card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bgColor-muted);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 0.15s,
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+
+.card:hover {
+  border-color: var(--brand-primary);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(var(--brand-rgb-primary), 0.15);
+}
+
+.cardCover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--bgColor-inset);
+  overflow: hidden;
+}
+
+.coverImg {
+  object-fit: cover;
+}
+
+.coverPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--brand-secondary) 0%, var(--brand-primary) 100%);
+  font-size: 3rem;
+  font-weight: 900;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.stageBadge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+}
+
+.stage_released {
+  background: rgba(9, 105, 218, 0.85);
+}
+.stage_crowdfunding {
+  background: rgba(26, 127, 55, 0.85);
+}
+.stage_production {
+  background: rgba(154, 103, 0, 0.85);
+}
+.stage_prototype {
+  background: rgba(130, 80, 223, 0.85);
+}
+.stage_concept {
+  background: rgba(99, 110, 123, 0.75);
+}
+.stage_cancelled {
+  background: rgba(207, 34, 46, 0.75);
+}
+
+.cardBody {
+  padding: 12px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.cardName {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--fgColor-default);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardDesc {
+  font-size: 0.78rem;
+  color: var(--fgColor-muted);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cardMeta {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.studioLabel {
+  font-size: 0.75rem;
+  color: var(--fgColor-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.categoryBadge {
+  font-size: 0.7rem;
+  padding: 2px 7px;
+  border-radius: 12px;
+  background: rgba(var(--brand-rgb-secondary), 0.12);
+  color: var(--brand-secondary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cardStats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.rating {
+  font-size: 0.8rem;
+  color: #e6a817;
+  font-weight: 700;
+}
+
+.stat {
+  font-size: 0.78rem;
+  color: var(--fgColor-muted);
+}

@@ -47,6 +47,24 @@ const STAGE_LABELS = {
   cancelled: "Cancelado",
 };
 
+const BG_CATEGORY_LABELS = {
+  board_game: "Tabuleiro",
+  card_game: "Cartas",
+  rpg: "RPG de Mesa",
+  dice_game: "Dados",
+  miniature: "Miniaturas",
+  party_game: "Party Game",
+};
+
+const BG_STAGE_LABELS = {
+  concept: "Conceito",
+  prototype: "Protótipo",
+  crowdfunding: "Financiamento Coletivo",
+  production: "Em Produção",
+  released: "Lançado",
+  cancelled: "Cancelado",
+};
+
 const EMPTY_ADDRESS = {
   street: "",
   number: "",
@@ -127,6 +145,39 @@ export default function ConfiguracoesPage() {
   const [creatingGame, setCreatingGame] = useState(false);
   const [gameMsg, setGameMsg] = useState({ type: null, text: "" });
 
+  // Jogos de Mesa
+  const [boardgames, setBoardgames] = useState([]);
+  const [newBoardgameName, setNewBoardgameName] = useState("");
+  const [newBoardgameCategory, setNewBoardgameCategory] = useState("board_game");
+  const [newBoardgameStage, setNewBoardgameStage] = useState("concept");
+  const [creatingBoardgame, setCreatingBoardgame] = useState(false);
+  const [boardgameMsg, setBoardgameMsg] = useState({ type: null, text: "" });
+
+  // Streaming
+  const [twitchChannel, setTwitchChannel] = useState("");
+  const [youtubeChannelId, setYoutubeChannelId] = useState("");
+
+  // Edição de jogo de mesa
+  const [editingBoardgameSlug, setEditingBoardgameSlug] = useState(null);
+  const [editBoardgameForm, setEditBoardgameForm] = useState(null);
+  const [loadingBoardgameEdit, setLoadingBoardgameEdit] = useState(false);
+  const [savingBoardgame, setSavingBoardgame] = useState(false);
+  const [editBoardgameMsg, setEditBoardgameMsg] = useState({ type: null, text: "" });
+
+  // Mídia de jogo de mesa
+  const [activeBgTab, setActiveBgTab] = useState("info");
+  const [bgVideos, setBgVideos] = useState([]);
+  const [bgNewVideoUrl, setBgNewVideoUrl] = useState("");
+  const [bgNewVideoCaption, setBgNewVideoCaption] = useState("");
+  const [bgAddingVideo, setBgAddingVideo] = useState(false);
+  const [bgRemovingVideoId, setBgRemovingVideoId] = useState(null);
+  const [bgVideoMsg, setBgVideoMsg] = useState({ type: null, text: "" });
+  // Upload de imagem do jogo de mesa
+  const [bgImgCropSrc, setBgImgCropSrc] = useState(null);
+  const [pendingBgImgSlug, setPendingBgImgSlug] = useState(null);
+  const [uploadingBgImg, setUploadingBgImg] = useState(false);
+  const bgImgInputRef = useRef(null);
+
   // Edição de jogo
   const [editingGameSlug, setEditingGameSlug] = useState(null);
   const [editGameForm, setEditGameForm] = useState(null);
@@ -172,6 +223,8 @@ export default function ConfiguracoesPage() {
       setHistory(data.history || "");
       setCnpj(data.cnpj || "");
       setFoundedAt(data.founded_at ? data.founded_at.slice(0, 10) : "");
+      setTwitchChannel(data.twitch_channel || "");
+      setYoutubeChannelId(data.youtube_channel_id || "");
       if (data.address) {
         setHasAddress(true);
         setAddress(addrToForm(data.address));
@@ -213,6 +266,16 @@ export default function ConfiguracoesPage() {
     }
   }, [slug]);
 
+  const fetchBoardgames = useCallback(async () => {
+    if (!slug) return;
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/boardgames`, { credentials: "include" });
+      if (res.ok) setBoardgames(await res.json());
+    } catch {
+      // silently ignore
+    }
+  }, [slug]);
+
   useEffect(() => {
     fetch("/api/v1/contact-types", { credentials: "include" })
       .then((r) => r.json())
@@ -225,7 +288,8 @@ export default function ConfiguracoesPage() {
     fetchInvites();
     fetchContacts();
     fetchGames();
-  }, [fetchStudio, fetchInvites, fetchContacts, fetchGames]);
+    fetchBoardgames();
+  }, [fetchStudio, fetchInvites, fetchContacts, fetchGames, fetchBoardgames]);
 
   function handleAddressChange(field, value) {
     setAddress((prev) => ({ ...prev, [field]: value }));
@@ -467,6 +531,82 @@ export default function ConfiguracoesPage() {
     }
   }
 
+  async function handleAddBgVideo(e) {
+    e?.preventDefault();
+    if (!bgNewVideoUrl.trim()) return;
+    setBgVideoMsg({ type: null, text: "" });
+    setBgAddingVideo(true);
+    try {
+      const res = await fetch(`/api/v1/boardgames/${editingBoardgameSlug}/media`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ url: bgNewVideoUrl.trim(), caption: bgNewVideoCaption.trim() || null }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setBgVideoMsg({ type: "error", text: data.message || "Erro ao adicionar vídeo." });
+        return;
+      }
+      setBgVideos((v) => [...v, data]);
+      setBgNewVideoUrl("");
+      setBgNewVideoCaption("");
+    } finally {
+      setBgAddingVideo(false);
+    }
+  }
+
+  async function handleRemoveBgVideo(mediaId) {
+    setBgRemovingVideoId(mediaId);
+    try {
+      const res = await fetch(`/api/v1/boardgames/${editingBoardgameSlug}/media/${mediaId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (res.ok) {
+        setBgVideos((v) => v.filter((m) => m.id !== mediaId));
+      }
+    } finally {
+      setBgRemovingVideoId(null);
+    }
+  }
+
+  function openBgImgPicker(bgSlug) {
+    setPendingBgImgSlug(bgSlug);
+    bgImgInputRef.current?.click();
+  }
+
+  function handleBgFileSelected(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    const reader = new FileReader();
+    reader.onload = () => setBgImgCropSrc(reader.result);
+    reader.readAsDataURL(file);
+  }
+
+  async function handleBgCropConfirm(blob) {
+    setBgImgCropSrc(null);
+    if (!pendingBgImgSlug) return;
+    setUploadingBgImg(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", blob);
+      formData.append("imgType", "banner");
+      const res = await fetch(`/api/v1/boardgames/${pendingBgImgSlug}/images`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Falha no upload da imagem.");
+      fetchBoardgames();
+    } catch {
+      setEditBoardgameMsg({ type: "error", text: "Erro ao enviar imagem do jogo de mesa." });
+    } finally {
+      setUploadingBgImg(false);
+    }
+  }
+
   function togglePlatform(platform) {
     setEditGameForm((f) => ({
       ...f,
@@ -490,6 +630,135 @@ export default function ConfiguracoesPage() {
 
   function removeStorePage(idx) {
     setEditGameForm((f) => ({ ...f, store_pages: f.store_pages.filter((_, i) => i !== idx) }));
+  }
+
+  async function handleCreateBoardgame(e) {
+    e.preventDefault();
+    if (!newBoardgameName.trim()) return;
+    setBoardgameMsg({ type: null, text: "" });
+    setCreatingBoardgame(true);
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/boardgames`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          name: newBoardgameName.trim(),
+          category: newBoardgameCategory,
+          stage: newBoardgameStage,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setBoardgameMsg({ type: "error", text: data.message || "Erro ao criar jogo de mesa." });
+        return;
+      }
+      setNewBoardgameName("");
+      setNewBoardgameCategory("board_game");
+      setNewBoardgameStage("concept");
+      setBoardgameMsg({ type: "success", text: `Jogo "${data.name}" criado!` });
+      fetchBoardgames();
+      handleOpenBoardgameEdit(data.slug);
+    } catch {
+      setBoardgameMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+    } finally {
+      setCreatingBoardgame(false);
+    }
+  }
+
+  async function handleOpenBoardgameEdit(bgSlug) {
+    if (editingBoardgameSlug === bgSlug) {
+      setEditingBoardgameSlug(null);
+      setEditBoardgameForm(null);
+      setEditBoardgameMsg({ type: null, text: "" });
+      setBgVideos([]);
+      setBgNewVideoUrl("");
+      setBgNewVideoCaption("");
+      setBgVideoMsg({ type: null, text: "" });
+      return;
+    }
+    setEditingBoardgameSlug(bgSlug);
+    setEditBoardgameForm(null);
+    setEditBoardgameMsg({ type: null, text: "" });
+    setBgVideos([]);
+    setBgNewVideoUrl("");
+    setBgNewVideoCaption("");
+    setBgVideoMsg({ type: null, text: "" });
+    setActiveBgTab("info");
+    setLoadingBoardgameEdit(true);
+    try {
+      const [bgRes, mediaRes] = await Promise.all([
+        fetch(`/api/v1/boardgames/${bgSlug}`, { credentials: "include" }),
+        fetch(`/api/v1/boardgames/${bgSlug}/media`, { credentials: "include" }),
+      ]);
+      const data = await bgRes.json();
+      if (!bgRes.ok) {
+        setEditBoardgameMsg({ type: "error", text: data.message || "Erro ao carregar jogo de mesa." });
+        return;
+      }
+      setEditBoardgameForm({
+        name: data.name || "",
+        short_description: data.short_description || "",
+        description: data.description || "",
+        category: data.category || "board_game",
+        stage: data.stage || "concept",
+        player_count_min: data.player_count_min ?? "",
+        player_count_max: data.player_count_max ?? "",
+        play_time_min: data.play_time_min ?? "",
+        play_time_max: data.play_time_max ?? "",
+        age_rating: data.age_rating ?? "",
+        weight: data.weight ?? "",
+        release_date: data.release_date ? data.release_date.slice(0, 10) : "",
+        website_url: data.website_url || "",
+        mechanics: data.mechanics || [],
+      });
+      if (mediaRes.ok) {
+        const mediaData = await mediaRes.json();
+        setBgVideos(mediaData.filter((m) => m.media_type === "video"));
+      }
+    } finally {
+      setLoadingBoardgameEdit(false);
+    }
+  }
+
+  async function handleSaveBoardgame(e) {
+    e.preventDefault();
+    if (!editBoardgameForm.name.trim()) return;
+    setEditBoardgameMsg({ type: null, text: "" });
+    setSavingBoardgame(true);
+    try {
+      const payload = {
+        ...editBoardgameForm,
+        name: editBoardgameForm.name.trim(),
+        player_count_min: editBoardgameForm.player_count_min === "" ? null : Number(editBoardgameForm.player_count_min),
+        player_count_max: editBoardgameForm.player_count_max === "" ? null : Number(editBoardgameForm.player_count_max),
+        play_time_min: editBoardgameForm.play_time_min === "" ? null : Number(editBoardgameForm.play_time_min),
+        play_time_max: editBoardgameForm.play_time_max === "" ? null : Number(editBoardgameForm.play_time_max),
+        age_rating: editBoardgameForm.age_rating === "" ? null : Number(editBoardgameForm.age_rating),
+        weight: editBoardgameForm.weight === "" ? null : Number(editBoardgameForm.weight),
+        mechanics: editBoardgameForm.mechanics.filter(Boolean),
+      };
+      const res = await fetch(`/api/v1/boardgames/${editingBoardgameSlug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setEditBoardgameMsg({ type: "error", text: data.message || "Erro ao salvar jogo de mesa." });
+        return;
+      }
+      setEditBoardgameMsg({ type: "success", text: "Jogo de mesa atualizado com sucesso!" });
+      fetchBoardgames();
+      if (data.slug && data.slug !== editingBoardgameSlug) {
+        setEditingBoardgameSlug(data.slug);
+      }
+    } catch {
+      setEditBoardgameMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+    } finally {
+      setSavingBoardgame(false);
+    }
   }
 
   async function handleRemoveMember(username) {
@@ -588,6 +857,8 @@ export default function ConfiguracoesPage() {
         cnpj: cnpj.trim() || null,
         founded_at: foundedAt || null,
         address: hasAddress && address.city && address.state ? address : null,
+        twitch_channel: twitchChannel.trim() || null,
+        youtube_channel_id: youtubeChannelId.trim() || null,
       };
 
       const res = await fetch(`/api/v1/studios/${slug}`, {
@@ -638,6 +909,8 @@ export default function ConfiguracoesPage() {
             { id: "team", label: "Equipe" },
             { id: "contacts", label: "Contatos" },
             { id: "games", label: "Jogos" },
+            { id: "boardgames", label: "Jogos de Mesa" },
+            { id: "streaming", label: "Streaming" },
           ].map((t) => (
             <button
               key={t.id}
@@ -1244,6 +1517,359 @@ export default function ConfiguracoesPage() {
           </section>
         )}
 
+        {/* JOGOS DE MESA */}
+        {activeTab === "boardgames" && (
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Jogos de Mesa</h2>
+
+            {boardgames.length > 0 && (
+              <ul className={styles.gameList}>
+                {boardgames.map((bg) => (
+                  <li key={bg.id} className={styles.gameListItem}>
+                    <div className={styles.gameListRow}>
+                      <Link href={`/jogos-de-mesa/${bg.slug}`} className={styles.gameLink} target="_blank" rel="noopener noreferrer">
+                        {bg.name}
+                      </Link>
+                      <span className={styles.gameStageBadge}>{BG_STAGE_LABELS[bg.stage] ?? bg.stage}</span>
+                      <span className={styles.gameStageBadge}>{BG_CATEGORY_LABELS[bg.category] ?? bg.category}</span>
+                      <button
+                        type="button"
+                        className={`${styles.btnEditGame} ${editingBoardgameSlug === bg.slug ? styles.btnEditGameActive : ""}`}
+                        onClick={() => handleOpenBoardgameEdit(bg.slug)}
+                      >
+                        {editingBoardgameSlug === bg.slug ? "Fechar" : "Editar"}
+                      </button>
+                    </div>
+
+                    {editingBoardgameSlug === bg.slug && (
+                      <div className={styles.gameEditPanel}>
+                        {loadingBoardgameEdit && (
+                          <div className={styles.gameEditLoading}>
+                            <Spinner size="small" />
+                          </div>
+                        )}
+                        {!loadingBoardgameEdit && editBoardgameForm && (
+                          <form onSubmit={handleSaveBoardgame} className={styles.gameEditForm}>
+                            <div className={styles.gameEditTabs}>
+                              {[
+                                { id: "info", label: "Informações" },
+                                { id: "media", label: "Mídia" },
+                              ].map((t) => (
+                                <button
+                                  key={t.id}
+                                  type="button"
+                                  className={`${styles.gameEditTab} ${activeBgTab === t.id ? styles.gameEditTabActive : ""}`}
+                                  onClick={() => setActiveBgTab(t.id)}
+                                >
+                                  {t.label}
+                                </button>
+                              ))}
+                            </div>
+
+                            {activeBgTab === "info" && (
+                              <div className={styles.gameEditGrid}>
+                                <label className={styles.fieldLabel}>
+                                  <span>Nome *</span>
+                                  <input
+                                    type="text"
+                                    className={styles.input}
+                                    value={editBoardgameForm.name}
+                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, name: e.target.value }))}
+                                    maxLength={255}
+                                    required
+                                  />
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>Tagline</span>
+                                  <input
+                                    type="text"
+                                    className={styles.input}
+                                    placeholder="Frase curta sobre o jogo"
+                                    value={editBoardgameForm.short_description}
+                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, short_description: e.target.value }))}
+                                    maxLength={255}
+                                  />
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>Categoria</span>
+                                  <select
+                                    className={styles.input}
+                                    value={editBoardgameForm.category}
+                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, category: e.target.value }))}
+                                  >
+                                    {Object.entries(BG_CATEGORY_LABELS).map(([k, v]) => (
+                                      <option key={k} value={k}>
+                                        {v}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>Fase</span>
+                                  <select
+                                    className={styles.input}
+                                    value={editBoardgameForm.stage}
+                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, stage: e.target.value }))}
+                                  >
+                                    {Object.entries(BG_STAGE_LABELS).map(([k, v]) => (
+                                      <option key={k} value={k}>
+                                        {v}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>Jogadores mín.</span>
+                                  <input
+                                    type="number"
+                                    className={styles.input}
+                                    min="1"
+                                    value={editBoardgameForm.player_count_min}
+                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, player_count_min: e.target.value }))}
+                                  />
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>Jogadores máx.</span>
+                                  <input
+                                    type="number"
+                                    className={styles.input}
+                                    min="1"
+                                    value={editBoardgameForm.player_count_max}
+                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, player_count_max: e.target.value }))}
+                                  />
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>Duração mín. (min)</span>
+                                  <input
+                                    type="number"
+                                    className={styles.input}
+                                    min="1"
+                                    value={editBoardgameForm.play_time_min}
+                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, play_time_min: e.target.value }))}
+                                  />
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>Duração máx. (min)</span>
+                                  <input
+                                    type="number"
+                                    className={styles.input}
+                                    min="1"
+                                    value={editBoardgameForm.play_time_max}
+                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, play_time_max: e.target.value }))}
+                                  />
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>Idade mínima</span>
+                                  <input
+                                    type="number"
+                                    className={styles.input}
+                                    min="0"
+                                    max="99"
+                                    value={editBoardgameForm.age_rating}
+                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, age_rating: e.target.value }))}
+                                  />
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>Peso (1.0 – 5.0)</span>
+                                  <input
+                                    type="number"
+                                    className={styles.input}
+                                    min="1"
+                                    max="5"
+                                    step="0.1"
+                                    value={editBoardgameForm.weight}
+                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, weight: e.target.value }))}
+                                  />
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>Data de lançamento</span>
+                                  <input
+                                    type="date"
+                                    className={styles.input}
+                                    value={editBoardgameForm.release_date}
+                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, release_date: e.target.value }))}
+                                  />
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>Site oficial</span>
+                                  <input
+                                    type="url"
+                                    className={styles.input}
+                                    placeholder="https://"
+                                    value={editBoardgameForm.website_url}
+                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, website_url: e.target.value }))}
+                                    maxLength={512}
+                                  />
+                                </label>
+
+                                <label className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}>
+                                  <span>Sobre o jogo</span>
+                                  <textarea
+                                    className={`${styles.input} ${styles.textarea}`}
+                                    placeholder="Descreva o jogo em detalhes..."
+                                    value={editBoardgameForm.description}
+                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, description: e.target.value }))}
+                                    rows={4}
+                                  />
+                                </label>
+                              </div>
+                            )}
+
+                            {activeBgTab === "media" && (
+                              <>
+                                {/* Vídeos */}
+                                <fieldset className={styles.fieldset}>
+                                  <legend className={styles.fieldsetLegend}>Vídeos</legend>
+                                  {bgVideos.length > 0 && (
+                                    <ul className={styles.videoList}>
+                                      {bgVideos.map((v) => (
+                                        <li key={v.id} className={styles.videoItem}>
+                                          <span className={styles.videoUrl} title={v.url}>
+                                            {v.caption || v.url}
+                                          </span>
+                                          <button
+                                            type="button"
+                                            className={styles.btnRemoveStore}
+                                            aria-label="Remover vídeo"
+                                            disabled={bgRemovingVideoId === v.id}
+                                            onClick={() => handleRemoveBgVideo(v.id)}
+                                          >
+                                            {bgRemovingVideoId === v.id ? <Spinner size="small" /> : "✕"}
+                                          </button>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  )}
+                                  <div className={styles.videoAddForm}>
+                                    <input
+                                      type="url"
+                                      className={styles.input}
+                                      placeholder="URL do vídeo (YouTube, Vimeo…)"
+                                      value={bgNewVideoUrl}
+                                      onChange={(e) => setBgNewVideoUrl(e.target.value)}
+                                      maxLength={512}
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                          e.preventDefault();
+                                          if (!bgAddingVideo && bgNewVideoUrl.trim()) handleAddBgVideo(e);
+                                        }
+                                      }}
+                                    />
+                                    <input
+                                      type="text"
+                                      className={styles.input}
+                                      placeholder="Legenda (opcional)"
+                                      value={bgNewVideoCaption}
+                                      onChange={(e) => setBgNewVideoCaption(e.target.value)}
+                                      maxLength={120}
+                                    />
+                                    <button
+                                      type="button"
+                                      className={styles.btnAddStore}
+                                      disabled={bgAddingVideo || !bgNewVideoUrl.trim()}
+                                      onClick={handleAddBgVideo}
+                                    >
+                                      {bgAddingVideo ? <Spinner size="small" /> : "+ Adicionar vídeo"}
+                                    </button>
+                                  </div>
+                                  {bgVideoMsg.text && <StatusMessageComponent type={bgVideoMsg.type} message={bgVideoMsg.text} />}
+                                </fieldset>
+
+                                {/* Imagem do card */}
+                                <div className={styles.gameImgUpload}>
+                                  <span className={styles.gameImgLabel}>Imagem do card (460 × 215)</span>
+                                  <div className={styles.gameImgPreviewWrap}>
+                                    {boardgames.find((b) => b.slug === editingBoardgameSlug)?.banner_url ? (
+                                      <img
+                                        src={boardgames.find((b) => b.slug === editingBoardgameSlug).banner_url}
+                                        alt="Card atual"
+                                        className={styles.gameImgPreview}
+                                      />
+                                    ) : (
+                                      <div className={styles.gameImgPlaceholder}>Sem imagem</div>
+                                    )}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className={styles.btnOutlineSmall}
+                                    onClick={() => openBgImgPicker(editingBoardgameSlug)}
+                                    disabled={uploadingBgImg}
+                                  >
+                                    {uploadingBgImg ? <Spinner size="small" /> : "Enviar imagem"}
+                                  </button>
+                                </div>
+                              </>
+                            )}
+
+                            {editBoardgameMsg.text && <StatusMessageComponent type={editBoardgameMsg.type} message={editBoardgameMsg.text} />}
+
+                            <div className={styles.gameEditActions}>
+                              <Link href={`/jogos-de-mesa/${bg.slug}`} target="_blank" rel="noopener noreferrer" className={styles.btnOutlineSmall}>
+                                Ver página
+                              </Link>
+                              <button type="submit" className={styles.btnSave} disabled={savingBoardgame || !editBoardgameForm.name.trim()}>
+                                {savingBoardgame ? <Spinner size="small" /> : "Salvar alterações"}
+                              </button>
+                            </div>
+                          </form>
+                        )}
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {/* Criar novo jogo de mesa */}
+            <form onSubmit={handleCreateBoardgame} className={styles.gameForm}>
+              <p className={styles.pendingTitle}>Criar novo jogo de mesa</p>
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="Nome do jogo"
+                value={newBoardgameName}
+                onChange={(e) => setNewBoardgameName(e.target.value)}
+                maxLength={255}
+                required
+              />
+              <div className={styles.gameFormRow}>
+                <select className={styles.input} value={newBoardgameCategory} onChange={(e) => setNewBoardgameCategory(e.target.value)}>
+                  {Object.entries(BG_CATEGORY_LABELS).map(([k, v]) => (
+                    <option key={k} value={k}>
+                      {v}
+                    </option>
+                  ))}
+                </select>
+                <select className={styles.input} value={newBoardgameStage} onChange={(e) => setNewBoardgameStage(e.target.value)}>
+                  {Object.entries(BG_STAGE_LABELS)
+                    .filter(([k]) => k !== "cancelled")
+                    .map(([k, v]) => (
+                      <option key={k} value={k}>
+                        {v}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              <button type="submit" className={styles.btnSave} disabled={creatingBoardgame || !newBoardgameName.trim()}>
+                {creatingBoardgame ? <Spinner size="small" /> : "Criar jogo de mesa"}
+              </button>
+            </form>
+
+            {boardgameMsg.text && <StatusMessageComponent type={boardgameMsg.type} message={boardgameMsg.text} />}
+          </section>
+        )}
+
         {/* CONVIDAR MEMBROS */}
         {activeTab === "team" && (
           <section className={styles.section}>
@@ -1293,6 +1919,90 @@ export default function ConfiguracoesPage() {
       <input ref={gameImgInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleGameFileSelected} />
       {gameImgCropSrc && (
         <ImageCropModal imageSrc={gameImgCropSrc} preset="gameCapsule" onConfirm={handleGameCropConfirm} onClose={() => setGameImgCropSrc(null)} />
+      )}
+
+      {/* Upload de imagem do jogo de mesa */}
+      <input ref={bgImgInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleBgFileSelected} />
+      {bgImgCropSrc && (
+        <ImageCropModal imageSrc={bgImgCropSrc} preset="gameCapsule" onConfirm={handleBgCropConfirm} onClose={() => setBgImgCropSrc(null)} />
+      )}
+
+      {/* ---- STREAMING TAB ---- */}
+      {activeTab === "streaming" && (
+        <>
+          {statusMsg.text && <StatusMessageComponent type={statusMsg.type} message={statusMsg.text} />}
+          <form onSubmit={handleSubmit} className={styles.form}>
+            <section className={styles.section}>
+              <h2 className={styles.sectionTitle}>Canais de Streaming</h2>
+              <p className={styles.fieldHint}>
+                Cadastre o canal do estúdio na Twitch e/ou YouTube. Quando o canal estiver ao vivo, ele aparecerá em destaque na{" "}
+                <a href="/streams" className={styles.inlineLink} target="_blank" rel="noopener noreferrer">
+                  página de streams
+                </a>
+                .
+              </p>
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="cfg-twitch">
+                  Canal da Twitch
+                </label>
+                <div className={styles.inputWithPrefix}>
+                  <span className={styles.inputPrefix}>twitch.tv/</span>
+                  <input
+                    id="cfg-twitch"
+                    type="text"
+                    className={styles.input}
+                    value={twitchChannel}
+                    onChange={(e) => setTwitchChannel(e.target.value.replace(/\s/g, "").replace(/^https?:\/\/(www\.)?twitch\.tv\//i, ""))}
+                    maxLength={100}
+                    placeholder="seucanal"
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                </div>
+                {twitchChannel && (
+                  <a href={`https://twitch.tv/${twitchChannel}`} target="_blank" rel="noopener noreferrer" className={styles.fieldLink}>
+                    Abrir canal ↗
+                  </a>
+                )}
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="cfg-youtube">
+                  Canal do YouTube (ID)
+                </label>
+                <input
+                  id="cfg-youtube"
+                  type="text"
+                  className={styles.input}
+                  value={youtubeChannelId}
+                  onChange={(e) => setYoutubeChannelId(e.target.value.trim())}
+                  maxLength={100}
+                  placeholder="UCxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+                <p className={styles.fieldHint}>
+                  O ID do canal começa com <code>UC</code>. Você pode encontrá-lo em{" "}
+                  <a href="https://www.youtube.com/account_advanced" target="_blank" rel="noopener noreferrer" className={styles.inlineLink}>
+                    youtube.com/account_advanced
+                  </a>
+                  .
+                </p>
+                {youtubeChannelId && (
+                  <a href={`https://youtube.com/channel/${youtubeChannelId}`} target="_blank" rel="noopener noreferrer" className={styles.fieldLink}>
+                    Abrir canal ↗
+                  </a>
+                )}
+              </div>
+            </section>
+
+            <div className={styles.formActions}>
+              <button type="submit" className={styles.btnSave} disabled={saving}>
+                {saving ? <Spinner size="small" /> : "Salvar alterações"}
+              </button>
+            </div>
+          </form>
+        </>
       )}
     </>
   );

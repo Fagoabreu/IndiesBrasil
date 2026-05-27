@@ -414,6 +414,10 @@
   margin-top: 2px;
 }
 
+.fieldLabelFull {
+  grid-column: 1 / -1;
+}
+
 .textarea {
   resize: vertical;
   min-height: 100px;
@@ -696,4 +700,63 @@
   color: var(--brand-primary);
   border-bottom-color: var(--brand-primary);
   font-weight: 700;
+}
+
+/* ---- Streaming tab ---- */
+.inputWithPrefix {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 6px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.inputWithPrefix:focus-within {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb-primary), 0.15);
+}
+
+.inputWithPrefix .input {
+  border: none;
+  border-radius: 0;
+  flex: 1;
+}
+
+.inputWithPrefix .input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.inputPrefix {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  background: var(--bgColor-muted);
+  border-right: 1px solid var(--borderColor-default);
+  color: var(--fgColor-muted);
+  font-size: 0.82rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.fieldLink {
+  display: inline-block;
+  font-size: 0.78rem;
+  color: var(--brand-primary);
+  text-decoration: none;
+  margin-top: 4px;
+}
+
+.fieldLink:hover {
+  text-decoration: underline;
+}
+
+.inlineLink {
+  color: var(--brand-primary);
+  text-decoration: underline;
+}
+
+.inlineLink:hover {
+  color: var(--brand-secondary);
 }

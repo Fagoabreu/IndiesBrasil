@@ -420,6 +420,40 @@ async function isFollowing(gameId, userId) {
   return result.rows.length > 0;
 }
 
+async function findFollowedBy(userId) {
+  const result = await database.query({
+    text: `
+      SELECT
+        g.id, g.slug, g.name, g.short_description, g.genre, g.stage,
+        g.release_date, g.created_at,
+        ui_cover.secure_url  AS cover_url,
+        ui_ban.secure_url    AS banner_url,
+        o.name               AS studio_name,
+        o.slug               AS studio_slug,
+        ui_logo.secure_url   AS studio_logo_url,
+        COUNT(DISTINCT gf.follower_id) AS follower_count,
+        ROUND(AVG(gr.rating), 1)       AS avg_rating,
+        COUNT(DISTINCT gr.id)          AS review_count,
+        ARRAY_AGG(DISTINCT gp.platform) FILTER (WHERE gp.platform IS NOT NULL) AS platforms
+      FROM game_followers ugf
+      JOIN games g           ON g.id = ugf.game_id
+      LEFT JOIN uploaded_images ui_cover ON ui_cover.id = g.cover_image_id
+      LEFT JOIN uploaded_images ui_ban   ON ui_ban.id   = g.banner_image_id
+      LEFT JOIN organizations o          ON o.id = g.owner_org_id
+      LEFT JOIN uploaded_images ui_logo  ON ui_logo.id  = o.img
+      LEFT JOIN game_followers gf        ON gf.game_id  = g.id
+      LEFT JOIN game_reviews   gr        ON gr.game_id  = g.id
+      LEFT JOIN game_platforms gp        ON gp.game_id  = g.id
+      WHERE ugf.follower_id = $1
+      GROUP BY g.id, ui_cover.secure_url, ui_ban.secure_url,
+               o.name, o.slug, ui_logo.secure_url
+      ORDER BY g.created_at DESC
+    `,
+    values: [userId],
+  });
+  return result.rows;
+}
+
 /* =========================================================
  * Reviews
  * ========================================================= */
@@ -561,6 +595,7 @@ const game = {
   followGame,
   unfollowGame,
   isFollowing,
+  findFollowedBy,
   createReview,
   updateReview,
   getReviews,

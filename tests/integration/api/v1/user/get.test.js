@@ -84,6 +84,13 @@ describe("GET /api/v1/user", () => {
           "read:game:follow",
           "create:game:review",
           "update:game:review",
+          "read:boardgame",
+          "read:boardgame:all",
+          "create:boardgame",
+          "update:boardgame",
+          "delete:boardgame",
+          "create:boardgame:follow",
+          "read:boardgame:follow",
         ],
       });
       expect(uuidVersion(responseBody.id)).toBe(4);
@@ -248,6 +255,13 @@ describe("GET /api/v1/user", () => {
           "read:game:follow",
           "create:game:review",
           "update:game:review",
+          "read:boardgame",
+          "read:boardgame:all",
+          "create:boardgame",
+          "update:boardgame",
+          "delete:boardgame",
+          "create:boardgame:follow",
+          "read:boardgame:follow",
         ],
       });
       expect(uuidVersion(responseBody.id)).toBe(4);
