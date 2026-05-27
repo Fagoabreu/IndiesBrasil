@@ -42,6 +42,9 @@ export default function LeftSidebarComponent() {
         <NavList.Item as={Link} href="/jogos-de-mesa" aria-current={router.pathname.startsWith("/jogos-de-mesa")}>
           Jogos de Mesa
         </NavList.Item>
+        <NavList.Item as={Link} href="/streams" aria-current={router.pathname.startsWith("/streams")}>
+          Stream
+        </NavList.Item>
 
         {user?.features.includes("read:admin") && (
           <NavList.Group>

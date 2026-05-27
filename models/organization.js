@@ -167,7 +167,7 @@ async function update(slug, data) {
   const values = [];
   let idx = 1;
 
-  const updatable = ["name", "description", "history", "pitch", "cnpj", "founded_at", "banner_video_url"];
+  const updatable = ["name", "description", "history", "pitch", "cnpj", "founded_at", "banner_video_url", "twitch_channel", "youtube_channel_id"];
   for (const key of updatable) {
     if (key in data) {
       fields.push(`${key} = $${idx++}`);

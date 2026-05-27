@@ -153,6 +153,10 @@ export default function ConfiguracoesPage() {
   const [creatingBoardgame, setCreatingBoardgame] = useState(false);
   const [boardgameMsg, setBoardgameMsg] = useState({ type: null, text: "" });
 
+  // Streaming
+  const [twitchChannel, setTwitchChannel] = useState("");
+  const [youtubeChannelId, setYoutubeChannelId] = useState("");
+
   // Edição de jogo de mesa
   const [editingBoardgameSlug, setEditingBoardgameSlug] = useState(null);
   const [editBoardgameForm, setEditBoardgameForm] = useState(null);
@@ -219,6 +223,8 @@ export default function ConfiguracoesPage() {
       setHistory(data.history || "");
       setCnpj(data.cnpj || "");
       setFoundedAt(data.founded_at ? data.founded_at.slice(0, 10) : "");
+      setTwitchChannel(data.twitch_channel || "");
+      setYoutubeChannelId(data.youtube_channel_id || "");
       if (data.address) {
         setHasAddress(true);
         setAddress(addrToForm(data.address));
@@ -851,6 +857,8 @@ export default function ConfiguracoesPage() {
         cnpj: cnpj.trim() || null,
         founded_at: foundedAt || null,
         address: hasAddress && address.city && address.state ? address : null,
+        twitch_channel: twitchChannel.trim() || null,
+        youtube_channel_id: youtubeChannelId.trim() || null,
       };
 
       const res = await fetch(`/api/v1/studios/${slug}`, {
@@ -902,6 +910,7 @@ export default function ConfiguracoesPage() {
             { id: "contacts", label: "Contatos" },
             { id: "games", label: "Jogos" },
             { id: "boardgames", label: "Jogos de Mesa" },
+            { id: "streaming", label: "Streaming" },
           ].map((t) => (
             <button
               key={t.id}
@@ -1916,6 +1925,84 @@ export default function ConfiguracoesPage() {
       <input ref={bgImgInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleBgFileSelected} />
       {bgImgCropSrc && (
         <ImageCropModal imageSrc={bgImgCropSrc} preset="gameCapsule" onConfirm={handleBgCropConfirm} onClose={() => setBgImgCropSrc(null)} />
+      )}
+
+      {/* ---- STREAMING TAB ---- */}
+      {activeTab === "streaming" && (
+        <>
+          {statusMsg.text && <StatusMessageComponent type={statusMsg.type} message={statusMsg.text} />}
+          <form onSubmit={handleSubmit} className={styles.form}>
+            <section className={styles.section}>
+              <h2 className={styles.sectionTitle}>Canais de Streaming</h2>
+              <p className={styles.fieldHint}>
+                Cadastre o canal do estúdio na Twitch e/ou YouTube. Quando o canal estiver ao vivo, ele aparecerá em destaque na{" "}
+                <a href="/streams" className={styles.inlineLink} target="_blank" rel="noopener noreferrer">
+                  página de streams
+                </a>
+                .
+              </p>
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="cfg-twitch">
+                  Canal da Twitch
+                </label>
+                <div className={styles.inputWithPrefix}>
+                  <span className={styles.inputPrefix}>twitch.tv/</span>
+                  <input
+                    id="cfg-twitch"
+                    type="text"
+                    className={styles.input}
+                    value={twitchChannel}
+                    onChange={(e) => setTwitchChannel(e.target.value.replace(/\s/g, "").replace(/^https?:\/\/(www\.)?twitch\.tv\//i, ""))}
+                    maxLength={100}
+                    placeholder="seucanal"
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                </div>
+                {twitchChannel && (
+                  <a href={`https://twitch.tv/${twitchChannel}`} target="_blank" rel="noopener noreferrer" className={styles.fieldLink}>
+                    Abrir canal ↗
+                  </a>
+                )}
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="cfg-youtube">
+                  Canal do YouTube (ID)
+                </label>
+                <input
+                  id="cfg-youtube"
+                  type="text"
+                  className={styles.input}
+                  value={youtubeChannelId}
+                  onChange={(e) => setYoutubeChannelId(e.target.value.trim())}
+                  maxLength={100}
+                  placeholder="UCxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+                <p className={styles.fieldHint}>
+                  O ID do canal começa com <code>UC</code>. Você pode encontrá-lo em{" "}
+                  <a href="https://www.youtube.com/account_advanced" target="_blank" rel="noopener noreferrer" className={styles.inlineLink}>
+                    youtube.com/account_advanced
+                  </a>
+                  .
+                </p>
+                {youtubeChannelId && (
+                  <a href={`https://youtube.com/channel/${youtubeChannelId}`} target="_blank" rel="noopener noreferrer" className={styles.fieldLink}>
+                    Abrir canal ↗
+                  </a>
+                )}
+              </div>
+            </section>
+
+            <div className={styles.formActions}>
+              <button type="submit" className={styles.btnSave} disabled={saving}>
+                {saving ? <Spinner size="small" /> : "Salvar alterações"}
+              </button>
+            </div>
+          </form>
+        </>
       )}
     </>
   );
