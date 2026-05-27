@@ -35,8 +35,12 @@ export default function LeftSidebarComponent() {
         <NavList.Item as={Link} href="/estudios" aria-current={router.pathname.startsWith("/estudios")}>
           Estúdios
         </NavList.Item>
-        <NavList.Item as={Link} href="/jogos" aria-current={router.pathname.startsWith("/jogos")}>
+        <NavList.Item as={Link} href="/jogos" aria-current={router.pathname === "/jogos" || router.pathname.startsWith("/jogos/")}>
           Jogos
+        </NavList.Item>
+
+        <NavList.Item as={Link} href="/jogos-de-mesa" aria-current={router.pathname.startsWith("/jogos-de-mesa")}>
+          Jogos de Mesa
         </NavList.Item>
 
         {user?.features.includes("read:admin") && (

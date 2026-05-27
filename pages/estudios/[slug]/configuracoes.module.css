@@ -414,6 +414,10 @@
   margin-top: 2px;
 }
 
+.fieldLabelFull {
+  grid-column: 1 / -1;
+}
+
 .textarea {
   resize: vertical;
   min-height: 100px;

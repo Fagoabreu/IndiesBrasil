@@ -80,6 +80,8 @@ function injectAnonymousUser(request) {
       "read:studio",
       "read:game",
       "read:game:all",
+      "read:boardgame",
+      "read:boardgame:all",
     ],
   };
   request.context = {
