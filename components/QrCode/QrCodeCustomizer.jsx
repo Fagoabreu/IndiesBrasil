@@ -28,6 +28,7 @@ export default function QrCodeCustomizer({
   onValueChange,
   settings = DEFAULT_QR_SETTINGS,
   onChange,
+  onLogoFileChange,
   showUrlInput = false,
   showDownload = false,
   size = 200,
@@ -42,6 +43,7 @@ export default function QrCodeCustomizer({
   function handleLogoChange(e) {
     const file = e.target.files?.[0];
     if (!file) return;
+    onLogoFileChange?.(file);
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") update("logoURL", reader.result);
@@ -156,6 +158,7 @@ QrCodeCustomizer.propTypes = {
     logoSize: PropTypes.number,
   }),
   onChange: PropTypes.func,
+  onLogoFileChange: PropTypes.func,
   showUrlInput: PropTypes.bool,
   showDownload: PropTypes.bool,
   size: PropTypes.number,

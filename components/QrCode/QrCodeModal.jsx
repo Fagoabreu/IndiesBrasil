@@ -15,18 +15,27 @@ import styles from "./QrCodeModal.module.css";
  */
 export default function QrCodeModal({ value, initialSettings, onSave, onClose }) {
   const [settings, setSettings] = useState(initialSettings ?? DEFAULT_QR_SETTINGS);
+  const [logoFile, setLogoFile] = useState(null);
 
   return (
     <Dialog onDismiss={onClose} onClose={onClose} aria-labelledby="qr-modal-title" wide>
       <Dialog.Header id="qr-modal-title">Personalizar QR Code</Dialog.Header>
 
       <div className={styles.body}>
-        <QrCodeCustomizer value={value} settings={settings} onChange={setSettings} showUrlInput={false} showDownload={false} size={170} />
+        <QrCodeCustomizer
+          value={value}
+          settings={settings}
+          onChange={setSettings}
+          onLogoFileChange={setLogoFile}
+          showUrlInput={false}
+          showDownload={false}
+          size={170}
+        />
       </div>
 
       <Dialog.Footer>
         <Button onClick={onClose}>Cancelar</Button>
-        <Button variant="primary" onClick={() => onSave(settings)}>
+        <Button variant="primary" onClick={() => onSave(settings, logoFile)}>
           Salvar
         </Button>
       </Dialog.Footer>

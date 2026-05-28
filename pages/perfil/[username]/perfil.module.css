@@ -199,6 +199,59 @@
   }
 }
 
+/* ===== TABS DO PERFIL ===== */
+
+.profileTabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--borderColor-muted);
+  margin: 16px 20px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profileTab {
+  padding: 10px 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--fgColor-muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+  margin-bottom: -1px;
+}
+
+.profileTab:hover {
+  color: var(--fgColor-default);
+}
+
+.profileTab[aria-selected="true"] {
+  color: var(--brand-primary);
+  border-bottom-color: var(--brand-primary);
+  font-weight: 600;
+}
+
+/* ===== FEED DE POSTS DO PERFIL ===== */
+
+.postsFeed {
+  padding: 16px 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.postsState {
+  text-align: center;
+  padding: 40px 24px;
+  color: var(--fgColor-muted);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
 /* ===== BOTÃO DE EXPORTAR PDF ===== */
 
 .profileQrWrapper {

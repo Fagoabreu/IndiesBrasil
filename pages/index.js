@@ -11,8 +11,7 @@ import TyperwriterComponent from "@/components/TypeWriter/TyperwriterComponent";
 import { SITE_URL, SITE_NAME } from "@/lib/seo";
 
 const PAGE_TITLE = "Indies Brasil — Rede Social de Desenvolvedores Indie Brasileiros";
-const PAGE_DESCRIPTION =
-  "Conecte-se com desenvolvedores, artistas e gamers da cena indie do Brasil. Portfólio profissional, feed social, sistema de tags e ferramentas para criadores de jogos.";
+const PAGE_DESCRIPTION = "Conecte-se com desenvolvedores, artistas e gamers, no coop chegaremos mais longe.";
 const PAGE_URL = SITE_URL;
 
 const JSON_LD = {
