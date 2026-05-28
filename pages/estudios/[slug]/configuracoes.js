@@ -1913,6 +1913,89 @@ export default function ConfiguracoesPage() {
             )}
           </section>
         )}
+
+        {/* ---- STREAMING TAB ---- */}
+        {activeTab === "streaming" && (
+          <>
+            {statusMsg.text && <StatusMessageComponent type={statusMsg.type} message={statusMsg.text} />}
+            <form onSubmit={handleSubmit} className={styles.form}>
+              <section className={styles.section}>
+                <h2 className={styles.sectionTitle}>Canais de Streaming</h2>
+                <p className={styles.fieldHint}>
+                  Cadastre o canal do estúdio na Twitch e/ou YouTube. Quando o canal estiver ao vivo, ele aparecerá em destaque na{" "}
+                  <a href="/streams" className={styles.inlineLink} target="_blank" rel="noopener noreferrer">
+                    página de streams
+                  </a>
+                  .
+                </p>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="cfg-twitch">
+                    Canal da Twitch
+                  </label>
+                  <div className={styles.inputWithPrefix}>
+                    <span className={styles.inputPrefix}>twitch.tv/</span>
+                    <input
+                      id="cfg-twitch"
+                      type="text"
+                      className={styles.input}
+                      value={twitchChannel}
+                      onChange={(e) => setTwitchChannel(e.target.value.replace(/\s/g, "").replace(/^https?:\/\/(www\.)?twitch\.tv\//i, ""))}
+                      maxLength={100}
+                      placeholder="seucanal"
+                      autoComplete="off"
+                      spellCheck={false}
+                    />
+                  </div>
+                  {twitchChannel && (
+                    <a href={`https://twitch.tv/${twitchChannel}`} target="_blank" rel="noopener noreferrer" className={styles.fieldLink}>
+                      Abrir canal ↗
+                    </a>
+                  )}
+                </div>
+
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="cfg-youtube">
+                    Canal do YouTube (ID)
+                  </label>
+                  <input
+                    id="cfg-youtube"
+                    type="text"
+                    className={styles.input}
+                    value={youtubeChannelId}
+                    onChange={(e) => setYoutubeChannelId(e.target.value.trim())}
+                    maxLength={100}
+                    placeholder="UCxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                  <p className={styles.fieldHint}>
+                    O ID do canal começa com <code>UC</code>. Você pode encontrá-lo em{" "}
+                    <a href="https://www.youtube.com/account_advanced" target="_blank" rel="noopener noreferrer" className={styles.inlineLink}>
+                      youtube.com/account_advanced
+                    </a>
+                    .
+                  </p>
+                  {youtubeChannelId && (
+                    <a
+                      href={`https://youtube.com/channel/${youtubeChannelId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.fieldLink}
+                    >
+                      Abrir canal ↗
+                    </a>
+                  )}
+                </div>
+              </section>
+
+              <div className={styles.formActions}>
+                <button type="submit" className={styles.btnSave} disabled={saving}>
+                  {saving ? <Spinner size="small" /> : "Salvar alterações"}
+                </button>
+              </div>
+            </form>
+          </>
+        )}
       </div>
 
       {/* Upload de imagem do jogo */}
@@ -1925,84 +2008,6 @@ export default function ConfiguracoesPage() {
       <input ref={bgImgInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleBgFileSelected} />
       {bgImgCropSrc && (
         <ImageCropModal imageSrc={bgImgCropSrc} preset="gameCapsule" onConfirm={handleBgCropConfirm} onClose={() => setBgImgCropSrc(null)} />
-      )}
-
-      {/* ---- STREAMING TAB ---- */}
-      {activeTab === "streaming" && (
-        <>
-          {statusMsg.text && <StatusMessageComponent type={statusMsg.type} message={statusMsg.text} />}
-          <form onSubmit={handleSubmit} className={styles.form}>
-            <section className={styles.section}>
-              <h2 className={styles.sectionTitle}>Canais de Streaming</h2>
-              <p className={styles.fieldHint}>
-                Cadastre o canal do estúdio na Twitch e/ou YouTube. Quando o canal estiver ao vivo, ele aparecerá em destaque na{" "}
-                <a href="/streams" className={styles.inlineLink} target="_blank" rel="noopener noreferrer">
-                  página de streams
-                </a>
-                .
-              </p>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="cfg-twitch">
-                  Canal da Twitch
-                </label>
-                <div className={styles.inputWithPrefix}>
-                  <span className={styles.inputPrefix}>twitch.tv/</span>
-                  <input
-                    id="cfg-twitch"
-                    type="text"
-                    className={styles.input}
-                    value={twitchChannel}
-                    onChange={(e) => setTwitchChannel(e.target.value.replace(/\s/g, "").replace(/^https?:\/\/(www\.)?twitch\.tv\//i, ""))}
-                    maxLength={100}
-                    placeholder="seucanal"
-                    autoComplete="off"
-                    spellCheck={false}
-                  />
-                </div>
-                {twitchChannel && (
-                  <a href={`https://twitch.tv/${twitchChannel}`} target="_blank" rel="noopener noreferrer" className={styles.fieldLink}>
-                    Abrir canal ↗
-                  </a>
-                )}
-              </div>
-
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="cfg-youtube">
-                  Canal do YouTube (ID)
-                </label>
-                <input
-                  id="cfg-youtube"
-                  type="text"
-                  className={styles.input}
-                  value={youtubeChannelId}
-                  onChange={(e) => setYoutubeChannelId(e.target.value.trim())}
-                  maxLength={100}
-                  placeholder="UCxxxxxxxxxxxxxxxxxxxxxxxxx"
-                  autoComplete="off"
-                  spellCheck={false}
-                />
-                <p className={styles.fieldHint}>
-                  O ID do canal começa com <code>UC</code>. Você pode encontrá-lo em{" "}
-                  <a href="https://www.youtube.com/account_advanced" target="_blank" rel="noopener noreferrer" className={styles.inlineLink}>
-                    youtube.com/account_advanced
-                  </a>
-                  .
-                </p>
-                {youtubeChannelId && (
-                  <a href={`https://youtube.com/channel/${youtubeChannelId}`} target="_blank" rel="noopener noreferrer" className={styles.fieldLink}>
-                    Abrir canal ↗
-                  </a>
-                )}
-              </div>
-            </section>
-
-            <div className={styles.formActions}>
-              <button type="submit" className={styles.btnSave} disabled={saving}>
-                {saving ? <Spinner size="small" /> : "Salvar alterações"}
-              </button>
-            </div>
-          </form>
-        </>
       )}
     </>
   );

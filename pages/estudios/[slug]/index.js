@@ -309,13 +309,13 @@ export default function StudioPage() {
           <div className={styles.logoWrapper}>
             {canEdit ? (
               <button onClick={() => openFilePicker("logo", "squareLogo")} className={styles.logoBtn} title="Alterar logo">
-                <Avatar src={studio.logo_url || undefined} size={72} alt={studio.name} className={styles.studioLogo} />
+                <Avatar src={studio.logo_url || "/images/studio.jpg"} size={72} alt={studio.name} className={styles.studioLogo} />
                 <span className={styles.logoBtnOverlay}>
                   <PencilIcon size={12} />
                 </span>
               </button>
             ) : (
-              <Avatar src={studio.logo_url || undefined} size={72} alt={studio.name} className={styles.studioLogo} />
+              <Avatar src={studio.logo_url || "/images/studio.jpg"} size={72} alt={studio.name} className={styles.studioLogo} />
             )}
           </div>
 

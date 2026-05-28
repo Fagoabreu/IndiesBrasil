@@ -381,6 +381,21 @@ async function setPostLikes(postId, userId, liked) {
   }
 }
 
+async function getPostsByUsername(viewerUserId, authorUsername) {
+  if (viewerUserId) {
+    const results = await database.query({
+      text: baseSelectQuery + ` WHERE u.username = $2 ORDER BY p.created_at DESC`,
+      values: [viewerUserId, authorUsername],
+    });
+    return results.rows;
+  }
+  const results = await database.query({
+    text: baseNoUserSelectQuery + ` WHERE u.username = $1 ORDER BY p.created_at DESC`,
+    values: [authorUsername],
+  });
+  return results.rows;
+}
+
 const post = {
   create,
   deleteById,
@@ -389,6 +404,7 @@ const post = {
   deletePostByIdAndAuthorId,
   deleteCommentsByPostId,
   setPostLikes,
+  getPostsByUsername,
 };
 
 export default post;

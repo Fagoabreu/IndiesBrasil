@@ -211,7 +211,7 @@ function StudioCard({ studio }) {
         </div>
         <div className={styles.cardBody}>
           <div className={styles.cardLogoRow}>
-            <Avatar src={studio.logo_url || undefined} size={48} alt={studio.name} className={styles.studioLogo} />
+            <Avatar src={studio.logo_url || "/images/studio.jpg"} size={48} alt={studio.name} className={styles.studioLogo} />
           </div>
           <h2 className={styles.studioName}>{studio.name}</h2>
           {studio.pitch && <p className={styles.studioPitch}>{studio.pitch}</p>}

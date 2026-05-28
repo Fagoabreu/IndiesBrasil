@@ -58,93 +58,124 @@ function getPlatformStyleClass(studio) {
   return styles[`platform_${platform}`];
 }
 
-function StreamCard({ studio, featured }) {
+function getEmbedSrc(studio, hostname) {
+  const platform = studio.active_platform ?? (studio.twitch_channel ? "twitch" : "youtube");
+  if (platform === "twitch" && studio.twitch_channel) {
+    return `https://player.twitch.tv/?channel=${studio.twitch_channel}&parent=${hostname}&muted=1`;
+  }
+  if (platform === "youtube" && studio.youtube_channel_id && studio.is_live) {
+    return `https://www.youtube.com/embed/live_stream?channel=${studio.youtube_channel_id}&autoplay=1&mute=1`;
+  }
+  return null;
+}
+
+function ThumbnailArea({ studio, featured, embedSrc, onPlay }) {
+  return (
+    <>
+      {studio.thumbnail_url ? (
+        <Image
+          src={studio.thumbnail_url}
+          alt={`Thumbnail de ${studio.name}`}
+          fill
+          sizes={featured ? "(max-width: 900px) 100vw, 640px" : "(max-width: 600px) 100vw, 320px"}
+          className={styles.thumbImg}
+        />
+      ) : (
+        <div className={styles.thumbPlaceholder}>
+          <BroadcastIcon size={featured ? 40 : 24} />
+        </div>
+      )}
+      {studio.is_live && <span className={styles.liveBadge}>AO VIVO</span>}
+      {studio.viewer_count != null && (
+        <span className={styles.viewerBadge}>
+          <PersonIcon size={12} />
+          {formatViewerCount(studio.viewer_count)}
+        </span>
+      )}
+      {embedSrc && (
+        <button className={styles.playBtn} onClick={onPlay} aria-label={`${studio.is_live ? "Assistir live" : "Abrir canal"} de ${studio.name}`}>
+          <span className={styles.playIcon}>▶</span>
+          <span>{studio.is_live ? "Assistir ao vivo" : "Abrir canal"}</span>
+        </button>
+      )}
+    </>
+  );
+}
+
+ThumbnailArea.propTypes = {
+  studio: studioPropType.isRequired,
+  featured: PropTypes.bool,
+  embedSrc: PropTypes.string,
+  onPlay: PropTypes.func.isRequired,
+};
+
+ThumbnailArea.defaultProps = {
+  featured: false,
+  embedSrc: null,
+};
+
+function StreamCard({ studio, featured, hostname }) {
+  const [playing, setPlaying] = useState(false);
   const streamUrl = getStreamUrl(studio);
   const platformLabel = getPlatformLabel(studio);
   const platformClass = getPlatformStyleClass(studio);
   const avatarSize = featured ? 44 : 36;
+  const embedSrc = getEmbedSrc(studio, hostname);
+
+  const avatar = studio.logo_url ? (
+    <Image src={studio.logo_url} alt={studio.name} width={avatarSize} height={avatarSize} className={styles.avatarImg} />
+  ) : (
+    <div className={styles.avatarPlaceholder} style={{ width: avatarSize, height: avatarSize }}>
+      {studio.name[0]}
+    </div>
+  );
+
+  const thumbContent =
+    playing && embedSrc ? (
+      <iframe
+        src={embedSrc}
+        title={studio.is_live ? `Transmissão ao vivo de ${studio.name}` : `Canal de ${studio.name}`}
+        allow="autoplay; fullscreen"
+        allowFullScreen
+        className={styles.embedFrame}
+      />
+    ) : (
+      <ThumbnailArea studio={studio} featured={featured} embedSrc={embedSrc} onPlay={() => setPlaying(true)} />
+    );
 
   return (
-    <a href={streamUrl} target="_blank" rel="noopener noreferrer" className={featured ? styles.featuredCard : styles.streamCard}>
-      <div className={featured ? styles.featuredThumb : styles.streamThumb}>
-        {studio.thumbnail_url ? (
-          <Image
-            src={studio.thumbnail_url}
-            alt={`Thumbnail de ${studio.name}`}
-            fill
-            sizes={featured ? "(max-width: 900px) 100vw, 640px" : "(max-width: 600px) 100vw, 320px"}
-            className={styles.thumbImg}
-          />
-        ) : (
-          <div className={styles.thumbPlaceholder}>
-            <BroadcastIcon size={featured ? 40 : 24} />
-          </div>
-        )}
-        {studio.is_live && <span className={styles.liveBadge}>AO VIVO</span>}
-        {studio.viewer_count != null && (
-          <span className={styles.viewerBadge}>
-            <PersonIcon size={12} />
-            {formatViewerCount(studio.viewer_count)}
-          </span>
-        )}
-      </div>
+    <div className={featured ? styles.featuredCard : styles.streamCard}>
+      <div className={featured ? styles.featuredThumb : styles.streamThumb}>{thumbContent}</div>
 
       <div className={styles.streamInfo}>
-        <div className={styles.streamAvatar}>
-          {studio.logo_url ? (
-            <Image src={studio.logo_url} alt={studio.name} width={avatarSize} height={avatarSize} className={styles.avatarImg} />
-          ) : (
-            <div className={styles.avatarPlaceholder} style={{ width: avatarSize, height: avatarSize }}>
-              {studio.name[0]}
-            </div>
-          )}
-        </div>
-
-        <div className={styles.streamMeta}>
-          <p className={styles.streamTitle}>{studio.stream_title || (studio.is_live ? "Transmissão ao vivo" : "Offline")}</p>
-          <p className={styles.streamStudio}>{studio.name}</p>
-          {studio.category_name && <span className={styles.categoryTag}>{studio.category_name}</span>}
-          <span className={`${styles.platformBadge} ${platformClass}`}>{platformLabel}</span>
-        </div>
+        <a href={streamUrl} target="_blank" rel="noopener noreferrer" className={styles.streamInfoLink}>
+          <div className={styles.streamAvatar}>{avatar}</div>
+          <div className={styles.streamMeta}>
+            <p className={styles.streamTitle}>{studio.stream_title || (studio.is_live ? "Transmissão ao vivo" : "Offline")}</p>
+            <p className={styles.streamStudio}>{studio.name}</p>
+            {studio.category_name && <span className={styles.categoryTag}>{studio.category_name}</span>}
+            <span className={`${styles.platformBadge} ${platformClass}`}>{platformLabel}</span>
+          </div>
+        </a>
+        {playing && (
+          <button className={styles.stopBtn} onClick={() => setPlaying(false)} aria-label="Fechar player">
+            ✕
+          </button>
+        )}
       </div>
-    </a>
+    </div>
   );
 }
 
 StreamCard.propTypes = {
   studio: studioPropType.isRequired,
   featured: PropTypes.bool,
+  hostname: PropTypes.string,
 };
 
 StreamCard.defaultProps = {
   featured: false,
-};
-
-function OfflineCard({ studio }) {
-  const streamUrl = getStreamUrl(studio);
-
-  return (
-    <a href={streamUrl} target="_blank" rel="noopener noreferrer" className={styles.offlineCard}>
-      <div className={styles.offlineAvatar}>
-        {studio.logo_url ? (
-          <Image src={studio.logo_url} alt={studio.name} width={40} height={40} className={styles.avatarImg} />
-        ) : (
-          <div className={styles.avatarPlaceholder} style={{ width: 40, height: 40 }}>
-            {studio.name[0]}
-          </div>
-        )}
-      </div>
-      <div className={styles.offlineMeta}>
-        <p className={styles.offlineName}>{studio.name}</p>
-        {studio.pitch && <p className={styles.offlinePitch}>{studio.pitch}</p>}
-      </div>
-      <span className={styles.offlineTag}>Offline</span>
-    </a>
-  );
-}
-
-OfflineCard.propTypes = {
-  studio: studioPropType.isRequired,
+  hostname: "localhost",
 };
 
 export default function StreamsPage() {
@@ -153,7 +184,13 @@ export default function StreamsPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState(null);
+  const [hostname, setHostname] = useState("localhost");
   const refreshTimerRef = useRef(null);
+  const didInitialRefreshRef = useRef(false);
+
+  useEffect(() => {
+    setHostname(globalThis.location.hostname);
+  }, []);
 
   const fetchStudios = useCallback(async () => {
     try {
@@ -179,13 +216,17 @@ export default function StreamsPage() {
   }, [refreshing, fetchStudios]);
 
   useEffect(() => {
-    fetchStudios();
-    // Auto-refresh every 5 minutes
-    refreshTimerRef.current = setInterval(() => {
+    // On first mount: call handleRefresh so Twitch/YouTube APIs are queried
+    // immediately and live status is accurate from the start.
+    // The ref guard prevents a re-call every time handleRefresh is recreated
+    // (which happens on every refreshing state change).
+    if (!didInitialRefreshRef.current) {
+      didInitialRefreshRef.current = true;
       handleRefresh();
-    }, REFRESH_INTERVAL_MS);
+    }
+    refreshTimerRef.current = setInterval(handleRefresh, REFRESH_INTERVAL_MS);
     return () => clearInterval(refreshTimerRef.current);
-  }, [fetchStudios, handleRefresh]);
+  }, [handleRefresh]);
 
   const liveStudios = studios.filter((s) => s.is_live);
   const offlineStudios = studios.filter((s) => !s.is_live);
@@ -245,7 +286,7 @@ export default function StreamsPage() {
             {/* Featured (first live stream) */}
             {featuredStudio && (
               <div className={styles.featuredRow}>
-                <StreamCard studio={featuredStudio} featured />
+                <StreamCard studio={featuredStudio} featured hostname={hostname} />
               </div>
             )}
 
@@ -253,7 +294,7 @@ export default function StreamsPage() {
             {otherLive.length > 0 && (
               <div className={styles.streamsGrid}>
                 {otherLive.map((s) => (
-                  <StreamCard key={s.id} studio={s} />
+                  <StreamCard key={s.id} studio={s} hostname={hostname} />
                 ))}
               </div>
             )}
@@ -285,9 +326,9 @@ export default function StreamsPage() {
         {!loading && offlineStudios.length > 0 && (
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>Canais offline</h2>
-            <div className={styles.offlineGrid}>
+            <div className={styles.streamsGrid}>
               {offlineStudios.map((s) => (
-                <OfflineCard key={s.id} studio={s} />
+                <StreamCard key={s.id} studio={s} hostname={hostname} />
               ))}
             </div>
           </section>

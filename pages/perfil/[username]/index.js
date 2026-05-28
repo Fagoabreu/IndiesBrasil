@@ -7,6 +7,7 @@ import Image from "next/image";
 
 import { useUser } from "@/context/UserContext";
 import FollowButton from "@/components/FollowButton";
+import PostCardComponent from "@/components/PostCard/PostCardComponent";
 
 import ListableSectionPanel from "@/components/Panels/ListableSectionPanel/ListableSectionPanel";
 import HistoricoItem from "@/components/Portfolio/Historico/HistoricoItem";
@@ -42,6 +43,10 @@ export default function Perfil() {
   const [perfilUser, setPerfilUser] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
 
+  const [activeTab, setActiveTab] = useState("info");
+  const [posts, setPosts] = useState([]);
+  const [loadingPosts, setLoadingPosts] = useState(false);
+
   const [errorMessage, setErrorMessage] = useState(null);
 
   async function fetchJSON(url, options = {}) {
@@ -71,6 +76,17 @@ export default function Perfil() {
     setPerfilUser(data);
   }, [username]);
 
+  const fetchPosts = useCallback(async () => {
+    if (!username) return;
+    setLoadingPosts(true);
+    try {
+      const res = await fetch(`/api/v1/users/${username}/posts`, { credentials: "include" });
+      if (res.ok) setPosts(await res.json());
+    } finally {
+      setLoadingPosts(false);
+    }
+  }, [username]);
+
   useEffect(() => {
     if (!username) return;
 
@@ -83,6 +99,10 @@ export default function Perfil() {
       }
     })();
   }, [username, reloadProfile]);
+
+  useEffect(() => {
+    if (activeTab === "posts") fetchPosts();
+  }, [activeTab, fetchPosts]);
 
   if (loadingUser || loadingProfile) {
     return (
@@ -109,6 +129,11 @@ export default function Perfil() {
 
   function handlePrint() {
     globalThis.open(`/perfil/${username}/curriculo`, "_blank");
+  }
+
+  function handleDeletePost(postId) {
+    setPosts((prev) => prev.filter((p) => p.id !== postId));
+    fetch(`/api/v1/posts/${postId}`, { method: "DELETE", credentials: "include" }).catch(() => {});
   }
 
   return (
@@ -184,66 +209,90 @@ export default function Perfil() {
             </div>
           </div>
 
+          {/* ===== TABS ===== */}
+          <div className={style.profileTabs} role="tablist" aria-label="Seções do perfil">
+            <button type="button" role="tab" aria-selected={activeTab === "info"} className={style.profileTab} onClick={() => setActiveTab("info")}>
+              Informações
+            </button>
+            <button type="button" role="tab" aria-selected={activeTab === "posts"} className={style.profileTab} onClick={() => setActiveTab("posts")}>
+              Postagens
+            </button>
+          </div>
+
           {/* ===== RESUME ===== */}
-          <section className={style.profileResume}>
-            {/* COLUNA PRINCIPAL */}
-            <div className={style.resumeMain}>
-              {/* Descrição */}
-              <SectionPanel
-                title="Descrição"
-                atributes={[
-                  { title: "Visibilidade", content: perfilUser.user.visibility, alignment: "row" },
-                  { title: "Resumo", content: perfilUser.user.resumo || "Resumo ainda não informado." },
-                  { title: "Bio", content: perfilUser.user.bio || "Bio ainda não informada." },
-                ]}
-              />
+          {activeTab === "info" && (
+            <section className={style.profileResume}>
+              {/* COLUNA PRINCIPAL */}
+              <div className={style.resumeMain}>
+                {/* Descrição */}
+                <SectionPanel
+                  title="Descrição"
+                  atributes={[
+                    { title: "Visibilidade", content: perfilUser.user.visibility, alignment: "row" },
+                    { title: "Resumo", content: perfilUser.user.resumo || "Resumo ainda não informado." },
+                    { title: "Bio", content: perfilUser.user.bio || "Bio ainda não informada." },
+                  ]}
+                />
 
-              {/* Histórico Profissional */}
-              <ListableSectionPanel
-                title="Histórico Profissional"
-                items={perfilUser.historico}
-                renderItem={(item) => <HistoricoItem item={item} />}
-              />
+                {/* Histórico Profissional */}
+                <ListableSectionPanel
+                  title="Histórico Profissional"
+                  items={perfilUser.historico}
+                  renderItem={(item) => <HistoricoItem item={item} />}
+                />
 
-              {/* Formação Acadêmica */}
-              <ListableSectionPanel
-                title="Formação Acadêmica"
-                items={perfilUser.formacoes}
-                emptyText="Nenhuma formação cadastrada."
-                renderItem={(item) => <FormacaoItem item={item} />}
-              />
+                {/* Formação Acadêmica */}
+                <ListableSectionPanel
+                  title="Formação Acadêmica"
+                  items={perfilUser.formacoes}
+                  emptyText="Nenhuma formação cadastrada."
+                  renderItem={(item) => <FormacaoItem item={item} />}
+                />
+              </div>
+
+              {/* COLUNA LATERAL */}
+              <aside className={style.resumeSidebar}>
+                {/* Contato */}
+                <ListableSectionPanel
+                  title="Contatos"
+                  items={perfilUser.contacts}
+                  emptyText="Nenhum contato cadastrado."
+                  renderItem={(item) => <ContatoItem item={item} />}
+                  variant="small"
+                />
+
+                {/* Especializações */}
+                <ListableSectionPanel
+                  title="Especializações"
+                  items={perfilUser.roles}
+                  emptyText="Nenhuma especialização cadastrada."
+                  renderItem={(item) => <RoleItem item={item} />}
+                  variant="small"
+                />
+
+                {/* Ferramentas */}
+                <ListableSectionPanel
+                  title="Ferramentas"
+                  items={perfilUser.tools}
+                  emptyText="Nenhuma ferramenta cadastrada."
+                  renderItem={(item) => <FerramentaItem item={item} />}
+                  variant="small"
+                />
+              </aside>
+            </section>
+          )}
+
+          {/* ===== POSTS ===== */}
+          {activeTab === "posts" && (
+            <div className={style.postsFeed}>
+              {loadingPosts && <p className={style.postsState}>Carregando postagens...</p>}
+              {!loadingPosts && posts.length === 0 && <p className={style.postsState}>Nenhuma postagem ainda.</p>}
+              {!loadingPosts &&
+                posts.map((p) => (
+                  <PostCardComponent key={p.id} post={p} canInteract={!!authUser} onDelete={isOwnProfile ? handleDeletePost : undefined} />
+                ))}
             </div>
-
-            {/* COLUNA LATERAL */}
-            <aside className={style.resumeSidebar}>
-              {/* Contato */}
-              <ListableSectionPanel
-                title="Contatos"
-                items={perfilUser.contacts}
-                emptyText="Nenhum contato cadastrado."
-                renderItem={(item) => <ContatoItem item={item} />}
-                variant="small"
-              />
-
-              {/* Especializações */}
-              <ListableSectionPanel
-                title="Especializações"
-                items={perfilUser.roles}
-                emptyText="Nenhuma especialização cadastrada."
-                renderItem={(item) => <RoleItem item={item} />}
-                variant="small"
-              />
-
-              {/* Ferramentas */}
-              <ListableSectionPanel
-                title="Ferramentas"
-                items={perfilUser.tools}
-                emptyText="Nenhuma ferramenta cadastrada."
-                renderItem={(item) => <FerramentaItem item={item} />}
-                variant="small"
-              />
-            </aside>
-          </section>
+          )}
         </section>
       </PageLayout.Content>
     </PageLayout>
