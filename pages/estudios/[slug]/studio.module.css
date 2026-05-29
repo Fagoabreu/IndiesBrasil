@@ -469,3 +469,83 @@
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 16px;
 }
+
+/* STREAM AO VIVO */
+.streamEmbed {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: none;
+  border-radius: 8px;
+  display: block;
+}
+
+/* CANAL OFFLINE */
+.channelCards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.channelCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--borderColor-muted);
+  background: var(--bgColor-muted);
+  text-decoration: none;
+  color: var(--fgColor-default);
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.channelCard:hover {
+  border-color: var(--brand-hover-border);
+  background: var(--brand-hover-bg);
+}
+
+.channelCardTwitch {
+  --channel-accent: #9146ff;
+}
+
+.channelCardYoutube {
+  --channel-accent: #ff0000;
+}
+
+.channelCard svg {
+  color: var(--channel-accent, var(--fgColor-muted));
+  flex-shrink: 0;
+}
+
+.channelCardInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.channelCardPlatform {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--channel-accent, var(--fgColor-muted));
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.channelCardName {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--fgColor-default);
+}
+
+.channelCardOffline {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--bgColor-inset);
+  color: var(--fgColor-muted);
+  border: 1px solid var(--borderColor-muted);
+  flex-shrink: 0;
+}

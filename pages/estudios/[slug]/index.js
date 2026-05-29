@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { Avatar, Spinner } from "@primer/react";
-import { OrganizationIcon, PeopleIcon, DownloadIcon, GearIcon, PencilIcon, VideoIcon } from "@primer/octicons-react";
+import { OrganizationIcon, PeopleIcon, DownloadIcon, GearIcon, PencilIcon, VideoIcon, BroadcastIcon } from "@primer/octicons-react";
 
 import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
@@ -14,6 +14,7 @@ import StudioQrCode from "@/components/Portfolio/StudioQrCode";
 import SectionPanel from "@/components/Panels/SectionPanel/SectionPanel";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
 import GameCard from "@/components/Card/GameCard";
+import BoardGameCard from "@/components/Card/BoardGameCard";
 import ImageCropModal from "@/components/ImageTools/ImageCropTool/ImageCropModal";
 import PropTypes from "prop-types";
 import { SITE_URL } from "@/lib/seo";
@@ -33,6 +34,18 @@ function getVideoEmbedUrl(url) {
   if (m) return `https://www.youtube.com/embed/${m[1]}?autoplay=1&mute=1&loop=1&playlist=${m[1]}`;
   m = url.match(/youtube\.com\/shorts\/([^?]+)/);
   if (m) return `https://www.youtube.com/embed/${m[1]}?autoplay=1&mute=1&loop=1&playlist=${m[1]}`;
+  return null;
+}
+
+function getLiveEmbedSrc(streamData) {
+  if (!streamData?.is_live) return null;
+  if (streamData.active_platform === "twitch" && streamData.twitch_channel) {
+    const hostname = globalThis.window?.location.hostname ?? "indiesbrasil.com";
+    return `https://player.twitch.tv/?channel=${streamData.twitch_channel}&parent=${hostname}&muted=1`;
+  }
+  if (streamData.active_platform === "youtube" && streamData.youtube_channel_id) {
+    return `https://www.youtube.com/embed/live_stream?channel=${streamData.youtube_channel_id}&autoplay=1&mute=1`;
+  }
   return null;
 }
 
@@ -67,6 +80,12 @@ export default function StudioPage() {
 
   // Games
   const [studioGames, setStudioGames] = useState([]);
+
+  // Board games
+  const [studioBoardGames, setStudioBoardGames] = useState([]);
+
+  // Stream status
+  const [studioStream, setStudioStream] = useState(null);
 
   // Video URL editing
   const [editingVideoUrl, setEditingVideoUrl] = useState(false);
@@ -105,10 +124,38 @@ export default function StudioPage() {
     }
   }, [slug]);
 
+  const fetchStudioBoardGames = useCallback(async () => {
+    if (!slug) return;
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/boardgames`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setStudioBoardGames(Array.isArray(data) ? data : []);
+      }
+    } catch {
+      // ignore
+    }
+  }, [slug]);
+
+  const fetchStudioStream = useCallback(async () => {
+    if (!slug) return;
+    try {
+      const res = await fetch("/api/v1/streams", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setStudioStream(data.find((s) => s.slug === slug) ?? null);
+      }
+    } catch {
+      // ignore
+    }
+  }, [slug]);
+
   useEffect(() => {
     fetchStudio();
     fetchStudioGames();
-  }, [fetchStudio, fetchStudioGames]);
+    fetchStudioBoardGames();
+    fetchStudioStream();
+  }, [fetchStudio, fetchStudioGames, fetchStudioBoardGames, fetchStudioStream]);
 
   const handleFollowChange = useCallback((nowFollowing) => {
     setViewer((v) => ({ ...v, isFollowing: nowFollowing }));
@@ -223,6 +270,7 @@ export default function StudioPage() {
   }
 
   const canEdit = viewer.isAdmin || viewer.isOwner;
+  const liveEmbedSrc = getLiveEmbedSrc(studioStream);
   const pageTitle = `${studio.name} — Indies Brasil`;
   const pageUrl = `${SITE_URL}/estudios/${studio.slug}`;
   const embedUrl = getVideoEmbedUrl(studio.banner_video_url);
@@ -371,12 +419,74 @@ export default function StudioPage() {
               </SectionPanel>
             )}
 
+            {/* STREAM AO VIVO */}
+            {liveEmbedSrc && (
+              <SectionPanel title="Ao Vivo">
+                <iframe
+                  src={liveEmbedSrc}
+                  className={styles.streamEmbed}
+                  allow="autoplay; encrypted-media"
+                  allowFullScreen
+                  title={`Stream ao vivo de ${studio.name}`}
+                />
+              </SectionPanel>
+            )}
+
+            {/* CANAL OFFLINE */}
+            {studioStream && !liveEmbedSrc && (
+              <SectionPanel title="Streaming">
+                <div className={styles.channelCards}>
+                  {studioStream.twitch_channel && (
+                    <a
+                      href={`https://twitch.tv/${studioStream.twitch_channel}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`${styles.channelCard} ${styles.channelCardTwitch}`}
+                    >
+                      <BroadcastIcon size={20} />
+                      <div className={styles.channelCardInfo}>
+                        <span className={styles.channelCardPlatform}>Twitch</span>
+                        <span className={styles.channelCardName}>{studioStream.twitch_channel}</span>
+                      </div>
+                      <span className={styles.channelCardOffline}>Offline</span>
+                    </a>
+                  )}
+                  {studioStream.youtube_channel_id && (
+                    <a
+                      href={`https://youtube.com/channel/${studioStream.youtube_channel_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`${styles.channelCard} ${styles.channelCardYoutube}`}
+                    >
+                      <BroadcastIcon size={20} />
+                      <div className={styles.channelCardInfo}>
+                        <span className={styles.channelCardPlatform}>YouTube</span>
+                        <span className={styles.channelCardName}>Ver canal</span>
+                      </div>
+                      <span className={styles.channelCardOffline}>Offline</span>
+                    </a>
+                  )}
+                </div>
+              </SectionPanel>
+            )}
+
             {/* JOGOS */}
             {studioGames.length > 0 && (
               <SectionPanel title="Jogos">
                 <div className={styles.gameCardList}>
                   {studioGames.map((g) => (
                     <GameCard key={g.id} game={g} />
+                  ))}
+                </div>
+              </SectionPanel>
+            )}
+
+            {/* JOGOS DE TABULEIRO */}
+            {studioBoardGames.length > 0 && (
+              <SectionPanel title="Jogos de Tabuleiro">
+                <div className={styles.gameCardList}>
+                  {studioBoardGames.map((bg) => (
+                    <BoardGameCard key={bg.id} boardgame={bg} />
                   ))}
                 </div>
               </SectionPanel>
