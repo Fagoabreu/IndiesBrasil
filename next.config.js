@@ -22,6 +22,11 @@ const nextConfig = {
         hostname: "static-cdn.jtvnw.net",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "i.ytimg.com",
+        pathname: "/**",
+      },
     ],
   },
 };
