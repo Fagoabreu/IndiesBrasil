@@ -419,6 +419,9 @@ function getPostResource(resource) {
   return {
     id: resource.id,
     organization_id: resource.organization_id,
+    organization_slug: resource.organization_slug,
+    organization_name: resource.organization_name,
+    organization_logo_url: resource.organization_logo_url,
     event_id: resource.event_id,
     event_title: resource.event_title,
     event_slug: resource.event_slug,

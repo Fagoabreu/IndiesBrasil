@@ -20,6 +20,9 @@ const camposBase = `
   COALESCE(c.comments_count, 0) AS comments_count,
   ev.title AS event_title,
   ev.slug AS event_slug,
+  org.slug AS organization_slug,
+  org.name AS organization_name,
+  orglogo.secure_url AS organization_logo_url,
 `;
 
 const joinsBase = `
@@ -51,6 +54,12 @@ const joinsBase = `
   -- Evento relacionado
   LEFT JOIN events ev
     ON ev.id = p.event_id
+
+  -- Organização relacionada
+  LEFT JOIN organizations org
+    ON org.id = p.organization_id
+  LEFT JOIN uploaded_images orglogo
+    ON orglogo.id = org.img
 `;
 
 const baseSelectQuery = `
@@ -381,6 +390,21 @@ async function setPostLikes(postId, userId, liked) {
   }
 }
 
+async function getPostsByOrgId(viewerUserId, orgId) {
+  if (viewerUserId) {
+    const results = await database.query({
+      text: baseSelectQuery + ` WHERE p.organization_id = $2 ORDER BY p.created_at DESC`,
+      values: [viewerUserId, orgId],
+    });
+    return results.rows;
+  }
+  const results = await database.query({
+    text: baseNoUserSelectQuery + ` WHERE p.organization_id = $1 ORDER BY p.created_at DESC`,
+    values: [orgId],
+  });
+  return results.rows;
+}
+
 async function getPostsByUsername(viewerUserId, authorUsername) {
   if (viewerUserId) {
     const results = await database.query({
@@ -401,6 +425,7 @@ const post = {
   deleteById,
   getPosts,
   getPostById,
+  getPostsByOrgId,
   deletePostByIdAndAuthorId,
   deleteCommentsByPostId,
   setPostLikes,

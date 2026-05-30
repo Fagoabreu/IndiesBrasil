@@ -52,6 +52,11 @@ PostCardComponent.propTypes = {
     event_id: PropTypes.string,
     event_title: PropTypes.string,
     event_slug: PropTypes.string,
+
+    organization_id: PropTypes.string,
+    organization_slug: PropTypes.string,
+    organization_name: PropTypes.string,
+    organization_logo_url: PropTypes.string,
   }).isRequired,
 
   onDelete: PropTypes.func,
@@ -228,6 +233,24 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
             <Link href={post.event_slug ? `/agenda/${post.event_slug}` : `/agenda/${post.event_id}`} className={styles.eventBadge}>
               <span className={styles.eventBadgeIcon}>📅</span>
               <span className={styles.eventBadgeLabel}>{post.event_title || "Ver evento"}</span>
+            </Link>
+          )}
+
+          {/* ORGANIZAÇÃO RELACIONADA */}
+          {post.organization_id && post.organization_slug && (
+            <Link href={`/estudios/${post.organization_slug}`} className={styles.orgBadge}>
+              {post.organization_logo_url ? (
+                <Image
+                  src={post.organization_logo_url}
+                  alt={post.organization_name || "Estúdio"}
+                  width={18}
+                  height={18}
+                  className={styles.orgBadgeLogo}
+                />
+              ) : (
+                <span className={styles.orgBadgeInitial}>{(post.organization_name || "E")[0].toUpperCase()}</span>
+              )}
+              <span className={styles.orgBadgeName}>{post.organization_name}</span>
             </Link>
           )}
 

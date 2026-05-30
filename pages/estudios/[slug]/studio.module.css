@@ -314,6 +314,59 @@
   flex-wrap: wrap;
 }
 
+/* ABAS */
+.tabBar {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--borderColor-muted);
+  margin-bottom: 20px;
+}
+
+.tabBtn {
+  padding: 8px 18px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--fgColor-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: -1px;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.tabBtn:hover {
+  color: var(--fgColor-default);
+}
+
+.tabBtnActive {
+  color: var(--brand-primary);
+  border-bottom-color: var(--brand-primary);
+  font-weight: 600;
+}
+
+/* ABA POSTAGENS */
+.postsTab {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 680px;
+}
+
+.postsLoading {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
+}
+
+.postList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 /* LAYOUT DE CONTEÚDO */
 .contentGrid {
   display: grid;
