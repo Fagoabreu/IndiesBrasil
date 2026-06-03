@@ -446,6 +446,20 @@ CREATE TABLE event_rsvps (
     CONSTRAINT event_rsvps_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+CREATE TABLE event_org_rsvps (
+    id              UUID        NOT NULL DEFAULT gen_random_uuid(),
+    event_id        UUID        NOT NULL,
+    organization_id UUID        NOT NULL,
+    confirmed_by    UUID        NOT NULL,
+    created_at      TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    updated_at      TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    CONSTRAINT event_org_rsvps_pkey PRIMARY KEY (id),
+    CONSTRAINT uq_event_org_rsvp UNIQUE (event_id, organization_id),
+    CONSTRAINT event_org_rsvps_event_id_fkey FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+    CONSTRAINT event_org_rsvps_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+    CONSTRAINT event_org_rsvps_confirmed_by_fkey FOREIGN KEY (confirmed_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
 -- =============================================================================
 -- POSTS
 -- =============================================================================

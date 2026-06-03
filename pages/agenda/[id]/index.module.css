@@ -519,3 +519,147 @@
     font-size: 1.4rem;
   }
 }
+
+/* ── RSVP de estúdios ── */
+.orgRsvpSection {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--borderColor-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.orgRsvpLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fgColor-muted);
+}
+
+.orgRsvpRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.orgRsvpSelect {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--borderColor-muted);
+  background: var(--bgColor-default);
+  color: var(--fgColor-default);
+  font-size: 0.875rem;
+  cursor: pointer;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.orgRsvpSelect:focus {
+  border-color: var(--brand-hover-border);
+}
+
+/* ── Estúdios confirmados ── */
+.orgRsvpAttendees {
+  margin-top: 14px;
+  padding: 12px;
+  background: rgba(var(--brand-rgb-primary), 0.06);
+  border: 1px solid rgba(var(--brand-rgb-primary), 0.25);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.orgRsvpAttendeesLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--brand-primary);
+}
+
+.orgRsvpAttendeesLabel::before {
+  content: "🏢";
+  font-size: 0.85rem;
+}
+
+.orgRsvpAttendeesList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.orgCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bgColor-default);
+  border: 1px solid rgba(var(--brand-rgb-primary), 0.2);
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--fgColor-default);
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    transform 0.1s;
+}
+
+.orgCard:hover {
+  border-color: var(--brand-primary);
+  background: var(--brand-hover-bg);
+  color: var(--brand-primary);
+  transform: translateX(2px);
+}
+
+.orgCardLogo {
+  width: 38px;
+  height: 38px;
+  border-radius: 7px;
+  object-fit: cover;
+  border: 2px solid rgba(var(--brand-rgb-primary), 0.3);
+  flex-shrink: 0;
+}
+
+.orgCardInitial {
+  width: 38px;
+  height: 38px;
+  border-radius: 7px;
+  background: var(--brand-gradient-h);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.orgCardName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.orgCardGoingBadge {
+  margin-left: auto;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--brand-primary);
+  background: rgba(var(--brand-rgb-primary), 0.1);
+  border: 1px solid rgba(var(--brand-rgb-primary), 0.25);
+  border-radius: 20px;
+  padding: 2px 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}

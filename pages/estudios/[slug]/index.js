@@ -2,8 +2,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import Image from "next/image";
 import { Avatar, Spinner } from "@primer/react";
-import { OrganizationIcon, PeopleIcon, DownloadIcon, GearIcon, PencilIcon, VideoIcon } from "@primer/octicons-react";
+import { OrganizationIcon, PeopleIcon, DownloadIcon, GearIcon, PencilIcon, VideoIcon, BroadcastIcon } from "@primer/octicons-react";
 
 import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
@@ -14,8 +15,10 @@ import StudioQrCode from "@/components/Portfolio/StudioQrCode";
 import SectionPanel from "@/components/Panels/SectionPanel/SectionPanel";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
 import GameCard from "@/components/Card/GameCard";
+import BoardGameCard from "@/components/Card/BoardGameCard";
+import CreatePost from "@/components/CreatePost/CreatePost";
+import PostCardComponent from "@/components/PostCard/PostCardComponent";
 import ImageCropModal from "@/components/ImageTools/ImageCropTool/ImageCropModal";
-import PropTypes from "prop-types";
 import { SITE_URL } from "@/lib/seo";
 import styles from "./studio.module.css";
 
@@ -33,6 +36,18 @@ function getVideoEmbedUrl(url) {
   if (m) return `https://www.youtube.com/embed/${m[1]}?autoplay=1&mute=1&loop=1&playlist=${m[1]}`;
   m = url.match(/youtube\.com\/shorts\/([^?]+)/);
   if (m) return `https://www.youtube.com/embed/${m[1]}?autoplay=1&mute=1&loop=1&playlist=${m[1]}`;
+  return null;
+}
+
+function getLiveEmbedSrc(streamData) {
+  if (!streamData?.is_live) return null;
+  if (streamData.active_platform === "twitch" && streamData.twitch_channel) {
+    const hostname = globalThis.window?.location.hostname ?? "indiesbrasil.com";
+    return `https://player.twitch.tv/?channel=${streamData.twitch_channel}&parent=${hostname}&muted=1`;
+  }
+  if (streamData.active_platform === "youtube" && streamData.youtube_channel_id) {
+    return `https://www.youtube.com/embed/live_stream?channel=${streamData.youtube_channel_id}&autoplay=1&mute=1`;
+  }
   return null;
 }
 
@@ -67,6 +82,25 @@ export default function StudioPage() {
 
   // Games
   const [studioGames, setStudioGames] = useState([]);
+
+  // Board games
+  const [studioBoardGames, setStudioBoardGames] = useState([]);
+
+  // Stream status
+  const [studioStream, setStudioStream] = useState(null);
+
+  // Tab
+  const [activeTab, setActiveTab] = useState("perfil");
+
+  // Posts
+  const [studioPosts, setStudioPosts] = useState([]);
+  const [loadingPosts, setLoadingPosts] = useState(false);
+
+  // Relacionamentos
+  const [relationships, setRelationships] = useState({ accepted: [], pending_incoming: [], pending_outgoing: [] });
+  const [relForm, setRelForm] = useState({ targetSlug: "", type: "partner" });
+  const [relFormOpen, setRelFormOpen] = useState(false);
+  const [relFormLoading, setRelFormLoading] = useState(false);
 
   // Video URL editing
   const [editingVideoUrl, setEditingVideoUrl] = useState(false);
@@ -105,10 +139,94 @@ export default function StudioPage() {
     }
   }, [slug]);
 
+  const fetchStudioBoardGames = useCallback(async () => {
+    if (!slug) return;
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/boardgames`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setStudioBoardGames(Array.isArray(data) ? data : []);
+      }
+    } catch {
+      // ignore
+    }
+  }, [slug]);
+
+  const fetchStudioStream = useCallback(async () => {
+    if (!slug) return;
+    try {
+      const res = await fetch("/api/v1/streams", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setStudioStream(data.find((s) => s.slug === slug) ?? null);
+      }
+    } catch {
+      // ignore
+    }
+  }, [slug]);
+
+  const fetchStudioPosts = useCallback(async () => {
+    if (!slug) return;
+    setLoadingPosts(true);
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/posts`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setStudioPosts(Array.isArray(data) ? data : []);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoadingPosts(false);
+    }
+  }, [slug]);
+
+  const fetchRelationships = useCallback(async () => {
+    if (!slug) return;
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/relationships`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setRelationships(data);
+      }
+    } catch {
+      // ignore
+    }
+  }, [slug]);
+
   useEffect(() => {
     fetchStudio();
     fetchStudioGames();
-  }, [fetchStudio, fetchStudioGames]);
+    fetchStudioBoardGames();
+    fetchStudioStream();
+    fetchRelationships();
+  }, [fetchStudio, fetchStudioGames, fetchStudioBoardGames, fetchStudioStream, fetchRelationships]);
+
+  useEffect(() => {
+    if (activeTab === "postagens") fetchStudioPosts();
+  }, [activeTab, fetchStudioPosts]);
+
+  const handleAddPost = async (content, file = null) => {
+    const formData = new FormData();
+    formData.append("content", content);
+    if (file) formData.append("file", file);
+    const res = await fetch(`/api/v1/studios/${slug}/posts`, {
+      method: "POST",
+      credentials: "include",
+      body: formData,
+    });
+    if (!res.ok) throw new Error("Erro ao criar post.");
+    const created = await res.json();
+    setStudioPosts((prev) => [created, ...prev]);
+  };
+
+  const handleDeletePost = async (postId) => {
+    const res = await fetch(`/api/v1/posts/${postId}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    if (res.ok) setStudioPosts((prev) => prev.filter((p) => p.id !== postId));
+  };
 
   const handleFollowChange = useCallback((nowFollowing) => {
     setViewer((v) => ({ ...v, isFollowing: nowFollowing }));
@@ -223,6 +341,73 @@ export default function StudioPage() {
   }
 
   const canEdit = viewer.isAdmin || viewer.isOwner;
+  const canPost = viewer.isMember || viewer.isAdmin || viewer.isOwner;
+
+  const RELATIONSHIP_TYPE_LABELS = {
+    partner: "Parceiro",
+    distributor: "Distribuidora",
+    cooperative: "Cooperativa",
+    workers_association: "Assoc. de trabalhadores",
+    collective: "Coletivo",
+    publisher: "Publicadora",
+    incubator: "Incubadora",
+    investor: "Investidora",
+    other: "Outro",
+  };
+
+  const handleRequestRelationship = async (e) => {
+    e.preventDefault();
+    if (!relForm.targetSlug.trim()) return;
+    setRelFormLoading(true);
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/relationships`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ target_slug: relForm.targetSlug.trim(), type: relForm.type }),
+      });
+      if (res.ok) {
+        setRelForm({ targetSlug: "", type: "partner" });
+        setRelFormOpen(false);
+        await fetchRelationships();
+      } else {
+        const err = await res.json();
+        alert(err.message || "Erro ao solicitar relacionamento.");
+      }
+    } finally {
+      setRelFormLoading(false);
+    }
+  };
+
+  const handleRespondRelationship = async (id, action) => {
+    const res = await fetch(`/api/v1/studios/${slug}/relationships/${id}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action }),
+    });
+    if (res.ok) {
+      await fetchRelationships();
+    } else {
+      const err = await res.json();
+      alert(err.message || "Erro ao responder solicitação.");
+    }
+  };
+
+  const handleRemoveRelationship = async (id) => {
+    if (!confirm("Tem certeza que deseja encerrar este relacionamento?")) return;
+    const res = await fetch(`/api/v1/studios/${slug}/relationships/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    if (res.ok) {
+      await fetchRelationships();
+    } else {
+      const err = await res.json();
+      alert(err.message || "Erro ao encerrar relacionamento.");
+    }
+  };
+  const liveEmbedSrc = getLiveEmbedSrc(studioStream);
   const pageTitle = `${studio.name} — Indies Brasil`;
   const pageUrl = `${SITE_URL}/estudios/${studio.slug}`;
   const embedUrl = getVideoEmbedUrl(studio.banner_video_url);
@@ -355,99 +540,337 @@ export default function StudioPage() {
           </div>
         </div>
 
-        {/* CONTEÚDO */}
-        <div className={styles.contentGrid}>
-          {/* COLUNA PRINCIPAL */}
-          <main className={styles.mainCol}>
-            {studio.description && (
-              <SectionPanel title="Sobre">
-                <p className={styles.bodyText}>{studio.description}</p>
-              </SectionPanel>
-            )}
-
-            {studio.history && (
-              <SectionPanel title="História">
-                <p className={styles.bodyText}>{studio.history}</p>
-              </SectionPanel>
-            )}
-
-            {/* JOGOS */}
-            {studioGames.length > 0 && (
-              <SectionPanel title="Jogos">
-                <div className={styles.gameCardList}>
-                  {studioGames.map((g) => (
-                    <GameCard key={g.id} game={g} />
-                  ))}
-                </div>
-              </SectionPanel>
-            )}
-          </main>
-
-          {/* BARRA LATERAL */}
-          <aside className={styles.sideCol}>
-            {studio.address && (
-              <SectionPanel title="Endereço">
-                <AddressDisplay address={studio.address} />
-              </SectionPanel>
-            )}
-
-            {studio.contacts?.length > 0 && (
-              <SectionPanel title="Contatos">
-                <ul className={styles.contactList}>
-                  {studio.contacts.map((c) => (
-                    <ContatoItem key={c.id ?? c.type} item={c} />
-                  ))}
-                </ul>
-              </SectionPanel>
-            )}
-
-            {studio.cnpj && (
-              <SectionPanel title="CNPJ">
-                <span className={styles.bodyText}>{studio.cnpj}</span>
-              </SectionPanel>
-            )}
-
-            {canEdit && !studio.address && !studio.cnpj && (studio.contacts?.length ?? 0) === 0 && (
-              <SectionPanel title="Informações">
-                <p className={styles.emptyHint}>
-                  Adicione endereço, CNPJ e contatos nas{" "}
-                  <Link href={`/estudios/${slug}/configuracoes`} className={styles.inlineLink}>
-                    configurações do estúdio
-                  </Link>
-                  .
-                </p>
-              </SectionPanel>
-            )}
-
-            {/* MEMBROS */}
-            <SectionPanel title={`Membros (${studio.members?.length ?? 0})`}>
-              {studio.members?.length > 0 ? (
-                <ul className={styles.memberList}>
-                  {studio.members.map((m) => (
-                    <li key={m.user_id ?? m.id} className={styles.memberItem}>
-                      <Link href={`/perfil/${m.username}`} className={styles.memberLink}>
-                        <Avatar src={m.avatar_url || "/images/avatar.png"} size={32} alt={m.username} />
-                        <div className={styles.memberInfo}>
-                          <span className={styles.memberName}>{m.display_name || m.username}</span>
-                          {m.roles?.length > 0 && <span className={styles.memberRoles}>{m.roles.join(", ")}</span>}
-                        </div>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className={styles.emptyHint}>
-                  Nenhum membro ainda.{" "}
-                  {canEdit && (
-                    <Link href={`/estudios/${slug}/configuracoes`} className={styles.inlineLink}>
-                      Convidar membros
-                    </Link>
-                  )}
-                </p>
-              )}
-            </SectionPanel>
-          </aside>
+        {/* ABAS */}
+        <div className={styles.tabBar}>
+          <button className={`${styles.tabBtn} ${activeTab === "perfil" ? styles.tabBtnActive : ""}`} onClick={() => setActiveTab("perfil")}>
+            Perfil
+          </button>
+          <button className={`${styles.tabBtn} ${activeTab === "postagens" ? styles.tabBtnActive : ""}`} onClick={() => setActiveTab("postagens")}>
+            Postagens
+          </button>
         </div>
+
+        {/* ABA: POSTAGENS */}
+        {activeTab === "postagens" && (
+          <div className={styles.postsTab}>
+            {canPost && authUser?.id && <CreatePost user={authUser} onPost={handleAddPost} />}
+            {loadingPosts ? (
+              <div className={styles.postsLoading}>
+                <Spinner size="medium" />
+              </div>
+            ) : studioPosts.length === 0 ? (
+              <p className={styles.emptyHint}>Nenhuma postagem ainda.</p>
+            ) : (
+              <div className={styles.postList}>
+                {studioPosts.map((p) => (
+                  <PostCardComponent key={p.id} post={p} canInteract={!!authUser?.id} onDelete={handleDeletePost} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ABA: PERFIL */}
+        {activeTab === "perfil" && (
+          <div className={styles.contentGrid}>
+            {/* COLUNA PRINCIPAL */}
+            <main className={styles.mainCol}>
+              {studio.description && (
+                <SectionPanel title="Sobre">
+                  <p className={styles.bodyText}>{studio.description}</p>
+                </SectionPanel>
+              )}
+
+              {studio.history && (
+                <SectionPanel title="História">
+                  <p className={styles.bodyText}>{studio.history}</p>
+                </SectionPanel>
+              )}
+
+              {/* STREAM AO VIVO */}
+              {liveEmbedSrc && (
+                <SectionPanel title="Ao Vivo">
+                  <iframe
+                    src={liveEmbedSrc}
+                    className={styles.streamEmbed}
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
+                    title={`Stream ao vivo de ${studio.name}`}
+                  />
+                </SectionPanel>
+              )}
+
+              {/* CANAL OFFLINE */}
+              {studioStream && !liveEmbedSrc && (
+                <SectionPanel title="Streaming">
+                  <div className={styles.channelCards}>
+                    {studioStream.twitch_channel && (
+                      <a
+                        href={`https://twitch.tv/${studioStream.twitch_channel}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`${styles.channelCard} ${styles.channelCardTwitch}`}
+                      >
+                        <BroadcastIcon size={20} />
+                        <div className={styles.channelCardInfo}>
+                          <span className={styles.channelCardPlatform}>Twitch</span>
+                          <span className={styles.channelCardName}>{studioStream.twitch_channel}</span>
+                        </div>
+                        <span className={styles.channelCardOffline}>Offline</span>
+                      </a>
+                    )}
+                    {studioStream.youtube_channel_id && (
+                      <a
+                        href={`https://youtube.com/channel/${studioStream.youtube_channel_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`${styles.channelCard} ${styles.channelCardYoutube}`}
+                      >
+                        <BroadcastIcon size={20} />
+                        <div className={styles.channelCardInfo}>
+                          <span className={styles.channelCardPlatform}>YouTube</span>
+                          <span className={styles.channelCardName}>Ver canal</span>
+                        </div>
+                        <span className={styles.channelCardOffline}>Offline</span>
+                      </a>
+                    )}
+                  </div>
+                </SectionPanel>
+              )}
+
+              {/* JOGOS */}
+              {studioGames.length > 0 && (
+                <SectionPanel title="Jogos">
+                  <div className={styles.gameCardList}>
+                    {studioGames.map((g) => (
+                      <GameCard key={g.id} game={g} />
+                    ))}
+                  </div>
+                </SectionPanel>
+              )}
+
+              {/* JOGOS DE TABULEIRO */}
+              {studioBoardGames.length > 0 && (
+                <SectionPanel title="Jogos de Tabuleiro">
+                  <div className={styles.gameCardList}>
+                    {studioBoardGames.map((bg) => (
+                      <BoardGameCard key={bg.id} boardgame={bg} />
+                    ))}
+                  </div>
+                </SectionPanel>
+              )}
+            </main>
+
+            {/* BARRA LATERAL */}
+            <aside className={styles.sideCol}>
+              {studio.address && (
+                <SectionPanel title="Endereço">
+                  <AddressDisplay address={studio.address} />
+                </SectionPanel>
+              )}
+
+              {studio.contacts?.length > 0 && (
+                <SectionPanel title="Contatos">
+                  <ul className={styles.contactList}>
+                    {studio.contacts.map((c) => (
+                      <ContatoItem key={c.id ?? c.type} item={c} />
+                    ))}
+                  </ul>
+                </SectionPanel>
+              )}
+
+              {studio.cnpj && (
+                <SectionPanel title="CNPJ">
+                  <span className={styles.bodyText}>{studio.cnpj}</span>
+                </SectionPanel>
+              )}
+
+              {canEdit && !studio.address && !studio.cnpj && (studio.contacts?.length ?? 0) === 0 && (
+                <SectionPanel title="Informações">
+                  <p className={styles.emptyHint}>
+                    Adicione endereço, CNPJ e contatos nas{" "}
+                    <Link href={`/estudios/${slug}/configuracoes`} className={styles.inlineLink}>
+                      configurações do estúdio
+                    </Link>
+                    .
+                  </p>
+                </SectionPanel>
+              )}
+
+              {/* MEMBROS */}
+              <SectionPanel title={`Membros (${studio.members?.length ?? 0})`}>
+                {studio.members?.length > 0 ? (
+                  <ul className={styles.memberList}>
+                    {studio.members.map((m) => (
+                      <li key={m.user_id ?? m.id} className={styles.memberItem}>
+                        <Link href={`/perfil/${m.username}`} className={styles.memberLink}>
+                          <Avatar src={m.avatar_url || "/images/avatar.png"} size={32} alt={m.username} />
+                          <div className={styles.memberInfo}>
+                            <span className={styles.memberName}>{m.display_name || m.username}</span>
+                            {m.roles?.length > 0 && <span className={styles.memberRoles}>{m.roles.join(", ")}</span>}
+                          </div>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className={styles.emptyHint}>
+                    Nenhum membro ainda.{" "}
+                    {canEdit && (
+                      <Link href={`/estudios/${slug}/configuracoes`} className={styles.inlineLink}>
+                        Convidar membros
+                      </Link>
+                    )}
+                  </p>
+                )}
+              </SectionPanel>
+
+              {/* RELACIONAMENTOS */}
+              {(relationships.accepted.length > 0 ||
+                relationships.pending_incoming.length > 0 ||
+                relationships.pending_outgoing.length > 0 ||
+                canEdit) && (
+                <SectionPanel title="Relacionamentos">
+                  {/* Aceitos */}
+                  {relationships.accepted.length > 0 && (
+                    <ul className={styles.relList}>
+                      {relationships.accepted.map((r) => (
+                        <li key={r.id} className={styles.relCard}>
+                          <Link href={`/estudios/${r.other_slug}`} className={styles.relCardLink}>
+                            {r.other_logo_url ? (
+                              <Image src={r.other_logo_url} alt={r.other_name} width={32} height={32} className={styles.relCardLogo} />
+                            ) : (
+                              <span className={styles.relCardInitial}>{r.other_name?.[0]?.toUpperCase() ?? "?"}</span>
+                            )}
+                            <div className={styles.relCardInfo}>
+                              <span className={styles.relCardName}>{r.other_name}</span>
+                              <span className={styles.relTypeBadge}>{RELATIONSHIP_TYPE_LABELS[r.relationship_type] ?? r.relationship_type}</span>
+                            </div>
+                          </Link>
+                          {canEdit && (
+                            <button className={styles.relRemoveBtn} title="Encerrar relacionamento" onClick={() => handleRemoveRelationship(r.id)}>
+                              ✕
+                            </button>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {/* Pendentes recebidas (só para admin) */}
+                  {canEdit && relationships.pending_incoming.length > 0 && (
+                    <div className={styles.relPendingSection}>
+                      <p className={styles.relPendingLabel}>Solicitações recebidas</p>
+                      <ul className={styles.relList}>
+                        {relationships.pending_incoming.map((r) => (
+                          <li key={r.id} className={styles.relPendingCard}>
+                            <Link href={`/estudios/${r.other_slug}`} className={styles.relCardLink}>
+                              {r.other_logo_url ? (
+                                <Image src={r.other_logo_url} alt={r.other_name} width={32} height={32} className={styles.relCardLogo} />
+                              ) : (
+                                <span className={styles.relCardInitial}>{r.other_name?.[0]?.toUpperCase() ?? "?"}</span>
+                              )}
+                              <div className={styles.relCardInfo}>
+                                <span className={styles.relCardName}>{r.other_name}</span>
+                                <span className={styles.relTypeBadge}>{RELATIONSHIP_TYPE_LABELS[r.relationship_type] ?? r.relationship_type}</span>
+                              </div>
+                            </Link>
+                            <div className={styles.relRespondBtns}>
+                              <button className={styles.relAcceptBtn} onClick={() => handleRespondRelationship(r.id, "accept")}>
+                                Aceitar
+                              </button>
+                              <button className={styles.relRejectBtn} onClick={() => handleRespondRelationship(r.id, "reject")}>
+                                Recusar
+                              </button>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Pendentes enviadas */}
+                  {relationships.pending_outgoing.length > 0 && (
+                    <div className={styles.relPendingSection}>
+                      <p className={styles.relPendingLabel}>Aguardando aprovação</p>
+                      <ul className={styles.relList}>
+                        {relationships.pending_outgoing.map((r) => (
+                          <li key={r.id} className={styles.relPendingCard}>
+                            <Link href={`/estudios/${r.other_slug}`} className={styles.relCardLink}>
+                              {r.other_logo_url ? (
+                                <Image src={r.other_logo_url} alt={r.other_name} width={32} height={32} className={styles.relCardLogo} />
+                              ) : (
+                                <span className={styles.relCardInitial}>{r.other_name?.[0]?.toUpperCase() ?? "?"}</span>
+                              )}
+                              <div className={styles.relCardInfo}>
+                                <span className={styles.relCardName}>{r.other_name}</span>
+                                <span className={styles.relTypeBadge}>{RELATIONSHIP_TYPE_LABELS[r.relationship_type] ?? r.relationship_type}</span>
+                              </div>
+                            </Link>
+                            <span className={styles.relPendingChip}>pendente</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Formulário de solicitação (só admin) */}
+                  {canEdit && (
+                    <div className={styles.relRequestSection}>
+                      {relFormOpen ? (
+                        <form className={styles.relForm} onSubmit={handleRequestRelationship}>
+                          <input
+                            type="text"
+                            className={styles.relFormInput}
+                            placeholder="Slug do estúdio (ex: acme-games)"
+                            value={relForm.targetSlug}
+                            onChange={(e) => setRelForm((f) => ({ ...f, targetSlug: e.target.value }))}
+                            required
+                          />
+                          <select
+                            className={styles.relFormSelect}
+                            value={relForm.type}
+                            onChange={(e) => setRelForm((f) => ({ ...f, type: e.target.value }))}
+                          >
+                            {Object.entries(RELATIONSHIP_TYPE_LABELS).map(([val, label]) => (
+                              <option key={val} value={val}>
+                                {label}
+                              </option>
+                            ))}
+                          </select>
+                          <div className={styles.relFormActions}>
+                            <button type="submit" className={styles.relFormBtn} disabled={relFormLoading}>
+                              {relFormLoading ? "Enviando…" : "Enviar solicitação"}
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.relCancelFormBtn}
+                              onClick={() => {
+                                setRelFormOpen(false);
+                                setRelForm({ targetSlug: "", type: "partner" });
+                              }}
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </form>
+                      ) : (
+                        <button className={styles.relRequestToggle} onClick={() => setRelFormOpen(true)}>
+                          + Solicitar relacionamento
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {!canEdit &&
+                    relationships.accepted.length === 0 &&
+                    relationships.pending_incoming.length === 0 &&
+                    relationships.pending_outgoing.length === 0 && <p className={styles.emptyHint}>Nenhum relacionamento ainda.</p>}
+                </SectionPanel>
+              )}
+            </aside>
+          </div>
+        )}
       </div>
     </>
   );

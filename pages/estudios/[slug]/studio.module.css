@@ -314,6 +314,59 @@
   flex-wrap: wrap;
 }
 
+/* ABAS */
+.tabBar {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--borderColor-muted);
+  margin-bottom: 20px;
+}
+
+.tabBtn {
+  padding: 8px 18px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--fgColor-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: -1px;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.tabBtn:hover {
+  color: var(--fgColor-default);
+}
+
+.tabBtnActive {
+  color: var(--brand-primary);
+  border-bottom-color: var(--brand-primary);
+  font-weight: 600;
+}
+
+/* ABA POSTAGENS */
+.postsTab {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 680px;
+}
+
+.postsLoading {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
+}
+
+.postList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 /* LAYOUT DE CONTEÚDO */
 .contentGrid {
   display: grid;
@@ -468,4 +521,332 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 16px;
+}
+
+/* STREAM AO VIVO */
+.streamEmbed {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: none;
+  border-radius: 8px;
+  display: block;
+}
+
+/* CANAL OFFLINE */
+.channelCards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.channelCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--borderColor-muted);
+  background: var(--bgColor-muted);
+  text-decoration: none;
+  color: var(--fgColor-default);
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.channelCard:hover {
+  border-color: var(--brand-hover-border);
+  background: var(--brand-hover-bg);
+}
+
+.channelCardTwitch {
+  --channel-accent: #9146ff;
+}
+
+.channelCardYoutube {
+  --channel-accent: #ff0000;
+}
+
+.channelCard svg {
+  color: var(--channel-accent, var(--fgColor-muted));
+  flex-shrink: 0;
+}
+
+.channelCardInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.channelCardPlatform {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--channel-accent, var(--fgColor-muted));
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.channelCardName {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--fgColor-default);
+}
+
+.channelCardOffline {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--bgColor-inset);
+  color: var(--fgColor-muted);
+  border: 1px solid var(--borderColor-muted);
+  flex-shrink: 0;
+}
+
+/* ────────────────────────────────────────────────────
+   RELACIONAMENTOS
+──────────────────────────────────────────────────── */
+.relList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.relCard,
+.relPendingCard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--borderColor-muted);
+  background: var(--bgColor-muted);
+  transition: border-color 0.15s;
+}
+
+.relCard:hover {
+  border-color: var(--brand-hover-border);
+}
+
+.relCardLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  flex: 1;
+  min-width: 0;
+}
+
+.relCardLogo {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--borderColor-muted);
+}
+
+.relCardInitial {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(var(--brand-rgb-primary), 0.15);
+  color: var(--brand-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.relCardInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.relCardName {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.relTypeBadge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  background: rgba(var(--brand-rgb-primary), 0.12);
+  border-radius: 4px;
+  padding: 1px 6px;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.relRemoveBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--fgColor-muted);
+  font-size: 0.8rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+
+.relRemoveBtn:hover {
+  color: #c0392b;
+  background: rgba(192, 57, 43, 0.1);
+}
+
+.relPendingSection {
+  margin-top: 12px;
+}
+
+.relPendingLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fgColor-muted);
+  margin: 0 0 6px;
+}
+
+.relRespondBtns {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.relAcceptBtn {
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(var(--brand-rgb-primary), 0.4);
+  background: rgba(var(--brand-rgb-primary), 0.1);
+  color: var(--brand-primary);
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+
+.relAcceptBtn:hover {
+  background: rgba(var(--brand-rgb-primary), 0.2);
+}
+
+.relRejectBtn {
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--borderColor-muted);
+  background: transparent;
+  color: var(--fgColor-muted);
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+
+.relRejectBtn:hover {
+  background: var(--bgColor-inset);
+}
+
+.relPendingChip {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 12px;
+  padding: 1px 8px;
+  flex-shrink: 0;
+}
+
+.relRequestSection {
+  margin-top: 12px;
+}
+
+.relRequestToggle {
+  background: none;
+  border: 1px dashed rgba(var(--brand-rgb-primary), 0.4);
+  color: var(--brand-primary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 100%;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.relRequestToggle:hover {
+  background: rgba(var(--brand-rgb-primary), 0.07);
+  border-color: var(--brand-primary);
+}
+
+.relForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.relFormInput,
+.relFormSelect {
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--borderColor-muted);
+  background: var(--bgColor-inset);
+  color: var(--fgColor-default);
+  font-size: 0.85rem;
+  box-sizing: border-box;
+}
+
+.relFormInput:focus,
+.relFormSelect:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+}
+
+.relFormActions {
+  display: flex;
+  gap: 6px;
+}
+
+.relFormBtn {
+  flex: 1;
+  padding: 7px 0;
+  border-radius: 6px;
+  border: none;
+  background: var(--brand-primary);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.relFormBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.relCancelFormBtn {
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--borderColor-muted);
+  background: transparent;
+  color: var(--fgColor-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
 }

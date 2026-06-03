@@ -124,6 +124,26 @@ async function refreshAllStreamStatuses() {
     });
   }
 
+  // Clean up stale platform records for channels that were removed from the org
+  await database.query({
+    text: `
+      UPDATE org_stream_status oss
+      SET
+        is_live              = false,
+        viewer_count         = NULL,
+        stream_title         = NULL,
+        stream_thumbnail_url = NULL,
+        category_name        = NULL,
+        checked_at           = now()
+      FROM organizations o
+      WHERE oss.org_id = o.id
+        AND (
+          (oss.platform = 'twitch'   AND o.twitch_channel       IS NULL)
+          OR (oss.platform = 'youtube' AND o.youtube_channel_id IS NULL)
+        )
+    `,
+  });
+
   return { checked: rows.length };
 }
 

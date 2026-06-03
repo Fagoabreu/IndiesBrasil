@@ -9,9 +9,9 @@ router.get(controller.canRequest("read:studio"), getHandler);
 
 export default router.handler(controller.errorHandlers);
 
-function pickActivePlatform(twitchLive, youtubeLive) {
-  if (twitchLive) return "twitch";
-  if (youtubeLive) return "youtube";
+function pickActivePlatform(row) {
+  if (row.twitch_channel && row.twitch_is_live) return "twitch";
+  if (row.youtube_channel_id && row.youtube_is_live) return "youtube";
   return null;
 }
 
@@ -46,7 +46,7 @@ async function getHandler(request, response) {
   const studios = await stream.getStudiosWithStreams();
 
   const data = studios.map((row) => {
-    const activePlatform = pickActivePlatform(row.twitch_is_live, row.youtube_is_live);
+    const activePlatform = pickActivePlatform(row);
     const streamFields = pickStreamFields(row, activePlatform);
 
     return {
