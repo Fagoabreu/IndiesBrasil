@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import Image from "next/image";
 import { Avatar, Spinner } from "@primer/react";
 import { OrganizationIcon, PeopleIcon, DownloadIcon, GearIcon, PencilIcon, VideoIcon, BroadcastIcon } from "@primer/octicons-react";
 
@@ -95,6 +96,12 @@ export default function StudioPage() {
   const [studioPosts, setStudioPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
 
+  // Relacionamentos
+  const [relationships, setRelationships] = useState({ accepted: [], pending_incoming: [], pending_outgoing: [] });
+  const [relForm, setRelForm] = useState({ targetSlug: "", type: "partner" });
+  const [relFormOpen, setRelFormOpen] = useState(false);
+  const [relFormLoading, setRelFormLoading] = useState(false);
+
   // Video URL editing
   const [editingVideoUrl, setEditingVideoUrl] = useState(false);
   const [videoUrlDraft, setVideoUrlDraft] = useState("");
@@ -174,12 +181,26 @@ export default function StudioPage() {
     }
   }, [slug]);
 
+  const fetchRelationships = useCallback(async () => {
+    if (!slug) return;
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/relationships`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setRelationships(data);
+      }
+    } catch {
+      // ignore
+    }
+  }, [slug]);
+
   useEffect(() => {
     fetchStudio();
     fetchStudioGames();
     fetchStudioBoardGames();
     fetchStudioStream();
-  }, [fetchStudio, fetchStudioGames, fetchStudioBoardGames, fetchStudioStream]);
+    fetchRelationships();
+  }, [fetchStudio, fetchStudioGames, fetchStudioBoardGames, fetchStudioStream, fetchRelationships]);
 
   useEffect(() => {
     if (activeTab === "postagens") fetchStudioPosts();
@@ -321,6 +342,71 @@ export default function StudioPage() {
 
   const canEdit = viewer.isAdmin || viewer.isOwner;
   const canPost = viewer.isMember || viewer.isAdmin || viewer.isOwner;
+
+  const RELATIONSHIP_TYPE_LABELS = {
+    partner: "Parceiro",
+    distributor: "Distribuidora",
+    cooperative: "Cooperativa",
+    workers_association: "Assoc. de trabalhadores",
+    collective: "Coletivo",
+    publisher: "Publicadora",
+    incubator: "Incubadora",
+    investor: "Investidora",
+    other: "Outro",
+  };
+
+  const handleRequestRelationship = async (e) => {
+    e.preventDefault();
+    if (!relForm.targetSlug.trim()) return;
+    setRelFormLoading(true);
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/relationships`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ target_slug: relForm.targetSlug.trim(), type: relForm.type }),
+      });
+      if (res.ok) {
+        setRelForm({ targetSlug: "", type: "partner" });
+        setRelFormOpen(false);
+        await fetchRelationships();
+      } else {
+        const err = await res.json();
+        alert(err.message || "Erro ao solicitar relacionamento.");
+      }
+    } finally {
+      setRelFormLoading(false);
+    }
+  };
+
+  const handleRespondRelationship = async (id, action) => {
+    const res = await fetch(`/api/v1/studios/${slug}/relationships/${id}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action }),
+    });
+    if (res.ok) {
+      await fetchRelationships();
+    } else {
+      const err = await res.json();
+      alert(err.message || "Erro ao responder solicitação.");
+    }
+  };
+
+  const handleRemoveRelationship = async (id) => {
+    if (!confirm("Tem certeza que deseja encerrar este relacionamento?")) return;
+    const res = await fetch(`/api/v1/studios/${slug}/relationships/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    if (res.ok) {
+      await fetchRelationships();
+    } else {
+      const err = await res.json();
+      alert(err.message || "Erro ao encerrar relacionamento.");
+    }
+  };
   const liveEmbedSrc = getLiveEmbedSrc(studioStream);
   const pageTitle = `${studio.name} — Indies Brasil`;
   const pageUrl = `${SITE_URL}/estudios/${studio.slug}`;
@@ -638,6 +724,150 @@ export default function StudioPage() {
                   </p>
                 )}
               </SectionPanel>
+
+              {/* RELACIONAMENTOS */}
+              {(relationships.accepted.length > 0 ||
+                relationships.pending_incoming.length > 0 ||
+                relationships.pending_outgoing.length > 0 ||
+                canEdit) && (
+                <SectionPanel title="Relacionamentos">
+                  {/* Aceitos */}
+                  {relationships.accepted.length > 0 && (
+                    <ul className={styles.relList}>
+                      {relationships.accepted.map((r) => (
+                        <li key={r.id} className={styles.relCard}>
+                          <Link href={`/estudios/${r.other_slug}`} className={styles.relCardLink}>
+                            {r.other_logo_url ? (
+                              <Image src={r.other_logo_url} alt={r.other_name} width={32} height={32} className={styles.relCardLogo} />
+                            ) : (
+                              <span className={styles.relCardInitial}>{r.other_name?.[0]?.toUpperCase() ?? "?"}</span>
+                            )}
+                            <div className={styles.relCardInfo}>
+                              <span className={styles.relCardName}>{r.other_name}</span>
+                              <span className={styles.relTypeBadge}>{RELATIONSHIP_TYPE_LABELS[r.relationship_type] ?? r.relationship_type}</span>
+                            </div>
+                          </Link>
+                          {canEdit && (
+                            <button className={styles.relRemoveBtn} title="Encerrar relacionamento" onClick={() => handleRemoveRelationship(r.id)}>
+                              ✕
+                            </button>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {/* Pendentes recebidas (só para admin) */}
+                  {canEdit && relationships.pending_incoming.length > 0 && (
+                    <div className={styles.relPendingSection}>
+                      <p className={styles.relPendingLabel}>Solicitações recebidas</p>
+                      <ul className={styles.relList}>
+                        {relationships.pending_incoming.map((r) => (
+                          <li key={r.id} className={styles.relPendingCard}>
+                            <Link href={`/estudios/${r.other_slug}`} className={styles.relCardLink}>
+                              {r.other_logo_url ? (
+                                <Image src={r.other_logo_url} alt={r.other_name} width={32} height={32} className={styles.relCardLogo} />
+                              ) : (
+                                <span className={styles.relCardInitial}>{r.other_name?.[0]?.toUpperCase() ?? "?"}</span>
+                              )}
+                              <div className={styles.relCardInfo}>
+                                <span className={styles.relCardName}>{r.other_name}</span>
+                                <span className={styles.relTypeBadge}>{RELATIONSHIP_TYPE_LABELS[r.relationship_type] ?? r.relationship_type}</span>
+                              </div>
+                            </Link>
+                            <div className={styles.relRespondBtns}>
+                              <button className={styles.relAcceptBtn} onClick={() => handleRespondRelationship(r.id, "accept")}>
+                                Aceitar
+                              </button>
+                              <button className={styles.relRejectBtn} onClick={() => handleRespondRelationship(r.id, "reject")}>
+                                Recusar
+                              </button>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Pendentes enviadas */}
+                  {relationships.pending_outgoing.length > 0 && (
+                    <div className={styles.relPendingSection}>
+                      <p className={styles.relPendingLabel}>Aguardando aprovação</p>
+                      <ul className={styles.relList}>
+                        {relationships.pending_outgoing.map((r) => (
+                          <li key={r.id} className={styles.relPendingCard}>
+                            <Link href={`/estudios/${r.other_slug}`} className={styles.relCardLink}>
+                              {r.other_logo_url ? (
+                                <Image src={r.other_logo_url} alt={r.other_name} width={32} height={32} className={styles.relCardLogo} />
+                              ) : (
+                                <span className={styles.relCardInitial}>{r.other_name?.[0]?.toUpperCase() ?? "?"}</span>
+                              )}
+                              <div className={styles.relCardInfo}>
+                                <span className={styles.relCardName}>{r.other_name}</span>
+                                <span className={styles.relTypeBadge}>{RELATIONSHIP_TYPE_LABELS[r.relationship_type] ?? r.relationship_type}</span>
+                              </div>
+                            </Link>
+                            <span className={styles.relPendingChip}>pendente</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Formulário de solicitação (só admin) */}
+                  {canEdit && (
+                    <div className={styles.relRequestSection}>
+                      {relFormOpen ? (
+                        <form className={styles.relForm} onSubmit={handleRequestRelationship}>
+                          <input
+                            type="text"
+                            className={styles.relFormInput}
+                            placeholder="Slug do estúdio (ex: acme-games)"
+                            value={relForm.targetSlug}
+                            onChange={(e) => setRelForm((f) => ({ ...f, targetSlug: e.target.value }))}
+                            required
+                          />
+                          <select
+                            className={styles.relFormSelect}
+                            value={relForm.type}
+                            onChange={(e) => setRelForm((f) => ({ ...f, type: e.target.value }))}
+                          >
+                            {Object.entries(RELATIONSHIP_TYPE_LABELS).map(([val, label]) => (
+                              <option key={val} value={val}>
+                                {label}
+                              </option>
+                            ))}
+                          </select>
+                          <div className={styles.relFormActions}>
+                            <button type="submit" className={styles.relFormBtn} disabled={relFormLoading}>
+                              {relFormLoading ? "Enviando…" : "Enviar solicitação"}
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.relCancelFormBtn}
+                              onClick={() => {
+                                setRelFormOpen(false);
+                                setRelForm({ targetSlug: "", type: "partner" });
+                              }}
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </form>
+                      ) : (
+                        <button className={styles.relRequestToggle} onClick={() => setRelFormOpen(true)}>
+                          + Solicitar relacionamento
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {!canEdit &&
+                    relationships.accepted.length === 0 &&
+                    relationships.pending_incoming.length === 0 &&
+                    relationships.pending_outgoing.length === 0 && <p className={styles.emptyHint}>Nenhum relacionamento ainda.</p>}
+                </SectionPanel>
+              )}
             </aside>
           </div>
         )}

@@ -649,6 +649,164 @@ async function findByMember(userId) {
   return results.rows;
 }
 
+/**
+ * Retorna todos os relacionamentos de um estúdio, separados por status.
+ * @returns {{ accepted: [], pending_incoming: [], pending_outgoing: [] }}
+ */
+async function getRelationships(orgId) {
+  const result = await database.query({
+    text: `
+      SELECT
+        r.id,
+        r.relationship_type,
+        r.status,
+        r.requested_by_org_id,
+        r.created_at,
+        -- dados do estúdio "parceiro" (o outro lado)
+        CASE WHEN r.org_a_id = $1 THEN ob.id    ELSE oa.id    END AS other_id,
+        CASE WHEN r.org_a_id = $1 THEN ob.slug  ELSE oa.slug  END AS other_slug,
+        CASE WHEN r.org_a_id = $1 THEN ob.name  ELSE oa.name  END AS other_name,
+        CASE WHEN r.org_a_id = $1 THEN uib.secure_url ELSE uia.secure_url END AS other_logo_url
+      FROM org_relationships r
+      INNER JOIN organizations oa ON oa.id = r.org_a_id
+      INNER JOIN organizations ob ON ob.id = r.org_b_id
+      LEFT  JOIN uploaded_images uia ON uia.id = oa.img
+      LEFT  JOIN uploaded_images uib ON uib.id = ob.img
+      WHERE (r.org_a_id = $1 OR r.org_b_id = $1)
+        AND r.status != 'rejected'
+      ORDER BY r.updated_at DESC
+    `,
+    values: [orgId],
+  });
+
+  const accepted = [];
+  const pending_incoming = [];
+  const pending_outgoing = [];
+
+  for (const row of result.rows) {
+    if (row.status === "accepted") {
+      accepted.push(row);
+    } else if (row.status === "pending") {
+      if (row.requested_by_org_id === orgId) {
+        pending_outgoing.push(row);
+      } else {
+        pending_incoming.push(row);
+      }
+    }
+  }
+
+  return { accepted, pending_incoming, pending_outgoing };
+}
+
+const VALID_RELATIONSHIP_TYPES = [
+  "partner",
+  "distributor",
+  "cooperative",
+  "workers_association",
+  "collective",
+  "publisher",
+  "incubator",
+  "investor",
+  "other",
+];
+
+/**
+ * Solicita um relacionamento entre dois estúdios.
+ * O par é normalizado: LEAST(a,b) vai para org_a_id.
+ */
+async function requestRelationship(fromOrgId, toSlug, type, userId) {
+  if (!VALID_RELATIONSHIP_TYPES.includes(type)) {
+    throw new ValidationError({ message: `Tipo de relacionamento inválido: ${type}` });
+  }
+
+  const target = await findBySlug(toSlug);
+  if (target.id === fromOrgId) {
+    throw new ValidationError({ message: "Um estúdio não pode criar um relacionamento consigo mesmo." });
+  }
+
+  const orgAId = fromOrgId < target.id ? fromOrgId : target.id;
+  const orgBId = fromOrgId < target.id ? target.id : fromOrgId;
+
+  const existing = await database.query({
+    text: `SELECT id, status FROM org_relationships WHERE org_a_id = $1 AND org_b_id = $2`,
+    values: [orgAId, orgBId],
+  });
+  if (existing.rowCount) {
+    const s = existing.rows[0].status;
+    if (s === "accepted") throw new ValidationError({ message: "Já existe um relacionamento ativo entre esses estúdios." });
+    if (s === "pending") throw new ValidationError({ message: "Já existe uma solicitação pendente entre esses estúdios." });
+  }
+
+  const result = await database.query({
+    text: `
+      INSERT INTO org_relationships
+        (org_a_id, org_b_id, relationship_type, status, requested_by_org_id, requested_by_user_id)
+      VALUES ($1, $2, $3, 'pending', $4, $5)
+      RETURNING *
+    `,
+    values: [orgAId, orgBId, type, fromOrgId, userId],
+  });
+
+  return result.rows[0];
+}
+
+/**
+ * Aceita ou rejeita uma solicitação de relacionamento.
+ * Só o estúdio que recebeu a solicitação pode responder.
+ */
+async function respondToRelationship(relationshipId, orgId, userId, action) {
+  if (!["accept", "reject"].includes(action)) {
+    throw new ValidationError({ message: "Ação inválida. Use 'accept' ou 'reject'." });
+  }
+
+  const rel = await database.query({
+    text: `SELECT * FROM org_relationships WHERE id = $1`,
+    values: [relationshipId],
+  });
+  if (!rel.rowCount) throw new NotFoundError({ message: "Relacionamento não encontrado." });
+
+  const row = rel.rows[0];
+  if (row.status !== "pending") throw new ValidationError({ message: "Apenas solicitações pendentes podem ser respondidas." });
+
+  const receiverOrgId = row.requested_by_org_id === row.org_a_id ? row.org_b_id : row.org_a_id;
+  if (receiverOrgId !== orgId) {
+    throw new ForbiddenError({ message: "Apenas o estúdio que recebeu a solicitação pode respondê-la." });
+  }
+
+  const newStatus = action === "accept" ? "accepted" : "rejected";
+  const result = await database.query({
+    text: `
+      UPDATE org_relationships
+      SET status = $1, responded_by_user_id = $2, updated_at = NOW()
+      WHERE id = $3
+      RETURNING *
+    `,
+    values: [newStatus, userId, relationshipId],
+  });
+  return result.rows[0];
+}
+
+/**
+ * Remove um relacionamento. Qualquer admin de qualquer um dos dois estúdios pode remover.
+ */
+async function removeRelationship(relationshipId, orgId) {
+  const rel = await database.query({
+    text: `SELECT org_a_id, org_b_id FROM org_relationships WHERE id = $1`,
+    values: [relationshipId],
+  });
+  if (!rel.rowCount) throw new NotFoundError({ message: "Relacionamento não encontrado." });
+
+  const { org_a_id, org_b_id } = rel.rows[0];
+  if (orgId !== org_a_id && orgId !== org_b_id) {
+    throw new ForbiddenError({ message: "Você não tem permissão para remover este relacionamento." });
+  }
+
+  await database.query({
+    text: `DELETE FROM org_relationships WHERE id = $1`,
+    values: [relationshipId],
+  });
+}
+
 const organization = {
   findAll,
   findByMember,
@@ -680,6 +838,10 @@ const organization = {
   deleteContact,
   requestOwnershipTransfer,
   respondToTransfer,
+  getRelationships,
+  requestRelationship,
+  respondToRelationship,
+  removeRelationship,
 };
 
 export default organization;
