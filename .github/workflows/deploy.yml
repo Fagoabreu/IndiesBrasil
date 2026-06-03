@@ -81,10 +81,8 @@ jobs:
       # Pretara pastas
       - name: Prepare directories on server
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} <<EOF
-            mkdir -p /var/www/indies/nginx
-            mkdir -p /var/www/indies/certs
-          EOF
+          ssh -T -o StrictHostKeyChecking=no ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} \
+            "mkdir -p /var/www/indies/nginx /var/www/indies/certs"
 
       #Enviar arquivos
       - name: Upload app artifacts
