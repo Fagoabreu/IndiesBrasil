@@ -67,6 +67,9 @@ jobs:
             echo "CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}"
             echo "CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}"
             echo "FILE_UPLOAD_BASE_FOLDER=${{ vars.FILE_UPLOAD_BASE_FOLDER }}"
+            echo "TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }}"
+            echo "TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }}"
+            echo "YOUTUBE_API_KEY=${{ secrets.YOUTUBE_API_KEY }}"
           } > .env.production
 
       # 4️⃣ Configurar SSH
