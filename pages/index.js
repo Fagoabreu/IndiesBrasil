@@ -142,13 +142,13 @@ function Home() {
             period="Desde o inicio"
             value={summary ? summary.user_accounts : "..."}
             previousLabel="Ultimos 30 dias"
-            previousValue="1"
+            previousValue={summary ? summary.new_user_accounts : "..."}
             icon={<PeopleIcon />}
           />
           <MetricCard
             title="Posts"
             period="30 dias"
-            value={summary ? summary.posts : "..."}
+            value={summary ? summary.new_posts : "..."}
             previousLabel="Periodo Anterior"
             previousValue={summary ? summary.previous_posts : "..."}
             icon={<StarIcon />}
@@ -161,7 +161,14 @@ function Home() {
             previousValue={summary ? summary.previous_events : "..."}
             icon={<TeamIcon />}
           />
-          <MetricCard title="Estudios" period="Total" value="..." icon={<TagIcon />} />
+          <MetricCard
+            title="Estudios"
+            period="Total"
+            value={summary ? summary.organizations : "..."}
+            previousLabel="Novos nos últimos 30 dias"
+            previousValue={summary ? summary.new_organizations : "..."}
+            icon={<TagIcon />}
+          />
           <MetricCard title="Jogos" period="Total" value="..." previousLabel="Em Desenvolvimento" previousValue="..." icon={<VideoIcon />} />
         </div>
       </section>

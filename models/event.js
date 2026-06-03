@@ -362,11 +362,29 @@ async function findById(id, userId) {
     values: [id],
   });
 
+  // RSVPs de organizações ("going" apenas)
+  const orgRsvpResult = await database.query({
+    text: `
+      SELECT
+        r.organization_id,
+        o.slug   AS org_slug,
+        o.name   AS org_name,
+        ui.secure_url AS org_logo_url
+      FROM event_org_rsvps r
+      INNER JOIN organizations o ON o.id = r.organization_id
+      LEFT JOIN uploaded_images ui ON ui.id = o.img
+      WHERE r.event_id = $1
+      ORDER BY r.created_at ASC
+    `,
+    values: [id],
+  });
+
   return {
     ...event,
     user_rsvp: userRsvp,
     is_owner: userId ? userId === event.created_by : false,
     upcoming_instances: instancesResult.rows,
+    org_rsvps: orgRsvpResult.rows,
   };
 }
 
@@ -638,6 +656,72 @@ async function upsertRsvp(eventId, userId, status, instanceId = null) {
   return getRsvpCounts(eventId);
 }
 
+/**
+ * Confirma presença de uma organização num evento.
+ * Valida que o usuário é membro/admin/dono da org.
+ */
+async function upsertOrgRsvp(eventId, orgId, userId) {
+  // Valida evento
+  const eventResult = await database.query({
+    text: `SELECT id, status AS event_status FROM events WHERE id = $1`,
+    values: [eventId],
+  });
+  if (!eventResult.rowCount) throw new NotFoundError({ message: "Evento não encontrado." });
+  if (eventResult.rows[0].event_status === "cancelled") {
+    throw new ValidationError({ message: "Não é possível confirmar presença em evento cancelado." });
+  }
+
+  // Valida membro da org
+  const memberResult = await database.query({
+    text: `
+      SELECT 1 FROM org_members WHERE org_id = $1 AND member_id = $2 AND status = 'active'
+      UNION
+      SELECT 1 FROM organizations WHERE id = $1 AND owner_id = $2
+    `,
+    values: [orgId, userId],
+  });
+  if (!memberResult.rowCount) {
+    throw new ForbiddenError({ message: "Você não faz parte deste estúdio." });
+  }
+
+  await database.query({
+    text: `
+      INSERT INTO event_org_rsvps (event_id, organization_id, confirmed_by)
+      VALUES ($1, $2, $3)
+      ON CONFLICT ON CONSTRAINT uq_event_org_rsvp
+      DO UPDATE SET confirmed_by = $3, updated_at = NOW()
+    `,
+    values: [eventId, orgId, userId],
+  });
+
+  return getRsvpCounts(eventId);
+}
+
+/**
+ * Remove o RSVP de uma organização num evento.
+ * Valida que o usuário é membro/admin/dono da org.
+ */
+async function removeOrgRsvp(eventId, orgId, userId) {
+  const memberResult = await database.query({
+    text: `
+      SELECT 1 FROM org_members WHERE org_id = $1 AND member_id = $2 AND status = 'active'
+      UNION
+      SELECT 1 FROM organizations WHERE id = $1 AND owner_id = $2
+    `,
+    values: [orgId, userId],
+  });
+  if (!memberResult.rowCount) {
+    throw new ForbiddenError({ message: "Você não faz parte deste estúdio." });
+  }
+
+  await database.query({
+    text: `DELETE FROM event_org_rsvps WHERE event_id = $1 AND organization_id = $2`,
+    values: [eventId, orgId],
+  });
+
+  return getRsvpCounts(eventId);
+}
+
 async function removeRsvp(eventId, userId) {
   await database.query({
     text: `DELETE FROM event_rsvps WHERE event_id = $1 AND user_id = $2 AND instance_id IS NULL`,
@@ -860,6 +944,8 @@ const event = {
   cancel,
   upsertRsvp,
   removeRsvp,
+  upsertOrgRsvp,
+  removeOrgRsvp,
   getRsvpCounts,
   invite,
   respondInvitation,

@@ -15,9 +15,15 @@ async function getSummary() {
           ) AS user_accounts,
           (
             SELECT COUNT(*)
+            FROM users
+            WHERE 'create:session' = ANY(features)
+            and created_at >= NOW() - INTERVAL '30 days'
+          ) AS new_user_accounts,
+          (
+            SELECT COUNT(*)
             FROM posts
             WHERE created_at >= NOW() - INTERVAL '30 days'
-          ) AS posts,
+          ) AS new_posts,
           (
             SELECT COUNT(*)
             FROM posts
@@ -34,7 +40,17 @@ async function getSummary() {
             SELECT COUNT(*)
             FROM events
             WHERE created_at >= NOW() - INTERVAL '30 days'
-          ) AS events;
+          ) AS events,
+          (
+            SELECT COUNT(*)
+            FROM organizations
+          ) AS organizations,
+          (
+            SELECT COUNT(*)
+            FROM organizations
+            WHERE created_at >= NOW() - INTERVAL '30 days'
+          ) AS new_organizations
+          ;
 
       `,
     });

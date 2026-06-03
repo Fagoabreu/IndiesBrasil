@@ -625,8 +625,33 @@ async function deleteContact(id, orgId) {
   }
 }
 
+/**
+ * Retorna os estúdios dos quais o usuário é dono ou membro ativo.
+ * Útil para renderizar seletor de RSVP em eventos.
+ */
+async function findByMember(userId) {
+  const results = await database.query({
+    text: `
+      SELECT
+        o.id, o.slug, o.name,
+        ui_logo.secure_url AS logo_url
+      FROM organizations o
+      LEFT JOIN uploaded_images ui_logo ON ui_logo.id = o.img
+      WHERE o.owner_id = $1
+         OR EXISTS (
+           SELECT 1 FROM org_members om
+           WHERE om.org_id = o.id AND om.member_id = $1 AND om.status = 'active'
+         )
+      ORDER BY o.name ASC
+    `,
+    values: [userId],
+  });
+  return results.rows;
+}
+
 const organization = {
   findAll,
+  findByMember,
   findBySlug,
   findById,
   create,

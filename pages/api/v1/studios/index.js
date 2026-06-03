@@ -13,11 +13,13 @@ router.post(controller.canRequest("create:studio"), createHandler);
 export default router.handler(controller.errorHandlers);
 
 async function listHandler(request, response) {
-  const { page = 1, limit = 20, search = "", isfollowing } = request.query;
+  const { page = 1, limit = 20, search = "", isfollowing, member } = request.query;
   const requestUser = request.context.user;
 
   let studios;
-  if (isfollowing === "true" && requestUser.id) {
+  if (member === "me" && requestUser?.id) {
+    studios = await organization.findByMember(requestUser.id);
+  } else if (isfollowing === "true" && requestUser?.id) {
     studios = await organization.findFollowing(requestUser.id, {
       page: Number(page),
       limit: Number(limit),

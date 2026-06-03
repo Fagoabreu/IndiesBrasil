@@ -55,6 +55,11 @@ export default function EventDetailPage() {
   const [rsvpLoading, setRsvpLoading] = useState(false);
   const [userRsvp, setUserRsvp] = useState(null);
   const [counts, setCounts] = useState({ going: 0, maybe: 0, not_going: 0 });
+  const [userStudios, setUserStudios] = useState([]);
+  const [orgRsvps, setOrgRsvps] = useState([]);
+  const [orgRsvpLoading, setOrgRsvpLoading] = useState(false);
+  const [selectedOrgId, setSelectedOrgId] = useState("");
+
   useEffect(() => {
     if (!id) return;
 
@@ -76,6 +81,7 @@ export default function EventDetailPage() {
             maybe: Number(evData.rsvp_maybe ?? 0),
             not_going: Number(evData.rsvp_not_going ?? 0),
           });
+          setOrgRsvps(Array.isArray(evData.org_rsvps) ? evData.org_rsvps : []);
         }
         if (postsRes.ok) setPosts(Array.isArray(postsData) ? postsData : []);
       } finally {
@@ -85,6 +91,13 @@ export default function EventDetailPage() {
 
     load();
   }, [id]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    fetch("/api/v1/studios?member=me", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setUserStudios(Array.isArray(data) ? data : []));
+  }, [user]);
 
   async function handleRsvp(status) {
     if (!user || !id) return;
@@ -130,6 +143,56 @@ export default function EventDetailPage() {
     if (!res.ok) return;
     const created = await res.json();
     setPosts((prev) => [created, ...prev]);
+  }
+
+  function isOrgGoing(orgId) {
+    return orgRsvps.some((o) => o.organization_id === orgId);
+  }
+
+  async function handleOrgRsvp() {
+    if (!selectedOrgId || !id) return;
+    setOrgRsvpLoading(true);
+    try {
+      if (isOrgGoing(selectedOrgId)) {
+        const res = await fetch(`/api/v1/events/${id}/org-rsvp`, {
+          method: "DELETE",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ org_id: selectedOrgId }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setOrgRsvps((prev) => prev.filter((o) => o.organization_id !== selectedOrgId));
+          setCounts(data.counts);
+        }
+      } else {
+        const res = await fetch(`/api/v1/events/${id}/org-rsvp`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ org_id: selectedOrgId }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const studio = userStudios.find((s) => s.id === selectedOrgId);
+          if (studio) {
+            setOrgRsvps((prev) => [
+              ...prev,
+              {
+                organization_id: studio.id,
+                status: "going",
+                org_slug: studio.slug,
+                org_name: studio.name,
+                org_logo_url: studio.logo_url,
+              },
+            ]);
+          }
+          setCounts(data.counts);
+        }
+      }
+    } finally {
+      setOrgRsvpLoading(false);
+    }
   }
 
   async function handleCancel() {
@@ -216,6 +279,25 @@ export default function EventDetailPage() {
                     {inst.override_title && <span style={{ color: "var(--brand-primary)", fontWeight: 600 }}>{inst.override_title}</span>}
                   </div>
                 ))}
+              </div>
+            )}
+
+            {orgRsvps.length > 0 && (
+              <div className={styles.orgRsvpAttendees}>
+                <div className={styles.orgRsvpAttendeesLabel}>Estúdios confirmados ({orgRsvps.length})</div>
+                <div className={styles.orgRsvpAttendeesList}>
+                  {orgRsvps.map((org) => (
+                    <Link key={org.organization_id} href={`/estudios/${org.org_slug}`} className={styles.orgCard}>
+                      {org.org_logo_url ? (
+                        <Image src={org.org_logo_url} alt={org.org_name} width={38} height={38} className={styles.orgCardLogo} />
+                      ) : (
+                        <span className={styles.orgCardInitial}>{(org.org_name || "E")[0].toUpperCase()}</span>
+                      )}
+                      <span className={styles.orgCardName}>{org.org_name}</span>
+                      <span className={styles.orgCardGoingBadge}>✓ Vai</span>
+                    </Link>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -340,17 +422,47 @@ export default function EventDetailPage() {
                 </div>
 
                 {user ? (
-                  <div className={styles.rsvpBtns}>
-                    <button type="button" className={rsvpBtnClass("going")} onClick={() => handleRsvp("going")} disabled={rsvpLoading}>
-                      ✅ {userRsvp === "going" ? "Confirmado!" : "Vou!"}
-                    </button>
-                    <button type="button" className={rsvpBtnClass("maybe")} onClick={() => handleRsvp("maybe")} disabled={rsvpLoading}>
-                      🤔 {userRsvp === "maybe" ? "Marcado como talvez" : "Talvez"}
-                    </button>
-                    <button type="button" className={rsvpBtnClass("not_going")} onClick={() => handleRsvp("not_going")} disabled={rsvpLoading}>
-                      ❌ {userRsvp === "not_going" ? "Marcado como não vou" : "Não vou"}
-                    </button>
-                  </div>
+                  <>
+                    <div className={styles.rsvpBtns}>
+                      <button type="button" className={rsvpBtnClass("going")} onClick={() => handleRsvp("going")} disabled={rsvpLoading}>
+                        ✅ {userRsvp === "going" ? "Confirmado!" : "Vou!"}
+                      </button>
+                      <button type="button" className={rsvpBtnClass("maybe")} onClick={() => handleRsvp("maybe")} disabled={rsvpLoading}>
+                        🤔 {userRsvp === "maybe" ? "Marcado como talvez" : "Talvez"}
+                      </button>
+                      <button type="button" className={rsvpBtnClass("not_going")} onClick={() => handleRsvp("not_going")} disabled={rsvpLoading}>
+                        ❌ {userRsvp === "not_going" ? "Marcado como não vou" : "Não vou"}
+                      </button>
+                    </div>
+
+                    {userStudios.length > 0 && (
+                      <div className={styles.orgRsvpSection}>
+                        <div className={styles.orgRsvpLabel}>Confirmar como estúdio</div>
+                        <div className={styles.orgRsvpRow}>
+                          <select className={styles.orgRsvpSelect} value={selectedOrgId} onChange={(e) => setSelectedOrgId(e.target.value)}>
+                            <option value="">Selecione um estúdio…</option>
+                            {userStudios.map((s) => (
+                              <option key={s.id} value={s.id}>
+                                {s.name}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            className={`${styles.rsvpBtn} ${selectedOrgId && isOrgGoing(selectedOrgId) ? `${styles.active} ${styles.going}` : ""}`}
+                            onClick={handleOrgRsvp}
+                            disabled={!selectedOrgId || orgRsvpLoading}
+                          >
+                            {orgRsvpLoading
+                              ? "…"
+                              : selectedOrgId && isOrgGoing(selectedOrgId)
+                                ? "✅ Confirmado — clique para cancelar"
+                                : "Confirmar presença"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <p className={styles.loginHint}>
                     <Link href="/login" className={styles.loginLink}>

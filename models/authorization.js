@@ -269,10 +269,13 @@ function filterOutput(user, feature, resource) {
   if (feature === "read:summary") {
     return {
       user_accounts: resource.user_accounts,
-      posts: resource.posts,
+      new_user_accounts: resource.new_user_accounts,
+      new_posts: resource.new_posts,
       previous_posts: resource.previous_posts,
       events: resource.events,
       previous_events: resource.previous_events,
+      organizations: resource.organizations,
+      new_organizations: resource.new_organizations,
     };
   }
 
