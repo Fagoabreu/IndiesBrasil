@@ -38,7 +38,7 @@
 
 .postGrid {
   display: grid;
-  grid-template-columns: 48px 1fr;
+  grid-template-columns: 48px minmax(0, 1fr);
   gap: 12px;
 }
 
@@ -64,6 +64,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
 }
 
 /* HEADER */
@@ -72,6 +73,17 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 8px;
+}
+
+.authorInfo {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.deleteBtn {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .authorName {
@@ -282,7 +294,7 @@
   }
 
   .postGrid {
-    grid-template-columns: 40px 1fr;
+    grid-template-columns: 40px minmax(0, 1fr);
     gap: 10px;
   }
 

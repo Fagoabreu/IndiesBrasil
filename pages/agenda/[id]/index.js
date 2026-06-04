@@ -227,7 +227,8 @@ export default function EventDetailPage() {
       <SeoHead title={pageTitle} description={ev.description || ev.title} url={pageUrl} />
 
       {ev.banner_url ? (
-        <Image src={ev.banner_url} alt={ev.title} width={900} height={260} className={styles.banner} />
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={ev.banner_url} alt={ev.title} className={styles.banner} />
       ) : (
         <div className={styles.bannerPlaceholder} />
       )}
