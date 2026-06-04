@@ -3,6 +3,7 @@
   gap: 24px;
   align-items: center;
   margin-top: 4px;
+  flex-wrap: wrap;
 }
 .actionItem {
   display: flex;
@@ -30,4 +31,10 @@
 .replyBtn {
   font-size: 13px;
   color: var(--fgColor-accent);
+}
+
+@media (max-width: 640px) {
+  .actions {
+    gap: 16px;
+  }
 }

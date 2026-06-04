@@ -499,11 +499,32 @@
 
 @media (max-width: 480px) {
   .bannerWrapper {
-    height: 150px;
+    height: 120px;
   }
 
-  .profileHeader {
-    gap: 10px;
+  .logoWrapper {
+    top: 76px; /* 120px banner − 44px overlap */
+    left: 16px;
+    width: 72px;
+    height: 72px;
+  }
+
+  .studioLogo {
+    width: 60px !important;
+    height: 60px !important;
+  }
+
+  /* Stack: content below the logo, no left offset */
+  .profileHeaderRow {
+    flex-direction: column;
+    padding: 52px 16px 16px;
+    margin-top: 0;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .profileContent {
+    width: 100%;
   }
 
   .studioName {
@@ -513,6 +534,22 @@
   .profileActions {
     width: 100%;
     margin-left: 0;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .btnOutline {
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  /* QR code: show below actions, smaller */
+  .profileRight {
+    display: flex;
+    width: 100%;
+    justify-content: flex-start;
+    order: 3;
   }
 }
 

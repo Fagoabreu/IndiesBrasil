@@ -17,7 +17,7 @@ function dbSettingsToState(data) {
   };
 }
 
-export default function StudioQrCode({ slug, canEdit }) {
+export default function StudioQrCode({ slug, canEdit, size = 120 }) {
   const [settings, setSettings] = useState({ ...DEFAULT_QR_SETTINGS });
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -78,7 +78,7 @@ export default function StudioQrCode({ slug, canEdit }) {
       <div className={styles.qrBox} ref={qrRef}>
         <QRCodeCanvas
           value={studioUrl}
-          size={120}
+          size={size}
           fgColor={settings.fgColor}
           bgColor={settings.bgColor}
           level="M"
@@ -115,4 +115,5 @@ export default function StudioQrCode({ slug, canEdit }) {
 StudioQrCode.propTypes = {
   slug: PropTypes.string,
   canEdit: PropTypes.bool,
+  size: PropTypes.number,
 };

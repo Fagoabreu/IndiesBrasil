@@ -213,7 +213,7 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
         <div className={styles.contentCol}>
           {/* HEADER */}
           <div className={styles.header}>
-            <div>
+            <div className={styles.authorInfo}>
               <Link href={`/perfil/${post.author_username}`} className={styles.authorName}>
                 <strong>{post.author_username}</strong>
               </Link>
