@@ -85,6 +85,24 @@ const BOOK_STAGE_LABELS = {
   cancelled: "Cancelado",
 };
 
+const BOOK_STORE_TYPES = [
+  { id: 1, name: "Amazon" },
+  { id: 2, name: "Submarino" },
+  { id: 3, name: "Americanas" },
+  { id: 4, name: "Magazine Luíza" },
+  { id: 5, name: "Mercado Livre" },
+  { id: 6, name: "Livraria Cultura" },
+  { id: 7, name: "Martins Fontes" },
+  { id: 8, name: "Estante Virtual" },
+  { id: 9, name: "Travessa" },
+  { id: 10, name: "Saraiva" },
+  { id: 11, name: "Loja própria" },
+  { id: 12, name: "Catarse" },
+  { id: 13, name: "Apoia.se" },
+  { id: 14, name: "Kickante" },
+  { id: 15, name: "Loja física" },
+];
+
 const EMPTY_ADDRESS = {
   street: "",
   number: "",
@@ -444,6 +462,13 @@ export default function ConfiguracoesPage() {
         website_url: data.website_url || "",
         buy_url: data.buy_url || "",
         cover_url_external: data.cover_url_external || "",
+        pdf_url: data.pdf_url || "",
+        store_pages:
+          data.store_pages?.map((sp) => ({
+            store_type_id: sp.store_type_id,
+            page_url: sp.page_url || "",
+            price: sp.price == null ? "" : String(sp.price),
+          })) || [],
       });
     } finally {
       setLoadingBookEdit(false);
@@ -461,6 +486,17 @@ export default function ConfiguracoesPage() {
         title: editBookForm.title.trim(),
         pages: editBookForm.pages === "" ? null : Number.parseInt(editBookForm.pages, 10),
       };
+      // Só incluir store_pages se o usuário interagiu com a aba Lojas
+      if (Array.isArray(editBookForm.store_pages)) {
+        const filledStores = editBookForm.store_pages
+          .filter((sp) => sp.store_type_id && sp.page_url.trim())
+          .map((sp) => ({
+            store_type_id: Number(sp.store_type_id),
+            page_url: sp.page_url.trim(),
+            price: sp.price === "" ? null : Number(sp.price),
+          }));
+        payload.store_pages = filledStores;
+      }
       const res = await fetch(`/api/v1/books/${editingBookSlug}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -828,6 +864,25 @@ export default function ConfiguracoesPage() {
 
   function removeStorePage(idx) {
     setEditGameForm((f) => ({ ...f, store_pages: f.store_pages.filter((_, i) => i !== idx) }));
+  }
+
+  // --- Book store page helpers ---
+  function addBookStorePage() {
+    setEditBookForm((f) => ({
+      ...f,
+      store_pages: [...f.store_pages, { store_type_id: "", page_url: "", price: "" }],
+    }));
+  }
+
+  function updateBookStorePage(idx, field, value) {
+    setEditBookForm((f) => {
+      const updated = f.store_pages.map((sp, i) => (i === idx ? { ...sp, [field]: value } : sp));
+      return { ...f, store_pages: updated };
+    });
+  }
+
+  function removeBookStorePage(idx) {
+    setEditBookForm((f) => ({ ...f, store_pages: f.store_pages.filter((_, i) => i !== idx) }));
   }
 
   async function handleCreateBoardgame(e) {
@@ -2150,6 +2205,8 @@ export default function ConfiguracoesPage() {
                               {[
                                 { id: "info", label: "Informações" },
                                 { id: "cover", label: "Capa" },
+                                { id: "pdf", label: "PDF" },
+                                { id: "stores", label: "Lojas" },
                               ].map((t) => (
                                 <button
                                   key={t.id}
@@ -2367,6 +2424,69 @@ export default function ConfiguracoesPage() {
                                   {uploadingBookImg ? <Spinner size="small" /> : "Enviar imagem"}
                                 </button>
                               </div>
+                            )}
+
+                            {activeBookTab === "pdf" && (
+                              <label className={styles.fieldLabel}>
+                                <span>URL do PDF</span>
+                                <input
+                                  type="url"
+                                  className={styles.input}
+                                  placeholder="https://seupdf.com/meu-livro.pdf"
+                                  value={editBookForm.pdf_url}
+                                  onChange={(e) => setEditBookForm((f) => ({ ...f, pdf_url: e.target.value }))}
+                                  maxLength={512}
+                                />
+                              </label>
+                            )}
+
+                            {activeBookTab === "stores" && (
+                              <fieldset className={styles.fieldset}>
+                                <legend className={styles.fieldsetLegend}>Links de compra</legend>
+                                {editBookForm.store_pages.map((sp, idx) => (
+                                  <div key={`book-store-${sp.store_type_id ?? ""}-${idx}`} className={styles.storePageRow}>
+                                    <select
+                                      className={styles.input}
+                                      value={sp.store_type_id}
+                                      onChange={(e) => updateBookStorePage(idx, "store_type_id", e.target.value)}
+                                    >
+                                      <option value="">Selecione a loja</option>
+                                      {BOOK_STORE_TYPES.map((st) => (
+                                        <option key={st.id} value={st.id}>
+                                          {st.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <input
+                                      type="url"
+                                      className={styles.input}
+                                      placeholder="URL da página na loja"
+                                      value={sp.page_url}
+                                      onChange={(e) => updateBookStorePage(idx, "page_url", e.target.value)}
+                                    />
+                                    <input
+                                      type="number"
+                                      className={`${styles.input} ${styles.priceInput}`}
+                                      placeholder="Preço (0 = grátis)"
+                                      value={sp.price}
+                                      min="0"
+                                      step="0.01"
+                                      onChange={(e) => updateBookStorePage(idx, "price", e.target.value)}
+                                    />
+                                    <button
+                                      type="button"
+                                      className={styles.btnRemoveStore}
+                                      onClick={() => removeBookStorePage(idx)}
+                                      aria-label="Remover"
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                ))}
+                                <button type="button" className={styles.btnAddStore} onClick={addBookStorePage}>
+                                  + Adicionar loja
+                                </button>
+                              </fieldset>
                             )}
 
                             {editBookMsg.text && <StatusMessageComponent type={editBookMsg.type} message={editBookMsg.text} />}

@@ -32,7 +32,7 @@ export default function BookCard({ book }) {
     <Link href={`/quadrinhos/${book.slug}`} className={styles.card}>
       <div className={styles.cardCover}>
         {book.cover_url ? (
-          <Image src={book.cover_url} alt={book.title} fill sizes="200px" className={styles.coverImg} unoptimized />
+          <Image src={book.cover_url} alt={book.title} width={200} height={300} className={styles.coverImg} unoptimized />
         ) : (
           <div className={styles.coverPlaceholder}>
             <span>{book.title[0]}</span>

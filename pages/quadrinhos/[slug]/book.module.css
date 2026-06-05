@@ -68,14 +68,19 @@
 
 /* Portrait book cover */
 .heroCoverWrap {
-  aspect-ratio: 2 / 3;
+  position: relative;
+  width: 220px;
+  min-height: 330px;
   background: var(--bgColor-inset);
   overflow: hidden;
   flex-shrink: 0;
 }
 
 .heroCoverImg {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .coverPlaceholder {
@@ -254,6 +259,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  margin-bottom: 36px;
 }
 
 .sectionTitle {
@@ -276,4 +282,103 @@
 
 .description p {
   margin: 0;
+}
+
+/* ── Store Cards Grid ── */
+.storeList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.storeItem {
+  margin: 0;
+  padding: 0;
+}
+
+.storeLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 10px;
+  background: var(--bgColor-muted);
+  text-decoration: none;
+  color: var(--fgColor-default);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    box-shadow 0.15s;
+}
+
+.storeLink:hover {
+  border-color: var(--brand-primary);
+  background: var(--brand-hover-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.storePrice {
+  margin-left: auto;
+  font-weight: 700;
+  color: var(--brand-primary);
+  white-space: nowrap;
+}
+
+.storeName {
+  font-weight: 500;
+}
+
+/* ── PDF Card ── */
+.pdfCard {
+  display: flex;
+}
+
+.pdfLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 10px;
+  background: var(--bgColor-muted);
+  text-decoration: none;
+  color: var(--fgColor-default);
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    box-shadow 0.15s;
+}
+
+.pdfLink:hover {
+  border-color: var(--brand-primary);
+  background: var(--brand-hover-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.pdfIcon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.pdfLabel {
+  flex: 1;
+}
+
+.pdfArrow {
+  font-size: 1.1rem;
+  color: var(--fgColor-muted);
+  transition: transform 0.15s;
+}
+
+.pdfLink:hover .pdfArrow {
+  transform: translateX(4px);
+  color: var(--brand-primary);
 }

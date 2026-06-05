@@ -21,6 +21,7 @@ import {
   ImageIcon,
   CodeIcon,
   FileCodeIcon,
+  BookIcon,
 } from "@primer/octicons-react";
 import { useUser } from "@/context/UserContext";
 import styles from "./LeftSidebarComponent.module.css";
@@ -87,6 +88,13 @@ export default function LeftSidebarComponent({ onNavigate }) {
             <TableIcon />
           </NavList.LeadingVisual>
           Jogos de Mesa
+        </NavList.Item>
+
+        <NavList.Item as={Link} href="/quadrinhos" aria-current={router.pathname.startsWith("/quadrinhos")} onClick={onNavigate}>
+          <NavList.LeadingVisual>
+            <BookIcon />
+          </NavList.LeadingVisual>
+          Livros e Quadrinhos
         </NavList.Item>
 
         <NavList.Item as={Link} href="/streams" aria-current={router.pathname.startsWith("/streams")} onClick={onNavigate}>

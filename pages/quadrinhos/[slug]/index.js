@@ -113,7 +113,7 @@ export default function BookPage() {
             {/* Cover portrait */}
             <div className={styles.heroCoverWrap}>
               {bookData.cover_url ? (
-                <Image src={bookData.cover_url} alt={bookData.title} fill sizes="220px" className={styles.heroCoverImg} unoptimized />
+                <Image src={bookData.cover_url} alt={bookData.title} width={220} height={330} className={styles.heroCoverImg} unoptimized />
               ) : (
                 <div className={styles.coverPlaceholder}>
                   <span>{bookData.title[0]}</span>
@@ -222,6 +222,39 @@ export default function BookPage() {
                   <p key={i}>{p}</p>
                 ))}
               </div>
+            </section>
+          )}
+
+          {/* PDF */}
+          {bookData.pdf_url && (
+            <section className={styles.section}>
+              <h2 className={styles.sectionTitle}>PDF</h2>
+              <div className={styles.pdfCard}>
+                <a href={bookData.pdf_url} target="_blank" rel="noopener noreferrer" className={styles.pdfLink}>
+                  <span className={styles.pdfIcon}>📄</span>
+                  <span className={styles.pdfLabel}>Ler / Baixar PDF</span>
+                  <span className={styles.pdfArrow}>→</span>
+                </a>
+              </div>
+            </section>
+          )}
+
+          {/* Stores */}
+          {Array.isArray(bookData.store_pages) && bookData.store_pages.length > 0 && (
+            <section className={styles.section}>
+              <h2 className={styles.sectionTitle}>Onde comprar</h2>
+              <ul className={styles.storeList}>
+                {bookData.store_pages.map((sp) => (
+                  <li key={sp.id} className={styles.storeItem}>
+                    <a href={sp.page_url} target="_blank" rel="noopener noreferrer" className={styles.storeLink}>
+                      <span className={styles.storeName}>{sp.store_name || `Loja #${sp.store_type_id}`}</span>
+                      {sp.price != null && (
+                        <span className={styles.storePrice}>{Number(sp.price) === 0 ? "Grátis" : `R$ ${Number(sp.price).toFixed(2)}`}</span>
+                      )}
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </section>
           )}
         </div>

@@ -90,7 +90,10 @@ async function findBySlug(slug) {
   if (!result.rows[0]) {
     throw new NotFoundError({ message: `Livro/quadrinho "${slug}" não encontrado.` });
   }
-  return result.rows[0];
+
+  const bookData = result.rows[0];
+  const storePages = await findStorePages(bookData.id);
+  return { ...bookData, store_pages: storePages };
 }
 
 async function findByOrg(orgId) {
@@ -99,7 +102,7 @@ async function findByOrg(orgId) {
       SELECT
         b.id, b.slug, b.title, b.subtitle, b.short_description,
         b.book_type, b.stage, b.release_date, b.created_at,
-        b.isbn, b.publisher, b.edition, b.website_url, b.buy_url,
+        b.isbn, b.publisher, b.edition, b.website_url, b.buy_url, b.pdf_url,
         COALESCE(ui.secure_url, b.cover_url_external) AS cover_url,
         COUNT(DISTINCT bf.follower_id) AS follower_count
       FROM books b
@@ -152,6 +155,7 @@ async function update(slug, body) {
     "website_url",
     "buy_url",
     "cover_url_external",
+    "pdf_url",
   ];
 
   const fields = [];
@@ -187,7 +191,13 @@ async function update(slug, body) {
   });
 
   if (!result.rows[0]) throw new NotFoundError({ message: "Livro não encontrado." });
-  return result.rows[0];
+
+  // Atualizar store_pages se fornecido no body (não apenas se array vazio)
+  if (Array.isArray(body.store_pages) && body.store_pages.length >= 0) {
+    await updateStorePages(result.rows[0].id, body.store_pages);
+  }
+
+  return findBySlug(slug);
 }
 
 /* =========================================================
@@ -199,6 +209,44 @@ async function saveCover(slug, imageId) {
     text: `UPDATE books SET cover_image_id = $1, updated_at = now() WHERE slug = $2`,
     values: [imageId, slug],
   });
+}
+
+/* =========================================================
+ * Store Pages
+ * ========================================================= */
+
+async function findStoreTypes() {
+  const result = await database.query({ text: `SELECT id, name FROM book_store ORDER BY id` });
+  return result.rows;
+}
+
+async function findStorePages(bookId) {
+  const result = await database.query({
+    text: `
+      SELECT bsp.id, bsp.page_url, bsp.price, bs.name AS store_name, bsp.store_type_id
+      FROM book_store_page bsp
+      LEFT JOIN book_store bs ON bs.id = bsp.store_type_id
+      WHERE bsp.book_id = $1
+      ORDER BY bsp.id
+    `,
+    values: [bookId],
+  });
+  return result.rows;
+}
+
+async function updateStorePages(bookId, storePages) {
+  await database.query({
+    text: `DELETE FROM book_store_page WHERE book_id = $1`,
+    values: [bookId],
+  });
+
+  for (const sp of storePages) {
+    if (!sp.store_type_id || !sp.page_url?.trim()) continue;
+    await database.query({
+      text: `INSERT INTO book_store_page (book_id, store_type_id, page_url, price) VALUES ($1, $2, $3, $4)`,
+      values: [bookId, Number(sp.store_type_id), sp.page_url.trim(), sp.price ?? null],
+    });
+  }
 }
 
 /* =========================================================
@@ -237,11 +285,11 @@ async function canEdit(bookId, requestUser) {
 
   const result = await database.query({
     text: `
-      SELECT 1
+            SELECT 1
       FROM books b
-      LEFT JOIN org_members om ON om.organization_id = b.owner_org_id AND om.user_id = $2 AND om.status = 'active'
+      LEFT JOIN org_members om ON om.org_id = b.owner_org_id AND om.member_id = $2 AND om.status = 'active'
       WHERE b.id = $1
-        AND (b.owner_id = $2 OR om.user_id IS NOT NULL)
+        AND (b.owner_id = $2 OR om.member_id IS NOT NULL)
     `,
     values: [bookId, requestUser.id],
   });
@@ -282,6 +330,7 @@ const book = {
   create,
   update,
   saveCover,
+  findStoreTypes,
   followBook,
   unfollowBook,
   isFollowing,
