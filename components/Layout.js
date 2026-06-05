@@ -21,7 +21,7 @@ export default function Layout({ children, RightSidebar = null }) {
         <button className="mobile-drawer-close-btn" onClick={() => setMobileNavOpen(false)} aria-label="Fechar menu">
           <XIcon size={20} />
         </button>
-        <LeftSidebarComponent />
+        <LeftSidebarComponent onNavigate={() => setMobileNavOpen(false)} />
       </nav>
 
       <div className="layout-body">

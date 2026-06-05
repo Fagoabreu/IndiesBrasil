@@ -1,12 +1,31 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import PropTypes from "prop-types";
 import { NavList } from "@primer/react";
-import { ChevronDownIcon, ChevronRightIcon } from "@primer/octicons-react";
+import {
+  ChevronDownIcon,
+  ChevronRightIcon,
+  HomeIcon,
+  CommentDiscussionIcon,
+  CalendarIcon,
+  PeopleIcon,
+  OrganizationIcon,
+  PackageIcon,
+  TableIcon,
+  BroadcastIcon,
+  PersonIcon,
+  GearIcon,
+  TagIcon,
+  ZapIcon,
+  ImageIcon,
+  CodeIcon,
+  FileCodeIcon,
+} from "@primer/octicons-react";
 import { useUser } from "@/context/UserContext";
 import styles from "./LeftSidebarComponent.module.css";
 
-export default function LeftSidebarComponent() {
+export default function LeftSidebarComponent({ onNavigate }) {
   const router = useRouter();
   const { user } = useUser();
 
@@ -16,33 +35,64 @@ export default function LeftSidebarComponent() {
   return (
     <div className={styles.sidebar}>
       <NavList>
-        <NavList.Item as={Link} href="/" aria-current={router.pathname === "/"}>
+        <NavList.Item as={Link} href="/" aria-current={router.pathname === "/"} onClick={onNavigate}>
+          <NavList.LeadingVisual>
+            <HomeIcon />
+          </NavList.LeadingVisual>
           Home
         </NavList.Item>
 
-        <NavList.Item as={Link} href="/posts" aria-current={router.pathname.startsWith("/posts")}>
+        <NavList.Item as={Link} href="/posts" aria-current={router.pathname.startsWith("/posts")} onClick={onNavigate}>
+          <NavList.LeadingVisual>
+            <CommentDiscussionIcon />
+          </NavList.LeadingVisual>
           Posts
         </NavList.Item>
 
-        <NavList.Item as={Link} href="/agenda" aria-current={router.pathname.startsWith("/agenda")}>
+        <NavList.Item as={Link} href="/agenda" aria-current={router.pathname.startsWith("/agenda")} onClick={onNavigate}>
+          <NavList.LeadingVisual>
+            <CalendarIcon />
+          </NavList.LeadingVisual>
           Agenda
         </NavList.Item>
 
-        <NavList.Item as={Link} href="/membros" aria-current={router.pathname.startsWith("/membros")}>
+        <NavList.Item as={Link} href="/membros" aria-current={router.pathname.startsWith("/membros")} onClick={onNavigate}>
+          <NavList.LeadingVisual>
+            <PeopleIcon />
+          </NavList.LeadingVisual>
           Membros
         </NavList.Item>
 
-        <NavList.Item as={Link} href="/estudios" aria-current={router.pathname.startsWith("/estudios")}>
+        <NavList.Item as={Link} href="/estudios" aria-current={router.pathname.startsWith("/estudios")} onClick={onNavigate}>
+          <NavList.LeadingVisual>
+            <OrganizationIcon />
+          </NavList.LeadingVisual>
           Estúdios
         </NavList.Item>
-        <NavList.Item as={Link} href="/jogos" aria-current={router.pathname === "/jogos" || router.pathname.startsWith("/jogos/")}>
+
+        <NavList.Item
+          as={Link}
+          href="/jogos"
+          aria-current={router.pathname === "/jogos" || router.pathname.startsWith("/jogos/")}
+          onClick={onNavigate}
+        >
+          <NavList.LeadingVisual>
+            <PackageIcon />
+          </NavList.LeadingVisual>
           Jogos
         </NavList.Item>
 
-        <NavList.Item as={Link} href="/jogos-de-mesa" aria-current={router.pathname.startsWith("/jogos-de-mesa")}>
+        <NavList.Item as={Link} href="/jogos-de-mesa" aria-current={router.pathname.startsWith("/jogos-de-mesa")} onClick={onNavigate}>
+          <NavList.LeadingVisual>
+            <TableIcon />
+          </NavList.LeadingVisual>
           Jogos de Mesa
         </NavList.Item>
-        <NavList.Item as={Link} href="/streams" aria-current={router.pathname.startsWith("/streams")}>
+
+        <NavList.Item as={Link} href="/streams" aria-current={router.pathname.startsWith("/streams")} onClick={onNavigate}>
+          <NavList.LeadingVisual>
+            <BroadcastIcon />
+          </NavList.LeadingVisual>
           Stream
         </NavList.Item>
 
@@ -54,19 +104,30 @@ export default function LeftSidebarComponent() {
 
             {adminOpen && (
               <>
-                <NavList.Item as={Link} href="/admin/contact-types">
+                <NavList.Item as={Link} href="/admin/contact-types" onClick={onNavigate}>
+                  <NavList.LeadingVisual>
+                    <PersonIcon />
+                  </NavList.LeadingVisual>
                   Contatos
                 </NavList.Item>
-                <NavList.Item as={Link} href="/admin/tools">
+                <NavList.Item as={Link} href="/admin/tools" onClick={onNavigate}>
+                  <NavList.LeadingVisual>
+                    <GearIcon />
+                  </NavList.LeadingVisual>
                   Ferramentas
                 </NavList.Item>
-                <NavList.Item as={Link} href="/admin/professions">
+                <NavList.Item as={Link} href="/admin/professions" onClick={onNavigate}>
+                  <NavList.LeadingVisual>
+                    <TagIcon />
+                  </NavList.LeadingVisual>
                   Profissões
                 </NavList.Item>
               </>
             )}
           </NavList.Group>
         )}
+
+        <NavList.Divider />
 
         <NavList.Group>
           <NavList.GroupHeading className={styles.groupHeading} onClick={() => setToolsOpen((v) => !v)} style={{ cursor: "pointer" }}>
@@ -75,16 +136,28 @@ export default function LeftSidebarComponent() {
 
           {toolsOpen && (
             <>
-              <NavList.Item as={Link} href="/ferramentas/qrgen">
+              <NavList.Item as={Link} href="/ferramentas/qrgen" onClick={onNavigate}>
+                <NavList.LeadingVisual>
+                  <ZapIcon />
+                </NavList.LeadingVisual>
                 Gerador QR
               </NavList.Item>
-              <NavList.Item as={Link} href="/ferramentas/imagecrop">
+              <NavList.Item as={Link} href="/ferramentas/imagecrop" onClick={onNavigate}>
+                <NavList.LeadingVisual>
+                  <ImageIcon />
+                </NavList.LeadingVisual>
                 Recortar Imagem
               </NavList.Item>
-              <NavList.Item as={Link} href="/ferramentas/viewer">
+              <NavList.Item as={Link} href="/ferramentas/viewer" onClick={onNavigate}>
+                <NavList.LeadingVisual>
+                  <CodeIcon />
+                </NavList.LeadingVisual>
                 Visualizador XML/JSON
               </NavList.Item>
-              <NavList.Item as={Link} href="/ferramentas/htmlviewer">
+              <NavList.Item as={Link} href="/ferramentas/htmlviewer" onClick={onNavigate}>
+                <NavList.LeadingVisual>
+                  <FileCodeIcon />
+                </NavList.LeadingVisual>
                 Visualizador HTML
               </NavList.Item>
             </>
@@ -94,3 +167,11 @@ export default function LeftSidebarComponent() {
     </div>
   );
 }
+
+LeftSidebarComponent.propTypes = {
+  onNavigate: PropTypes.func,
+};
+
+LeftSidebarComponent.defaultProps = {
+  onNavigate: undefined,
+};
