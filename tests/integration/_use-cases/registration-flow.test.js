@@ -109,6 +109,13 @@ describe("Use case: Registration Flow (all successful)", () => {
       "delete:boardgame",
       "create:boardgame:follow",
       "read:boardgame:follow",
+      "read:book",
+      "read:book:all",
+      "create:book",
+      "update:book",
+      "delete:book",
+      "create:book:follow",
+      "read:book:follow",
     ]);
   });
 

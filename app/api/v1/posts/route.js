@@ -68,7 +68,6 @@ export async function GET(request) {
     const tag = searchParams.get("tag");
 
     const posts = await post.getPosts(user.id, searchType, tag);
-    console.log("Posts encontrados:", posts);
     const secureOutputValues = await authorization.filterOutput(user, "read:post:all", posts);
     return Response.json(secureOutputValues, { status: 200 });
   } catch (error) {

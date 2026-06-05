@@ -1,0 +1,269 @@
+.page {
+  width: min(100%, 1000px);
+  margin: 0 auto;
+  padding: 12px 0 32px;
+}
+
+/* ---- PAGE HEADER ---- */
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: var(--brand-ambient-bg);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.pageHeader::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--brand-gradient-v);
+}
+
+.headerBlock {
+  min-width: 0;
+  flex: 1;
+}
+
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-left: 8px;
+}
+
+.memberCount {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--brand-primary);
+  background: rgba(var(--brand-rgb-primary), 0.07);
+  border: 1px solid var(--brand-active-ring);
+  border-radius: 999px;
+  padding: 2px 12px;
+}
+
+.pageSubtitle {
+  margin-top: 6px;
+  color: var(--fgColor-muted);
+  font-size: 0.93rem;
+  padding-left: 8px;
+}
+
+/* ---- SEARCH + SELECTS ---- */
+.searchWrapper {
+  margin-top: 16px;
+  padding-left: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.searchInput {
+  width: 100%;
+  max-width: 400px;
+}
+
+.selectRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.select {
+  padding: 6px 10px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 6px;
+  background: var(--bgColor-default);
+  color: var(--fgColor-default);
+  font-size: 0.875rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb-primary), 0.15);
+}
+
+/* ---- FEED TABS ---- */
+.feedTabs {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  background-color: var(--bgColor-muted);
+  border-radius: 999px;
+  border: 1px solid var(--borderColor-muted);
+  flex-shrink: 0;
+}
+
+.feedTab {
+  all: unset;
+  cursor: pointer;
+  padding: 7px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+  white-space: nowrap;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.feedTab:hover {
+  color: var(--brand-primary);
+}
+
+.feedTabActive {
+  background: var(--brand-active-bg);
+  color: var(--brand-primary);
+  box-shadow: 0 0 0 1px var(--brand-active-ring);
+  background-clip: padding-box;
+}
+
+/* ---- GRID — portrait cards, narrower columns ---- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 20px;
+}
+
+/* ---- LOADING STATE ---- */
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 20px;
+  color: var(--fgColor-muted);
+}
+
+/* ---- EMPTY STATE ---- */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 56px 0;
+  color: var(--fgColor-muted);
+  text-align: center;
+}
+
+.emptyIcon {
+  color: var(--borderColor-muted);
+}
+
+.emptyTitle {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin: 0;
+  color: var(--fgColor-default);
+}
+
+.emptyDescription {
+  font-size: 0.875rem;
+  margin: 0;
+  color: var(--fgColor-muted);
+}
+
+/* ---- LOAD MORE ---- */
+.loadMoreWrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.loadMore {
+  display: block;
+  margin: 32px auto 0;
+  padding: 10px 32px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid var(--borderColor-default);
+  color: var(--fgColor-default);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.loadMore:hover:not(:disabled) {
+  background: var(--brand-hover-bg);
+}
+
+.loadMore:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .page {
+    width: 100%;
+  }
+
+  .pageHeader {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .headerBlock {
+    padding-left: 0;
+  }
+
+  .headerTitle {
+    padding-left: 0;
+  }
+
+  .pageSubtitle {
+    padding-left: 0;
+  }
+
+  .searchWrapper {
+    padding-left: 0;
+    margin-top: 8px;
+  }
+
+  .searchInput {
+    max-width: 100%;
+    width: 100%;
+    display: block;
+  }
+
+  .selectRow {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .select {
+    width: 100%;
+  }
+
+  .feedTabs {
+    width: 100%;
+  }
+
+  .feedTab {
+    flex: 1;
+    text-align: center;
+    padding: 7px 8px;
+  }
+
+  /* 2 columns on mobile for portrait cards */
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}

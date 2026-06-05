@@ -580,6 +580,17 @@
   color: var(--fgColor-muted);
 }
 
+/* Preview de capa de livro — proporção 2:3 (retrato) */
+.bookCoverPreviewWrap {
+  width: 120px;
+  aspect-ratio: 2 / 3;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--bgColor-default);
+  border: 1px solid var(--borderColor-muted);
+  flex-shrink: 0;
+}
+
 .btnOutlineSmall {
   padding: 7px 14px;
   border-radius: 6px;

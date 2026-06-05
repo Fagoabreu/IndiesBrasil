@@ -1,0 +1,279 @@
+.loadingPage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--borderColor-muted);
+  border-top-color: var(--brand-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.page {
+  min-height: 100vh;
+  background: var(--bgColor-default);
+}
+
+.content {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 80px;
+}
+
+/* ── Breadcrumb ── */
+.breadcrumb {
+  font-size: 0.8rem;
+  color: var(--fgColor-muted);
+  margin-bottom: 24px;
+}
+
+.breadcrumb a {
+  color: var(--fgColor-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.breadcrumb a:hover {
+  color: var(--brand-primary);
+}
+
+/* ── Hero (cover + info side-by-side) ── */
+.bookHero {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 0;
+  margin-bottom: 36px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bgColor-muted);
+}
+
+@media (max-width: 640px) {
+  .bookHero {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Portrait book cover */
+.heroCoverWrap {
+  aspect-ratio: 2 / 3;
+  background: var(--bgColor-inset);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.heroCoverImg {
+  object-fit: cover;
+}
+
+.coverPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--brand-secondary) 0%, var(--brand-primary) 100%);
+  font-size: 4rem;
+  font-weight: 900;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+/* Info panel */
+.heroInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px;
+  min-width: 0;
+  overflow: hidden;
+  border-left: 1px solid var(--borderColor-muted);
+}
+
+@media (max-width: 640px) {
+  .heroInfo {
+    border-left: none;
+    border-top: 1px solid var(--borderColor-muted);
+    padding: 16px;
+  }
+}
+
+.heroTitle {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0;
+  color: var(--fgColor-default);
+  line-height: 1.25;
+}
+
+.heroSubtitle {
+  font-size: 1rem;
+  color: var(--fgColor-muted);
+  margin: 0;
+  font-style: italic;
+}
+
+.heroTagline {
+  font-size: 0.875rem;
+  color: var(--fgColor-muted);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.heroDivider {
+  border: none;
+  border-top: 1px solid var(--borderColor-muted);
+  margin: 4px 0;
+}
+
+.heroMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+
+.heroMetaRow {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.heroMetaLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fgColor-muted);
+  min-width: 90px;
+  flex-shrink: 0;
+}
+
+.heroMetaValue {
+  font-size: 0.85rem;
+  color: var(--fgColor-default);
+  margin: 0;
+}
+
+.heroMetaLink {
+  font-size: 0.85rem;
+  color: var(--brand-primary);
+  text-decoration: none;
+}
+
+.heroMetaLink:hover {
+  text-decoration: underline;
+}
+
+/* ── Hero action buttons ── */
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.btnFollow,
+.btnUnfollow {
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.btnFollow {
+  background: var(--brand-primary);
+  color: #fff;
+  border: none;
+}
+
+.btnFollow:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.btnUnfollow {
+  background: var(--bgColor-muted);
+  color: var(--fgColor-default);
+  border: 1px solid var(--borderColor-default);
+}
+
+.btnUnfollow:hover:not(:disabled) {
+  border-color: var(--brand-primary);
+}
+
+.btnFollow:disabled,
+.btnUnfollow:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnBuy,
+.btnWebsite,
+.btnEdit {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  border: 1px solid var(--borderColor-default);
+  background: var(--bgColor-muted);
+  color: var(--fgColor-default);
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.btnBuy:hover,
+.btnWebsite:hover,
+.btnEdit:hover {
+  border-color: var(--brand-primary);
+  background: var(--brand-hover-bg);
+}
+
+/* ── Description ── */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--fgColor-default);
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+.description {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--fgColor-default);
+  line-height: 1.7;
+}
+
+.description p {
+  margin: 0;
+}
