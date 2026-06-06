@@ -9,7 +9,7 @@ async function findAll({ page = 1, limit = 20, search = "", book_type = "", stag
   const offset = (page - 1) * limit;
   const result = await database.query({
     text: `
-      SELECT
+            SELECT
         b.id, b.slug, b.title, b.subtitle, b.short_description,
         b.book_type, b.stage, b.release_date, b.created_at,
         b.isbn, b.publisher, b.edition, b.pages, b.language,
@@ -18,12 +18,15 @@ async function findAll({ page = 1, limit = 20, search = "", book_type = "", stag
         o.name               AS studio_name,
         o.slug               AS studio_slug,
         ui_logo.secure_url   AS studio_logo_url,
-        COUNT(DISTINCT bf.follower_id) AS follower_count
+        COUNT(DISTINCT bf.follower_id) AS follower_count,
+        ROUND(AVG(br.rating), 1)       AS avg_rating,
+        COUNT(DISTINCT br.id)          AS review_count
       FROM books b
       LEFT JOIN uploaded_images ui      ON ui.id = b.cover_image_id
       LEFT JOIN organizations o         ON o.id = b.owner_org_id
       LEFT JOIN uploaded_images ui_logo ON ui_logo.id = o.img
       LEFT JOIN book_followers bf       ON bf.book_id = b.id
+      LEFT JOIN book_reviews br         ON br.book_id = b.id
       WHERE ($3 = '' OR b.title ILIKE '%' || $3 || '%' OR b.short_description ILIKE '%' || $3 || '%')
         AND ($4 = '' OR b.book_type = $4)
         AND ($5 = '' OR b.stage = $5)
@@ -39,7 +42,7 @@ async function findAll({ page = 1, limit = 20, search = "", book_type = "", stag
 async function findFollowedBy(userId) {
   const result = await database.query({
     text: `
-      SELECT
+            SELECT
         b.id, b.slug, b.title, b.subtitle, b.short_description,
         b.book_type, b.stage, b.release_date, b.created_at,
         b.isbn, b.publisher, b.edition,
@@ -47,13 +50,16 @@ async function findFollowedBy(userId) {
         o.name               AS studio_name,
         o.slug               AS studio_slug,
         ui_logo.secure_url   AS studio_logo_url,
-        COUNT(DISTINCT bf.follower_id) AS follower_count
+        COUNT(DISTINCT bf.follower_id) AS follower_count,
+        ROUND(AVG(br.rating), 1)       AS avg_rating,
+        COUNT(DISTINCT br.id)          AS review_count
       FROM book_followers ubf
       JOIN books b                      ON b.id = ubf.book_id
       LEFT JOIN uploaded_images ui      ON ui.id = b.cover_image_id
       LEFT JOIN organizations o         ON o.id = b.owner_org_id
       LEFT JOIN uploaded_images ui_logo ON ui_logo.id = o.img
       LEFT JOIN book_followers bf       ON bf.book_id = b.id
+      LEFT JOIN book_reviews br         ON br.book_id = b.id
       WHERE ubf.follower_id = $1
       GROUP BY b.id, ui.secure_url, o.name, o.slug, ui_logo.secure_url
       ORDER BY b.created_at DESC
@@ -66,7 +72,7 @@ async function findFollowedBy(userId) {
 async function findBySlug(slug) {
   const result = await database.query({
     text: `
-      SELECT
+            SELECT
         b.*,
         COALESCE(ui.secure_url, b.cover_url_external) AS cover_url,
         o.name               AS studio_name,
@@ -74,13 +80,16 @@ async function findBySlug(slug) {
         o.pitch              AS studio_pitch,
         ui_logo.secure_url   AS studio_logo_url,
         u.username           AS owner_username,
-        COUNT(DISTINCT bf.follower_id) AS follower_count
+        COUNT(DISTINCT bf.follower_id) AS follower_count,
+        ROUND(AVG(br.rating), 1)       AS avg_rating,
+        COUNT(DISTINCT br.id)          AS review_count
       FROM books b
       LEFT JOIN uploaded_images ui      ON ui.id = b.cover_image_id
       LEFT JOIN organizations o         ON o.id = b.owner_org_id
       LEFT JOIN uploaded_images ui_logo ON ui_logo.id = o.img
       LEFT JOIN users u                 ON u.id = b.owner_id
       LEFT JOIN book_followers bf       ON bf.book_id = b.id
+      LEFT JOIN book_reviews br         ON br.book_id = b.id
       WHERE b.slug = $1
       GROUP BY b.id, ui.secure_url, o.name, o.slug, o.pitch, ui_logo.secure_url, u.username
     `,
@@ -99,15 +108,18 @@ async function findBySlug(slug) {
 async function findByOrg(orgId) {
   const result = await database.query({
     text: `
-      SELECT
+            SELECT
         b.id, b.slug, b.title, b.subtitle, b.short_description,
         b.book_type, b.stage, b.release_date, b.created_at,
         b.isbn, b.publisher, b.edition, b.website_url, b.buy_url, b.pdf_url,
         COALESCE(ui.secure_url, b.cover_url_external) AS cover_url,
-        COUNT(DISTINCT bf.follower_id) AS follower_count
+        COUNT(DISTINCT bf.follower_id) AS follower_count,
+        ROUND(AVG(br.rating), 1)       AS avg_rating,
+        COUNT(DISTINCT br.id)          AS review_count
       FROM books b
       LEFT JOIN uploaded_images ui  ON ui.id = b.cover_image_id
       LEFT JOIN book_followers bf   ON bf.book_id = b.id
+      LEFT JOIN book_reviews br     ON br.book_id = b.id
       WHERE b.owner_org_id = $1
       GROUP BY b.id, ui.secure_url
       ORDER BY b.created_at DESC
@@ -322,6 +334,111 @@ async function generateSlug(name, currentSlug = null) {
   return `${base}-${i}`;
 }
 
+/* =========================================================
+ * Reviews
+ * ========================================================= */
+
+async function createReview(bookId, userId, { rating, content = null }) {
+  rating = Number(rating);
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    throw new ValidationError({ message: "A nota deve ser um número inteiro entre 1 e 5." });
+  }
+
+  const existing = await database.query({
+    text: `SELECT id FROM book_reviews WHERE book_id = $1 AND reviewer_id = $2`,
+    values: [bookId, userId],
+  });
+
+  if (existing.rows.length > 0) {
+    throw new ValidationError({ message: "Você já avaliou este livro/quadrinho. Use PATCH para editar." });
+  }
+
+  const result = await database.query({
+    text: `
+      INSERT INTO book_reviews (book_id, reviewer_id, rating, content)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *
+    `,
+    values: [bookId, userId, rating, content],
+  });
+  return result.rows[0];
+}
+
+async function updateReview(reviewId, userId, { rating, content }) {
+  const existing = await database.query({
+    text: `SELECT * FROM book_reviews WHERE id = $1`,
+    values: [reviewId],
+  });
+
+  if (existing.rows.length === 0) {
+    throw new NotFoundError({ message: "Avaliação não encontrada." });
+  }
+
+  if (existing.rows[0].reviewer_id !== userId) {
+    throw new ForbiddenError({ message: "Você não pode editar a avaliação de outro usuário." });
+  }
+
+  const fields = [];
+  const values = [];
+  let idx = 1;
+
+  if (rating != null) {
+    const r = Number(rating);
+    if (!Number.isInteger(r) || r < 1 || r > 5) {
+      throw new ValidationError({ message: "A nota deve ser um número inteiro entre 1 e 5." });
+    }
+    fields.push(`rating = $${idx++}`);
+    values.push(r);
+  }
+
+  if (content !== undefined) {
+    fields.push(`content = $${idx++}`);
+    values.push(content);
+  }
+
+  if (fields.length === 0) {
+    return existing.rows[0];
+  }
+
+  fields.push(`updated_at = now()`);
+  values.push(reviewId);
+
+  const result = await database.query({
+    text: `UPDATE book_reviews SET ${fields.join(", ")} WHERE id = $${idx} RETURNING *`,
+    values,
+  });
+  return result.rows[0];
+}
+
+async function getReviews(bookId, { page = 1, limit = 10 } = {}) {
+  const offset = (page - 1) * limit;
+  const result = await database.query({
+    text: `
+      SELECT
+        br.id, br.rating, br.content, br.created_at, br.updated_at,
+        u.username,
+        u.resumo AS display_name,
+        ui.secure_url AS avatar_url
+      FROM book_reviews br
+      JOIN users u ON u.id = br.reviewer_id
+      LEFT JOIN uploaded_images ui ON ui.id = u.avatar_image
+      WHERE br.book_id = $1
+      ORDER BY br.created_at DESC
+      LIMIT $2 OFFSET $3
+    `,
+    values: [bookId, limit, offset],
+  });
+  return result.rows;
+}
+
+async function getUserReview(bookId, userId) {
+  const result = await database.query({
+    text: `SELECT * FROM book_reviews WHERE book_id = $1 AND reviewer_id = $2`,
+    values: [bookId, userId],
+  });
+  return result.rows[0] || null;
+}
+
 const book = {
   findAll,
   findFollowedBy,
@@ -335,6 +452,10 @@ const book = {
   unfollowBook,
   isFollowing,
   canEdit,
+  createReview,
+  updateReview,
+  getReviews,
+  getUserReview,
 };
 
 export default book;

@@ -5,6 +5,7 @@ import CarouselComponent from "@/components/Carousel/CarouselComponent";
 import styles from "./index.module.css";
 import VerticalCardComponent from "@/components/Card/VerticalCardComponent";
 import MetricCard from "@/components/Card/MetricCard";
+import HighlightCard from "@/components/HighlightCard/HighlightCard";
 import { PeopleIcon, StarIcon, PeopleIcon as TeamIcon, TagIcon, VideoIcon } from "@primer/octicons-react";
 import { useEffect, useState } from "react";
 import TyperwriterComponent from "@/components/TypeWriter/TyperwriterComponent";
@@ -90,6 +91,7 @@ function Home() {
     "Artistas.",
   ];
   const [summary, setSummary] = useState(null);
+  const [highlights, setHighlights] = useState([]);
 
   useEffect(() => {
     async function getSummary() {
@@ -107,7 +109,23 @@ function Home() {
         console.error("Erro ao buscar summary:", error);
       }
     }
+
+    async function getHighlights() {
+      try {
+        const response = await fetch("/api/v1/highlights", {
+          method: "GET",
+          credentials: "include",
+        });
+        if (response.ok) {
+          setHighlights(await response.json());
+        }
+      } catch (error) {
+        console.error("Erro ao buscar highlights:", error);
+      }
+    }
+
     getSummary();
+    getHighlights();
   }, []);
 
   return (
@@ -172,6 +190,22 @@ function Home() {
           <MetricCard title="Jogos" period="Total" value="..." previousLabel="Em Desenvolvimento" previousValue="..." icon={<VideoIcon />} />
         </div>
       </section>
+
+      {/* HIGHLIGHTS */}
+      {highlights.length > 0 && (
+        <section className={styles.section}>
+          <header className={styles.sectionHeader}>
+            <p className={styles.sectionLabel}>Destaques</p>
+            <h2 className={styles.sectionTitle}>Conteúdos dos Estúdios</h2>
+            <p className={styles.sectionSub}>Jogos, boardgames e publicações em destaque dos estúdios brasileiros.</p>
+          </header>
+          <div className={styles.highlightGrid}>
+            {highlights.map((item) => (
+              <HighlightCard key={`${item.type}-${item.slug}`} item={item} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* FEATURES STRIP */}
       <section className={styles.featuresStrip}>

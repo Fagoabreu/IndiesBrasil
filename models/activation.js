@@ -106,15 +106,20 @@ async function activateUserByUserId(userId) {
   }
 
   const activatedUser = await user.setFeatures(userId, [
+    //session permissions
     "create:session",
     "read:session",
+    //post permissions
     "read:post",
     "create:post",
+    //User permissions
     "read:user",
     "update:user",
+    //Event permissions
     "read:event",
     "create:event",
     "update:event",
+    //studio permissions
     "read:studio",
     "create:studio",
     "update:studio",
@@ -126,6 +131,7 @@ async function activateUserByUserId(userId) {
     "create:studio:invitation",
     "read:studio:follow",
     "create:studio:follow",
+    //game permissions
     "read:game",
     "read:game:all",
     "create:game",
@@ -135,6 +141,7 @@ async function activateUserByUserId(userId) {
     "read:game:follow",
     "create:game:review",
     "update:game:review",
+    //boardgame permissions
     "read:boardgame",
     "read:boardgame:all",
     "create:boardgame",
@@ -142,11 +149,16 @@ async function activateUserByUserId(userId) {
     "delete:boardgame",
     "create:boardgame:follow",
     "read:boardgame:follow",
+    "create:boardgame:review",
+    "update:boardgame:review",
+    //book permissions
     "read:book",
     "read:book:all",
     "create:book",
     "update:book",
     "delete:book",
+    "create:book:review",
+    "update:book:review",
     "create:book:follow",
     "read:book:follow",
   ]);

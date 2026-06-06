@@ -4,6 +4,7 @@ import Head from "next/head";
 import Link from "next/link";
 import Image from "next/image";
 import { useUser } from "@/context/UserContext";
+import GameReviews from "@/components/GameReviews/GameReviews";
 import styles from "./book.module.css";
 
 const BOOK_TYPES = {
@@ -224,6 +225,16 @@ export default function BookPage() {
               </div>
             </section>
           )}
+
+          {/* Avaliações */}
+          <GameReviews
+            reviewsApiUrl={`/api/v1/books/${slug}/reviews`}
+            avgRating={bookData.avg_rating}
+            reviewCount={Number(bookData.review_count ?? 0)}
+            userReview={bookData.viewer?.userReview ?? null}
+            user={user}
+            onReviewChange={fetchBook}
+          />
 
           {/* PDF */}
           {bookData.pdf_url && (

@@ -18,6 +18,14 @@ export default function StudiosPage() {
   const [tab, setTab] = useState("all");
   const [search, setSearch] = useState("");
 
+  // Se veio com ?member=me, inicia na aba Membro
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("member") === "me" && user) {
+      setTab("member");
+    }
+  }, [user]);
+
   // aba "Descubra"
   const [allStudios, setAllStudios] = useState([]);
   const [allLoading, setAllLoading] = useState(true);
@@ -27,6 +35,10 @@ export default function StudiosPage() {
   // aba "Seguindo"
   const [followingStudios, setFollowingStudios] = useState([]);
   const [followingLoading, setFollowingLoading] = useState(false);
+
+  // aba "Membro"
+  const [memberStudios, setMemberStudios] = useState([]);
+  const [memberLoading, setMemberLoading] = useState(false);
 
   // Carrega todos os estúdios (aba Descubra) com debounce na busca
   useEffect(() => {
@@ -54,6 +66,17 @@ export default function StudiosPage() {
       .finally(() => setFollowingLoading(false));
   }, [user]);
 
+  // Carrega estúdios onde o usuário é membro
+  useEffect(() => {
+    if (!user) return;
+    setMemberLoading(true);
+    fetch("/api/v1/studios?member=me", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => setMemberStudios(Array.isArray(data) ? data : []))
+      .catch(() => setMemberStudios([]))
+      .finally(() => setMemberLoading(false));
+  }, [user]);
+
   async function loadAll(pageNum, searchQuery) {
     setAllLoading(true);
     try {
@@ -70,8 +93,8 @@ export default function StudiosPage() {
     }
   }
 
-  const activeList = tab === "following" ? followingStudios : allStudios;
-  const isLoading = tab === "following" ? followingLoading : allLoading;
+  const activeList = tab === "following" ? followingStudios : tab === "member" ? memberStudios : allStudios;
+  const isLoading = tab === "following" ? followingLoading : tab === "member" ? memberLoading : allLoading;
 
   const countNum = activeList.length;
   const countStr = countNum.toLocaleString("pt-BR");
@@ -80,6 +103,8 @@ export default function StudiosPage() {
   let emptyTitle;
   if (tab === "following") {
     emptyTitle = "Você ainda não segue nenhum estúdio";
+  } else if (tab === "member") {
+    emptyTitle = "Você ainda não é membro de nenhum estúdio";
   } else if (search) {
     emptyTitle = "Nenhum estúdio encontrado";
   } else {
@@ -89,6 +114,8 @@ export default function StudiosPage() {
   let emptyDescription;
   if (tab === "following") {
     emptyDescription = 'Vá para "Descubra" e comece a seguir!';
+  } else if (tab === "member") {
+    emptyDescription = "Peça para entrar em um estúdio ou crie o seu próprio.";
   } else if (search) {
     emptyDescription = `Nenhum resultado para "${search}". Tente outro termo.`;
   } else {
@@ -157,6 +184,15 @@ export default function StudiosPage() {
                 onClick={() => setTab("following")}
               >
                 Seguindo
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={tab === "member"}
+                className={`${styles.feedTab} ${tab === "member" ? styles.feedTabActive : ""}`}
+                onClick={() => setTab("member")}
+              >
+                Membro
               </button>
             </div>
           )}

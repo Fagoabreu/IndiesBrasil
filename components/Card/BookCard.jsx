@@ -54,9 +54,10 @@ export default function BookCard({ book }) {
           <span className={styles.typeBadge}>{typeLabel}</span>
         </div>
 
-        {Number(book.follower_count) > 0 && (
+        {(book.avg_rating > 0 || Number(book.follower_count) > 0) && (
           <div className={styles.cardStats}>
-            <span className={styles.stat}>{book.follower_count} seguindo</span>
+            {book.avg_rating > 0 && <span className={styles.rating}>★ {Number(book.avg_rating).toFixed(1)}</span>}
+            {Number(book.follower_count) > 0 && <span className={styles.stat}>{book.follower_count} seguindo</span>}
           </div>
         )}
       </div>
@@ -76,5 +77,6 @@ BookCard.propTypes = {
     studio_name: PropTypes.string,
     studio_slug: PropTypes.string,
     follower_count: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+    avg_rating: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   }).isRequired,
 };

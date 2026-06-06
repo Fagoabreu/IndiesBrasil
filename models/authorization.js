@@ -129,6 +129,8 @@ const availableFeatures = new Set([
   "delete:book",
   "create:book:follow",
   "read:book:follow",
+  "create:book:review",
+  "update:book:review",
 ]);
 
 function can(user, feature, resource) {

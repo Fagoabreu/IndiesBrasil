@@ -1,33 +1,73 @@
+/* ── Root ── */
 .headerRoot {
-  position: relative;
-  padding: 6px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 20px;
+  gap: 12px;
+  background: var(--bgColor-default);
+  border-bottom: 1px solid var(--borderColor-muted);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-@media (max-width: 768px) {
-  .headerRoot {
-    padding: 6px 12px;
-  }
-}
-
-.logoArea {
+/* ── Left side ── */
+.headerLeft {
   display: flex;
   align-items: center;
   gap: 10px;
-  text-decoration: none;
-  color: var(--fgColor-default);
+  min-width: 0;
 }
 
-/* Anel de destaque ao redor do logo */
+/* ── Hamburger ── */
+.menuBtn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--fgColor-default);
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.menuBtn:hover {
+  background: var(--bgColor-muted);
+}
+
+@media (max-width: 768px) {
+  .menuBtn {
+    display: flex;
+  }
+}
+
+/* ── Logo ── */
+.logoArea {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--fgColor-default);
+  flex-shrink: 0;
+}
+
 .logoWrapper {
   position: relative;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
   overflow: hidden;
+  flex-shrink: 0;
   box-shadow:
     0 0 0 2px rgba(var(--brand-rgb-primary), 0.35),
     var(--brand-glow-sm);
-  transition: box-shadow 0.25s ease;
+  transition: box-shadow 0.2s;
 }
 
 .logoArea:hover .logoWrapper {
@@ -36,59 +76,38 @@
     var(--brand-glow-md);
 }
 
-/* Texto com gradiente de marca */
 .logoText {
   font-weight: 700;
-  font-size: 18px;
+  font-size: 16px;
+  white-space: nowrap;
   background: var(--brand-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.navDesktop {
+/* ── Right side ── */
+.headerRight {
   display: flex;
-  gap: 20px;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
-.navDesktop a {
-  color: var(--color-fg-default);
-  text-decoration: none;
-  font-size: 15px;
-  position: relative;
-  padding: 4px 0;
-}
-
-.navDesktop a::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -3px;
-  height: 2px;
-  width: 0;
-  background: currentColor;
-  transition: width 0.25s ease;
-}
-
-.navDesktop a:hover::after {
-  width: 100%;
-}
-
-/* ===== Avatar + username button ===== */
+/* ── Avatar menu button ── */
 .avatarBtn {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-/* Anel de glow ao redor do avatar */
 .avatarRing {
   display: inline-flex;
   border-radius: 50%;
   box-shadow:
     0 0 0 2px rgba(var(--brand-rgb-primary), 0.4),
     var(--brand-glow-sm);
-  transition: box-shadow 0.2s ease;
+  transition: box-shadow 0.2s;
 }
 
 .avatarRing:hover {
@@ -97,12 +116,11 @@
     var(--brand-glow-md);
 }
 
-/* Nome do usuário — visível a partir de 480 px */
 .avatarUsername {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--fgColor-default);
-  max-width: 130px;
+  max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -110,6 +128,10 @@
 
 @media (max-width: 480px) {
   .avatarUsername {
+    display: none;
+  }
+
+  .logoText {
     display: none;
   }
 }
