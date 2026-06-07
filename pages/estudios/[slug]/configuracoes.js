@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
+import Image from "next/image";
 import Link from "next/link";
 import { Spinner } from "@primer/react";
 import { ArrowLeftIcon } from "@primer/octicons-react";
@@ -1615,10 +1616,12 @@ export default function ConfiguracoesPage() {
                                   <span className={styles.gameImgLabel}>Imagem do card (460 × 215)</span>
                                   <div className={styles.gameImgPreviewWrap}>
                                     {games.find((g) => g.slug === editingGameSlug)?.banner_url ? (
-                                      <img
+                                      <Image
                                         src={games.find((g) => g.slug === editingGameSlug).banner_url}
                                         alt="Card atual"
+                                        fill
                                         className={styles.gameImgPreview}
+                                        sizes="300px"
                                       />
                                     ) : (
                                       <div className={styles.gameImgPlaceholder}>Sem imagem</div>
@@ -2045,10 +2048,12 @@ export default function ConfiguracoesPage() {
                                   <span className={styles.gameImgLabel}>Imagem do card (460 × 215)</span>
                                   <div className={styles.gameImgPreviewWrap}>
                                     {boardgames.find((b) => b.slug === editingBoardgameSlug)?.banner_url ? (
-                                      <img
+                                      <Image
                                         src={boardgames.find((b) => b.slug === editingBoardgameSlug).banner_url}
                                         alt="Card atual"
+                                        fill
                                         className={styles.gameImgPreview}
+                                        sizes="300px"
                                       />
                                     ) : (
                                       <div className={styles.gameImgPlaceholder}>Sem imagem</div>
@@ -2397,10 +2402,12 @@ export default function ConfiguracoesPage() {
                                 <span className={styles.gameImgLabel}>Capa (proporção 2:3 — formato livro)</span>
                                 <div className={styles.bookCoverPreviewWrap}>
                                   {books.find((b) => b.slug === editingBookSlug)?.cover_url ? (
-                                    <img
+                                    <Image
                                       src={books.find((b) => b.slug === editingBookSlug).cover_url}
                                       alt="Capa atual"
+                                      fill
                                       className={styles.gameImgPreview}
+                                      sizes="200px"
                                     />
                                   ) : (
                                     <div className={styles.gameImgPlaceholder}>Sem capa</div>

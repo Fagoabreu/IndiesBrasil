@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Heading, TextInput, Spinner, Avatar } from "@primer/react";
 import { OrganizationIcon, PlusIcon, PeopleIcon } from "@primer/octicons-react";
@@ -242,7 +243,11 @@ function StudioCard({ studio }) {
     <li className={styles.studioCard}>
       <Link href={`/estudios/${studio.slug}`} className={styles.cardLink}>
         <div className={styles.cardBanner}>
-          {studio.banner_url ? <img src={studio.banner_url} alt="" className={styles.bannerImg} /> : <div className={styles.bannerPlaceholder} />}
+          {studio.banner_url ? (
+            <Image src={studio.banner_url} alt="" fill className={styles.bannerImg} sizes="(max-width: 600px) 100vw, 300px" />
+          ) : (
+            <div className={styles.bannerPlaceholder} />
+          )}
         </div>
         <div className={styles.cardBody}>
           <div className={styles.cardLogoRow}>
