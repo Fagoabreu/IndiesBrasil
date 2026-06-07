@@ -1,7 +1,6 @@
 import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import game from "models/game";
-import { ForbiddenError } from "infra/errors";
 
 const router = createRouter();
 router.use(controller.injectAnonymousOrUser);
@@ -33,7 +32,6 @@ async function postHandler(request, response) {
 
 async function patchHandler(request, response) {
   const requestUser = request.context.user;
-  const { slug } = request.query;
   const { reviewId } = request.body;
 
   if (!reviewId) {
@@ -43,3 +41,4 @@ async function patchHandler(request, response) {
   const review = await game.updateReview(reviewId, requestUser.id, request.body);
   return response.status(200).json(review);
 }
+

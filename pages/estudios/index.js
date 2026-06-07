@@ -47,7 +47,6 @@ export default function StudiosPage() {
       loadAll(1, search);
     }, 350);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
   useEffect(() => {

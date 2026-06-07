@@ -6,19 +6,19 @@ import { ForbiddenError } from "infra/errors";
 const router = createRouter();
 router.use(controller.injectAnonymousOrUser);
 
-// PATCH â€” aceitar ou recusar convite (pelo usuÃ¡rio convidado)
+// PATCH — aceitar ou recusar convite (pelo usuário convidado)
 router.patch(controller.canRequest("read:studio"), respondHandler);
 
-// DELETE â€” cancelar convite (pelo admin que enviou ou outro admin)
+// DELETE — cancelar convite (pelo admin que enviou ou outro admin)
 router.delete(controller.canRequest("create:studio:invitation"), cancelHandler);
 
 export default router.handler(controller.errorHandlers);
 
 async function respondHandler(request, response) {
-  const { slug, id } = request.query;
+  const { id } = request.query;
   const requestUser = request.context.user;
 
-  if (!requestUser.id) throw new ForbiddenError({ message: "AutenticaÃ§Ã£o necessÃ¡ria." });
+  if (!requestUser.id) throw new ForbiddenError({ message: "Autenticação necessária." });
 
   const { accept } = request.body;
   const result = await organization.respondToInvitation(id, requestUser.id, accept);

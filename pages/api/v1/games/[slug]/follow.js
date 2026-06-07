@@ -1,7 +1,6 @@
 import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import game from "models/game";
-import { ForbiddenError } from "infra/errors";
 
 const router = createRouter();
 router.use(controller.injectAnonymousOrUser);
@@ -30,3 +29,4 @@ async function deleteHandler(request, response) {
 
   return response.status(200).json({ following: false });
 }
+
