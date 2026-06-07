@@ -1,6 +1,7 @@
 "use client";
 import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/router";
+import Image from "next/image";
 import Link from "next/link";
 import { Spinner } from "@primer/react";
 import { ArrowLeftIcon } from "@primer/octicons-react";
@@ -258,8 +259,14 @@ export default function CriarEventoPage() {
 
             {(bannerFilePreview || (bannerMode === "url" && bannerExternalUrl)) && (
               <div className={styles.bannerPreviewWrap}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={bannerFilePreview || bannerExternalUrl} alt="Preview da capa" className={styles.bannerImg} />
+                <Image
+                  src={bannerFilePreview || bannerExternalUrl}
+                  alt="Preview da capa"
+                  fill
+                  className={styles.bannerImg}
+                  sizes="700px"
+                  unoptimized={!!bannerFilePreview}
+                />
                 <button type="button" className={styles.removeBannerBtn} onClick={handleClearBanner}>
                   Remover
                 </button>
