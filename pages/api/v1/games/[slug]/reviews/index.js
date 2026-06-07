@@ -41,4 +41,3 @@ async function patchHandler(request, response) {
   const review = await game.updateReview(reviewId, requestUser.id, request.body);
   return response.status(200).json(review);
 }
-

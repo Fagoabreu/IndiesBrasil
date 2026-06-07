@@ -29,4 +29,3 @@ async function deleteHandler(request, response) {
 
   return response.status(200).json({ following: false });
 }
-
