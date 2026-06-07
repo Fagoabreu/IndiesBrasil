@@ -146,6 +146,12 @@ export default function BoardgamePage() {
               <hr className={styles.heroDivider} />
               <dl className={styles.heroMeta}>
                 <div className={styles.heroMetaRow}>
+                  <dt className={styles.heroMetaLabel}>Avaliações</dt>
+                  <dd className={styles.heroMetaValue}>
+                    {bgData.review_count > 0 ? `${Number(bgData.avg_rating).toFixed(1)} ★ (${bgData.review_count})` : "Nenhuma avaliação"}
+                  </dd>
+                </div>
+                <div className={styles.heroMetaRow}>
                   <dt className={styles.heroMetaLabel}>Categoria</dt>
                   <dd className={styles.heroMetaValue}>{categoryLabel}</dd>
                 </div>

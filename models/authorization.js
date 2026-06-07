@@ -120,6 +120,17 @@ const availableFeatures = new Set([
   "read:boardgame:follow",
   "create:boardgame:review",
   "update:boardgame:review",
+
+  //book
+  "read:book",
+  "read:book:all",
+  "create:book",
+  "update:book",
+  "delete:book",
+  "create:book:follow",
+  "read:book:follow",
+  "create:book:review",
+  "update:book:review",
 ]);
 
 function can(user, feature, resource) {

@@ -54,7 +54,7 @@ export default function GameReviews({ reviewsApiUrl, avgRating, reviewCount, use
       setReviewRating(userReview.rating ?? 0);
       setReviewContent(userReview.content ?? "");
     }
-  }, [userReview?.id]);
+  }, [userReview]);
 
   async function handleSubmit(e) {
     e.preventDefault();

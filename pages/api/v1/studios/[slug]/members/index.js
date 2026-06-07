@@ -1,18 +1,31 @@
 import { createRouter } from "next-connect";
 import controller from "infra/controller";
-import organization from "models/organization";
-import { ForbiddenError } from "infra/errors";
+import game from "models/game";
 
 const router = createRouter();
 router.use(controller.injectAnonymousOrUser);
 
-router.get(controller.canRequest("read:studio:member"), listHandler);
+router.post(controller.canRequest("create:game:follow"), postHandler);
+router.delete(controller.canRequest("create:game:follow"), deleteHandler);
 
 export default router.handler(controller.errorHandlers);
 
-async function listHandler(request, response) {
+async function postHandler(request, response) {
+  const requestUser = request.context.user;
   const { slug } = request.query;
-  const studio = await organization.findBySlug(slug);
-  const members = await organization.findMembers(studio.id);
-  return response.status(200).json(members);
+
+  const gameData = await game.findBySlug(slug);
+  await game.followGame(gameData.id, requestUser.id);
+
+  return response.status(200).json({ following: true });
+}
+
+async function deleteHandler(request, response) {
+  const requestUser = request.context.user;
+  const { slug } = request.query;
+
+  const gameData = await game.findBySlug(slug);
+  await game.unfollowGame(gameData.id, requestUser.id);
+
+  return response.status(200).json({ following: false });
 }

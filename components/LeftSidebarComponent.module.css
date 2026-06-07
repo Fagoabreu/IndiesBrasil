@@ -47,23 +47,32 @@
   color: var(--brand-primary) !important;
 }
 
-/* ===== Fallback: active item via aria-current ===== *
-   Garante que o item ativo use as cores da marca
-   independente de qual token o Primer usa internamente. */
-.sidebar :global(a[aria-current]:not([aria-current="false"])),
-.sidebar :global(button[aria-current]:not([aria-current="false"])) {
-  background-color: rgba(var(--brand-rgb-primary), 0.1) !important;
-  color: var(--brand-primary) !important;
+/* ===== Hover em todos os itens (translate suave) ===== */
+.sidebar :global(a:not([aria-current])),
+.sidebar :global(button:not([aria-current])) {
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.12s ease !important;
 }
 
-/* Indicador lateral esquerdo do item ativo */
-.sidebar :global(a[aria-current]:not([aria-current="false"]))::before,
-.sidebar :global(button[aria-current]:not([aria-current="false"]))::before {
-  background-color: var(--brand-primary) !important;
-}
-
-/* Hover em itens não-ativos */
 .sidebar :global(a:not([aria-current]):hover),
 .sidebar :global(button:not([aria-current]):hover) {
   background-color: var(--brand-hover-bg) !important;
+  transform: translateX(3px) !important;
+}
+
+/* ===== Item ativo — gradiente + brilho ===== */
+.sidebar :global(a[aria-current]:not([aria-current="false"])),
+.sidebar :global(button[aria-current]:not([aria-current="false"])) {
+  background: linear-gradient(to right, rgba(var(--brand-rgb-primary), 0.16), rgba(var(--brand-rgb-primary), 0.04)) !important;
+  color: var(--brand-primary) !important;
+  font-weight: 600 !important;
+}
+
+/* Indicador lateral esquerdo — com brilho */
+.sidebar :global(a[aria-current]:not([aria-current="false"]))::before,
+.sidebar :global(button[aria-current]:not([aria-current="false"]))::before {
+  background-color: var(--brand-primary) !important;
+  box-shadow: 0 0 8px rgba(var(--brand-rgb-primary), 0.7) !important;
 }

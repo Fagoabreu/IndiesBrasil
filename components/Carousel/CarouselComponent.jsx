@@ -1,9 +1,7 @@
-import { useRef, useState } from "react";
-import { IconButton } from "@primer/react";
-import { ChevronLeftIcon, ChevronRightIcon } from "@primer/octicons-react";
-import styles from "./CarouselComponent.module.css";
+import { useRef, useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import Image from "next/image";
+import styles from "./CarouselComponent.module.css";
 
 CarouselComponent.propTypes = {
   cards: PropTypes.arrayOf(
@@ -15,70 +13,106 @@ CarouselComponent.propTypes = {
 };
 
 export default function CarouselComponent({ cards }) {
-  const TOTAL_CARDS = cards.length;
-  const containerRef = useRef(null);
+  const total = cards.length;
+  const trackRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  function scrollToIndex(index) {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const cardWidth = container.firstChild.offsetWidth;
-    container.scrollTo({
-      left: cardWidth * index,
-      behavior: "smooth",
-    });
-
+  const scrollTo = useCallback((index) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const cardWidth = track.children[0]?.offsetWidth || 1;
+    track.scrollTo({ left: cardWidth * index, behavior: "smooth" });
     setActiveIndex(index);
-  }
+  }, []);
 
   function handlePrev() {
-    scrollToIndex(Math.max(activeIndex - 1, 0));
+    scrollTo(Math.max(activeIndex - 1, 0));
   }
 
   function handleNext() {
-    scrollToIndex(Math.min(activeIndex + 1, TOTAL_CARDS - 1));
+    scrollTo(Math.min(activeIndex + 1, total - 1));
   }
 
-  const noopImageLoader = ({ src, width, quality }) => {
-    return `${src}?w=${width}&q=${quality || 75}`;
-  };
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    function onScroll() {
+      const cardWidth = track.children[0]?.offsetWidth || 1;
+      const idx = Math.round(track.scrollLeft / cardWidth);
+      setActiveIndex(Math.min(idx, total - 1));
+    }
+    track.addEventListener("scroll", onScroll, { passive: true });
+    return () => track.removeEventListener("scroll", onScroll);
+  }, [total]);
+
+  const noopLoader = ({ src, width, quality }) => `${src}?w=${width}&q=${quality || 75}`;
 
   return (
     <div className={styles.wrapper}>
-      <IconButton aria-label="Anterior" icon={ChevronLeftIcon} onClick={handlePrev} className={styles.navLeft} />
-
-      <div className={styles.carousel} ref={containerRef}>
-        {cards.map((card, index) => (
-          <div className={styles.card} key={index}>
-            <div className={styles.imageWrapper}>
+      <div className={styles.track} ref={trackRef}>
+        {cards.map((card, i) => (
+          <div className={styles.card} key={i}>
+            <div className={styles.imageWrap}>
               <Image
                 src={card.image_src}
                 alt={card.content}
-                loader={noopImageLoader}
+                loader={noopLoader}
                 fill
                 className={styles.image}
-                sizes="(max-width: 600px) 100vw, 320px"
-                priority={index === 0}
+                sizes="(max-width: 640px) 85vw, 280px"
+                priority={i < 3}
               />
             </div>
-
-            <div className={styles.content}>
-              <h3>{card.content}</h3>
+            <div className={styles.label}>
+              <span>{card.content}</span>
             </div>
           </div>
         ))}
       </div>
 
-      <IconButton aria-label="Próximo" icon={ChevronRightIcon} onClick={handleNext} className={styles.navRight} />
+      <div className={styles.fadeLeft} />
+      <div className={styles.fadeRight} />
+
+      {activeIndex > 0 && (
+        <button className={`${styles.navBtn} ${styles.navLeft}`} onClick={handlePrev} aria-label="Anterior">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+      )}
+      {activeIndex < total - 1 && (
+        <button className={`${styles.navBtn} ${styles.navRight}`} onClick={handleNext} aria-label="Próximo">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+      )}
 
       <div className={styles.dots}>
-        {Array.from({ length: TOTAL_CARDS }).map((_, index) => (
+        {cards.map((_, i) => (
           <button
-            key={index}
-            className={`${styles.dot} ${index === activeIndex ? styles.activeDot : ""}`}
-            onClick={() => scrollToIndex(index)}
-            aria-label={`Ir para card ${index + 1}`}
+            key={i}
+            className={`${styles.dot} ${i === activeIndex ? styles.dotActive : ""}`}
+            onClick={() => scrollTo(i)}
+            aria-label={`Slide ${i + 1}`}
           />
         ))}
       </div>

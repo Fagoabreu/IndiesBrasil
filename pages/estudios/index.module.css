@@ -124,9 +124,12 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .studioCard {
+  display: flex;
   border-radius: 10px;
   border: 1px solid var(--borderColor-muted);
   background: var(--bgColor-default);
@@ -134,6 +137,7 @@
     border-color 0.15s,
     transform 0.15s,
     box-shadow 0.15s;
+  min-width: 0;
 }
 
 .studioCard:hover {
@@ -321,6 +325,7 @@
 @media (max-width: 640px) {
   .page {
     width: 100%;
+    padding: 12px 12px 32px;
   }
 
   .pageHeader {
@@ -379,5 +384,9 @@
   .studioGrid {
     grid-template-columns: 1fr;
     gap: 14px;
+  }
+
+  .studioCard {
+    width: 100%;
   }
 }

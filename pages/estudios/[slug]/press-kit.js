@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import Image from "next/image";
 import Head from "next/head";
 import { QRCodeSVG } from "qrcode.react";
 import styles from "./press-kit.module.css";
@@ -87,7 +88,16 @@ export default function PressKitPage() {
       <div className={styles.page}>
         {/* CABEÇALHO HERO */}
         <header className={styles.pkHeader}>
-          {studio.logo_url && <img src={studio.logo_url} alt={`Logo de ${studio.name}`} className={styles.pkLogo} />}
+          {studio.logo_url && (
+            <Image
+              src={studio.logo_url}
+              alt={`Logo de ${studio.name}`}
+              width={96}
+              height={96}
+              className={styles.pkLogo}
+              style={{ objectFit: "contain" }}
+            />
+          )}
           <div className={styles.pkHeaderText}>
             <h1 className={styles.pkName}>{studio.name}</h1>
             {studio.pitch && <p className={styles.pkPitch}>{studio.pitch}</p>}

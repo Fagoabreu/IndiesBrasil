@@ -1,8 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { Avatar, ActionMenu, ActionList, IconButton, Button, PageHeader } from "@primer/react";
-import { ThreeBarsIcon } from "@primer/octicons-react";
+import { Avatar, ActionMenu, ActionList, Button } from "@primer/react";
 
 import styles from "./HeaderComponent.module.css";
 import { useUser } from "@/context/UserContext";
@@ -10,9 +9,6 @@ import PropTypes from "prop-types";
 import { useRouter } from "next/router";
 import NotificationButton from "./NotificationButton";
 
-// ThemeSwitcher depende de window.matchMedia e localStorage — estado exclusivo do cliente.
-// ssr: false impede que seja renderizado no servidor, eliminando o hydration mismatch.
-// Documentação: https://nextjs.org/docs/pages/guides/lazy-loading#with-no-ssr
 const ThemeSwitcher = dynamic(() => import("../ThemeSwitcher"), { ssr: false });
 
 export default function HeaderComponent({ onMenuClick }) {
@@ -23,28 +19,25 @@ export default function HeaderComponent({ onMenuClick }) {
   const usernameLabel = user?.name || user?.username || "Usuário";
 
   return (
-    <PageHeader className={styles.headerRoot} role="banner" aria-label="Title">
-      <PageHeader.TitleArea>
-        <PageHeader.LeadingAction hidden={{ narrow: false, regular: true, wide: true }}>
-          <IconButton
-            aria-label="Abrir menu de navegação"
-            icon={ThreeBarsIcon}
-            onClick={onMenuClick}
-            className={styles.mobileMenuBtn}
-            variant="invisible"
-          />
-        </PageHeader.LeadingAction>
-        <PageHeader.Title>
-          <Link href="/" className={styles.logoArea}>
-            <div className={styles.logoWrapper}>
-              <Image src="/images/logo.png" alt="Logo Indies Brasil" fill sizes="40px" priority />
-            </div>
-            <span className={styles.logoText}>Indies Brasil</span>
-          </Link>
-        </PageHeader.Title>
-      </PageHeader.TitleArea>
+    <header className={styles.headerRoot} role="banner">
+      {/* Lado esquerdo: hamburguer + logo */}
+      <div className={styles.headerLeft}>
+        <button type="button" aria-label="Abrir menu de navegação" onClick={onMenuClick} className={styles.menuBtn}>
+          <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M1 2.75A.75.75 0 011.75 2h12.5a.75.75 0 010 1.5H1.75A.75.75 0 011 2.75zm0 5A.75.75 0 011.75 7h12.5a.75.75 0 010 1.5H1.75A.75.75 0 011 7.75zM1.75 12a.75.75 0 000 1.5h12.5a.75.75 0 000-1.5H1.75z" />
+          </svg>
+        </button>
 
-      <PageHeader.Actions>
+        <Link href="/" className={styles.logoArea}>
+          <div className={styles.logoWrapper}>
+            <Image src="/images/logo.png" alt="Logo Indies Brasil" fill sizes="36px" priority />
+          </div>
+          <span className={styles.logoText}>Indies Brasil</span>
+        </Link>
+      </div>
+
+      {/* Lado direito: ações */}
+      <div className={styles.headerRight}>
         <ThemeSwitcher />
         {user ? (
           <>
@@ -53,15 +46,15 @@ export default function HeaderComponent({ onMenuClick }) {
               <ActionMenu.Button>
                 <div className={styles.avatarBtn}>
                   <span className={styles.avatarRing}>
-                    <Avatar src={avatarSrc} size={32} />
+                    <Avatar src={avatarSrc} size={28} />
                   </span>
                   <span className={styles.avatarUsername}>{usernameLabel}</span>
                 </div>
               </ActionMenu.Button>
-
               <ActionMenu.Overlay>
                 <ActionList>
                   <ActionList.Item onSelect={() => router.push(`/perfil/${user.username}`)}>Meu perfil</ActionList.Item>
+                  <ActionList.Item onSelect={() => router.push("/estudios?member=me")}>Meus estúdios</ActionList.Item>
                   <ActionList.Divider />
                   <ActionList.Item variant="danger" onSelect={logout}>
                     Sair
@@ -71,12 +64,12 @@ export default function HeaderComponent({ onMenuClick }) {
             </ActionMenu>
           </>
         ) : (
-          <Button type="submit" variant="primary" as={Link} href="/login">
+          <Button variant="primary" as={Link} href="/login">
             Entrar
           </Button>
         )}
-      </PageHeader.Actions>
-    </PageHeader>
+      </div>
+    </header>
   );
 }
 

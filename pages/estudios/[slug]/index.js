@@ -58,7 +58,11 @@ function renderBanner(embedUrl, bannerUrl, studioName, styles) {
     );
   }
   if (bannerUrl) {
-    return <img src={bannerUrl} alt={`Banner de ${studioName}`} className={styles.bannerImg} />;
+    return (
+      <div style={{ position: "relative", width: "100%", height: "100%" }}>
+        <Image src={bannerUrl} alt={`Banner de ${studioName}`} fill className={styles.bannerImg} sizes="100vw" />
+      </div>
+    );
   }
   return <div className={styles.bannerPlaceholder} />;
 }

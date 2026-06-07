@@ -1,7 +1,6 @@
 import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import game from "models/game";
-import { ForbiddenError } from "infra/errors";
 
 const router = createRouter();
 router.use(controller.injectAnonymousOrUser);
@@ -33,7 +32,6 @@ async function postHandler(request, response) {
 
 async function patchHandler(request, response) {
   const requestUser = request.context.user;
-  const { slug } = request.query;
   const { reviewId } = request.body;
 
   if (!reviewId) {

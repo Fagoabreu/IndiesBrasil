@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
+import Image from "next/image";
 import Link from "next/link";
 import { Spinner } from "@primer/react";
 import { ArrowLeftIcon } from "@primer/octicons-react";
@@ -64,6 +65,44 @@ const BG_STAGE_LABELS = {
   released: "Lançado",
   cancelled: "Cancelado",
 };
+
+const BOOK_TYPE_LABELS = {
+  book: "Livro",
+  comic: "Quadrinho",
+  manga: "Mangá",
+  graphic_novel: "Romance Gráfico",
+  zine: "Zine",
+  artbook: "Artbook",
+  rpg_manual: "Manual de RPG",
+  other: "Outro",
+};
+
+const BOOK_STAGE_LABELS = {
+  concept: "Conceito",
+  writing: "Escrevendo",
+  crowdfunding: "Financiamento Coletivo",
+  production: "Em Produção",
+  released: "Publicado",
+  cancelled: "Cancelado",
+};
+
+const BOOK_STORE_TYPES = [
+  { id: 1, name: "Amazon" },
+  { id: 2, name: "Submarino" },
+  { id: 3, name: "Americanas" },
+  { id: 4, name: "Magazine Luíza" },
+  { id: 5, name: "Mercado Livre" },
+  { id: 6, name: "Livraria Cultura" },
+  { id: 7, name: "Martins Fontes" },
+  { id: 8, name: "Estante Virtual" },
+  { id: 9, name: "Travessa" },
+  { id: 10, name: "Saraiva" },
+  { id: 11, name: "Loja própria" },
+  { id: 12, name: "Catarse" },
+  { id: 13, name: "Apoia.se" },
+  { id: 14, name: "Kickante" },
+  { id: 15, name: "Loja física" },
+];
 
 const EMPTY_ADDRESS = {
   street: "",
@@ -152,6 +191,28 @@ export default function ConfiguracoesPage() {
   const [newBoardgameStage, setNewBoardgameStage] = useState("concept");
   const [creatingBoardgame, setCreatingBoardgame] = useState(false);
   const [boardgameMsg, setBoardgameMsg] = useState({ type: null, text: "" });
+
+  // Publicações (livros/quadrinhos)
+  const [books, setBooks] = useState([]);
+  const [newBookTitle, setNewBookTitle] = useState("");
+  const [newBookType, setNewBookType] = useState("book");
+  const [newBookStage, setNewBookStage] = useState("concept");
+  const [creatingBook, setCreatingBook] = useState(false);
+  const [bookMsg, setBookMsg] = useState({ type: null, text: "" });
+
+  // Edição de publicação
+  const [editingBookSlug, setEditingBookSlug] = useState(null);
+  const [editBookForm, setEditBookForm] = useState(null);
+  const [loadingBookEdit, setLoadingBookEdit] = useState(false);
+  const [savingBook, setSavingBook] = useState(false);
+  const [editBookMsg, setEditBookMsg] = useState({ type: null, text: "" });
+  const [activeBookTab, setActiveBookTab] = useState("info");
+
+  // Upload de capa do livro
+  const [bookImgCropSrc, setBookImgCropSrc] = useState(null);
+  const [pendingBookImgSlug, setPendingBookImgSlug] = useState(null);
+  const [uploadingBookImg, setUploadingBookImg] = useState(false);
+  const bookImgInputRef = useRef(null);
 
   // Streaming
   const [twitchChannel, setTwitchChannel] = useState("");
@@ -276,6 +337,16 @@ export default function ConfiguracoesPage() {
     }
   }, [slug]);
 
+  const fetchBooks = useCallback(async () => {
+    if (!slug) return;
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/books`, { credentials: "include" });
+      if (res.ok) setBooks(await res.json());
+    } catch {
+      // silently ignore
+    }
+  }, [slug]);
+
   useEffect(() => {
     fetch("/api/v1/contact-types", { credentials: "include" })
       .then((r) => r.json())
@@ -289,7 +360,8 @@ export default function ConfiguracoesPage() {
     fetchContacts();
     fetchGames();
     fetchBoardgames();
-  }, [fetchStudio, fetchInvites, fetchContacts, fetchGames, fetchBoardgames]);
+    fetchBooks();
+  }, [fetchStudio, fetchInvites, fetchContacts, fetchGames, fetchBoardgames, fetchBooks]);
 
   function handleAddressChange(field, value) {
     setAddress((prev) => ({ ...prev, [field]: value }));
@@ -319,6 +391,169 @@ export default function ConfiguracoesPage() {
       setInviteMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
     } finally {
       setInviting(false);
+    }
+  }
+
+  async function handleCreateBook(e) {
+    e.preventDefault();
+    if (!newBookTitle.trim()) return;
+    setBookMsg({ type: null, text: "" });
+    setCreatingBook(true);
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/books`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          title: newBookTitle.trim(),
+          book_type: newBookType,
+          stage: newBookStage,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setBookMsg({ type: "error", text: data.message || "Erro ao criar publicação." });
+        return;
+      }
+      setNewBookTitle("");
+      setNewBookType("book");
+      setNewBookStage("concept");
+      setBookMsg({ type: "success", text: `Publicação "${data.title}" criada!` });
+      fetchBooks();
+      handleOpenBookEdit(data.slug);
+    } catch {
+      setBookMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+    } finally {
+      setCreatingBook(false);
+    }
+  }
+
+  async function handleOpenBookEdit(bookSlug) {
+    if (editingBookSlug === bookSlug) {
+      setEditingBookSlug(null);
+      setEditBookForm(null);
+      setEditBookMsg({ type: null, text: "" });
+      return;
+    }
+    setEditingBookSlug(bookSlug);
+    setEditBookForm(null);
+    setEditBookMsg({ type: null, text: "" });
+    setActiveBookTab("info");
+    setLoadingBookEdit(true);
+    try {
+      const res = await fetch(`/api/v1/books/${bookSlug}`, { credentials: "include" });
+      const data = await res.json();
+      if (!res.ok) {
+        setEditBookMsg({ type: "error", text: data.message || "Erro ao carregar publicação." });
+        return;
+      }
+      setEditBookForm({
+        title: data.title || "",
+        subtitle: data.subtitle || "",
+        short_description: data.short_description || "",
+        description: data.description || "",
+        book_type: data.book_type || "book",
+        stage: data.stage || "concept",
+        isbn: data.isbn || "",
+        publisher: data.publisher || "",
+        edition: data.edition || "",
+        pages: data.pages ?? "",
+        language: data.language || "Português",
+        release_date: data.release_date ? data.release_date.slice(0, 10) : "",
+        website_url: data.website_url || "",
+        buy_url: data.buy_url || "",
+        cover_url_external: data.cover_url_external || "",
+        pdf_url: data.pdf_url || "",
+        store_pages:
+          data.store_pages?.map((sp) => ({
+            store_type_id: sp.store_type_id,
+            page_url: sp.page_url || "",
+            price: sp.price == null ? "" : String(sp.price),
+          })) || [],
+      });
+    } finally {
+      setLoadingBookEdit(false);
+    }
+  }
+
+  async function handleSaveBook(e) {
+    e.preventDefault();
+    if (!editBookForm.title.trim()) return;
+    setEditBookMsg({ type: null, text: "" });
+    setSavingBook(true);
+    try {
+      const payload = {
+        ...editBookForm,
+        title: editBookForm.title.trim(),
+        pages: editBookForm.pages === "" ? null : Number.parseInt(editBookForm.pages, 10),
+      };
+      // Só incluir store_pages se o usuário interagiu com a aba Lojas
+      if (Array.isArray(editBookForm.store_pages)) {
+        const filledStores = editBookForm.store_pages
+          .filter((sp) => sp.store_type_id && sp.page_url.trim())
+          .map((sp) => ({
+            store_type_id: Number(sp.store_type_id),
+            page_url: sp.page_url.trim(),
+            price: sp.price === "" ? null : Number(sp.price),
+          }));
+        payload.store_pages = filledStores;
+      }
+      const res = await fetch(`/api/v1/books/${editingBookSlug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setEditBookMsg({ type: "error", text: data.message || "Erro ao salvar publicação." });
+        return;
+      }
+      setEditBookMsg({ type: "success", text: "Publicação atualizada com sucesso!" });
+      fetchBooks();
+      if (data.slug && data.slug !== editingBookSlug) {
+        setEditingBookSlug(data.slug);
+      }
+    } catch {
+      setEditBookMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+    } finally {
+      setSavingBook(false);
+    }
+  }
+
+  function openBookImgPicker(bookSlug) {
+    setPendingBookImgSlug(bookSlug);
+    bookImgInputRef.current?.click();
+  }
+
+  function handleBookFileSelected(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    const reader = new FileReader();
+    reader.onload = () => setBookImgCropSrc(reader.result);
+    reader.readAsDataURL(file);
+  }
+
+  async function handleBookCropConfirm(blob) {
+    setBookImgCropSrc(null);
+    if (!pendingBookImgSlug) return;
+    setUploadingBookImg(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", blob);
+      formData.append("imgType", "cover");
+      const res = await fetch(`/api/v1/books/${pendingBookImgSlug}/images`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Falha no upload da imagem.");
+      fetchBooks();
+    } catch {
+      setEditBookMsg({ type: "error", text: "Erro ao enviar capa da publicação." });
+    } finally {
+      setUploadingBookImg(false);
     }
   }
 
@@ -632,6 +867,25 @@ export default function ConfiguracoesPage() {
     setEditGameForm((f) => ({ ...f, store_pages: f.store_pages.filter((_, i) => i !== idx) }));
   }
 
+  // --- Book store page helpers ---
+  function addBookStorePage() {
+    setEditBookForm((f) => ({
+      ...f,
+      store_pages: [...f.store_pages, { store_type_id: "", page_url: "", price: "" }],
+    }));
+  }
+
+  function updateBookStorePage(idx, field, value) {
+    setEditBookForm((f) => {
+      const updated = f.store_pages.map((sp, i) => (i === idx ? { ...sp, [field]: value } : sp));
+      return { ...f, store_pages: updated };
+    });
+  }
+
+  function removeBookStorePage(idx) {
+    setEditBookForm((f) => ({ ...f, store_pages: f.store_pages.filter((_, i) => i !== idx) }));
+  }
+
   async function handleCreateBoardgame(e) {
     e.preventDefault();
     if (!newBoardgameName.trim()) return;
@@ -910,6 +1164,7 @@ export default function ConfiguracoesPage() {
             { id: "contacts", label: "Contatos" },
             { id: "games", label: "Jogos" },
             { id: "boardgames", label: "Jogos de Mesa" },
+            { id: "books", label: "Publicações" },
             { id: "streaming", label: "Streaming" },
           ].map((t) => (
             <button
@@ -1361,10 +1616,12 @@ export default function ConfiguracoesPage() {
                                   <span className={styles.gameImgLabel}>Imagem do card (460 × 215)</span>
                                   <div className={styles.gameImgPreviewWrap}>
                                     {games.find((g) => g.slug === editingGameSlug)?.banner_url ? (
-                                      <img
+                                      <Image
                                         src={games.find((g) => g.slug === editingGameSlug).banner_url}
                                         alt="Card atual"
+                                        fill
                                         className={styles.gameImgPreview}
+                                        sizes="300px"
                                       />
                                     ) : (
                                       <div className={styles.gameImgPlaceholder}>Sem imagem</div>
@@ -1791,10 +2048,12 @@ export default function ConfiguracoesPage() {
                                   <span className={styles.gameImgLabel}>Imagem do card (460 × 215)</span>
                                   <div className={styles.gameImgPreviewWrap}>
                                     {boardgames.find((b) => b.slug === editingBoardgameSlug)?.banner_url ? (
-                                      <img
+                                      <Image
                                         src={boardgames.find((b) => b.slug === editingBoardgameSlug).banner_url}
                                         alt="Card atual"
+                                        fill
                                         className={styles.gameImgPreview}
+                                        sizes="300px"
                                       />
                                     ) : (
                                       <div className={styles.gameImgPlaceholder}>Sem imagem</div>
@@ -1914,6 +2173,387 @@ export default function ConfiguracoesPage() {
           </section>
         )}
 
+        {/* PUBLICAÇÕES (livros/quadrinhos) */}
+        {activeTab === "books" && (
+          <section className={styles.section}>
+            <h2 className={styles.sectionTitle}>Publicações</h2>
+
+            {books.length > 0 && (
+              <ul className={styles.gameList}>
+                {books.map((bk) => (
+                  <li key={bk.id} className={styles.gameListItem}>
+                    <div className={styles.gameListRow}>
+                      <Link href={`/quadrinhos/${bk.slug}`} className={styles.gameLink} target="_blank" rel="noopener noreferrer">
+                        {bk.title}
+                      </Link>
+                      <span className={styles.gameStageBadge}>{BOOK_STAGE_LABELS[bk.stage] ?? bk.stage}</span>
+                      <span className={styles.gameStageBadge}>{BOOK_TYPE_LABELS[bk.book_type] ?? bk.book_type}</span>
+                      <button
+                        type="button"
+                        className={`${styles.btnEditGame} ${editingBookSlug === bk.slug ? styles.btnEditGameActive : ""}`}
+                        onClick={() => handleOpenBookEdit(bk.slug)}
+                      >
+                        {editingBookSlug === bk.slug ? "Fechar" : "Editar"}
+                      </button>
+                    </div>
+
+                    {editingBookSlug === bk.slug && (
+                      <div className={styles.gameEditPanel}>
+                        {loadingBookEdit && (
+                          <div className={styles.gameEditLoading}>
+                            <Spinner size="small" />
+                          </div>
+                        )}
+                        {!loadingBookEdit && editBookForm && (
+                          <form onSubmit={handleSaveBook} className={styles.gameEditForm}>
+                            <div className={styles.gameEditTabs}>
+                              {[
+                                { id: "info", label: "Informações" },
+                                { id: "cover", label: "Capa" },
+                                { id: "pdf", label: "PDF" },
+                                { id: "stores", label: "Lojas" },
+                              ].map((t) => (
+                                <button
+                                  key={t.id}
+                                  type="button"
+                                  className={`${styles.gameEditTab} ${activeBookTab === t.id ? styles.gameEditTabActive : ""}`}
+                                  onClick={() => setActiveBookTab(t.id)}
+                                >
+                                  {t.label}
+                                </button>
+                              ))}
+                            </div>
+
+                            {activeBookTab === "info" && (
+                              <div className={styles.gameEditGrid}>
+                                <label className={styles.fieldLabel}>
+                                  <span>Título *</span>
+                                  <input
+                                    type="text"
+                                    className={styles.input}
+                                    value={editBookForm.title}
+                                    onChange={(e) => setEditBookForm((f) => ({ ...f, title: e.target.value }))}
+                                    maxLength={255}
+                                    required
+                                  />
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>Subtítulo</span>
+                                  <input
+                                    type="text"
+                                    className={styles.input}
+                                    placeholder="Subtítulo da publicação"
+                                    value={editBookForm.subtitle}
+                                    onChange={(e) => setEditBookForm((f) => ({ ...f, subtitle: e.target.value }))}
+                                    maxLength={255}
+                                  />
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>Tagline</span>
+                                  <input
+                                    type="text"
+                                    className={styles.input}
+                                    placeholder="Frase curta sobre a publicação"
+                                    value={editBookForm.short_description}
+                                    onChange={(e) => setEditBookForm((f) => ({ ...f, short_description: e.target.value }))}
+                                    maxLength={255}
+                                  />
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>Tipo</span>
+                                  <select
+                                    className={styles.input}
+                                    value={editBookForm.book_type}
+                                    onChange={(e) => setEditBookForm((f) => ({ ...f, book_type: e.target.value }))}
+                                  >
+                                    {Object.entries(BOOK_TYPE_LABELS).map(([k, v]) => (
+                                      <option key={k} value={k}>
+                                        {v}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>Fase</span>
+                                  <select
+                                    className={styles.input}
+                                    value={editBookForm.stage}
+                                    onChange={(e) => setEditBookForm((f) => ({ ...f, stage: e.target.value }))}
+                                  >
+                                    {Object.entries(BOOK_STAGE_LABELS).map(([k, v]) => (
+                                      <option key={k} value={k}>
+                                        {v}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>Editora</span>
+                                  <input
+                                    type="text"
+                                    className={styles.input}
+                                    placeholder="Nome da editora"
+                                    value={editBookForm.publisher}
+                                    onChange={(e) => setEditBookForm((f) => ({ ...f, publisher: e.target.value }))}
+                                    maxLength={200}
+                                  />
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>Edição</span>
+                                  <input
+                                    type="text"
+                                    className={styles.input}
+                                    placeholder="Ex: 1ª edição"
+                                    value={editBookForm.edition}
+                                    onChange={(e) => setEditBookForm((f) => ({ ...f, edition: e.target.value }))}
+                                    maxLength={80}
+                                  />
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>ISBN</span>
+                                  <input
+                                    type="text"
+                                    className={styles.input}
+                                    placeholder="978-..."
+                                    value={editBookForm.isbn}
+                                    onChange={(e) => setEditBookForm((f) => ({ ...f, isbn: e.target.value }))}
+                                    maxLength={20}
+                                  />
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>Páginas</span>
+                                  <input
+                                    type="number"
+                                    className={styles.input}
+                                    min="1"
+                                    value={editBookForm.pages}
+                                    onChange={(e) => setEditBookForm((f) => ({ ...f, pages: e.target.value }))}
+                                  />
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>Idioma</span>
+                                  <input
+                                    type="text"
+                                    className={styles.input}
+                                    value={editBookForm.language}
+                                    onChange={(e) => setEditBookForm((f) => ({ ...f, language: e.target.value }))}
+                                    maxLength={60}
+                                  />
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>Data de lançamento</span>
+                                  <input
+                                    type="date"
+                                    className={styles.input}
+                                    value={editBookForm.release_date}
+                                    onChange={(e) => setEditBookForm((f) => ({ ...f, release_date: e.target.value }))}
+                                  />
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>Site oficial</span>
+                                  <input
+                                    type="url"
+                                    className={styles.input}
+                                    placeholder="https://"
+                                    value={editBookForm.website_url}
+                                    onChange={(e) => setEditBookForm((f) => ({ ...f, website_url: e.target.value }))}
+                                    maxLength={512}
+                                  />
+                                </label>
+
+                                <label className={styles.fieldLabel}>
+                                  <span>Link de compra</span>
+                                  <input
+                                    type="url"
+                                    className={styles.input}
+                                    placeholder="https://"
+                                    value={editBookForm.buy_url}
+                                    onChange={(e) => setEditBookForm((f) => ({ ...f, buy_url: e.target.value }))}
+                                    maxLength={512}
+                                  />
+                                </label>
+
+                                <label className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}>
+                                  <span>Sobre a publicação</span>
+                                  <textarea
+                                    className={`${styles.input} ${styles.textarea}`}
+                                    placeholder="Descreva a publicação em detalhes..."
+                                    value={editBookForm.description}
+                                    onChange={(e) => setEditBookForm((f) => ({ ...f, description: e.target.value }))}
+                                    rows={4}
+                                  />
+                                </label>
+                              </div>
+                            )}
+
+                            {activeBookTab === "cover" && (
+                              <div className={styles.gameImgUpload}>
+                                <span className={styles.gameImgLabel}>Capa (proporção 2:3 — formato livro)</span>
+                                <div className={styles.bookCoverPreviewWrap}>
+                                  {books.find((b) => b.slug === editingBookSlug)?.cover_url ? (
+                                    <Image
+                                      src={books.find((b) => b.slug === editingBookSlug).cover_url}
+                                      alt="Capa atual"
+                                      fill
+                                      className={styles.gameImgPreview}
+                                      sizes="200px"
+                                    />
+                                  ) : (
+                                    <div className={styles.gameImgPlaceholder}>Sem capa</div>
+                                  )}
+                                </div>
+                                <p className={styles.fieldHint}>Ou informe uma URL externa:</p>
+                                <input
+                                  type="url"
+                                  className={styles.input}
+                                  placeholder="https://..."
+                                  value={editBookForm.cover_url_external}
+                                  onChange={(e) => setEditBookForm((f) => ({ ...f, cover_url_external: e.target.value }))}
+                                  maxLength={512}
+                                />
+                                <button
+                                  type="button"
+                                  className={styles.btnOutlineSmall}
+                                  onClick={() => openBookImgPicker(editingBookSlug)}
+                                  disabled={uploadingBookImg}
+                                >
+                                  {uploadingBookImg ? <Spinner size="small" /> : "Enviar imagem"}
+                                </button>
+                              </div>
+                            )}
+
+                            {activeBookTab === "pdf" && (
+                              <label className={styles.fieldLabel}>
+                                <span>URL do PDF</span>
+                                <input
+                                  type="url"
+                                  className={styles.input}
+                                  placeholder="https://seupdf.com/meu-livro.pdf"
+                                  value={editBookForm.pdf_url}
+                                  onChange={(e) => setEditBookForm((f) => ({ ...f, pdf_url: e.target.value }))}
+                                  maxLength={512}
+                                />
+                              </label>
+                            )}
+
+                            {activeBookTab === "stores" && (
+                              <fieldset className={styles.fieldset}>
+                                <legend className={styles.fieldsetLegend}>Links de compra</legend>
+                                {editBookForm.store_pages.map((sp, idx) => (
+                                  <div key={`book-store-${sp.store_type_id ?? ""}-${idx}`} className={styles.storePageRow}>
+                                    <select
+                                      className={styles.input}
+                                      value={sp.store_type_id}
+                                      onChange={(e) => updateBookStorePage(idx, "store_type_id", e.target.value)}
+                                    >
+                                      <option value="">Selecione a loja</option>
+                                      {BOOK_STORE_TYPES.map((st) => (
+                                        <option key={st.id} value={st.id}>
+                                          {st.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <input
+                                      type="url"
+                                      className={styles.input}
+                                      placeholder="URL da página na loja"
+                                      value={sp.page_url}
+                                      onChange={(e) => updateBookStorePage(idx, "page_url", e.target.value)}
+                                    />
+                                    <input
+                                      type="number"
+                                      className={`${styles.input} ${styles.priceInput}`}
+                                      placeholder="Preço (0 = grátis)"
+                                      value={sp.price}
+                                      min="0"
+                                      step="0.01"
+                                      onChange={(e) => updateBookStorePage(idx, "price", e.target.value)}
+                                    />
+                                    <button
+                                      type="button"
+                                      className={styles.btnRemoveStore}
+                                      onClick={() => removeBookStorePage(idx)}
+                                      aria-label="Remover"
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                ))}
+                                <button type="button" className={styles.btnAddStore} onClick={addBookStorePage}>
+                                  + Adicionar loja
+                                </button>
+                              </fieldset>
+                            )}
+
+                            {editBookMsg.text && <StatusMessageComponent type={editBookMsg.type} message={editBookMsg.text} />}
+
+                            <div className={styles.gameEditActions}>
+                              <Link href={`/quadrinhos/${bk.slug}`} target="_blank" rel="noopener noreferrer" className={styles.btnOutlineSmall}>
+                                Ver página
+                              </Link>
+                              <button type="submit" className={styles.btnSave} disabled={savingBook || !editBookForm.title.trim()}>
+                                {savingBook ? <Spinner size="small" /> : "Salvar alterações"}
+                              </button>
+                            </div>
+                          </form>
+                        )}
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {/* Criar nova publicação */}
+            <form onSubmit={handleCreateBook} className={styles.gameForm}>
+              <p className={styles.pendingTitle}>Criar nova publicação</p>
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="Título da publicação"
+                value={newBookTitle}
+                onChange={(e) => setNewBookTitle(e.target.value)}
+                maxLength={255}
+                required
+              />
+              <div className={styles.gameFormRow}>
+                <select className={styles.input} value={newBookType} onChange={(e) => setNewBookType(e.target.value)}>
+                  {Object.entries(BOOK_TYPE_LABELS).map(([k, v]) => (
+                    <option key={k} value={k}>
+                      {v}
+                    </option>
+                  ))}
+                </select>
+                <select className={styles.input} value={newBookStage} onChange={(e) => setNewBookStage(e.target.value)}>
+                  {Object.entries(BOOK_STAGE_LABELS)
+                    .filter(([k]) => k !== "cancelled")
+                    .map(([k, v]) => (
+                      <option key={k} value={k}>
+                        {v}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              <button type="submit" className={styles.btnSave} disabled={creatingBook || !newBookTitle.trim()}>
+                {creatingBook ? <Spinner size="small" /> : "Criar publicação"}
+              </button>
+            </form>
+
+            {bookMsg.text && <StatusMessageComponent type={bookMsg.type} message={bookMsg.text} />}
+          </section>
+        )}
+
         {/* ---- STREAMING TAB ---- */}
         {activeTab === "streaming" && (
           <>
@@ -2008,6 +2648,12 @@ export default function ConfiguracoesPage() {
       <input ref={bgImgInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleBgFileSelected} />
       {bgImgCropSrc && (
         <ImageCropModal imageSrc={bgImgCropSrc} preset="gameCapsule" onConfirm={handleBgCropConfirm} onClose={() => setBgImgCropSrc(null)} />
+      )}
+
+      {/* Upload de capa de publicação */}
+      <input ref={bookImgInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleBookFileSelected} />
+      {bookImgCropSrc && (
+        <ImageCropModal imageSrc={bookImgCropSrc} preset="bookCover" onConfirm={handleBookCropConfirm} onClose={() => setBookImgCropSrc(null)} />
       )}
     </>
   );
