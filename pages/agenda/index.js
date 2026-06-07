@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Spinner } from "@primer/react";
 import { CalendarIcon, PlusIcon, LocationIcon, BroadcastIcon } from "@primer/octicons-react";
@@ -219,8 +220,7 @@ export default function AgendaPage() {
                     {/* Banner */}
                     {ev.banner_url && (
                       <div className={styles.eventBanner}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={ev.banner_url} alt="" className={styles.bannerThumb} />
+                        <Image src={ev.banner_url} alt="" fill className={styles.bannerThumb} sizes="300px" />
                       </div>
                     )}
                   </Link>

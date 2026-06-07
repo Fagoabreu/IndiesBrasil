@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/router";
+import Image from "next/image";
 import Link from "next/link";
 import { Spinner } from "@primer/react";
 import { ArrowLeftIcon } from "@primer/octicons-react";
@@ -306,8 +307,7 @@ export default function EditarEventoPage() {
 
             {currentBannerUrl && (
               <div className={styles.bannerPreviewWrap}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={currentBannerUrl} alt="Capa do evento" className={styles.bannerImg} />
+                <Image src={currentBannerUrl} alt="Capa do evento" fill className={styles.bannerImg} sizes="700px" />
                 <button type="button" className={styles.removeBannerBtn} onClick={handleRemoveBanner} disabled={bannerLoading}>
                   {bannerLoading ? "..." : "Remover"}
                 </button>
