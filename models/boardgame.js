@@ -471,6 +471,7 @@ async function canEdit(boardgameId, user) {
   return false;
 }
 
+// eslint-disable-next-line import/no-anonymous-default-export
 export default {
   findAll,
   findFollowedBy,
