@@ -31,6 +31,7 @@ export default function LeftSidebarComponent({ onNavigate }) {
   const { user } = useUser();
 
   const [adminOpen, setAdminOpen] = useState(true);
+  const [construcaoOpen, setConstrucaoOpen] = useState(true);
   const [toolsOpen, setToolsOpen] = useState(true);
 
   return (
@@ -63,6 +64,8 @@ export default function LeftSidebarComponent({ onNavigate }) {
           </NavList.LeadingVisual>
           Membros
         </NavList.Item>
+
+        <NavList.Divider />
 
         <NavList.Item as={Link} href="/estudios" aria-current={router.pathname.startsWith("/estudios")} onClick={onNavigate}>
           <NavList.LeadingVisual>
@@ -135,8 +138,6 @@ export default function LeftSidebarComponent({ onNavigate }) {
           </NavList.Group>
         )}
 
-        <NavList.Divider />
-
         <NavList.Group>
           <NavList.GroupHeading className={styles.groupHeading} onClick={() => setToolsOpen((v) => !v)} style={{ cursor: "pointer" }}>
             {toolsOpen ? <ChevronDownIcon size={12} /> : <ChevronRightIcon size={12} />} Ferramentas
@@ -167,6 +168,50 @@ export default function LeftSidebarComponent({ onNavigate }) {
                   <FileCodeIcon />
                 </NavList.LeadingVisual>
                 Visualizador HTML
+              </NavList.Item>
+            </>
+          )}
+        </NavList.Group>
+
+        <NavList.Group>
+          <NavList.GroupHeading className={styles.groupHeading} onClick={() => setConstrucaoOpen((v) => !v)} style={{ cursor: "pointer" }}>
+            {construcaoOpen ? <ChevronDownIcon size={12} /> : <ChevronRightIcon size={12} />} Em Construção
+          </NavList.GroupHeading>
+          {construcaoOpen && (
+            <>
+              <NavList.Item as={Link} href="/noticias" aria-current={router.pathname.startsWith("/noticias")} onClick={onNavigate}>
+                <NavList.LeadingVisual>
+                  <BroadcastIcon />
+                </NavList.LeadingVisual>
+                Noticias
+              </NavList.Item>
+
+              <NavList.Item as={Link} href="/avaliacoes" aria-current={router.pathname.startsWith("/avaliacoes")} onClick={onNavigate}>
+                <NavList.LeadingVisual>
+                  <BroadcastIcon />
+                </NavList.LeadingVisual>
+                Avaliações
+              </NavList.Item>
+
+              <NavList.Item as={Link} href="/estudo" aria-current={router.pathname.startsWith("/estudo")} onClick={onNavigate}>
+                <NavList.LeadingVisual>
+                  <BroadcastIcon />
+                </NavList.LeadingVisual>
+                Estudo
+              </NavList.Item>
+
+              <NavList.Item as={Link} href="/ajuda" aria-current={router.pathname.startsWith("/ajuda")} onClick={onNavigate}>
+                <NavList.LeadingVisual>
+                  <BroadcastIcon />
+                </NavList.LeadingVisual>
+                Ajuda Comunidade
+              </NavList.Item>
+
+              <NavList.Item as={Link} href="/suporte" aria-current={router.pathname.startsWith("/suporte")} onClick={onNavigate}>
+                <NavList.LeadingVisual>
+                  <BroadcastIcon />
+                </NavList.LeadingVisual>
+                Suporte ao Site
               </NavList.Item>
             </>
           )}
