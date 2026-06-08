@@ -18,12 +18,26 @@ FROM
 
 async function create(commentInputValues) {
   const postComment = await runInsertQuery(commentInputValues);
-  await notification.createPostNotification({
-    user_id: commentInputValues.author_id,
-    source_user_id: commentInputValues.author_id,
-    post_id: commentInputValues.post_id,
-    type: "post_commented",
+
+  // Busca o dono do post para notificá-lo do comentário
+  const postResult = await database.query({
+    text: `SELECT author_id FROM posts WHERE id = $1`,
+    values: [commentInputValues.post_id],
   });
+
+  if (postResult.rowCount > 0) {
+    const postAuthorId = postResult.rows[0].author_id;
+    // Só cria notificação se quem comentou não for o próprio dono do post
+    if (postAuthorId !== commentInputValues.author_id) {
+      await notification.createPostNotification({
+        user_id: postAuthorId,
+        source_user_id: commentInputValues.author_id,
+        post_id: commentInputValues.post_id,
+        type: "post_commented",
+      });
+    }
+  }
+
   return postComment;
 
   async function runInsertQuery(commentInputValues) {

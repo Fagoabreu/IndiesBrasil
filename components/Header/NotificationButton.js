@@ -106,6 +106,8 @@ export default function NotificationButton() {
     markNotificationRead(user.username, n);
     if (n.type === "studio_invitation" && n.org_slug) {
       router.push(`/estudios/${n.org_slug}`);
+    } else if (n.type === "post_liked" || n.type === "post_commented") {
+      router.push(`/posts/${n.post_id}`);
     }
   }
 

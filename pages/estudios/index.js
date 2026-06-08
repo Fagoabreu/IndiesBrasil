@@ -21,7 +21,7 @@ export default function StudiosPage() {
 
   // Se veio com ?member=me, inicia na aba Membro
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(globalThis.location.search);
     if (params.get("member") === "me" && user) {
       setTab("member");
     }
@@ -244,7 +244,16 @@ function StudioCard({ studio }) {
       <Link href={`/estudios/${studio.slug}`} className={styles.cardLink}>
         <div className={styles.cardBanner}>
           {studio.banner_url ? (
-            <Image src={studio.banner_url} alt="" fill className={styles.bannerImg} sizes="(max-width: 600px) 100vw, 300px" />
+            <div style={{ position: "relative", width: "100%", height: "100%" }}>
+              <Image
+                src={studio.banner_url}
+                alt=""
+                fill
+                className={styles.bannerImg}
+                sizes="(max-width: 600px) 100vw, 300px"
+                style={{ objectFit: "cover" }}
+              />
+            </div>
           ) : (
             <div className={styles.bannerPlaceholder} />
           )}
