@@ -595,6 +595,9 @@ function getUserNotificationsResource(resource) {
     created_at: resource.created_at,
     title: resource.title,
     message: resource.message,
+    org_slug: resource.org_slug,
+    studio_name: resource.studio_name,
+    source_username: resource.source_username,
   };
 }
 

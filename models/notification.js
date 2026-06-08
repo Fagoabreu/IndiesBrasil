@@ -179,10 +179,12 @@ async function findUserNotificationsByUserId(userId) {
   async function runSelectQuery(userId) {
     const results = await database.query({
       text: `
-        SELECT un.*, nm.title, nm.message, u.username AS source_username
+        SELECT un.*, nm.title, nm.message, u.username AS source_username,
+          s.name AS studio_name
         FROM user_notifications un
         LEFT JOIN notification_messages nm ON nm.type = un.type
         LEFT JOIN users u ON u.id = un.source_user_id
+        LEFT JOIN organizations s ON s.slug = un.org_slug
         WHERE un.user_id = $1
         ORDER BY un.created_at DESC
       `,

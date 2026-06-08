@@ -1,4 +1,5 @@
 // components/MemberCard.jsx
+import Image from "next/image";
 import { Avatar, Link } from "@primer/react";
 import styles from "./MemberCard.module.css";
 import PropTypes from "prop-types";
@@ -6,6 +7,7 @@ import PropTypes from "prop-types";
 MemberCard.propTypes = {
   user: PropTypes.shape({
     avatar_image: PropTypes.string,
+    background_image: PropTypes.string,
     name: PropTypes.string.isRequired,
     username: PropTypes.string.isRequired,
     role: PropTypes.string,
@@ -19,7 +21,16 @@ MemberCard.propTypes = {
 export default function MemberCard({ user }) {
   return (
     <Link className={styles.card} href={`/perfil/${user.username}`} inline={true}>
-      {/* Avatar */}
+      {/* Faixa superior com imagem de fundo */}
+      <div className={styles.topDivider}>
+        {user.background_image ? (
+          <Image src={user.background_image} alt="" fill className={styles.topBgImg} />
+        ) : (
+          <div className={styles.topBgPlaceholder} />
+        )}
+      </div>
+
+      {/* Avatar — sobreposto à divisória */}
       <div className={styles.avatarWrapper}>
         <Avatar src={user.avatar_image || "/images/avatar.png"} size={96} className={styles.avatar} />
       </div>
