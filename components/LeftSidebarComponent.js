@@ -179,35 +179,38 @@ export default function LeftSidebarComponent({ onNavigate }) {
           </NavList.GroupHeading>
           {construcaoOpen && (
             <>
-              <NavList.Item as={Link} href="/noticias" aria-current={router.pathname.startsWith("/noticias")} onClick={onNavigate}>
+              <NavList.Item as={Link} href="/construcao/noticias" aria-current={router.pathname === "/construcao/noticias"} onClick={onNavigate}>
                 <NavList.LeadingVisual>
                   <BroadcastIcon />
                 </NavList.LeadingVisual>
                 Noticias
               </NavList.Item>
 
-              <NavList.Item as={Link} href="/avaliacoes" aria-current={router.pathname.startsWith("/avaliacoes")} onClick={onNavigate}>
+              <NavList.Item as={Link} href="/construcao/avaliacoes" aria-current={router.pathname === "/construcao/avaliacoes"} onClick={onNavigate}>
                 <NavList.LeadingVisual>
                   <BroadcastIcon />
                 </NavList.LeadingVisual>
                 Avaliações
               </NavList.Item>
-
-              <NavList.Item as={Link} href="/estudo" aria-current={router.pathname.startsWith("/estudo")} onClick={onNavigate}>
+              <NavList.Item as={Link} href="/construcao/estudo" aria-current={router.pathname.startsWith("/construcao/estudo")} onClick={onNavigate}>
                 <NavList.LeadingVisual>
                   <BroadcastIcon />
                 </NavList.LeadingVisual>
                 Estudo
               </NavList.Item>
 
-              <NavList.Item as={Link} href="/ajuda" aria-current={router.pathname.startsWith("/ajuda")} onClick={onNavigate}>
+              <NavList.Item as={Link} href="/construcao/ajuda" aria-current={router.pathname.startsWith("/construcao/ajuda")} onClick={onNavigate}>
                 <NavList.LeadingVisual>
                   <BroadcastIcon />
                 </NavList.LeadingVisual>
                 Ajuda Comunidade
               </NavList.Item>
-
-              <NavList.Item as={Link} href="/suporte" aria-current={router.pathname.startsWith("/suporte")} onClick={onNavigate}>
+              <NavList.Item
+                as={Link}
+                href="/construcao/suporte"
+                aria-current={router.pathname.startsWith("/construcao/suporte")}
+                onClick={onNavigate}
+              >
                 <NavList.LeadingVisual>
                   <BroadcastIcon />
                 </NavList.LeadingVisual>
