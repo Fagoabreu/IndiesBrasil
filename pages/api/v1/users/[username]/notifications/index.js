@@ -43,6 +43,6 @@ async function patchHandler(request, response) {
   if (!notifications) {
     return response.status(404).json({ message: "Notificação não encontrada." });
   }
-  const secureOutputValues = authorization.filterOutput(userTryingToGet, "read:user_notifications:all", notifications);
+  const secureOutputValues = authorization.filterOutput(userTryingToGet, "read:user_notifications", notifications);
   return response.status(200).json(secureOutputValues);
 }

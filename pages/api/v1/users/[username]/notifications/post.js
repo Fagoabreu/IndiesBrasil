@@ -40,6 +40,6 @@ async function patchHandler(request, response) {
   }
 
   const notifications = await notification.updatePostNotification(userInputValues);
-  const secureOutputValues = authorization.filterOutput(userTryingToGet, "read:post_notifications:all", notifications);
+  const secureOutputValues = authorization.filterOutput(userTryingToGet, "read:post_notifications", notifications);
   return response.status(200).json(secureOutputValues);
 }

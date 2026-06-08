@@ -1,7 +1,6 @@
 .card {
   background-color: var(--bgColor-default);
   border-radius: 14px;
-  padding: 20px 18px;
   max-width: 280px;
   text-align: center;
   display: flex;
@@ -15,6 +14,7 @@
     transform 0.2s ease,
     box-shadow 0.2s ease,
     border-color 0.2s ease;
+  padding: 0 18px 20px;
 }
 
 /* gradient top line on hover */
@@ -28,6 +28,7 @@
   background: var(--brand-gradient-h);
   opacity: 0;
   transition: opacity 0.2s ease;
+  z-index: 2;
 }
 
 .card:hover {
@@ -40,7 +41,28 @@
   opacity: 1;
 }
 
-/* Avatar */
+/* ── Faixa superior com imagem de fundo ── */
+.topDivider {
+  position: relative;
+  width: calc(100% + 36px); /* compensa o padding lateral do card */
+  height: 70px;
+  margin: 0 -18px; /* estica para fora do padding */
+  overflow: hidden;
+  background: var(--bgColor-muted);
+  flex-shrink: 0;
+}
+
+.topBgImg {
+  object-fit: cover;
+}
+
+.topBgPlaceholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(var(--brand-rgb-primary), 0.15), rgba(var(--brand-rgb-secondary), 0.1));
+}
+
+/* ── Avatar ── */
 
 .avatarWrapper {
   width: 110px;
@@ -51,6 +73,10 @@
   align-items: center;
   justify-content: center;
   box-shadow: var(--brand-glow-sm);
+  margin-top: -40px; /* sobrepõe a divisória */
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
 }
 
 .avatar {

@@ -10,7 +10,7 @@ import styles from "./NotificationButton.module.css";
 const CLIENT_NOTIF_DEFS = {
   studio_invitation: {
     title: "Convite de estúdio",
-    message: "%userId te convidou para o estúdio %orgSlug.",
+    message: "%userId te convidou para o estúdio %studio_name.",
   },
 };
 
@@ -24,7 +24,8 @@ function resolveMessage(n) {
   return template
     .replace("%userId", n.source_username || "alguém")
     .replace("%postId", n.post_id ? String(n.post_id).slice(0, 8) : "um post")
-    .replace("%orgSlug", n.org_slug || "estúdio");
+    .replace("%orgSlug", n.org_slug || "estúdio")
+    .replace("%studio_name", n.studio_name || n.org_slug || "estúdio");
 }
 
 async function loadNotifications(username) {
@@ -46,7 +47,7 @@ async function markNotificationRead(username, n) {
     type: n.type,
     source_user_id: n.source_user_id,
     is_read: true,
-    org_slug: n.org_slug ?? "",
+    org_slug: n.org_slug || "",
     ...(isPost && { post_id: n.post_id }),
   };
   await fetch(url, {
