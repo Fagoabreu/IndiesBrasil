@@ -326,3 +326,78 @@
     gap: 12px !important;
   }
 }
+
+/* ===== NOTIFICAÇÕES ===== */
+
+.notifSection {
+  padding: 16px 4px 8px;
+}
+
+.notifList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.notifItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: var(--bgColor-default);
+  border: 1px solid var(--borderColor-muted);
+  position: relative;
+  transition: border-color 0.15s;
+}
+
+.notifUnread {
+  border-left: 3px solid var(--brand-primary);
+  background: rgba(var(--brand-rgb-primary), 0.04);
+}
+
+.notifHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.notifTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+}
+
+.notifDate {
+  font-size: 0.75rem;
+  color: var(--fgColor-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.notifMessage {
+  font-size: 0.82rem;
+  color: var(--fgColor-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.notifUnreadDot {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand-primary);
+}
+
+.notifClickable {
+  cursor: pointer;
+}
+
+.notifClickable:hover {
+  border-color: var(--brand-hover-border);
+  background: var(--brand-hover-bg);
+}

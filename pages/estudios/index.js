@@ -21,7 +21,7 @@ export default function StudiosPage() {
 
   // Se veio com ?member=me, inicia na aba Membro
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(globalThis.location.search);
     if (params.get("member") === "me" && user) {
       setTab("member");
     }

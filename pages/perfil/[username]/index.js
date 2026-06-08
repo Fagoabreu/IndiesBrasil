@@ -30,6 +30,27 @@ function formatDateBR(date) {
   return new Intl.DateTimeFormat("pt-BR").format(new Date(date));
 }
 
+// Tipos de notificação cujas mensagens não estão na tabela notification_messages
+const CLIENT_NOTIF_DEFS = {
+  studio_invitation: {
+    title: "Convite de estúdio",
+    message: "%userId te convidou para o estúdio %orgSlug.",
+  },
+};
+
+function notificationTitle(n) {
+  return n.title || CLIENT_NOTIF_DEFS[n.type]?.title || n.type;
+}
+
+function notificationMessage(n) {
+  const template = n.message || CLIENT_NOTIF_DEFS[n.type]?.message;
+  if (!template) return null;
+  return template
+    .replace("%userId", n.source_username || "alguém")
+    .replace("%postId", n.post_id ? String(n.post_id).slice(0, 8) : "um post")
+    .replace("%orgSlug", n.org_slug || "estúdio");
+}
+
 /* =====================
  * Página
  * ===================== */
@@ -48,6 +69,11 @@ export default function Perfil() {
   const [loadingPosts, setLoadingPosts] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState(null);
+
+  // Notificações (apenas para o próprio perfil)
+  const [userNotifs, setUserNotifs] = useState([]);
+  const [postNotifs, setPostNotifs] = useState([]);
+  const [loadingNotifs, setLoadingNotifs] = useState(false);
 
   async function fetchJSON(url, options = {}) {
     const res = await fetch(url, {
@@ -103,6 +129,25 @@ export default function Perfil() {
   useEffect(() => {
     if (activeTab === "posts") fetchPosts();
   }, [activeTab, fetchPosts]);
+
+  useEffect(() => {
+    if (activeTab === "notifications") fetchNotifications();
+  }, [activeTab]);
+
+  async function fetchNotifications() {
+    if (!isOwnProfile || !username) return;
+    setLoadingNotifs(true);
+    try {
+      const [userRes, postRes] = await Promise.all([
+        fetch(`/api/v1/users/${username}/notifications`, { credentials: "include" }),
+        fetch(`/api/v1/users/${username}/notifications/post`, { credentials: "include" }),
+      ]);
+      setUserNotifs(userRes.ok ? await userRes.json() : []);
+      setPostNotifs(postRes.ok ? await postRes.json() : []);
+    } finally {
+      setLoadingNotifs(false);
+    }
+  }
 
   if (loadingUser || loadingProfile) {
     return (
@@ -217,6 +262,17 @@ export default function Perfil() {
             <button type="button" role="tab" aria-selected={activeTab === "posts"} className={style.profileTab} onClick={() => setActiveTab("posts")}>
               Postagens
             </button>
+            {isOwnProfile && (
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === "notifications"}
+                className={style.profileTab}
+                onClick={() => setActiveTab("notifications")}
+              >
+                Notificações
+              </button>
+            )}
           </div>
 
           {/* ===== RESUME ===== */}
@@ -293,8 +349,71 @@ export default function Perfil() {
                 ))}
             </div>
           )}
+
+          {/* ===== NOTIFICAÇÕES ===== */}
+          {activeTab === "notifications" && isOwnProfile && (
+            <div className={style.notifSection}>
+              {loadingNotifs && <p className={style.postsState}>Carregando notificações...</p>}
+              {!loadingNotifs && <NotificationList userNotifs={userNotifs} postNotifs={postNotifs} username={username} />}
+            </div>
+          )}
         </section>
       </PageLayout.Content>
     </PageLayout>
+  );
+}
+
+/* =====================
+ * NotificationList
+ * ===================== */
+
+function NotificationList({ userNotifs, postNotifs, username }) {
+  const router = useRouter();
+  const all = [...userNotifs, ...postNotifs].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  if (all.length === 0) {
+    return <p className={style.postsState}>Nenhuma notificação.</p>;
+  }
+
+  function handleClick(n) {
+    if (n.type === "post_liked" || n.type === "post_commented") {
+      router.push(`/posts/${n.post_id}`);
+    } else if (n.type === "studio_invitation" && n.org_slug) {
+      router.push(`/estudios/${n.org_slug}`);
+    }
+  }
+
+  return (
+    <div className={style.notifList}>
+      {all.map((n) => {
+        const nid = `${n.user_id}_${n.type}_${n.source_user_id}${n.post_id != null ? `_${n.post_id}` : ""}`;
+        const isClickable = n.type === "post_liked" || n.type === "post_commented" || (n.type === "studio_invitation" && n.org_slug);
+        return (
+          <div
+            key={nid}
+            className={`${style.notifItem} ${!n.is_read ? style.notifUnread : ""} ${isClickable ? style.notifClickable : ""}`}
+            onClick={isClickable ? () => handleClick(n) : undefined}
+            role={isClickable ? "button" : undefined}
+            tabIndex={isClickable ? 0 : undefined}
+            onKeyDown={
+              isClickable
+                ? (e) => {
+                    if (e.key === "Enter" || e.key === " ") handleClick(n);
+                  }
+                : undefined
+            }
+          >
+            <div className={style.notifHeader}>
+              <span className={style.notifTitle}>{notificationTitle(n)}</span>
+              <span className={style.notifDate}>
+                {new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(n.created_at))}
+              </span>
+            </div>
+            {notificationMessage(n) && <p className={style.notifMessage}>{notificationMessage(n)}</p>}
+            {!n.is_read && <span className={style.notifUnreadDot} />}
+          </div>
+        );
+      })}
+    </div>
   );
 }

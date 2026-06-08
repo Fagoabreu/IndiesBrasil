@@ -7,9 +7,23 @@ import { createRouter } from "next-connect";
 
 const router = createRouter();
 router.use(controller.injectAnonymousOrUser);
+router.get(getHandler);
 router.delete(controller.canRequest("read:session"), deleteHandler);
 
 export default router.handler(controller.errorHandlers);
+
+async function getHandler(request, response) {
+  const { post_id } = request.query;
+  const userTryingToGet = request.context.user;
+
+  const postData = await post.getPostById(userTryingToGet?.id || null, post_id);
+  if (!postData) {
+    throw new NotFoundError();
+  }
+
+  const secureOutputValues = authorization.filterOutput(userTryingToGet, "read:post", postData);
+  return response.status(200).json(secureOutputValues);
+}
 
 async function deleteHandler(request, response) {
   const post_id = request.query.post_id;
