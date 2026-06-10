@@ -132,34 +132,52 @@ function Home() {
     <main className={styles.page}>
       <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} jsonLd={JSON_LD} />
 
-      {/* HERO */}
+      {/* ════════════════════════════════════
+          HERO — Primeira impressão
+      ════════════════════════════════════ */}
       <section className={styles.hero}>
-        <span className={styles.heroBadge}>🎮 A comunidade indie do Brasil</span>
+        <div className={styles.heroInner}>
+          <div className={styles.heroContent}>
+            <span className={styles.heroBadge}>🎮 A comunidade indie do Brasil</span>
 
-        <h1 className={styles.heroHeading}>
-          Bem-vindo.
-          <br /> <TyperwriterComponent initText="Somos" frases={frases} />
-        </h1>
+            <h1 className={styles.heroHeading}>
+              Bem-vindo.
+              <br /> <TyperwriterComponent initText="Somos" frases={frases} />
+            </h1>
 
-        <p className={styles.heroSub}>
-          Conecte-se com desenvolvedores, artistas, gamers e criadores que constroem o futuro dos jogos independentes no Brasil.
-        </p>
+            <p className={styles.heroSub}>
+              Conecte-se com desenvolvedores, artistas, gamers e criadores que constroem o futuro dos jogos independentes no Brasil.
+            </p>
 
-        <div className={styles.heroCta}>
-          <Link href="/cadastro" className={styles.ctaPrimary}>
-            Criar conta grátis
-          </Link>
-          <Link href="/posts" className={styles.ctaSecondary}>
-            Explorar comunidade →
-          </Link>
+            <div className={styles.heroCta}>
+              <Link href="/cadastro" className={styles.ctaPrimary}>
+                Criar conta grátis
+              </Link>
+              <Link href="/posts" className={styles.ctaSecondary}>
+                Explorar comunidade →
+              </Link>
+            </div>
+          </div>
+
+          {/* Card promocional — ao lado do hero */}
+          <div className={styles.heroPromo}>
+            <Link href="/cadastro" className={styles.promoCard}>
+              <img src="/images/ArteSite.png" alt="Junte-se à comunidade Indies Brasil" className={styles.promoImage} />
+            </Link>
+          </div>
         </div>
+      </section>
 
+      {/* ════════════════════════════════════
+          MÉTRICAS — Prova social
+      ════════════════════════════════════ */}
+      <section className={styles.metricsSection}>
         <div className={styles.metrics}>
           <MetricCard
-            title="Usuarios"
-            period="Desde o inicio"
+            title="Usuários"
+            period="Desde o início"
             value={summary ? summary.user_accounts : "..."}
-            previousLabel="Ultimos 30 dias"
+            previousLabel="Últimos 30 dias"
             previousValue={summary ? summary.new_user_accounts : "..."}
             icon={<PeopleIcon />}
           />
@@ -167,20 +185,20 @@ function Home() {
             title="Posts"
             period="30 dias"
             value={summary ? summary.new_posts : "..."}
-            previousLabel="Periodo Anterior"
+            previousLabel="Período Anterior"
             previousValue={summary ? summary.previous_posts : "..."}
             icon={<StarIcon />}
           />
           <MetricCard
             title="Eventos"
-            period="Proximos 30 dias"
+            period="Próximos 30 dias"
             value={summary ? summary.events : "..."}
-            previousLabel="Periodo Anterior"
+            previousLabel="Período Anterior"
             previousValue={summary ? summary.previous_events : "..."}
             icon={<TeamIcon />}
           />
           <MetricCard
-            title="Estudios"
+            title="Estúdios"
             period="Total"
             value={summary ? summary.organizations : "..."}
             previousLabel="Novos nos últimos 30 dias"
@@ -191,7 +209,9 @@ function Home() {
         </div>
       </section>
 
-      {/* HIGHLIGHTS */}
+      {/* ════════════════════════════════════
+          HIGHLIGHTS — Conteúdo em destaque
+      ════════════════════════════════════ */}
       {highlights.length > 0 && (
         <section className={styles.section}>
           <header className={styles.sectionHeader}>
@@ -207,11 +227,15 @@ function Home() {
         </section>
       )}
 
-      {/* FEATURES STRIP */}
-      <section className={styles.featuresStrip}>
-        <p className={styles.sectionLabel}>Plataforma</p>
-        <h2 className={styles.sectionTitle}>Tudo que você precisa, num só lugar</h2>
-        <p className={styles.sectionSub}>Ferramentas pensadas para profissionais e entusiastas da indústria indie brasileira.</p>
+      {/* ════════════════════════════════════
+          FEATURES — O que a plataforma oferece
+      ════════════════════════════════════ */}
+      <section className={styles.section}>
+        <header className={styles.sectionHeader}>
+          <p className={styles.sectionLabel}>Plataforma</p>
+          <h2 className={styles.sectionTitle}>Tudo que você precisa, num só lugar</h2>
+          <p className={styles.sectionSub}>Ferramentas pensadas para profissionais e entusiastas da indústria indie brasileira.</p>
+        </header>
 
         <div className={styles.featureGrid}>
           {FEATURES.map((feature) => (
@@ -224,21 +248,9 @@ function Home() {
         </div>
       </section>
 
-      {/* COMUNIDADE */}
-      <section className={styles.section}>
-        <header className={styles.sectionHeader}>
-          <p className={styles.sectionLabel}>Comunidade</p>
-          <h2 className={styles.sectionTitle}>Junte-se ao grupo</h2>
-        </header>
-        <HorizontalCardComponent
-          image="/images/IndiesWhatsApp.jpeg"
-          alt="Qr Code Convite Grupo WhatsApp"
-          title="Conheça nossa comunidade"
-          description="Grupo focado em desenvolvedores independentes de jogos brasileiros. Compartilhamos dicas, recursos, oportunidades e apoio para fomentar a indústria nacional."
-        />
-      </section>
-
-      {/* INTEGRAÇÕES */}
+      {/* ════════════════════════════════════
+          INTEGRAÇÕES — YouTube, Twitch, Steam, Instagram
+      ════════════════════════════════════ */}
       <section className={styles.section}>
         <header className={styles.sectionHeader}>
           <p className={styles.sectionLabel}>Integrações</p>
@@ -260,7 +272,9 @@ function Home() {
         />
       </section>
 
-      {/* TAGS */}
+      {/* ════════════════════════════════════
+          TAGS — Descoberta de conteúdo
+      ════════════════════════════════════ */}
       <section className={styles.section}>
         <header className={styles.sectionHeader}>
           <p className={styles.sectionLabel}>Descoberta</p>
@@ -272,6 +286,22 @@ function Home() {
           alt="ranqueamento Tags"
           title="Tags"
           description="Ranqueamento e localização de posts através de tags que auxiliam a classificação do assunto, podendo iniciar uma trend ou uma conversa."
+        />
+      </section>
+
+      {/* ════════════════════════════════════
+          COMUNIDADE — Chamada para ação final
+      ════════════════════════════════════ */}
+      <section className={styles.section}>
+        <header className={styles.sectionHeader}>
+          <p className={styles.sectionLabel}>Comunidade</p>
+          <h2 className={styles.sectionTitle}>Junte-se ao grupo</h2>
+        </header>
+        <HorizontalCardComponent
+          image="/images/IndiesWhatsApp.jpeg"
+          alt="Qr Code Convite Grupo WhatsApp"
+          title="Conheça nossa comunidade"
+          description="Grupo focado em desenvolvedores independentes de jogos brasileiros. Compartilhamos dicas, recursos, oportunidades e apoio para fomentar a indústria nacional."
         />
       </section>
     </main>

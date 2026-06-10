@@ -1,17 +1,17 @@
 .wrapper {
   position: relative;
   width: 100%;
-  padding: 0.75rem 0;
+  padding: 1rem 0;
 }
 
 /* ── Track ── */
 .track {
   display: flex;
-  gap: 1rem;
+  gap: 1.25rem;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
-  padding: 0.5rem 0.25rem 1rem;
+  padding: 0.75rem 0.25rem 1.25rem;
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
@@ -22,51 +22,55 @@
 
 /* ── Card ── */
 .card {
-  flex: 0 0 280px;
+  flex: 0 0 300px;
   scroll-snap-align: start;
-  border-radius: 14px;
+  border-radius: 16px;
   overflow: hidden;
   background: var(--bgColor-default);
   border: 1px solid var(--borderColor-muted);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease,
-    border-color 0.3s ease;
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
 }
 
 .card:hover {
-  transform: translateY(-7px);
-  box-shadow: 0 14px 32px rgba(var(--brand-rgb-primary), 0.14);
-  border-color: var(--brand-primary);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(var(--brand-rgb-primary), 0.12);
+  border-color: var(--brand-hover-border);
 }
 
 .imageWrap {
   position: relative;
   width: 100%;
-  height: 190px;
+  height: 200px;
   overflow: hidden;
 }
 
 .image {
   object-fit: cover;
-  transition: transform 0.45s ease;
+  transition: transform 0.5s ease;
 }
 
 .card:hover .image {
-  transform: scale(1.1);
+  transform: scale(1.08);
 }
 
 .label {
-  padding: 0.85rem 1rem 1rem;
-  text-align: center;
+  padding: 1rem 1.25rem 1.125rem;
+  text-align: left;
 }
 
 .label span {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--fgColor-default);
   letter-spacing: 0.01em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* ── Fade nas bordas ── */
@@ -75,11 +79,11 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 48px;
+  width: 64px;
   z-index: 2;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.35s ease;
+  transition: opacity 0.4s ease;
 }
 
 .wrapper:hover .fadeLeft,
@@ -89,12 +93,12 @@
 
 .fadeLeft {
   left: 0;
-  background: linear-gradient(to right, var(--bgColor-default), transparent);
+  background: linear-gradient(to right, var(--bgColor-default) 20%, transparent);
 }
 
 .fadeRight {
   right: 0;
-  background: linear-gradient(to left, var(--bgColor-default), transparent);
+  background: linear-gradient(to left, var(--bgColor-default) 20%, transparent);
 }
 
 /* ── Nav buttons ── */
@@ -103,22 +107,18 @@
   top: 50%;
   transform: translateY(-50%);
   z-index: 10;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  border: 1px solid var(--borderColor-default);
+  border: none;
   background: var(--bgColor-default);
   color: var(--fgColor-default);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  transition:
-    background 0.2s,
-    color 0.2s,
-    box-shadow 0.2s,
-    transform 0.2s;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+  transition: all 0.2s ease;
   opacity: 0;
 }
 
@@ -129,9 +129,8 @@
 .navBtn:hover {
   background: var(--brand-primary);
   color: #fff;
-  border-color: var(--brand-primary);
-  box-shadow: 0 4px 16px rgba(var(--brand-rgb-primary), 0.3);
-  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 4px 20px rgba(var(--brand-rgb-primary), 0.3);
+  transform: translateY(-50%) scale(1.08);
 }
 
 .navBtn:active {
@@ -139,43 +138,43 @@
 }
 
 .navLeft {
-  left: -18px;
+  left: 4px;
 }
 
 .navRight {
-  right: -18px;
+  right: 4px;
 }
 
 /* ── Dots ── */
 .dots {
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
   display: flex;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   border: none;
   background: var(--borderColor-default);
   cursor: pointer;
   padding: 0;
   transition:
-    background 0.25s,
-    transform 0.25s,
-    width 0.25s;
+    background 0.3s,
+    transform 0.3s,
+    width 0.3s;
 }
 
 .dot:hover {
   background: var(--fgColor-muted);
-  transform: scale(1.35);
+  transform: scale(1.4);
 }
 
 .dotActive {
-  width: 26px;
-  border-radius: 4px;
+  width: 28px;
+  border-radius: 5px;
   background: var(--brand-primary);
 }
 

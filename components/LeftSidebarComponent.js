@@ -186,11 +186,11 @@ export default function LeftSidebarComponent({ onNavigate }) {
                 Noticias
               </NavList.Item>
 
-              <NavList.Item as={Link} href="/construcao/avaliacoes" aria-current={router.pathname === "/construcao/avaliacoes"} onClick={onNavigate}>
+              <NavList.Item as={Link} href="/construcao/analises" aria-current={router.pathname === "/construcao/analises"} onClick={onNavigate}>
                 <NavList.LeadingVisual>
                   <BroadcastIcon />
                 </NavList.LeadingVisual>
-                Avaliações
+                Análises e Reviews
               </NavList.Item>
               <NavList.Item as={Link} href="/construcao/estudo" aria-current={router.pathname.startsWith("/construcao/estudo")} onClick={onNavigate}>
                 <NavList.LeadingVisual>
