@@ -1,32 +1,65 @@
-/* Card — portrait format (like a book cover) */
+/* ════════════════════════════════════════
+   BookCard — Efeito de livro fechado 3D
+════════════════════════════════════════ */
 .card {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--borderColor-muted);
-  border-radius: 10px;
+  border-radius: 4px 10px 10px 4px;
   overflow: hidden;
-  background: var(--bgColor-muted);
+  background: var(--bgColor-default);
   text-decoration: none;
   color: inherit;
+  position: relative;
   transition:
-    border-color 0.15s,
-    transform 0.15s,
-    box-shadow 0.15s;
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.3s ease;
+
+  /* Lombada na esquerda — simulando a capa grossa */
+  border-left: 6px solid var(--borderColor-muted);
+  border-top: 1px solid var(--borderColor-muted);
+  border-right: 1px solid var(--borderColor-muted);
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+/* Sombra de profundidade na lombada */
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 6px;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.08), transparent 60%);
+  pointer-events: none;
+  z-index: 2;
 }
 
 .card:hover {
   border-color: var(--brand-primary);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(var(--brand-rgb-primary), 0.15);
+  border-left-color: var(--brand-primary);
+  transform: translateY(-4px) rotateY(-3deg) perspective(800px) translateZ(8px);
+  box-shadow:
+    6px 8px 28px rgba(var(--brand-rgb-primary), 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-/* Portrait aspect ratio */
+/* Capa */
 .cardCover {
   position: relative;
   width: 100%;
   aspect-ratio: 2 / 3;
   background: var(--bgColor-inset);
   overflow: hidden;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* ── Wrapper da imagem ── */
+.coverInner {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
 .coverImg {
@@ -34,6 +67,11 @@
   height: 100% !important;
   max-width: 100%;
   object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.card:hover .coverImg {
+  transform: scale(1.04);
 }
 
 .coverPlaceholder {
@@ -49,6 +87,23 @@
   text-transform: uppercase;
 }
 
+/* ── Efeito de páginas no lado direito da capa ── */
+.pagesEffect {
+  position: absolute;
+  top: 2px;
+  right: -4px;
+  bottom: 2px;
+  width: 6px;
+  background: linear-gradient(to right, var(--bgColor-default), var(--bgColor-muted));
+  border-radius: 0 2px 2px 0;
+  box-shadow:
+    -1px 0 2px rgba(0, 0, 0, 0.06),
+    inset 1px 0 0 rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Stage badge */
 .stageBadge {
   position: absolute;
   top: 8px;
@@ -61,6 +116,7 @@
   letter-spacing: 0.04em;
   background: rgba(0, 0, 0, 0.65);
   color: #fff;
+  z-index: 3;
 }
 
 .stage_released {
@@ -82,12 +138,14 @@
   background: rgba(207, 34, 46, 0.75);
 }
 
+/* Card body */
 .cardBody {
-  padding: 10px 12px 12px;
+  padding: 10px 14px 12px 10px;
   display: flex;
   flex-direction: column;
   gap: 5px;
   flex: 1;
+  position: relative;
 }
 
 .cardName {
@@ -149,16 +207,25 @@
   font-size: 0.75rem;
   color: var(--fgColor-muted);
 }
-
 .rating {
   font-size: 0.8rem;
   font-weight: 700;
   color: #e6a817;
 }
 
-/* Mobile: stay as portrait cards in 2-col grid — no layout change needed */
+/* Mobile */
 @media (max-width: 600px) {
   .cardName {
     font-size: 0.85rem;
+  }
+  .card {
+    border-left-width: 4px;
+  }
+  .card::before {
+    width: 4px;
+  }
+  .cardCover::after {
+    width: 4px;
+    right: -3px;
   }
 }

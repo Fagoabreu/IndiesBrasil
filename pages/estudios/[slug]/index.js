@@ -16,6 +16,7 @@ import SectionPanel from "@/components/Panels/SectionPanel/SectionPanel";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
 import GameCard from "@/components/Card/GameCard";
 import BoardGameCard from "@/components/Card/BoardGameCard";
+import BookCard from "@/components/Card/BookCard";
 import CreatePost from "@/components/CreatePost/CreatePost";
 import PostCardComponent from "@/components/PostCard/PostCardComponent";
 import ImageCropModal from "@/components/ImageTools/ImageCropTool/ImageCropModal";
@@ -90,6 +91,9 @@ export default function StudioPage() {
   // Board games
   const [studioBoardGames, setStudioBoardGames] = useState([]);
 
+  // Books (quadrinhos/livros)
+  const [studioBooks, setStudioBooks] = useState([]);
+
   // Stream status
   const [studioStream, setStudioStream] = useState(null);
 
@@ -156,6 +160,19 @@ export default function StudioPage() {
     }
   }, [slug]);
 
+  const fetchStudioBooks = useCallback(async () => {
+    if (!slug) return;
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/books`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setStudioBooks(Array.isArray(data) ? data : []);
+      }
+    } catch {
+      // ignore
+    }
+  }, [slug]);
+
   const fetchStudioStream = useCallback(async () => {
     if (!slug) return;
     try {
@@ -202,9 +219,10 @@ export default function StudioPage() {
     fetchStudio();
     fetchStudioGames();
     fetchStudioBoardGames();
+    fetchStudioBooks();
     fetchStudioStream();
     fetchRelationships();
-  }, [fetchStudio, fetchStudioGames, fetchStudioBoardGames, fetchStudioStream, fetchRelationships]);
+  }, [fetchStudio, fetchStudioGames, fetchStudioBoardGames, fetchStudioBooks, fetchStudioStream, fetchRelationships]);
 
   useEffect(() => {
     if (activeTab === "postagens") fetchStudioPosts();
@@ -659,6 +677,17 @@ export default function StudioPage() {
                   <div className={styles.gameCardList}>
                     {studioBoardGames.map((bg) => (
                       <BoardGameCard key={bg.id} boardgame={bg} />
+                    ))}
+                  </div>
+                </SectionPanel>
+              )}
+
+              {/* LIVROS E QUADRINHOS */}
+              {studioBooks.length > 0 && (
+                <SectionPanel title="Livros e Quadrinhos">
+                  <div className={styles.gameCardList}>
+                    {studioBooks.map((b) => (
+                      <BookCard key={b.id} book={b} />
                     ))}
                   </div>
                 </SectionPanel>

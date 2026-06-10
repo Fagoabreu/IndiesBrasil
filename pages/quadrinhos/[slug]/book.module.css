@@ -31,7 +31,6 @@
   padding: 24px 16px 80px;
 }
 
-/* ── Breadcrumb ── */
 .breadcrumb {
   font-size: 0.8rem;
   color: var(--fgColor-muted);
@@ -48,25 +47,70 @@
   color: var(--brand-primary);
 }
 
-/* ── Hero (cover + info side-by-side) ── */
+/* ═══════════════════════════════════════════════════════
+   Hero — Livro aberto (capa esquerda + info direita)
+═══════════════════════════════════════════════════════ */
 .bookHero {
   display: grid;
   grid-template-columns: 220px 1fr;
   gap: 0;
   margin-bottom: 36px;
-  border: 1px solid var(--borderColor-muted);
-  border-radius: 10px;
+  position: relative;
+  background: var(--bgColor-default);
+  border-radius: 4px 14px 14px 4px;
   overflow: hidden;
-  background: var(--bgColor-muted);
+
+  border-top: 1px solid var(--borderColor-muted);
+  border-right: 1px solid var(--borderColor-muted);
+  border-bottom: 1px solid var(--borderColor-muted);
+  border-left: 8px solid var(--borderColor-muted);
+
+  box-shadow:
+    -2px 0 6px rgba(0, 0, 0, 0.04),
+    4px 6px 20px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.35s ease;
+}
+
+.bookHero:hover {
+  box-shadow:
+    -2px 0 6px rgba(0, 0, 0, 0.04),
+    6px 10px 32px rgba(var(--brand-rgb-primary), 0.1);
+}
+
+.bookHero::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 8px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.bookHero::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 220px;
+  width: 12px;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.04) 0%, transparent 30%, transparent 70%, rgba(0, 0, 0, 0.04) 100%);
+  pointer-events: none;
+  z-index: 5;
 }
 
 @media (max-width: 640px) {
   .bookHero {
     grid-template-columns: 1fr;
+    border-left-width: 6px;
+  }
+
+  .bookHero::after {
+    display: none;
   }
 }
 
-/* Portrait book cover */
 .heroCoverWrap {
   position: relative;
   width: 220px;
@@ -96,23 +140,14 @@
   text-transform: uppercase;
 }
 
-/* Info panel */
 .heroInfo {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 24px;
+  padding: 28px 28px 24px 28px;
   min-width: 0;
   overflow: hidden;
-  border-left: 1px solid var(--borderColor-muted);
-}
-
-@media (max-width: 640px) {
-  .heroInfo {
-    border-left: none;
-    border-top: 1px solid var(--borderColor-muted);
-    padding: 16px;
-  }
+  position: relative;
 }
 
 .heroTitle {
@@ -183,7 +218,6 @@
   text-decoration: underline;
 }
 
-/* ── Hero action buttons ── */
 .heroActions {
   display: flex;
   flex-wrap: wrap;
@@ -254,7 +288,6 @@
   background: var(--brand-hover-bg);
 }
 
-/* ── Description ── */
 .section {
   display: flex;
   flex-direction: column;
@@ -284,7 +317,6 @@
   margin: 0;
 }
 
-/* ── Store Cards Grid ── */
 .storeList {
   list-style: none;
   margin: 0;
@@ -334,7 +366,6 @@
   font-weight: 500;
 }
 
-/* ── PDF Card ── */
 .pdfCard {
   display: flex;
 }

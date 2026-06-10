@@ -5,19 +5,19 @@
 }
 
 /* ========================================
-   HERO
+   HERO — Layout lado a lado (texto + promo)
 ======================================== */
 .hero {
   position: relative;
-  padding: 4.5rem 0 3.5rem;
-  margin-bottom: 5rem;
+  padding: 4rem 0 3rem;
+  margin-bottom: 2rem;
 }
 
-/* Ambient glow behind hero */
+/* Ambient glow */
 .hero::before {
   content: "";
   position: absolute;
-  inset: -60px -4rem;
+  inset: -60px -4rem -40px;
   background:
     radial-gradient(ellipse 70% 55% at 15% 45%, rgba(var(--brand-rgb-primary), 0.1), transparent),
     radial-gradient(ellipse 55% 45% at 85% 15%, rgba(var(--brand-rgb-secondary), 0.08), transparent);
@@ -25,9 +25,21 @@
   z-index: 0;
 }
 
-.heroBadge {
+.heroInner {
   position: relative;
   z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.heroContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.heroBadge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -41,11 +53,10 @@
   border-radius: 100px;
   padding: 5px 14px;
   margin-bottom: 1.5rem;
+  width: fit-content;
 }
 
 .heroHeading {
-  position: relative;
-  z-index: 1;
   font-size: clamp(2.4rem, 5.5vw, 3.75rem);
   font-weight: 800;
   line-height: 1.08;
@@ -55,22 +66,17 @@
 }
 
 .heroSub {
-  position: relative;
-  z-index: 1;
   font-size: clamp(1rem, 1.8vw, 1.15rem);
   color: var(--fgColor-muted);
   max-width: 560px;
   line-height: 1.7;
-  margin-bottom: 2.25rem;
+  margin-bottom: 2rem;
 }
 
 .heroCta {
-  position: relative;
-  z-index: 1;
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 3rem;
 }
 
 .ctaPrimary {
@@ -124,11 +130,52 @@
   color: var(--brand-primary);
 }
 
-.metrics {
+/* Card promocional (lado direito do hero) */
+.heroPromo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.promoCard {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  border-radius: 16px;
+  overflow: hidden;
+  text-decoration: none;
+  border: 1px solid var(--borderColor-muted);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.promoCard:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 16px 40px rgba(var(--brand-rgb-primary), 0.18);
+  border-color: var(--brand-hover-border);
+}
+
+.promoImage {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ========================================
+   MÉTRICAS — Seção destacada após hero
+======================================== */
+.metricsSection {
+  margin-bottom: 4rem;
   position: relative;
   z-index: 1;
+}
+
+.metrics {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
 }
 
@@ -161,12 +208,8 @@
 }
 
 /* ========================================
-   FEATURES STRIP
+   FEATURES
 ======================================== */
-.featuresStrip {
-  margin-bottom: 5rem;
-}
-
 .featureGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -186,7 +229,6 @@
     box-shadow 0.2s ease;
 }
 
-/* gradient top-line on hover */
 .featureCard::before {
   content: "";
   position: absolute;
@@ -256,16 +298,64 @@
 }
 
 /* ========================================
+   REVEAL ON SCROLL — Animação de entrada/saída
+======================================== */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px) scale(0.98);
+  transition:
+    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.revealVisible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* ========================================
    RESPONSIVE
 ======================================== */
+@media (max-width: 860px) {
+  .heroInner {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .heroPromo {
+    order: -1;
+  }
+
+  .promoCard {
+    max-width: 100%;
+  }
+
+  .heroContent {
+    text-align: center;
+    align-items: center;
+  }
+
+  .heroCta {
+    justify-content: center;
+  }
+
+  .heroSub {
+    max-width: 100%;
+  }
+
+  .heroBadge {
+    align-self: center;
+  }
+}
+
 @media (max-width: 640px) {
   .hero {
-    padding: 3rem 0 2rem;
-    margin-bottom: 3rem;
+    padding: 2.5rem 0 2rem;
   }
 
   .heroCta {
     flex-direction: column;
+    width: 100%;
   }
 
   .ctaPrimary,
@@ -275,16 +365,24 @@
     text-align: center;
   }
 
+  .metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .featureGrid {
     grid-template-columns: 1fr 1fr;
   }
 
-  .featuresStrip {
+  .section {
     margin-bottom: 3rem;
   }
 }
 
 @media (max-width: 400px) {
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+
   .featureGrid {
     grid-template-columns: 1fr;
   }

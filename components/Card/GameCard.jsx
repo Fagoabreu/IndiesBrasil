@@ -18,13 +18,15 @@ export default function GameCard({ game }) {
   return (
     <Link href={`/jogos/${game.slug}`} className={styles.card}>
       <div className={styles.cardCover}>
-        {game.banner_url || game.cover_url ? (
-          <Image src={game.banner_url || game.cover_url} alt={game.name} fill sizes="(max-width: 600px) 100vw, 280px" className={styles.coverImg} />
-        ) : (
-          <div className={styles.coverPlaceholder}>
-            <span>{game.name[0]}</span>
-          </div>
-        )}
+        <div className={styles.coverInner}>
+          {game.banner_url || game.cover_url ? (
+            <Image src={game.banner_url || game.cover_url} alt={game.name} fill sizes="(max-width: 600px) 100vw, 280px" className={styles.coverImg} />
+          ) : (
+            <div className={styles.coverPlaceholder}>
+              <span>{game.name[0]}</span>
+            </div>
+          )}
+        </div>
         <span className={`${styles.stageBadge} ${styles[`stage_${game.stage}`]}`}>{stageLabel}</span>
       </div>
 

@@ -31,13 +31,17 @@ export default function BookCard({ book }) {
   return (
     <Link href={`/quadrinhos/${book.slug}`} className={styles.card}>
       <div className={styles.cardCover}>
-        {book.cover_url ? (
-          <Image src={book.cover_url} alt={book.title} width={200} height={300} className={styles.coverImg} unoptimized />
-        ) : (
-          <div className={styles.coverPlaceholder}>
-            <span>{book.title[0]}</span>
-          </div>
-        )}
+        <div className={styles.coverInner}>
+          {book.cover_url ? (
+            <Image src={book.cover_url} alt={book.title} width={200} height={300} className={styles.coverImg} unoptimized />
+          ) : (
+            <div className={styles.coverPlaceholder}>
+              <span>{book.title[0]}</span>
+            </div>
+          )}
+        </div>
+        {/* Efeito de páginas (lado direito) — sempre presente */}
+        <div className={styles.pagesEffect} />
         <span className={`${styles.stageBadge} ${stageClass}`}>{stageLabel}</span>
       </div>
 
