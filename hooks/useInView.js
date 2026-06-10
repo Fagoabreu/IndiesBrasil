@@ -6,11 +6,11 @@ import { useRef, useState, useEffect } from "react";
  * está dentro da viewport no momento.
  *
  * @param {object} options - Opções do IntersectionObserver
- * @param {number} [options.threshold=0.1] - Percentual visível para considerar "visível"
- * @param {string} [options.rootMargin="0px 0px -80px 0px"] - Margem extra
+ * @param {number} [options.threshold=0.2] - Percentual visível para considerar "visível"
+ * @param {string} [options.rootMargin="0px 0px -70px 0px"] - Margem extra
  */
 export default function useInView(options = {}) {
-  const { threshold = 0.1, rootMargin = "0px 0px -80px 0px" } = options;
+  const { threshold = 0.2, rootMargin = "0px 0px -70px 0px" } = options;
   const ref = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
 
