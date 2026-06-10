@@ -298,6 +298,22 @@
 }
 
 /* ========================================
+   REVEAL ON SCROLL — Animação de entrada/saída
+======================================== */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px) scale(0.98);
+  transition:
+    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.revealVisible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* ========================================
    RESPONSIVE
 ======================================== */
 @media (max-width: 860px) {

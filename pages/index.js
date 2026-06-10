@@ -10,6 +10,7 @@ import { PeopleIcon, StarIcon, PeopleIcon as TeamIcon, TagIcon, VideoIcon } from
 import { useEffect, useState } from "react";
 import TyperwriterComponent from "@/components/TypeWriter/TyperwriterComponent";
 import { SITE_URL, SITE_NAME } from "@/lib/seo";
+import useInView from "@/hooks/useInView";
 
 const PAGE_TITLE = "Indies Brasil — Rede Social de Desenvolvedores Indie Brasileiros";
 const PAGE_DESCRIPTION = "Conecte-se com desenvolvedores, artistas e gamers, no coop chegaremos mais longe.";
@@ -77,6 +78,15 @@ const FEATURES = [
     desc: "Participe de discussões, dê feedback em projetos e colabore com outros criadores.",
   },
 ];
+
+function SectionReveal({ children, className = "", as: Tag = "section", ...props }) {
+  const [ref, isVisible] = useInView({ threshold: 0.08 });
+  return (
+    <Tag ref={ref} className={`${styles.reveal} ${isVisible ? styles.revealVisible : ""} ${className}`} {...props}>
+      {children}
+    </Tag>
+  );
+}
 
 function Home() {
   const frases = [
@@ -171,7 +181,7 @@ function Home() {
       {/* ════════════════════════════════════
           MÉTRICAS — Prova social
       ════════════════════════════════════ */}
-      <section className={styles.metricsSection}>
+      <SectionReveal className={styles.metricsSection}>
         <div className={styles.metrics}>
           <MetricCard
             title="Usuários"
@@ -207,13 +217,13 @@ function Home() {
           />
           <MetricCard title="Jogos" period="Total" value="..." previousLabel="Em Desenvolvimento" previousValue="..." icon={<VideoIcon />} />
         </div>
-      </section>
+      </SectionReveal>
 
       {/* ════════════════════════════════════
           HIGHLIGHTS — Conteúdo em destaque
       ════════════════════════════════════ */}
       {highlights.length > 0 && (
-        <section className={styles.section}>
+        <SectionReveal className={styles.section}>
           <header className={styles.sectionHeader}>
             <p className={styles.sectionLabel}>Destaques</p>
             <h2 className={styles.sectionTitle}>Conteúdos dos Estúdios</h2>
@@ -224,13 +234,13 @@ function Home() {
               <HighlightCard key={`${item.type}-${item.slug}`} item={item} />
             ))}
           </div>
-        </section>
+        </SectionReveal>
       )}
 
       {/* ════════════════════════════════════
           FEATURES — O que a plataforma oferece
       ════════════════════════════════════ */}
-      <section className={styles.section}>
+      <SectionReveal className={styles.section}>
         <header className={styles.sectionHeader}>
           <p className={styles.sectionLabel}>Plataforma</p>
           <h2 className={styles.sectionTitle}>Tudo que você precisa, num só lugar</h2>
@@ -246,12 +256,12 @@ function Home() {
             </div>
           ))}
         </div>
-      </section>
+      </SectionReveal>
 
       {/* ════════════════════════════════════
           INTEGRAÇÕES — YouTube, Twitch, Steam, Instagram
       ════════════════════════════════════ */}
-      <section className={styles.section}>
+      <SectionReveal className={styles.section}>
         <header className={styles.sectionHeader}>
           <p className={styles.sectionLabel}>Integrações</p>
           <h2 className={styles.sectionTitle}>YouTube, Twitch, Instagram e Steam</h2>
@@ -270,12 +280,12 @@ function Home() {
             { content: "YouTube Vídeo", image_src: "/images/youtube_video.png" },
           ]}
         />
-      </section>
+      </SectionReveal>
 
       {/* ════════════════════════════════════
           TAGS — Descoberta de conteúdo
       ════════════════════════════════════ */}
-      <section className={styles.section}>
+      <SectionReveal className={styles.section}>
         <header className={styles.sectionHeader}>
           <p className={styles.sectionLabel}>Descoberta</p>
           <h2 className={styles.sectionTitle}>Sistema de Tags</h2>
@@ -287,12 +297,12 @@ function Home() {
           title="Tags"
           description="Ranqueamento e localização de posts através de tags que auxiliam a classificação do assunto, podendo iniciar uma trend ou uma conversa."
         />
-      </section>
+      </SectionReveal>
 
       {/* ════════════════════════════════════
           COMUNIDADE — Chamada para ação final
       ════════════════════════════════════ */}
-      <section className={styles.section}>
+      <SectionReveal className={styles.section}>
         <header className={styles.sectionHeader}>
           <p className={styles.sectionLabel}>Comunidade</p>
           <h2 className={styles.sectionTitle}>Junte-se ao grupo</h2>
@@ -303,7 +313,7 @@ function Home() {
           title="Conheça nossa comunidade"
           description="Grupo focado em desenvolvedores independentes de jogos brasileiros. Compartilhamos dicas, recursos, oportunidades e apoio para fomentar a indústria nacional."
         />
-      </section>
+      </SectionReveal>
     </main>
   );
 }
