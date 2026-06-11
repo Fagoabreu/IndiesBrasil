@@ -6,6 +6,7 @@ import { Heading, TextInput, Spinner, Avatar } from "@primer/react";
 import { OrganizationIcon, PlusIcon, PeopleIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
+import useTiltEffect from "@/hooks/useTiltEffect";
 import { SITE_URL } from "@/lib/seo";
 import styles from "./index.module.css";
 
@@ -239,8 +240,10 @@ export default function StudiosPage() {
 }
 
 function StudioCard({ studio }) {
+  const tiltRef = useTiltEffect({ max: 8, perspective: 900, scale: 1.02, maxGlare: 0.12 });
+
   return (
-    <li className={styles.studioCard}>
+    <li className={styles.studioCard} ref={tiltRef}>
       <Link href={`/estudios/${studio.slug}`} className={styles.cardLink}>
         <div className={styles.cardBanner}>
           {studio.banner_url ? (
