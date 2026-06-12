@@ -1,0 +1,202 @@
+.page {
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.header {
+  background: var(--brand-ambient-bg);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.header::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--brand-primary), var(--brand-secondary));
+}
+
+.headerTitle {
+  margin: 0 0 4px;
+  font-size: 1.3rem;
+}
+
+.headerDesc {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--fgColor-muted);
+}
+
+.createArea {
+  margin-bottom: 20px;
+}
+
+/* ── Criar notícia ── */
+.createCard {
+  background: var(--bgColor-default);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.createCard h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 6px;
+  background: var(--bgColor-inset);
+  color: var(--fgColor-default);
+  font-size: 0.875rem;
+  transition: border-color 0.15s;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: var(--brand-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--brand-active-ring);
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.sourceRow {
+  display: flex;
+  gap: 8px;
+}
+
+.sourceRow input {
+  flex: 1;
+}
+
+.fileInput {
+  font-size: 0.8rem;
+  color: var(--fgColor-muted);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: var(--brand-gradient);
+  color: #fff;
+  transition: opacity 0.15s;
+}
+
+.btnPrimary:hover {
+  opacity: 0.9;
+}
+
+.btnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--borderColor-muted);
+  background: transparent;
+  color: var(--fgColor-default);
+  transition: all 0.15s;
+}
+
+.btnSecondary:hover {
+  background: var(--bgColor-muted);
+}
+
+/* ── Grid de notícias ── */
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.empty {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--fgColor-muted);
+}
+
+.empty h3 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+}
+
+.empty p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.loading {
+  text-align: center;
+  padding: 32px;
+  color: var(--fgColor-muted);
+}
+
+.previewImage {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--borderColor-muted);
+}
+
+.imagePreviewArea {
+  position: relative;
+  display: inline-block;
+}
+
+.removeImage {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+}
