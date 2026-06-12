@@ -15,6 +15,7 @@ import {
   TableIcon,
   BroadcastIcon,
   PersonIcon,
+  PaperAirplaneIcon,
   GearIcon,
   TagIcon,
   ZapIcon,
@@ -31,6 +32,7 @@ export default function LeftSidebarComponent({ onNavigate }) {
   const { user } = useUser();
 
   const [adminOpen, setAdminOpen] = useState(true);
+  const [artigosOpen, setArtigosOpen] = useState(true);
   const [construcaoOpen, setConstrucaoOpen] = useState(true);
   const [toolsOpen, setToolsOpen] = useState(true);
 
@@ -107,6 +109,19 @@ export default function LeftSidebarComponent({ onNavigate }) {
           Stream
         </NavList.Item>
 
+        <NavList.Group>
+          <NavList.GroupHeading className={styles.groupHeading} onClick={() => setArtigosOpen((v) => !v)} style={{ cursor: "pointer" }}>
+            {artigosOpen ? <ChevronDownIcon size={12} /> : <ChevronRightIcon size={12} />} Artigos e Estudos
+          </NavList.GroupHeading>
+
+          <NavList.Item as={Link} href="/noticias" aria-current={router.pathname.startsWith("/noticias")} onClick={onNavigate}>
+            <NavList.LeadingVisual>
+              <PaperAirplaneIcon />
+            </NavList.LeadingVisual>
+            Notícias
+          </NavList.Item>
+        </NavList.Group>
+
         {user?.features.includes("read:admin") && (
           <NavList.Group>
             <NavList.GroupHeading className={styles.groupHeading} onClick={() => setAdminOpen((v) => !v)} style={{ cursor: "pointer" }}>
@@ -179,13 +194,6 @@ export default function LeftSidebarComponent({ onNavigate }) {
           </NavList.GroupHeading>
           {construcaoOpen && (
             <>
-              <NavList.Item as={Link} href="/construcao/noticias" aria-current={router.pathname === "/construcao/noticias"} onClick={onNavigate}>
-                <NavList.LeadingVisual>
-                  <BroadcastIcon />
-                </NavList.LeadingVisual>
-                Noticias
-              </NavList.Item>
-
               <NavList.Item as={Link} href="/construcao/analises" aria-current={router.pathname === "/construcao/analises"} onClick={onNavigate}>
                 <NavList.LeadingVisual>
                   <BroadcastIcon />

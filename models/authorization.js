@@ -131,6 +131,16 @@ const availableFeatures = new Set([
   "read:book:follow",
   "create:book:review",
   "update:book:review",
+
+  //news
+  "create:news",
+  "read:news",
+  "read:news:all",
+  "update:news",
+  "delete:news",
+  "create:news:rating",
+  "create:news:factcheck",
+  "create:news:comment",
 ]);
 
 function can(user, feature, resource) {
@@ -402,6 +412,22 @@ function filterOutput(user, feature, resource) {
       return getUserNotificationsResource(resourceItem);
     });
   }
+
+  if (feature === "read:news") {
+    return getNewsResource(resource);
+  }
+
+  if (feature === "read:news:all") {
+    return resource.map((item) => getNewsResource(item));
+  }
+
+  if (feature === "create:news:rating") {
+    return {
+      id: resource.id,
+      news_id: resource.news_id,
+      rating: resource.rating,
+    };
+  }
 }
 
 function getUserResource(resource, showFeatures = true) {
@@ -598,6 +624,32 @@ function getUserNotificationsResource(resource) {
     org_slug: resource.org_slug,
     studio_name: resource.studio_name,
     source_username: resource.source_username,
+  };
+}
+
+function getNewsResource(resource) {
+  return {
+    id: resource.id,
+    author_id: resource.author_id,
+    author_username: resource.author_username,
+    author_avatar_image: resource.author_avatar_image,
+    author_avatar_url: resource.author_avatar_url || null,
+    title: resource.title,
+    summary: resource.summary,
+    body: resource.body,
+    img: resource.img,
+    img_url: resource.img_url,
+    source_url: resource.source_url,
+    source_label: resource.source_label,
+    created_at: resource.created_at,
+    updated_at: resource.updated_at,
+    avg_rating: Number(resource.avg_rating) || 0,
+    rating_count: Number(resource.rating_count) || 0,
+    factcheck_count: Number(resource.factcheck_count) || 0,
+    fake_count: Number(resource.fake_count) || 0,
+    comment_count: Number(resource.comment_count) || 0,
+    user_rating: resource.user_rating || null,
+    user_factcheck: resource.user_factcheck || null,
   };
 }
 
