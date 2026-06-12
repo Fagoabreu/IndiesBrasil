@@ -280,12 +280,7 @@ export default function NewsDetailPage() {
         {editing ? (
           <div className={styles.editForm}>
             <h4>Editar notícia</h4>
-            <input
-              className={styles.commentInput}
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              placeholder="Título"
-            />
+            <input className={styles.commentInput} value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder="Título" />
             <textarea
               className={styles.commentInput}
               value={editSummary}
@@ -293,13 +288,7 @@ export default function NewsDetailPage() {
               placeholder="Resumo"
               rows={2}
             />
-            <textarea
-              className={styles.commentInput}
-              value={editBody}
-              onChange={(e) => setEditBody(e.target.value)}
-              placeholder="Corpo"
-              rows={6}
-            />
+            <textarea className={styles.commentInput} value={editBody} onChange={(e) => setEditBody(e.target.value)} placeholder="Corpo" rows={6} />
             <div className={styles.editActions}>
               <button className={styles.cancelBtn} onClick={() => setEditing(false)}>
                 Cancelar
@@ -401,11 +390,7 @@ export default function NewsDetailPage() {
                 onChange={(e) => setCommentText(e.target.value)}
                 rows={1}
               />
-              <button
-                className={styles.commentBtn}
-                onClick={handleComment}
-                disabled={!commentText.trim() || sendingComment}
-              >
+              <button className={styles.commentBtn} onClick={handleComment} disabled={!commentText.trim() || sendingComment}>
                 {sendingComment ? "..." : "Comentar"}
               </button>
             </div>

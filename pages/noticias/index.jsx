@@ -100,9 +100,7 @@ export default function NewsPage() {
         <Heading as="h2" className={styles.headerTitle}>
           Notícias
         </Heading>
-        <p className={styles.headerDesc}>
-          Fique por dentro das últimas notícias, novidades e atualizações do cenário indie brasileiro.
-        </p>
+        <p className={styles.headerDesc}>Fique por dentro das últimas notícias, novidades e atualizações do cenário indie brasileiro.</p>
       </div>
 
       {/* Criar notícia */}
@@ -116,12 +114,7 @@ export default function NewsPage() {
             <div className={styles.createCard}>
               <h3>Nova notícia</h3>
 
-              <input
-                className={styles.input}
-                placeholder="Título da notícia"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
+              <input className={styles.input} placeholder="Título da notícia" value={title} onChange={(e) => setTitle(e.target.value)} />
 
               <textarea
                 className={styles.textarea}
@@ -180,11 +173,7 @@ export default function NewsPage() {
                 <button className={styles.btnSecondary} onClick={resetForm}>
                   Cancelar
                 </button>
-                <button
-                  className={styles.btnPrimary}
-                  onClick={handleSubmit}
-                  disabled={saving || !title.trim() || !summary.trim() || !body.trim()}
-                >
+                <button className={styles.btnPrimary} onClick={handleSubmit} disabled={saving || !title.trim() || !summary.trim() || !body.trim()}>
                   {saving ? "Publicando..." : "Publicar notícia"}
                 </button>
               </div>

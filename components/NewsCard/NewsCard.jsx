@@ -7,10 +7,7 @@ export default function NewsCard({ news }) {
   const hasImage = news.img_url;
   const firstLetter = (news.title || "N")[0].toUpperCase();
 
-  const fakePct =
-    news.factcheck_count + news.fake_count > 0
-      ? Math.round((news.fake_count / (news.factcheck_count + news.fake_count)) * 100)
-      : null;
+  const fakePct = news.factcheck_count + news.fake_count > 0 ? Math.round((news.fake_count / (news.factcheck_count + news.fake_count)) * 100) : null;
 
   let factcheckStatus = "neutral";
   let factcheckLabel = "Sem verificação";
@@ -47,13 +44,7 @@ export default function NewsCard({ news }) {
         <div className={styles.meta}>
           <div className={styles.author}>
             {news.author_avatar_url ? (
-              <Image
-                src={news.author_avatar_url}
-                alt={news.author_username}
-                width={20}
-                height={20}
-                className={styles.avatar}
-              />
+              <Image src={news.author_avatar_url} alt={news.author_username} width={20} height={20} className={styles.avatar} />
             ) : (
               <div className={styles.avatarPlaceholder}>{news.author_username?.[0]?.toUpperCase() || "?"}</div>
             )}
