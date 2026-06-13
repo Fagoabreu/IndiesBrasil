@@ -106,7 +106,7 @@ export default function LeftSidebarComponent({ onNavigate }) {
           <NavList.LeadingVisual>
             <BroadcastIcon />
           </NavList.LeadingVisual>
-          Stream
+          Live Stream
         </NavList.Item>
 
         <NavList.Group>
