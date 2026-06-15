@@ -27,6 +27,7 @@ const availableFeatures = new Set([
   "create:post",
   "read:post",
   "read:post:all",
+  "update:post",
 
   //contact_type,
   "read:contact_type",
@@ -458,22 +459,33 @@ function getUserResource(resource, showFeatures = true) {
 function getPostResource(resource) {
   return {
     id: resource.id,
+    //Organization fileds
     organization_id: resource.organization_id,
     organization_slug: resource.organization_slug,
     organization_name: resource.organization_name,
     organization_logo_url: resource.organization_logo_url,
+    //Event fields
     event_id: resource.event_id,
     event_title: resource.event_title,
     event_slug: resource.event_slug,
+    //Post content
     content: resource.content,
     img: resource.img,
     created_at: resource.created_at,
     parent_post_id: resource.parent_post_id,
     embed: resource.embed,
     post_img_url: resource.post_img_url,
+    //Autor content
     author_username: resource.author_username,
     author_avatar_image: resource.author_avatar_image,
     author_avatar_url: resource.author_avatar_url,
+    //poll content
+    poll_id: resource.poll_id,
+    poll_question: resource.poll_question,
+    poll_ended_at: resource.poll_ended_at,
+    options: resource.options,
+    user_vote: resource.user_vote,
+    //
     likes_count: resource.likes_count,
     comments_count: resource.comments_count,
     liked_by_user: resource.liked_by_user,

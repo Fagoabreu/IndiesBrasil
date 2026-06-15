@@ -8,12 +8,14 @@ SELECT
   c.created_at,
   c.content,
   u.username AS author_username,
-  u.avatar_image AS author_avatar_image,
+  uui.secure_url AS author_avatar_image,
   (c.author_id = $2) AS is_current_user
 FROM 
   comments c
   INNER JOIN users u
-    ON u.id = c.author_id 
+    ON u.id = c.author_id
+  LEFT JOIN uploaded_images uui
+    ON uui.id = u.avatar_image
 `;
 
 async function create(commentInputValues) {

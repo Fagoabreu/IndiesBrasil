@@ -112,6 +112,7 @@ async function activateUserByUserId(userId) {
     //post permissions
     "read:post",
     "create:post",
+    "update:post",
     //User permissions
     "read:user",
     "update:user",

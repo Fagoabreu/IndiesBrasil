@@ -8,6 +8,7 @@ import CommentPanelComponent from "../CommentPanel/CommentPanelComponent";
 import EmbedComponent from "../Embeds/EmbedComponent";
 import Image from "next/image";
 import PropTypes from "prop-types";
+import PollComponent from "./PollComponent";
 
 function timeAgo(dateString) {
   const now = new Date();
@@ -273,6 +274,18 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
 
           {/* EMBEDS */}
           <EmbedComponent embeds={post.embed} />
+
+          {/* ENQUETE */}
+          {post.poll_id && (
+            <PollComponent
+              postId={post.id}
+              question={post.poll_question || ""}
+              options={post.options || []}
+              userVote={post.user_vote}
+              endedAt={post.poll_ended_at}
+              isAuthor={post.is_current_user}
+            />
+          )}
 
           {/* AÇÕES */}
           <PostActionsComponent

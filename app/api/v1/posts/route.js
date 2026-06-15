@@ -19,12 +19,19 @@ export async function POST(request) {
     }
 
     const formData = await request.formData();
-    const content = formData.get("content");
+    const content = formData.get("content") || "";
     const file = formData.get("file");
     const event_id = formData.get("event_id") || undefined;
+    const poll_question = formData.get("poll_question");
+    const poll_options_raw = formData.get("poll_options");
 
     const userInputValues = { content, author_id: user.id };
     if (event_id) userInputValues.event_id = event_id;
+
+    if (poll_question && poll_options_raw) {
+      userInputValues.poll_question = poll_question.trim();
+      userInputValues.poll_options = JSON.parse(poll_options_raw);
+    }
 
     if (file) {
       const imageData = await uploadedImages.uploadImage(file, "posts");

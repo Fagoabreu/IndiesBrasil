@@ -126,3 +126,78 @@
   outline: 2px solid var(--brand-primary);
   outline-offset: -2px;
 }
+
+/* ─── POLL ─── */
+.pollArea {
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 10px;
+  background: var(--bgColor-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pollInput {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--bgColor-default);
+  color: var(--fgColor-default);
+  box-sizing: border-box;
+}
+
+.pollInput:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px var(--brand-active-ring);
+}
+
+.pollOptionRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.addOptionBtn {
+  all: unset;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--brand-primary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  transition: color 0.1s;
+}
+
+.addOptionBtn:hover {
+  color: var(--brand-hover);
+}
+
+.pollToggleBtn {
+  all: unset;
+  cursor: pointer;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid var(--borderColor-muted);
+  color: var(--fgColor-muted);
+  transition: all 0.15s;
+}
+
+.pollToggleBtn:hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.pollToggleActive {
+  background: var(--brand-primary);
+  color: var(--fgColor-onInverse);
+  border-color: var(--brand-primary);
+}
