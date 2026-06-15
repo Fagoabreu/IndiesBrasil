@@ -1,6 +1,7 @@
 import { NotFoundError, ValidationError } from "@/infra/errors";
 import database from "infra/database";
 import notification from "./notification";
+import poll from "./poll";
 
 const camposBase = `
   p.id,
@@ -23,6 +24,11 @@ const camposBase = `
   org.slug AS organization_slug,
   org.name AS organization_name,
   orglogo.secure_url AS organization_logo_url,
+  po.id AS poll_id,
+  po.question AS poll_question,
+  po.ended_at AS poll_ended_at,
+  poll_opts.poll_options AS options,
+  user_poll_vote.poll_option_id AS user_vote,
 `;
 
 const joinsBase = `
@@ -60,6 +66,33 @@ const joinsBase = `
     ON org.id = p.organization_id
   LEFT JOIN uploaded_images orglogo
     ON orglogo.id = org.img
+
+  -- Enquete (poll)
+  LEFT JOIN polls po ON po.id = p.poll_id
+  LEFT JOIN LATERAL (
+    SELECT COALESCE(json_agg(json_build_object(
+      'id', poopt.id,
+      'label', poopt.label,
+      'votes_count', COALESCE(pv.vote_count, 0)
+    ) ORDER BY poopt.id), '[]'::json) AS poll_options
+    FROM poll_options poopt
+    LEFT JOIN (
+      SELECT poll_option_id, COUNT(*) AS vote_count
+      FROM poll_votes
+      GROUP BY poll_option_id
+    ) pv ON pv.poll_option_id = poopt.id
+    WHERE poopt.poll_id = po.id
+  ) poll_opts ON true
+
+  -- Voto do usuário atual na enquete
+  LEFT JOIN LATERAL (
+    SELECT pv2.poll_option_id
+    FROM poll_votes pv2
+    JOIN poll_options po2 ON po2.id = pv2.poll_option_id
+    WHERE po2.poll_id = po.id AND pv2.user_id = $1
+    LIMIT 1
+  ) user_poll_vote ON ($1 IS NOT NULL)
+    
 `;
 
 const baseSelectQuery = `
@@ -125,6 +158,16 @@ async function create(postInputValues) {
       }),
     );
   }
+
+  // Cria poll se tiver dados
+  if (postInputValues.poll_question && postInputValues.poll_options) {
+    const newPoll = await poll.create(postInputValues.poll_question, postInputValues.poll_options);
+    await database.query({
+      text: "UPDATE posts SET poll_id = $1 WHERE id = $2",
+      values: [newPoll.id, newPost.id],
+    });
+  }
+
   return newPost;
 
   async function runInsertQuery(postInputValues) {
@@ -261,6 +304,7 @@ async function getPosts(user_id, seachType, tag) {
   async function runSelectNoUserQuery() {
     const results = await database.query({
       text: baseNoUserSelectQuery + ` ORDER BY p.created_at DESC;`,
+      values: [null],
     });
     return results.rows;
   }
@@ -399,8 +443,8 @@ async function getPostsByOrgId(viewerUserId, orgId) {
     return results.rows;
   }
   const results = await database.query({
-    text: baseNoUserSelectQuery + ` WHERE p.organization_id = $1 ORDER BY p.created_at DESC`,
-    values: [orgId],
+    text: baseNoUserSelectQuery + ` WHERE p.organization_id = $2 ORDER BY p.created_at DESC`,
+    values: [null, orgId],
   });
   return results.rows;
 }
@@ -414,8 +458,8 @@ async function getPostsByUsername(viewerUserId, authorUsername) {
     return results.rows;
   }
   const results = await database.query({
-    text: baseNoUserSelectQuery + ` WHERE u.username = $1 ORDER BY p.created_at DESC`,
-    values: [authorUsername],
+    text: baseNoUserSelectQuery + ` WHERE u.username = $2 ORDER BY p.created_at DESC`,
+    values: [null, authorUsername],
   });
   return results.rows;
 }

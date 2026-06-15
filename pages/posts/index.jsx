@@ -67,13 +67,13 @@ export default function PostsPage() {
   }, [fetchPosts, loadingUser]);
 
   // POST /api/v1/posts
-  const handleAddPost = async (content, file = null) => {
+  const handleAddPost = async (content, file = null, existingFormData = null) => {
     try {
-      const formData = new FormData();
-      formData.append("content", content);
-
-      if (file) {
-        formData.append("file", file);
+      const formData = existingFormData || new FormData();
+      // Se não veio formData pré-preenchido (com poll), monta manualmente
+      if (!existingFormData) {
+        formData.append("content", content);
+        if (file) formData.append("file", file);
       }
 
       const response = await fetch("/api/v1/posts", {

@@ -134,15 +134,25 @@ export default function EventDetailPage() {
     return `${styles.rsvpBtn} ${styles.active} ${styles[status]}`;
   }
 
-  async function handleAddPost(content, file = null) {
-    const formData = new FormData();
-    formData.append("content", content);
-    formData.append("event_id", id);
-    if (file) formData.append("file", file);
-    const res = await fetch("/api/v1/posts", { method: "POST", credentials: "include", body: formData });
-    if (!res.ok) return;
-    const created = await res.json();
-    setPosts((prev) => [created, ...prev]);
+  async function handleAddPost(content, file = null, existingFormData = null) {
+    try {
+      const formData = existingFormData || new FormData();
+      if (!existingFormData) {
+        formData.append("content", content);
+        if (file) formData.append("file", file);
+      }
+      formData.append("event_id", id);
+      const res = await fetch("/api/v1/posts", { method: "POST", credentials: "include", body: formData });
+      if (!res.ok) {
+        const err = await res.json();
+        console.error("Erro ao criar post:", err);
+        return;
+      }
+      const created = await res.json();
+      setPosts((prev) => [created, ...prev]);
+    } catch (err) {
+      console.error("Erro ao criar post:", err);
+    }
   }
 
   function isOrgGoing(orgId) {

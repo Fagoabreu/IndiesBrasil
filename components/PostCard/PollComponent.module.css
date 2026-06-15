@@ -1,0 +1,99 @@
+.poll {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.question {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--fgColor-default);
+  margin: 0 0 4px 0;
+}
+
+.option {
+  all: unset;
+  cursor: pointer;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+
+.option:not(.optionResult):hover {
+  border-color: var(--brand-primary);
+  background: var(--brand-hover-bg);
+}
+
+.option.optionResult {
+  cursor: default;
+}
+
+.option.selected {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px var(--brand-active-ring);
+}
+
+.optionLabel {
+  font-weight: 500;
+  color: var(--fgColor-default);
+}
+
+.resultBar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 20px;
+}
+
+.resultFill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--brand-active-ring);
+  border-radius: 6px;
+  opacity: 0.3;
+  transition: width 0.3s ease;
+}
+
+.resultLabel {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-weight: 500;
+}
+
+.resultPct {
+  font-weight: 600;
+  color: var(--brand-primary);
+}
+
+.hint,
+.total {
+  font-size: 12px;
+  color: var(--fgColor-muted);
+  margin: 2px 0;
+}
+
+.endBtn {
+  all: unset;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--fgColor-danger);
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--borderColor-danger);
+  align-self: flex-start;
+  transition: all 0.15s;
+}
+
+.endBtn:hover {
+  background: var(--bgColor-danger-emphasis);
+  color: var(--fgColor-onEmphasis);
+}
