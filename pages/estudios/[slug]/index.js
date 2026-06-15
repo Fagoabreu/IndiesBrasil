@@ -1,699 +1,910 @@
-import { InternalServerError } from "@/infra/errors.js";
+"use client";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/router";
+import Link from "next/link";
+import Image from "next/image";
+import { Avatar, Spinner } from "@primer/react";
+import { OrganizationIcon, PeopleIcon, DownloadIcon, GearIcon, PencilIcon, VideoIcon, BroadcastIcon } from "@primer/octicons-react";
 
-const availableFeatures = new Set([
-  //USER
-  "create:user",
-  "read:user",
-  "read:user:self",
-  "update:user",
-  "update:user:others",
+import { useUser } from "@/context/UserContext";
+import SeoHead from "@/components/SeoHead";
+import FollowButton from "@/components/FollowButton";
+import AddressDisplay from "@/components/Address/AddressDisplay";
+import ContatoItem from "@/components/Portfolio/Contatos/ContatoItem";
+import StudioQrCode from "@/components/Portfolio/StudioQrCode";
+import SectionPanel from "@/components/Panels/SectionPanel/SectionPanel";
+import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
+import GameCard from "@/components/Card/GameCard";
+import BoardGameCard from "@/components/Card/BoardGameCard";
+import BookCard from "@/components/Card/BookCard";
+import CreatePost from "@/components/CreatePost/CreatePost";
+import PostCardComponent from "@/components/PostCard/PostCardComponent";
+import ImageCropModal from "@/components/ImageTools/ImageCropTool/ImageCropModal";
+import { SITE_URL } from "@/lib/seo";
+import styles from "./studio.module.css";
 
-  //SESSION
-  "create:session",
-  "read:session",
+function formatDateBR(dateStr) {
+  if (!dateStr) return "";
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long", year: "numeric" }).format(new Date(dateStr));
+}
 
-  //ACTIVATION_TOKEN,
-  "read:activation_token",
+/** Extrai URL de embed para YouTube a partir de uma URL fornecida pelo usuário. */
+function getVideoEmbedUrl(url) {
+  if (!url) return null;
+  let m = url.match(/[?&]v=([^&]+)/);
+  if (m) return `https://www.youtube.com/embed/${m[1]}?autoplay=1&mute=1&loop=1&playlist=${m[1]}`;
+  m = url.match(/youtu\.be\/([^?]+)/);
+  if (m) return `https://www.youtube.com/embed/${m[1]}?autoplay=1&mute=1&loop=1&playlist=${m[1]}`;
+  m = url.match(/youtube\.com\/shorts\/([^?]+)/);
+  if (m) return `https://www.youtube.com/embed/${m[1]}?autoplay=1&mute=1&loop=1&playlist=${m[1]}`;
+  return null;
+}
 
-  //MIGRATION
-  "read:migration",
-  "create:migration",
-
-  //STATUS
-  "read:status",
-  "read:status:all",
-
-  //POST
-  "create:post",
-  "read:post",
-  "read:post:all",
-  "update:post",
-
-  //contact_type,
-  "read:contact_type",
-  "read:contact_type:all",
-
-  //comment
-  "read:comment",
-  "read:comment:all",
-
-  //like
-  "read:like",
-
-  //tag
-  "read:tag:all",
-  "count:tag:all",
-
-  //tool
-  "read:tool",
-  "read:tool:all",
-
-  //profession
-  "read:profession:all",
-  "read:profession",
-
-  //profile
-  "read:profile",
-  "read:profile_contact",
-  "read:profile_contact:all",
-  "read:profile_formacoes",
-  "read:profile_formacoes:all",
-  "read:profile_history",
-  "read:profile_history:all",
-  "read:profile_role",
-  "read:profile_role:all",
-  "read:profile_tool",
-  "read:profile_tool:all",
-
-  //follow user
-  "read:user_follow",
-
-  //server status
-  "read:summary",
-
-  //notification
-  "read:user_notifications",
-  "read:user_notifications:all",
-  "read:post_notifications",
-  "read:post_notifications:all",
-
-  //event / calendar
-  "read:event",
-  "read:event:all",
-  "create:event",
-  "update:event",
-  "delete:event",
-  "create:event:rsvp",
-  "create:event:invitation",
-
-  //studio / organization
-  "read:studio",
-  "read:studio:all",
-  "create:studio",
-  "update:studio",
-  "delete:studio",
-  "read:studio:member",
-  "create:studio:member",
-  "delete:studio:member",
-  "read:studio:invitation",
-  "create:studio:invitation",
-  "read:studio:follow",
-  "create:studio:follow",
-
-  //game
-  "read:game",
-  "read:game:all",
-  "create:game",
-  "update:game",
-  "delete:game",
-  "create:game:follow",
-  "read:game:follow",
-  "create:game:review",
-  "update:game:review",
-
-  //boardgame
-  "read:boardgame",
-  "read:boardgame:all",
-  "create:boardgame",
-  "update:boardgame",
-  "delete:boardgame",
-  "create:boardgame:follow",
-  "read:boardgame:follow",
-  "create:boardgame:review",
-  "update:boardgame:review",
-
-  //book
-  "read:book",
-  "read:book:all",
-  "create:book",
-  "update:book",
-  "delete:book",
-  "create:book:follow",
-  "read:book:follow",
-  "create:book:review",
-  "update:book:review",
-
-  //news
-  "create:news",
-  "read:news",
-  "read:news:all",
-  "update:news",
-  "delete:news",
-  "create:news:rating",
-  "create:news:factcheck",
-  "create:news:comment",
-]);
-
-function can(user, feature, resource) {
-  validateUser(user);
-  validateFeature(feature);
-  let authorized = false;
-  if (user.features.includes(feature)) {
-    authorized = true;
+function getLiveEmbedSrc(streamData) {
+  if (!streamData?.is_live) return null;
+  if (streamData.active_platform === "twitch" && streamData.twitch_channel) {
+    const hostname = globalThis.window?.location.hostname ?? "indiesbrasil.com";
+    return `https://player.twitch.tv/?channel=${streamData.twitch_channel}&parent=${hostname}&muted=1`;
   }
+  if (streamData.active_platform === "youtube" && streamData.youtube_channel_id) {
+    return `https://www.youtube.com/embed/live_stream?channel=${streamData.youtube_channel_id}&autoplay=1&mute=1`;
+  }
+  return null;
+}
 
-  if (feature === "update:user" && resource) {
-    authorized = false;
-    if (user.id === resource.id || can(user, "update:user:others")) {
-      authorized = true;
+function renderBanner(embedUrl, bannerUrl, studioName, styles) {
+  if (embedUrl) {
+    return (
+      <iframe src={embedUrl} className={styles.bannerVideo} allow="autoplay; encrypted-media" allowFullScreen title={`Vídeo de ${studioName}`} />
+    );
+  }
+  if (bannerUrl) {
+    return (
+      <div style={{ position: "relative", width: "100%", height: "100%" }}>
+        <Image src={bannerUrl} alt={`Banner de ${studioName}`} fill className={styles.bannerImg} sizes="100vw" />
+      </div>
+    );
+  }
+  return <div className={styles.bannerPlaceholder} />;
+}
+
+export default function StudioPage() {
+  const router = useRouter();
+  const { slug } = router.query;
+  const { user: authUser, loadingUser } = useUser();
+
+  const [studio, setStudio] = useState(null);
+  const [viewer, setViewer] = useState({ isFollowing: false, isMember: false, isAdmin: false, isOwner: false });
+  const [loading, setLoading] = useState(true);
+  const [statusMsg, setStatusMsg] = useState({ type: null, text: "" });
+
+  // Upload crop state
+  const [cropSrc, setCropSrc] = useState(null);
+  const [cropPreset, setCropPreset] = useState("avatar");
+  const [pendingImgType, setPendingImgType] = useState(null);
+  const logoInputRef = useRef(null);
+  const bannerInputRef = useRef(null);
+
+  // Games
+  const [studioGames, setStudioGames] = useState([]);
+
+  // Board games
+  const [studioBoardGames, setStudioBoardGames] = useState([]);
+
+  // Books (quadrinhos/livros)
+  const [studioBooks, setStudioBooks] = useState([]);
+
+  // Stream status
+  const [studioStream, setStudioStream] = useState(null);
+
+  // Tab
+  const [activeTab, setActiveTab] = useState("perfil");
+
+  // Posts
+  const [studioPosts, setStudioPosts] = useState([]);
+  const [loadingPosts, setLoadingPosts] = useState(false);
+
+  // Relacionamentos
+  const [relationships, setRelationships] = useState({ accepted: [], pending_incoming: [], pending_outgoing: [] });
+  const [relForm, setRelForm] = useState({ targetSlug: "", type: "partner" });
+  const [relFormOpen, setRelFormOpen] = useState(false);
+  const [relFormLoading, setRelFormLoading] = useState(false);
+
+  // Video URL editing
+  const [editingVideoUrl, setEditingVideoUrl] = useState(false);
+  const [videoUrlDraft, setVideoUrlDraft] = useState("");
+  const [savingVideo, setSavingVideo] = useState(false);
+
+  const fetchStudio = useCallback(async () => {
+    if (!slug) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}`, { credentials: "include" });
+      const data = await res.json();
+      if (!res.ok || data.status_code) {
+        setStudio(null);
+      } else {
+        setStudio(data);
+        setViewer(data.viewer ?? {});
+      }
+    } catch {
+      setStudio(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [slug]);
+
+  const fetchStudioGames = useCallback(async () => {
+    if (!slug) return;
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/games`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setStudioGames(Array.isArray(data) ? data : (data.games ?? []));
+      }
+    } catch {
+      // ignore
+    }
+  }, [slug]);
+
+  const fetchStudioBoardGames = useCallback(async () => {
+    if (!slug) return;
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/boardgames`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setStudioBoardGames(Array.isArray(data) ? data : []);
+      }
+    } catch {
+      // ignore
+    }
+  }, [slug]);
+
+  const fetchStudioBooks = useCallback(async () => {
+    if (!slug) return;
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/books`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setStudioBooks(Array.isArray(data) ? data : []);
+      }
+    } catch {
+      // ignore
+    }
+  }, [slug]);
+
+  const fetchStudioStream = useCallback(async () => {
+    if (!slug) return;
+    try {
+      const res = await fetch("/api/v1/streams", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setStudioStream(data.find((s) => s.slug === slug) ?? null);
+      }
+    } catch {
+      // ignore
+    }
+  }, [slug]);
+
+  const fetchStudioPosts = useCallback(async () => {
+    if (!slug) return;
+    setLoadingPosts(true);
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/posts`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setStudioPosts(Array.isArray(data) ? data : []);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoadingPosts(false);
+    }
+  }, [slug]);
+
+  const fetchRelationships = useCallback(async () => {
+    if (!slug) return;
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/relationships`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setRelationships(data);
+      }
+    } catch {
+      // ignore
+    }
+  }, [slug]);
+
+  useEffect(() => {
+    fetchStudio();
+    fetchStudioGames();
+    fetchStudioBoardGames();
+    fetchStudioBooks();
+    fetchStudioStream();
+    fetchRelationships();
+  }, [fetchStudio, fetchStudioGames, fetchStudioBoardGames, fetchStudioBooks, fetchStudioStream, fetchRelationships]);
+
+  useEffect(() => {
+    if (activeTab === "postagens") fetchStudioPosts();
+  }, [activeTab, fetchStudioPosts]);
+
+  const handleAddPost = async (content, file = null) => {
+    const formData = new FormData();
+    formData.append("content", content);
+    if (file) formData.append("file", file);
+    const res = await fetch(`/api/v1/studios/${slug}/posts`, {
+      method: "POST",
+      credentials: "include",
+      body: formData,
+    });
+    if (!res.ok) throw new Error("Erro ao criar post.");
+    const created = await res.json();
+    setStudioPosts((prev) => [created, ...prev]);
+  };
+
+  const handleDeletePost = async (postId) => {
+    const res = await fetch(`/api/v1/posts/${postId}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    if (res.ok) setStudioPosts((prev) => prev.filter((p) => p.id !== postId));
+  };
+
+  const handleFollowChange = useCallback((nowFollowing) => {
+    setViewer((v) => ({ ...v, isFollowing: nowFollowing }));
+    setStudio((s) => (s ? { ...s, follower_count: (s.follower_count ?? 0) + (nowFollowing ? 1 : -1) } : s));
+  }, []);
+
+  const [respondingInvite, setRespondingInvite] = useState(false);
+  async function handleInviteRespond(accept) {
+    const inv = viewer.pendingInvitation;
+    if (!inv) return;
+    setRespondingInvite(true);
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/invitations/${inv.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ accept }),
+      });
+      if (res.ok) {
+        setViewer((v) => ({ ...v, pendingInvitation: null, isMember: accept }));
+        if (accept) fetchStudio();
+      } else {
+        const err = await res.json();
+        setStatusMsg({ type: "error", text: err.message || "Erro ao responder convite." });
+      }
+    } catch {
+      setStatusMsg({ type: "error", text: "Erro ao responder convite." });
+    } finally {
+      setRespondingInvite(false);
     }
   }
-  return authorized;
-}
 
-function filterOutput(user, feature, resource) {
-  validateUser(user);
-  validateFeature(feature);
-  validateResource(resource);
-  if (feature === "read:user") {
-    return getUserResource(resource);
+  // ── Upload helpers ────────────────────────────────────────────────────
+  function openFilePicker(imgType, preset) {
+    setPendingImgType(imgType);
+    setCropPreset(preset);
+    if (imgType === "logo") logoInputRef.current?.click();
+    else bannerInputRef.current?.click();
   }
 
-  if (feature === "read:user:self") {
-    if (user.id === resource.id)
-      return {
-        id: resource.id,
-        username: resource.username,
-        email: resource.email,
-        cpf: resource.cpf,
-        features: resource.features,
-        created_at: resource.created_at,
-        updated_at: resource.updated_at,
-        followers_count: resource.followers_count,
-        following_count: resource.following_count,
-        posts_count: resource.posts_count,
-        resumo: resource.resumo,
-        bio: resource.bio,
-        visibility: resource.visibility,
-        avatar_image: resource.avatar_image,
-        background_image: resource.background_image,
-      };
+  function handleFileSelected(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    const reader = new FileReader();
+    reader.onload = () => setCropSrc(reader.result);
+    reader.readAsDataURL(file);
   }
 
-  if (feature === "read:session") {
-    if (user.id === resource.user_id)
-      return {
-        id: resource.id,
-        token: resource.token,
-        user_id: resource.user_id,
-        created_at: resource.created_at,
-        updated_at: resource.updated_at,
-        expires_at: resource.expires_at,
-      };
-  }
-
-  if (feature === "read:activation_token") {
-    return {
-      id: resource.id,
-      user_id: resource.user_id,
-      created_at: resource.created_at,
-      updated_at: resource.updated_at,
-      expires_at: resource.expires_at,
-      used_at: resource.used_at,
-    };
-  }
-
-  if (feature === "read:migration") {
-    return resource.map((migration) => {
-      return {
-        path: migration.path,
-        name: migration.name,
-        timestamp: migration.timestamp,
-      };
-    });
-  }
-
-  if (feature === "read:status") {
-    const output = {
-      updated_at: resource.updated_at,
-      dependencies: {
-        database: {
-          max_connections: resource.dependencies.database.max_connections,
-          opened_connections: resource.dependencies.database.opened_connections,
-        },
-      },
-    };
-
-    if (can(user, "read:status:all")) {
-      output.dependencies.database.version = resource.dependencies.database.version;
+  async function handleCropConfirm(blob) {
+    setCropSrc(null);
+    if (!pendingImgType) return;
+    const formData = new FormData();
+    formData.append("file", blob);
+    formData.append("imgType", pendingImgType);
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/images`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Falha no upload");
+      await fetchStudio();
+    } catch {
+      setStatusMsg({ type: "error", text: "Erro ao enviar imagem." });
     }
-
-    return output;
   }
 
-  if (feature === "read:post") {
-    return getPostResource(resource);
+  // ── Video URL helpers ─────────────────────────────────────────────────
+  function startEditVideoUrl() {
+    setVideoUrlDraft(studio?.banner_video_url ?? "");
+    setEditingVideoUrl(true);
   }
 
-  if (feature === "read:post:all") {
-    return resource.map((resourceItem) => {
-      return getPostResource(resourceItem);
-    });
+  async function saveVideoUrl() {
+    setSavingVideo(true);
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ banner_video_url: videoUrlDraft.trim() || null }),
+      });
+      if (!res.ok) throw new Error("Falha ao salvar URL do vídeo.");
+      await fetchStudio();
+      setEditingVideoUrl(false);
+    } catch {
+      setStatusMsg({ type: "error", text: "Erro ao salvar URL do vídeo." });
+    } finally {
+      setSavingVideo(false);
+    }
   }
 
-  if (feature === "read:contact_type") {
-    return getContactTypeResource(resource);
+  if (loading || loadingUser) {
+    return (
+      <div className={styles.loadingWrapper}>
+        <Spinner size="large" />
+      </div>
+    );
   }
 
-  if (feature === "read:contact_type:all") {
-    return resource.map((resourceItem) => {
-      return getContactTypeResource(resourceItem);
-    });
+  if (!studio) {
+    return (
+      <div className={styles.notFound}>
+        <OrganizationIcon size={48} />
+        <p>Estúdio não encontrado.</p>
+        <Link href="/estudios" className={styles.btnOutline}>
+          Ver todos os estúdios
+        </Link>
+      </div>
+    );
   }
 
-  if (feature === "read:comment") {
-    return getCommentResource(resource);
-  }
+  const canEdit = viewer.isAdmin || viewer.isOwner;
+  const canPost = viewer.isMember || viewer.isAdmin || viewer.isOwner;
 
-  if (feature === "read:comment:all") {
-    return resource.map((resourceItem) => {
-      return getCommentResource(resourceItem);
-    });
-  }
-
-  if (feature === "read:like") {
-    return {
-      liked: resource.liked,
-      action: resource.action,
-    };
-  }
-
-  if (feature === "read:profession:all") {
-    return resource.map((resourceItem) => {
-      return getProfessionResource(resourceItem);
-    });
-  }
-
-  if (feature === "read:profession") {
-    return getProfessionResource(resource);
-  }
-
-  if (feature === "read:summary") {
-    return {
-      user_accounts: resource.user_accounts,
-      new_user_accounts: resource.new_user_accounts,
-      new_posts: resource.new_posts,
-      previous_posts: resource.previous_posts,
-      events: resource.events,
-      previous_events: resource.previous_events,
-      organizations: resource.organizations,
-      new_organizations: resource.new_organizations,
-    };
-  }
-
-  if (feature === "read:tag:all") {
-    return resource.map((resourceItem) => {
-      return getTagResource(resourceItem);
-    });
-  }
-
-  if (feature === "count:tag:all") {
-    return resource.map((resourceItem) => {
-      return getTagCountResource(resourceItem);
-    });
-  }
-
-  if (feature === "read:tool") {
-    return getToolResource(resource);
-  }
-
-  if (feature === "read:tool:all") {
-    return resource.map((respurceItem) => {
-      return getToolResource(respurceItem);
-    });
-  }
-
-  if (feature === "read:profile") {
-    return getProfileResource(resource);
-  }
-
-  if (feature === "read:profile_contact") {
-    return getProfileContactResource(resource);
-  }
-
-  if (feature === "read:profile_contact:all") {
-    return resource.map((resourceItem) => {
-      return getProfileContactResource(resourceItem);
-    });
-  }
-
-  if (feature === "read:profile_history") {
-    return getProfileHistoryResource(resource);
-  }
-
-  if (feature === "read:profile_history:all") {
-    return resource.map((resourceItem) => {
-      return getProfileHistoryResource(resourceItem);
-    });
-  }
-
-  if (feature === "read:profile_formacoes") {
-    return getProfileFormacoesResource(resource);
-  }
-
-  if (feature === "read:profile_formacoes:all") {
-    return resource.map((resourceItem) => {
-      return getProfileFormacoesResource(resourceItem);
-    });
-  }
-
-  if (feature === "read:profile_role") {
-    return getProfileRoleResource(resource);
-  }
-
-  if (feature === "read:profile_role:all") {
-    return resource.map((resourceItem) => {
-      return getProfileRoleResource(resourceItem);
-    });
-  }
-
-  if (feature === "read:profile_tool") {
-    return getProfileToolResource(resource);
-  }
-
-  if (feature === "read:profile_tool:all") {
-    return resource.map((resourceItem) => {
-      return getProfileToolResource(resourceItem);
-    });
-  }
-
-  if (feature === "read:profile_images") {
-    return getProfileImagesResource(resource);
-  }
-
-  if (feature === "read:profile_images:all") {
-    return resource.map((resourceItem) => {
-      return getProfileImagesResource(resourceItem);
-    });
-  }
-
-  if (feature === "read:user_follow") {
-    return {
-      followed: resource.followed,
-      action: resource.action,
-    };
-  }
-
-  if (feature === "read:post_notifications") {
-    return getPostNotificationsResource(resource);
-  }
-
-  if (feature === "read:post_notifications:all") {
-    return resource.map((resourceItem) => {
-      return getPostNotificationsResource(resourceItem);
-    });
-  }
-
-  if (feature === "read:user_notifications") {
-    return getUserNotificationsResource(resource);
-  }
-
-  if (feature === "read:user_notifications:all") {
-    return resource.map((resourceItem) => {
-      return getUserNotificationsResource(resourceItem);
-    });
-  }
-
-  if (feature === "read:news") {
-    return getNewsResource(resource);
-  }
-
-  if (feature === "read:news:all") {
-    return resource.map((item) => getNewsResource(item));
-  }
-
-  if (feature === "create:news:rating") {
-    return {
-      id: resource.id,
-      news_id: resource.news_id,
-      rating: resource.rating,
-    };
-  }
-}
-
-function getUserResource(resource, showFeatures = true) {
-  const userData = {
-    id: resource.id,
-    username: resource.username,
-    features: resource.features,
-    created_at: resource.created_at,
-    updated_at: resource.updated_at,
-    followers_count: resource.followers_count,
-    following_count: resource.following_count,
-    posts_count: resource.posts_count,
-    resumo: resource.resumo,
-    bio: resource.bio,
-    visibility: resource.visibility,
-    avatar_image: resource.avatar_image,
-    background_image: resource.background_image,
-    is_following: resource.is_following,
+  const RELATIONSHIP_TYPE_LABELS = {
+    partner: "Parceiro",
+    distributor: "Distribuidora",
+    cooperative: "Cooperativa",
+    workers_association: "Assoc. de trabalhadores",
+    collective: "Coletivo",
+    publisher: "Publicadora",
+    incubator: "Incubadora",
+    investor: "Investidora",
+    other: "Outro",
   };
 
-  if (!showFeatures) {
-    delete userData.features;
-  }
-
-  return userData;
-}
-
-function getPostResource(resource) {
-  return {
-    id: resource.id,
-    organization_id: resource.organization_id,
-    organization_slug: resource.organization_slug,
-    organization_name: resource.organization_name,
-    organization_logo_url: resource.organization_logo_url,
-    event_id: resource.event_id,
-    event_title: resource.event_title,
-    event_slug: resource.event_slug,
-    content: resource.content,
-    img: resource.img,
-    created_at: resource.created_at,
-    parent_post_id: resource.parent_post_id,
-    embed: resource.embed,
-    post_img_url: resource.post_img_url,
-    author_username: resource.author_username,
-    author_avatar_image: resource.author_avatar_image,
-    author_avatar_url: resource.author_avatar_url,
-    likes_count: resource.likes_count,
-    comments_count: resource.comments_count,
-    liked_by_user: resource.liked_by_user,
-    is_current_user: resource.is_current_user,
+  const handleRequestRelationship = async (e) => {
+    e.preventDefault();
+    if (!relForm.targetSlug.trim()) return;
+    setRelFormLoading(true);
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/relationships`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ target_slug: relForm.targetSlug.trim(), type: relForm.type }),
+      });
+      if (res.ok) {
+        setRelForm({ targetSlug: "", type: "partner" });
+        setRelFormOpen(false);
+        await fetchRelationships();
+      } else {
+        const err = await res.json();
+        alert(err.message || "Erro ao solicitar relacionamento.");
+      }
+    } finally {
+      setRelFormLoading(false);
+    }
   };
-}
 
-function getCommentResource(resource) {
-  return {
-    id: resource.id,
-    post_id: resource.post_id,
-    created_at: resource.created_at,
-    content: resource.content,
-    author_username: resource.author_username,
-    author_avatar_image: resource.author_avatar_image,
-    is_current_user: resource.is_current_user,
-  };
-}
-
-function getContactTypeResource(resource) {
-  return {
-    id: resource.id,
-    icon_key: resource.icon_key,
-    icon_img: resource.icon_img,
-  };
-}
-
-function getProfessionResource(resource) {
-  return {
-    name: resource.name,
-    icon_img: resource.icon_img,
-  };
-}
-
-function getTagResource(resource) {
-  return {
-    id: resource.name,
-    name: resource.name,
-    created_at: resource.created_at,
-  };
-}
-
-function getTagCountResource(resource) {
-  return {
-    name: resource.name,
-    usage_count: resource.usage_count,
-  };
-}
-
-function getToolResource(resource) {
-  return {
-    id: resource.id,
-    name: resource.name,
-    icon_img: resource.icon_img,
-  };
-}
-
-function getProfileResource(resource) {
-  return {
-    user: getUserResource(resource.user, false),
-    historico: resource.historico.map((historicoItem) => {
-      return getProfileHistoryResource(historicoItem);
-    }),
-    formacoes: resource.formacoes.map((formacaoItem) => {
-      return getProfileFormacoesResource(formacaoItem);
-    }),
-    tools: resource.tools.map((toolItem) => {
-      return getProfileToolResource(toolItem);
-    }),
-    contacts: resource.contacts.map((contactItem) => {
-      return getProfileContactResource(contactItem);
-    }),
-    roles: resource.roles.map((roleItem) => {
-      return getProfileRoleResource(roleItem);
-    }),
-  };
-}
-
-function getProfileContactResource(resource) {
-  return {
-    id: resource.id,
-    icon_img: resource.icon_img,
-    icon_key: resource.icon_key,
-    contact_type_id: resource.contact_type_id,
-    contact_value: resource.contact_value,
-  };
-}
-
-function getProfileFormacoesResource(resource) {
-  return {
-    id: resource.id,
-    ordem: resource.ordem,
-    nome: resource.nome,
-    init_date: resource.init_date,
-    end_date: resource.end_date,
-    instituicao: resource.instituicao,
-  };
-}
-
-function getProfileHistoryResource(resource) {
-  return {
-    id: resource.id,
-    ordem: resource.ordem,
-    cargo: resource.cargo,
-    init_date: resource.init_date,
-    end_date: resource.end_date,
-    company: resource.company,
-    cidade: resource.cidade,
-    estado: resource.estado,
-    atribuicoes: resource.atribuicoes,
-  };
-}
-
-function getProfileRoleResource(resource) {
-  return {
-    portfolio_role_name: resource.portfolio_role_name,
-    experience: resource.experience,
-    ordem: resource.ordem,
-    icon_img: resource.icon_img,
-  };
-}
-
-function getProfileToolResource(resource) {
-  return {
-    portfolio_tool_id: resource.portfolio_tool_id,
-    experience: resource.experience,
-    name: resource.name,
-    icon_img: resource.icon_img,
-  };
-}
-
-function getProfileImagesResource(resource) {
-  return {
-    avatar_image: resource.avatar_image,
-    background_image: resource.background_image,
-  };
-}
-
-function getUserNotificationsResource(resource) {
-  return {
-    user_id: resource.user_id,
-    type: resource.type,
-    source_user_id: resource.source_user_id,
-    is_read: resource.is_read,
-    created_at: resource.created_at,
-    title: resource.title,
-    message: resource.message,
-    org_slug: resource.org_slug,
-    studio_name: resource.studio_name,
-    source_username: resource.source_username,
-  };
-}
-
-function getNewsResource(resource) {
-  return {
-    id: resource.id,
-    author_id: resource.author_id,
-    author_username: resource.author_username,
-    author_avatar_image: resource.author_avatar_image,
-    author_avatar_url: resource.author_avatar_url || null,
-    title: resource.title,
-    summary: resource.summary,
-    body: resource.body,
-    img: resource.img,
-    img_url: resource.img_url,
-    source_url: resource.source_url,
-    source_label: resource.source_label,
-    created_at: resource.created_at,
-    updated_at: resource.updated_at,
-    avg_rating: Number(resource.avg_rating) || 0,
-    rating_count: Number(resource.rating_count) || 0,
-    factcheck_count: Number(resource.factcheck_count) || 0,
-    fake_count: Number(resource.fake_count) || 0,
-    comment_count: Number(resource.comment_count) || 0,
-    user_rating: resource.user_rating || null,
-    user_factcheck: resource.user_factcheck || null,
-  };
-}
-
-function getPostNotificationsResource(resource) {
-  return {
-    user_id: resource.user_id,
-    type: resource.type,
-    source_user_id: resource.source_user_id,
-    post_id: resource.post_id,
-    is_read: resource.is_read,
-    created_at: resource.created_at,
-    title: resource.title,
-    message: resource.message,
-  };
-}
-
-function validateUser(user) {
-  if (!user?.features) {
-    throw new InternalServerError({
-      cause: "É necessário fornecer `user` no model authorization.",
+  const handleRespondRelationship = async (id, action) => {
+    const res = await fetch(`/api/v1/studios/${slug}/relationships/${id}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action }),
     });
-  }
-}
+    if (res.ok) {
+      await fetchRelationships();
+    } else {
+      const err = await res.json();
+      alert(err.message || "Erro ao responder solicitação.");
+    }
+  };
 
-function validateFeature(feature) {
-  if (!feature || !availableFeatures.has(feature)) {
-    throw new InternalServerError({
-      cause: "É necessário fornecer uma `feature` conhecida no model authorization.",
+  const handleRemoveRelationship = async (id) => {
+    if (!confirm("Tem certeza que deseja encerrar este relacionamento?")) return;
+    const res = await fetch(`/api/v1/studios/${slug}/relationships/${id}`, {
+      method: "DELETE",
+      credentials: "include",
     });
-  }
+    if (res.ok) {
+      await fetchRelationships();
+    } else {
+      const err = await res.json();
+      alert(err.message || "Erro ao encerrar relacionamento.");
+    }
+  };
+  const liveEmbedSrc = getLiveEmbedSrc(studioStream);
+  const pageTitle = `${studio.name} — Indies Brasil`;
+  const pageUrl = `${SITE_URL}/estudios/${studio.slug}`;
+  const embedUrl = getVideoEmbedUrl(studio.banner_video_url);
+
+  return (
+    <>
+      <SeoHead
+        title={pageTitle}
+        description={studio.pitch || `Estúdio indie brasileiro: ${studio.name}`}
+        canonical={pageUrl}
+        openGraph={{
+          title: pageTitle,
+          description: studio.pitch || "",
+          url: pageUrl,
+          image: studio.banner_url || studio.logo_url || undefined,
+        }}
+      />
+
+      {/* Inputs ocultos para upload */}
+      <input ref={logoInputRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={handleFileSelected} />
+      <input ref={bannerInputRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={handleFileSelected} />
+
+      {cropSrc && <ImageCropModal imageSrc={cropSrc} preset={cropPreset} onConfirm={handleCropConfirm} onClose={() => setCropSrc(null)} />}
+
+      <div className={styles.pageWrapper}>
+        {statusMsg.text && <StatusMessageComponent type={statusMsg.type} message={statusMsg.text} />}
+
+        {viewer.pendingInvitation && (
+          <div className={styles.inviteBanner}>
+            <span className={styles.inviteBannerText}>
+              <strong>{viewer.pendingInvitation.invited_by_username}</strong> convidou você para fazer parte deste estúdio
+              {viewer.pendingInvitation.role ? ` como ${viewer.pendingInvitation.role}` : ""}.
+            </span>
+            <div className={styles.inviteBannerActions}>
+              <button className={styles.btnAccept} onClick={() => handleInviteRespond(true)} disabled={respondingInvite}>
+                {respondingInvite ? <Spinner size="small" /> : "Aceitar"}
+              </button>
+              <button className={styles.btnDecline} onClick={() => handleInviteRespond(false)} disabled={respondingInvite}>
+                Recusar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* HEADER CARD */}
+        <div className={styles.headerCard}>
+          {/* BANNER */}
+          <div className={styles.bannerWrapper}>
+            {renderBanner(embedUrl, studio.banner_url, studio.name, styles)}
+            {canEdit && (
+              <div className={styles.bannerActions}>
+                {editingVideoUrl ? (
+                  <div className={styles.videoUrlEditor}>
+                    <input
+                      type="url"
+                      className={styles.videoUrlInput}
+                      value={videoUrlDraft}
+                      onChange={(e) => setVideoUrlDraft(e.target.value)}
+                      placeholder="URL do YouTube (deixe vazio para remover)"
+                      autoFocus
+                    />
+                    <button className={styles.bannerBtn} onClick={saveVideoUrl} disabled={savingVideo}>
+                      {savingVideo ? <Spinner size="small" /> : "Salvar"}
+                    </button>
+                    <button className={styles.bannerBtn} onClick={() => setEditingVideoUrl(false)}>
+                      Cancelar
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <button className={styles.bannerBtn} onClick={() => openFilePicker("banner", "headerBanner")}>
+                      <PencilIcon size={12} /> Imagem
+                    </button>
+                    <button className={styles.bannerBtn} onClick={startEditVideoUrl}>
+                      <VideoIcon size={12} /> Vídeo
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* LOGO */}
+          <div className={styles.logoWrapper}>
+            {canEdit ? (
+              <button onClick={() => openFilePicker("logo", "squareLogo")} className={styles.logoBtn} title="Alterar logo">
+                <Avatar src={studio.logo_url || "/images/studio.jpg"} size={72} alt={studio.name} className={styles.studioLogo} />
+                <span className={styles.logoBtnOverlay}>
+                  <PencilIcon size={12} />
+                </span>
+              </button>
+            ) : (
+              <Avatar src={studio.logo_url || "/images/studio.jpg"} size={72} alt={studio.name} className={styles.studioLogo} />
+            )}
+          </div>
+
+          {/* CONTENT ROW */}
+          <div className={styles.profileHeaderRow}>
+            <div className={styles.profileContent}>
+              <div className={styles.profileMeta}>
+                <h1 className={styles.studioName}>{studio.name}</h1>
+                {studio.pitch && <p className={styles.studioPitch}>{studio.pitch}</p>}
+                <div className={styles.metaRow}>
+                  {studio.founded_at && <span className={styles.metaItem}>Fundado em {formatDateBR(studio.founded_at)}</span>}
+                  <span className={styles.metaItem}>
+                    <PeopleIcon size={14} /> {studio.member_count ?? 0} membros
+                  </span>
+                  {(studio.follower_count ?? 0) > 0 && <span className={styles.metaItem}>{studio.follower_count} seguidores</span>}
+                </div>
+              </div>
+
+              <div className={styles.profileActions}>
+                {!viewer.isOwner && !viewer.isMember && authUser?.id && (
+                  <FollowButton endpoint={`/api/v1/studios/${slug}/follow`} isFollowing={viewer.isFollowing} onToggle={handleFollowChange} />
+                )}
+                <Link href={`/estudios/${slug}/press-kit`} className={styles.btnOutline} target="_blank" rel="noopener noreferrer">
+                  <DownloadIcon size={14} /> Press Kit
+                </Link>
+                {canEdit && (
+                  <Link href={`/estudios/${slug}/configuracoes`} className={styles.btnOutline}>
+                    <GearIcon size={14} /> Editar
+                  </Link>
+                )}
+              </div>
+            </div>
+
+            <div className={styles.profileRight}>
+              <StudioQrCode slug={slug} canEdit={canEdit} />
+            </div>
+          </div>
+        </div>
+
+        {/* ABAS */}
+        <div className={styles.tabBar}>
+          <button className={`${styles.tabBtn} ${activeTab === "perfil" ? styles.tabBtnActive : ""}`} onClick={() => setActiveTab("perfil")}>
+            Perfil
+          </button>
+          <button className={`${styles.tabBtn} ${activeTab === "postagens" ? styles.tabBtnActive : ""}`} onClick={() => setActiveTab("postagens")}>
+            Postagens
+          </button>
+        </div>
+
+        {/* ABA: POSTAGENS */}
+        {activeTab === "postagens" && (
+          <div className={styles.postsTab}>
+            {canPost && authUser?.id && <CreatePost user={authUser} onPost={handleAddPost} />}
+            {loadingPosts ? (
+              <div className={styles.postsLoading}>
+                <Spinner size="medium" />
+              </div>
+            ) : studioPosts.length === 0 ? (
+              <p className={styles.emptyHint}>Nenhuma postagem ainda.</p>
+            ) : (
+              <div className={styles.postList}>
+                {studioPosts.map((p) => (
+                  <PostCardComponent key={p.id} post={p} canInteract={!!authUser?.id} onDelete={handleDeletePost} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ABA: PERFIL */}
+        {activeTab === "perfil" && (
+          <div className={styles.contentGrid}>
+            {/* COLUNA PRINCIPAL */}
+            <main className={styles.mainCol}>
+              {studio.description && (
+                <SectionPanel title="Sobre">
+                  <p className={styles.bodyText}>{studio.description}</p>
+                </SectionPanel>
+              )}
+
+              {studio.history && (
+                <SectionPanel title="História">
+                  <p className={styles.bodyText}>{studio.history}</p>
+                </SectionPanel>
+              )}
+
+              {/* STREAM AO VIVO */}
+              {liveEmbedSrc && (
+                <SectionPanel title="Ao Vivo">
+                  <iframe
+                    src={liveEmbedSrc}
+                    className={styles.streamEmbed}
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
+                    title={`Stream ao vivo de ${studio.name}`}
+                  />
+                </SectionPanel>
+              )}
+
+              {/* CANAL OFFLINE */}
+              {studioStream && !liveEmbedSrc && (
+                <SectionPanel title="Streaming">
+                  <div className={styles.channelCards}>
+                    {studioStream.twitch_channel && (
+                      <a
+                        href={`https://twitch.tv/${studioStream.twitch_channel}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`${styles.channelCard} ${styles.channelCardTwitch}`}
+                      >
+                        <BroadcastIcon size={20} />
+                        <div className={styles.channelCardInfo}>
+                          <span className={styles.channelCardPlatform}>Twitch</span>
+                          <span className={styles.channelCardName}>{studioStream.twitch_channel}</span>
+                        </div>
+                        <span className={styles.channelCardOffline}>Offline</span>
+                      </a>
+                    )}
+                    {studioStream.youtube_channel_id && (
+                      <a
+                        href={`https://youtube.com/channel/${studioStream.youtube_channel_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`${styles.channelCard} ${styles.channelCardYoutube}`}
+                      >
+                        <BroadcastIcon size={20} />
+                        <div className={styles.channelCardInfo}>
+                          <span className={styles.channelCardPlatform}>YouTube</span>
+                          <span className={styles.channelCardName}>Ver canal</span>
+                        </div>
+                        <span className={styles.channelCardOffline}>Offline</span>
+                      </a>
+                    )}
+                  </div>
+                </SectionPanel>
+              )}
+
+              {/* JOGOS */}
+              {studioGames.length > 0 && (
+                <SectionPanel title="Jogos">
+                  <div className={styles.gameCardList}>
+                    {studioGames.map((g) => (
+                      <GameCard key={g.id} game={g} />
+                    ))}
+                  </div>
+                </SectionPanel>
+              )}
+
+              {/* JOGOS DE TABULEIRO */}
+              {studioBoardGames.length > 0 && (
+                <SectionPanel title="Jogos de Tabuleiro">
+                  <div className={styles.gameCardList}>
+                    {studioBoardGames.map((bg) => (
+                      <BoardGameCard key={bg.id} boardgame={bg} />
+                    ))}
+                  </div>
+                </SectionPanel>
+              )}
+
+              {/* LIVROS E QUADRINHOS */}
+              {studioBooks.length > 0 && (
+                <SectionPanel title="Livros e Quadrinhos">
+                  <div className={styles.gameCardList}>
+                    {studioBooks.map((b) => (
+                      <BookCard key={b.id} book={b} />
+                    ))}
+                  </div>
+                </SectionPanel>
+              )}
+            </main>
+
+            {/* BARRA LATERAL */}
+            <aside className={styles.sideCol}>
+              {studio.address && (
+                <SectionPanel title="Endereço">
+                  <AddressDisplay address={studio.address} />
+                </SectionPanel>
+              )}
+
+              {studio.contacts?.length > 0 && (
+                <SectionPanel title="Contatos">
+                  <ul className={styles.contactList}>
+                    {studio.contacts.map((c) => (
+                      <ContatoItem key={c.id ?? c.type} item={c} />
+                    ))}
+                  </ul>
+                </SectionPanel>
+              )}
+
+              {studio.cnpj && (
+                <SectionPanel title="CNPJ">
+                  <span className={styles.bodyText}>{studio.cnpj}</span>
+                </SectionPanel>
+              )}
+
+              {canEdit && !studio.address && !studio.cnpj && (studio.contacts?.length ?? 0) === 0 && (
+                <SectionPanel title="Informações">
+                  <p className={styles.emptyHint}>
+                    Adicione endereço, CNPJ e contatos nas{" "}
+                    <Link href={`/estudios/${slug}/configuracoes`} className={styles.inlineLink}>
+                      configurações do estúdio
+                    </Link>
+                    .
+                  </p>
+                </SectionPanel>
+              )}
+
+              {/* MEMBROS */}
+              <SectionPanel title={`Membros (${studio.members?.length ?? 0})`}>
+                {studio.members?.length > 0 ? (
+                  <ul className={styles.memberList}>
+                    {studio.members.map((m) => (
+                      <li key={m.user_id ?? m.id} className={styles.memberItem}>
+                        <Link href={`/perfil/${m.username}`} className={styles.memberLink}>
+                          <Avatar src={m.avatar_url || "/images/avatar.png"} size={32} alt={m.username} />
+                          <div className={styles.memberInfo}>
+                            <span className={styles.memberName}>{m.display_name || m.username}</span>
+                            {m.roles?.length > 0 && <span className={styles.memberRoles}>{m.roles.join(", ")}</span>}
+                          </div>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className={styles.emptyHint}>
+                    Nenhum membro ainda.{" "}
+                    {canEdit && (
+                      <Link href={`/estudios/${slug}/configuracoes`} className={styles.inlineLink}>
+                        Convidar membros
+                      </Link>
+                    )}
+                  </p>
+                )}
+              </SectionPanel>
+
+              {/* RELACIONAMENTOS */}
+              {(relationships.accepted.length > 0 ||
+                relationships.pending_incoming.length > 0 ||
+                relationships.pending_outgoing.length > 0 ||
+                canEdit) && (
+                <SectionPanel title="Relacionamentos">
+                  {/* Aceitos */}
+                  {relationships.accepted.length > 0 && (
+                    <ul className={styles.relList}>
+                      {relationships.accepted.map((r) => (
+                        <li key={r.id} className={styles.relCard}>
+                          <Link href={`/estudios/${r.other_slug}`} className={styles.relCardLink}>
+                            {r.other_logo_url ? (
+                              <Image src={r.other_logo_url} alt={r.other_name} width={32} height={32} className={styles.relCardLogo} />
+                            ) : (
+                              <span className={styles.relCardInitial}>{r.other_name?.[0]?.toUpperCase() ?? "?"}</span>
+                            )}
+                            <div className={styles.relCardInfo}>
+                              <span className={styles.relCardName}>{r.other_name}</span>
+                              <span className={styles.relTypeBadge}>{RELATIONSHIP_TYPE_LABELS[r.relationship_type] ?? r.relationship_type}</span>
+                            </div>
+                          </Link>
+                          {canEdit && (
+                            <button className={styles.relRemoveBtn} title="Encerrar relacionamento" onClick={() => handleRemoveRelationship(r.id)}>
+                              ✕
+                            </button>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {/* Pendentes recebidas (só para admin) */}
+                  {canEdit && relationships.pending_incoming.length > 0 && (
+                    <div className={styles.relPendingSection}>
+                      <p className={styles.relPendingLabel}>Solicitações recebidas</p>
+                      <ul className={styles.relList}>
+                        {relationships.pending_incoming.map((r) => (
+                          <li key={r.id} className={styles.relPendingCard}>
+                            <Link href={`/estudios/${r.other_slug}`} className={styles.relCardLink}>
+                              {r.other_logo_url ? (
+                                <Image src={r.other_logo_url} alt={r.other_name} width={32} height={32} className={styles.relCardLogo} />
+                              ) : (
+                                <span className={styles.relCardInitial}>{r.other_name?.[0]?.toUpperCase() ?? "?"}</span>
+                              )}
+                              <div className={styles.relCardInfo}>
+                                <span className={styles.relCardName}>{r.other_name}</span>
+                                <span className={styles.relTypeBadge}>{RELATIONSHIP_TYPE_LABELS[r.relationship_type] ?? r.relationship_type}</span>
+                              </div>
+                            </Link>
+                            <div className={styles.relRespondBtns}>
+                              <button className={styles.relAcceptBtn} onClick={() => handleRespondRelationship(r.id, "accept")}>
+                                Aceitar
+                              </button>
+                              <button className={styles.relRejectBtn} onClick={() => handleRespondRelationship(r.id, "reject")}>
+                                Recusar
+                              </button>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Pendentes enviadas */}
+                  {relationships.pending_outgoing.length > 0 && (
+                    <div className={styles.relPendingSection}>
+                      <p className={styles.relPendingLabel}>Aguardando aprovação</p>
+                      <ul className={styles.relList}>
+                        {relationships.pending_outgoing.map((r) => (
+                          <li key={r.id} className={styles.relPendingCard}>
+                            <Link href={`/estudios/${r.other_slug}`} className={styles.relCardLink}>
+                              {r.other_logo_url ? (
+                                <Image src={r.other_logo_url} alt={r.other_name} width={32} height={32} className={styles.relCardLogo} />
+                              ) : (
+                                <span className={styles.relCardInitial}>{r.other_name?.[0]?.toUpperCase() ?? "?"}</span>
+                              )}
+                              <div className={styles.relCardInfo}>
+                                <span className={styles.relCardName}>{r.other_name}</span>
+                                <span className={styles.relTypeBadge}>{RELATIONSHIP_TYPE_LABELS[r.relationship_type] ?? r.relationship_type}</span>
+                              </div>
+                            </Link>
+                            <span className={styles.relPendingChip}>pendente</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Formulário de solicitação (só admin) */}
+                  {canEdit && (
+                    <div className={styles.relRequestSection}>
+                      {relFormOpen ? (
+                        <form className={styles.relForm} onSubmit={handleRequestRelationship}>
+                          <input
+                            type="text"
+                            className={styles.relFormInput}
+                            placeholder="Slug do estúdio (ex: acme-games)"
+                            value={relForm.targetSlug}
+                            onChange={(e) => setRelForm((f) => ({ ...f, targetSlug: e.target.value }))}
+                            required
+                          />
+                          <select
+                            className={styles.relFormSelect}
+                            value={relForm.type}
+                            onChange={(e) => setRelForm((f) => ({ ...f, type: e.target.value }))}
+                          >
+                            {Object.entries(RELATIONSHIP_TYPE_LABELS).map(([val, label]) => (
+                              <option key={val} value={val}>
+                                {label}
+                              </option>
+                            ))}
+                          </select>
+                          <div className={styles.relFormActions}>
+                            <button type="submit" className={styles.relFormBtn} disabled={relFormLoading}>
+                              {relFormLoading ? "Enviando…" : "Enviar solicitação"}
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.relCancelFormBtn}
+                              onClick={() => {
+                                setRelFormOpen(false);
+                                setRelForm({ targetSlug: "", type: "partner" });
+                              }}
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </form>
+                      ) : (
+                        <button className={styles.relRequestToggle} onClick={() => setRelFormOpen(true)}>
+                          + Solicitar relacionamento
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {!canEdit &&
+                    relationships.accepted.length === 0 &&
+                    relationships.pending_incoming.length === 0 &&
+                    relationships.pending_outgoing.length === 0 && <p className={styles.emptyHint}>Nenhum relacionamento ainda.</p>}
+                </SectionPanel>
+              )}
+            </aside>
+          </div>
+        )}
+      </div>
+    </>
+  );
 }
-
-function validateResource(resource) {
-  if (!resource) {
-    throw new InternalServerError({
-      cause: "É necessário fornecer um `resource` em `authorization.filterOutput`.",
-    });
-  }
-}
-
-const authorization = {
-  can,
-  filterOutput,
-};
-
-export default authorization;
