@@ -193,6 +193,10 @@ export default function BookPage() {
                   {getFollowLabel(followLoading, following)}
                 </button>
 
+                <Link href={`/analises/novo?tipo=book&content_id=${bookData.id}`} className={styles.btnAnalise}>
+                  📝 Criar Análise
+                </Link>
+
                 {bookData.buy_url && (
                   <a href={bookData.buy_url} target="_blank" rel="noopener noreferrer" className={styles.btnBuy}>
                     Onde comprar

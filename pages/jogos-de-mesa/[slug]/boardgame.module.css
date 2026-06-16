@@ -210,6 +210,29 @@
   cursor: not-allowed;
 }
 
+.btnAnalise {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  border: 2px solid var(--brand-primary);
+  background: transparent;
+  color: var(--brand-primary);
+  transition:
+    background 0.15s,
+    color 0.15s;
+  box-sizing: border-box;
+}
+
+.btnAnalise:hover {
+  background: var(--brand-primary);
+  color: #fff;
+}
+
 .btnWebsite {
   display: block;
   width: 100%;

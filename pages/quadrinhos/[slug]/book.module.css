@@ -264,6 +264,27 @@
   cursor: not-allowed;
 }
 
+.btnAnalise {
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  border: 2px solid var(--brand-primary);
+  background: transparent;
+  color: var(--brand-primary);
+  transition:
+    background 0.15s,
+    color 0.15s;
+  cursor: pointer;
+}
+
+.btnAnalise:hover {
+  background: var(--brand-primary);
+  color: #fff;
+}
+
 .btnBuy,
 .btnWebsite,
 .btnEdit {

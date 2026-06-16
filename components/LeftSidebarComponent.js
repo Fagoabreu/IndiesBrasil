@@ -23,6 +23,7 @@ import {
   CodeIcon,
   FileCodeIcon,
   BookIcon,
+  StarIcon,
 } from "@primer/octicons-react";
 import { useUser } from "@/context/UserContext";
 import styles from "./LeftSidebarComponent.module.css";
@@ -120,6 +121,12 @@ export default function LeftSidebarComponent({ onNavigate }) {
             </NavList.LeadingVisual>
             Notícias
           </NavList.Item>
+          <NavList.Item as={Link} href="/analises" aria-current={router.pathname === "/analises"} onClick={onNavigate}>
+            <NavList.LeadingVisual>
+              <StarIcon />
+            </NavList.LeadingVisual>
+            Análises e Reviews
+          </NavList.Item>
         </NavList.Group>
 
         {user?.features.includes("read:admin") && (
@@ -194,12 +201,6 @@ export default function LeftSidebarComponent({ onNavigate }) {
           </NavList.GroupHeading>
           {construcaoOpen && (
             <>
-              <NavList.Item as={Link} href="/construcao/analises" aria-current={router.pathname === "/construcao/analises"} onClick={onNavigate}>
-                <NavList.LeadingVisual>
-                  <BroadcastIcon />
-                </NavList.LeadingVisual>
-                Análises e Reviews
-              </NavList.Item>
               <NavList.Item as={Link} href="/construcao/estudo" aria-current={router.pathname.startsWith("/construcao/estudo")} onClick={onNavigate}>
                 <NavList.LeadingVisual>
                   <BroadcastIcon />
