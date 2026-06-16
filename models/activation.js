@@ -162,6 +162,12 @@ async function activateUserByUserId(userId) {
     "update:book:review",
     "create:book:follow",
     "read:book:follow",
+    //content-review (analises)
+    "read:content_review",
+    "read:content_review:all",
+    "create:content_review",
+    "update:content_review",
+    "delete:content_review",
   ]);
   return activatedUser;
 }

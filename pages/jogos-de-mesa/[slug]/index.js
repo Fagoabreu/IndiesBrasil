@@ -232,6 +232,10 @@ export default function BoardgamePage() {
                 {getFollowLabel(followLoading, following)}
               </button>
 
+              <Link href={`/analises/novo?tipo=boardgame&content_id=${bgData.id}`} className={styles.btnAnalise}>
+                📝 Criar Análise
+              </Link>
+
               {bgData.website_url && (
                 <a href={bgData.website_url} target="_blank" rel="noopener noreferrer" className={styles.btnWebsite}>
                   Visitar site oficial

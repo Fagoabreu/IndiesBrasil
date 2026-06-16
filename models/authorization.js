@@ -142,6 +142,13 @@ const availableFeatures = new Set([
   "create:news:rating",
   "create:news:factcheck",
   "create:news:comment",
+
+  //content-review (analises)
+  "read:content_review",
+  "read:content_review:all",
+  "create:content_review",
+  "update:content_review",
+  "delete:content_review",
 ]);
 
 function can(user, feature, resource) {

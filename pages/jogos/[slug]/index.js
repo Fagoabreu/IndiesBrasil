@@ -240,6 +240,11 @@ export default function GamePage() {
                 </p>
               )}
 
+              {/* Criar Análise */}
+              <Link href={`/analises/novo?tipo=game&content_id=${gameData.id}`} className={styles.btnAnalise}>
+                📝 Criar Análise
+              </Link>
+
               {/* Links de lojas */}
               {gameData.store_pages?.length > 0 && (
                 <div className={styles.storeLinks}>
