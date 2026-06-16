@@ -78,32 +78,67 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      # Pretara pastas
+      # SSH options comuns para evitar timeouts intermitentes
+      # ConnectTimeout=30: falha rápido em vez de esperar 2min
+      # ServerAliveInterval=15: mantém conexão viva durante transfers longos
+      # TCPKeepAlive=yes: detecta conexões mortas
+      # Retry com exponential backoff resolve o problema intermitente de timeout
       - name: Prepare directories on server
         run: |
-          ssh -T -o StrictHostKeyChecking=no ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} \
-            "mkdir -p /var/www/indies/nginx /var/www/indies/certs"
+          SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=15 -o TCPKeepAlive=yes"
+          SSH_TARGET="${{ vars.SSH_USER }}@${{ vars.SSH_HOST }}"
+
+          for i in 1 2 3 4 5; do
+            echo "Attempt $i/5..."
+            if ssh -T $SSH_OPTS "$SSH_TARGET" "mkdir -p /var/www/indies/nginx /var/www/indies/certs"; then
+              echo "✅ Directories prepared"
+              exit 0
+            fi
+            wait=$((2 ** i))
+            echo "⏳ Failed, retrying in ${wait}s..."
+            sleep $wait
+          done
+          echo "❌ Failed after 5 attempts"
+          exit 1
 
       #Enviar arquivos
       - name: Upload app artifacts
         run: |
-          rsync -az --checksum \
-            --exclude='certs/' \
-            -e "ssh -o StrictHostKeyChecking=no" \
-            indies-app.tar.gz \
-            .env.production \
-            deploy/compose.yaml \
-            ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }}:/var/www/indies/
-            
-          rsync -az --checksum \
-            -e "ssh -o StrictHostKeyChecking=no" \
-            deploy/nginx/ \
-            ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }}:/var/www/indies/nginx
+          SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=15 -o TCPKeepAlive=yes"
+          SSH_TARGET="${{ vars.SSH_USER }}@${{ vars.SSH_HOST }}"
+
+          for i in 1 2 3 4 5; do
+            echo "Attempt $i/5..."
+            if rsync -az --checksum \
+              --exclude='certs/' \
+              -e "ssh $SSH_OPTS" \
+              indies-app.tar.gz \
+              .env.production \
+              deploy/compose.yaml \
+              "$SSH_TARGET:/var/www/indies/" && \
+              rsync -az --checksum \
+              -e "ssh $SSH_OPTS" \
+              deploy/nginx/ \
+              "$SSH_TARGET:/var/www/indies/nginx"; then
+              echo "✅ Artifacts uploaded"
+              exit 0
+            fi
+            wait=$((2 ** i))
+            echo "⏳ Failed, retrying in ${wait}s..."
+            sleep $wait
+          done
+          echo "❌ Failed after 5 attempts"
+          exit 1
 
       # 5️⃣ Deploy remoto
       - name: Deploy app
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} << 'EOF'
+          SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=15 -o TCPKeepAlive=yes"
+          SSH_TARGET="${{ vars.SSH_USER }}@${{ vars.SSH_HOST }}"
+
+          for i in 1 2 3 4 5; do
+            echo "Attempt $i/5..."
+            if ssh $SSH_OPTS "$SSH_TARGET" << 'EOF'
             set -e
             cd /var/www/indies
 
@@ -196,6 +231,16 @@ jobs:
               echo "ℹ️ nginx container not found, skipping reload"
             fi
           EOF
+            then
+              echo "✅ Deploy completed"
+              exit 0
+            fi
+            wait=$((2 ** i))
+            echo "⏳ Deploy failed, retrying in ${wait}s..."
+            sleep $wait
+          done
+          echo "❌ Deploy failed after 5 attempts"
+          exit 1
 
       # Run Migrations
       #- name: Run database migrations
