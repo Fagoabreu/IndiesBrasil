@@ -103,6 +103,11 @@ describe("GET /api/v1/user", () => {
           "update:book:review",
           "create:book:follow",
           "read:book:follow",
+          "read:content_review",
+          "read:content_review:all",
+          "create:content_review",
+          "update:content_review",
+          "delete:content_review",
         ],
       });
       expect(uuidVersion(responseBody.id)).toBe(4);
@@ -286,6 +291,11 @@ describe("GET /api/v1/user", () => {
           "update:book:review",
           "create:book:follow",
           "read:book:follow",
+          "read:content_review",
+          "read:content_review:all",
+          "create:content_review",
+          "update:content_review",
+          "delete:content_review",
         ],
       });
       expect(uuidVersion(responseBody.id)).toBe(4);
