@@ -1,5 +1,6 @@
 import database from "infra/database";
 import { NotFoundError, ValidationError, ForbiddenError } from "infra/errors";
+import uploadedImages from "models/uploadedImages";
 
 /* =========================================================
  * Helpers
@@ -185,10 +186,74 @@ async function remove(slug, ownerId) {
     });
   }
 
+  // Remove a imagem de capa do Cloudinary e da tabela uploaded_images
+  if (course.cover_image_id) {
+    try {
+      await uploadedImages.deleteImage(course.cover_image_id);
+    } catch {
+      // best-effort: prossegue mesmo se falhar a remoção da imagem
+    }
+  }
+
   await database.query({
     text: `DELETE FROM courses WHERE id = $1`,
     values: [course.id],
   });
+}
+
+/* =========================================================
+ * Cover image
+ * ========================================================= */
+
+async function updateCoverImage(slug, ownerId, coverImageId) {
+  const course = await findBySlug(slug);
+
+  if (course.owner_id !== ownerId) {
+    throw new ForbiddenError({
+      message: "Você não tem permissão para editar este curso.",
+    });
+  }
+
+  // Remove imagem antiga se existir
+  if (course.cover_image_id) {
+    try {
+      await uploadedImages.deleteImage(course.cover_image_id);
+    } catch {
+      // best-effort: prossegue mesmo se falhar a remoção da imagem antiga
+    }
+  }
+
+  await database.query({
+    text: `UPDATE courses SET cover_image_id = $1, updated_at = timezone('utc', now()) WHERE id = $2`,
+    values: [coverImageId, course.id],
+  });
+
+  return findBySlug(slug);
+}
+
+async function removeCoverImage(slug, ownerId) {
+  const course = await findBySlug(slug);
+
+  if (course.owner_id !== ownerId) {
+    throw new ForbiddenError({
+      message: "Você não tem permissão para editar este curso.",
+    });
+  }
+
+  if (course.cover_image_id) {
+    try {
+      await uploadedImages.deleteImage(course.cover_image_id);
+    } catch {
+      // best-effort: prossegue mesmo se falhar a remoção da imagem
+    }
+  }
+
+  await database.query({
+    text: `UPDATE courses SET cover_image_id = NULL, updated_at = timezone('utc', now()) WHERE id = $1`,
+    values: [course.id],
+  });
+
+  return findBySlug(slug);
 }
 
 /* =========================================================
@@ -256,10 +321,11 @@ async function findLessonsByCourseSlug(slug) {
 
   const results = await database.query({
     text: `
-      SELECT *
-      FROM course_lessons
-      WHERE course_id = $1
-      ORDER BY order_index ASC
+      SELECT cl.*, cm.title AS module_title
+      FROM course_lessons cl
+      LEFT JOIN course_modules cm ON cm.id = cl.module_id
+      WHERE cl.course_id = $1
+      ORDER BY cl.order_index ASC
     `,
     values: [course.id],
   });
@@ -297,7 +363,7 @@ async function createLesson(slug, ownerId, lessonData) {
     });
   }
 
-  const { title, description = "", videoUrl = null, readingMaterial = null, orderIndex } = lessonData;
+  const { title, description = "", videoUrl = null, readingMaterial = null, orderIndex, moduleId = null } = lessonData;
 
   if (!title || title.trim().length < 2) {
     throw new ValidationError({
@@ -317,11 +383,11 @@ async function createLesson(slug, ownerId, lessonData) {
 
   const results = await database.query({
     text: `
-      INSERT INTO course_lessons (course_id, title, description, video_url, reading_material, order_index)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO course_lessons (course_id, title, description, video_url, reading_material, order_index, module_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
     `,
-    values: [course.id, title.trim(), description, videoUrl, readingMaterial, Number(order)],
+    values: [course.id, title.trim(), description, videoUrl, readingMaterial, Number(order), moduleId],
   });
 
   return { ...results.rows[0], course_slug: slug };
@@ -337,7 +403,7 @@ async function updateLesson(slug, orderIndex, ownerId, lessonData) {
     });
   }
 
-  const { title, description, videoUrl, readingMaterial, orderIndex: newOrder } = lessonData;
+  const { title, description, videoUrl, readingMaterial, orderIndex: newOrder, moduleId } = lessonData;
 
   const results = await database.query({
     text: `
@@ -348,6 +414,7 @@ async function updateLesson(slug, orderIndex, ownerId, lessonData) {
         video_url = COALESCE($3, video_url),
         reading_material = COALESCE($4, reading_material),
         order_index = COALESCE($5, order_index),
+        module_id = COALESCE($7, module_id),
         updated_at = timezone('utc', now())
       WHERE id = $6
       RETURNING *
@@ -359,6 +426,7 @@ async function updateLesson(slug, orderIndex, ownerId, lessonData) {
       readingMaterial !== undefined ? readingMaterial : null,
       newOrder !== undefined ? Number(newOrder) : null,
       lesson.id,
+      moduleId !== undefined ? moduleId : null,
     ],
   });
 
@@ -379,6 +447,124 @@ async function deleteLesson(slug, orderIndex, ownerId) {
     text: `DELETE FROM course_lessons WHERE id = $1`,
     values: [lesson.id],
   });
+}
+
+/* =========================================================
+ * Modules
+ * ========================================================= */
+
+async function findModulesByCourseSlug(slug) {
+  const course = await findBySlug(slug);
+
+  const results = await database.query({
+    text: `
+      SELECT
+        cm.id,
+        cm.title,
+        cm.order_index,
+        cm.created_at,
+        COUNT(cl.id) AS lesson_count
+      FROM course_modules cm
+      LEFT JOIN course_lessons cl ON cl.module_id = cm.id
+      WHERE cm.course_id = $1
+      GROUP BY cm.id, cm.title, cm.order_index, cm.created_at
+      ORDER BY cm.order_index ASC
+    `,
+    values: [course.id],
+  });
+  return results.rows;
+}
+
+async function createModule(slug, ownerId, moduleData) {
+  const course = await findBySlug(slug);
+
+  if (course.owner_id !== ownerId) {
+    throw new ForbiddenError({
+      message: "Você não tem permissão para adicionar módulos a este curso.",
+    });
+  }
+
+  const { title, orderIndex } = moduleData;
+
+  if (!title || title.trim().length < 2) {
+    throw new ValidationError({
+      message: "O título do módulo deve ter pelo menos 2 caracteres.",
+    });
+  }
+
+  let order = orderIndex;
+  if (order === undefined || order === null) {
+    const maxResult = await database.query({
+      text: `SELECT COALESCE(MAX(order_index), -1) + 1 AS next_order FROM course_modules WHERE course_id = $1`,
+      values: [course.id],
+    });
+    order = maxResult.rows[0].next_order;
+  }
+
+  const results = await database.query({
+    text: `
+      INSERT INTO course_modules (course_id, title, order_index)
+      VALUES ($1, $2, $3)
+      RETURNING *
+    `,
+    values: [course.id, title.trim(), Number(order)],
+  });
+
+  return { ...results.rows[0], lesson_count: 0 };
+}
+
+async function updateModule(slug, moduleId, ownerId, moduleData) {
+  const course = await findBySlug(slug);
+
+  if (course.owner_id !== ownerId) {
+    throw new ForbiddenError({
+      message: "Você não tem permissão para editar módulos deste curso.",
+    });
+  }
+
+  const { title, orderIndex } = moduleData;
+
+  const results = await database.query({
+    text: `
+      UPDATE course_modules
+      SET
+        title = COALESCE($1, title),
+        order_index = COALESCE($2, order_index),
+        updated_at = timezone('utc', now())
+      WHERE id = $3 AND course_id = $4
+      RETURNING *
+    `,
+    values: [title || null, orderIndex !== undefined ? Number(orderIndex) : null, moduleId, course.id],
+  });
+
+  if (results.rowCount === 0) {
+    throw new NotFoundError({
+      message: "Módulo não encontrado.",
+    });
+  }
+
+  return results.rows[0];
+}
+
+async function deleteModule(slug, moduleId, ownerId) {
+  const course = await findBySlug(slug);
+
+  if (course.owner_id !== ownerId) {
+    throw new ForbiddenError({
+      message: "Você não tem permissão para remover módulos deste curso.",
+    });
+  }
+
+  const result = await database.query({
+    text: `DELETE FROM course_modules WHERE id = $1 AND course_id = $2 RETURNING id`,
+    values: [moduleId, course.id],
+  });
+
+  if (result.rowCount === 0) {
+    throw new NotFoundError({
+      message: "Módulo não encontrado.",
+    });
+  }
 }
 
 /* =========================================================
@@ -601,6 +787,8 @@ const courseModel = {
   create,
   update,
   remove,
+  updateCoverImage,
+  removeCoverImage,
   getCourseTags,
   setCourseTags,
   findLessonsByCourseSlug,
@@ -608,6 +796,10 @@ const courseModel = {
   createLesson,
   updateLesson,
   deleteLesson,
+  findModulesByCourseSlug,
+  createModule,
+  updateModule,
+  deleteModule,
   upsertRating,
   getUserRating,
   getCourseRatings,

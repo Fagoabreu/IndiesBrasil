@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,6 +9,7 @@ import { ArrowLeftIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
+import ImageCropModal from "@/components/ImageTools/ImageCropTool/ImageCropModal";
 import styles from "./editar.module.css";
 
 const SUGGESTED_TAGS = ["Jogo", "Unity", "Godot", "Arte", "Som", "Programação", "Design", "Marketing"];
@@ -35,10 +36,13 @@ export default function EditarCursoPage() {
 
   // Aulas
   const [lessons, setLessons] = useState([]);
+  const [modules, setModules] = useState([]);
+  const [unassignedLessons, setUnassignedLessons] = useState([]);
 
-  // Criar nova aula
-  const [newLessonTitle, setNewLessonTitle] = useState("");
-  const [creatingLesson, setCreatingLesson] = useState(false);
+  // Criar nova aula (inline per-module)
+  const [activeAddLessonModule, setActiveAddLessonModule] = useState(null); // module id, "unassigned", or null
+  const [addLessonTitle, setAddLessonTitle] = useState("");
+  const [addingLesson, setAddingLesson] = useState(false);
   const [lessonMsg, setLessonMsg] = useState({ type: null, text: "" });
 
   // Edição inline de aula
@@ -47,6 +51,19 @@ export default function EditarCursoPage() {
   const [savingLesson, setSavingLesson] = useState(false);
   const [deletingLessonOrder, setDeletingLessonOrder] = useState(null);
   const [editLessonMsg, setEditLessonMsg] = useState({ type: null, text: "" });
+
+  // Módulos
+  const [newModuleTitle, setNewModuleTitle] = useState("");
+  const [creatingModule, setCreatingModule] = useState(false);
+  const [editingModuleId, setEditingModuleId] = useState(null);
+  const [editModuleTitle, setEditModuleTitle] = useState("");
+  const [savingModule, setSavingModule] = useState(false);
+  const [moduleMsg, setModuleMsg] = useState({ type: null, text: "" });
+
+  // Upload de capa
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [coverCropSrc, setCoverCropSrc] = useState(null);
+  const coverInputRef = useRef(null);
 
   const fetchCourse = useCallback(async () => {
     if (!slug) return;
@@ -68,7 +85,7 @@ export default function EditarCursoPage() {
       setCoverUrl(data.cover_url || null);
       setSelectedTags(data.tags?.map((t) => t.name) || []);
       setCourseSlug(data.slug);
-      setLessons(data.lessons || []);
+      // lessons are fetched via fetchModules which handles modules
     } finally {
       setLoading(false);
     }
@@ -77,6 +94,40 @@ export default function EditarCursoPage() {
   useEffect(() => {
     fetchCourse();
   }, [fetchCourse]);
+
+  const fetchLessonList = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/v1/courses/${courseSlug || slug}/lessons`);
+      if (res.ok) {
+        const data = await res.json();
+        setLessons(data);
+      }
+    } catch {
+      // silent
+    }
+  }, [courseSlug, slug]);
+
+  const fetchModules = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/v1/courses/${courseSlug || slug}/modules`);
+      if (res.ok) {
+        const data = await res.json();
+        setModules(data.modules || []);
+        setUnassignedLessons(data.unassignedLessons || []);
+        setLessons([...data.modules.flatMap((m) => m.lessons || []), ...(data.unassignedLessons || [])]);
+      }
+    } catch {
+      // silent
+    }
+  }, [courseSlug, slug]);
+
+  useEffect(() => {
+    if (courseSlug) {
+      fetchLessonList();
+      fetchModules();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseSlug]);
 
   function toggleTag(tag) {
     setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
@@ -96,6 +147,68 @@ export default function EditarCursoPage() {
     if (e.key === "Enter") {
       e.preventDefault();
       addCustomTag();
+    }
+  }
+
+  function handleCoverFileSelected(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    const reader = new FileReader();
+    reader.onload = () => setCoverCropSrc(reader.result);
+    reader.readAsDataURL(file);
+  }
+
+  async function handleCoverCropConfirm(blob) {
+    setCoverCropSrc(null);
+    if (!blob) return;
+    setUploadingCover(true);
+    try {
+      const reader = new FileReader();
+      const base64 = await new Promise((resolve) => {
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+
+      const res = await fetch(`/api/v1/courses/${slug}/cover`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ image: base64 }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setStatusMsg({ type: "error", text: data.message || "Erro ao enviar capa." });
+        return;
+      }
+      setCoverUrl(data.cover_url);
+      setStatusMsg({ type: "success", text: "Capa atualizada!" });
+    } catch {
+      setStatusMsg({ type: "error", text: "Erro ao enviar capa." });
+    } finally {
+      setUploadingCover(false);
+    }
+  }
+
+  async function handleRemoveCover() {
+    if (!confirm("Remover a capa do curso?")) return;
+    setUploadingCover(true);
+    try {
+      const res = await fetch(`/api/v1/courses/${slug}/cover`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setStatusMsg({ type: "error", text: data.message || "Erro ao remover capa." });
+        return;
+      }
+      setCoverUrl(null);
+      setStatusMsg({ type: "success", text: "Capa removida." });
+    } catch {
+      setStatusMsg({ type: "error", text: "Erro ao remover capa." });
+    } finally {
+      setUploadingCover(false);
     }
   }
 
@@ -150,32 +263,39 @@ export default function EditarCursoPage() {
 
   // ---- Aulas ----
 
-  async function handleCreateLesson(e) {
-    e.preventDefault();
-    if (!newLessonTitle.trim()) return;
+  function openAddLessonFor(moduleId) {
+    setActiveAddLessonModule(moduleId);
+    setAddLessonTitle("");
     setLessonMsg({ type: null, text: "" });
-    setCreatingLesson(true);
+  }
+
+  async function handleAddLesson(moduleId) {
+    if (!addLessonTitle.trim()) return;
+    setLessonMsg({ type: null, text: "" });
+    setAddingLesson(true);
     try {
+      const body = { title: addLessonTitle.trim(), moduleId: moduleId === "unassigned" ? null : moduleId };
+
       const res = await fetch(`/api/v1/courses/${slug}/lessons`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ title: newLessonTitle.trim() }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) {
         setLessonMsg({ type: "error", text: data.message || "Erro ao criar aula." });
         return;
       }
-      setNewLessonTitle("");
+      setAddLessonTitle("");
+      setActiveAddLessonModule(null);
       setLessonMsg({ type: "success", text: `Aula "${data.title}" criada!` });
-      const newLesson = { ...data };
-      setLessons((prev) => [...prev, newLesson]);
-      openLessonEditForLesson(newLesson);
+      openLessonEditForLesson(data);
+      await fetchModules();
     } catch {
       setLessonMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
     } finally {
-      setCreatingLesson(false);
+      setAddingLesson(false);
     }
   }
 
@@ -188,6 +308,7 @@ export default function EditarCursoPage() {
       video_url: lesson.video_url || "",
       reading_material: lesson.reading_material || "",
       order_index: lesson.order_index,
+      module_id: lesson.module_id || "",
     });
   }
 
@@ -217,6 +338,7 @@ export default function EditarCursoPage() {
         videoUrl: editLessonForm.video_url.trim(),
         readingMaterial: editLessonForm.reading_material.trim(),
         orderIndex: Number(editLessonForm.order_index),
+        moduleId: editLessonForm.module_id?.trim() || null,
       };
 
       const res = await fetch(`/api/v1/courses/${slug}/lessons/${editingLessonOrder}`, {
@@ -231,8 +353,8 @@ export default function EditarCursoPage() {
         return;
       }
       setEditLessonMsg({ type: "success", text: "Aula atualizada!" });
-      setLessons((prev) => prev.map((l) => (l.order_index === editingLessonOrder ? { ...l, ...data } : l)));
       setEditingLessonOrder(data.order_index);
+      await fetchModules();
     } catch {
       setEditLessonMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
     } finally {
@@ -246,16 +368,198 @@ export default function EditarCursoPage() {
     try {
       const res = await fetch(`/api/v1/courses/${slug}/lessons/${orderIndex}`, { method: "DELETE", credentials: "include" });
       if (res.ok) {
-        setLessons((prev) => prev.filter((l) => l.order_index !== orderIndex));
         setEditingLessonOrder(null);
         setEditLessonForm(null);
         setEditLessonMsg({ type: "success", text: "Aula removida." });
+        await fetchModules();
       }
     } catch {
       setEditLessonMsg({ type: "error", text: "Erro ao remover aula." });
     } finally {
       setDeletingLessonOrder(null);
     }
+  }
+
+  // ---- Módulos ----
+
+  async function handleCreateModule(e) {
+    e.preventDefault();
+    if (!newModuleTitle.trim()) return;
+    setModuleMsg({ type: null, text: "" });
+    setCreatingModule(true);
+    try {
+      const res = await fetch(`/api/v1/courses/${slug}/modules`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ title: newModuleTitle.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setModuleMsg({ type: "error", text: data.message || "Erro ao criar módulo." });
+        return;
+      }
+      setNewModuleTitle("");
+      setModuleMsg({ type: "success", text: `Módulo "${data.title}" criado!` });
+      await fetchModules();
+    } catch {
+      setModuleMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+    } finally {
+      setCreatingModule(false);
+    }
+  }
+
+  async function handleSaveModule(moduleId) {
+    if (!editModuleTitle.trim()) return;
+    setSavingModule(true);
+    try {
+      const res = await fetch(`/api/v1/courses/${slug}/modules`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ moduleId, title: editModuleTitle.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setModuleMsg({ type: "error", text: data.message || "Erro ao salvar módulo." });
+        return;
+      }
+      setEditingModuleId(null);
+      setEditModuleTitle("");
+      setModuleMsg({ type: "success", text: "Módulo atualizado!" });
+      await fetchModules();
+    } catch {
+      setModuleMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+    } finally {
+      setSavingModule(false);
+    }
+  }
+
+  async function handleDeleteModule(moduleId) {
+    if (!confirm("Remover este módulo? As aulas dentro dele ficarão sem módulo.")) return;
+    try {
+      const res = await fetch(`/api/v1/courses/${slug}/modules`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ moduleId }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setModuleMsg({ type: "error", text: data.message || "Erro ao remover módulo." });
+        return;
+      }
+      setEditingModuleId(null);
+      setEditModuleTitle("");
+      setModuleMsg({ type: "success", text: "Módulo removido." });
+      await fetchModules();
+    } catch {
+      setModuleMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+    }
+  }
+
+  function renderLessonEditForm(lesson) {
+    if (!editLessonForm) return null;
+
+    return (
+      <div className={styles.lessonEditPanel}>
+        <form onSubmit={handleSaveLesson} className={styles.lessonEditForm}>
+          <div className={styles.lessonEditGrid}>
+            <label className={styles.fieldLabel}>
+              <span>Título *</span>
+              <input
+                type="text"
+                className={styles.input}
+                value={editLessonForm.title}
+                onChange={(e) => setEditLessonForm((f) => ({ ...f, title: e.target.value }))}
+                maxLength={255}
+                required
+              />
+            </label>
+
+            <label className={styles.fieldLabel}>
+              <span>Ordem (0 = primeira)</span>
+              <input
+                type="number"
+                className={styles.input}
+                min="0"
+                value={editLessonForm.order_index}
+                onChange={(e) => setEditLessonForm((f) => ({ ...f, order_index: e.target.value }))}
+              />
+            </label>
+
+            {modules.length > 0 && (
+              <label className={styles.fieldLabel}>
+                <span>Módulo</span>
+                <select
+                  className={styles.input}
+                  value={editLessonForm.module_id}
+                  onChange={(e) => setEditLessonForm((f) => ({ ...f, module_id: e.target.value }))}
+                >
+                  <option value="">Sem módulo</option>
+                  {modules.map((mod) => (
+                    <option key={mod.id} value={mod.id}>
+                      {mod.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            <label className={styles.fieldLabel}>
+              <span>URL do vídeo</span>
+              <input
+                type="url"
+                className={styles.input}
+                placeholder="https://youtube.com/..."
+                value={editLessonForm.video_url}
+                onChange={(e) => setEditLessonForm((f) => ({ ...f, video_url: e.target.value }))}
+                maxLength={512}
+              />
+            </label>
+
+            <label className={styles.fieldLabel}>
+              <span>Material de leitura</span>
+              <input
+                type="url"
+                className={styles.input}
+                placeholder="https://..."
+                value={editLessonForm.reading_material}
+                onChange={(e) => setEditLessonForm((f) => ({ ...f, reading_material: e.target.value }))}
+                maxLength={512}
+              />
+            </label>
+
+            <label className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}>
+              <span>Descrição da aula</span>
+              <textarea
+                className={`${styles.input} ${styles.textarea}`}
+                placeholder="Resumo do conteúdo da aula..."
+                value={editLessonForm.description}
+                onChange={(e) => setEditLessonForm((f) => ({ ...f, description: e.target.value }))}
+                rows={3}
+              />
+            </label>
+          </div>
+
+          {editLessonMsg.text && <StatusMessageComponent type={editLessonMsg.type} message={editLessonMsg.text} />}
+
+          <div className={styles.lessonEditActions}>
+            <button
+              type="button"
+              className={styles.btnDeleteLesson}
+              onClick={() => handleDeleteLesson(lesson.order_index)}
+              disabled={deletingLessonOrder === lesson.order_index}
+            >
+              {deletingLessonOrder === lesson.order_index ? <Spinner size="small" /> : "Remover aula"}
+            </button>
+            <button type="submit" className={styles.btnSave} disabled={savingLesson || !editLessonForm.title.trim()}>
+              {savingLesson ? <Spinner size="small" /> : "Salvar aula"}
+            </button>
+          </div>
+        </form>
+      </div>
+    );
   }
 
   if (loadingUser || loading) {
@@ -301,10 +605,10 @@ export default function EditarCursoPage() {
             {statusMsg.text && <StatusMessageComponent type={statusMsg.type} message={statusMsg.text} />}
 
             <form onSubmit={handleSubmit} className={styles.form}>
-              {/* Capa atual */}
-              {coverUrl && (
-                <section className={styles.section}>
-                  <h2 className={styles.sectionTitle}>Capa</h2>
+              {/* Capa */}
+              <section className={styles.section}>
+                <h2 className={styles.sectionTitle}>Capa</h2>
+                {coverUrl && (
                   <div className={styles.coverPreview}>
                     <Image
                       src={coverUrl}
@@ -315,7 +619,24 @@ export default function EditarCursoPage() {
                       style={{ objectFit: "cover" }}
                     />
                   </div>
-                </section>
+                )}
+
+                <input ref={coverInputRef} type="file" accept="image/*" className={styles.hiddenFileInput} onChange={handleCoverFileSelected} />
+
+                <div className={styles.coverActions}>
+                  <button type="button" className={styles.btnCoverUpload} onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}>
+                    {uploadingCover ? <Spinner size="small" /> : coverUrl ? "Alterar capa" : "Adicionar capa"}
+                  </button>
+                  {coverUrl && (
+                    <button type="button" className={styles.btnCoverRemove} onClick={handleRemoveCover} disabled={uploadingCover}>
+                      Remover capa
+                    </button>
+                  )}
+                </div>
+              </section>
+
+              {coverCropSrc && (
+                <ImageCropModal imageSrc={coverCropSrc} preset="cover" onConfirm={handleCoverCropConfirm} onClose={() => setCoverCropSrc(null)} />
               )}
 
               {/* Informações básicas */}
@@ -429,168 +750,272 @@ export default function EditarCursoPage() {
         {/* ---- TAB: Aulas ---- */}
         {activeTab === "lessons" && (
           <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>Aulas ({lessons.length})</h2>
+            <h2 className={styles.sectionTitle}>Estrutura do curso</h2>
 
-            {/* Lista de aulas existentes */}
-            {lessons.length > 0 && (
-              <ul className={styles.lessonList}>
-                {lessons.map((lesson) => (
-                  <li key={lesson.id} className={styles.lessonListItem}>
-                    <div className={styles.lessonListRow}>
-                      <span className={styles.lessonOrderBadge}>#{lesson.order_index + 1}</span>
-                      <Link
-                        href={`/estudos/${courseSlug}/aulas/${lesson.order_index}`}
-                        className={styles.lessonLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {lesson.title}
-                      </Link>
-                      <button
-                        type="button"
-                        className={`${styles.btnEditLesson} ${editingLessonOrder === lesson.order_index ? styles.btnEditLessonActive : ""}`}
-                        onClick={() => handleOpenLessonEdit(lesson.order_index)}
-                      >
-                        {editingLessonOrder === lesson.order_index ? "Fechar" : "Editar"}
-                      </button>
-                    </div>
-
-                    {/* Formulário de edição expandido */}
-                    {editingLessonOrder === lesson.order_index && (
-                      <div className={styles.lessonEditPanel}>
-                        {editLessonForm && (
-                          <form onSubmit={handleSaveLesson} className={styles.lessonEditForm}>
-                            <div className={styles.lessonEditGrid}>
-                              <label className={styles.fieldLabel}>
-                                <span>Título *</span>
-                                <input
-                                  type="text"
-                                  className={styles.input}
-                                  value={editLessonForm.title}
-                                  onChange={(e) =>
-                                    setEditLessonForm((f) => ({
-                                      ...f,
-                                      title: e.target.value,
-                                    }))
-                                  }
-                                  maxLength={255}
-                                  required
-                                />
-                              </label>
-
-                              <label className={styles.fieldLabel}>
-                                <span>Ordem (0 = primeira)</span>
-                                <input
-                                  type="number"
-                                  className={styles.input}
-                                  min="0"
-                                  value={editLessonForm.order_index}
-                                  onChange={(e) =>
-                                    setEditLessonForm((f) => ({
-                                      ...f,
-                                      order_index: e.target.value,
-                                    }))
-                                  }
-                                />
-                              </label>
-
-                              <label className={styles.fieldLabel}>
-                                <span>URL do vídeo</span>
-                                <input
-                                  type="url"
-                                  className={styles.input}
-                                  placeholder="https://youtube.com/..."
-                                  value={editLessonForm.video_url}
-                                  onChange={(e) =>
-                                    setEditLessonForm((f) => ({
-                                      ...f,
-                                      video_url: e.target.value,
-                                    }))
-                                  }
-                                  maxLength={512}
-                                />
-                              </label>
-
-                              <label className={styles.fieldLabel}>
-                                <span>Material de leitura</span>
-                                <input
-                                  type="url"
-                                  className={styles.input}
-                                  placeholder="https://..."
-                                  value={editLessonForm.reading_material}
-                                  onChange={(e) =>
-                                    setEditLessonForm((f) => ({
-                                      ...f,
-                                      reading_material: e.target.value,
-                                    }))
-                                  }
-                                  maxLength={512}
-                                />
-                              </label>
-
-                              <label className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}>
-                                <span>Descrição da aula</span>
-                                <textarea
-                                  className={`${styles.input} ${styles.textarea}`}
-                                  placeholder="Resumo do conteúdo da aula..."
-                                  value={editLessonForm.description}
-                                  onChange={(e) =>
-                                    setEditLessonForm((f) => ({
-                                      ...f,
-                                      description: e.target.value,
-                                    }))
-                                  }
-                                  rows={3}
-                                />
-                              </label>
-                            </div>
-
-                            {editLessonMsg.text && <StatusMessageComponent type={editLessonMsg.type} message={editLessonMsg.text} />}
-
-                            <div className={styles.lessonEditActions}>
-                              <button
-                                type="button"
-                                className={styles.btnDeleteLesson}
-                                onClick={() => handleDeleteLesson(lesson.order_index)}
-                                disabled={deletingLessonOrder === lesson.order_index}
-                              >
-                                {deletingLessonOrder === lesson.order_index ? <Spinner size="small" /> : "Remover aula"}
-                              </button>
-                              <button type="submit" className={styles.btnSave} disabled={savingLesson || !editLessonForm.title.trim()}>
-                                {savingLesson ? <Spinner size="small" /> : "Salvar aula"}
-                              </button>
-                            </div>
-                          </form>
-                        )}
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {/* Criar nova aula */}
-            <form onSubmit={handleCreateLesson} className={styles.lessonForm}>
-              <p className={styles.lessonFormTitle}>Criar nova aula</p>
-              <input
-                type="text"
-                className={styles.input}
-                placeholder="Título da aula"
-                value={newLessonTitle}
-                onChange={(e) => setNewLessonTitle(e.target.value)}
-                maxLength={255}
-                required
-              />
-              <button type="submit" className={styles.btnSave} disabled={creatingLesson || !newLessonTitle.trim()}>
-                {creatingLesson ? <Spinner size="small" /> : "Criar aula"}
-              </button>
-            </form>
-
-            {lessonMsg.text && (
+            {moduleMsg.text && <StatusMessageComponent type={moduleMsg.type} message={moduleMsg.text} />}
+            {lessonMsg.text && !activeAddLessonModule && (
               <div className={styles.lessonMsg}>
                 <StatusMessageComponent type={lessonMsg.type} message={lessonMsg.text} />
               </div>
             )}
+
+            {/* ---- Criar módulo (topo) ---- */}
+            <form onSubmit={handleCreateModule} className={styles.moduleForm}>
+              <div className={styles.inlineAddRow}>
+                <input
+                  type="text"
+                  className={styles.input}
+                  placeholder="Nome do novo módulo (ex: Introdução, Avançado)"
+                  value={newModuleTitle}
+                  onChange={(e) => setNewModuleTitle(e.target.value)}
+                  maxLength={255}
+                  required
+                />
+                <button type="submit" className={styles.btnSaveSmall} disabled={creatingModule || !newModuleTitle.trim()}>
+                  {creatingModule ? <Spinner size="small" /> : "Criar módulo"}
+                </button>
+              </div>
+            </form>
+
+            {/* ---- Módulos ---- */}
+            {modules.length > 0 && (
+              <div className={styles.moduleList}>
+                {modules.map((mod) => (
+                  <div key={mod.id} className={styles.moduleCard}>
+                    <div className={styles.moduleHeader}>
+                      <div className={styles.moduleHeaderLeft}>
+                        {editingModuleId === mod.id ? (
+                          <input
+                            type="text"
+                            className={styles.input}
+                            value={editModuleTitle}
+                            onChange={(e) => setEditModuleTitle(e.target.value)}
+                            maxLength={255}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleSaveModule(mod.id);
+                              }
+                            }}
+                            autoFocus
+                          />
+                        ) : (
+                          <h3 className={styles.moduleTitle}>
+                            {mod.title}{" "}
+                            <span className={styles.moduleLessonCount}>
+                              ({mod.lesson_count || 0} aula{mod.lesson_count !== 1 ? "s" : ""})
+                            </span>
+                          </h3>
+                        )}
+                      </div>
+                      <div className={styles.moduleActions}>
+                        {editingModuleId === mod.id ? (
+                          <>
+                            <button
+                              type="button"
+                              className={styles.btnSaveSmall}
+                              onClick={() => handleSaveModule(mod.id)}
+                              disabled={savingModule || !editModuleTitle.trim()}
+                            >
+                              {savingModule ? <Spinner size="small" /> : "Salvar"}
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.btnCancelSmall}
+                              onClick={() => {
+                                setEditingModuleId(null);
+                                setEditModuleTitle("");
+                              }}
+                              disabled={savingModule}
+                            >
+                              Cancelar
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button type="button" className={styles.btnAddLesson} onClick={() => openAddLessonFor(mod.id)}>
+                              + Aula
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.btnEditModule}
+                              onClick={() => {
+                                setEditingModuleId(mod.id);
+                                setEditModuleTitle(mod.title);
+                              }}
+                            >
+                              Renomear
+                            </button>
+                            <button type="button" className={styles.btnDeleteModule} onClick={() => handleDeleteModule(mod.id)}>
+                              Remover
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Inline "nova aula" dentro deste módulo */}
+                    {activeAddLessonModule === mod.id && (
+                      <div className={styles.inlineAddLesson}>
+                        <input
+                          type="text"
+                          className={styles.input}
+                          placeholder="Título da nova aula..."
+                          value={addLessonTitle}
+                          onChange={(e) => setAddLessonTitle(e.target.value)}
+                          maxLength={255}
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleAddLesson(mod.id);
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className={styles.btnSaveSmall}
+                          onClick={() => handleAddLesson(mod.id)}
+                          disabled={addingLesson || !addLessonTitle.trim()}
+                        >
+                          {addingLesson ? <Spinner size="small" /> : "Adicionar"}
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.btnCancelSmall}
+                          onClick={() => {
+                            setActiveAddLessonModule(null);
+                            setAddLessonTitle("");
+                          }}
+                          disabled={addingLesson}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Lessons in this module */}
+                    {mod.lessons && mod.lessons.length > 0 && (
+                      <ul className={styles.lessonList}>
+                        {mod.lessons.map((lesson) => (
+                          <li key={lesson.id} className={styles.lessonListItem}>
+                            <div className={styles.lessonListRow}>
+                              <span className={styles.lessonOrderBadge}>#{lesson.order_index + 1}</span>
+                              <Link
+                                href={`/estudos/${courseSlug}/aulas/${lesson.order_index}`}
+                                className={styles.lessonLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {lesson.title}
+                              </Link>
+                              <button
+                                type="button"
+                                className={`${styles.btnEditLesson} ${editingLessonOrder === lesson.order_index ? styles.btnEditLessonActive : ""}`}
+                                onClick={() => handleOpenLessonEdit(lesson.order_index)}
+                              >
+                                {editingLessonOrder === lesson.order_index ? "Fechar" : "Editar"}
+                              </button>
+                            </div>
+
+                            {editingLessonOrder === lesson.order_index && renderLessonEditForm(lesson)}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    {(!mod.lessons || mod.lessons.length === 0) && !activeAddLessonModule && (
+                      <p className={styles.moduleEmpty}>Nenhuma aula neste módulo ainda.</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* ---- Unassigned Lessons ---- */}
+            <div className={styles.unassignedSection}>
+              <div className={styles.unassignedHeader}>
+                <h3 className={styles.unassignedTitle}>
+                  Sem módulo ({unassignedLessons.length} aula{unassignedLessons.length !== 1 ? "s" : ""})
+                </h3>
+                <button type="button" className={styles.btnAddLesson} onClick={() => openAddLessonFor("unassigned")}>
+                  + Aula
+                </button>
+              </div>
+
+              {/* Inline "nova aula" para a seção sem módulo */}
+              {activeAddLessonModule === "unassigned" && (
+                <div className={styles.inlineAddLesson}>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    placeholder="Título da nova aula..."
+                    value={addLessonTitle}
+                    onChange={(e) => setAddLessonTitle(e.target.value)}
+                    maxLength={255}
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddLesson("unassigned");
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className={styles.btnSaveSmall}
+                    onClick={() => handleAddLesson("unassigned")}
+                    disabled={addingLesson || !addLessonTitle.trim()}
+                  >
+                    {addingLesson ? <Spinner size="small" /> : "Adicionar"}
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.btnCancelSmall}
+                    onClick={() => {
+                      setActiveAddLessonModule(null);
+                      setAddLessonTitle("");
+                    }}
+                    disabled={addingLesson}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              )}
+
+              {unassignedLessons.length > 0 && (
+                <ul className={styles.lessonList}>
+                  {unassignedLessons.map((lesson) => (
+                    <li key={lesson.id} className={styles.lessonListItem}>
+                      <div className={styles.lessonListRow}>
+                        <span className={styles.lessonOrderBadge}>#{lesson.order_index + 1}</span>
+                        <Link
+                          href={`/estudos/${courseSlug}/aulas/${lesson.order_index}`}
+                          className={styles.lessonLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {lesson.title}
+                        </Link>
+                        <button
+                          type="button"
+                          className={`${styles.btnEditLesson} ${editingLessonOrder === lesson.order_index ? styles.btnEditLessonActive : ""}`}
+                          onClick={() => handleOpenLessonEdit(lesson.order_index)}
+                        >
+                          {editingLessonOrder === lesson.order_index ? "Fechar" : "Editar"}
+                        </button>
+                      </div>
+
+                      {editingLessonOrder === lesson.order_index && renderLessonEditForm(lesson)}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {unassignedLessons.length === 0 && !activeAddLessonModule && modules.length === 0 && (
+                <p className={styles.moduleEmpty}>Crie um módulo acima e depois adicione aulas dentro dele.</p>
+              )}
+            </div>
           </section>
         )}
       </div>

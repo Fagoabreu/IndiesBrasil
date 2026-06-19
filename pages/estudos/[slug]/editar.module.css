@@ -174,6 +174,67 @@
   object-fit: cover;
 }
 
+.hiddenFileInput {
+  display: none;
+}
+
+.coverActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btnCoverUpload {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 6px;
+  background: var(--brand-primary);
+  border: none;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnCoverUpload:hover:not(:disabled) {
+  background: var(--brand-secondary);
+}
+
+.btnCoverUpload:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnCoverRemove {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid var(--borderColor-default);
+  color: var(--fgColor-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.btnCoverRemove:hover:not(:disabled) {
+  border-color: var(--fgColor-danger, #cf222e);
+  color: var(--fgColor-danger, #cf222e);
+}
+
+.btnCoverRemove:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ---- Tags ---- */
 
 .tagRow {
@@ -494,4 +555,217 @@
 
 .lessonMsg {
   margin-top: 12px;
+}
+
+/* ---- Modules ---- */
+
+.moduleList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.moduleCard {
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 8px;
+  background: var(--bgColor-default);
+  overflow: hidden;
+}
+
+.moduleHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 15px;
+  background: var(--bgColor-muted);
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+.moduleHeaderLeft {
+  flex: 1;
+  min-width: 0;
+}
+
+.moduleHeaderLeft .input {
+  width: 100%;
+}
+
+.moduleTitle {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+  margin: 0;
+}
+
+.moduleLessonCount {
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: var(--fgColor-muted);
+}
+
+.moduleActions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btnEditModule {
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  border-radius: 5px;
+  border: 1px solid var(--borderColor-default);
+  background: transparent;
+  color: var(--fgColor-muted);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.btnEditModule:hover {
+  color: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+
+.btnAddLesson {
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  border-radius: 5px;
+  border: 1px solid var(--brand-primary);
+  background: transparent;
+  color: var(--brand-primary);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.btnAddLesson:hover {
+  background: var(--brand-primary);
+  color: #fff;
+}
+
+.btnDeleteModule {
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  border-radius: 5px;
+  border: 1px solid var(--borderColor-default);
+  background: transparent;
+  color: var(--fgColor-muted);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.btnDeleteModule:hover {
+  color: var(--fgColor-danger, #cf222e);
+  border-color: var(--fgColor-danger, #cf222e);
+}
+
+.btnSaveSmall {
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  border-radius: 5px;
+  border: none;
+  background: var(--brand-primary);
+  color: #fff;
+  cursor: pointer;
+}
+
+.btnSaveSmall:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnCancelSmall {
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  border-radius: 5px;
+  border: 1px solid var(--borderColor-default);
+  background: transparent;
+  color: var(--fgColor-muted);
+  cursor: pointer;
+}
+
+.btnCancelSmall:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.moduleEmpty {
+  padding: 16px;
+  text-align: center;
+  color: var(--fgColor-muted);
+  font-size: 0.82rem;
+  font-style: italic;
+  margin: 0;
+}
+
+/** Unassigned lessons section **/
+
+.unassignedSection {
+  margin-bottom: 20px;
+}
+
+.unassignedHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--borderColor-muted);
+  margin-bottom: 8px;
+}
+
+.unassignedTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+  margin: 0;
+}
+
+/* Inline add-lesson row (inside module or unassigned section) */
+
+.inlineAddLesson {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 15px;
+  background: var(--bgColor-muted);
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+.inlineAddLesson .input {
+  flex: 1;
+}
+
+/* Inline add-row for creating modules */
+
+.inlineAddRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.inlineAddRow .input {
+  flex: 1;
+}
+
+/* Create module form */
+
+.moduleForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--borderColor-muted);
 }
