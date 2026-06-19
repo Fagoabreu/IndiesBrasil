@@ -88,6 +88,10 @@ function injectAnonymousUser(request) {
       "read:news:all",
       "read:content_review",
       "read:content_review:all",
+      "read:course",
+      "read:course:lesson",
+      "read:course:rating",
+      "read:course:comment",
     ],
   };
   request.context = {

@@ -127,6 +127,12 @@ export default function LeftSidebarComponent({ onNavigate }) {
             </NavList.LeadingVisual>
             Análises e Reviews
           </NavList.Item>
+          <NavList.Item as={Link} href="/estudos" aria-current={router.pathname.startsWith("/estudos")} onClick={onNavigate}>
+            <NavList.LeadingVisual>
+              <BookIcon />
+            </NavList.LeadingVisual>
+            Cursos e Estudos
+          </NavList.Item>
         </NavList.Group>
 
         {user?.features.includes("read:admin") && (
@@ -201,13 +207,6 @@ export default function LeftSidebarComponent({ onNavigate }) {
           </NavList.GroupHeading>
           {construcaoOpen && (
             <>
-              <NavList.Item as={Link} href="/construcao/estudo" aria-current={router.pathname.startsWith("/construcao/estudo")} onClick={onNavigate}>
-                <NavList.LeadingVisual>
-                  <BroadcastIcon />
-                </NavList.LeadingVisual>
-                Estudo
-              </NavList.Item>
-
               <NavList.Item as={Link} href="/construcao/ajuda" aria-current={router.pathname.startsWith("/construcao/ajuda")} onClick={onNavigate}>
                 <NavList.LeadingVisual>
                   <BroadcastIcon />

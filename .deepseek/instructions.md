@@ -53,6 +53,12 @@ Toda mudanca deve ser mapeada para a camada correta. Nunca violar boundaries ent
 - `infra/**/*.js` excluido do lint.
 - Commits: Conventional Commits (`feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`).
 
+## API Routes (Pages Router)
+
+- next-connect: `createRouter()` + `controller.injectAnonymousOrUser` + `controller.canRequest(feature)`.
+- Routes em `pages/api/v1/<resource>/[param]/`. Metodos HTTP exportados: `get`, `post`, `patch`, `del`.
+- Respostas sempre JSON com tratamento de erro via `infra/errors.js`.
+
 ## Authorization (critico)
 
 Toda nova feature de API exige registro em **3 lugares**:
@@ -61,7 +67,15 @@ Toda nova feature de API exige registro em **3 lugares**:
 2. `models/activation.js` -> `activateUserByUserId`
 3. `infra/controller.js` -> `injectAnonymousUser` (se publica)
 
-Atualizar testes que verificam o array de features do usuario ativado.
+### Testes de feature arrays — atualizar sempre
+
+Novas features exigem atualizar os arrays em **3 arquivos de teste**:
+
+1. `tests/integration/_use-cases/registration-flow.test.js` — indentaçao 6 espaços
+2. `tests/integration/api/v1/users/[username]/patch.test.js` — indentaçao 10 espaços (3 blocos)
+3. `tests/integration/api/v1/user/get.test.js` — indentaçao 10 espaços (2 blocos)
+
+Inserir antes de `"read:content_review"`. Usar contexto unico para cada bloco (varia entre arquivos).
 
 ## Banco de Dados
 
@@ -80,5 +94,14 @@ Atualizar testes que verificam o array de features do usuario ativado.
 - SEO: componente `SeoHead` — nunca `<Head>` inline.
 - CSS Module junto ao componente (`ComponentName.module.css`).
 - Nomes: componentes `PascalCase`, hooks/utils `camelCase`, assets `kebab-case`, constantes `UPPER_SNAKE_CASE`.
+- Models: `const modelName = { ... }; export default modelName;` — nunca `export default { ... }` direto (evita `import/no-anonymous-default-export`).
+- Sidebar: novos itens em `components/LeftSidebarComponent.js` dentro do grupo `NavList` apropriado.
+- Video embed customizado: criar componente `VideoEmbed` inline (YouTube/Vimeo parser). Nao usar `Embeds` existente — ele espera estrutura especifica de post.
 - Nao criar arquivos de exemplo/demo sem solicitacao explicita.
 - Extrair antes de repetir: logica usada 2+ vezes vai para `lib/`, `utils/` ou `components/`.
+
+## PowerShell
+
+- Windows PowerShell 5.1: `Get-Content -Raw` e `Set-Content -NoNewline` **nao existem**.
+- Usar `[System.IO.File]::ReadAllText($path)` e `[System.IO.File]::WriteAllText($path, $content)`.
+- Verificar line endings: arquivos sao CRLF. Usar `` `r`n `` nas strings de replace.

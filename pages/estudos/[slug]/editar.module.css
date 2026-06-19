@@ -1,0 +1,771 @@
+/* =============================================================
+ * Editar Curso — Estilo inspirado em configuracoes.module.css
+ * Inclui tabs e gerenciamento de aulas (similar a jogos no estúdio)
+ * ============================================================= */
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 80px 0;
+}
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+
+/* ---- Top bar ---- */
+
+.topBar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  color: var(--fgColor-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.backLink:hover {
+  color: var(--brand-primary);
+}
+
+.pageTitle {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--fgColor-default);
+}
+
+/* ---- Tab navigation ---- */
+
+.tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--borderColor-muted);
+  margin-bottom: 24px;
+  overflow-x: auto;
+}
+
+.tab {
+  padding: 10px 18px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--fgColor-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+  margin-bottom: -1px;
+}
+
+.tab:hover {
+  color: var(--fgColor-default);
+}
+
+.tabActive {
+  color: var(--fgColor-default);
+  border-bottom-color: var(--brand-primary);
+  font-weight: 700;
+}
+
+/* ---- Form ---- */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.section {
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--bgColor-muted);
+}
+
+.sectionTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--fgColor-default);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+/* ---- Fields ---- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+}
+
+.required {
+  color: var(--fgColor-danger, #cf222e);
+}
+
+.hint {
+  font-size: 0.78rem;
+  color: var(--fgColor-muted);
+  margin-top: 2px;
+}
+
+.input,
+.textarea {
+  padding: 8px 12px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 6px;
+  background: var(--bgColor-default);
+  color: var(--fgColor-default);
+  font-size: 0.875rem;
+  font-family: inherit;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb-primary), 0.15);
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* ---- Cover preview ---- */
+
+.coverPreview {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--borderColor-default);
+}
+
+.coverImg {
+  object-fit: cover;
+}
+
+.hiddenFileInput {
+  display: none;
+}
+
+.coverActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btnCoverUpload {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 6px;
+  background: var(--brand-primary);
+  border: none;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnCoverUpload:hover:not(:disabled) {
+  background: var(--brand-secondary);
+}
+
+.btnCoverUpload:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnCoverRemove {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid var(--borderColor-default);
+  color: var(--fgColor-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.btnCoverRemove:hover:not(:disabled) {
+  border-color: var(--fgColor-danger, #cf222e);
+  color: var(--fgColor-danger, #cf222e);
+}
+
+.btnCoverRemove:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- Tags ---- */
+
+.tagRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tagChip {
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--borderColor-default);
+  background: var(--bgColor-default);
+  color: var(--fgColor-muted);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tagChip:hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.tagChipActive {
+  background: rgba(var(--brand-rgb-primary), 0.12);
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.customTagRow {
+  display: flex;
+  gap: 8px;
+}
+
+.customTagRow .input {
+  flex: 1;
+}
+
+.btnTagAdd {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: var(--bgColor-default);
+  border: 1px solid var(--borderColor-default);
+  color: var(--fgColor-default);
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.btnTagAdd:hover:not(:disabled) {
+  background: var(--brand-hover-bg);
+}
+
+.btnTagAdd:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.selectedTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.selectedTagItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 14px;
+  background: rgba(var(--brand-rgb-primary), 0.1);
+  color: var(--brand-primary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.removeTagBtn {
+  background: none;
+  border: none;
+  padding: 0 2px;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--fgColor-muted);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.removeTagBtn:hover {
+  color: var(--fgColor-danger, #cf222e);
+}
+
+/* ---- Actions ---- */
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.btnCancel {
+  padding: 8px 18px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid var(--borderColor-default);
+  color: var(--fgColor-default);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnCancel:hover {
+  background: var(--brand-hover-bg);
+}
+
+.btnSave {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  border-radius: 6px;
+  background: var(--brand-primary);
+  border: none;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnSave:hover:not(:disabled) {
+  background: var(--brand-secondary);
+}
+
+.btnSave:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ---- Lessons tab ---- */
+
+.lessonList {
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.lessonListItem {
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.lessonListRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bgColor-muted);
+}
+
+.lessonOrderBadge {
+  font-size: 0.72rem;
+  color: var(--fgColor-muted);
+  background: var(--bgColor-inset);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 4px;
+  padding: 2px 7px;
+  flex-shrink: 0;
+}
+
+.lessonLink {
+  text-decoration: none;
+  color: var(--fgColor-default);
+  font-weight: 600;
+  font-size: 0.875rem;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lessonLink:hover {
+  color: var(--brand-primary);
+}
+
+.btnEditLesson {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 5px;
+  border: 1px solid var(--borderColor-default);
+  background: transparent;
+  color: var(--fgColor-muted);
+  font-size: 0.78rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.btnEditLesson:hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.btnEditLessonActive {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+  background: rgba(var(--brand-rgb-primary), 0.08);
+}
+
+/* Lesson edit panel (expanded inline form) */
+
+.lessonEditPanel {
+  border-top: 1px solid var(--borderColor-muted);
+  background: var(--bgColor-default);
+  padding: 20px 16px;
+}
+
+.lessonEditForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.lessonEditGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 560px) {
+  .lessonEditGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fieldLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+}
+
+.fieldLabel .input {
+  margin-top: 2px;
+}
+
+.fieldLabel .textarea {
+  margin-top: 2px;
+}
+
+.fieldLabelFull {
+  grid-column: 1 / -1;
+}
+
+.lessonEditActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  align-items: center;
+  padding-top: 4px;
+}
+
+.btnDeleteLesson {
+  padding: 8px 16px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid var(--borderColor-default);
+  color: var(--fgColor-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.btnDeleteLesson:hover:not(:disabled) {
+  border-color: var(--fgColor-danger, #cf222e);
+  color: var(--fgColor-danger, #cf222e);
+}
+
+.btnDeleteLesson:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Create lesson form */
+
+.lessonForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.lessonFormTitle {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+  margin: 4px 0 0;
+}
+
+.lessonMsg {
+  margin-top: 12px;
+}
+
+/* ---- Modules ---- */
+
+.moduleList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.moduleCard {
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 8px;
+  background: var(--bgColor-default);
+  overflow: hidden;
+}
+
+.moduleHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 15px;
+  background: var(--bgColor-muted);
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+.moduleHeaderLeft {
+  flex: 1;
+  min-width: 0;
+}
+
+.moduleHeaderLeft .input {
+  width: 100%;
+}
+
+.moduleTitle {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+  margin: 0;
+}
+
+.moduleLessonCount {
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: var(--fgColor-muted);
+}
+
+.moduleActions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btnEditModule {
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  border-radius: 5px;
+  border: 1px solid var(--borderColor-default);
+  background: transparent;
+  color: var(--fgColor-muted);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.btnEditModule:hover {
+  color: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+
+.btnAddLesson {
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  border-radius: 5px;
+  border: 1px solid var(--brand-primary);
+  background: transparent;
+  color: var(--brand-primary);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.btnAddLesson:hover {
+  background: var(--brand-primary);
+  color: #fff;
+}
+
+.btnDeleteModule {
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  border-radius: 5px;
+  border: 1px solid var(--borderColor-default);
+  background: transparent;
+  color: var(--fgColor-muted);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.btnDeleteModule:hover {
+  color: var(--fgColor-danger, #cf222e);
+  border-color: var(--fgColor-danger, #cf222e);
+}
+
+.btnSaveSmall {
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  border-radius: 5px;
+  border: none;
+  background: var(--brand-primary);
+  color: #fff;
+  cursor: pointer;
+}
+
+.btnSaveSmall:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnCancelSmall {
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  border-radius: 5px;
+  border: 1px solid var(--borderColor-default);
+  background: transparent;
+  color: var(--fgColor-muted);
+  cursor: pointer;
+}
+
+.btnCancelSmall:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.moduleEmpty {
+  padding: 16px;
+  text-align: center;
+  color: var(--fgColor-muted);
+  font-size: 0.82rem;
+  font-style: italic;
+  margin: 0;
+}
+
+/** Unassigned lessons section **/
+
+.unassignedSection {
+  margin-bottom: 20px;
+}
+
+.unassignedHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--borderColor-muted);
+  margin-bottom: 8px;
+}
+
+.unassignedTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+  margin: 0;
+}
+
+/* Inline add-lesson row (inside module or unassigned section) */
+
+.inlineAddLesson {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 15px;
+  background: var(--bgColor-muted);
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+.inlineAddLesson .input {
+  flex: 1;
+}
+
+/* Inline add-row for creating modules */
+
+.inlineAddRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.inlineAddRow .input {
+  flex: 1;
+}
+
+/* Create module form */
+
+.moduleForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--borderColor-muted);
+}

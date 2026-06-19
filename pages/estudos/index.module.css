@@ -1,0 +1,274 @@
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.headerBlock {
+  flex: 1 1 300px;
+}
+
+.headerTitle {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.headerTitle h2 {
+  margin: 0;
+}
+
+.courseCount {
+  font-size: 14px;
+  color: var(--fgColor-muted);
+}
+
+.pageSubtitle {
+  color: var(--fgColor-muted);
+  margin: 4px 0 16px;
+  font-size: 15px;
+}
+
+.searchWrapper {
+  max-width: 420px;
+  margin-bottom: 12px;
+}
+
+.searchInput {
+  width: 100%;
+}
+
+.tagFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.tagBtn {
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--borderColor-default);
+  background: var(--bgColor-default);
+  color: var(--fgColor-muted);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tagBtn:hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.tagBtnActive {
+  background: rgba(var(--brand-rgb-primary), 0.12);
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--brand-primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.btnPrimary:hover {
+  opacity: 0.85;
+}
+
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px 0;
+  color: var(--fgColor-muted);
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 0;
+  color: var(--fgColor-muted);
+  text-align: center;
+}
+
+.emptyIcon {
+  opacity: 0.4;
+  margin-bottom: 12px;
+}
+
+.emptyTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 4px;
+  color: var(--fgColor-default);
+}
+
+.emptyDescription {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* ---- Grid ---- */
+
+.courseGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* ---- Card ---- */
+
+.courseCard {
+  border-radius: 12px;
+  border: 1px solid var(--borderColor-default);
+  background: var(--bgColor-default);
+  overflow: hidden;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.courseCard:hover {
+  box-shadow: 0 4px 20px rgba(var(--brand-rgb-primary), 0.1);
+}
+
+.cardLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.cardCover {
+  width: 100%;
+  height: 160px;
+  overflow: hidden;
+  background: var(--bgColor-inset);
+}
+
+.coverImg {
+  object-fit: cover;
+}
+
+.coverPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fgColor-muted);
+  background: var(--bgColor-inset);
+}
+
+.cardBody {
+  padding: 14px 16px 18px;
+}
+
+.courseName {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.courseDesc {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--fgColor-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cardMeta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--fgColor-muted);
+  margin-bottom: 6px;
+}
+
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cardAuthor {
+  font-size: 12px;
+  color: var(--fgColor-muted);
+}
+
+.loadMore {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0 16px;
+}
+
+.btnOutline {
+  padding: 8px 24px;
+  border-radius: 8px;
+  border: 1px solid var(--borderColor-default);
+  background: transparent;
+  color: var(--fgColor-default);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.btnOutline:hover {
+  border-color: var(--brand-primary);
+}
+
+/* ---- Responsive ---- */
+
+@media (max-width: 640px) {
+  .page {
+    padding: 16px 12px 32px;
+  }
+
+  .courseGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .pageHeader {
+    flex-direction: column;
+  }
+}
