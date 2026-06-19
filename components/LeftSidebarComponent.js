@@ -127,6 +127,12 @@ export default function LeftSidebarComponent({ onNavigate }) {
             </NavList.LeadingVisual>
             Análises e Reviews
           </NavList.Item>
+          <NavList.Item as={Link} href="/estudos" aria-current={router.pathname.startsWith("/estudos")} onClick={onNavigate}>
+            <NavList.LeadingVisual>
+              <BookIcon />
+            </NavList.LeadingVisual>
+            Cursos
+          </NavList.Item>
         </NavList.Group>
 
         {user?.features.includes("read:admin") && (

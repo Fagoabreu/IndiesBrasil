@@ -1,0 +1,305 @@
+/* =========================================================
+ * CommentEditor — Toolbar + emoji picker + preview
+ * Zero dependências externas
+ * ========================================================= */
+
+.editor {
+  border: 1px solid var(--borderColor-default);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bgColor-default);
+  transition: border-color 0.15s;
+}
+
+.editor:focus-within {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb-primary), 0.12);
+}
+
+/* ---- Toolbar ---- */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--borderColor-muted);
+  background: var(--bgColor-muted);
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tbGroup {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.tbBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--fgColor-muted);
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition:
+    background 0.12s,
+    color 0.12s;
+}
+
+.tbBtn:hover {
+  background: var(--bgColor-inset);
+  color: var(--fgColor-default);
+}
+
+.tbBtnActive,
+.tbBtnActive:hover {
+  background: rgba(var(--brand-rgb-primary), 0.1);
+  color: var(--brand-primary);
+  border-color: rgba(var(--brand-rgb-primary), 0.2);
+}
+
+.tbStrike {
+  text-decoration: line-through;
+  font-weight: 700;
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.tbCodeBlock {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ---- Textarea (Primer internals) ---- */
+
+/* O wrapper span do Primer também precisa ocupar 100% */
+.editor [class*="TextInputBaseWrapper"] {
+  width: 100% !important;
+  display: block !important;
+}
+
+.editor textarea {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 12px;
+  font-family: inherit;
+}
+
+/* ---- Preview ---- */
+
+.preview {
+  padding: 14px;
+  min-height: 100px;
+  max-height: 360px;
+  overflow-y: auto;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--fgColor-default);
+}
+
+/* Markdown rendered inside preview */
+.preview p {
+  margin: 4px 0 8px;
+}
+.preview strong {
+  font-weight: 700 !important;
+}
+.preview em {
+  font-style: italic !important;
+}
+.preview del,
+.preview s {
+  text-decoration: line-through !important;
+  opacity: 0.7;
+}
+
+.preview :global(.spoiler) {
+  background: var(--fgColor-default);
+  color: transparent;
+  border-radius: 4px;
+  padding: 1px 5px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s;
+}
+.preview :global(.spoiler):hover {
+  background: var(--fgColor-muted);
+}
+.preview :global(.spoiler.revealed) {
+  background: rgba(var(--brand-rgb-primary), 0.08);
+  color: inherit;
+  user-select: auto;
+}
+.preview :global(.spoiler.revealed) * {
+  color: inherit !important;
+}
+.preview :global(.spoiler) * {
+  color: transparent !important;
+  transition: color 0.15s;
+}
+
+.preview a {
+  color: var(--brand-primary);
+  text-decoration: none;
+}
+.preview a:hover {
+  text-decoration: underline;
+}
+
+.preview ul,
+.preview ol {
+  padding-left: 20px;
+  margin: 4px 0 8px;
+}
+.preview li {
+  margin: 2px 0;
+}
+
+.preview blockquote {
+  margin: 8px 0;
+  padding: 4px 12px;
+  border-left: 3px solid var(--brand-primary);
+  background: rgba(var(--brand-rgb-primary), 0.06);
+  color: var(--fgColor-muted);
+}
+
+.preview code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace);
+  font-size: 0.82rem;
+  background: var(--bgColor-inset);
+  border: 1px solid var(--borderColor-muted);
+}
+
+.preview pre {
+  margin: 8px 0;
+  padding: 12px;
+  border-radius: 6px;
+  background: var(--bgColor-inset);
+  border: 1px solid var(--borderColor-muted);
+  overflow-x: auto;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.preview pre code {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  border: none;
+  font-size: inherit;
+}
+
+.preview hr {
+  border: none;
+  border-top: 1px solid var(--borderColor-muted);
+  margin: 12px 0;
+}
+
+/* ---- Emoji Picker ---- */
+
+.emojiWrap {
+  position: relative;
+}
+
+.emojiPicker {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  z-index: 100;
+  background: var(--bgColor-default);
+  border: 1px solid var(--borderColor-default);
+  border-radius: 8px;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.15),
+    0 0 0 1px var(--borderColor-muted);
+  padding: 8px;
+  width: 280px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.emojiGrid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 2px;
+}
+
+.emojiBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  font-size: 1rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.1s;
+}
+
+.emojiBtn:hover {
+  background: var(--brand-hover-bg);
+}
+
+/* ---- Footer ---- */
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--borderColor-muted);
+  background: var(--bgColor-muted);
+  flex-wrap: wrap;
+}
+
+.footerHint {
+  font-size: 0.7rem;
+  color: var(--fgColor-muted);
+  line-height: 1.4;
+  flex: 1;
+  min-width: 0;
+}
+
+.footerBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 6px;
+  background: var(--brand-primary);
+  border: none;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.footerBtn:hover:not(:disabled) {
+  background: var(--brand-secondary);
+}
+
+.footerBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

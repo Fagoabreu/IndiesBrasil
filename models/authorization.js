@@ -133,6 +133,24 @@ const availableFeatures = new Set([
   "create:book:review",
   "update:book:review",
 
+  //course
+  "read:course",
+  "create:course",
+  "update:course",
+  "delete:course",
+  "read:course:lesson",
+  "create:course:lesson",
+  "update:course:lesson",
+  "delete:course:lesson",
+  "create:course:rating",
+  "read:course:rating",
+  "create:course:progress",
+  "read:course:progress",
+  "read:course:comment",
+  "create:course:comment",
+  "update:course:comment",
+  "delete:course:comment",
+
   //news
   "create:news",
   "read:news",
