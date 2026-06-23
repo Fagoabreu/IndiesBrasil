@@ -571,18 +571,18 @@ async function deleteModule(slug, moduleId, ownerId) {
  * Ratings
  * ========================================================= */
 
-async function upsertRating(slug, userId, rating) {
+async function upsertRating(slug, userId, rating, review = null) {
   const course = await findBySlug(slug);
   const validRating = validateRating(rating);
 
   await database.query({
     text: `
-      INSERT INTO course_ratings (course_id, user_id, rating)
-      VALUES ($1, $2, $3)
+      INSERT INTO course_ratings (course_id, user_id, rating, review)
+      VALUES ($1, $2, $3, $4)
       ON CONFLICT (course_id, user_id)
-      DO UPDATE SET rating = $3, created_at = timezone('utc', now())
+      DO UPDATE SET rating = $3, review = $4, created_at = timezone('utc', now())
     `,
-    values: [course.id, userId, validRating],
+    values: [course.id, userId, validRating, review],
   });
 
   return getUserRating(slug, userId);
@@ -593,7 +593,7 @@ async function getUserRating(slug, userId) {
 
   const results = await database.query({
     text: `
-      SELECT rating, created_at
+      SELECT rating, review, created_at
       FROM course_ratings
       WHERE course_id = $1 AND user_id = $2
     `,
@@ -610,6 +610,7 @@ async function getCourseRatings(slug) {
     text: `
       SELECT
         cr.rating,
+        cr.review,
         cr.created_at,
         u.username
       FROM course_ratings cr
@@ -781,6 +782,100 @@ async function deleteLessonComment(slug, orderIndex, commentId, authorId) {
   }
 }
 
+/* =========================================================
+ * Enrollments (Inscrições)
+ * ========================================================= */
+
+async function enrollUser(slug, userId) {
+  const course = await findBySlug(slug);
+
+  const results = await database.query({
+    text: `
+      INSERT INTO course_enrollments (course_id, user_id)
+      VALUES ($1, $2)
+      ON CONFLICT DO NOTHING
+      RETURNING id
+    `,
+    values: [course.id, userId],
+  });
+
+  return results.rowCount > 0;
+}
+
+async function unenrollUser(slug, userId) {
+  const course = await findBySlug(slug);
+
+  const results = await database.query({
+    text: `
+      DELETE FROM course_enrollments
+      WHERE course_id = $1 AND user_id = $2
+      RETURNING id
+    `,
+    values: [course.id, userId],
+  });
+
+  return results.rowCount > 0;
+}
+
+async function isUserEnrolled(slug, userId) {
+  const course = await findBySlug(slug);
+
+  const results = await database.query({
+    text: `
+      SELECT 1 FROM course_enrollments
+      WHERE course_id = $1 AND user_id = $2
+      LIMIT 1
+    `,
+    values: [course.id, userId],
+  });
+
+  return results.rowCount > 0;
+}
+
+async function getEnrolledCourses(userId) {
+  const results = await database.query({
+    text: `
+      SELECT
+        c.id, c.slug, c.title, c.description, c.created_at, c.updated_at,
+        c.cover_image_id,
+        ui.secure_url                AS cover_url,
+        u.username                   AS owner_username,
+        COUNT(DISTINCT cl.id)        AS lesson_count,
+        COALESCE(AVG(cr.rating), 0)  AS avg_rating,
+        COUNT(DISTINCT cr.user_id)   AS rating_count
+      FROM courses c
+      INNER JOIN course_enrollments ce ON ce.course_id = c.id
+      LEFT JOIN uploaded_images ui ON ui.id = c.cover_image_id
+      LEFT JOIN users u            ON u.id = c.owner_id
+      LEFT JOIN course_lessons cl  ON cl.course_id = c.id
+      LEFT JOIN course_ratings cr  ON cr.course_id = c.id
+      WHERE ce.user_id = $1
+      GROUP BY c.id, ui.secure_url, u.username, ce.created_at
+      ORDER BY ce.created_at DESC
+    `,
+    values: [userId],
+  });
+
+  return results.rows;
+}
+
+async function getCourseEnrollments(slug) {
+  const course = await findBySlug(slug);
+
+  const results = await database.query({
+    text: `
+      SELECT u.id, u.username, u.avatar_url, ce.created_at
+      FROM course_enrollments ce
+      INNER JOIN users u ON u.id = ce.user_id
+      WHERE ce.course_id = $1
+      ORDER BY ce.created_at DESC
+    `,
+    values: [course.id],
+  });
+
+  return results.rows;
+}
+
 const courseModel = {
   findAll,
   findBySlug,
@@ -810,6 +905,11 @@ const courseModel = {
   createLessonComment,
   updateLessonComment,
   deleteLessonComment,
+  enrollUser,
+  unenrollUser,
+  isUserEnrolled,
+  getEnrolledCourses,
+  getCourseEnrollments,
 };
 
 export default courseModel;

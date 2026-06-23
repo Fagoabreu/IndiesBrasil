@@ -30,10 +30,28 @@ function onErrorHandler(error, request, response) {
 
 function onRouterErrorHandler(error) {
   if (error instanceof ValidationError || error instanceof NotFoundError || error instanceof ForbiddenError) {
-    return NextResponse.json({ status: error.statusCode, error });
+    return NextResponse.json(error, { status: error.statusCode });
   }
-  console.log(error);
-  return NextResponse.json(error, { status: error.statusCode });
+  if (error instanceof UnauthorizedError) {
+    const response = NextResponse.json(error, { status: error.statusCode });
+    clearSessionCookieAppRouter(response);
+    return response;
+  }
+  const publicErrorObject = new InternalServerError({
+    cause: error,
+  });
+  console.error(publicErrorObject);
+  return NextResponse.json(publicErrorObject, { status: publicErrorObject.statusCode });
+}
+
+function clearSessionCookieAppRouter(response) {
+  const setCookie = cookie.serialize("session_id", "invalid", {
+    path: "/",
+    maxAge: -1,
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: true,
+  });
+  response.headers.set("Set-Cookie", setCookie);
 }
 
 async function setSessionCookie(sessionToken, response) {

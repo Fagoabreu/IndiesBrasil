@@ -29,7 +29,7 @@ async function upsertHandler(request, response) {
     });
   }
 
-  const { rating } = request.body;
-  const result = await course.upsertRating(slug, requestUser.id, rating);
+  const { rating, review } = request.body;
+  const result = await course.upsertRating(slug, requestUser.id, rating, review || null);
   return response.status(200).json(result);
 }

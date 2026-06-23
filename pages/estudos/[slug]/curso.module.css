@@ -167,13 +167,19 @@
 
 .rateSection {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 12px;
   padding: 16px;
   border-radius: 12px;
   border: 1px solid var(--borderColor-default);
   background: var(--bgColor-default);
   margin-bottom: 24px;
+}
+
+.rateRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .rateLabel {
@@ -203,6 +209,29 @@
 
 .starActive {
   color: #f0c040;
+}
+
+.reviewInput {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--borderColor-default);
+  background: var(--bgColor-default);
+  color: var(--fgColor-default);
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.reviewInput::placeholder {
+  color: var(--fgColor-muted);
+}
+
+.reviewInput:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px rgba(var(--brand-rgb-primary), 0.2);
 }
 
 /* ---- Progress ---- */

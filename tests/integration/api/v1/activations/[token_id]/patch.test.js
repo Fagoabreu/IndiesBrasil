@@ -168,6 +168,8 @@ describe("PATCH /api/v1/activations/[token_id]", () => {
         "create:course:comment",
         "update:course:comment",
         "delete:course:comment",
+        "create:course:enrollment",
+        "read:course:enrollment",
         "read:content_review",
         "read:content_review:all",
         "create:content_review",

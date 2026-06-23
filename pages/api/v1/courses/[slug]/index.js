@@ -27,6 +27,7 @@ async function getHandler(request, response) {
     viewer = {
       isOwner: courseData.owner_id === requestUser.id,
       userRating: userRating?.rating || null,
+      review: userRating?.review || null,
       progress,
     };
   }
