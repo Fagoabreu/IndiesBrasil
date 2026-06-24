@@ -1,9 +1,10 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Image from "next/image";
 import { useUser } from "@/context/UserContext";
+import ImageCropModal from "@/components/ImageTools/ImageCropTool/ImageCropModal";
 import styles from "./novo.module.css";
 
 const CONTENT_TYPE_OPTIONS = [
@@ -39,6 +40,11 @@ export default function NovaAnalisePage() {
   const [error, setError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editingSlug, setEditingSlug] = useState("");
+
+  // Upload de capa
+  const [coverCropSrc, setCoverCropSrc] = useState(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const coverInputRef = useRef(null);
 
   // Preencher content_type e content_id dos query params
   useEffect(() => {
@@ -115,6 +121,81 @@ export default function NovaAnalisePage() {
   function removePoint(arr, setter, index) {
     if (arr.length <= 1) return;
     setter((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  // ── Cover image upload ──────────────────────────────────
+  function handleCoverFileChange(e) {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+    e.target.value = "";
+    const reader = new FileReader();
+    reader.onload = () => setCoverCropSrc(reader.result);
+    reader.readAsDataURL(selectedFile);
+  }
+
+  function handleCoverCropClose() {
+    setCoverCropSrc(null);
+  }
+
+  async function handleCoverCropConfirm(blob) {
+    setCoverCropSrc(null);
+    if (!blob) return;
+    setUploadingCover(true);
+    setError("");
+    try {
+      const reader = new FileReader();
+      const base64 = await new Promise((resolve) => {
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+
+      let res;
+      if (isEditing && editingSlug) {
+        res = await fetch(`/api/v1/analises/${editingSlug}/cover`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ image: base64 }),
+        });
+      } else {
+        // Se ainda está criando, converte para data URL e armazena como cover_url
+        setCoverImageUrl(base64);
+        return;
+      }
+
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || "Erro ao enviar capa.");
+        return;
+      }
+      setCoverImageUrl(data.cover_url);
+    } catch {
+      setError("Erro de conexão ao enviar capa.");
+    } finally {
+      setUploadingCover(false);
+    }
+  }
+
+  async function handleRemoveCover() {
+    if (!confirm("Remover a capa da análise?")) return;
+    if (isEditing && editingSlug) {
+      setUploadingCover(true);
+      try {
+        const res = await fetch(`/api/v1/analises/${editingSlug}/cover`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        if (res.ok) {
+          setCoverImageUrl("");
+        }
+      } catch {
+        // ignore
+      } finally {
+        setUploadingCover(false);
+      }
+    } else {
+      setCoverImageUrl("");
+    }
   }
 
   async function handleSubmit(e) {
@@ -260,15 +341,9 @@ export default function NovaAnalisePage() {
           </div>
 
           <div className={styles.fieldGroup}>
-            <label className={styles.label}>URL da Imagem de Capa</label>
-            <input
-              type="text"
-              className={styles.input}
-              value={coverImageUrl}
-              onChange={(e) => setCoverImageUrl(e.target.value)}
-              placeholder="https://... (URL da imagem de capa)"
-            />
-            {coverImageUrl && (
+            <label className={styles.label}>Imagem de Capa</label>
+            <input ref={coverInputRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={handleCoverFileChange} />
+            {coverImageUrl ? (
               <div className={styles.coverPreview}>
                 <Image
                   src={coverImageUrl}
@@ -278,8 +353,21 @@ export default function NovaAnalisePage() {
                   className={styles.coverPreviewImg}
                   unoptimized={coverImageUrl.startsWith("data:") || coverImageUrl.startsWith("blob:")}
                 />
+                <div className={styles.coverActions}>
+                  <button type="button" className={styles.coverActionBtn} onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}>
+                    {uploadingCover ? "Enviando..." : "✏️ Alterar capa"}
+                  </button>
+                  <button type="button" className={styles.coverRemoveBtn} onClick={handleRemoveCover} disabled={uploadingCover}>
+                    🗑️ Remover
+                  </button>
+                </div>
               </div>
+            ) : (
+              <button type="button" className={styles.coverUploadBtn} onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}>
+                {uploadingCover ? "Enviando capa..." : "📷 Selecionar imagem de capa"}
+              </button>
             )}
+            <p className={styles.hint}>A capa aparece no topo da análise e nos cards de listagem. Recomendamos 16:9 (ex: 1200×675).</p>
           </div>
 
           {/* Seções */}
@@ -425,6 +513,9 @@ export default function NovaAnalisePage() {
           </div>
         </form>
       </div>
+
+      {/* Image crop modal */}
+      {coverCropSrc && <ImageCropModal imageSrc={coverCropSrc} preset="cover" onConfirm={handleCoverCropConfirm} onClose={handleCoverCropClose} />}
     </>
   );
 }

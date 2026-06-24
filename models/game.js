@@ -294,7 +294,8 @@ async function update(slug, data) {
   for (const key of updatable) {
     if (key in data) {
       fields.push(`${key} = $${idx++}`);
-      values.push(data[key] ?? null);
+      const val = data[key];
+      values.push(val === "" ? null : (val ?? null));
     }
   }
 

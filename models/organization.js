@@ -112,8 +112,8 @@ async function create(ownerUser, data) {
 
   const result = await database.query({
     text: `
-      INSERT INTO organizations (id, owner_id, name, slug, description, history, pitch, cnpj, founded_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      INSERT INTO organizations (id, owner_id, name, slug, description, history, pitch, cnpj, founded_at, website, features)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *
     `,
     values: [
@@ -126,6 +126,8 @@ async function create(ownerUser, data) {
       data.pitch || null,
       data.cnpj || null,
       data.founded_at || null,
+      data.website || null,
+      data.features || null,
     ],
   });
 
@@ -167,7 +169,19 @@ async function update(slug, data) {
   const values = [];
   let idx = 1;
 
-  const updatable = ["name", "description", "history", "pitch", "cnpj", "founded_at", "banner_video_url", "twitch_channel", "youtube_channel_id"];
+  const updatable = [
+    "name",
+    "description",
+    "history",
+    "pitch",
+    "cnpj",
+    "founded_at",
+    "banner_video_url",
+    "twitch_channel",
+    "youtube_channel_id",
+    "website",
+    "features",
+  ];
   for (const key of updatable) {
     if (key in data) {
       fields.push(`${key} = $${idx++}`);

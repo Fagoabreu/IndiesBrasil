@@ -13,6 +13,11 @@ const CONTENT_TYPE_LABELS = {
   book: "Livro/Quadrinho",
 };
 
+function getContentUrl(contentType, slug) {
+  const prefix = { game: "/jogos", boardgame: "/jogos-de-mesa", book: "/quadrinhos" };
+  return `${prefix[contentType] || ""}/${slug}`;
+}
+
 function StarRating({ value }) {
   if (!value) return null;
   return (
@@ -108,51 +113,79 @@ export default function AnalisePage() {
           )}
         </nav>
 
-        {/* Header */}
-        <header className={styles.articleHeader}>
-          <div className={styles.headerContent}>
-            <span className={styles.badge}>{CONTENT_TYPE_LABELS[analise.content_type] || analise.content_type}</span>
-            <h1 className={styles.articleTitle}>{analise.title}</h1>
-
-            <div className={styles.articleMeta}>
-              <div className={styles.authorInfo}>
-                {analise.author_avatar_url && (
-                  <Image src={analise.author_avatar_url} alt={analise.author_username} width={36} height={36} className={styles.authorAvatar} />
-                )}
-                <div>
-                  <span className={styles.authorName}>Por {analise.author_username}</span>
-                  <span className={styles.publishDate}>
-                    {new Date(analise.published_at).toLocaleDateString("pt-BR", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </span>
-                </div>
-              </div>
-
-              {analise.rating && (
-                <div className={styles.ratingBox}>
-                  <span className={styles.ratingValue}>{analise.rating}</span>
-                  <StarRating value={analise.rating} />
-                </div>
+        {/* Content reference card */}
+        {analise.content_name && (
+          <div className={styles.contentRefCard}>
+            <div className={styles.contentRefThumb}>
+              {analise.content_cover_url ? (
+                <Image
+                  src={analise.content_cover_url}
+                  alt={analise.content_name}
+                  fill
+                  sizes="80px"
+                  className={styles.contentRefThumbImg}
+                  unoptimized={analise.content_cover_url.startsWith("data:") || analise.content_cover_url.startsWith("blob:")}
+                />
+              ) : (
+                <span className={styles.contentRefThumbPlaceholder}>📦</span>
+              )}
+            </div>
+            <div className={styles.contentRefInfo}>
+              <span className={styles.contentRefLabel}>Esta análise é sobre</span>
+              {analise.content_slug ? (
+                <Link href={getContentUrl(analise.content_type, analise.content_slug)} className={styles.contentRefName}>
+                  {analise.content_name}
+                </Link>
+              ) : (
+                <span className={styles.contentRefName}>{analise.content_name}</span>
               )}
             </div>
           </div>
+        )}
 
-          {/* Cover */}
-          {analise.cover_url && (
-            <div className={styles.coverWrap}>
-              <Image
-                src={analise.cover_url}
-                alt={analise.title}
-                fill
-                priority
-                sizes="(max-width: 768px) 100vw, 800px"
-                className={styles.coverImage}
-              />
+        {/* Header */}
+        <header className={styles.articleHeader}>
+          <div className={styles.headerTopRow}>
+            <div className={styles.headerMain}>
+              <span className={styles.badge}>{CONTENT_TYPE_LABELS[analise.content_type] || analise.content_type}</span>
+              <h1 className={styles.articleTitle}>{analise.title}</h1>
             </div>
-          )}
+
+            {analise.rating && (
+              <div className={styles.ratingBadge}>
+                <div>
+                  <span className={styles.ratingLabel}>Nota</span>
+                  <span className={styles.ratingValue}>{analise.rating}</span>
+                </div>
+                <StarRating value={analise.rating} />
+              </div>
+            )}
+          </div>
+
+          <div className={styles.articleMeta}>
+            <div className={styles.authorInfo}>
+              {analise.author_avatar_url && (
+                <Image
+                  src={analise.author_avatar_url}
+                  alt={analise.author_username}
+                  width={36}
+                  height={36}
+                  className={styles.authorAvatar}
+                  unoptimized={analise.author_avatar_url.startsWith("data:") || analise.author_avatar_url.startsWith("blob:")}
+                />
+              )}
+              <div className={styles.authorText}>
+                <span className={styles.authorName}>Por {analise.author_username}</span>
+                <span className={styles.publishDate}>
+                  {new Date(analise.published_at).toLocaleDateString("pt-BR", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </span>
+              </div>
+            </div>
+          </div>
         </header>
 
         {/* Author actions */}
@@ -164,6 +197,21 @@ export default function AnalisePage() {
             <button type="button" onClick={handleDelete} className={styles.btnDelete}>
               🗑️ Excluir
             </button>
+          </div>
+        )}
+
+        {/* Cover hero */}
+        {analise.cover_url && (
+          <div className={styles.coverHero}>
+            <Image
+              src={analise.cover_url}
+              alt={analise.title}
+              fill
+              priority
+              sizes="(max-width: 768px) 100vw, 860px"
+              className={styles.coverHeroImg}
+              unoptimized={analise.cover_url.startsWith("data:") || analise.cover_url.startsWith("blob:")}
+            />
           </div>
         )}
 

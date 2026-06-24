@@ -698,6 +698,8 @@ export default function ConfiguracoesPage() {
         ...editGameForm,
         name: editGameForm.name.trim(),
         genre: editGameForm.genre.trim() || "Indefinido",
+        trailer_url: editGameForm.trailer_url?.trim() || "",
+        website_url: editGameForm.website_url?.trim() || "",
         store_pages: editGameForm.store_pages
           .filter((sp) => sp.store_type_id && sp.page_url.trim())
           .map((sp) => ({
@@ -1427,7 +1429,7 @@ export default function ConfiguracoesPage() {
                               {[
                                 { id: "info", label: "Informações" },
                                 { id: "media", label: "Mídia" },
-                                { id: "distribution", label: "Distribuição" },
+                                { id: "distribution", label: "Lojas" },
                               ].map((t) => (
                                 <button
                                   key={t.id}
@@ -1443,7 +1445,7 @@ export default function ConfiguracoesPage() {
                             {activeGameTab === "info" && (
                               <div className={styles.gameEditGrid}>
                                 {/* Nome */}
-                                <label className={styles.fieldLabel}>
+                                <label className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}>
                                   <span>Nome do jogo *</span>
                                   <input
                                     type="text"
@@ -1456,7 +1458,7 @@ export default function ConfiguracoesPage() {
                                 </label>
 
                                 {/* Tagline */}
-                                <label className={styles.fieldLabel}>
+                                <label className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}>
                                   <span>Tagline</span>
                                   <input
                                     type="text"
@@ -1524,7 +1526,7 @@ export default function ConfiguracoesPage() {
                                 </label>
 
                                 {/* Website */}
-                                <label className={styles.fieldLabel}>
+                                <label className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}>
                                   <span>Site oficial</span>
                                   <input
                                     type="url"
@@ -1536,6 +1538,60 @@ export default function ConfiguracoesPage() {
                                   />
                                 </label>
 
+                                {/* Descrição completa */}
+                                <label className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}>
+                                  <span>Sobre o jogo</span>
+                                  <textarea
+                                    className={`${styles.input} ${styles.textarea}`}
+                                    placeholder="Descreva o jogo em detalhes..."
+                                    value={editGameForm.description}
+                                    onChange={(e) => setEditGameForm((f) => ({ ...f, description: e.target.value }))}
+                                    rows={8}
+                                  />
+                                </label>
+
+                                {/* Plataformas */}
+                                <fieldset className={`${styles.fieldset} ${styles.fieldsetFull}`}>
+                                  <legend className={styles.fieldsetLegend}>Plataformas</legend>
+                                  <div className={styles.platformsGrid}>
+                                    {PLATFORM_OPTIONS.map(([key, label]) => (
+                                      <label key={key} className={styles.checkboxLabel}>
+                                        <input type="checkbox" checked={editGameForm.platforms.includes(key)} onChange={() => togglePlatform(key)} />
+                                        {label}
+                                      </label>
+                                    ))}
+                                  </div>
+                                </fieldset>
+                              </div>
+                            )}
+
+                            {activeGameTab === "media" && (
+                              <>
+                                {/* Imagem do card */}
+                                <div className={styles.gameImgUpload}>
+                                  <span className={styles.gameImgLabel}>Imagem do card (460 × 215)</span>
+                                  <div className={styles.gameImgPreviewWrap}>
+                                    {games.find((g) => g.slug === editingGameSlug)?.banner_url ? (
+                                      <Image
+                                        src={games.find((g) => g.slug === editingGameSlug).banner_url}
+                                        alt="Card atual"
+                                        fill
+                                        className={styles.gameImgPreview}
+                                        sizes="300px"
+                                      />
+                                    ) : (
+                                      <div className={styles.gameImgPlaceholder}>Sem imagem</div>
+                                    )}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className={styles.btnOutlineSmall}
+                                    onClick={() => openGameImgPicker(editingGameSlug)}
+                                    disabled={uploadingGameImg}
+                                  >
+                                    {uploadingGameImg ? <Spinner size="small" /> : "Enviar imagem"}
+                                  </button>
+                                </div>
                                 {/* Trailer */}
                                 <label className={styles.fieldLabel}>
                                   <span>URL do trailer</span>
@@ -1548,11 +1604,7 @@ export default function ConfiguracoesPage() {
                                     maxLength={512}
                                   />
                                 </label>
-                              </div>
-                            )}
 
-                            {activeGameTab === "media" && (
-                              <>
                                 {/* Vídeos adicionais */}
                                 <fieldset className={styles.fieldset}>
                                   <legend className={styles.fieldsetLegend}>Vídeos</legend>
@@ -1610,62 +1662,11 @@ export default function ConfiguracoesPage() {
                                   </div>
                                   {videoMsg.text && <StatusMessageComponent type={videoMsg.type} message={videoMsg.text} />}
                                 </fieldset>
-
-                                {/* Imagem do card */}
-                                <div className={styles.gameImgUpload}>
-                                  <span className={styles.gameImgLabel}>Imagem do card (460 × 215)</span>
-                                  <div className={styles.gameImgPreviewWrap}>
-                                    {games.find((g) => g.slug === editingGameSlug)?.banner_url ? (
-                                      <Image
-                                        src={games.find((g) => g.slug === editingGameSlug).banner_url}
-                                        alt="Card atual"
-                                        fill
-                                        className={styles.gameImgPreview}
-                                        sizes="300px"
-                                      />
-                                    ) : (
-                                      <div className={styles.gameImgPlaceholder}>Sem imagem</div>
-                                    )}
-                                  </div>
-                                  <button
-                                    type="button"
-                                    className={styles.btnOutlineSmall}
-                                    onClick={() => openGameImgPicker(editingGameSlug)}
-                                    disabled={uploadingGameImg}
-                                  >
-                                    {uploadingGameImg ? <Spinner size="small" /> : "Enviar imagem"}
-                                  </button>
-                                </div>
                               </>
                             )}
 
                             {activeGameTab === "distribution" && (
                               <>
-                                {/* Descrição completa */}
-                                <label className={styles.fieldLabel}>
-                                  <span>Sobre o jogo</span>
-                                  <textarea
-                                    className={`${styles.input} ${styles.textarea}`}
-                                    placeholder="Descreva o jogo em detalhes..."
-                                    value={editGameForm.description}
-                                    onChange={(e) => setEditGameForm((f) => ({ ...f, description: e.target.value }))}
-                                    rows={5}
-                                  />
-                                </label>
-
-                                {/* Plataformas */}
-                                <fieldset className={styles.fieldset}>
-                                  <legend className={styles.fieldsetLegend}>Plataformas</legend>
-                                  <div className={styles.platformsGrid}>
-                                    {PLATFORM_OPTIONS.map(([key, label]) => (
-                                      <label key={key} className={styles.checkboxLabel}>
-                                        <input type="checkbox" checked={editGameForm.platforms.includes(key)} onChange={() => togglePlatform(key)} />
-                                        {label}
-                                      </label>
-                                    ))}
-                                  </div>
-                                </fieldset>
-
                                 {/* Links de lojas */}
                                 <fieldset className={styles.fieldset}>
                                   <legend className={styles.fieldsetLegend}>Links de lojas</legend>

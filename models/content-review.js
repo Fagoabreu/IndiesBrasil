@@ -53,11 +53,19 @@ async function findAll({ page = 1, limit = 20, contentType = "" } = {}) {
           cr.cover_url,
           u.username          AS author_username,
           uui.secure_url      AS author_avatar_url,
-          cov.secure_url      AS cover_image_url
+          cov.secure_url      AS cover_image_url,
+          COALESCE(g.name, bg.name, b.title)                 AS content_name,
+          COALESCE(g_cov.secure_url, bg_cov.secure_url, b_cov.secure_url, b.cover_url_external) AS content_cover_url
         FROM content_reviews cr
         JOIN users u                  ON u.id = cr.author_id
         LEFT JOIN uploaded_images uui ON uui.id = u.avatar_image
         LEFT JOIN uploaded_images cov ON cov.id = cr.cover_image_id
+        LEFT JOIN games g             ON cr.content_type = 'game' AND g.id = cr.content_id
+        LEFT JOIN uploaded_images g_cov ON g_cov.id = g.cover_image_id
+        LEFT JOIN boardgames bg       ON cr.content_type = 'boardgame' AND bg.id = cr.content_id
+        LEFT JOIN uploaded_images bg_cov ON bg_cov.id = bg.cover_image_id
+        LEFT JOIN books b             ON cr.content_type = 'book' AND b.id = cr.content_id
+        LEFT JOIN uploaded_images b_cov ON b_cov.id = b.cover_image_id
         WHERE cr.content_type = $3
         ORDER BY cr.published_at DESC
         LIMIT $1 OFFSET $2
@@ -73,11 +81,20 @@ async function findAll({ page = 1, limit = 20, contentType = "" } = {}) {
           cr.cover_url,
           u.username          AS author_username,
           uui.secure_url      AS author_avatar_url,
-          cov.secure_url      AS cover_image_url
+          cov.secure_url      AS cover_image_url,
+          COALESCE(g.name, bg.name, b.title)                 AS content_name,
+        COALESCE(g_cov.secure_url, bg_cov.secure_url, b_cov.secure_url, b.cover_url_external) AS content_cover_url,
+        COALESCE(g.slug, bg.slug, b.slug)                   AS content_slug
         FROM content_reviews cr
         JOIN users u                  ON u.id = cr.author_id
         LEFT JOIN uploaded_images uui ON uui.id = u.avatar_image
         LEFT JOIN uploaded_images cov ON cov.id = cr.cover_image_id
+        LEFT JOIN games g             ON cr.content_type = 'game' AND g.id = cr.content_id
+        LEFT JOIN uploaded_images g_cov ON g_cov.id = g.cover_image_id
+        LEFT JOIN boardgames bg       ON cr.content_type = 'boardgame' AND bg.id = cr.content_id
+        LEFT JOIN uploaded_images bg_cov ON bg_cov.id = bg.cover_image_id
+        LEFT JOIN books b             ON cr.content_type = 'book' AND b.id = cr.content_id
+        LEFT JOIN uploaded_images b_cov ON b_cov.id = b.cover_image_id
         ORDER BY cr.published_at DESC
         LIMIT $1 OFFSET $2
       `,
@@ -101,11 +118,20 @@ async function findByContent({ contentType, contentId, page = 1, limit = 10 } = 
         cr.cover_url,
         u.username          AS author_username,
         uui.secure_url      AS author_avatar_url,
-        cov.secure_url      AS cover_image_url
+        cov.secure_url      AS cover_image_url,
+        COALESCE(g.name, bg.name, b.title)                 AS content_name,
+        COALESCE(g_cov.secure_url, bg_cov.secure_url, b_cov.secure_url, b.cover_url_external) AS content_cover_url,
+        COALESCE(g.slug, bg.slug, b.slug)                   AS content_slug
       FROM content_reviews cr
       JOIN users u                  ON u.id = cr.author_id
       LEFT JOIN uploaded_images uui ON uui.id = u.avatar_image
       LEFT JOIN uploaded_images cov ON cov.id = cr.cover_image_id
+      LEFT JOIN games g             ON cr.content_type = 'game' AND g.id = cr.content_id
+      LEFT JOIN uploaded_images g_cov ON g_cov.id = g.cover_image_id
+      LEFT JOIN boardgames bg       ON cr.content_type = 'boardgame' AND bg.id = cr.content_id
+      LEFT JOIN uploaded_images bg_cov ON bg_cov.id = bg.cover_image_id
+      LEFT JOIN books b             ON cr.content_type = 'book' AND b.id = cr.content_id
+      LEFT JOIN uploaded_images b_cov ON b_cov.id = b.cover_image_id
       WHERE cr.content_type = $1 AND cr.content_id = $2
       ORDER BY cr.published_at DESC
       LIMIT $3 OFFSET $4
@@ -128,11 +154,20 @@ async function findBySlug(slug) {
         u.username          AS author_username,
         u.resumo            AS author_bio,
         uui.secure_url      AS author_avatar_url,
-        cov.secure_url      AS cover_image_url
+        cov.secure_url      AS cover_image_url,
+        COALESCE(g.name, bg.name, b.title)                 AS content_name,
+        COALESCE(g_cov.secure_url, bg_cov.secure_url, b_cov.secure_url, b.cover_url_external) AS content_cover_url,
+        COALESCE(g.slug, bg.slug, b.slug)                   AS content_slug
       FROM content_reviews cr
       JOIN users u                  ON u.id = cr.author_id
       LEFT JOIN uploaded_images uui ON uui.id = u.avatar_image
       LEFT JOIN uploaded_images cov ON cov.id = cr.cover_image_id
+      LEFT JOIN games g             ON cr.content_type = 'game' AND g.id = cr.content_id
+      LEFT JOIN uploaded_images g_cov ON g_cov.id = g.cover_image_id
+      LEFT JOIN boardgames bg       ON cr.content_type = 'boardgame' AND bg.id = cr.content_id
+      LEFT JOIN uploaded_images bg_cov ON bg_cov.id = bg.cover_image_id
+      LEFT JOIN books b             ON cr.content_type = 'book' AND b.id = cr.content_id
+      LEFT JOIN uploaded_images b_cov ON b_cov.id = b.cover_image_id
       WHERE cr.slug = $1
     `,
     values: [slug],
@@ -153,11 +188,20 @@ async function findById(id) {
         u.username          AS author_username,
         u.resumo            AS author_bio,
         uui.secure_url      AS author_avatar_url,
-        cov.secure_url      AS cover_image_url
+        cov.secure_url      AS cover_image_url,
+        COALESCE(g.name, bg.name, b.title)                 AS content_name,
+        COALESCE(g_cov.secure_url, bg_cov.secure_url, b_cov.secure_url, b.cover_url_external) AS content_cover_url,
+        COALESCE(g.slug, bg.slug, b.slug)                   AS content_slug
       FROM content_reviews cr
       JOIN users u                  ON u.id = cr.author_id
       LEFT JOIN uploaded_images uui ON uui.id = u.avatar_image
       LEFT JOIN uploaded_images cov ON cov.id = cr.cover_image_id
+      LEFT JOIN games g             ON cr.content_type = 'game' AND g.id = cr.content_id
+      LEFT JOIN uploaded_images g_cov ON g_cov.id = g.cover_image_id
+      LEFT JOIN boardgames bg       ON cr.content_type = 'boardgame' AND bg.id = cr.content_id
+      LEFT JOIN uploaded_images bg_cov ON bg_cov.id = bg.cover_image_id
+      LEFT JOIN books b             ON cr.content_type = 'book' AND b.id = cr.content_id
+      LEFT JOIN uploaded_images b_cov ON b_cov.id = b.cover_image_id
       WHERE cr.id = $1
     `,
     values: [id],
@@ -316,6 +360,40 @@ async function deleteReview(reviewId, userId) {
 }
 
 /* =========================================================
+ * Cover image
+ * ========================================================= */
+
+async function updateCoverImage(reviewSlug, userId, imageId) {
+  const existing = await findBySlug(reviewSlug);
+
+  if (existing.author_id !== userId) {
+    throw new ForbiddenError({ message: "Você não pode alterar a capa de outra pessoa." });
+  }
+
+  const result = await database.query({
+    text: `UPDATE content_reviews SET cover_image_id = $1, updated_at = now() WHERE id = $2 RETURNING *`,
+    values: [imageId, existing.id],
+  });
+
+  return parseFullReview(result.rows[0]);
+}
+
+async function removeCoverImage(reviewSlug, userId) {
+  const existing = await findBySlug(reviewSlug);
+
+  if (existing.author_id !== userId) {
+    throw new ForbiddenError({ message: "Você não pode alterar a capa de outra pessoa." });
+  }
+
+  const result = await database.query({
+    text: `UPDATE content_reviews SET cover_image_id = NULL, updated_at = now() WHERE id = $1 RETURNING *`,
+    values: [existing.id],
+  });
+
+  return parseFullReview(result.rows[0]);
+}
+
+/* =========================================================
  * Parsers
  * ========================================================= */
 
@@ -326,6 +404,9 @@ function parseReviewRow(row) {
     title: row.title,
     content_type: row.content_type,
     content_id: row.content_id,
+    content_name: row.content_name,
+    content_cover_url: row.content_cover_url,
+    content_slug: row.content_slug,
     rating: row.rating,
     published_at: row.published_at,
     created_at: row.created_at,
@@ -339,6 +420,9 @@ function parseFullReview(row) {
   return {
     ...row,
     cover_url: row.cover_url || row.cover_image_url || null,
+    content_name: row.content_name || null,
+    content_cover_url: row.content_cover_url || null,
+    content_slug: row.content_slug || null,
     sections: parseJsonField(row.sections),
     positive_points: parseJsonField(row.positive_points),
     negative_points: parseJsonField(row.negative_points),
@@ -366,6 +450,8 @@ const contentReview = {
   findById,
   create,
   update,
+  updateCoverImage,
+  removeCoverImage,
   delete: deleteReview,
   VALID_CONTENT_TYPES,
 };

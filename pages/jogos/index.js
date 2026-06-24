@@ -224,8 +224,8 @@ export default function JogosPage() {
       {!isLoading && activeList.length > 0 && (
         <>
           <div className={styles.grid}>
-            {activeList.map((g) => (
-              <GameCard key={g.id} game={g} />
+            {activeList.map((g, i) => (
+              <GameCard key={g.id} game={g} priority={i === 0} />
             ))}
           </div>
 

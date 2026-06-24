@@ -107,7 +107,38 @@ export default function AnalisesPage() {
                       <StarRating value={a.rating} />
                     </div>
                   )}
+                  {a.content_name && (
+                    <div className={styles.cardContentRef}>
+                      <div className={styles.cardContentThumb}>
+                        {a.content_cover_url ? (
+                          <Image
+                            src={a.content_cover_url}
+                            alt={a.content_name}
+                            width={32}
+                            height={32}
+                            className={styles.cardContentThumbImg}
+                            unoptimized={a.content_cover_url.startsWith("data:") || a.content_cover_url.startsWith("blob:")}
+                          />
+                        ) : (
+                          <span className={styles.cardContentThumbPlaceholder}>📦</span>
+                        )}
+                      </div>
+                      <span className={styles.cardContentName}>{a.content_name}</span>
+                    </div>
+                  )}
                   <div className={styles.cardMeta}>
+                    {a.author_avatar_url ? (
+                      <Image
+                        src={a.author_avatar_url}
+                        alt={a.author_username}
+                        width={18}
+                        height={18}
+                        className={styles.cardAuthorAvatar}
+                        unoptimized={a.author_avatar_url.startsWith("data:") || a.author_avatar_url.startsWith("blob:")}
+                      />
+                    ) : (
+                      <span className={styles.cardAuthorAvatarPlaceholder}>👤</span>
+                    )}
                     <span>Por {a.author_username}</span>
                     <span>{new Date(a.published_at).toLocaleDateString("pt-BR")}</span>
                   </div>

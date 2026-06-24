@@ -53,6 +53,20 @@
   margin-bottom: 1.5rem;
 }
 
+/* Layout de duas colunas: header texto + rating */
+.headerTopRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.headerMain {
+  flex: 1;
+  min-width: 0;
+}
+
 .badge {
   display: inline-block;
   padding: 0.2rem 0.75rem;
@@ -77,7 +91,6 @@
 .articleMeta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
   padding-bottom: 1.25rem;
@@ -88,40 +101,58 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
 }
 
 .authorAvatar {
   border-radius: 50%;
   object-fit: cover;
+  flex-shrink: 0;
+}
+
+.authorText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .authorName {
-  display: block;
   font-weight: 600;
   color: var(--fgColor-default);
   font-size: 0.95rem;
 }
 
 .publishDate {
-  display: block;
   font-size: 0.8rem;
   color: var(--fgColor-muted);
-  margin-top: 0.15rem;
 }
 
-.ratingBox {
+.ratingBadge {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: var(--bgColor-muted);
-  border-radius: 8px;
+  padding: 0.5rem 0.9rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(var(--brand-rgb-primary), 0.12), rgba(var(--brand-rgb-primary), 0.04));
+  border: 1px solid rgba(var(--brand-rgb-primary), 0.15);
+  flex-shrink: 0;
 }
 
 .ratingValue {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--fgColor-default);
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--brand-primary);
+  line-height: 1;
+}
+
+.ratingLabel {
+  display: block;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fgColor-muted);
+  margin-bottom: 2px;
 }
 
 .stars {
@@ -153,14 +184,28 @@
   object-fit: cover;
 }
 
+/* Cover hero */
+.coverHero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 420px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bgColor-muted);
+  margin: 1.5rem 0;
+}
+
+.coverHeroImg {
+  object-fit: cover;
+}
+
 /* Author actions */
 .authorActions {
   display: flex;
   gap: 0.75rem;
-  margin-bottom: 2rem;
-  padding: 0.75rem 1rem;
-  background: var(--bgColor-muted);
-  border-radius: 8px;
+  padding: 0.75rem 0;
+  margin-bottom: 1rem;
 }
 
 .btnEdit,

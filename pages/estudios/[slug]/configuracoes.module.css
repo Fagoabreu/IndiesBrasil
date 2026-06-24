@@ -418,6 +418,10 @@
   grid-column: 1 / -1;
 }
 
+.fieldsetFull {
+  grid-column: 1 / -1;
+}
+
 .textarea {
   resize: vertical;
   min-height: 100px;

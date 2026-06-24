@@ -12,7 +12,7 @@ const STAGES = {
   cancelled: "Cancelado",
 };
 
-export default function GameCard({ game }) {
+export default function GameCard({ game, priority = false }) {
   const stageLabel = STAGES[game.stage] ?? game.stage;
 
   return (
@@ -20,7 +20,14 @@ export default function GameCard({ game }) {
       <div className={styles.cardCover}>
         <div className={styles.coverInner}>
           {game.banner_url || game.cover_url ? (
-            <Image src={game.banner_url || game.cover_url} alt={game.name} fill sizes="(max-width: 600px) 100vw, 280px" className={styles.coverImg} />
+            <Image
+              src={game.banner_url || game.cover_url}
+              alt={game.name}
+              fill
+              sizes="(max-width: 600px) 100vw, 280px"
+              className={styles.coverImg}
+              priority={priority}
+            />
           ) : (
             <div className={styles.coverPlaceholder}>
               <span>{game.name[0]}</span>
