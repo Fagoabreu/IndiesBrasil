@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import PropTypes from "prop-types";
 import styles from "./BookCard.module.css";
+import ContentRatingBadge from "components/ContentRatingBadge";
 
 export const BOOK_TYPES = {
   book: "Livro",
@@ -43,6 +44,9 @@ export default function BookCard({ book }) {
         {/* Efeito de páginas (lado direito) — sempre presente */}
         <div className={styles.pagesEffect} />
         <span className={`${styles.stageBadge} ${stageClass}`}>{stageLabel}</span>
+        <span className={styles.ratingBadge}>
+          <ContentRatingBadge rating={book.content_rating} size="sm" />
+        </span>
       </div>
 
       <div className={styles.cardBody}>

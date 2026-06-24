@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./GameCard.module.css";
+import ContentRatingBadge from "@/components/ContentRatingBadge";
+import MonetizationBadge from "@/components/MonetizationBadge";
 
 const STAGES = {
   concept: "Conceito",
@@ -35,6 +37,29 @@ export default function GameCard({ game, priority = false }) {
           )}
         </div>
         <span className={`${styles.stageBadge} ${styles[`stage_${game.stage}`]}`}>{stageLabel}</span>
+        <span className={styles.ratingBadge}>
+          <ContentRatingBadge rating={game.content_rating} size="sm" />
+        </span>
+        {(game.has_lootboxes || game.has_in_game_purchases || game.has_excessive_ads) && (
+          <span className={styles.monetizationBadge}>
+            <MonetizationBadge
+              hasLootboxes={game.has_lootboxes}
+              hasInGamePurchases={game.has_in_game_purchases}
+              hasExcessiveAds={game.has_excessive_ads}
+              size="sm"
+            />
+          </span>
+        )}
+        {(game.has_lootboxes || game.has_in_game_purchases || game.has_excessive_ads) && (
+          <span className={styles.monetizationBadge}>
+            <MonetizationBadge
+              hasLootboxes={game.has_lootboxes}
+              hasInGamePurchases={game.has_in_game_purchases}
+              hasExcessiveAds={game.has_excessive_ads}
+              size="sm"
+            />
+          </span>
+        )}
       </div>
 
       <div className={styles.cardBody}>

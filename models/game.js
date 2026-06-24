@@ -55,7 +55,8 @@ async function findAll({ page = 1, limit = 20, search = "", genre = "", stage = 
     text: `
       SELECT
         g.id, g.slug, g.name, g.short_description, g.genre, g.stage,
-        g.release_date, g.created_at,
+        g.release_date, g.created_at, g.content_rating,
+        g.has_lootboxes, g.has_in_game_purchases, g.has_excessive_ads,
         ui_cover.secure_url  AS cover_url,
         ui_ban.secure_url    AS banner_url,
         o.name               AS studio_name,
@@ -139,7 +140,8 @@ async function findByOrg(orgId) {
     text: `
       SELECT
         g.id, g.slug, g.name, g.short_description, g.genre, g.stage,
-        g.release_date, g.created_at,
+        g.release_date, g.created_at, g.content_rating,
+        g.has_lootboxes, g.has_in_game_purchases, g.has_excessive_ads,
         ui_cover.secure_url AS cover_url,
         ui_ban.secure_url   AS banner_url,
         COUNT(DISTINCT gf.follower_id) AS follower_count,
@@ -426,7 +428,8 @@ async function findFollowedBy(userId) {
     text: `
       SELECT
         g.id, g.slug, g.name, g.short_description, g.genre, g.stage,
-        g.release_date, g.created_at,
+        g.release_date, g.created_at, g.content_rating,
+        g.has_lootboxes, g.has_in_game_purchases, g.has_excessive_ads,
         ui_cover.secure_url  AS cover_url,
         ui_ban.secure_url    AS banner_url,
         o.name               AS studio_name,

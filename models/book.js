@@ -13,7 +13,7 @@ async function findAll({ page = 1, limit = 20, search = "", book_type = "", stag
         b.id, b.slug, b.title, b.subtitle, b.short_description,
         b.book_type, b.stage, b.release_date, b.created_at,
         b.isbn, b.publisher, b.edition, b.pages, b.language,
-        b.website_url, b.buy_url,
+        b.website_url, b.buy_url, b.content_rating,
         COALESCE(ui.secure_url, b.cover_url_external) AS cover_url,
         o.name               AS studio_name,
         o.slug               AS studio_slug,
@@ -45,7 +45,7 @@ async function findFollowedBy(userId) {
             SELECT
         b.id, b.slug, b.title, b.subtitle, b.short_description,
         b.book_type, b.stage, b.release_date, b.created_at,
-        b.isbn, b.publisher, b.edition,
+        b.isbn, b.publisher, b.edition, b.content_rating,
         COALESCE(ui.secure_url, b.cover_url_external) AS cover_url,
         o.name               AS studio_name,
         o.slug               AS studio_slug,
@@ -111,7 +111,7 @@ async function findByOrg(orgId) {
             SELECT
         b.id, b.slug, b.title, b.subtitle, b.short_description,
         b.book_type, b.stage, b.release_date, b.created_at,
-        b.isbn, b.publisher, b.edition, b.website_url, b.buy_url, b.pdf_url,
+        b.isbn, b.publisher, b.edition, b.website_url, b.buy_url, b.pdf_url, b.content_rating,
         COALESCE(ui.secure_url, b.cover_url_external) AS cover_url,
         COUNT(DISTINCT bf.follower_id) AS follower_count,
         ROUND(AVG(br.rating), 1)       AS avg_rating,

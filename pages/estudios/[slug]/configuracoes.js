@@ -11,6 +11,7 @@ import SeoHead from "@/components/SeoHead";
 import AddressFormFields from "@/components/Address/AddressFormFields";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
 import ImageCropModal from "@/components/ImageTools/ImageCropTool/ImageCropModal";
+import ContentRatingModal from "@/components/ContentRatingModal";
 import styles from "./configuracoes.module.css";
 
 const PLATFORM_OPTIONS = [
@@ -260,6 +261,9 @@ export default function ConfiguracoesPage() {
   const [uploadingGameImg, setUploadingGameImg] = useState(false);
   const gameImgInputRef = useRef(null);
 
+  // Classificação indicativa
+  const [ratingModal, setRatingModal] = useState(null);
+
   const fetchStudio = useCallback(async () => {
     if (!slug) return;
     try {
@@ -346,6 +350,41 @@ export default function ConfiguracoesPage() {
       // silently ignore
     }
   }, [slug]);
+
+  // Classificação indicativa — fechamento do modal (save + refresh)
+  const handleRatingClose = useCallback(
+    async (result) => {
+      if (!result || !ratingModal) {
+        setRatingModal(null);
+        return;
+      }
+      const { type, slug } = ratingModal;
+      setRatingModal(null);
+      try {
+        const res = await fetch("/api/v1/content-rating", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            action: "save",
+            type,
+            slug,
+            rating: result.rating,
+            reasons: result.reasons,
+            monetizationFlags: result.monetizationFlags || undefined,
+          }),
+        });
+        if (res.ok) {
+          if (type === "game") fetchGames();
+          else if (type === "boardgame") fetchBoardgames();
+          else if (type === "book") fetchBooks();
+        }
+      } catch {
+        // silently ignore
+      }
+    },
+    [ratingModal, fetchGames, fetchBoardgames, fetchBooks],
+  );
 
   useEffect(() => {
     fetch("/api/v1/contact-types", { credentials: "include" })
@@ -1413,6 +1452,13 @@ export default function ConfiguracoesPage() {
                       >
                         {editingGameSlug === g.slug ? "Fechar" : "Editar"}
                       </button>
+                      <button
+                        type="button"
+                        className={styles.btnClassify}
+                        onClick={() => setRatingModal({ type: "game", slug: g.slug, name: g.name })}
+                      >
+                        Classificar
+                      </button>
                     </div>
 
                     {/* Formulário de edição expandido */}
@@ -1796,6 +1842,13 @@ export default function ConfiguracoesPage() {
                         onClick={() => handleOpenBoardgameEdit(bg.slug)}
                       >
                         {editingBoardgameSlug === bg.slug ? "Fechar" : "Editar"}
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.btnClassify}
+                        onClick={() => setRatingModal({ type: "boardgame", slug: bg.slug, name: bg.name })}
+                      >
+                        Classificar
                       </button>
                     </div>
 
@@ -2195,6 +2248,13 @@ export default function ConfiguracoesPage() {
                         onClick={() => handleOpenBookEdit(bk.slug)}
                       >
                         {editingBookSlug === bk.slug ? "Fechar" : "Editar"}
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.btnClassify}
+                        onClick={() => setRatingModal({ type: "book", slug: bk.slug, name: bk.title })}
+                      >
+                        Classificar
                       </button>
                     </div>
 
@@ -2656,6 +2716,9 @@ export default function ConfiguracoesPage() {
       {bookImgCropSrc && (
         <ImageCropModal imageSrc={bookImgCropSrc} preset="bookCover" onConfirm={handleBookCropConfirm} onClose={() => setBookImgCropSrc(null)} />
       )}
+
+      {/* Modal de classificação indicativa */}
+      {ratingModal && <ContentRatingModal type={ratingModal.type} itemName={ratingModal.name} onClose={handleRatingClose} />}
     </>
   );
 }

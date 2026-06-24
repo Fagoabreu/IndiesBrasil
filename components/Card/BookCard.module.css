@@ -119,6 +119,13 @@
   z-index: 3;
 }
 
+.ratingBadge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 3;
+}
+
 .stage_released {
   background: rgba(9, 105, 218, 0.85);
 }
