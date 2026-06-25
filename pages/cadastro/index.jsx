@@ -171,7 +171,6 @@ export default function Cadastro() {
       if (response.status === 201) {
         setSuccessMsg("Sua conta criada com sucesso!\no Link de ativação foi enviado ao email informado.");
         setShowForm(false);
-        setTimeout(() => router.push("/login"), 10000);
       } else {
         const data = await response.json();
         setErrorMsg({
