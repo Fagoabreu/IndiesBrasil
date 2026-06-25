@@ -539,6 +539,8 @@ describe("Patch /api/v1/users/[username]", () => {
           "create:course:comment",
           "update:course:comment",
           "delete:course:comment",
+          "create:course:enrollment",
+          "read:course:enrollment",
           "read:news",
           "read:news:all",
           "create:news",
