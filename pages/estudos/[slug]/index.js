@@ -262,23 +262,23 @@ export default function CursoPage() {
       {user && !isOwner && (
         <div className={styles.rateSection}>
           <div className={styles.rateRow}>
-          <span className={styles.rateLabel}>Sua avaliação:</span>
-          <div className={styles.starsInteractive}>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <button
-                key={star}
-                type="button"
-                className={styles.starBtn}
-                disabled={ratingSubmitting}
-                onMouseEnter={() => setHoverRating(star)}
-                onMouseLeave={() => setHoverRating(0)}
-                onClick={() => handleRate(star)}
-                aria-label={`Avaliar ${star} estrela${star > 1 ? "s" : ""}`}
-              >
-                {(hoverRating || userRating) >= star ? <StarFillIcon size={22} className={styles.starActive} /> : <StarIcon size={22} />}
-              </button>
-            ))}
-          </div>
+            <span className={styles.rateLabel}>Sua avaliação:</span>
+            <div className={styles.starsInteractive}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  className={styles.starBtn}
+                  disabled={ratingSubmitting}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  onClick={() => handleRate(star)}
+                  aria-label={`Avaliar ${star} estrela${star > 1 ? "s" : ""}`}
+                >
+                  {(hoverRating || userRating) >= star ? <StarFillIcon size={22} className={styles.starActive} /> : <StarIcon size={22} />}
+                </button>
+              ))}
+            </div>
           </div>
           <textarea
             className={styles.reviewInput}

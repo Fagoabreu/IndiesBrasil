@@ -25,30 +25,33 @@ export default function CursosPage() {
   const [hasMore, setHasMore] = useState(false);
   const [showEnrolled, setShowEnrolled] = useState(false);
 
-  const loadCourses = useCallback(async (pageNum, searchQuery, tagFilter) => {
-    setLoading(true);
-    try {
-      if (showEnrolled) {
-        const params = new URLSearchParams({ search: searchQuery });
-        const res = await fetch(`/api/v1/courses/enrolled?${params}`, { credentials: "include" });
-        const data = await res.json();
-        const rows = Array.isArray(data) ? data : [];
-        setCourses(rows);
-        setHasMore(false);
-      } else {
-        const params = new URLSearchParams({ page: pageNum, limit: 20, search: searchQuery, tag: tagFilter });
-        const res = await fetch(`/api/v1/courses?${params}`, { credentials: "include" });
-        const data = await res.json();
-        const rows = Array.isArray(data) ? data : [];
-        setCourses((prev) => (pageNum === 1 ? rows : [...prev, ...rows]));
-        setHasMore(rows.length === 20);
+  const loadCourses = useCallback(
+    async (pageNum, searchQuery, tagFilter) => {
+      setLoading(true);
+      try {
+        if (showEnrolled) {
+          const params = new URLSearchParams({ search: searchQuery });
+          const res = await fetch(`/api/v1/courses/enrolled?${params}`, { credentials: "include" });
+          const data = await res.json();
+          const rows = Array.isArray(data) ? data : [];
+          setCourses(rows);
+          setHasMore(false);
+        } else {
+          const params = new URLSearchParams({ page: pageNum, limit: 20, search: searchQuery, tag: tagFilter });
+          const res = await fetch(`/api/v1/courses?${params}`, { credentials: "include" });
+          const data = await res.json();
+          const rows = Array.isArray(data) ? data : [];
+          setCourses((prev) => (pageNum === 1 ? rows : [...prev, ...rows]));
+          setHasMore(rows.length === 20);
+        }
+      } catch {
+        setCourses([]);
+      } finally {
+        setLoading(false);
       }
-    } catch {
-      setCourses([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [showEnrolled]);
+    },
+    [showEnrolled],
+  );
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -61,8 +64,6 @@ export default function CursosPage() {
   useEffect(() => {
     if (page > 1) loadCourses(page, search, tag);
   }, [page, search, tag, loadCourses]);
-
-
 
   const countStr = courses.length.toLocaleString("pt-BR");
   const countWord = courses.length === 1 ? "curso" : "cursos";
@@ -86,9 +87,7 @@ export default function CursosPage() {
               </span>
             )}
           </div>
-          <p className={styles.pageSubtitle}>
-            {showEnrolled ? "Cursos em que você está inscrito." : "Aprenda com a comunidade indie brasileira."}
-          </p>
+          <p className={styles.pageSubtitle}>{showEnrolled ? "Cursos em que você está inscrito." : "Aprenda com a comunidade indie brasileira."}</p>
 
           <div className={styles.searchWrapper}>
             <TextInput
@@ -102,18 +101,18 @@ export default function CursosPage() {
           </div>
 
           {!showEnrolled && (
-          <div className={styles.tagFilters}>
-            {["Jogo", "Unity", "Godot", "Arte", "Som", "Programação", "Design", "Marketing"].map((t) => (
-              <button
-                key={t}
-                type="button"
-                className={`${styles.tagBtn} ${tag === t.toLowerCase() ? styles.tagBtnActive : ""}`}
-                onClick={() => setTag((prev) => (prev === t.toLowerCase() ? "" : t.toLowerCase()))}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
+            <div className={styles.tagFilters}>
+              {["Jogo", "Unity", "Godot", "Arte", "Som", "Programação", "Design", "Marketing"].map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  className={`${styles.tagBtn} ${tag === t.toLowerCase() ? styles.tagBtnActive : ""}`}
+                  onClick={() => setTag((prev) => (prev === t.toLowerCase() ? "" : t.toLowerCase()))}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
           )}
         </div>
 
@@ -122,7 +121,10 @@ export default function CursosPage() {
             <button
               type="button"
               className={`${styles.btnOutline} ${showEnrolled ? styles.btnPrimary : ""}`}
-              onClick={() => { setShowEnrolled((p) => !p); setTag(""); }}
+              onClick={() => {
+                setShowEnrolled((p) => !p);
+                setTag("");
+              }}
             >
               {showEnrolled ? <CheckIcon size={14} /> : <BookIcon size={14} />}
               {showEnrolled ? "Minhas inscrições" : "Minhas inscrições"}
@@ -148,15 +150,21 @@ export default function CursosPage() {
           <BookIcon size={40} className={styles.emptyIcon} />
           <p className={styles.emptyTitle}>
             {showEnrolled
-              ? (search ? `Nenhum curso inscrito encontrado para "${search}"` : "Você ainda não se inscreveu em nenhum curso")
-              : (search || tag ? `Nenhum curso encontrado${search ? ` para "${search}"` : ""}` : "Ainda não há cursos cadastrados")
-            }
+              ? search
+                ? `Nenhum curso inscrito encontrado para "${search}"`
+                : "Você ainda não se inscreveu em nenhum curso"
+              : search || tag
+                ? `Nenhum curso encontrado${search ? ` para "${search}"` : ""}`
+                : "Ainda não há cursos cadastrados"}
           </p>
           <p className={styles.emptyDescription}>
             {showEnrolled
-              ? (search ? "Tente outro termo de busca." : "Explore os cursos disponíveis e inscreva-se!")
-              : (search || tag ? "Tente outro termo ou filtro." : "Seja o primeiro a criar um curso!")
-            }
+              ? search
+                ? "Tente outro termo de busca."
+                : "Explore os cursos disponíveis e inscreva-se!"
+              : search || tag
+                ? "Tente outro termo ou filtro."
+                : "Seja o primeiro a criar um curso!"}
           </p>
         </div>
       )}

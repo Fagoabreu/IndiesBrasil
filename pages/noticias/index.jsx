@@ -115,7 +115,13 @@ export default function NewsPage() {
       {user && (
         <div className={styles.createArea}>
           {!showForm ? (
-            <button className={styles.btnPrimary} onClick={() => { setShowForm(true); setSubmitError(null); }}>
+            <button
+              className={styles.btnPrimary}
+              onClick={() => {
+                setShowForm(true);
+                setSubmitError(null);
+              }}
+            >
               <PlusIcon size={14} /> Criar notícia
             </button>
           ) : (
@@ -177,9 +183,7 @@ export default function NewsPage() {
                 )}
               </div>
 
-              {submitError && (
-                <div className={styles.errorMessage}>{submitError}</div>
-              )}
+              {submitError && <div className={styles.errorMessage}>{submitError}</div>}
 
               <div className={styles.actions}>
                 <button className={styles.btnSecondary} onClick={resetForm}>
