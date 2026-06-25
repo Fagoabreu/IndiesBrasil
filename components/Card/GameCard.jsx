@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./GameCard.module.css";
+import ContentRatingBadge from "@/components/ContentRatingBadge";
+import MonetizationBadge from "@/components/MonetizationBadge";
 
 const STAGES = {
   concept: "Conceito",
@@ -12,7 +14,7 @@ const STAGES = {
   cancelled: "Cancelado",
 };
 
-export default function GameCard({ game }) {
+export default function GameCard({ game, priority = false }) {
   const stageLabel = STAGES[game.stage] ?? game.stage;
 
   return (
@@ -20,7 +22,14 @@ export default function GameCard({ game }) {
       <div className={styles.cardCover}>
         <div className={styles.coverInner}>
           {game.banner_url || game.cover_url ? (
-            <Image src={game.banner_url || game.cover_url} alt={game.name} fill sizes="(max-width: 600px) 100vw, 280px" className={styles.coverImg} />
+            <Image
+              src={game.banner_url || game.cover_url}
+              alt={game.name}
+              fill
+              sizes="(max-width: 600px) 100vw, 280px"
+              className={styles.coverImg}
+              priority={priority}
+            />
           ) : (
             <div className={styles.coverPlaceholder}>
               <span>{game.name[0]}</span>
@@ -28,6 +37,29 @@ export default function GameCard({ game }) {
           )}
         </div>
         <span className={`${styles.stageBadge} ${styles[`stage_${game.stage}`]}`}>{stageLabel}</span>
+        <span className={styles.ratingBadge}>
+          <ContentRatingBadge rating={game.content_rating} size="sm" />
+        </span>
+        {(game.has_lootboxes || game.has_in_game_purchases || game.has_excessive_ads) && (
+          <span className={styles.monetizationBadge}>
+            <MonetizationBadge
+              hasLootboxes={game.has_lootboxes}
+              hasInGamePurchases={game.has_in_game_purchases}
+              hasExcessiveAds={game.has_excessive_ads}
+              size="sm"
+            />
+          </span>
+        )}
+        {(game.has_lootboxes || game.has_in_game_purchases || game.has_excessive_ads) && (
+          <span className={styles.monetizationBadge}>
+            <MonetizationBadge
+              hasLootboxes={game.has_lootboxes}
+              hasInGamePurchases={game.has_in_game_purchases}
+              hasExcessiveAds={game.has_excessive_ads}
+              size="sm"
+            />
+          </span>
+        )}
       </div>
 
       <div className={styles.cardBody}>

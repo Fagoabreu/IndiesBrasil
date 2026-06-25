@@ -28,16 +28,16 @@ export async function POST(request, { params }) {
     await controller.injectApiUser(request);
     const user = request.context.user;
 
-    if (!authorization.can(user, "read:news")) {
+    if (!authorization.can(user, "create:news:comment")) {
       throw new ForbiddenError({
-        message: "Você não possui permissão.",
-        action: 'Verifique se o seu usuário possui a feature "read:news".',
+        message: "Você não possui permissão para comentar.",
+        action: 'Verifique se o seu usuário possui a feature "create:news:comment".',
       });
     }
 
     const { id } = await params;
-    const formData = await request.formData();
-    const content = formData.get("content");
+    const body = await request.json();
+    const content = body.content;
 
     if (!content || !content.trim()) {
       return Response.json({ error: "Conteúdo é obrigatório." }, { status: 400 });

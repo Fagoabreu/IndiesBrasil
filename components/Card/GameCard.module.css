@@ -187,6 +187,20 @@
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+.ratingBadge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 3;
+}
+
+.monetizationBadge {
+  position: absolute;
+  top: 38px;
+  left: 10px;
+  z-index: 3;
+}
+
 .stage_released {
   background: rgba(9, 105, 218, 0.88);
 }

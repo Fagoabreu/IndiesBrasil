@@ -99,6 +99,15 @@
   margin-top: 4px;
 }
 
+.errorMessage {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  background: rgba(var(--brand-rgb-primary), 0.08);
+  color: var(--fgColor-danger);
+  border: 1px solid var(--borderColor-danger, rgba(var(--brand-rgb-primary), 0.2));
+}
+
 .btnPrimary {
   display: inline-flex;
   align-items: center;

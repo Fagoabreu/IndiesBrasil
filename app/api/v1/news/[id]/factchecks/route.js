@@ -8,16 +8,16 @@ export async function POST(request, { params }) {
     await controller.injectApiUser(request);
     const user = request.context.user;
 
-    if (!authorization.can(user, "read:news")) {
+    if (!authorization.can(user, "create:news:factcheck")) {
       throw new ForbiddenError({
-        message: "Você não possui permissão.",
-        action: 'Verifique se o seu usuário possui a feature "read:news".',
+        message: "Você não possui permissão para checar fatos.",
+        action: 'Verifique se o seu usuário possui a feature "create:news:factcheck".',
       });
     }
 
     const { id } = await params;
-    const formData = await request.formData();
-    const vote = formData.get("vote");
+    const body = await request.json();
+    const vote = body.vote;
 
     if (!["factcheck", "fake"].includes(vote)) {
       return Response.json({ error: "Voto inválido. Use 'factcheck' ou 'fake'." }, { status: 400 });

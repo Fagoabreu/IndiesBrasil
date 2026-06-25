@@ -8,16 +8,16 @@ export async function POST(request, { params }) {
     await controller.injectApiUser(request);
     const user = request.context.user;
 
-    if (!authorization.can(user, "read:news")) {
+    if (!authorization.can(user, "create:news:rating")) {
       throw new ForbiddenError({
-        message: "Você não possui permissão.",
-        action: 'Verifique se o seu usuário possui a feature "read:news".',
+        message: "Você não possui permissão para avaliar.",
+        action: 'Verifique se o seu usuário possui a feature "create:news:rating".',
       });
     }
 
     const { id } = await params;
-    const formData = await request.formData();
-    const rating = Number(formData.get("rating"));
+    const body = await request.json();
+    const rating = Number(body.rating);
 
     if (rating < 1 || rating > 5) {
       return Response.json({ error: "Rating deve ser entre 1 e 5." }, { status: 400 });

@@ -24,6 +24,8 @@ import {
   FileCodeIcon,
   BookIcon,
   StarIcon,
+  LightBulbIcon,
+  PulseIcon,
 } from "@primer/octicons-react";
 import { useUser } from "@/context/UserContext";
 import styles from "./LeftSidebarComponent.module.css";
@@ -129,7 +131,7 @@ export default function LeftSidebarComponent({ onNavigate }) {
           </NavList.Item>
           <NavList.Item as={Link} href="/estudos" aria-current={router.pathname.startsWith("/estudos")} onClick={onNavigate}>
             <NavList.LeadingVisual>
-              <BookIcon />
+              <LightBulbIcon />
             </NavList.LeadingVisual>
             Cursos e Estudos
           </NavList.Item>
@@ -147,19 +149,25 @@ export default function LeftSidebarComponent({ onNavigate }) {
                   <NavList.LeadingVisual>
                     <PersonIcon />
                   </NavList.LeadingVisual>
-                  Contatos
+                  Cadastro Contatos
                 </NavList.Item>
                 <NavList.Item as={Link} href="/admin/tools" onClick={onNavigate}>
                   <NavList.LeadingVisual>
                     <GearIcon />
                   </NavList.LeadingVisual>
-                  Ferramentas
+                  Cadastro Ferramentas
                 </NavList.Item>
                 <NavList.Item as={Link} href="/admin/professions" onClick={onNavigate}>
                   <NavList.LeadingVisual>
                     <TagIcon />
                   </NavList.LeadingVisual>
-                  Profissões
+                  Cadastro Profissões
+                </NavList.Item>
+                <NavList.Item as={Link} href="/status" onClick={onNavigate}>
+                  <NavList.LeadingVisual>
+                    <PulseIcon />
+                  </NavList.LeadingVisual>
+                  Server Status
                 </NavList.Item>
               </>
             )}

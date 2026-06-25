@@ -21,12 +21,21 @@ export default function CursoPage() {
   const [userRating, setUserRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [ratingSubmitting, setRatingSubmitting] = useState(false);
+  const [userReview, setUserReview] = useState("");
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [enrollmentSubmitting, setEnrollmentSubmitting] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
     loadCourse();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
+
+  useEffect(() => {
+    if (!slug || !user) return;
+    loadEnrollmentStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, user?.id]);
 
   async function loadCourse() {
     setLoading(true);
@@ -41,6 +50,7 @@ export default function CursoPage() {
       const data = await res.json();
       setCourse(data);
       if (data.viewer?.userRating) setUserRating(data.viewer.userRating);
+      if (data.viewer?.review) setUserReview(data.viewer.review);
     } catch {
       setError("Erro ao carregar o curso.");
     } finally {
@@ -48,18 +58,58 @@ export default function CursoPage() {
     }
   }
 
+  async function loadEnrollmentStatus() {
+    try {
+      const res = await fetch(`/api/v1/courses/${slug}/enrollments`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setIsEnrolled(data.enrolled);
+      }
+    } catch {
+      // silently fail
+    }
+  }
+
+  async function handleEnroll() {
+    if (!user || enrollmentSubmitting) return;
+    setEnrollmentSubmitting(true);
+    try {
+      const method = isEnrolled ? "DELETE" : "POST";
+      const res = await fetch(`/api/v1/courses/${slug}/enrollments`, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ userId: user.id }),
+      });
+      if (res.ok) {
+        setIsEnrolled(!isEnrolled);
+        loadCourse();
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setEnrollmentSubmitting(false);
+    }
+  }
+
   async function handleRate(rating) {
     if (!user || ratingSubmitting) return;
+    setUserRating(rating);
+  }
+
+  async function handleSubmitReview() {
+    if (!user || ratingSubmitting || !userRating) return;
     setRatingSubmitting(true);
     try {
       const res = await fetch(`/api/v1/courses/${slug}/ratings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ rating }),
+        body: JSON.stringify({ rating: userRating, review: userReview || null }),
       });
       if (res.ok) {
-        setUserRating(rating);
+        const data = await res.json();
+        if (data?.review !== undefined) setUserReview(data.review || "");
         loadCourse();
       }
     } catch {
@@ -196,29 +246,51 @@ export default function CursoPage() {
               </Button>
             </div>
           )}
+
+          {/* User enrollment action */}
+          {user && !isOwner && (
+            <div className={styles.userActions}>
+              <Button variant={isEnrolled ? "danger" : "primary"} onClick={handleEnroll} disabled={enrollmentSubmitting}>
+                {enrollmentSubmitting ? "..." : isEnrolled ? "Desinscrever" : "Inscrever"}
+              </Button>
+            </div>
+          )}
         </div>
       </header>
 
       {/* Rating for users */}
       {user && !isOwner && (
         <div className={styles.rateSection}>
-          <span className={styles.rateLabel}>Sua avaliação:</span>
-          <div className={styles.starsInteractive}>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <button
-                key={star}
-                type="button"
-                className={styles.starBtn}
-                disabled={ratingSubmitting}
-                onMouseEnter={() => setHoverRating(star)}
-                onMouseLeave={() => setHoverRating(0)}
-                onClick={() => handleRate(star)}
-                aria-label={`Avaliar ${star} estrela${star > 1 ? "s" : ""}`}
-              >
-                {(hoverRating || userRating) >= star ? <StarFillIcon size={22} className={styles.starActive} /> : <StarIcon size={22} />}
-              </button>
-            ))}
+          <div className={styles.rateRow}>
+            <span className={styles.rateLabel}>Sua avaliação:</span>
+            <div className={styles.starsInteractive}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  className={styles.starBtn}
+                  disabled={ratingSubmitting}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  onClick={() => handleRate(star)}
+                  aria-label={`Avaliar ${star} estrela${star > 1 ? "s" : ""}`}
+                >
+                  {(hoverRating || userRating) >= star ? <StarFillIcon size={22} className={styles.starActive} /> : <StarIcon size={22} />}
+                </button>
+              ))}
+            </div>
           </div>
+          <textarea
+            className={styles.reviewInput}
+            placeholder="Escreva um relato ou crítica construtiva sobre o curso..."
+            value={userReview}
+            onChange={(e) => setUserReview(e.target.value)}
+            rows={3}
+            maxLength={2000}
+          />
+          <Button variant="primary" onClick={handleSubmitReview} disabled={ratingSubmitting || !userRating}>
+            {ratingSubmitting ? <Spinner size="small" /> : userRating && course.viewer?.userRating ? "Atualizar avaliação" : "Enviar avaliação"}
+          </Button>
         </div>
       )}
 

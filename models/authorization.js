@@ -150,6 +150,8 @@ const availableFeatures = new Set([
   "create:course:comment",
   "update:course:comment",
   "delete:course:comment",
+  "create:course:enrollment",
+  "read:course:enrollment",
 
   //news
   "create:news",

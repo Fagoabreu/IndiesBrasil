@@ -151,7 +151,538 @@
   white-space: pre-line;
 }
 
-/* Equipe */
+.emptyHint {
+  font-size: 0.85rem;
+  color: #aaa;
+  font-style: italic;
+  margin: 0;
+}
+
+/* ── Features / Destaques ──────────────────────────── */
+.featuresList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.featureItem {
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #2c2c3e;
+  padding-left: 20px;
+  position: relative;
+}
+
+.featureItem::before {
+  content: "◆";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #8b5cf6;
+  font-size: 0.6rem;
+  line-height: 1.7;
+}
+
+/* ── Trailers / Vídeos ─────────────────────────────── */
+.videoWrap {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 */
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+}
+
+.videoIframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* ── Games grid (fallback cards) ───────────────────── */
+.gamesGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.gameCard {
+  display: flex;
+  gap: 16px;
+  padding: 14px;
+  border: 1px solid #e0d6f7;
+  border-radius: 8px;
+  background: #fdfbff;
+  page-break-inside: avoid;
+  align-items: flex-start;
+}
+
+.gameCoverWrap {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #eee;
+}
+
+.gameCover {
+  object-fit: cover;
+}
+
+.gameInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.gameName {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: #1a1a2e;
+  font-family: sans-serif;
+}
+
+.bookSubtitle {
+  font-size: 0.82rem;
+  color: #777;
+  font-style: italic;
+  margin: 0 0 4px;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.gameMeta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.gameStage {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.08);
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-family: sans-serif;
+}
+
+.gameGenre {
+  font-size: 0.75rem;
+  color: #777;
+  font-family: sans-serif;
+}
+
+.gameDesc {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  margin: 0 0 6px;
+  color: #555;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.gameRelease {
+  font-size: 0.75rem;
+  color: #888;
+  font-family: sans-serif;
+}
+
+.gameRating {
+  font-size: 0.78rem;
+  color: #f5a623;
+  font-weight: 600;
+  font-family: sans-serif;
+  margin-left: 8px;
+}
+
+/* ── Detail list (rich presskit entries) ───────────── */
+.detailList {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* ── Detail section (per game/boardgame/book) ───────── */
+.detailSection {
+  border: 1px solid #e0d6f7;
+  border-radius: 10px;
+  padding: 20px;
+  background: #fdfbff;
+  page-break-inside: avoid;
+}
+
+.detailHeader {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.detailCoverWrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #eee;
+  border: 1px solid #e0d6f7;
+}
+
+.detailCover {
+  object-fit: cover;
+}
+
+.detailHeaderInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.detailName {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: #1a1a2e;
+  font-family: sans-serif;
+  line-height: 1.3;
+}
+
+.detailMeta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.detailStage {
+  font-size: 0.66rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.08);
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-family: sans-serif;
+}
+
+.detailTag {
+  font-size: 0.72rem;
+  color: #666;
+  background: #f0ecf9;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-family: sans-serif;
+}
+
+.detailShortDesc {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin: 0;
+  color: #555;
+  font-style: italic;
+}
+
+.detailDesc {
+  margin-bottom: 14px;
+}
+
+.detailDesc .bodyText {
+  font-size: 0.9rem;
+}
+
+.detailSubtitle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #8b5cf6;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 10px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e0d6f7;
+  font-family: sans-serif;
+}
+
+.detailLink {
+  color: #8b5cf6;
+  text-decoration: none;
+  word-break: break-all;
+  font-size: 0.82rem;
+}
+
+.detailLink:hover {
+  text-decoration: underline;
+}
+
+/* ── Specs table ───────────────────────────────────── */
+.specList {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 24px;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  background: #faf8ff;
+  border: 1px solid #ede4ff;
+  border-radius: 8px;
+}
+
+.specRow {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+}
+
+.specLabel {
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: sans-serif;
+}
+
+.specValue {
+  font-size: 0.82rem;
+  color: #2c2c3e;
+  margin: 0;
+  font-family: sans-serif;
+  line-height: 1.4;
+}
+
+/* ── Trailer within detail ─────────────────────────── */
+.detailTrailer {
+  margin-bottom: 16px;
+}
+
+/* ── Media gallery ─────────────────────────────────── */
+.mediaGallery {
+  margin-bottom: 16px;
+}
+
+.mediaGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.mediaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid #e0d6f7;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #fff;
+  page-break-inside: avoid;
+}
+
+.mediaImg {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  aspect-ratio: 16 / 9;
+  background: #eee;
+}
+
+.mediaCaption {
+  font-size: 0.7rem;
+  color: #999;
+  padding: 4px 8px;
+  font-family: sans-serif;
+  line-height: 1.3;
+}
+
+/* ── Store table ───────────────────────────────────── */
+.storeSection {
+  margin-bottom: 16px;
+}
+
+.storeTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  font-family: sans-serif;
+}
+
+.storeTable th {
+  text-align: left;
+  padding: 6px 10px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #e0d6f7;
+  background: #faf8ff;
+}
+
+.storeTable td {
+  padding: 6px 10px;
+  border-bottom: 1px solid #ede4ff;
+  color: #2c2c3e;
+  vertical-align: top;
+}
+
+.storeLink {
+  color: #8b5cf6;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.storeLink:hover {
+  text-decoration: underline;
+}
+
+/* ── Team grid ─────────────────────────────────────── */
+.detailTeam {
+  margin-bottom: 8px;
+}
+
+.teamGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.teamCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid #e0d6f7;
+  border-radius: 6px;
+  background: #fff;
+  page-break-inside: avoid;
+}
+
+.teamAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: #eee;
+}
+
+.teamInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.teamName {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1a1a2e;
+  font-family: sans-serif;
+  line-height: 1.3;
+}
+
+.teamRole {
+  font-size: 0.7rem;
+  color: #888;
+  font-family: sans-serif;
+  line-height: 1.3;
+}
+
+/* ── Logos e Assets ────────────────────────────────── */
+.assetsIntro {
+  font-size: 0.82rem;
+  color: #777;
+  line-height: 1.5;
+  margin: 0 0 14px;
+}
+
+.assetsGrid {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.assetItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.assetPreview {
+  border: 2px dashed #d0c8e8;
+  border-radius: 8px;
+  padding: 16px;
+  background: #faf8ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 180px;
+  min-height: 80px;
+}
+
+.assetImg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.assetLabel {
+  font-size: 0.72rem;
+  color: #999;
+  font-family: sans-serif;
+  text-align: center;
+}
+
+/* ── Redes Sociais ─────────────────────────────────── */
+.socialGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.socialLink {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid #d0c8e8;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #2c2c3e;
+  font-family: sans-serif;
+  font-size: 0.82rem;
+  background: #faf8ff;
+  transition: background 0.2s;
+}
+
+.socialLink:hover {
+  background: #ede4ff;
+}
+
+.socialIcon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.socialLabel {
+  font-weight: 500;
+}
+
+/* ── Equipe ────────────────────────────────────────── */
 .memberList {
   list-style: none;
   margin: 0;
@@ -178,13 +709,6 @@
   color: #777;
   font-size: 0.8rem;
   font-style: italic;
-}
-
-.emptyHint {
-  font-size: 0.85rem;
-  color: #aaa;
-  font-style: italic;
-  margin: 0;
 }
 
 /* ── Factsheet (sidebar) ───────────────────────────── */
@@ -244,6 +768,23 @@
   line-height: 1.4;
 }
 
+.factContactRow {
+  display: block;
+  line-height: 1.4;
+  font-size: 0.82rem;
+  color: #555;
+}
+
+.factLink {
+  color: #8b5cf6;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.factLink:hover {
+  text-decoration: underline;
+}
+
 /* QR Code */
 .qrBlock {
   display: flex;
@@ -289,5 +830,45 @@
 
   .pkFooter {
     margin-top: 24px;
+  }
+
+  .videoWrap {
+    break-inside: avoid;
+  }
+
+  .gameCard {
+    break-inside: avoid;
+  }
+
+  .detailSection {
+    break-inside: avoid;
+  }
+
+  .detailHeader {
+    break-inside: avoid;
+  }
+
+  .specList {
+    break-inside: avoid;
+  }
+
+  .mediaGrid {
+    break-inside: avoid;
+  }
+
+  .mediaItem {
+    break-inside: avoid;
+  }
+
+  .teamCard {
+    break-inside: avoid;
+  }
+
+  .storeTable {
+    break-inside: avoid;
+  }
+
+  .socialGrid {
+    break-inside: avoid;
   }
 }

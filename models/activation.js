@@ -179,6 +179,17 @@ async function activateUserByUserId(userId) {
     "create:course:comment",
     "update:course:comment",
     "delete:course:comment",
+    "create:course:enrollment",
+    "read:course:enrollment",
+    //news permissions
+    "read:news",
+    "read:news:all",
+    "create:news",
+    "update:news",
+    "delete:news",
+    "create:news:rating",
+    "create:news:factcheck",
+    "create:news:comment",
     //content-review (analises)
     "read:content_review",
     "read:content_review:all",

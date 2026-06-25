@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import PropTypes from "prop-types";
 import styles from "./BoardGameCard.module.css";
+import ContentRatingBadge from "@/components/ContentRatingBadge";
 
 const CATEGORIES = {
   board_game: "Tabuleiro",
@@ -60,6 +61,9 @@ export default function BoardGameCard({ boardgame }) {
           </div>
         )}
         <span className={`${styles.stageBadge} ${stageClass}`}>{stageLabel}</span>
+        <span className={styles.ratingBadge}>
+          <ContentRatingBadge rating={boardgame.content_rating} size="sm" />
+        </span>
       </div>
 
       <div className={styles.cardBody}>

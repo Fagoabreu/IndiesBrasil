@@ -664,8 +664,8 @@ export default function StudioPage() {
               {studioGames.length > 0 && (
                 <SectionPanel title="Jogos">
                   <div className={styles.gameCardList}>
-                    {studioGames.map((g) => (
-                      <GameCard key={g.id} game={g} />
+                    {studioGames.map((g, idx) => (
+                      <GameCard key={g.id} game={g} priority={idx === 0} />
                     ))}
                   </div>
                 </SectionPanel>

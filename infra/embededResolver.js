@@ -101,11 +101,23 @@ async function fetchLinkPreview(url) {
       return match ? match[1] : null;
     };
 
+    const rawImage = getMeta("image");
+    const image =
+      rawImage && !rawImage.startsWith("http")
+        ? (() => {
+            try {
+              return new URL(rawImage, url).href;
+            } catch {
+              return rawImage;
+            }
+          })()
+        : rawImage;
+
     return {
       type: "preview",
       title: getMeta("title"),
       description: getMeta("description"),
-      image: getMeta("image"),
+      image,
       url,
     };
   } catch {
@@ -180,6 +192,7 @@ function resolveSteam(url) {
 
 const embededResolver = {
   getEmbededLinks,
+  fetchLinkPreview,
 };
 
 export default embededResolver;

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { StarFillIcon, CommentDiscussionIcon, PeopleIcon } from "@primer/octicons-react";
+import { StarFillIcon, CommentDiscussionIcon, CheckIcon, XIcon } from "@primer/octicons-react";
 import styles from "./NewsCard.module.css";
 
 export default function NewsCard({ news }) {
@@ -68,9 +68,13 @@ export default function NewsCard({ news }) {
             <CommentDiscussionIcon size={13} />
             {news.comment_count}
           </span>
-          <span className={styles.statItem}>
-            <PeopleIcon size={13} />
-            {news.factcheck_count + news.fake_count}
+          <span className={`${styles.statItem} ${styles.statCheck}`}>
+            <CheckIcon size={13} />
+            {news.factcheck_count}
+          </span>
+          <span className={`${styles.statItem} ${styles.statFake}`}>
+            <XIcon size={13} />
+            {news.fake_count}
           </span>
           <span
             className={`${styles.factcheckBadge} ${

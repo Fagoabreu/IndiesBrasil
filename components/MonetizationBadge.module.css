@@ -1,0 +1,60 @@
+/* Selos de transparência de monetização — Lei Felca (PL 412/2022) */
+
+.mzBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.mzBadge--sm {
+  gap: 2px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: #fff;
+  font-family: var(--fontStack-monospace, monospace);
+  border: 1.5px solid #ffffff;
+}
+
+.mzBadge--sm .badge {
+  padding: 1px 3px;
+  font-size: 0;
+  border-radius: 2px;
+}
+
+.mzBadge--sm .badge svg {
+  width: 10px;
+  height: 10px;
+}
+
+/* Lootboxes — vermelho/alaranjado (alerta) */
+.lootboxes {
+  background-color: #cf222e;
+}
+
+/* Compras no jogo — laranja/amarelo (atenção) */
+.purchases {
+  background-color: #d1750b;
+}
+
+/* Anúncios excessivos — azul claro */
+.ads {
+  background-color: #0969da;
+}
+
+.label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}

@@ -56,6 +56,10 @@ export default function GamePage() {
   const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [websitePreview, setWebsitePreview] = useState(null);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [analisesList, setAnalisesList] = useState([]);
+  const [analisesLoading, setAnalisesLoading] = useState(false);
 
   const fetchGame = useCallback(async () => {
     if (!slug) return;
@@ -76,6 +80,42 @@ export default function GamePage() {
   useEffect(() => {
     fetchGame();
   }, [fetchGame]);
+
+  useEffect(() => {
+    if (!gameData?.website_url) {
+      setWebsitePreview(null);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/v1/link-preview?url=${encodeURIComponent(gameData.website_url)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!cancelled) setWebsitePreview(data);
+      })
+      .catch(() => {
+        if (!cancelled) setWebsitePreview(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [gameData?.website_url]);
+
+  // Busca análises quando o gameData carrega
+  useEffect(() => {
+    if (!gameData?.id) return;
+    setAnalisesLoading(true);
+    fetch(`/api/v1/analises/by-content?content_type=game&content_id=${encodeURIComponent(gameData.id)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setAnalisesList(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        setAnalisesList([]);
+      })
+      .finally(() => {
+        setAnalisesLoading(false);
+      });
+  }, [gameData?.id]);
 
   async function handleFollow() {
     if (!user) {
@@ -160,27 +200,63 @@ export default function GamePage() {
                     {gameData.release_date ? new Date(gameData.release_date).toLocaleDateString("pt-BR") : (STAGES[gameData.stage] ?? gameData.stage)}
                   </dd>
                 </div>
-                {gameData.studio_slug && (
-                  <>
-                    <div className={styles.heroMetaRow}>
-                      <dt className={styles.heroMetaLabel}>Desenvolvedor</dt>
-                      <dd className={styles.heroMetaValue}>
-                        <Link href={`/estudios/${gameData.studio_slug}`} className={styles.heroMetaLink}>
-                          {gameData.studio_name}
-                        </Link>
-                      </dd>
-                    </div>
-                    <div className={styles.heroMetaRow}>
-                      <dt className={styles.heroMetaLabel}>Distribuidora</dt>
-                      <dd className={styles.heroMetaValue}>
-                        <Link href={`/estudios/${gameData.studio_slug}`} className={styles.heroMetaLink}>
-                          {gameData.studio_name}
-                        </Link>
-                      </dd>
-                    </div>
-                  </>
-                )}
               </dl>
+
+              <hr className={styles.heroDivider} />
+
+              {/* Estúdio */}
+              {gameData.studio_slug && (
+                <Link href={`/estudios/${gameData.studio_slug}`} className={styles.heroStudio}>
+                  {gameData.studio_logo_url && (
+                    <Image src={gameData.studio_logo_url} alt={gameData.studio_name} width={28} height={28} className={styles.heroStudioLogo} />
+                  )}
+                  <div className={styles.heroStudioInfo}>
+                    <span className={styles.heroStudioLabel}>Desenvolvido por</span>
+                    <span className={styles.heroStudioName}>{gameData.studio_name}</span>
+                  </div>
+                </Link>
+              )}
+
+              <hr className={styles.heroDivider} />
+
+              {/* Status */}
+              <div className={styles.heroDetails}>
+                <div className={styles.heroDetailRow}>
+                  <span className={styles.heroDetailLabel}>Status</span>
+                  <span className={`${styles.stagePill} ${styles[`stage_${gameData.stage}`]}`}>{STAGES[gameData.stage] ?? gameData.stage}</span>
+                </div>
+                {gameData.genre && gameData.genre !== "Indefinido" && (
+                  <div className={styles.heroDetailRow}>
+                    <span className={styles.heroDetailLabel}>Gênero</span>
+                    <span className={styles.heroDetailValue}>{gameData.genre}</span>
+                  </div>
+                )}
+                {gameData.engine && (
+                  <div className={styles.heroDetailRow}>
+                    <span className={styles.heroDetailLabel}>Engine</span>
+                    <span className={styles.heroDetailValue}>{gameData.engine}</span>
+                  </div>
+                )}
+                {gameData.release_date && (
+                  <div className={styles.heroDetailRow}>
+                    <span className={styles.heroDetailLabel}>Lançamento</span>
+                    <span className={styles.heroDetailValue}>{new Date(gameData.release_date).toLocaleDateString("pt-BR")}</span>
+                  </div>
+                )}
+                {gameData.platforms?.length > 0 && (
+                  <div className={styles.heroDetailRow}>
+                    <span className={styles.heroDetailLabel}>Plataformas</span>
+                    <div className={styles.platformsList}>
+                      {gameData.platforms.map((p) => (
+                        <span key={p} className={styles.platformPill} title={PLATFORM_LABELS[p] ?? p}>
+                          {PLATFORM_ICONS[p] ?? "🎮"} {PLATFORM_LABELS[p] ?? p}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {gameData.tags?.length > 0 && (
                 <div className={styles.heroTagsSection}>
                   <p className={styles.heroTagsLabel}>Marcadores populares para este produto:</p>
@@ -198,29 +274,160 @@ export default function GamePage() {
 
           {/* ── Layout principal ── */}
           <div className={styles.layout}>
-            {/* ── Coluna esquerda: mídia ── */}
+            {/* ── Coluna esquerda: conteúdo principal ── */}
             <main className={styles.main}>
-              {/* Descrição */}
-              {gameData.description && (
-                <section className={styles.section}>
-                  <h2 className={styles.sectionTitle}>Sobre o jogo</h2>
-                  <div className={styles.description}>
-                    {gameData.description.split("\n").map((p, i) => (
-                      <p key={i}>{p}</p>
-                    ))}
-                  </div>
-                </section>
+              {/* ── Tabs ── */}
+              <nav className={styles.tabs}>
+                <button
+                  type="button"
+                  className={`${styles.tab} ${activeTab === "overview" ? styles.tabActive : ""}`}
+                  onClick={() => setActiveTab("overview")}
+                >
+                  Visão geral
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.tab} ${activeTab === "analises" ? styles.tabActive : ""}`}
+                  onClick={() => setActiveTab("analises")}
+                >
+                  Análises
+                  {analisesList.length > 0 && <span className={styles.tabCount}>{analisesList.length}</span>}
+                </button>
+              </nav>
+
+              {activeTab === "overview" && (
+                <>
+                  {/* Descrição */}
+                  {gameData.description && (
+                    <section className={styles.section}>
+                      <h2 className={styles.sectionTitle}>Sobre o jogo</h2>
+                      <div className={styles.description}>
+                        {gameData.description.split("\n").map((p, i) => (
+                          <p key={i}>{p}</p>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {/* Lojas */}
+                  {gameData.store_pages?.length > 0 && (
+                    <section className={styles.section}>
+                      <h2 className={styles.sectionTitle}>Onde comprar</h2>
+                      <div className={styles.storeLinks}>
+                        {gameData.store_pages.map((sp) => {
+                          const steamMatch = sp.page_url?.match(/store\.steampowered\.com\/app\/(\d+)/);
+                          const steamAppId = steamMatch ? steamMatch[1] : null;
+                          return (
+                            <div key={sp.id} className={styles.storeCard}>
+                              <div className={styles.storeCardHeader}>
+                                <span className={styles.storeName}>{sp.store_name}</span>
+                                {sp.price != null && (
+                                  <span className={`${styles.storePrice} ${Number(sp.price) === 0 ? styles.storePriceFree : ""}`}>
+                                    {Number(sp.price) === 0 ? "Grátis" : `R$ ${Number(sp.price).toFixed(2)}`}
+                                  </span>
+                                )}
+                              </div>
+                              {steamAppId ? (
+                                <iframe
+                                  src={`https://store.steampowered.com/widget/${steamAppId}/`}
+                                  width="100%"
+                                  height="190"
+                                  frameBorder="0"
+                                  scrolling="no"
+                                  title={`${sp.store_name} Widget`}
+                                  className={styles.storeSteamWidget}
+                                />
+                              ) : (
+                                <a href={sp.page_url} target="_blank" rel="noopener noreferrer" className={styles.storeSimpleLink}>
+                                  Visitar loja ↗
+                                </a>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  )}
+
+                  {/* Avaliações */}
+                  <GameReviews
+                    reviewsApiUrl={`/api/v1/games/${slug}/reviews`}
+                    avgRating={gameData.avg_rating}
+                    reviewCount={Number(gameData.review_count ?? 0)}
+                    userReview={viewer?.userReview ?? null}
+                    user={user}
+                    onReviewChange={fetchGame}
+                  />
+                </>
               )}
 
-              {/* Avaliações */}
-              <GameReviews
-                reviewsApiUrl={`/api/v1/games/${slug}/reviews`}
-                avgRating={gameData.avg_rating}
-                reviewCount={Number(gameData.review_count ?? 0)}
-                userReview={viewer?.userReview ?? null}
-                user={user}
-                onReviewChange={fetchGame}
-              />
+              {activeTab === "analises" && (
+                <>
+                  {analisesLoading ? (
+                    <div className={styles.analisesLoading}>
+                      <div className={styles.spinner} />
+                    </div>
+                  ) : analisesList.length === 0 ? (
+                    <div className={styles.analisesEmpty}>
+                      <p>Nenhuma análise publicada para este jogo ainda.</p>
+                      <Link href={`/analises/novo?tipo=game&content_id=${gameData.id}`} className={styles.analisesEmptyLink}>
+                        📝 Seja o primeiro a publicar uma análise
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className={styles.analisesGrid}>
+                      {analisesList.map((a) => (
+                        <Link key={a.id} href={`/analises/${a.slug}`} className={styles.analiseCard}>
+                          <div className={styles.analiseCardCover}>
+                            {a.cover_url ? (
+                              <Image
+                                src={a.cover_url}
+                                alt={a.title}
+                                fill
+                                sizes="280px"
+                                className={styles.analiseCardCoverImg}
+                                unoptimized={a.cover_url.startsWith("data:") || a.cover_url.startsWith("blob:")}
+                              />
+                            ) : (
+                              <div className={styles.analiseCardCoverPlaceholder}>
+                                <span>📝</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className={styles.analiseCardBody}>
+                            <h3 className={styles.analiseCardTitle}>{a.title}</h3>
+                            {a.rating && (
+                              <div className={styles.analiseCardStars}>
+                                {[1, 2, 3, 4, 5].map((s) => (
+                                  <span key={s} className={a.rating >= s ? styles.starFilled : styles.starEmpty}>
+                                    ★
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            <div className={styles.analiseCardMeta}>
+                              {a.author_avatar_url ? (
+                                <Image
+                                  src={a.author_avatar_url}
+                                  alt={a.author_username}
+                                  width={16}
+                                  height={16}
+                                  className={styles.analiseCardAvatar}
+                                  unoptimized={a.author_avatar_url.startsWith("data:") || a.author_avatar_url.startsWith("blob:")}
+                                />
+                              ) : (
+                                <span className={styles.analiseCardAvatarPlaceholder}>👤</span>
+                              )}
+                              <span>Por {a.author_username}</span>
+                              <span>{new Date(a.published_at).toLocaleDateString("pt-BR")}</span>
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
             </main>
 
             {/* ── Coluna direita: sidebar ── */}
@@ -240,89 +447,46 @@ export default function GamePage() {
                 </p>
               )}
 
+              {/* Editar jogo */}
+              {viewer?.canEdit && (
+                <Link href={`/estudios/${gameData.studio_slug}/configuracoes`} className={styles.editLink}>
+                  ⚙️ Gerenciar jogo
+                </Link>
+              )}
+
               {/* Criar Análise */}
               <Link href={`/analises/novo?tipo=game&content_id=${gameData.id}`} className={styles.btnAnalise}>
                 📝 Criar Análise
               </Link>
 
-              {/* Links de lojas */}
-              {gameData.store_pages?.length > 0 && (
-                <div className={styles.storeLinks}>
-                  {gameData.store_pages.map((sp) => (
-                    <a key={sp.id} href={sp.page_url} target="_blank" rel="noopener noreferrer" className={styles.storeLink}>
-                      <span className={styles.storeName}>{sp.store_name}</span>
-                      {sp.price != null ? (
-                        <span className={styles.storePrice}>{Number(sp.price) === 0 ? "Grátis" : `R$ ${Number(sp.price).toFixed(2)}`}</span>
-                      ) : null}
-                    </a>
-                  ))}
-                </div>
-              )}
-
               {/* Site */}
               {gameData.website_url && (
-                <a href={gameData.website_url} target="_blank" rel="noopener noreferrer" className={styles.websiteLink}>
-                  🌐 Site oficial
+                <a href={gameData.website_url} target="_blank" rel="noopener noreferrer" className={styles.websitePanel}>
+                  {websitePreview?.image ? (
+                    <div className={styles.websitePanelImgWrap}>
+                      <Image
+                        src={websitePreview.image}
+                        alt={websitePreview.title || "Site oficial"}
+                        fill
+                        sizes="400px"
+                        className={styles.websitePanelImg}
+                        unoptimized
+                      />
+                      <span className={styles.websitePanelBadge}>🌐 Site oficial</span>
+                    </div>
+                  ) : (
+                    <div className={styles.websitePanelFallback}>
+                      <span className={styles.websitePanelIcon}>🌐</span>
+                      <span className={styles.websitePanelLabel}>Site oficial</span>
+                    </div>
+                  )}
+                  {(websitePreview?.title || websitePreview?.description) && (
+                    <div className={styles.websitePanelContent}>
+                      {websitePreview.title && <strong className={styles.websitePanelTitle}>{websitePreview.title}</strong>}
+                      {websitePreview.description && <p className={styles.websitePanelDesc}>{websitePreview.description}</p>}
+                    </div>
+                  )}
                 </a>
-              )}
-
-              {/* Detalhes */}
-              <div className={styles.details}>
-                <dl className={styles.detailList}>
-                  <div className={styles.detailRow}>
-                    <dt>Status</dt>
-                    <dd>
-                      <span className={`${styles.stagePill} ${styles[`stage_${gameData.stage}`]}`}>{STAGES[gameData.stage] ?? gameData.stage}</span>
-                    </dd>
-                  </div>
-
-                  {gameData.genre && gameData.genre !== "Indefinido" && (
-                    <div className={styles.detailRow}>
-                      <dt>Gênero</dt>
-                      <dd>{gameData.genre}</dd>
-                    </div>
-                  )}
-
-                  {gameData.engine && (
-                    <div className={styles.detailRow}>
-                      <dt>Engine</dt>
-                      <dd>{gameData.engine}</dd>
-                    </div>
-                  )}
-
-                  {gameData.release_date && (
-                    <div className={styles.detailRow}>
-                      <dt>Lançamento</dt>
-                      <dd>{new Date(gameData.release_date).toLocaleDateString("pt-BR")}</dd>
-                    </div>
-                  )}
-
-                  {gameData.platforms?.length > 0 && (
-                    <div className={styles.detailRow}>
-                      <dt>Plataformas</dt>
-                      <dd className={styles.platformsList}>
-                        {gameData.platforms.map((p) => (
-                          <span key={p} className={styles.platformPill} title={PLATFORM_LABELS[p] ?? p}>
-                            {PLATFORM_ICONS[p] ?? "🎮"} {PLATFORM_LABELS[p] ?? p}
-                          </span>
-                        ))}
-                      </dd>
-                    </div>
-                  )}
-                </dl>
-              </div>
-
-              {/* Estúdio */}
-              {gameData.studio_slug && (
-                <div className={styles.studioBox}>
-                  <p className={styles.studioLabel}>Desenvolvido por</p>
-                  <Link href={`/estudios/${gameData.studio_slug}`} className={styles.studioLink}>
-                    {gameData.studio_logo_url && (
-                      <Image src={gameData.studio_logo_url} alt={gameData.studio_name} width={32} height={32} className={styles.studioLogo} />
-                    )}
-                    <span>{gameData.studio_name}</span>
-                  </Link>
-                </div>
               )}
 
               {/* Equipe */}
@@ -347,13 +511,6 @@ export default function GamePage() {
                     ))}
                   </ul>
                 </div>
-              )}
-
-              {/* Editar jogo */}
-              {viewer?.canEdit && (
-                <Link href={`/estudios/${gameData.studio_slug}/configuracoes`} className={styles.editLink}>
-                  Gerenciar jogo
-                </Link>
               )}
             </aside>
           </div>

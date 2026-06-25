@@ -26,6 +26,7 @@ export default function NewsPage() {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
   const fetchNews = useCallback(async () => {
     setLoading(true);
@@ -33,7 +34,7 @@ export default function NewsPage() {
       const res = await fetch("/api/v1/news", { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
-        setNewsList(data || []);
+        setNewsList(Array.isArray(data) ? data : []);
       }
     } finally {
       setLoading(false);
@@ -55,6 +56,7 @@ export default function NewsPage() {
   const handleSubmit = async () => {
     if (!title.trim() || !summary.trim() || !body.trim()) return;
     setSaving(true);
+    setSubmitError(null);
 
     try {
       const formData = new FormData();
@@ -75,7 +77,12 @@ export default function NewsPage() {
         const created = await res.json();
         setNewsList((prev) => [created, ...prev]);
         resetForm();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setSubmitError(data?.error?.message || data?.message || `Erro ao publicar (${res.status})`);
       }
+    } catch {
+      setSubmitError("Erro de conexão. Verifique sua internet e tente novamente.");
     } finally {
       setSaving(false);
     }
@@ -90,6 +97,7 @@ export default function NewsPage() {
     setSourceLabel("");
     setFile(null);
     setPreview(null);
+    setSubmitError(null);
   };
 
   return (
@@ -107,7 +115,13 @@ export default function NewsPage() {
       {user && (
         <div className={styles.createArea}>
           {!showForm ? (
-            <button className={styles.btnPrimary} onClick={() => setShowForm(true)}>
+            <button
+              className={styles.btnPrimary}
+              onClick={() => {
+                setShowForm(true);
+                setSubmitError(null);
+              }}
+            >
               <PlusIcon size={14} /> Criar notícia
             </button>
           ) : (
@@ -168,6 +182,8 @@ export default function NewsPage() {
                   </div>
                 )}
               </div>
+
+              {submitError && <div className={styles.errorMessage}>{submitError}</div>}
 
               <div className={styles.actions}>
                 <button className={styles.btnSecondary} onClick={resetForm}>

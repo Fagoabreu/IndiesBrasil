@@ -145,6 +145,14 @@
   color: var(--fgColor-muted);
 }
 
+.statCheck {
+  color: #1a7f37;
+}
+
+.statFake {
+  color: #cf222e;
+}
+
 .factcheckBadge {
   display: inline-flex;
   align-items: center;
