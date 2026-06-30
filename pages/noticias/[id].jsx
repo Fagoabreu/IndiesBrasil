@@ -238,7 +238,7 @@ export default function NewsDetailPage() {
       {/* Capa */}
       <div className={styles.hero}>
         {news.img_url ? (
-          <Image src={news.img_url} alt={news.title} fill className={styles.heroImg} priority />
+          <Image src={news.img_url} alt={news.title} fill className={styles.heroImg} sizes="(max-width: 812px) calc(100vw - 32px), 780px" priority />
         ) : (
           <div className={styles.heroPlaceholder}>{firstLetter}</div>
         )}

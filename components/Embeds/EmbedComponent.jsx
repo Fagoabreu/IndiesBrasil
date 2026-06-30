@@ -22,16 +22,17 @@ export default function EmbedComponent({ embeds }) {
   if (!embeds?.length) return null;
   return (
     <div>
-      {embeds.map((embed) => {
+      {embeds.map((embed, i) => {
         if (!embed) return null;
+        const key = embed.id ?? i;
         if (embed.type === "youtube") {
-          return <iframe key={embed.id} title={embed.title} src={embed.embedUrl} height="400" width="100%" allowFullScreen />;
+          return <iframe key={key} title={embed.title} src={embed.embedUrl} height="400" width="100%" allowFullScreen />;
         }
 
         if (embed.type === "twitch") {
           return (
             <iframe
-              key={embed.id}
+              key={key}
               src={embed.embedUrl}
               height="400"
               width="100%"
@@ -46,7 +47,7 @@ export default function EmbedComponent({ embeds }) {
 
         if (embed.type === "instagram") {
           return (
-            <div key={embed.id} className={styles.embed}>
+            <div key={key} className={styles.embed}>
               <InstagramEmbed url={embed.url} />
             </div>
           );
@@ -55,12 +56,11 @@ export default function EmbedComponent({ embeds }) {
         if (embed.type === "steam") {
           return (
             <iframe
-              key={embed.id}
+              key={key}
               src={embed.embedUrl}
               width="100%"
               height="190"
               frameBorder="0"
-              allowTransparency
               scrolling="no"
               title="Steam Store Widget"
               style={{
@@ -73,7 +73,7 @@ export default function EmbedComponent({ embeds }) {
 
         if (embed.type === "preview") {
           return (
-            <a key={embed.id} href={embed.url} target="_blank" rel="noopener noreferrer" className={styles.previewCard}>
+            <a key={key} href={embed.url} target="_blank" rel="noopener noreferrer" className={styles.previewCard}>
               {embed.image && (
                 <div className={styles.previewImageWrapper}>
                   <Image
