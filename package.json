@@ -42,26 +42,26 @@
     "cookie": "1.0.2",
     "dotenv": "16.4.7",
     "dotenv-expand": "12.0.1",
-    "next": "16.1.6",
+    "next": "16.2.9",
     "next-cloudinary": "^6.17.5",
     "next-connect": "1.0.0-next.4",
-    "nodemailer": "8.0.1",
+    "nodemailer": "9.0.1",
     "pg": "8.13.1",
     "prop-types": "15.8.1",
     "qrcode.react": "^4.2.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-easy-crop": "5.5.6",
-    "styled-components": "6.1.19",
+    "styled-components": "6.4.3",
     "swr": "2.3.2",
-    "uuid": "11.1.0"
+    "uuid": "11.1.1"
   },
   "devDependencies": {
     "@commitlint/cli": "19.7.1",
     "@commitlint/config-conventional": "19.7.1",
     "@faker-js/faker": "9.7.0",
     "@types/jest": "30.0.0",
-    "commitizen": "4.3.1",
+    "commitizen": "4.3.2",
     "concurrently": "9.1.2",
     "cz-conventional-changelog": "3.0.1",
     "eslint": "9.39.3",
@@ -84,5 +84,9 @@
   },
   "engines": {
     "node": "24"
+  },
+  "overrides": {
+    "postcss": "8.5.10",
+    "js-yaml": "4.3.0"
   }
 }

@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import Link from "next/link";
@@ -65,49 +65,73 @@ export default function EditarCursoPage() {
   const [coverCropSrc, setCoverCropSrc] = useState(null);
   const coverInputRef = useRef(null);
 
-  const fetchCourse = useCallback(async () => {
+  useEffect(() => {
     if (!slug) return;
-    try {
-      const res = await fetch(`/api/v1/courses/${slug}`, { credentials: "include" });
-      const data = await res.json();
-      if (!res.ok || data.status_code) {
-        router.replace(`/estudos/${slug}`);
-        return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/v1/courses/${slug}`, { credentials: "include" });
+        const data = await res.json();
+        if (!res.ok || data.status_code) {
+          router.replace(`/estudos/${slug}`);
+          return;
+        }
+        if (!data.viewer?.isOwner) {
+          router.replace(`/estudos/${slug}`);
+          return;
+        }
+        if (!cancelled) {
+          setTitle(data.title || "");
+          setDescription(data.description || "");
+          setCoverUrl(data.cover_url || null);
+          setSelectedTags(data.tags?.map((t) => t.name) || []);
+          setCourseSlug(data.slug);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-
-      if (!data.viewer?.isOwner) {
-        router.replace(`/estudos/${slug}`);
-        return;
-      }
-
-      setTitle(data.title || "");
-      setDescription(data.description || "");
-      setCoverUrl(data.cover_url || null);
-      setSelectedTags(data.tags?.map((t) => t.name) || []);
-      setCourseSlug(data.slug);
-      // lessons are fetched via fetchModules which handles modules
-    } finally {
-      setLoading(false);
-    }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [slug, router]);
 
   useEffect(() => {
-    fetchCourse();
-  }, [fetchCourse]);
+    if (!courseSlug) return;
+    let cancelled = false;
+    const targetSlug = courseSlug || slug;
 
-  const fetchLessonList = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/v1/courses/${courseSlug || slug}/lessons`);
-      if (res.ok) {
-        const data = await res.json();
-        setLessons(data);
+    // Fetch lessons + modules in parallel
+    (async () => {
+      try {
+        const [lessonsRes, modulesRes] = await Promise.all([
+          fetch(`/api/v1/courses/${targetSlug}/lessons`),
+          fetch(`/api/v1/courses/${targetSlug}/modules`),
+        ]);
+
+        if (!cancelled) {
+          if (lessonsRes.ok) {
+            const data = await lessonsRes.json();
+            setLessons(data);
+          }
+
+          if (modulesRes.ok) {
+            const data = await modulesRes.json();
+            setModules(data.modules || []);
+            setUnassignedLessons(data.unassignedLessons || []);
+          }
+        }
+      } catch {
+        // silent
       }
-    } catch {
-      // silent
-    }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [courseSlug, slug]);
 
-  const fetchModules = useCallback(async () => {
+  async function fetchModules() {
     try {
       const res = await fetch(`/api/v1/courses/${courseSlug || slug}/modules`);
       if (res.ok) {
@@ -119,15 +143,7 @@ export default function EditarCursoPage() {
     } catch {
       // silent
     }
-  }, [courseSlug, slug]);
-
-  useEffect(() => {
-    if (courseSlug) {
-      fetchLessonList();
-      fetchModules();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseSlug]);
+  }
 
   function toggleTag(tag) {
     setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));

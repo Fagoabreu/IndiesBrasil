@@ -1,4 +1,5 @@
 import SeoHead from "@/components/SeoHead";
+import Image from "next/image";
 import Link from "next/link";
 import HorizontalCardComponent from "@/components/Card/HorizontalCardComponent";
 import CarouselComponent from "@/components/Carousel/CarouselComponent";
@@ -172,7 +173,7 @@ function Home() {
           {/* Card promocional — ao lado do hero */}
           <div className={styles.heroPromo}>
             <Link href="/cadastro" className={styles.promoCard}>
-              <img src="/images/ArteSite.png" alt="Junte-se à comunidade Indies Brasil" className={styles.promoImage} />
+              <Image src="/images/ArteSite.png" alt="Junte-se à comunidade Indies Brasil" className={styles.promoImage} width={400} height={300} />
             </Link>
           </div>
         </div>

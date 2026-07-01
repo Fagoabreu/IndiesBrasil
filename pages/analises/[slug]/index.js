@@ -60,6 +60,7 @@ export default function AnalisePage() {
   }, [slug, router]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAnalise();
   }, [fetchAnalise]);
 

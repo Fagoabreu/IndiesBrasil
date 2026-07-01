@@ -61,7 +61,14 @@ function renderBanner(embedUrl, bannerUrl, studioName, styles) {
   if (bannerUrl) {
     return (
       <div style={{ position: "relative", width: "100%", height: "100%" }}>
-        <Image src={bannerUrl} alt={`Banner de ${studioName}`} fill className={styles.bannerImg} sizes="100vw" />
+        <Image
+          src={bannerUrl}
+          alt={`Banner de ${studioName}`}
+          fill
+          priority
+          className={styles.bannerImg}
+          sizes="(max-width: 1032px) calc(100vw - 34px), 966px"
+        />
       </div>
     );
   }
@@ -101,8 +108,8 @@ export default function StudioPage() {
   const [activeTab, setActiveTab] = useState("perfil");
 
   // Posts
-  const [studioPosts, setStudioPosts] = useState([]);
-  const [loadingPosts, setLoadingPosts] = useState(false);
+  const [studioPosts, setStudioPosts] = useState(null);
+  const loadingPosts = studioPosts === null;
 
   // Relacionamentos
   const [relationships, setRelationships] = useState({ accepted: [], pending_incoming: [], pending_outgoing: [] });
@@ -115,7 +122,7 @@ export default function StudioPage() {
   const [videoUrlDraft, setVideoUrlDraft] = useState("");
   const [savingVideo, setSavingVideo] = useState(false);
 
-  const fetchStudio = useCallback(async () => {
+  async function fetchStudio() {
     if (!slug) return;
     setLoading(true);
     try {
@@ -132,77 +139,111 @@ export default function StudioPage() {
     } finally {
       setLoading(false);
     }
-  }, [slug]);
+  }
 
-  const fetchStudioGames = useCallback(async () => {
+  useEffect(() => {
     if (!slug) return;
-    try {
-      const res = await fetch(`/api/v1/studios/${slug}/games`, { credentials: "include" });
-      if (res.ok) {
+    let cancelled = false;
+
+    const loadStudio = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/v1/studios/${slug}`, { credentials: "include" });
         const data = await res.json();
-        setStudioGames(Array.isArray(data) ? data : (data.games ?? []));
+        if (cancelled) return;
+        if (!res.ok || data.status_code) {
+          setStudio(null);
+        } else {
+          setStudio(data);
+          setViewer(data.viewer ?? {});
+        }
+      } catch {
+        if (!cancelled) setStudio(null);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    } catch {
-      // ignore
-    }
+    };
+
+    // Sub-fetches triggered after studio loads
+    const loadSubData = async () => {
+      // Games
+      fetch(`/api/v1/studios/${slug}/games`, { credentials: "include" })
+        .then(
+          (r) =>
+            r.ok &&
+            r.json().then((d) => {
+              if (!cancelled) setStudioGames(Array.isArray(d) ? d : (d.games ?? []));
+            }),
+        )
+        .catch(() => {});
+      // Boardgames
+      fetch(`/api/v1/studios/${slug}/boardgames`, { credentials: "include" })
+        .then(
+          (r) =>
+            r.ok &&
+            r.json().then((d) => {
+              if (!cancelled) setStudioBoardGames(Array.isArray(d) ? d : []);
+            }),
+        )
+        .catch(() => {});
+      // Books
+      fetch(`/api/v1/studios/${slug}/books`, { credentials: "include" })
+        .then(
+          (r) =>
+            r.ok &&
+            r.json().then((d) => {
+              if (!cancelled) setStudioBooks(Array.isArray(d) ? d : []);
+            }),
+        )
+        .catch(() => {});
+      // Stream
+      fetch("/api/v1/streams", { credentials: "include" })
+        .then(
+          (r) =>
+            r.ok &&
+            r.json().then((d) => {
+              if (!cancelled) setStudioStream((d || []).find((s) => s.slug === slug) ?? null);
+            }),
+        )
+        .catch(() => {});
+      // Relationships
+      fetch(`/api/v1/studios/${slug}/relationships`, { credentials: "include" })
+        .then(
+          (r) =>
+            r.ok &&
+            r.json().then((d) => {
+              if (!cancelled) setRelationships(d);
+            }),
+        )
+        .catch(() => {});
+    };
+
+    loadStudio().then(() => {
+      if (!cancelled) loadSubData();
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [slug]);
 
-  const fetchStudioBoardGames = useCallback(async () => {
-    if (!slug) return;
-    try {
-      const res = await fetch(`/api/v1/studios/${slug}/boardgames`, { credentials: "include" });
-      if (res.ok) {
-        const data = await res.json();
-        setStudioBoardGames(Array.isArray(data) ? data : []);
-      }
-    } catch {
-      // ignore
-    }
-  }, [slug]);
+  useEffect(() => {
+    if (!slug || activeTab !== "postagens") return;
+    let cancelled = false;
+    fetch(`/api/v1/studios/${slug}/posts`, { credentials: "include" })
+      .then((r) => r.ok && r.json())
+      .then((data) => {
+        if (!cancelled) setStudioPosts(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (!cancelled) setStudioPosts([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, activeTab]);
 
-  const fetchStudioBooks = useCallback(async () => {
-    if (!slug) return;
-    try {
-      const res = await fetch(`/api/v1/studios/${slug}/books`, { credentials: "include" });
-      if (res.ok) {
-        const data = await res.json();
-        setStudioBooks(Array.isArray(data) ? data : []);
-      }
-    } catch {
-      // ignore
-    }
-  }, [slug]);
-
-  const fetchStudioStream = useCallback(async () => {
-    if (!slug) return;
-    try {
-      const res = await fetch("/api/v1/streams", { credentials: "include" });
-      if (res.ok) {
-        const data = await res.json();
-        setStudioStream(data.find((s) => s.slug === slug) ?? null);
-      }
-    } catch {
-      // ignore
-    }
-  }, [slug]);
-
-  const fetchStudioPosts = useCallback(async () => {
-    if (!slug) return;
-    setLoadingPosts(true);
-    try {
-      const res = await fetch(`/api/v1/studios/${slug}/posts`, { credentials: "include" });
-      if (res.ok) {
-        const data = await res.json();
-        setStudioPosts(Array.isArray(data) ? data : []);
-      }
-    } catch {
-      // ignore
-    } finally {
-      setLoadingPosts(false);
-    }
-  }, [slug]);
-
-  const fetchRelationships = useCallback(async () => {
+  async function fetchRelationships() {
     if (!slug) return;
     try {
       const res = await fetch(`/api/v1/studios/${slug}/relationships`, { credentials: "include" });
@@ -213,20 +254,7 @@ export default function StudioPage() {
     } catch {
       // ignore
     }
-  }, [slug]);
-
-  useEffect(() => {
-    fetchStudio();
-    fetchStudioGames();
-    fetchStudioBoardGames();
-    fetchStudioBooks();
-    fetchStudioStream();
-    fetchRelationships();
-  }, [fetchStudio, fetchStudioGames, fetchStudioBoardGames, fetchStudioBooks, fetchStudioStream, fetchRelationships]);
-
-  useEffect(() => {
-    if (activeTab === "postagens") fetchStudioPosts();
-  }, [activeTab, fetchStudioPosts]);
+  }
 
   const handleAddPost = async (content, file = null) => {
     const formData = new FormData();
@@ -239,7 +267,7 @@ export default function StudioPage() {
     });
     if (!res.ok) throw new Error("Erro ao criar post.");
     const created = await res.json();
-    setStudioPosts((prev) => [created, ...prev]);
+    setStudioPosts((prev) => [created, ...(prev || [])]);
   };
 
   const handleDeletePost = async (postId) => {
@@ -247,7 +275,7 @@ export default function StudioPage() {
       method: "DELETE",
       credentials: "include",
     });
-    if (res.ok) setStudioPosts((prev) => prev.filter((p) => p.id !== postId));
+    if (res.ok) setStudioPosts((prev) => (prev || []).filter((p) => p.id !== postId));
   };
 
   const handleFollowChange = useCallback((nowFollowing) => {
@@ -580,11 +608,11 @@ export default function StudioPage() {
               <div className={styles.postsLoading}>
                 <Spinner size="medium" />
               </div>
-            ) : studioPosts.length === 0 ? (
+            ) : (studioPosts || []).length === 0 ? (
               <p className={styles.emptyHint}>Nenhuma postagem ainda.</p>
             ) : (
               <div className={styles.postList}>
-                {studioPosts.map((p) => (
+                {(studioPosts || []).map((p) => (
                   <PostCardComponent key={p.id} post={p} canInteract={!!authUser?.id} onDelete={handleDeletePost} />
                 ))}
               </div>

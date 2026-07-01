@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Spinner } from "@primer/react";
@@ -61,30 +61,29 @@ export default function AgendaPage() {
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth()); // 0-indexed
   const [filter, setFilter] = useState("");
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const loadEvents = useCallback(async () => {
-    setLoading(true);
-    try {
-      const from = new Date(year, month, 1).toISOString();
-      const to = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
-      const typeParam = filter ? `&type=${filter}` : "";
-      const res = await fetch(`/api/v1/events?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}${typeParam}`, {
-        credentials: "include",
-      });
-      const data = await res.json();
-      setEvents(Array.isArray(data) ? data : []);
-    } catch {
-      setEvents([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [year, month, filter]);
+  const [events, setEvents] = useState(null);
+  const loading = events === null;
 
   useEffect(() => {
-    loadEvents();
-  }, [loadEvents]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const from = new Date(year, month, 1).toISOString();
+        const to = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
+        const typeParam = filter ? `&type=${filter}` : "";
+        const res = await fetch(`/api/v1/events?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}${typeParam}`, {
+          credentials: "include",
+        });
+        const data = await res.json();
+        if (!cancelled) setEvents(Array.isArray(data) ? data : []);
+      } catch {
+        if (!cancelled) setEvents([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [year, month, filter]);
 
   function prevMonth() {
     if (month === 0) {
@@ -101,7 +100,7 @@ export default function AgendaPage() {
   }
 
   // Agrupa eventos por dia
-  const grouped = events.reduce((acc, ev) => {
+  const grouped = (events || []).reduce((acc, ev) => {
     const d = new Date(ev.starts_at);
     const key = d.toDateString();
     if (!acc[key]) acc[key] = { date: d, items: [] };

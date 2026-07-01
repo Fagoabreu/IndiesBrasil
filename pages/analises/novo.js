@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Image from "next/image";
@@ -29,8 +29,8 @@ export default function NovaAnalisePage() {
   const { tipo, content_id, edit } = router.query;
 
   const [title, setTitle] = useState("");
-  const [contentType, setContentType] = useState("");
-  const [contentId, setContentId] = useState("");
+  const [contentType, setContentType] = useState(() => (tipo && CONTENT_TYPE_OPTIONS.find((o) => o.value === tipo) ? tipo : ""));
+  const [contentId, setContentId] = useState(() => content_id ?? "");
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [rating, setRating] = useState(null);
   const [sections, setSections] = useState([emptySection("text")]);
@@ -46,41 +46,35 @@ export default function NovaAnalisePage() {
   const [uploadingCover, setUploadingCover] = useState(false);
   const coverInputRef = useRef(null);
 
-  // Preencher content_type e content_id dos query params
-  useEffect(() => {
-    if (tipo && CONTENT_TYPE_OPTIONS.find((o) => o.value === tipo)) {
-      setContentType(tipo);
-    }
-    if (content_id) {
-      setContentId(content_id);
-    }
-  }, [tipo, content_id]);
-
   // Carregar dados para edição
-  const fetchForEdit = useCallback(async () => {
-    if (!edit) return;
-    try {
-      const res = await fetch(`/api/v1/analises/${edit}`, { credentials: "include" });
-      if (!res.ok) return;
-      const data = await res.json();
-      setTitle(data.title);
-      setContentType(data.content_type);
-      setContentId(data.content_id);
-      setCoverImageUrl(data.cover_url || "");
-      setRating(data.rating);
-      setSections(data.sections?.length ? data.sections : [emptySection("text")]);
-      setPositivePoints(data.positive_points?.length ? data.positive_points : [""]);
-      setNegativePoints(data.negative_points?.length ? data.negative_points : [""]);
-      setIsEditing(true);
-      setEditingSlug(data.slug);
-    } catch {
-      // ignore
-    }
-  }, [edit]);
 
   useEffect(() => {
-    fetchForEdit();
-  }, [fetchForEdit]);
+    if (!edit) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/v1/analises/${edit}`, { credentials: "include" });
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (cancelled) return;
+        setTitle(data.title);
+        setContentType(data.content_type);
+        setContentId(data.content_id);
+        setCoverImageUrl(data.cover_url || "");
+        setRating(data.rating);
+        setSections(data.sections?.length ? data.sections : [emptySection("text")]);
+        setPositivePoints(data.positive_points?.length ? data.positive_points : [""]);
+        setNegativePoints(data.negative_points?.length ? data.negative_points : [""]);
+        setIsEditing(true);
+        setEditingSlug(data.slug);
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [edit]);
 
   // Redirecionar se não logado
   useEffect(() => {

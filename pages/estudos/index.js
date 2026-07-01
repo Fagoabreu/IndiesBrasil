@@ -62,6 +62,7 @@ export default function CursosPage() {
   }, [search, tag, showEnrolled, loadCourses]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (page > 1) loadCourses(page, search, tag);
   }, [page, search, tag, loadCourses]);
 

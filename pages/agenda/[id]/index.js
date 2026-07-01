@@ -236,14 +236,6 @@ export default function EventDetailPage() {
     <>
       <SeoHead title={pageTitle} description={ev.description || ev.title} url={pageUrl} />
 
-      {ev.banner_url ? (
-        <div className={styles.bannerWrap}>
-          <Image src={ev.banner_url} alt={ev.title} fill className={styles.banner} sizes="100vw" priority />
-        </div>
-      ) : (
-        <div className={styles.bannerPlaceholder} />
-      )}
-
       <div className={styles.page}>
         <Link
           href="/agenda"
@@ -260,14 +252,34 @@ export default function EventDetailPage() {
           <ArrowLeftIcon size={14} /> Agenda
         </Link>
 
-        <div className={styles.header}>
-          <div className={styles.badges}>
-            <span className={`${styles.typeBadge} ${styles[ev.event_type]}`}>{TYPE_LABELS[ev.event_type] ?? ev.event_type}</span>
-            {ev.status === "cancelled" && <span className={styles.cancelledBadge}>Cancelado</span>}
-            {ev.visibility === "private" && <span className={styles.privateBadge}>🔒 Privado</span>}
-            {ev.is_recurring && <span className={styles.recurringBadge}>🔁 Recorrente</span>}
+        {/* HEADER CARD */}
+        <div className={styles.headerCard}>
+          {ev.banner_url ? (
+            <div className={styles.bannerWrap}>
+              <Image
+                src={ev.banner_url}
+                alt={ev.title}
+                fill
+                className={styles.banner}
+                sizes="(max-width: 932px) calc(100vw - 34px), 866px"
+                priority
+              />
+            </div>
+          ) : (
+            <div className={styles.bannerPlaceholder} />
+          )}
+
+          <div className={styles.headerContent}>
+            <div className={styles.header}>
+              <div className={styles.badges}>
+                <span className={`${styles.typeBadge} ${styles[ev.event_type]}`}>{TYPE_LABELS[ev.event_type] ?? ev.event_type}</span>
+                {ev.status === "cancelled" && <span className={styles.cancelledBadge}>Cancelado</span>}
+                {ev.visibility === "private" && <span className={styles.privateBadge}>🔒 Privado</span>}
+                {ev.is_recurring && <span className={styles.recurringBadge}>🔁 Recorrente</span>}
+              </div>
+              <h1 className={styles.title}>{ev.title}</h1>
+            </div>
           </div>
-          <h1 className={styles.title}>{ev.title}</h1>
         </div>
 
         <div className={styles.layout}>

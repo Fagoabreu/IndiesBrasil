@@ -44,6 +44,7 @@ export default function MembersPage() {
 
   useEffect(() => {
     if (!user) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoadingFollowing(true);
 
     async function loadFollowing() {
