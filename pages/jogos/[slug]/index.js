@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
@@ -56,42 +56,45 @@ export default function GamePage() {
   const [loading, setLoading] = useState(true);
   const [following, setFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
-  const [websitePreview, setWebsitePreview] = useState(null);
+  const [websitePreview, setWebsitePreview] = useState(null); // {url, data} | null
+  const displayPreview = websitePreview?.url === gameData?.website_url ? websitePreview.data : null;
   const [activeTab, setActiveTab] = useState("overview");
-  const [analisesList, setAnalisesList] = useState([]);
-  const [analisesLoading, setAnalisesLoading] = useState(false);
+  const [analisesList, setAnalisesList] = useState(null); // {gameId, data} | null
+  const displayAnalisesList = analisesList?.gameId === gameData?.id ? analisesList.data : null;
+  const analisesLoading = displayAnalisesList === null && !!gameData?.id;
 
-  const fetchGame = useCallback(async () => {
+  useEffect(() => {
     if (!slug) return;
-    try {
-      const res = await fetch(`/api/v1/games/${slug}`, { credentials: "include" });
-      if (!res.ok) {
-        router.replace("/jogos");
-        return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/v1/games/${slug}`, { credentials: "include" });
+        if (!res.ok) {
+          router.replace("/jogos");
+          return;
+        }
+        const data = await res.json();
+        if (!cancelled) {
+          setGameData(data);
+          setFollowing(data.viewer?.isFollowing ?? false);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      const data = await res.json();
-      setGameData(data);
-      setFollowing(data.viewer?.isFollowing ?? false);
-    } finally {
-      setLoading(false);
-    }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [slug, router]);
 
   useEffect(() => {
-    fetchGame();
-  }, [fetchGame]);
-
-  useEffect(() => {
-    if (!gameData?.website_url) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setWebsitePreview(null);
-      return;
-    }
+    if (!gameData?.website_url) return;
+    const url = gameData.website_url;
     let cancelled = false;
-    fetch(`/api/v1/link-preview?url=${encodeURIComponent(gameData.website_url)}`)
+    fetch(`/api/v1/link-preview?url=${encodeURIComponent(url)}`)
       .then((r) => r.json())
       .then((data) => {
-        if (!cancelled) setWebsitePreview(data);
+        if (!cancelled) setWebsitePreview({ url, data });
       })
       .catch(() => {
         if (!cancelled) setWebsitePreview(null);
@@ -101,22 +104,21 @@ export default function GamePage() {
     };
   }, [gameData?.website_url]);
 
-  // Busca análises quando o gameData carrega
   useEffect(() => {
     if (!gameData?.id) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setAnalisesLoading(true);
-    fetch(`/api/v1/analises/by-content?content_type=game&content_id=${encodeURIComponent(gameData.id)}`)
+    const gameId = gameData.id;
+    let cancelled = false;
+    fetch(`/api/v1/analises/by-content?content_type=game&content_id=${encodeURIComponent(gameId)}`)
       .then((r) => r.json())
       .then((data) => {
-        setAnalisesList(Array.isArray(data) ? data : []);
+        if (!cancelled) setAnalisesList({ gameId, data: Array.isArray(data) ? data : [] });
       })
       .catch(() => {
-        setAnalisesList([]);
-      })
-      .finally(() => {
-        setAnalisesLoading(false);
+        if (!cancelled) setAnalisesList({ gameId, data: [] });
       });
+    return () => {
+      cancelled = true;
+    };
   }, [gameData?.id]);
 
   async function handleFollow() {
@@ -293,7 +295,7 @@ export default function GamePage() {
                   onClick={() => setActiveTab("analises")}
                 >
                   Análises
-                  {analisesList.length > 0 && <span className={styles.tabCount}>{analisesList.length}</span>}
+                  {displayAnalisesList?.length > 0 && <span className={styles.tabCount}>{displayAnalisesList.length}</span>}
                 </button>
               </nav>
 
@@ -358,7 +360,14 @@ export default function GamePage() {
                     reviewCount={Number(gameData.review_count ?? 0)}
                     userReview={viewer?.userReview ?? null}
                     user={user}
-                    onReviewChange={fetchGame}
+                    onReviewChange={async () => {
+                      const res = await fetch(`/api/v1/games/${slug}`, { credentials: "include" });
+                      if (res.ok) {
+                        const data = await res.json();
+                        setGameData(data);
+                        setFollowing(data.viewer?.isFollowing ?? false);
+                      }
+                    }}
                   />
                 </>
               )}
@@ -369,7 +378,7 @@ export default function GamePage() {
                     <div className={styles.analisesLoading}>
                       <div className={styles.spinner} />
                     </div>
-                  ) : analisesList.length === 0 ? (
+                  ) : displayAnalisesList?.length === 0 ? (
                     <div className={styles.analisesEmpty}>
                       <p>Nenhuma análise publicada para este jogo ainda.</p>
                       <Link href={`/analises/novo?tipo=game&content_id=${gameData.id}`} className={styles.analisesEmptyLink}>
@@ -378,7 +387,7 @@ export default function GamePage() {
                     </div>
                   ) : (
                     <div className={styles.analisesGrid}>
-                      {analisesList.map((a) => (
+                      {displayAnalisesList?.map((a) => (
                         <Link key={a.id} href={`/analises/${a.slug}`} className={styles.analiseCard}>
                           <div className={styles.analiseCardCover}>
                             {a.cover_url ? (
@@ -464,11 +473,11 @@ export default function GamePage() {
               {/* Site */}
               {gameData.website_url && (
                 <a href={gameData.website_url} target="_blank" rel="noopener noreferrer" className={styles.websitePanel}>
-                  {websitePreview?.image ? (
+                  {displayPreview?.image ? (
                     <div className={styles.websitePanelImgWrap}>
                       <Image
-                        src={websitePreview.image}
-                        alt={websitePreview.title || "Site oficial"}
+                        src={displayPreview.image}
+                        alt={displayPreview.title || "Site oficial"}
                         fill
                         sizes="400px"
                         className={styles.websitePanelImg}
@@ -482,10 +491,10 @@ export default function GamePage() {
                       <span className={styles.websitePanelLabel}>Site oficial</span>
                     </div>
                   )}
-                  {(websitePreview?.title || websitePreview?.description) && (
+                  {(displayPreview?.title || displayPreview?.description) && (
                     <div className={styles.websitePanelContent}>
-                      {websitePreview.title && <strong className={styles.websitePanelTitle}>{websitePreview.title}</strong>}
-                      {websitePreview.description && <p className={styles.websitePanelDesc}>{websitePreview.description}</p>}
+                      {displayPreview.title && <strong className={styles.websitePanelTitle}>{displayPreview.title}</strong>}
+                      {displayPreview.description && <p className={styles.websitePanelDesc}>{displayPreview.description}</p>}
                     </div>
                   )}
                 </a>

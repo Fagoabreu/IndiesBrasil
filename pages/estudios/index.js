@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Heading, TextInput, Spinner, Avatar } from "@primer/react";
@@ -17,17 +17,14 @@ const PAGE_URL = `${SITE_URL}/estudios`;
 export default function StudiosPage() {
   const { user } = useUser();
 
-  const [tab, setTab] = useState("all");
-  const [search, setSearch] = useState("");
-
-  // Se veio com ?member=me, inicia na aba Membro
-  useEffect(() => {
-    const params = new URLSearchParams(globalThis.location.search);
-    if (params.get("member") === "me" && user) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setTab("member");
+  const [tab, setTab] = useState(() => {
+    if (typeof globalThis !== "undefined") {
+      const params = new URLSearchParams(globalThis.location.search);
+      if (params.get("member") === "me") return "member";
     }
-  }, [user]);
+    return "all";
+  });
+  const [search, setSearch] = useState("");
 
   // aba "Descubra"
   const [allStudios, setAllStudios] = useState([]);
@@ -36,12 +33,10 @@ export default function StudiosPage() {
   const [allHasMore, setAllHasMore] = useState(false);
 
   // aba "Seguindo"
-  const [followingStudios, setFollowingStudios] = useState([]);
-  const [followingLoading, setFollowingLoading] = useState(false);
+  const [followingStudios, setFollowingStudios] = useState(null);
 
   // aba "Membro"
-  const [memberStudios, setMemberStudios] = useState([]);
-  const [memberLoading, setMemberLoading] = useState(false);
+  const [memberStudios, setMemberStudios] = useState(null);
 
   // Carrega todos os estúdios (aba Descubra) com debounce na busca
   async function loadAll(pageNum, searchQuery) {
@@ -68,37 +63,50 @@ export default function StudiosPage() {
     return () => clearTimeout(t);
   }, [search]);
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (allPage > 1) loadAll(allPage, search);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allPage]);
+  const loadMore = useCallback(() => {
+    const nextPage = allPage + 1;
+    setAllPage(nextPage);
+    loadAll(nextPage, search);
+  }, [allPage, search]);
 
   // Carrega estúdios seguidos quando usuário faz login
   useEffect(() => {
     if (!user) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setFollowingLoading(true);
+    let cancelled = false;
     fetch("/api/v1/studios?isfollowing=true", { credentials: "include" })
       .then((r) => r.json())
-      .then((data) => setFollowingStudios(Array.isArray(data) ? data : []))
-      .catch(() => setFollowingStudios([]))
-      .finally(() => setFollowingLoading(false));
+      .then((data) => {
+        if (!cancelled) setFollowingStudios(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (!cancelled) setFollowingStudios([]);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   // Carrega estúdios onde o usuário é membro
   useEffect(() => {
     if (!user) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMemberLoading(true);
+    let cancelled = false;
     fetch("/api/v1/studios?member=me", { credentials: "include" })
       .then((r) => r.json())
-      .then((data) => setMemberStudios(Array.isArray(data) ? data : []))
-      .catch(() => setMemberStudios([]))
-      .finally(() => setMemberLoading(false));
+      .then((data) => {
+        if (!cancelled) setMemberStudios(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (!cancelled) setMemberStudios([]);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
-  const activeList = tab === "following" ? followingStudios : tab === "member" ? memberStudios : allStudios;
+  const followingLoading = followingStudios === null;
+  const memberLoading = memberStudios === null;
+
+  const activeList = (tab === "following" ? followingStudios : tab === "member" ? memberStudios : allStudios) ?? [];
   const isLoading = tab === "following" ? followingLoading : tab === "member" ? memberLoading : allLoading;
 
   const countNum = activeList.length;
@@ -232,7 +240,7 @@ export default function StudiosPage() {
 
           {tab === "all" && allHasMore && (
             <div className={styles.loadMore}>
-              <button className={styles.btnOutline} disabled={allLoading} onClick={() => setAllPage((p) => p + 1)}>
+              <button className={styles.btnOutline} disabled={allLoading} onClick={loadMore}>
                 {allLoading ? <Spinner size="small" /> : "Carregar mais"}
               </button>
             </div>

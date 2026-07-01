@@ -66,15 +66,15 @@ export default function Perfil() {
   const [loadingProfile, setLoadingProfile] = useState(true);
 
   const [activeTab, setActiveTab] = useState("info");
-  const [posts, setPosts] = useState([]);
-  const [loadingPosts, setLoadingPosts] = useState(false);
+  const [posts, setPosts] = useState(null);
+  const loadingPosts = posts === null;
 
   const [errorMessage, setErrorMessage] = useState(null);
 
   // Notificações (apenas para o próprio perfil)
-  const [userNotifs, setUserNotifs] = useState([]);
-  const [postNotifs, setPostNotifs] = useState([]);
-  const [loadingNotifs, setLoadingNotifs] = useState(false);
+  const [userNotifs, setUserNotifs] = useState(null);
+  const [postNotifs, setPostNotifs] = useState(null);
+  const loadingNotifs = userNotifs === null || postNotifs === null;
 
   async function fetchJSON(url, options = {}) {
     const res = await fetch(url, {
@@ -103,55 +103,56 @@ export default function Perfil() {
     setPerfilUser(data);
   }, [username]);
 
-  const fetchPosts = useCallback(async () => {
-    if (!username) return;
-    setLoadingPosts(true);
-    try {
-      const res = await fetch(`/api/v1/users/${username}/posts`, { credentials: "include" });
-      if (res.ok) setPosts(await res.json());
-    } finally {
-      setLoadingPosts(false);
-    }
-  }, [username]);
-
   useEffect(() => {
     if (!username) return;
-
+    let cancelled = false;
     (async () => {
       setLoadingProfile(true);
       try {
-        await reloadProfile();
+        const data = await fetchJSON(`/api/v1/users/${username}/profile`);
+        if (!cancelled) setPerfilUser(data);
       } finally {
-        setLoadingProfile(false);
+        if (!cancelled) setLoadingProfile(false);
       }
     })();
-  }, [username, reloadProfile]);
+    return () => {
+      cancelled = true;
+    };
+  }, [username]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (activeTab === "posts") fetchPosts();
-  }, [activeTab, fetchPosts]);
+    if (!username || activeTab !== "posts") return;
+    let cancelled = false;
+    fetch(`/api/v1/users/${username}/posts`, { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
+      .then((data) => {
+        if (!cancelled) setPosts(data ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setPosts([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [username, activeTab]);
 
-  const fetchNotifications = useCallback(async () => {
+  useEffect(() => {
     const isOwn = authUser?.username === perfilUser?.user?.username;
-    if (!isOwn || !username) return;
-    setLoadingNotifs(true);
-    try {
-      const [userRes, postRes] = await Promise.all([
-        fetch(`/api/v1/users/${username}/notifications`, { credentials: "include" }),
-        fetch(`/api/v1/users/${username}/notifications/post`, { credentials: "include" }),
-      ]);
-      setUserNotifs(userRes.ok ? await userRes.json() : []);
-      setPostNotifs(postRes.ok ? await postRes.json() : []);
-    } finally {
-      setLoadingNotifs(false);
-    }
-  }, [authUser, perfilUser, username]);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (activeTab === "notifications") fetchNotifications();
-  }, [activeTab, fetchNotifications]);
+    if (!isOwn || !username || activeTab !== "notifications") return;
+    let cancelled = false;
+    Promise.all([
+      fetch(`/api/v1/users/${username}/notifications`, { credentials: "include" }),
+      fetch(`/api/v1/users/${username}/notifications/post`, { credentials: "include" }),
+    ]).then(async ([userRes, postRes]) => {
+      if (!cancelled) {
+        setUserNotifs(userRes.ok ? await userRes.json() : []);
+        setPostNotifs(postRes.ok ? await postRes.json() : []);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [authUser, perfilUser, username, activeTab]);
 
   if (loadingUser || loadingProfile) {
     return (

@@ -184,14 +184,9 @@ export default function StreamsPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState(null);
-  const [hostname, setHostname] = useState("localhost");
+  const [hostname] = useState(() => globalThis.location.hostname);
   const refreshTimerRef = useRef(null);
   const didInitialRefreshRef = useRef(false);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setHostname(globalThis.location.hostname);
-  }, []);
 
   const fetchStudios = useCallback(async () => {
     try {

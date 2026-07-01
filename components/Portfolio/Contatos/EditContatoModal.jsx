@@ -13,8 +13,8 @@ export default function EditContatoModal({ onClose, onSave, initialData }) {
   const [loadingTypes, setLoadingTypes] = useState(true);
 
   const [form, setForm] = useState({
-    contact_type_id: "",
-    contact_value: "",
+    contact_type_id: initialData?.contact_type_id ?? "",
+    contact_value: initialData?.contact_value ?? "",
   });
 
   const [saving, setSaving] = useState(false);
@@ -30,16 +30,6 @@ export default function EditContatoModal({ onClose, onSave, initialData }) {
     }
     loadTypes();
   }, []);
-
-  useEffect(() => {
-    if (initialData) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setForm({
-        contact_type_id: initialData.contact_type_id,
-        contact_value: initialData.contact_value,
-      });
-    }
-  }, [initialData]);
 
   function update(field, value) {
     setForm((s) => ({ ...s, [field]: value }));

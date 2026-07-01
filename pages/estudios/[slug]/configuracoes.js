@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import Link from "next/link";
@@ -264,7 +264,7 @@ export default function ConfiguracoesPage() {
   // Classificação indicativa
   const [ratingModal, setRatingModal] = useState(null);
 
-  const fetchStudio = useCallback(async () => {
+  async function fetchStudio() {
     if (!slug) return;
     try {
       const res = await fetch(`/api/v1/studios/${slug}`, { credentials: "include" });
@@ -299,9 +299,9 @@ export default function ConfiguracoesPage() {
     } finally {
       setLoading(false);
     }
-  }, [slug, router]);
+  }
 
-  const fetchInvites = useCallback(async () => {
+  async function fetchInvites() {
     if (!slug) return;
     try {
       const res = await fetch(`/api/v1/studios/${slug}/invitations`, { credentials: "include" });
@@ -309,9 +309,9 @@ export default function ConfiguracoesPage() {
     } catch {
       // silently ignore
     }
-  }, [slug]);
+  }
 
-  const fetchContacts = useCallback(async () => {
+  async function fetchContacts() {
     if (!slug) return;
     try {
       const res = await fetch(`/api/v1/studios/${slug}/contacts`, { credentials: "include" });
@@ -319,9 +319,9 @@ export default function ConfiguracoesPage() {
     } catch {
       // silently ignore
     }
-  }, [slug]);
+  }
 
-  const fetchGames = useCallback(async () => {
+  async function fetchGames() {
     if (!slug) return;
     try {
       const res = await fetch(`/api/v1/studios/${slug}/games`, { credentials: "include" });
@@ -329,9 +329,9 @@ export default function ConfiguracoesPage() {
     } catch {
       // silently ignore
     }
-  }, [slug]);
+  }
 
-  const fetchBoardgames = useCallback(async () => {
+  async function fetchBoardgames() {
     if (!slug) return;
     try {
       const res = await fetch(`/api/v1/studios/${slug}/boardgames`, { credentials: "include" });
@@ -339,9 +339,9 @@ export default function ConfiguracoesPage() {
     } catch {
       // silently ignore
     }
-  }, [slug]);
+  }
 
-  const fetchBooks = useCallback(async () => {
+  async function fetchBooks() {
     if (!slug) return;
     try {
       const res = await fetch(`/api/v1/studios/${slug}/books`, { credentials: "include" });
@@ -349,42 +349,39 @@ export default function ConfiguracoesPage() {
     } catch {
       // silently ignore
     }
-  }, [slug]);
+  }
 
   // Classificação indicativa — fechamento do modal (save + refresh)
-  const handleRatingClose = useCallback(
-    async (result) => {
-      if (!result || !ratingModal) {
-        setRatingModal(null);
-        return;
-      }
-      const { type, slug } = ratingModal;
+  async function handleRatingClose(result) {
+    if (!result || !ratingModal) {
       setRatingModal(null);
-      try {
-        const res = await fetch("/api/v1/content-rating", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            action: "save",
-            type,
-            slug,
-            rating: result.rating,
-            reasons: result.reasons,
-            monetizationFlags: result.monetizationFlags || undefined,
-          }),
-        });
-        if (res.ok) {
-          if (type === "game") fetchGames();
-          else if (type === "boardgame") fetchBoardgames();
-          else if (type === "book") fetchBooks();
-        }
-      } catch {
-        // silently ignore
+      return;
+    }
+    const { type, slug } = ratingModal;
+    setRatingModal(null);
+    try {
+      const res = await fetch("/api/v1/content-rating", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          action: "save",
+          type,
+          slug,
+          rating: result.rating,
+          reasons: result.reasons,
+          monetizationFlags: result.monetizationFlags || undefined,
+        }),
+      });
+      if (res.ok) {
+        if (type === "game") fetchGames();
+        else if (type === "boardgame") fetchBoardgames();
+        else if (type === "book") fetchBooks();
       }
-    },
-    [ratingModal, fetchGames, fetchBoardgames, fetchBooks],
-  );
+    } catch {
+      // silently ignore
+    }
+  }
 
   useEffect(() => {
     fetch("/api/v1/contact-types", { credentials: "include" })
@@ -394,14 +391,97 @@ export default function ConfiguracoesPage() {
   }, []);
 
   useEffect(() => {
-    fetchStudio();
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchInvites();
-    fetchContacts();
-    fetchGames();
-    fetchBoardgames();
-    fetchBooks();
-  }, [fetchStudio, fetchInvites, fetchContacts, fetchGames, fetchBoardgames, fetchBooks]);
+    if (!slug) return;
+    let cancelled = false;
+
+    // All sub-fetches
+    const subFetches = () => {
+      if (cancelled) return;
+      fetch(`/api/v1/studios/${slug}/invitations`, { credentials: "include" })
+        .then(
+          (r) =>
+            r.ok &&
+            r.json().then((d) => {
+              if (!cancelled) setPendingInvites(d);
+            }),
+        )
+        .catch(() => {});
+      fetch(`/api/v1/studios/${slug}/contacts`, { credentials: "include" })
+        .then(
+          (r) =>
+            r.ok &&
+            r.json().then((d) => {
+              if (!cancelled) setContacts(d);
+            }),
+        )
+        .catch(() => {});
+      fetch(`/api/v1/studios/${slug}/games`, { credentials: "include" })
+        .then(
+          (r) =>
+            r.ok &&
+            r.json().then((d) => {
+              if (!cancelled) setGames(d);
+            }),
+        )
+        .catch(() => {});
+      fetch(`/api/v1/studios/${slug}/boardgames`, { credentials: "include" })
+        .then(
+          (r) =>
+            r.ok &&
+            r.json().then((d) => {
+              if (!cancelled) setBoardgames(d);
+            }),
+        )
+        .catch(() => {});
+      fetch(`/api/v1/studios/${slug}/books`, { credentials: "include" })
+        .then(
+          (r) =>
+            r.ok &&
+            r.json().then((d) => {
+              if (!cancelled) setBooks(d);
+            }),
+        )
+        .catch(() => {});
+    };
+
+    fetch(`/api/v1/studios/${slug}`, { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        if (!data || data.status_code === 404) {
+          router.replace("/estudios");
+          return;
+        }
+        if (!data.viewer?.isOwner && !data.viewer?.isMember) {
+          router.replace(`/estudios/${slug}`);
+          return;
+        }
+        setName(data.name || "");
+        setPitch(data.pitch || "");
+        setDescription(data.description || "");
+        setHistory(data.history || "");
+        setCnpj(data.cnpj || "");
+        setFoundedAt(data.founded_at ? data.founded_at.slice(0, 10) : "");
+        setTwitchChannel(data.twitch_channel || "");
+        setYoutubeChannelId(data.youtube_channel_id || "");
+        if (data.address) {
+          setHasAddress(true);
+          setAddress(addrToForm(data.address));
+        }
+        setMembers(data.members || []);
+        setOwnerId(data.owner_id ?? null);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+          subFetches();
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, router]);
 
   function handleAddressChange(field, value) {
     setAddress((prev) => ({ ...prev, [field]: value }));

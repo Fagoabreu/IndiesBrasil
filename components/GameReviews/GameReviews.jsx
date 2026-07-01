@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import PropTypes from "prop-types";
@@ -34,29 +34,26 @@ StarRating.propTypes = {
 
 export default function GameReviews({ reviewsApiUrl, avgRating, reviewCount, userReview, user, onReviewChange }) {
   const [reviews, setReviews] = useState([]);
-  const [reviewRating, setReviewRating] = useState(userReview?.rating ?? 0);
-  const [reviewContent, setReviewContent] = useState(userReview?.content ?? "");
+  // Estado rastreia edicoes do usuario; null = usar valor da prop
+  const [editedRating, setEditedRating] = useState(null);
+  const [editedContent, setEditedContent] = useState(null);
+  // Derivados durante render — prop tem precedencia ate usuario editar
+  const reviewRating = editedRating ?? userReview?.rating ?? 0;
+  const reviewContent = editedContent ?? userReview?.content ?? "";
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewMsg, setReviewMsg] = useState({ type: null, text: "" });
   const [editingReview, setEditingReview] = useState(false);
 
-  const fetchReviews = useCallback(async () => {
-    const res = await fetch(reviewsApiUrl, { credentials: "include" });
-    if (res.ok) setReviews(await res.json());
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const res = await fetch(reviewsApiUrl, { credentials: "include" });
+      if (!cancelled && res.ok) setReviews(await res.json());
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [reviewsApiUrl]);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchReviews();
-  }, [fetchReviews]);
-
-  useEffect(() => {
-    if (userReview) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setReviewRating(userReview.rating ?? 0);
-      setReviewContent(userReview.content ?? "");
-    }
-  }, [userReview]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -83,8 +80,12 @@ export default function GameReviews({ reviewsApiUrl, avgRating, reviewCount, use
       }
       setReviewMsg({ type: "success", text: "Avaliação salva!" });
       setEditingReview(false);
+      setEditedRating(data.review?.rating ?? null);
+      setEditedContent(data.review?.content ?? null);
       onReviewChange?.();
-      await fetchReviews();
+      // Refetch reviews after submit
+      const refetchRes = await fetch(reviewsApiUrl, { credentials: "include" });
+      if (refetchRes.ok) setReviews(await refetchRes.json());
     } finally {
       setReviewSubmitting(false);
     }
@@ -124,12 +125,12 @@ export default function GameReviews({ reviewsApiUrl, avgRating, reviewCount, use
           ) : (
             <form onSubmit={handleSubmit} className={styles.reviewForm}>
               <p className={styles.reviewFormTitle}>{hasUserReview ? "Editar avaliação" : "Avaliar este jogo"}</p>
-              <StarRating value={reviewRating} onChange={setReviewRating} />
+              <StarRating value={reviewRating} onChange={setEditedRating} />
               <textarea
                 className={styles.reviewTextarea}
                 placeholder="Compartilhe sua experiência (opcional)"
                 value={reviewContent}
-                onChange={(e) => setReviewContent(e.target.value)}
+                onChange={(e) => setEditedContent(e.target.value)}
                 rows={3}
                 maxLength={1000}
               />
