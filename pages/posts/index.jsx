@@ -27,6 +27,7 @@ export default function PostsPage() {
     if (!router.isReady) return;
 
     if (router.query.tag) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveTag(router.query.tag);
       setTab("tag");
     }
@@ -62,6 +63,7 @@ export default function PostsPage() {
 
   useEffect(() => {
     if (!loadingUser) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchPosts();
     }
   }, [fetchPosts, loadingUser]);

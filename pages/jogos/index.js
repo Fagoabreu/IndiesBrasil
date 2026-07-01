@@ -90,6 +90,7 @@ export default function JogosPage() {
   }, [search, genre, stage]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (allPage > 1) loadAll(allPage, search, genre, stage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allPage]);
@@ -97,6 +98,7 @@ export default function JogosPage() {
   // Load followed games when user logs in
   useEffect(() => {
     if (!user) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFollowingLoading(true);
     fetch("/api/v1/games?isfollowing=true", { credentials: "include" })
       .then((r) => r.json())

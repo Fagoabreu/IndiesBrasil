@@ -24,6 +24,7 @@ export default function StudiosPage() {
   useEffect(() => {
     const params = new URLSearchParams(globalThis.location.search);
     if (params.get("member") === "me" && user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTab("member");
     }
   }, [user]);
@@ -43,41 +44,6 @@ export default function StudiosPage() {
   const [memberLoading, setMemberLoading] = useState(false);
 
   // Carrega todos os estúdios (aba Descubra) com debounce na busca
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setAllPage(1);
-      loadAll(1, search);
-    }, 350);
-    return () => clearTimeout(t);
-  }, [search]);
-
-  useEffect(() => {
-    if (allPage > 1) loadAll(allPage, search);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allPage]);
-
-  // Carrega estúdios seguidos quando usuário faz login
-  useEffect(() => {
-    if (!user) return;
-    setFollowingLoading(true);
-    fetch("/api/v1/studios?isfollowing=true", { credentials: "include" })
-      .then((r) => r.json())
-      .then((data) => setFollowingStudios(Array.isArray(data) ? data : []))
-      .catch(() => setFollowingStudios([]))
-      .finally(() => setFollowingLoading(false));
-  }, [user]);
-
-  // Carrega estúdios onde o usuário é membro
-  useEffect(() => {
-    if (!user) return;
-    setMemberLoading(true);
-    fetch("/api/v1/studios?member=me", { credentials: "include" })
-      .then((r) => r.json())
-      .then((data) => setMemberStudios(Array.isArray(data) ? data : []))
-      .catch(() => setMemberStudios([]))
-      .finally(() => setMemberLoading(false));
-  }, [user]);
-
   async function loadAll(pageNum, searchQuery) {
     setAllLoading(true);
     try {
@@ -93,6 +59,44 @@ export default function StudiosPage() {
       setAllLoading(false);
     }
   }
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setAllPage(1);
+      loadAll(1, search);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (allPage > 1) loadAll(allPage, search);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allPage]);
+
+  // Carrega estúdios seguidos quando usuário faz login
+  useEffect(() => {
+    if (!user) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setFollowingLoading(true);
+    fetch("/api/v1/studios?isfollowing=true", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => setFollowingStudios(Array.isArray(data) ? data : []))
+      .catch(() => setFollowingStudios([]))
+      .finally(() => setFollowingLoading(false));
+  }, [user]);
+
+  // Carrega estúdios onde o usuário é membro
+  useEffect(() => {
+    if (!user) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMemberLoading(true);
+    fetch("/api/v1/studios?member=me", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => setMemberStudios(Array.isArray(data) ? data : []))
+      .catch(() => setMemberStudios([]))
+      .finally(() => setMemberLoading(false));
+  }, [user]);
 
   const activeList = tab === "following" ? followingStudios : tab === "member" ? memberStudios : allStudios;
   const isLoading = tab === "following" ? followingLoading : tab === "member" ? memberLoading : allLoading;

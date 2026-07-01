@@ -83,6 +83,7 @@ export default function GamePage() {
 
   useEffect(() => {
     if (!gameData?.website_url) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setWebsitePreview(null);
       return;
     }
@@ -103,6 +104,7 @@ export default function GamePage() {
   // Busca análises quando o gameData carrega
   useEffect(() => {
     if (!gameData?.id) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAnalisesLoading(true);
     fetch(`/api/v1/analises/by-content?content_type=game&content_id=${encodeURIComponent(gameData.id)}`)
       .then((r) => r.json())

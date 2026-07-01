@@ -128,15 +128,13 @@ export default function Perfil() {
   }, [username, reloadProfile]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (activeTab === "posts") fetchPosts();
   }, [activeTab, fetchPosts]);
 
-  useEffect(() => {
-    if (activeTab === "notifications") fetchNotifications();
-  }, [activeTab]);
-
-  async function fetchNotifications() {
-    if (!isOwnProfile || !username) return;
+  const fetchNotifications = useCallback(async () => {
+    const isOwn = authUser?.username === perfilUser?.user?.username;
+    if (!isOwn || !username) return;
     setLoadingNotifs(true);
     try {
       const [userRes, postRes] = await Promise.all([
@@ -148,7 +146,12 @@ export default function Perfil() {
     } finally {
       setLoadingNotifs(false);
     }
-  }
+  }, [authUser, perfilUser, username]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (activeTab === "notifications") fetchNotifications();
+  }, [activeTab, fetchNotifications]);
 
   if (loadingUser || loadingProfile) {
     return (
@@ -355,7 +358,7 @@ export default function Perfil() {
           {activeTab === "notifications" && isOwnProfile && (
             <div className={style.notifSection}>
               {loadingNotifs && <p className={style.postsState}>Carregando notificações...</p>}
-              {!loadingNotifs && <NotificationList userNotifs={userNotifs} postNotifs={postNotifs} username={username} />}
+              {!loadingNotifs && <NotificationList userNotifs={userNotifs} postNotifs={postNotifs} />}
             </div>
           )}
         </section>
@@ -368,7 +371,7 @@ export default function Perfil() {
  * NotificationList
  * ===================== */
 
-function NotificationList({ userNotifs, postNotifs, username }) {
+function NotificationList({ userNotifs, postNotifs }) {
   const router = useRouter();
   const all = [...userNotifs, ...postNotifs].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 

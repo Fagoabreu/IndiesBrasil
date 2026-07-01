@@ -46,11 +46,13 @@ export default function GameReviews({ reviewsApiUrl, avgRating, reviewCount, use
   }, [reviewsApiUrl]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchReviews();
   }, [fetchReviews]);
 
   useEffect(() => {
     if (userReview) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setReviewRating(userReview.rating ?? 0);
       setReviewContent(userReview.content ?? "");
     }

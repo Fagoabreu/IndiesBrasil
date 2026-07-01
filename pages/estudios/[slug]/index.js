@@ -223,6 +223,7 @@ export default function StudioPage() {
   }, [slug]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchStudio();
     fetchStudioGames();
     fetchStudioBoardGames();
@@ -232,6 +233,7 @@ export default function StudioPage() {
   }, [fetchStudio, fetchStudioGames, fetchStudioBoardGames, fetchStudioBooks, fetchStudioStream, fetchRelationships]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (activeTab === "postagens") fetchStudioPosts();
   }, [activeTab, fetchStudioPosts]);
 

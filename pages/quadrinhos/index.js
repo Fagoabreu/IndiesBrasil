@@ -78,12 +78,14 @@ export default function QuadrinhosPage() {
   }, [search, bookType, stage]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (allPage > 1) loadAll(allPage, search, bookType, stage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allPage]);
 
   useEffect(() => {
     if (!user) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFollowingLoading(true);
     fetch("/api/v1/books?isfollowing=true", { credentials: "include" })
       .then((r) => r.json())

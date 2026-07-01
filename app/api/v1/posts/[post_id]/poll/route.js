@@ -15,7 +15,7 @@ export async function POST(request, { params }) {
       });
     }
 
-    const { post_id } = await params;
+    await params;
     const formData = await request.formData();
     const poll_option_id = Number(formData.get("poll_option_id"));
 

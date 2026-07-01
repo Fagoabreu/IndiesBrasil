@@ -123,6 +123,7 @@ export default function EditarCursoPage() {
 
   useEffect(() => {
     if (courseSlug) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchLessonList();
       fetchModules();
     }

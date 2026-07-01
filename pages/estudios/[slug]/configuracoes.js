@@ -395,6 +395,7 @@ export default function ConfiguracoesPage() {
 
   useEffect(() => {
     fetchStudio();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchInvites();
     fetchContacts();
     fetchGames();

@@ -49,6 +49,7 @@ export default function NovaAnalisePage() {
   // Preencher content_type e content_id dos query params
   useEffect(() => {
     if (tipo && CONTENT_TYPE_OPTIONS.find((o) => o.value === tipo)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setContentType(tipo);
     }
     if (content_id) {
@@ -79,6 +80,7 @@ export default function NovaAnalisePage() {
   }, [edit]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchForEdit();
   }, [fetchForEdit]);
 

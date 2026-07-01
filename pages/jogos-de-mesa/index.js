@@ -80,6 +80,7 @@ export default function JogosDeMessaPage() {
   }, [search, category, stage]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (allPage > 1) loadAll(allPage, search, category, stage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allPage]);
@@ -87,6 +88,7 @@ export default function JogosDeMessaPage() {
   // Load followed board games when user logs in
   useEffect(() => {
     if (!user) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFollowingLoading(true);
     fetch("/api/v1/boardgames?isfollowing=true", { credentials: "include" })
       .then((r) => r.json())

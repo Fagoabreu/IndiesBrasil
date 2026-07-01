@@ -44,6 +44,7 @@ export default function AnalisesPage() {
   }, [page, filter]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAnalises();
   }, [fetchAnalises]);
 

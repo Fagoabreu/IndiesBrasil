@@ -1,5 +1,5 @@
 import controller from "@/infra/controller";
-import { ForbiddenError, NotFoundError } from "@/infra/errors";
+import { ForbiddenError } from "@/infra/errors";
 import authorization from "@/models/authorization";
 import news from "@/models/news";
 import uploadedImages from "@/models/uploadedImages";

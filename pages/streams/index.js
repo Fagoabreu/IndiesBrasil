@@ -189,6 +189,7 @@ export default function StreamsPage() {
   const didInitialRefreshRef = useRef(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHostname(globalThis.location.hostname);
   }, []);
 

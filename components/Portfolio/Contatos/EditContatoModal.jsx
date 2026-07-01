@@ -33,6 +33,7 @@ export default function EditContatoModal({ onClose, onSave, initialData }) {
 
   useEffect(() => {
     if (initialData) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm({
         contact_type_id: initialData.contact_type_id,
         contact_value: initialData.contact_value,

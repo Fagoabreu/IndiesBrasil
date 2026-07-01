@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import { Heading } from "@primer/react";
 import { PlusIcon, XIcon, ImageIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
@@ -42,6 +43,7 @@ export default function NewsPage() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!loadingUser) fetchNews();
   }, [fetchNews, loadingUser]);
 
@@ -169,7 +171,7 @@ export default function NewsPage() {
                 </label>
                 {preview && (
                   <div className={styles.imagePreviewArea}>
-                    <img src={preview} alt="Preview" className={styles.previewImage} />
+                    <Image src={preview} alt="Preview" className={styles.previewImage} width={300} height={200} unoptimized />
                     <button
                       className={styles.removeImage}
                       onClick={() => {
