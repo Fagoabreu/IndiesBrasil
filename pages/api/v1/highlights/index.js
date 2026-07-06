@@ -2,11 +2,7 @@ import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import database from "infra/database";
 
-const router = createRouter();
-
-router.get(getHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter().get(getHandler).handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const [games, boardgames, books] = await Promise.all([
@@ -46,7 +42,9 @@ async function getRandomItems(table, nameField) {
         t.slug,
         t.short_description,
         ${
-          table === "books" ? `COALESCE(ui_cover.secure_url, t.cover_url_external)` : `COALESCE(ui_ban.secure_url, ui_cover.secure_url)`
+          table === "books"
+            ? `COALESCE(ui_cover.secure_url, t.cover_url_external)`
+            : `COALESCE(ui_ban.secure_url, ui_cover.secure_url)`
         } AS banner_url,
         o.name AS studio_name,
         o.slug AS studio_slug,

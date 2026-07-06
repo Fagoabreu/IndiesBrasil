@@ -2,12 +2,10 @@ import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import stream from "models/stream";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(controller.canRequest("read:studio"), getHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:studio"), getHandler)
+  .handler(controller.errorHandlers);
 
 function pickActivePlatform(row) {
   if (row.twitch_channel && row.twitch_is_live) return "twitch";
@@ -34,7 +32,13 @@ function pickStreamFields(row, platform) {
       checked_at: row.youtube_checked_at,
     };
   }
-  return { viewer_count: null, stream_title: null, thumbnail_url: null, category_name: null, checked_at: null };
+  return {
+    viewer_count: null,
+    stream_title: null,
+    thumbnail_url: null,
+    category_name: null,
+    checked_at: null,
+  };
 }
 
 /**

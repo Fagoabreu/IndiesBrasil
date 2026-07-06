@@ -4,13 +4,11 @@ import book from "models/book";
 import organization from "models/organization";
 import { ForbiddenError } from "infra/errors";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(controller.canRequest("read:book:all"), getHandler);
-router.post(controller.canRequest("create:book"), postHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:book:all"), getHandler)
+  .post(controller.canRequest("create:book"), postHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const { slug } = request.query;
@@ -30,7 +28,8 @@ async function postHandler(request, response) {
 
   if (!isAdmin && !isOwner) {
     throw new ForbiddenError({
-      message: "Apenas administradores do estúdio podem criar livros/quadrinhos.",
+      message:
+        "Apenas administradores do estúdio podem criar livros/quadrinhos.",
     });
   }
 

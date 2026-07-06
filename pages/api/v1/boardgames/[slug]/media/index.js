@@ -3,13 +3,11 @@ import controller from "infra/controller";
 import boardgame from "models/boardgame";
 import { ForbiddenError, ValidationError } from "infra/errors";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(controller.canRequest("read:boardgame"), getHandler);
-router.post(controller.canRequest("update:boardgame"), postHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:boardgame"), getHandler)
+  .post(controller.canRequest("update:boardgame"), postHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const { slug } = request.query;
@@ -25,7 +23,9 @@ async function postHandler(request, response) {
   const boardgameData = await boardgame.findBySlug(slug);
   const canEdit = await boardgame.canEdit(boardgameData.id, requestUser);
   if (!canEdit) {
-    throw new ForbiddenError({ message: "Você não tem permissão para editar este jogo de mesa." });
+    throw new ForbiddenError({
+      message: "Você não tem permissão para editar este jogo de mesa.",
+    });
   }
 
   const { url, caption } = request.body;

@@ -21,7 +21,7 @@ describe("Patch /api/v1/users/[username]", () => {
       expect(createdUser.username).toBe("authenticatedUser");
       const activatedUser = await orchestrator.activateUser(createdUser);
       expect(activatedUser.username).toBe("authenticatedUser");
-      sessionToken = await orchestrator.createSession(activatedUser.id);
+      sessionToken = await orchestrator.createSession(activatedUser);
     });
   });
 
@@ -83,7 +83,7 @@ describe("Patch /api/v1/users/[username]", () => {
       });
 
       const activatedUser2 = await orchestrator.activateUser(user2);
-      const sessionObject2 = await orchestrator.createSession(activatedUser2.id);
+      const sessionObject2 = await orchestrator.createSession(activatedUser2);
 
       const response = await fetch("http://localhost:3000/api/v1/users/user2", {
         method: "PATCH",
@@ -117,7 +117,7 @@ describe("Patch /api/v1/users/[username]", () => {
       });
 
       const activatedUser2 = await orchestrator.activateUser(createdUser2);
-      const sessionObject2 = await orchestrator.createSession(activatedUser2.id);
+      const sessionObject2 = await orchestrator.createSession(activatedUser2);
 
       const response = await fetch("http://localhost:3000/api/v1/users/targetingUser1", {
         method: "PATCH",
@@ -150,7 +150,7 @@ describe("Patch /api/v1/users/[username]", () => {
       });
 
       const activatedUser = await orchestrator.activateUser(createdUser2);
-      const sessionObject = await orchestrator.createSession(activatedUser.id);
+      const sessionObject = await orchestrator.createSession(activatedUser);
 
       const response = await fetch(`http://localhost:3000/api/v1/users/${createdUser2.username}`, {
         method: "PATCH",
@@ -183,7 +183,7 @@ describe("Patch /api/v1/users/[username]", () => {
       });
 
       const activatedUser = await orchestrator.activateUser(user2);
-      const sessionObject = await orchestrator.createSession(activatedUser.id);
+      const sessionObject = await orchestrator.createSession(activatedUser);
 
       const response = await fetch(`http://localhost:3000/api/v1/users/${user2.username}`, {
         method: "PATCH",
@@ -212,7 +212,7 @@ describe("Patch /api/v1/users/[username]", () => {
       });
 
       const activatedUser = await orchestrator.activateUser(uniqueUser);
-      const sessionObject = await orchestrator.createSession(activatedUser.id);
+      const sessionObject = await orchestrator.createSession(activatedUser);
 
       const response = await fetch("http://localhost:3000/api/v1/users/uniqueUser1", {
         method: "PATCH",
@@ -331,7 +331,7 @@ describe("Patch /api/v1/users/[username]", () => {
       });
 
       const activatedUser = await orchestrator.activateUser(user1);
-      const sessionObject = await orchestrator.createSession(activatedUser.id);
+      const sessionObject = await orchestrator.createSession(activatedUser);
 
       const response = await fetch(`http://localhost:3000/api/v1/users/${user1.username}`, {
         method: "PATCH",
@@ -450,7 +450,7 @@ describe("Patch /api/v1/users/[username]", () => {
       });
 
       const activatedUser = await orchestrator.activateUser(createdUser);
-      const sessionObject = await orchestrator.createSession(activatedUser.id);
+      const sessionObject = await orchestrator.createSession(activatedUser);
 
       const response = await fetch(`http://localhost:3000/api/v1/users/${createdUser.username}`, {
         method: "PATCH",
@@ -577,7 +577,7 @@ describe("Patch /api/v1/users/[username]", () => {
     test("With  `update:user:others` targeting `default user`", async () => {
       const privilegedUser = await orchestrator.createUser();
       const activatedPrivilegedUser = await orchestrator.activateUser(privilegedUser);
-      const privilegedUserSession = await orchestrator.createSession(activatedPrivilegedUser.id);
+      const privilegedUserSession = await orchestrator.createSession(activatedPrivilegedUser);
       await orchestrator.addFeaturesToUser(privilegedUser, ["update:user:others"]);
 
       const defaultUser = await orchestrator.createUser();

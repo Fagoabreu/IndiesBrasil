@@ -2,14 +2,12 @@ import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import course from "models/course";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(getHandler);
-router.post(controller.canRequest("create:course:enrollment"), postHandler);
-router.delete(controller.canRequest("create:course:enrollment"), deleteHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(getHandler)
+  .post(controller.canRequest("create:course:enrollment"), postHandler)
+  .delete(controller.canRequest("create:course:enrollment"), deleteHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const { slug } = request.query;
@@ -62,7 +60,9 @@ async function postHandler(request, response) {
 
     return response.status(201).json({
       enrolled,
-      message: enrolled ? "Inscrito no curso com sucesso." : "Já estava inscrito neste curso.",
+      message: enrolled
+        ? "Inscrito no curso com sucesso."
+        : "Já estava inscrito neste curso.",
     });
   } catch (error) {
     if (error.name === "NotFoundError") {
@@ -103,7 +103,9 @@ async function deleteHandler(request, response) {
 
     return response.status(200).json({
       unenrolled,
-      message: unenrolled ? "Desinscrito do curso com sucesso." : "Você não estava inscrito neste curso.",
+      message: unenrolled
+        ? "Desinscrito do curso com sucesso."
+        : "Você não estava inscrito neste curso.",
     });
   } catch (error) {
     if (error.name === "NotFoundError") {

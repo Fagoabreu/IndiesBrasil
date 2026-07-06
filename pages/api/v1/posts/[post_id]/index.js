@@ -5,12 +5,11 @@ import post from "@/models/post.js";
 import uploadedImages from "@/models/uploadedImages";
 import { createRouter } from "next-connect";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-router.get(getHandler);
-router.delete(controller.canRequest("read:session"), deleteHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(getHandler)
+  .delete(controller.canRequest("read:session"), deleteHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const { post_id } = request.query;
@@ -21,7 +20,11 @@ async function getHandler(request, response) {
     throw new NotFoundError();
   }
 
-  const secureOutputValues = authorization.filterOutput(userTryingToGet, "read:post", postData);
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToGet,
+    "read:post",
+    postData,
+  );
   return response.status(200).json(secureOutputValues);
 }
 
@@ -41,13 +44,20 @@ async function deleteHandler(request, response) {
   }
 
   await post.deleteCommentsByPostId(postToDelete.id);
-  const resultPost = await post.deletePostByIdAndAuthorId(author_id, postToDelete.id);
+  const resultPost = await post.deletePostByIdAndAuthorId(
+    author_id,
+    postToDelete.id,
+  );
 
   if (imgId) {
     await uploadedImages.deleteImage(imgId);
   }
 
-  const secureOutputValues = authorization.filterOutput(userTryingToDelete, "read:post", resultPost);
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToDelete,
+    "read:post",
+    resultPost,
+  );
 
   return response.status(200).json(secureOutputValues);
 }

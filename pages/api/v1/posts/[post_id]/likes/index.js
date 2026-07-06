@@ -3,11 +3,10 @@ import authorization from "@/models/authorization";
 import post from "@/models/post";
 import { createRouter } from "next-connect";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-router.post(controller.canRequest("create:post"), postHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .post(controller.canRequest("create:post"), postHandler)
+  .handler(controller.errorHandlers);
 
 async function postHandler(request, response) {
   const userTryingToLike = request.context.user;
@@ -16,6 +15,10 @@ async function postHandler(request, response) {
   const { liked } = request.body;
 
   const result = await post.setPostLikes(post_id, user_id, liked);
-  const secureOutputValues = authorization.filterOutput(userTryingToLike, "read:like", result);
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToLike,
+    "read:like",
+    result,
+  );
   return response.status(201).json(secureOutputValues);
 }

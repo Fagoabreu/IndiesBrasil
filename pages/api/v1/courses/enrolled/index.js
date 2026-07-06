@@ -2,12 +2,10 @@ import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import course from "models/course";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(controller.canRequest("read:course:enrollment"), getHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:course:enrollment"), getHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const { search = "" } = request.query;
@@ -17,7 +15,11 @@ async function getHandler(request, response) {
 
   if (search) {
     const q = search.toLowerCase();
-    const filtered = enrolled.filter((c) => c.title?.toLowerCase().includes(q) || c.description?.toLowerCase().includes(q));
+    const filtered = enrolled.filter(
+      (c) =>
+        c.title?.toLowerCase().includes(q) ||
+        c.description?.toLowerCase().includes(q),
+    );
     return response.status(200).json(filtered);
   }
 

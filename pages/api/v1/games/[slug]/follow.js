@@ -2,13 +2,11 @@ import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import game from "models/game";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.post(controller.canRequest("create:game:follow"), postHandler);
-router.delete(controller.canRequest("create:game:follow"), deleteHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .post(controller.canRequest("create:game:follow"), postHandler)
+  .delete(controller.canRequest("create:game:follow"), deleteHandler)
+  .handler(controller.errorHandlers);
 
 async function postHandler(request, response) {
   const requestUser = request.context.user;

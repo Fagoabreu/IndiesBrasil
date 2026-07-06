@@ -4,14 +4,12 @@ import authorization from "models/authorization";
 import course from "models/course";
 import { ForbiddenError } from "infra/errors";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(controller.canRequest("read:course"), getHandler);
-router.patch(controller.canRequest("update:course"), patchHandler);
-router.delete(controller.canRequest("delete:course"), deleteHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:course"), getHandler)
+  .patch(controller.canRequest("update:course"), patchHandler)
+  .delete(controller.canRequest("delete:course"), deleteHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const { slug } = request.query;
@@ -23,7 +21,10 @@ async function getHandler(request, response) {
 
   let viewer = null;
   if (requestUser?.id) {
-    const [userRating, progress] = await Promise.all([course.getUserRating(slug, requestUser.id), course.getCourseProgress(slug, requestUser.id)]);
+    const [userRating, progress] = await Promise.all([
+      course.getUserRating(slug, requestUser.id),
+      course.getCourseProgress(slug, requestUser.id),
+    ]);
     viewer = {
       isOwner: courseData.owner_id === requestUser.id,
       userRating: userRating?.rating || null,

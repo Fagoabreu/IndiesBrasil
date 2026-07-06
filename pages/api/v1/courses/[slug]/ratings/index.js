@@ -4,13 +4,11 @@ import authorization from "models/authorization";
 import course from "models/course";
 import { ForbiddenError } from "infra/errors";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(controller.canRequest("read:course:rating"), listHandler);
-router.post(controller.canRequest("create:course:rating"), upsertHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:course:rating"), listHandler)
+  .post(controller.canRequest("create:course:rating"), upsertHandler)
+  .handler(controller.errorHandlers);
 
 async function listHandler(request, response) {
   const { slug } = request.query;
@@ -30,6 +28,11 @@ async function upsertHandler(request, response) {
   }
 
   const { rating, review } = request.body;
-  const result = await course.upsertRating(slug, requestUser.id, rating, review || null);
+  const result = await course.upsertRating(
+    slug,
+    requestUser.id,
+    rating,
+    review || null,
+  );
   return response.status(200).json(result);
 }

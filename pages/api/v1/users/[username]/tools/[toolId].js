@@ -5,12 +5,11 @@ import profile from "@/models/profile";
 import authorization from "@/models/authorization";
 import { ForbiddenError } from "@/infra/errors";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-router.patch(controller.canRequest("update:user"), patchHandler);
-router.delete(controller.canRequest("update:user"), deleteHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .patch(controller.canRequest("update:user"), patchHandler)
+  .delete(controller.canRequest("update:user"), deleteHandler)
+  .handler(controller.errorHandlers);
 
 async function patchHandler(request, response) {
   const username = request.query.username;
@@ -22,11 +21,20 @@ async function patchHandler(request, response) {
   if (!authorization.can(userTryingToPatch, "update:user", targetUser)) {
     throw new ForbiddenError({
       message: "Você não possui permissão para atualizar outro usuário.",
-      action: "Verifique se você possui a feature necessária para atualizar outro usuário",
+      action:
+        "Verifique se você possui a feature necessária para atualizar outro usuário",
     });
   }
-  const postedProfileTool = await profile.patchTools(targetUser.id, toolId, userInputValues);
-  const secureOutputValues = authorization.filterOutput(userTryingToPatch, "read:profile_tool", postedProfileTool);
+  const postedProfileTool = await profile.patchTools(
+    targetUser.id,
+    toolId,
+    userInputValues,
+  );
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToPatch,
+    "read:profile_tool",
+    postedProfileTool,
+  );
   return response.status(200).json(secureOutputValues);
 }
 
@@ -39,11 +47,19 @@ async function deleteHandler(request, response) {
   if (!authorization.can(userTryingToDelete, "update:user", targetUser)) {
     throw new ForbiddenError({
       message: "Você não possui permissão para atualizar outro usuário.",
-      action: "Verifique se você possui a feature necessária para atualizar outro usuário",
+      action:
+        "Verifique se você possui a feature necessária para atualizar outro usuário",
     });
   }
-  const postedContact = await profile.deleteToolByUserAndTool(targetUser.id, toolId);
-  const secureOutputValues = authorization.filterOutput(userTryingToDelete, "read:profile_contact", postedContact);
+  const postedContact = await profile.deleteToolByUserAndTool(
+    targetUser.id,
+    toolId,
+  );
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToDelete,
+    "read:profile_contact",
+    postedContact,
+  );
 
   return response.status(200).json(secureOutputValues);
 }

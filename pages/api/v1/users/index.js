@@ -4,13 +4,11 @@ import user from "models/user.js";
 import activation from "models/activation.js";
 import authorization from "@/models/authorization";
 
-const router = createRouter();
-
-router.use(controller.injectAnonymousOrUser);
-router.post(controller.canRequest("create:user"), postHandler);
-router.get(controller.canRequest("read:user"), getHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .post(controller.canRequest("create:user"), postHandler)
+  .get(controller.canRequest("read:user"), getHandler)
+  .handler(controller.errorHandlers);
 
 async function postHandler(request, response) {
   const userTryingToPost = request.context.user;
@@ -20,7 +18,11 @@ async function postHandler(request, response) {
   const activationToken = await activation.create(newUser.id);
   await activation.sendEmailToUser(newUser, activationToken);
 
-  const secureOutputValues = authorization.filterOutput(userTryingToPost, "read:user", newUser);
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToPost,
+    "read:user",
+    newUser,
+  );
   return response.status(201).json(secureOutputValues);
 }
 
@@ -31,7 +33,11 @@ async function getHandler(request, response) {
   const userId = request.context.user.id;
   const selectedUsers = await user.findUsers(userId, isfollowing);
   const secureOutputValues = selectedUsers.map((selectedUser) => {
-    return authorization.filterOutput(userTryingToPost, "read:user", selectedUser);
+    return authorization.filterOutput(
+      userTryingToPost,
+      "read:user",
+      selectedUser,
+    );
   });
   return response.status(200).json(secureOutputValues);
 }

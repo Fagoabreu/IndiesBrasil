@@ -5,12 +5,11 @@ import profile from "@/models/profile";
 import authorization from "@/models/authorization";
 import { ForbiddenError } from "@/infra/errors";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-router.patch(controller.canRequest("update:user"), patchHandler);
-router.delete(controller.canRequest("update:user"), deleteHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .patch(controller.canRequest("update:user"), patchHandler)
+  .delete(controller.canRequest("update:user"), deleteHandler)
+  .handler(controller.errorHandlers);
 
 async function patchHandler(request, response) {
   const username = request.query.username;
@@ -22,13 +21,18 @@ async function patchHandler(request, response) {
   if (!authorization.can(userTryingToPatch, "update:user", targetUser)) {
     throw new ForbiddenError({
       message: "Você não possui permissão para atualizar outro usuário.",
-      action: "Verifique se você possui a feature necessária para atualizar outro usuário",
+      action:
+        "Verifique se você possui a feature necessária para atualizar outro usuário",
     });
   }
 
   userInputValues.id = historicoId;
   const postedHistory = await profile.patchHistorico(userInputValues);
-  const secureOutputValues = authorization.filterOutput(userTryingToPatch, "read:profile_history", postedHistory);
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToPatch,
+    "read:profile_history",
+    postedHistory,
+  );
   return response.status(200).json(secureOutputValues);
 }
 
@@ -41,11 +45,16 @@ async function deleteHandler(request, response) {
   if (!authorization.can(userTryingToDelete, "update:user", targetUser)) {
     throw new ForbiddenError({
       message: "Você não possui permissão para atualizar outro usuário.",
-      action: "Verifique se você possui a feature necessária para atualizar outro usuário",
+      action:
+        "Verifique se você possui a feature necessária para atualizar outro usuário",
     });
   }
 
   const deletedHistory = await profile.deleteHistoricoById(historicoId);
-  const secureOutputValues = authorization.filterOutput(userTryingToDelete, "read:profile_history", deletedHistory);
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToDelete,
+    "read:profile_history",
+    deletedHistory,
+  );
   return response.status(200).json(secureOutputValues);
 }

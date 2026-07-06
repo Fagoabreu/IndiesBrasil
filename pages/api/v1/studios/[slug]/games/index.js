@@ -4,13 +4,11 @@ import game from "models/game";
 import organization from "models/organization";
 import { ForbiddenError } from "infra/errors";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(controller.canRequest("read:game"), getHandler);
-router.post(controller.canRequest("create:game"), postHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:game"), getHandler)
+  .post(controller.canRequest("create:game"), postHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const { slug } = request.query;

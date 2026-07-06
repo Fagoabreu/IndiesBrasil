@@ -2,15 +2,13 @@ import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import course from "models/course";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(controller.canRequest("read:course"), getHandler);
-router.post(controller.canRequest("update:course"), postHandler);
-router.patch(controller.canRequest("update:course"), patchHandler);
-router.delete(controller.canRequest("update:course"), deleteHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:course"), getHandler)
+  .post(controller.canRequest("update:course"), postHandler)
+  .patch(controller.canRequest("update:course"), patchHandler)
+  .delete(controller.canRequest("update:course"), deleteHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const { slug } = request.query;
@@ -53,7 +51,10 @@ async function postHandler(request, response) {
   const requestUser = request.context.user;
   const { title, orderIndex } = request.body;
 
-  const createdModule = await course.createModule(slug, requestUser.id, { title, orderIndex });
+  const createdModule = await course.createModule(slug, requestUser.id, {
+    title,
+    orderIndex,
+  });
 
   return response.status(201).json(createdModule);
 }
@@ -63,7 +64,12 @@ async function patchHandler(request, response) {
   const requestUser = request.context.user;
   const { moduleId, title, orderIndex } = request.body;
 
-  const updatedModule = await course.updateModule(slug, moduleId, requestUser.id, { title, orderIndex });
+  const updatedModule = await course.updateModule(
+    slug,
+    moduleId,
+    requestUser.id,
+    { title, orderIndex },
+  );
 
   return response.status(200).json(updatedModule);
 }

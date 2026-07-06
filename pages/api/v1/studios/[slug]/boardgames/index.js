@@ -4,13 +4,11 @@ import boardgame from "models/boardgame";
 import organization from "models/organization";
 import { ForbiddenError } from "infra/errors";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(controller.canRequest("read:boardgame:all"), getHandler);
-router.post(controller.canRequest("create:boardgame"), postHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:boardgame:all"), getHandler)
+  .post(controller.canRequest("create:boardgame"), postHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const { slug } = request.query;
@@ -34,6 +32,10 @@ async function postHandler(request, response) {
     });
   }
 
-  const newBoardgame = await boardgame.create(requestUser.id, studio.id, request.body);
+  const newBoardgame = await boardgame.create(
+    requestUser.id,
+    studio.id,
+    request.body,
+  );
   return response.status(201).json(newBoardgame);
 }

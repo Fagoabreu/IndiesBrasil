@@ -2,18 +2,18 @@ import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import contentReview from "models/content-review";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(controller.canRequest("read:content_review"), getHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:content_review"), getHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const { content_type, content_id, page = 1, limit = 10 } = request.query;
 
   if (!content_type || !content_id) {
-    return response.status(400).json({ message: "content_type e content_id são obrigatórios." });
+    return response
+      .status(400)
+      .json({ message: "content_type e content_id são obrigatórios." });
   }
 
   const reviews = await contentReview.findByContent({

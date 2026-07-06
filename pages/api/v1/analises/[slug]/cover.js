@@ -4,13 +4,11 @@ import contentReview from "models/content-review";
 import uploadedImages from "models/uploadedImages";
 import { ValidationError } from "infra/errors";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.post(controller.canRequest("update:content_review"), postHandler);
-router.delete(controller.canRequest("update:content_review"), deleteHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .post(controller.canRequest("update:content_review"), postHandler)
+  .delete(controller.canRequest("update:content_review"), deleteHandler)
+  .handler(controller.errorHandlers);
 
 async function postHandler(request, response) {
   const { slug } = request.query;
@@ -34,7 +32,10 @@ async function postHandler(request, response) {
   const buffer = Buffer.from(match[2], "base64");
   const blob = new Blob([buffer], { type: `image/${match[1]}` });
 
-  const uploadedImage = await uploadedImages.uploadImage(blob, `analises/${slug}`);
+  const uploadedImage = await uploadedImages.uploadImage(
+    blob,
+    `analises/${slug}`,
+  );
   await contentReview.updateCoverImage(slug, requestUser.id, uploadedImage.id);
 
   return response.status(200).json({

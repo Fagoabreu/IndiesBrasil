@@ -4,13 +4,11 @@ import authorization from "models/authorization";
 import course from "models/course";
 import { ForbiddenError } from "infra/errors";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(controller.canRequest("read:course:comment"), listHandler);
-router.post(controller.canRequest("create:course:comment"), createHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:course:comment"), listHandler)
+  .post(controller.canRequest("create:course:comment"), createHandler)
+  .handler(controller.errorHandlers);
 
 async function listHandler(request, response) {
   const { slug, order } = request.query;
@@ -30,6 +28,11 @@ async function createHandler(request, response) {
   }
 
   const { content } = request.body;
-  const comment = await course.createLessonComment(slug, order, requestUser.id, content);
+  const comment = await course.createLessonComment(
+    slug,
+    order,
+    requestUser.id,
+    content,
+  );
   return response.status(201).json(comment);
 }

@@ -4,19 +4,22 @@ import user from "models/user";
 import authorization from "@/models/authorization";
 import { ForbiddenError } from "@/infra/errors";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-router.get(controller.canRequest("read:user"), getHandler);
-router.patch(controller.canRequest("update:user"), patchHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:user"), getHandler)
+  .patch(controller.canRequest("update:user"), patchHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const userTryingToRequest = request.context.user;
   const username = request.query.username;
   const userFound = await user.findOneByUsernameSecured(username);
 
-  const secureOutputValues = authorization.filterOutput(userTryingToRequest, "read:user", userFound);
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToRequest,
+    "read:user",
+    userFound,
+  );
 
   return response.status(200).json(secureOutputValues);
 }
@@ -30,13 +33,18 @@ async function patchHandler(request, response) {
   if (!authorization.can(userTryingToPatch, "update:user", targetUser)) {
     throw new ForbiddenError({
       message: "Você não possui permissão para atualizar outro usuário.",
-      action: "Verifique se você possui a feature necessária para atualizar outro usuário",
+      action:
+        "Verifique se você possui a feature necessária para atualizar outro usuário",
     });
   }
 
   const updatedUser = await user.update(username, userInputValues);
 
-  const secureOutputValues = authorization.filterOutput(userTryingToPatch, "read:user", updatedUser);
+  const secureOutputValues = authorization.filterOutput(
+    userTryingToPatch,
+    "read:user",
+    updatedUser,
+  );
 
   return response.status(200).json(secureOutputValues);
 }

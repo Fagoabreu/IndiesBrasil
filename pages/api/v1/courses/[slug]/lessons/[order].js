@@ -4,14 +4,12 @@ import authorization from "models/authorization";
 import course from "models/course";
 import { ForbiddenError } from "infra/errors";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(controller.canRequest("read:course:lesson"), getHandler);
-router.patch(controller.canRequest("update:course:lesson"), patchHandler);
-router.delete(controller.canRequest("delete:course:lesson"), deleteHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:course:lesson"), getHandler)
+  .patch(controller.canRequest("update:course:lesson"), patchHandler)
+  .delete(controller.canRequest("delete:course:lesson"), deleteHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const { slug, order } = request.query;
@@ -30,7 +28,12 @@ async function patchHandler(request, response) {
     });
   }
 
-  const updated = await course.updateLesson(slug, order, requestUser.id, request.body);
+  const updated = await course.updateLesson(
+    slug,
+    order,
+    requestUser.id,
+    request.body,
+  );
   return response.status(200).json(updated);
 }
 
