@@ -14,7 +14,9 @@ export async function POST(request, { params }) {
     const user = request.context.user;
 
     if (!authorization.can(user, "update:event")) {
-      throw new ForbiddenError({ message: "Você não possui permissão para editar eventos." });
+      throw new ForbiddenError({
+        message: "Você não possui permissão para editar eventos.",
+      });
     }
 
     const { id } = await params;
@@ -46,7 +48,9 @@ export async function DELETE(request, { params }) {
     const user = request.context.user;
 
     if (!authorization.can(user, "update:event")) {
-      throw new ForbiddenError({ message: "Você não possui permissão para editar eventos." });
+      throw new ForbiddenError({
+        message: "Você não possui permissão para editar eventos.",
+      });
     }
 
     const { id } = await params;

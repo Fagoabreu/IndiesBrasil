@@ -10,11 +10,22 @@ HorizontalCardComponent.propTypes = {
   description: PropTypes.string,
 };
 
-export default function HorizontalCardComponent({ image, alt, title, description }) {
+export default function HorizontalCardComponent({
+  image,
+  alt,
+  title,
+  description,
+}) {
   return (
     <div className={styles.card}>
       <div className={styles.imageWraper}>
-        <Image className={styles.qrImage} src={image} alt={alt} fill style={{ objectFit: "contain" }} />
+        <Image
+          className={styles.qrImage}
+          src={image}
+          alt={alt}
+          fill
+          style={{ objectFit: "contain" }}
+        />
       </div>
       <div className={styles.cardBody}>
         <h3 className={styles.cardTitle} size="medium">

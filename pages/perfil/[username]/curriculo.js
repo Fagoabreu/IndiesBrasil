@@ -24,7 +24,8 @@ export default function CurriculoPage() {
   const [loading, setLoading] = useState(true);
 
   const qrSettings = useMemo(() => {
-    if (!username || globalThis.window === undefined) return { ...DEFAULT_QR_SETTINGS };
+    if (!username || globalThis.window === undefined)
+      return { ...DEFAULT_QR_SETTINGS };
     try {
       const raw = localStorage.getItem(`qr_settings_${username}`);
       if (raw) return { ...DEFAULT_QR_SETTINGS, ...JSON.parse(raw) };
@@ -54,7 +55,14 @@ export default function CurriculoPage() {
     return <div className={styles.loading}>Perfil não encontrado.</div>;
   }
 
-  const { user, historico = [], formacoes = [], contacts = [], roles = [], tools = [] } = profile;
+  const {
+    user,
+    historico = [],
+    formacoes = [],
+    contacts = [],
+    roles = [],
+    tools = [],
+  } = profile;
 
   const fullName = profile.name || user.username;
   const profileUrl = `${SITE_URL}/perfil/${username}`;
@@ -93,15 +101,27 @@ export default function CurriculoPage() {
         {/* ===== CABEÇALHO ===== */}
         <header className={styles.cvHeader}>
           {/* Avatar */}
-          <Image src={user.avatar_image || "/images/avatar.png"} alt={fullName} width={82} height={82} className={styles.cvAvatar} />
+          <Image
+            src={user.avatar_image || "/images/avatar.png"}
+            alt={fullName}
+            width={82}
+            height={82}
+            className={styles.cvAvatar}
+          />
 
           {/* Nome / Especializações / Bio */}
           <div className={styles.cvHeaderMain}>
             <h1 className={styles.cvName}>{fullName}</h1>
 
-            {roles.length > 0 && <p className={styles.cvRoles}>{roles.map((r) => r.portfolio_role_name).join(" · ")}</p>}
+            {roles.length > 0 && (
+              <p className={styles.cvRoles}>
+                {roles.map((r) => r.portfolio_role_name).join(" · ")}
+              </p>
+            )}
 
-            {(user.resumo || user.bio) && <p className={styles.cvBio}>{user.resumo || user.bio}</p>}
+            {(user.resumo || user.bio) && (
+              <p className={styles.cvBio}>{user.resumo || user.bio}</p>
+            )}
           </div>
 
           {/* Coluna direita: contatos + QR */}
@@ -110,7 +130,11 @@ export default function CurriculoPage() {
               <ul className={styles.cvHeaderContacts}>
                 {contacts.map((c) => (
                   <li key={c.id}>
-                    {(c.nome || c.icon_key) && <span className={styles.cvContactLabel}>{c.nome || c.icon_key}</span>}
+                    {(c.nome || c.icon_key) && (
+                      <span className={styles.cvContactLabel}>
+                        {c.nome || c.icon_key}
+                      </span>
+                    )}
                     <span>{c.contact_value}</span>
                   </li>
                 ))}
@@ -158,13 +182,18 @@ export default function CurriculoPage() {
             {/* Histórico Profissional */}
             {sortedHistorico.length > 0 && (
               <section className={styles.cvSection}>
-                <h2 className={styles.cvSectionTitle}>Histórico Profissional</h2>
+                <h2 className={styles.cvSectionTitle}>
+                  Histórico Profissional
+                </h2>
                 {sortedHistorico.map((h) => (
                   <div key={h.id} className={styles.cvEntry}>
                     <div className={styles.cvEntryHeader}>
                       <span className={styles.cvEntryTitle}>{h.cargo}</span>
                       <span className={styles.cvDate}>
-                        {DateUtils.formatMonthYear(h.init_date)} — {h.end_date ? DateUtils.formatMonthYear(h.end_date) : "Atual"}
+                        {DateUtils.formatMonthYear(h.init_date)} —{" "}
+                        {h.end_date
+                          ? DateUtils.formatMonthYear(h.end_date)
+                          : "Atual"}
                       </span>
                     </div>
                     <div className={styles.cvEntrySub}>
@@ -172,13 +201,14 @@ export default function CurriculoPage() {
                       {h.cidade ? ` · ${h.cidade}` : ""}
                       {h.estado ? `, ${h.estado}` : ""}
                     </div>
-                    {Array.isArray(h.atribuicoes) && h.atribuicoes.length > 0 && (
-                      <ul className={styles.cvEntryList}>
-                        {h.atribuicoes.map((a) => (
-                          <li key={a}>{a}</li>
-                        ))}
-                      </ul>
-                    )}
+                    {Array.isArray(h.atribuicoes) &&
+                      h.atribuicoes.length > 0 && (
+                        <ul className={styles.cvEntryList}>
+                          {h.atribuicoes.map((a) => (
+                            <li key={a}>{a}</li>
+                          ))}
+                        </ul>
+                      )}
                   </div>
                 ))}
               </section>
@@ -193,7 +223,10 @@ export default function CurriculoPage() {
                     <div className={styles.cvEntryHeader}>
                       <span className={styles.cvEntryTitle}>{f.nome}</span>
                       <span className={styles.cvDate}>
-                        {DateUtils.formatMonthYear(f.init_date)} — {f.end_date ? DateUtils.formatMonthYear(f.end_date) : "Atual"}
+                        {DateUtils.formatMonthYear(f.init_date)} —{" "}
+                        {f.end_date
+                          ? DateUtils.formatMonthYear(f.end_date)
+                          : "Atual"}
                       </span>
                     </div>
                     <div className={styles.cvEntrySub}>{f.instituicao}</div>
@@ -212,8 +245,12 @@ export default function CurriculoPage() {
                 <ul className={styles.cvSideList}>
                   {contacts.map((c) => (
                     <li key={c.id} className={styles.cvSideItem}>
-                      <span className={styles.cvSideItemName}>{c.nome || c.icon_key}</span>
-                      <span className={styles.cvSideItemLevel}>{c.contact_value}</span>
+                      <span className={styles.cvSideItemName}>
+                        {c.nome || c.icon_key}
+                      </span>
+                      <span className={styles.cvSideItemLevel}>
+                        {c.contact_value}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -226,10 +263,18 @@ export default function CurriculoPage() {
                 <h2 className={styles.cvSectionTitle}>Especializações</h2>
                 <ul className={styles.cvSideList}>
                   {roles.map((r) => (
-                    <li key={r.portfolio_role_name} className={styles.cvSideItem}>
-                      <span className={styles.cvSideItemName}>{r.portfolio_role_name}</span>
+                    <li
+                      key={r.portfolio_role_name}
+                      className={styles.cvSideItem}
+                    >
+                      <span className={styles.cvSideItemName}>
+                        {r.portfolio_role_name}
+                      </span>
                       {r.experience && (
-                        <span className={styles.cvSideItemLevel}>{EXPERIENCE_LABELS[r.experience?.toLowerCase()] || r.experience}</span>
+                        <span className={styles.cvSideItemLevel}>
+                          {EXPERIENCE_LABELS[r.experience?.toLowerCase()] ||
+                            r.experience}
+                        </span>
                       )}
                     </li>
                   ))}
@@ -243,10 +288,16 @@ export default function CurriculoPage() {
                 <h2 className={styles.cvSectionTitle}>Ferramentas</h2>
                 <ul className={styles.cvSideList}>
                   {tools.map((t) => (
-                    <li key={t.portfolio_tool_id || t.name} className={styles.cvSideItem}>
+                    <li
+                      key={t.portfolio_tool_id || t.name}
+                      className={styles.cvSideItem}
+                    >
                       <span className={styles.cvSideItemName}>{t.name}</span>
                       {t.experience && (
-                        <span className={styles.cvSideItemLevel}>{EXPERIENCE_LABELS[t.experience?.toLowerCase()] || t.experience}</span>
+                        <span className={styles.cvSideItemLevel}>
+                          {EXPERIENCE_LABELS[t.experience?.toLowerCase()] ||
+                            t.experience}
+                        </span>
                       )}
                     </li>
                   ))}

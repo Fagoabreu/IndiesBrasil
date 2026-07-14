@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { Dialog, Button, FormControl, ActionMenu, ActionList } from "@primer/react";
+import {
+  Dialog,
+  Button,
+  FormControl,
+  ActionMenu,
+  ActionList,
+} from "@primer/react";
 import IconSvg from "@/components/IconSvg/IconSvg";
 import StarExperienceSelector from "@/components/Selectors/StarExperienceSelector";
 import styles from "./EditFerramentaModal.module.css";
@@ -61,13 +67,23 @@ export default function EditFerramentaModal({ onClose, onSave, initialData }) {
         <FormControl className={styles.formControl}>
           <FormControl.Label>Ferramenta</FormControl.Label>
           <ActionMenu>
-            <ActionMenu.Button block>{selectedTool ? selectedTool.name : "Selecionar ferramenta"}</ActionMenu.Button>
+            <ActionMenu.Button block>
+              {selectedTool ? selectedTool.name : "Selecionar ferramenta"}
+            </ActionMenu.Button>
             <ActionMenu.Overlay className={styles.toolsOverlay}>
               <ActionList>
                 {toolsCatalog.map((t) => (
-                  <ActionList.Item key={t.id} selected={form.tool_id === t.id} onSelect={() => update("tool_id", t.id)}>
+                  <ActionList.Item
+                    key={t.id}
+                    selected={form.tool_id === t.id}
+                    onSelect={() => update("tool_id", t.id)}
+                  >
                     <ActionList.LeadingVisual>
-                      <IconSvg src={`/images/tools/${t.icon_img}.svg`} alt={t.name} size={16} />
+                      <IconSvg
+                        src={`/images/tools/${t.icon_img}.svg`}
+                        alt={t.name}
+                        size={16}
+                      />
                     </ActionList.LeadingVisual>
                     {t.name}
                   </ActionList.Item>
@@ -79,13 +95,21 @@ export default function EditFerramentaModal({ onClose, onSave, initialData }) {
 
         <FormControl className={styles.formControl}>
           <FormControl.Label>Nível de experiência</FormControl.Label>
-          <StarExperienceSelector value={form.experience} onChange={(v) => update("experience", v)} />
+          <StarExperienceSelector
+            value={form.experience}
+            onChange={(v) => update("experience", v)}
+          />
         </FormControl>
       </div>
 
       <Dialog.Footer>
         <Button onClick={onClose}>Cancelar</Button>
-        <Button variant="primary" loading={loading} disabled={!form.tool_id} onClick={handleSave}>
+        <Button
+          variant="primary"
+          loading={loading}
+          disabled={!form.tool_id}
+          onClick={handleSave}
+        >
           Salvar
         </Button>
       </Dialog.Footer>

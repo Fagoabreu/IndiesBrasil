@@ -36,11 +36,17 @@ export default function GameCard({ game, priority = false }) {
             </div>
           )}
         </div>
-        <span className={`${styles.stageBadge} ${styles[`stage_${game.stage}`]}`}>{stageLabel}</span>
+        <span
+          className={`${styles.stageBadge} ${styles[`stage_${game.stage}`]}`}
+        >
+          {stageLabel}
+        </span>
         <span className={styles.ratingBadge}>
           <ContentRatingBadge rating={game.content_rating} size="sm" />
         </span>
-        {(game.has_lootboxes || game.has_in_game_purchases || game.has_excessive_ads) && (
+        {(game.has_lootboxes ||
+          game.has_in_game_purchases ||
+          game.has_excessive_ads) && (
           <span className={styles.monetizationBadge}>
             <MonetizationBadge
               hasLootboxes={game.has_lootboxes}
@@ -50,7 +56,9 @@ export default function GameCard({ game, priority = false }) {
             />
           </span>
         )}
-        {(game.has_lootboxes || game.has_in_game_purchases || game.has_excessive_ads) && (
+        {(game.has_lootboxes ||
+          game.has_in_game_purchases ||
+          game.has_excessive_ads) && (
           <span className={styles.monetizationBadge}>
             <MonetizationBadge
               hasLootboxes={game.has_lootboxes}
@@ -64,7 +72,9 @@ export default function GameCard({ game, priority = false }) {
 
       <div className={styles.cardBody}>
         <h2 className={styles.cardName}>{game.name}</h2>
-        {game.short_description && <p className={styles.cardDesc}>{game.short_description}</p>}
+        {game.short_description && (
+          <p className={styles.cardDesc}>{game.short_description}</p>
+        )}
 
         <div className={styles.cardMeta}>
           {game.studio_name && (
@@ -72,13 +82,21 @@ export default function GameCard({ game, priority = false }) {
               {game.studio_name}
             </span>
           )}
-          {game.genre && game.genre !== "Indefinido" && <span className={styles.genreBadge}>{game.genre}</span>}
+          {game.genre && game.genre !== "Indefinido" && (
+            <span className={styles.genreBadge}>{game.genre}</span>
+          )}
         </div>
 
         {(game.avg_rating > 0 || game.follower_count > 0) && (
           <div className={styles.cardStats}>
-            {game.avg_rating > 0 && <span className={styles.rating}>★ {Number(game.avg_rating).toFixed(1)}</span>}
-            {game.follower_count > 0 && <span className={styles.followers}>♥ {game.follower_count}</span>}
+            {game.avg_rating > 0 && (
+              <span className={styles.rating}>
+                ★ {Number(game.avg_rating).toFixed(1)}
+              </span>
+            )}
+            {game.follower_count > 0 && (
+              <span className={styles.followers}>♥ {game.follower_count}</span>
+            )}
           </div>
         )}
       </div>

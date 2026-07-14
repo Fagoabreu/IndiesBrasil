@@ -7,7 +7,13 @@ import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
 import styles from "./configuracoes.module.css";
 
-const EXPERIENCE_LEVELS = ["Estudante", "Junior", "Pleno", "Senior", "Especialista"];
+const EXPERIENCE_LEVELS = [
+  "Estudante",
+  "Junior",
+  "Pleno",
+  "Senior",
+  "Especialista",
+];
 
 async function fetchJSON(url, options = {}) {
   const res = await fetch(url, { credentials: "include", ...options });
@@ -18,7 +24,13 @@ async function fetchJSON(url, options = {}) {
 
 function StatusMsg({ msg }) {
   if (!msg?.text) return null;
-  return <p className={`${styles.statusMsg} ${msg.type === "ok" ? styles.statusMsgOk : styles.statusMsgErr}`}>{msg.text}</p>;
+  return (
+    <p
+      className={`${styles.statusMsg} ${msg.type === "ok" ? styles.statusMsgOk : styles.statusMsgErr}`}
+    >
+      {msg.text}
+    </p>
+  );
 }
 
 /* ============================================================
@@ -33,7 +45,9 @@ function HistoricoItemRow({ item, username, onSaved, onDeleted }) {
     estado: item.estado || "",
     init_date: item.init_date?.slice(0, 10) || "",
     end_date: item.end_date?.slice(0, 10) || "",
-    atribuicoes: Array.isArray(item.atribuicoes) ? item.atribuicoes.join("\n") : "",
+    atribuicoes: Array.isArray(item.atribuicoes)
+      ? item.atribuicoes.join("\n")
+      : "",
   });
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -75,7 +89,9 @@ function HistoricoItemRow({ item, username, onSaved, onDeleted }) {
     if (!confirm(`Remover "${item.cargo}"?`)) return;
     setDeleting(true);
     try {
-      await fetchJSON(`/api/v1/users/${username}/historico/${item.id}`, { method: "DELETE" });
+      await fetchJSON(`/api/v1/users/${username}/historico/${item.id}`, {
+        method: "DELETE",
+      });
       onDeleted();
     } catch (err) {
       alert(err.message);
@@ -92,10 +108,19 @@ function HistoricoItemRow({ item, username, onSaved, onDeleted }) {
           <div className={styles.itemSubtitle}>{item.company || ""}</div>
         </div>
         <div className={styles.itemActions}>
-          <button type="button" className={styles.btnOutline} onClick={() => setOpen((v) => !v)}>
+          <button
+            type="button"
+            className={styles.btnOutline}
+            onClick={() => setOpen((v) => !v)}
+          >
             {open ? "Fechar" : "Editar"}
           </button>
-          <button type="button" className={styles.btnDanger} onClick={handleDelete} disabled={deleting}>
+          <button
+            type="button"
+            className={styles.btnDanger}
+            onClick={handleDelete}
+            disabled={deleting}
+          >
             {deleting ? "..." : "Remover"}
           </button>
         </div>
@@ -106,42 +131,80 @@ function HistoricoItemRow({ item, username, onSaved, onDeleted }) {
           <div className={styles.fieldRow}>
             <div className={styles.field}>
               <label className={styles.label}>Cargo</label>
-              <input className={styles.input} value={form.cargo} onChange={(e) => update("cargo", e.target.value)} />
+              <input
+                className={styles.input}
+                value={form.cargo}
+                onChange={(e) => update("cargo", e.target.value)}
+              />
             </div>
             <div className={styles.field}>
               <label className={styles.label}>Empresa</label>
-              <input className={styles.input} value={form.company} onChange={(e) => update("company", e.target.value)} />
+              <input
+                className={styles.input}
+                value={form.company}
+                onChange={(e) => update("company", e.target.value)}
+              />
             </div>
           </div>
           <div className={styles.fieldRow}>
             <div className={styles.field}>
               <label className={styles.label}>Cidade</label>
-              <input className={styles.input} value={form.cidade} onChange={(e) => update("cidade", e.target.value)} />
+              <input
+                className={styles.input}
+                value={form.cidade}
+                onChange={(e) => update("cidade", e.target.value)}
+              />
             </div>
             <div className={styles.field}>
               <label className={styles.label}>Estado</label>
-              <input className={styles.input} value={form.estado} onChange={(e) => update("estado", e.target.value)} maxLength={2} />
+              <input
+                className={styles.input}
+                value={form.estado}
+                onChange={(e) => update("estado", e.target.value)}
+                maxLength={2}
+              />
             </div>
           </div>
           <div className={styles.fieldRow}>
             <div className={styles.field}>
               <label className={styles.label}>Início</label>
-              <input type="date" className={styles.input} value={form.init_date} onChange={(e) => update("init_date", e.target.value)} />
+              <input
+                type="date"
+                className={styles.input}
+                value={form.init_date}
+                onChange={(e) => update("init_date", e.target.value)}
+              />
             </div>
             <div className={styles.field}>
-              <label className={styles.label}>Conclusão (deixe vazio se atual)</label>
-              <input type="date" className={styles.input} value={form.end_date} onChange={(e) => update("end_date", e.target.value)} />
+              <label className={styles.label}>
+                Conclusão (deixe vazio se atual)
+              </label>
+              <input
+                type="date"
+                className={styles.input}
+                value={form.end_date}
+                onChange={(e) => update("end_date", e.target.value)}
+              />
             </div>
           </div>
           <div className={styles.field}>
             <label className={styles.label}>Atribuições (uma por linha)</label>
-            <textarea className={styles.textarea} rows={4} value={form.atribuicoes} onChange={(e) => update("atribuicoes", e.target.value)} />
+            <textarea
+              className={styles.textarea}
+              rows={4}
+              value={form.atribuicoes}
+              onChange={(e) => update("atribuicoes", e.target.value)}
+            />
           </div>
           <div className={styles.itemEditActions}>
             <button type="submit" className={styles.btnSave} disabled={saving}>
               {saving ? "Salvando..." : "Salvar"}
             </button>
-            <button type="button" className={styles.btnOutline} onClick={() => setOpen(false)}>
+            <button
+              type="button"
+              className={styles.btnOutline}
+              onClick={() => setOpen(false)}
+            >
               Cancelar
             </button>
           </div>
@@ -196,7 +259,9 @@ function FormacaoItemRow({ item, username, onSaved, onDeleted }) {
     if (!confirm(`Remover "${item.nome}"?`)) return;
     setDeleting(true);
     try {
-      await fetchJSON(`/api/v1/users/${username}/formacoes/${item.id}`, { method: "DELETE" });
+      await fetchJSON(`/api/v1/users/${username}/formacoes/${item.id}`, {
+        method: "DELETE",
+      });
       onDeleted();
     } catch (err) {
       alert(err.message);
@@ -213,10 +278,19 @@ function FormacaoItemRow({ item, username, onSaved, onDeleted }) {
           <div className={styles.itemSubtitle}>{item.instituicao || ""}</div>
         </div>
         <div className={styles.itemActions}>
-          <button type="button" className={styles.btnOutline} onClick={() => setOpen((v) => !v)}>
+          <button
+            type="button"
+            className={styles.btnOutline}
+            onClick={() => setOpen((v) => !v)}
+          >
             {open ? "Fechar" : "Editar"}
           </button>
-          <button type="button" className={styles.btnDanger} onClick={handleDelete} disabled={deleting}>
+          <button
+            type="button"
+            className={styles.btnDanger}
+            onClick={handleDelete}
+            disabled={deleting}
+          >
             {deleting ? "..." : "Remover"}
           </button>
         </div>
@@ -227,28 +301,52 @@ function FormacaoItemRow({ item, username, onSaved, onDeleted }) {
           <div className={styles.fieldRow}>
             <div className={styles.field}>
               <label className={styles.label}>Curso</label>
-              <input className={styles.input} value={form.nome} onChange={(e) => update("nome", e.target.value)} />
+              <input
+                className={styles.input}
+                value={form.nome}
+                onChange={(e) => update("nome", e.target.value)}
+              />
             </div>
             <div className={styles.field}>
               <label className={styles.label}>Instituição</label>
-              <input className={styles.input} value={form.instituicao} onChange={(e) => update("instituicao", e.target.value)} />
+              <input
+                className={styles.input}
+                value={form.instituicao}
+                onChange={(e) => update("instituicao", e.target.value)}
+              />
             </div>
           </div>
           <div className={styles.fieldRow}>
             <div className={styles.field}>
               <label className={styles.label}>Início</label>
-              <input type="date" className={styles.input} value={form.init_date} onChange={(e) => update("init_date", e.target.value)} />
+              <input
+                type="date"
+                className={styles.input}
+                value={form.init_date}
+                onChange={(e) => update("init_date", e.target.value)}
+              />
             </div>
             <div className={styles.field}>
-              <label className={styles.label}>Conclusão (deixe vazio se em andamento)</label>
-              <input type="date" className={styles.input} value={form.end_date} onChange={(e) => update("end_date", e.target.value)} />
+              <label className={styles.label}>
+                Conclusão (deixe vazio se em andamento)
+              </label>
+              <input
+                type="date"
+                className={styles.input}
+                value={form.end_date}
+                onChange={(e) => update("end_date", e.target.value)}
+              />
             </div>
           </div>
           <div className={styles.itemEditActions}>
             <button type="submit" className={styles.btnSave} disabled={saving}>
               {saving ? "Salvando..." : "Salvar"}
             </button>
-            <button type="button" className={styles.btnOutline} onClick={() => setOpen(false)}>
+            <button
+              type="button"
+              className={styles.btnOutline}
+              onClick={() => setOpen(false)}
+            >
               Cancelar
             </button>
           </div>
@@ -274,7 +372,9 @@ function ContatoItemRow({ item, contactTypes, username, onSaved, onDeleted }) {
     setForm((p) => ({ ...p, [field]: value }));
   }
 
-  const typeName = contactTypes.find((t) => t.id == item.contact_type_id)?.icon_key || String(item.contact_type_id);
+  const typeName =
+    contactTypes.find((t) => t.id == item.contact_type_id)?.icon_key ||
+    String(item.contact_type_id);
 
   async function handleSave(e) {
     e.preventDefault();
@@ -301,7 +401,9 @@ function ContatoItemRow({ item, contactTypes, username, onSaved, onDeleted }) {
     if (!confirm(`Remover contato "${typeName}"?`)) return;
     setDeleting(true);
     try {
-      await fetchJSON(`/api/v1/users/${username}/contacts/${item.id}`, { method: "DELETE" });
+      await fetchJSON(`/api/v1/users/${username}/contacts/${item.id}`, {
+        method: "DELETE",
+      });
       onDeleted();
     } catch (err) {
       alert(err.message);
@@ -318,10 +420,19 @@ function ContatoItemRow({ item, contactTypes, username, onSaved, onDeleted }) {
           <div className={styles.itemSubtitle}>{item.contact_value}</div>
         </div>
         <div className={styles.itemActions}>
-          <button type="button" className={styles.btnOutline} onClick={() => setOpen((v) => !v)}>
+          <button
+            type="button"
+            className={styles.btnOutline}
+            onClick={() => setOpen((v) => !v)}
+          >
             {open ? "Fechar" : "Editar"}
           </button>
-          <button type="button" className={styles.btnDanger} onClick={handleDelete} disabled={deleting}>
+          <button
+            type="button"
+            className={styles.btnDanger}
+            onClick={handleDelete}
+            disabled={deleting}
+          >
             {deleting ? "..." : "Remover"}
           </button>
         </div>
@@ -331,7 +442,11 @@ function ContatoItemRow({ item, contactTypes, username, onSaved, onDeleted }) {
         <form className={styles.itemEditForm} onSubmit={handleSave}>
           <div className={styles.field}>
             <label className={styles.label}>Tipo de contato</label>
-            <select className={styles.select} value={form.contact_type_id} onChange={(e) => update("contact_type_id", e.target.value)}>
+            <select
+              className={styles.select}
+              value={form.contact_type_id}
+              onChange={(e) => update("contact_type_id", e.target.value)}
+            >
               <option value="">Selecione...</option>
               {contactTypes.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -341,14 +456,24 @@ function ContatoItemRow({ item, contactTypes, username, onSaved, onDeleted }) {
             </select>
           </div>
           <div className={styles.field}>
-            <label className={styles.label}>Valor (URL, e-mail, @usuario…)</label>
-            <input className={styles.input} value={form.contact_value} onChange={(e) => update("contact_value", e.target.value)} />
+            <label className={styles.label}>
+              Valor (URL, e-mail, @usuario…)
+            </label>
+            <input
+              className={styles.input}
+              value={form.contact_value}
+              onChange={(e) => update("contact_value", e.target.value)}
+            />
           </div>
           <div className={styles.itemEditActions}>
             <button type="submit" className={styles.btnSave} disabled={saving}>
               {saving ? "Salvando..." : "Salvar"}
             </button>
-            <button type="button" className={styles.btnOutline} onClick={() => setOpen(false)}>
+            <button
+              type="button"
+              className={styles.btnOutline}
+              onClick={() => setOpen(false)}
+            >
               Cancelar
             </button>
           </div>
@@ -378,11 +503,17 @@ function RoleItemRow({ item, professions, username, onSaved, onDeleted }) {
     e.preventDefault();
     setSaving(true);
     try {
-      await fetchJSON(`/api/v1/users/${username}/roles/${item.portfolio_role_name}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: form.name, experience: form.experience }),
-      });
+      await fetchJSON(
+        `/api/v1/users/${username}/roles/${item.portfolio_role_name}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: form.name,
+            experience: form.experience,
+          }),
+        },
+      );
       setOpen(false);
       onSaved();
     } catch (err) {
@@ -393,10 +524,14 @@ function RoleItemRow({ item, professions, username, onSaved, onDeleted }) {
   }
 
   async function handleDelete() {
-    if (!confirm(`Remover especialização "${item.portfolio_role_name}"?`)) return;
+    if (!confirm(`Remover especialização "${item.portfolio_role_name}"?`))
+      return;
     setDeleting(true);
     try {
-      await fetchJSON(`/api/v1/users/${username}/roles/${item.portfolio_role_name}`, { method: "DELETE" });
+      await fetchJSON(
+        `/api/v1/users/${username}/roles/${item.portfolio_role_name}`,
+        { method: "DELETE" },
+      );
       onDeleted();
     } catch (err) {
       alert(err.message);
@@ -409,14 +544,25 @@ function RoleItemRow({ item, professions, username, onSaved, onDeleted }) {
     <div className={styles.itemRow}>
       <div className={styles.itemHeader}>
         <div className={styles.itemMeta}>
-          <div className={styles.itemTitle}>{item.role_name || item.portfolio_role_name}</div>
+          <div className={styles.itemTitle}>
+            {item.role_name || item.portfolio_role_name}
+          </div>
           <div className={styles.itemSubtitle}>{item.experience}</div>
         </div>
         <div className={styles.itemActions}>
-          <button type="button" className={styles.btnOutline} onClick={() => setOpen((v) => !v)}>
+          <button
+            type="button"
+            className={styles.btnOutline}
+            onClick={() => setOpen((v) => !v)}
+          >
             {open ? "Fechar" : "Editar"}
           </button>
-          <button type="button" className={styles.btnDanger} onClick={handleDelete} disabled={deleting}>
+          <button
+            type="button"
+            className={styles.btnDanger}
+            onClick={handleDelete}
+            disabled={deleting}
+          >
             {deleting ? "..." : "Remover"}
           </button>
         </div>
@@ -426,7 +572,11 @@ function RoleItemRow({ item, professions, username, onSaved, onDeleted }) {
         <form className={styles.itemEditForm} onSubmit={handleSave}>
           <div className={styles.field}>
             <label className={styles.label}>Especialização</label>
-            <select className={styles.select} value={form.name} onChange={(e) => update("name", e.target.value)}>
+            <select
+              className={styles.select}
+              value={form.name}
+              onChange={(e) => update("name", e.target.value)}
+            >
               <option value="">Selecione...</option>
               {professions.map((p) => (
                 <option key={p.name} value={p.name}>
@@ -437,7 +587,11 @@ function RoleItemRow({ item, professions, username, onSaved, onDeleted }) {
           </div>
           <div className={styles.field}>
             <label className={styles.label}>Nível</label>
-            <select className={styles.select} value={form.experience} onChange={(e) => update("experience", e.target.value)}>
+            <select
+              className={styles.select}
+              value={form.experience}
+              onChange={(e) => update("experience", e.target.value)}
+            >
               {EXPERIENCE_LEVELS.map((l) => (
                 <option key={l} value={l}>
                   {l}
@@ -449,7 +603,11 @@ function RoleItemRow({ item, professions, username, onSaved, onDeleted }) {
             <button type="submit" className={styles.btnSave} disabled={saving}>
               {saving ? "Salvando..." : "Salvar"}
             </button>
-            <button type="button" className={styles.btnOutline} onClick={() => setOpen(false)}>
+            <button
+              type="button"
+              className={styles.btnOutline}
+              onClick={() => setOpen(false)}
+            >
               Cancelar
             </button>
           </div>
@@ -479,11 +637,17 @@ function FerramentaItemRow({ item, tools, username, onSaved, onDeleted }) {
     e.preventDefault();
     setSaving(true);
     try {
-      await fetchJSON(`/api/v1/users/${username}/tools/${item.portfolio_tool_id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ portfolio_tool_id: Number(form.tool_id), experience: form.experience }),
-      });
+      await fetchJSON(
+        `/api/v1/users/${username}/tools/${item.portfolio_tool_id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            portfolio_tool_id: Number(form.tool_id),
+            experience: form.experience,
+          }),
+        },
+      );
       setOpen(false);
       onSaved();
     } catch (err) {
@@ -497,7 +661,10 @@ function FerramentaItemRow({ item, tools, username, onSaved, onDeleted }) {
     if (!confirm(`Remover ferramenta "${item.name}"?`)) return;
     setDeleting(true);
     try {
-      await fetchJSON(`/api/v1/users/${username}/tools/${item.portfolio_tool_id}`, { method: "DELETE" });
+      await fetchJSON(
+        `/api/v1/users/${username}/tools/${item.portfolio_tool_id}`,
+        { method: "DELETE" },
+      );
       onDeleted();
     } catch (err) {
       alert(err.message);
@@ -514,10 +681,19 @@ function FerramentaItemRow({ item, tools, username, onSaved, onDeleted }) {
           <div className={styles.itemSubtitle}>{item.experience}</div>
         </div>
         <div className={styles.itemActions}>
-          <button type="button" className={styles.btnOutline} onClick={() => setOpen((v) => !v)}>
+          <button
+            type="button"
+            className={styles.btnOutline}
+            onClick={() => setOpen((v) => !v)}
+          >
             {open ? "Fechar" : "Editar"}
           </button>
-          <button type="button" className={styles.btnDanger} onClick={handleDelete} disabled={deleting}>
+          <button
+            type="button"
+            className={styles.btnDanger}
+            onClick={handleDelete}
+            disabled={deleting}
+          >
             {deleting ? "..." : "Remover"}
           </button>
         </div>
@@ -527,7 +703,11 @@ function FerramentaItemRow({ item, tools, username, onSaved, onDeleted }) {
         <form className={styles.itemEditForm} onSubmit={handleSave}>
           <div className={styles.field}>
             <label className={styles.label}>Ferramenta</label>
-            <select className={styles.select} value={form.tool_id} onChange={(e) => update("tool_id", e.target.value)}>
+            <select
+              className={styles.select}
+              value={form.tool_id}
+              onChange={(e) => update("tool_id", e.target.value)}
+            >
               <option value="">Selecione...</option>
               {tools.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -538,7 +718,11 @@ function FerramentaItemRow({ item, tools, username, onSaved, onDeleted }) {
           </div>
           <div className={styles.field}>
             <label className={styles.label}>Nível</label>
-            <select className={styles.select} value={form.experience} onChange={(e) => update("experience", e.target.value)}>
+            <select
+              className={styles.select}
+              value={form.experience}
+              onChange={(e) => update("experience", e.target.value)}
+            >
               {EXPERIENCE_LEVELS.map((l) => (
                 <option key={l} value={l}>
                   {l}
@@ -550,7 +734,11 @@ function FerramentaItemRow({ item, tools, username, onSaved, onDeleted }) {
             <button type="submit" className={styles.btnSave} disabled={saving}>
               {saving ? "Salvando..." : "Salvar"}
             </button>
-            <button type="button" className={styles.btnOutline} onClick={() => setOpen(false)}>
+            <button
+              type="button"
+              className={styles.btnOutline}
+              onClick={() => setOpen(false)}
+            >
               Cancelar
             </button>
           </div>
@@ -601,12 +789,20 @@ export default function ProfileConfiguracoesPage() {
 
   // ---- Formação — add form ----
   const [showAddFormacao, setShowAddFormacao] = useState(false);
-  const [newFormacao, setNewFormacao] = useState({ nome: "", instituicao: "", init_date: "", end_date: "" });
+  const [newFormacao, setNewFormacao] = useState({
+    nome: "",
+    instituicao: "",
+    init_date: "",
+    end_date: "",
+  });
   const [addingFormacao, setAddingFormacao] = useState(false);
 
   // ---- Contatos — add form ----
   const [showAddContato, setShowAddContato] = useState(false);
-  const [newContato, setNewContato] = useState({ contact_type_id: "", contact_value: "" });
+  const [newContato, setNewContato] = useState({
+    contact_type_id: "",
+    contact_value: "",
+  });
   const [addingContato, setAddingContato] = useState(false);
   const [contatoMsg, setContatoMsg] = useState({ type: null, text: "" });
 
@@ -617,7 +813,10 @@ export default function ProfileConfiguracoesPage() {
 
   // ---- Ferramentas — add form ----
   const [showAddFerramenta, setShowAddFerramenta] = useState(false);
-  const [newFerramenta, setNewFerramenta] = useState({ tool_id: "", experience: "Estudante" });
+  const [newFerramenta, setNewFerramenta] = useState({
+    tool_id: "",
+    experience: "Estudante",
+  });
   const [addingFerramenta, setAddingFerramenta] = useState(false);
 
   /* ---------- load profile ---------- */
@@ -730,7 +929,15 @@ export default function ProfileConfiguracoesPage() {
           ordem: (profile.historico || []).length,
         }),
       });
-      setNewHistorico({ cargo: "", company: "", cidade: "", estado: "", init_date: "", end_date: "", atribuicoes: "" });
+      setNewHistorico({
+        cargo: "",
+        company: "",
+        cidade: "",
+        estado: "",
+        init_date: "",
+        end_date: "",
+        atribuicoes: "",
+      });
       setShowAddHistorico(false);
       await reloadProfile();
     } catch (err) {
@@ -756,7 +963,12 @@ export default function ProfileConfiguracoesPage() {
           ordem: (profile.formacoes || []).length,
         }),
       });
-      setNewFormacao({ nome: "", instituicao: "", init_date: "", end_date: "" });
+      setNewFormacao({
+        nome: "",
+        instituicao: "",
+        init_date: "",
+        end_date: "",
+      });
       setShowAddFormacao(false);
       await reloadProfile();
     } catch (err) {
@@ -890,7 +1102,11 @@ export default function ProfileConfiguracoesPage() {
               <div className={styles.fieldGroup}>
                 <div className={styles.field}>
                   <label className={styles.label}>Visibilidade</label>
-                  <select className={styles.select} value={visibility} onChange={(e) => setVisibility(e.target.value)}>
+                  <select
+                    className={styles.select}
+                    value={visibility}
+                    onChange={(e) => setVisibility(e.target.value)}
+                  >
                     <option value="public">Público</option>
                     <option value="followers">Seguidores</option>
                     <option value="private">Privado</option>
@@ -919,7 +1135,11 @@ export default function ProfileConfiguracoesPage() {
                 </div>
               </div>
 
-              <button type="submit" className={styles.btnSave} disabled={savingPerfil}>
+              <button
+                type="submit"
+                className={styles.btnSave}
+                disabled={savingPerfil}
+              >
                 {savingPerfil ? "Salvando..." : "Salvar perfil"}
               </button>
             </form>
@@ -934,12 +1154,20 @@ export default function ProfileConfiguracoesPage() {
             <h2 className={styles.sectionTitle}>Histórico Profissional</h2>
 
             <div className={styles.itemList}>
-              {(profile.historico || []).length === 0 && <p className={styles.empty}>Nenhum histórico cadastrado.</p>}
+              {(profile.historico || []).length === 0 && (
+                <p className={styles.empty}>Nenhum histórico cadastrado.</p>
+              )}
               {(profile.historico || [])
                 .slice()
                 .sort((a, b) => a.ordem - b.ordem)
                 .map((item) => (
-                  <HistoricoItemRow key={item.id} item={item} username={username} onSaved={reloadProfile} onDeleted={reloadProfile} />
+                  <HistoricoItemRow
+                    key={item.id}
+                    item={item}
+                    username={username}
+                    onSaved={reloadProfile}
+                    onDeleted={reloadProfile}
+                  />
                 ))}
             </div>
 
@@ -952,7 +1180,12 @@ export default function ProfileConfiguracoesPage() {
                     <input
                       className={styles.input}
                       value={newHistorico.cargo}
-                      onChange={(e) => setNewHistorico((p) => ({ ...p, cargo: e.target.value }))}
+                      onChange={(e) =>
+                        setNewHistorico((p) => ({
+                          ...p,
+                          cargo: e.target.value,
+                        }))
+                      }
                       required
                     />
                   </div>
@@ -961,7 +1194,12 @@ export default function ProfileConfiguracoesPage() {
                     <input
                       className={styles.input}
                       value={newHistorico.company}
-                      onChange={(e) => setNewHistorico((p) => ({ ...p, company: e.target.value }))}
+                      onChange={(e) =>
+                        setNewHistorico((p) => ({
+                          ...p,
+                          company: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                 </div>
@@ -971,7 +1209,12 @@ export default function ProfileConfiguracoesPage() {
                     <input
                       className={styles.input}
                       value={newHistorico.cidade}
-                      onChange={(e) => setNewHistorico((p) => ({ ...p, cidade: e.target.value }))}
+                      onChange={(e) =>
+                        setNewHistorico((p) => ({
+                          ...p,
+                          cidade: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                   <div className={styles.field}>
@@ -979,7 +1222,12 @@ export default function ProfileConfiguracoesPage() {
                     <input
                       className={styles.input}
                       value={newHistorico.estado}
-                      onChange={(e) => setNewHistorico((p) => ({ ...p, estado: e.target.value }))}
+                      onChange={(e) =>
+                        setNewHistorico((p) => ({
+                          ...p,
+                          estado: e.target.value,
+                        }))
+                      }
                       maxLength={2}
                     />
                   </div>
@@ -991,7 +1239,12 @@ export default function ProfileConfiguracoesPage() {
                       type="date"
                       className={styles.input}
                       value={newHistorico.init_date}
-                      onChange={(e) => setNewHistorico((p) => ({ ...p, init_date: e.target.value }))}
+                      onChange={(e) =>
+                        setNewHistorico((p) => ({
+                          ...p,
+                          init_date: e.target.value,
+                        }))
+                      }
                       required
                     />
                   </div>
@@ -1001,30 +1254,54 @@ export default function ProfileConfiguracoesPage() {
                       type="date"
                       className={styles.input}
                       value={newHistorico.end_date}
-                      onChange={(e) => setNewHistorico((p) => ({ ...p, end_date: e.target.value }))}
+                      onChange={(e) =>
+                        setNewHistorico((p) => ({
+                          ...p,
+                          end_date: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                 </div>
                 <div className={styles.field}>
-                  <label className={styles.label}>Atribuições (uma por linha)</label>
+                  <label className={styles.label}>
+                    Atribuições (uma por linha)
+                  </label>
                   <textarea
                     className={styles.textarea}
                     rows={3}
                     value={newHistorico.atribuicoes}
-                    onChange={(e) => setNewHistorico((p) => ({ ...p, atribuicoes: e.target.value }))}
+                    onChange={(e) =>
+                      setNewHistorico((p) => ({
+                        ...p,
+                        atribuicoes: e.target.value,
+                      }))
+                    }
                   />
                 </div>
                 <div className={styles.addFormActions}>
-                  <button type="submit" className={styles.btnSave} disabled={addingHistorico}>
+                  <button
+                    type="submit"
+                    className={styles.btnSave}
+                    disabled={addingHistorico}
+                  >
                     {addingHistorico ? "Adicionando..." : "Adicionar"}
                   </button>
-                  <button type="button" className={styles.btnOutline} onClick={() => setShowAddHistorico(false)}>
+                  <button
+                    type="button"
+                    className={styles.btnOutline}
+                    onClick={() => setShowAddHistorico(false)}
+                  >
                     Cancelar
                   </button>
                 </div>
               </form>
             ) : (
-              <button type="button" className={styles.btnOutline} onClick={() => setShowAddHistorico(true)}>
+              <button
+                type="button"
+                className={styles.btnOutline}
+                onClick={() => setShowAddHistorico(true)}
+              >
                 + Adicionar histórico
               </button>
             )}
@@ -1039,12 +1316,20 @@ export default function ProfileConfiguracoesPage() {
             <h2 className={styles.sectionTitle}>Formação Acadêmica</h2>
 
             <div className={styles.itemList}>
-              {(profile.formacoes || []).length === 0 && <p className={styles.empty}>Nenhuma formação cadastrada.</p>}
+              {(profile.formacoes || []).length === 0 && (
+                <p className={styles.empty}>Nenhuma formação cadastrada.</p>
+              )}
               {(profile.formacoes || [])
                 .slice()
                 .sort((a, b) => a.ordem - b.ordem)
                 .map((item) => (
-                  <FormacaoItemRow key={item.id} item={item} username={username} onSaved={reloadProfile} onDeleted={reloadProfile} />
+                  <FormacaoItemRow
+                    key={item.id}
+                    item={item}
+                    username={username}
+                    onSaved={reloadProfile}
+                    onDeleted={reloadProfile}
+                  />
                 ))}
             </div>
 
@@ -1057,7 +1342,9 @@ export default function ProfileConfiguracoesPage() {
                     <input
                       className={styles.input}
                       value={newFormacao.nome}
-                      onChange={(e) => setNewFormacao((p) => ({ ...p, nome: e.target.value }))}
+                      onChange={(e) =>
+                        setNewFormacao((p) => ({ ...p, nome: e.target.value }))
+                      }
                       required
                     />
                   </div>
@@ -1066,7 +1353,12 @@ export default function ProfileConfiguracoesPage() {
                     <input
                       className={styles.input}
                       value={newFormacao.instituicao}
-                      onChange={(e) => setNewFormacao((p) => ({ ...p, instituicao: e.target.value }))}
+                      onChange={(e) =>
+                        setNewFormacao((p) => ({
+                          ...p,
+                          instituicao: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                 </div>
@@ -1077,7 +1369,12 @@ export default function ProfileConfiguracoesPage() {
                       type="date"
                       className={styles.input}
                       value={newFormacao.init_date}
-                      onChange={(e) => setNewFormacao((p) => ({ ...p, init_date: e.target.value }))}
+                      onChange={(e) =>
+                        setNewFormacao((p) => ({
+                          ...p,
+                          init_date: e.target.value,
+                        }))
+                      }
                       required
                     />
                   </div>
@@ -1087,21 +1384,38 @@ export default function ProfileConfiguracoesPage() {
                       type="date"
                       className={styles.input}
                       value={newFormacao.end_date}
-                      onChange={(e) => setNewFormacao((p) => ({ ...p, end_date: e.target.value }))}
+                      onChange={(e) =>
+                        setNewFormacao((p) => ({
+                          ...p,
+                          end_date: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                 </div>
                 <div className={styles.addFormActions}>
-                  <button type="submit" className={styles.btnSave} disabled={addingFormacao}>
+                  <button
+                    type="submit"
+                    className={styles.btnSave}
+                    disabled={addingFormacao}
+                  >
                     {addingFormacao ? "Adicionando..." : "Adicionar"}
                   </button>
-                  <button type="button" className={styles.btnOutline} onClick={() => setShowAddFormacao(false)}>
+                  <button
+                    type="button"
+                    className={styles.btnOutline}
+                    onClick={() => setShowAddFormacao(false)}
+                  >
                     Cancelar
                   </button>
                 </div>
               </form>
             ) : (
-              <button type="button" className={styles.btnOutline} onClick={() => setShowAddFormacao(true)}>
+              <button
+                type="button"
+                className={styles.btnOutline}
+                onClick={() => setShowAddFormacao(true)}
+              >
                 + Adicionar formação
               </button>
             )}
@@ -1118,7 +1432,9 @@ export default function ProfileConfiguracoesPage() {
             <StatusMsg msg={contatoMsg} />
 
             <div className={styles.itemList}>
-              {(profile.contacts || []).length === 0 && <p className={styles.empty}>Nenhum contato cadastrado.</p>}
+              {(profile.contacts || []).length === 0 && (
+                <p className={styles.empty}>Nenhum contato cadastrado.</p>
+              )}
               {(profile.contacts || [])
                 .slice()
                 .sort((a, b) => a.ordem - b.ordem)
@@ -1142,7 +1458,12 @@ export default function ProfileConfiguracoesPage() {
                   <select
                     className={styles.select}
                     value={newContato.contact_type_id}
-                    onChange={(e) => setNewContato((p) => ({ ...p, contact_type_id: e.target.value }))}
+                    onChange={(e) =>
+                      setNewContato((p) => ({
+                        ...p,
+                        contact_type_id: e.target.value,
+                      }))
+                    }
                     required
                   >
                     <option value="">Selecione...</option>
@@ -1154,25 +1475,44 @@ export default function ProfileConfiguracoesPage() {
                   </select>
                 </div>
                 <div className={styles.field}>
-                  <label className={styles.label}>Valor (URL, e-mail, @usuario…)</label>
+                  <label className={styles.label}>
+                    Valor (URL, e-mail, @usuario…)
+                  </label>
                   <input
                     className={styles.input}
                     value={newContato.contact_value}
-                    onChange={(e) => setNewContato((p) => ({ ...p, contact_value: e.target.value }))}
+                    onChange={(e) =>
+                      setNewContato((p) => ({
+                        ...p,
+                        contact_value: e.target.value,
+                      }))
+                    }
                     required
                   />
                 </div>
                 <div className={styles.addFormActions}>
-                  <button type="submit" className={styles.btnSave} disabled={addingContato}>
+                  <button
+                    type="submit"
+                    className={styles.btnSave}
+                    disabled={addingContato}
+                  >
                     {addingContato ? "Adicionando..." : "Adicionar"}
                   </button>
-                  <button type="button" className={styles.btnOutline} onClick={() => setShowAddContato(false)}>
+                  <button
+                    type="button"
+                    className={styles.btnOutline}
+                    onClick={() => setShowAddContato(false)}
+                  >
                     Cancelar
                   </button>
                 </div>
               </form>
             ) : (
-              <button type="button" className={styles.btnOutline} onClick={() => setShowAddContato(true)}>
+              <button
+                type="button"
+                className={styles.btnOutline}
+                onClick={() => setShowAddContato(true)}
+              >
                 + Adicionar contato
               </button>
             )}
@@ -1189,7 +1529,11 @@ export default function ProfileConfiguracoesPage() {
               <h2 className={styles.sectionTitle}>Especializações</h2>
 
               <div className={styles.itemList}>
-                {(profile.roles || []).length === 0 && <p className={styles.empty}>Nenhuma especialização cadastrada.</p>}
+                {(profile.roles || []).length === 0 && (
+                  <p className={styles.empty}>
+                    Nenhuma especialização cadastrada.
+                  </p>
+                )}
                 {(profile.roles || []).map((item) => (
                   <RoleItemRow
                     key={item.portfolio_role_name}
@@ -1210,7 +1554,9 @@ export default function ProfileConfiguracoesPage() {
                     <select
                       className={styles.select}
                       value={newRole.name}
-                      onChange={(e) => setNewRole((p) => ({ ...p, name: e.target.value }))}
+                      onChange={(e) =>
+                        setNewRole((p) => ({ ...p, name: e.target.value }))
+                      }
                       required
                     >
                       <option value="">Selecione...</option>
@@ -1226,7 +1572,12 @@ export default function ProfileConfiguracoesPage() {
                     <select
                       className={styles.select}
                       value={newRole.experience}
-                      onChange={(e) => setNewRole((p) => ({ ...p, experience: e.target.value }))}
+                      onChange={(e) =>
+                        setNewRole((p) => ({
+                          ...p,
+                          experience: e.target.value,
+                        }))
+                      }
                     >
                       {EXPERIENCE_LEVELS.map((l) => (
                         <option key={l} value={l}>
@@ -1236,16 +1587,28 @@ export default function ProfileConfiguracoesPage() {
                     </select>
                   </div>
                   <div className={styles.addFormActions}>
-                    <button type="submit" className={styles.btnSave} disabled={addingRole}>
+                    <button
+                      type="submit"
+                      className={styles.btnSave}
+                      disabled={addingRole}
+                    >
                       {addingRole ? "Adicionando..." : "Adicionar"}
                     </button>
-                    <button type="button" className={styles.btnOutline} onClick={() => setShowAddRole(false)}>
+                    <button
+                      type="button"
+                      className={styles.btnOutline}
+                      onClick={() => setShowAddRole(false)}
+                    >
                       Cancelar
                     </button>
                   </div>
                 </form>
               ) : (
-                <button type="button" className={styles.btnOutline} onClick={() => setShowAddRole(true)}>
+                <button
+                  type="button"
+                  className={styles.btnOutline}
+                  onClick={() => setShowAddRole(true)}
+                >
                   + Adicionar especialização
                 </button>
               )}
@@ -1256,7 +1619,9 @@ export default function ProfileConfiguracoesPage() {
               <h2 className={styles.sectionTitle}>Ferramentas</h2>
 
               <div className={styles.itemList}>
-                {(profile.tools || []).length === 0 && <p className={styles.empty}>Nenhuma ferramenta cadastrada.</p>}
+                {(profile.tools || []).length === 0 && (
+                  <p className={styles.empty}>Nenhuma ferramenta cadastrada.</p>
+                )}
                 {(profile.tools || []).map((item) => (
                   <FerramentaItemRow
                     key={item.portfolio_tool_id}
@@ -1277,7 +1642,12 @@ export default function ProfileConfiguracoesPage() {
                     <select
                       className={styles.select}
                       value={newFerramenta.tool_id}
-                      onChange={(e) => setNewFerramenta((p) => ({ ...p, tool_id: e.target.value }))}
+                      onChange={(e) =>
+                        setNewFerramenta((p) => ({
+                          ...p,
+                          tool_id: e.target.value,
+                        }))
+                      }
                       required
                     >
                       <option value="">Selecione...</option>
@@ -1293,7 +1663,12 @@ export default function ProfileConfiguracoesPage() {
                     <select
                       className={styles.select}
                       value={newFerramenta.experience}
-                      onChange={(e) => setNewFerramenta((p) => ({ ...p, experience: e.target.value }))}
+                      onChange={(e) =>
+                        setNewFerramenta((p) => ({
+                          ...p,
+                          experience: e.target.value,
+                        }))
+                      }
                     >
                       {EXPERIENCE_LEVELS.map((l) => (
                         <option key={l} value={l}>
@@ -1303,16 +1678,28 @@ export default function ProfileConfiguracoesPage() {
                     </select>
                   </div>
                   <div className={styles.addFormActions}>
-                    <button type="submit" className={styles.btnSave} disabled={addingFerramenta}>
+                    <button
+                      type="submit"
+                      className={styles.btnSave}
+                      disabled={addingFerramenta}
+                    >
                       {addingFerramenta ? "Adicionando..." : "Adicionar"}
                     </button>
-                    <button type="button" className={styles.btnOutline} onClick={() => setShowAddFerramenta(false)}>
+                    <button
+                      type="button"
+                      className={styles.btnOutline}
+                      onClick={() => setShowAddFerramenta(false)}
+                    >
                       Cancelar
                     </button>
                   </div>
                 </form>
               ) : (
-                <button type="button" className={styles.btnOutline} onClick={() => setShowAddFerramenta(true)}>
+                <button
+                  type="button"
+                  className={styles.btnOutline}
+                  onClick={() => setShowAddFerramenta(true)}
+                >
                   + Adicionar ferramenta
                 </button>
               )}

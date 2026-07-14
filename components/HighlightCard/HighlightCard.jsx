@@ -16,7 +16,15 @@ const TYPE_ROUTES = {
 };
 
 export default function HighlightCard({ item }) {
-  const { type, name, slug, short_description, banner_url, studio_name, studio_logo_url } = item;
+  const {
+    type,
+    name,
+    slug,
+    short_description,
+    banner_url,
+    studio_name,
+    studio_logo_url,
+  } = item;
   const routeBase = TYPE_ROUTES[type] || "/";
   const typeLabel = TYPE_LABELS[type] || type;
 
@@ -25,7 +33,13 @@ export default function HighlightCard({ item }) {
       {/* Banner / cover */}
       <div className={styles.cardBanner}>
         {banner_url ? (
-          <Image src={banner_url} alt={name} fill sizes="(max-width: 768px) 100vw, 33vw" className={styles.bannerImg} />
+          <Image
+            src={banner_url}
+            alt={name}
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            className={styles.bannerImg}
+          />
         ) : (
           <div className={styles.bannerPlaceholder}>
             <span>{name[0]}</span>
@@ -37,11 +51,21 @@ export default function HighlightCard({ item }) {
       {/* Info */}
       <div className={styles.cardBody}>
         <h3 className={styles.cardName}>{name}</h3>
-        {short_description && <p className={styles.cardDesc}>{short_description}</p>}
+        {short_description && (
+          <p className={styles.cardDesc}>{short_description}</p>
+        )}
 
         {studio_name && (
           <div className={styles.studioRow}>
-            {studio_logo_url && <Image src={studio_logo_url} alt={studio_name} width={20} height={20} className={styles.studioLogo} />}
+            {studio_logo_url && (
+              <Image
+                src={studio_logo_url}
+                alt={studio_name}
+                width={20}
+                height={20}
+                className={styles.studioLogo}
+              />
+            )}
             <span className={styles.studioName}>{studio_name}</span>
           </div>
         )}

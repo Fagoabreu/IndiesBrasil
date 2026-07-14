@@ -144,7 +144,11 @@ exports.up = (pgm) => {
     platform: { type: "varchar(30)", notNull: true },
   });
 
-  pgm.addConstraint("game_platforms", "game_platforms_pkey", "PRIMARY KEY (game_id, platform)");
+  pgm.addConstraint(
+    "game_platforms",
+    "game_platforms_pkey",
+    "PRIMARY KEY (game_id, platform)",
+  );
 
   /* ---------------------------------------------------------------
    * 5. game_tags: M2M com a tabela tags
@@ -164,7 +168,11 @@ exports.up = (pgm) => {
     },
   });
 
-  pgm.addConstraint("game_tags", "game_tags_pkey", "PRIMARY KEY (game_id, tag_id)");
+  pgm.addConstraint(
+    "game_tags",
+    "game_tags_pkey",
+    "PRIMARY KEY (game_id, tag_id)",
+  );
 
   /* ---------------------------------------------------------------
    * 6. games_teams: créditos da equipe
@@ -186,7 +194,11 @@ exports.up = (pgm) => {
     roles: { type: "varchar(100)" },
   });
 
-  pgm.addConstraint("games_teams", "games_teams_game_member_uniq", "UNIQUE (game_id, team_member_id)");
+  pgm.addConstraint(
+    "games_teams",
+    "games_teams_game_member_uniq",
+    "UNIQUE (game_id, team_member_id)",
+  );
   pgm.createIndex("games_teams", "game_id");
 
   /* ---------------------------------------------------------------
@@ -212,7 +224,11 @@ exports.up = (pgm) => {
     },
   });
 
-  pgm.addConstraint("game_followers", "game_followers_pkey", "PRIMARY KEY (game_id, follower_id)");
+  pgm.addConstraint(
+    "game_followers",
+    "game_followers_pkey",
+    "PRIMARY KEY (game_id, follower_id)",
+  );
 
   /* ---------------------------------------------------------------
    * 8. game_reviews: avaliações 1–5 estrelas
@@ -245,8 +261,16 @@ exports.up = (pgm) => {
     },
   });
 
-  pgm.addConstraint("game_reviews", "game_reviews_game_reviewer_uniq", "UNIQUE (game_id, reviewer_id)");
-  pgm.addConstraint("game_reviews", "game_reviews_rating_check", "CHECK (rating BETWEEN 1 AND 5)");
+  pgm.addConstraint(
+    "game_reviews",
+    "game_reviews_game_reviewer_uniq",
+    "UNIQUE (game_id, reviewer_id)",
+  );
+  pgm.addConstraint(
+    "game_reviews",
+    "game_reviews_rating_check",
+    "CHECK (rating BETWEEN 1 AND 5)",
+  );
   pgm.createIndex("game_reviews", "game_id");
 
   /* ---------------------------------------------------------------

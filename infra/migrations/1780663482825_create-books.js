@@ -98,7 +98,11 @@ exports.up = (pgm) => {
     },
   });
 
-  pgm.addConstraint("book_followers", "book_followers_pkey", "PRIMARY KEY (book_id, follower_id)");
+  pgm.addConstraint(
+    "book_followers",
+    "book_followers_pkey",
+    "PRIMARY KEY (book_id, follower_id)",
+  );
   pgm.createIndex("book_followers", "follower_id");
 };
 

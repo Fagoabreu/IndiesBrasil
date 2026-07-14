@@ -168,7 +168,10 @@
 
 .submitBtn:hover:not(:disabled) {
   opacity: 0.9;
-  box-shadow: var(--brand-glow-sm, 0 0 12px rgba(var(--brand-rgb-primary), 0.4));
+  box-shadow: var(
+    --brand-glow-sm,
+    0 0 12px rgba(var(--brand-rgb-primary), 0.4)
+  );
 }
 
 .submitBtn:disabled {

@@ -8,7 +8,8 @@ import { SITE_URL } from "@/lib/seo";
 import styles from "./index.module.css";
 
 const PAGE_TITLE = "Quadrinhos e Livros — Indies Brasil";
-const PAGE_DESCRIPTION = "Descubra quadrinhos, mangás, livros e publicações criadas por artistas e escritores indie brasileiros.";
+const PAGE_DESCRIPTION =
+  "Descubra quadrinhos, mangás, livros e publicações criadas por artistas e escritores indie brasileiros.";
 const PAGE_URL = `${SITE_URL}/quadrinhos`;
 
 const BOOK_TYPES = {
@@ -48,25 +49,28 @@ export default function QuadrinhosPage() {
   const [followingBooks, setFollowingBooks] = useState([]);
   const [followingLoading, setFollowingLoading] = useState(false);
 
-  const loadAll = useCallback(async (pageNum, searchQuery, bookTypeQuery, stageQuery) => {
-    setAllLoading(true);
-    try {
-      const params = new URLSearchParams({
-        page: pageNum,
-        limit: LIMIT,
-        search: searchQuery,
-        book_type: bookTypeQuery,
-        stage: stageQuery,
-      });
-      const res = await fetch(`/api/v1/books?${params}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      setAllBooks((prev) => (pageNum === 1 ? data : [...prev, ...data]));
-      setAllHasMore(data.length === LIMIT);
-    } finally {
-      setAllLoading(false);
-    }
-  }, []);
+  const loadAll = useCallback(
+    async (pageNum, searchQuery, bookTypeQuery, stageQuery) => {
+      setAllLoading(true);
+      try {
+        const params = new URLSearchParams({
+          page: pageNum,
+          limit: LIMIT,
+          search: searchQuery,
+          book_type: bookTypeQuery,
+          stage: stageQuery,
+        });
+        const res = await fetch(`/api/v1/books?${params}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        setAllBooks((prev) => (pageNum === 1 ? data : [...prev, ...data]));
+        setAllHasMore(data.length === LIMIT);
+      } finally {
+        setAllLoading(false);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -121,7 +125,11 @@ export default function QuadrinhosPage() {
 
   return (
     <div className={styles.page}>
-      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} />
+      <SeoHead
+        title={PAGE_TITLE}
+        description={PAGE_DESCRIPTION}
+        canonical={PAGE_URL}
+      />
 
       <header className={styles.pageHeader}>
         <div className={styles.headerBlock}>
@@ -133,7 +141,9 @@ export default function QuadrinhosPage() {
               </span>
             )}
           </div>
-          <p className={styles.pageSubtitle}>Descubra quadrinhos, mangás, livros e publicações indie brasileiras.</p>
+          <p className={styles.pageSubtitle}>
+            Descubra quadrinhos, mangás, livros e publicações indie brasileiras.
+          </p>
 
           {tab === "all" && (
             <div className={styles.searchWrapper}>
@@ -146,7 +156,11 @@ export default function QuadrinhosPage() {
                 className={styles.searchInput}
               />
               <div className={styles.selectRow}>
-                <select className={styles.select} value={bookType} onChange={(e) => setBookType(e.target.value)}>
+                <select
+                  className={styles.select}
+                  value={bookType}
+                  onChange={(e) => setBookType(e.target.value)}
+                >
                   <option value="">Todos os tipos</option>
                   {Object.entries(BOOK_TYPES).map(([k, v]) => (
                     <option key={k} value={k}>
@@ -154,7 +168,11 @@ export default function QuadrinhosPage() {
                     </option>
                   ))}
                 </select>
-                <select className={styles.select} value={stage} onChange={(e) => setStage(e.target.value)}>
+                <select
+                  className={styles.select}
+                  value={stage}
+                  onChange={(e) => setStage(e.target.value)}
+                >
                   <option value="">Todas as fases</option>
                   {Object.entries(STAGES).map(([k, v]) => (
                     <option key={k} value={k}>
@@ -168,7 +186,11 @@ export default function QuadrinhosPage() {
         </div>
 
         {user && (
-          <div className={styles.feedTabs} role="tablist" aria-label="Filtros de publicações">
+          <div
+            className={styles.feedTabs}
+            role="tablist"
+            aria-label="Filtros de publicações"
+          >
             <button
               type="button"
               role="tab"
@@ -216,7 +238,11 @@ export default function QuadrinhosPage() {
 
           {tab === "all" && allHasMore && (
             <div className={styles.loadMoreWrapper}>
-              <button className={styles.loadMore} disabled={allLoading} onClick={() => setAllPage((p) => p + 1)}>
+              <button
+                className={styles.loadMore}
+                disabled={allLoading}
+                onClick={() => setAllPage((p) => p + 1)}
+              >
                 {allLoading ? <Spinner size="small" /> : "Carregar mais"}
               </button>
             </div>

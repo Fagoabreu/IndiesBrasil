@@ -188,7 +188,8 @@ export default function ConfiguracoesPage() {
   // Jogos de Mesa
   const [boardgames, setBoardgames] = useState([]);
   const [newBoardgameName, setNewBoardgameName] = useState("");
-  const [newBoardgameCategory, setNewBoardgameCategory] = useState("board_game");
+  const [newBoardgameCategory, setNewBoardgameCategory] =
+    useState("board_game");
   const [newBoardgameStage, setNewBoardgameStage] = useState("concept");
   const [creatingBoardgame, setCreatingBoardgame] = useState(false);
   const [boardgameMsg, setBoardgameMsg] = useState({ type: null, text: "" });
@@ -224,7 +225,10 @@ export default function ConfiguracoesPage() {
   const [editBoardgameForm, setEditBoardgameForm] = useState(null);
   const [loadingBoardgameEdit, setLoadingBoardgameEdit] = useState(false);
   const [savingBoardgame, setSavingBoardgame] = useState(false);
-  const [editBoardgameMsg, setEditBoardgameMsg] = useState({ type: null, text: "" });
+  const [editBoardgameMsg, setEditBoardgameMsg] = useState({
+    type: null,
+    text: "",
+  });
 
   // Mídia de jogo de mesa
   const [activeBgTab, setActiveBgTab] = useState("info");
@@ -267,7 +271,9 @@ export default function ConfiguracoesPage() {
   async function fetchStudio() {
     if (!slug) return;
     try {
-      const res = await fetch(`/api/v1/studios/${slug}`, { credentials: "include" });
+      const res = await fetch(`/api/v1/studios/${slug}`, {
+        credentials: "include",
+      });
       const data = await res.json();
       if (!res.ok || data.status_code) {
         router.replace(`/estudios/${slug}`);
@@ -304,7 +310,9 @@ export default function ConfiguracoesPage() {
   async function fetchInvites() {
     if (!slug) return;
     try {
-      const res = await fetch(`/api/v1/studios/${slug}/invitations`, { credentials: "include" });
+      const res = await fetch(`/api/v1/studios/${slug}/invitations`, {
+        credentials: "include",
+      });
       if (res.ok) setPendingInvites(await res.json());
     } catch {
       // silently ignore
@@ -314,7 +322,9 @@ export default function ConfiguracoesPage() {
   async function fetchContacts() {
     if (!slug) return;
     try {
-      const res = await fetch(`/api/v1/studios/${slug}/contacts`, { credentials: "include" });
+      const res = await fetch(`/api/v1/studios/${slug}/contacts`, {
+        credentials: "include",
+      });
       if (res.ok) setContacts(await res.json());
     } catch {
       // silently ignore
@@ -324,7 +334,9 @@ export default function ConfiguracoesPage() {
   async function fetchGames() {
     if (!slug) return;
     try {
-      const res = await fetch(`/api/v1/studios/${slug}/games`, { credentials: "include" });
+      const res = await fetch(`/api/v1/studios/${slug}/games`, {
+        credentials: "include",
+      });
       if (res.ok) setGames(await res.json());
     } catch {
       // silently ignore
@@ -334,7 +346,9 @@ export default function ConfiguracoesPage() {
   async function fetchBoardgames() {
     if (!slug) return;
     try {
-      const res = await fetch(`/api/v1/studios/${slug}/boardgames`, { credentials: "include" });
+      const res = await fetch(`/api/v1/studios/${slug}/boardgames`, {
+        credentials: "include",
+      });
       if (res.ok) setBoardgames(await res.json());
     } catch {
       // silently ignore
@@ -344,7 +358,9 @@ export default function ConfiguracoesPage() {
   async function fetchBooks() {
     if (!slug) return;
     try {
-      const res = await fetch(`/api/v1/studios/${slug}/books`, { credentials: "include" });
+      const res = await fetch(`/api/v1/studios/${slug}/books`, {
+        credentials: "include",
+      });
       if (res.ok) setBooks(await res.json());
     } catch {
       // silently ignore
@@ -501,14 +517,23 @@ export default function ConfiguracoesPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setInviteMsg({ type: "error", text: data.message || "Erro ao enviar convite." });
+        setInviteMsg({
+          type: "error",
+          text: data.message || "Erro ao enviar convite.",
+        });
         return;
       }
       setInviteUsername("");
-      setInviteMsg({ type: "success", text: `Convite enviado para @${inviteUsername.trim()}.` });
+      setInviteMsg({
+        type: "success",
+        text: `Convite enviado para @${inviteUsername.trim()}.`,
+      });
       fetchInvites();
     } catch {
-      setInviteMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setInviteMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setInviting(false);
     }
@@ -532,13 +557,19 @@ export default function ConfiguracoesPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setBookMsg({ type: "error", text: data.message || "Erro ao criar publicação." });
+        setBookMsg({
+          type: "error",
+          text: data.message || "Erro ao criar publicação.",
+        });
         return;
       }
       setNewBookTitle("");
       setNewBookType("book");
       setNewBookStage("concept");
-      setBookMsg({ type: "success", text: `Publicação "${data.title}" criada!` });
+      setBookMsg({
+        type: "success",
+        text: `Publicação "${data.title}" criada!`,
+      });
       fetchBooks();
       handleOpenBookEdit(data.slug);
     } catch {
@@ -561,10 +592,15 @@ export default function ConfiguracoesPage() {
     setActiveBookTab("info");
     setLoadingBookEdit(true);
     try {
-      const res = await fetch(`/api/v1/books/${bookSlug}`, { credentials: "include" });
+      const res = await fetch(`/api/v1/books/${bookSlug}`, {
+        credentials: "include",
+      });
       const data = await res.json();
       if (!res.ok) {
-        setEditBookMsg({ type: "error", text: data.message || "Erro ao carregar publicação." });
+        setEditBookMsg({
+          type: "error",
+          text: data.message || "Erro ao carregar publicação.",
+        });
         return;
       }
       setEditBookForm({
@@ -605,7 +641,10 @@ export default function ConfiguracoesPage() {
       const payload = {
         ...editBookForm,
         title: editBookForm.title.trim(),
-        pages: editBookForm.pages === "" ? null : Number.parseInt(editBookForm.pages, 10),
+        pages:
+          editBookForm.pages === ""
+            ? null
+            : Number.parseInt(editBookForm.pages, 10),
       };
       // Só incluir store_pages se o usuário interagiu com a aba Lojas
       if (Array.isArray(editBookForm.store_pages)) {
@@ -626,16 +665,25 @@ export default function ConfiguracoesPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setEditBookMsg({ type: "error", text: data.message || "Erro ao salvar publicação." });
+        setEditBookMsg({
+          type: "error",
+          text: data.message || "Erro ao salvar publicação.",
+        });
         return;
       }
-      setEditBookMsg({ type: "success", text: "Publicação atualizada com sucesso!" });
+      setEditBookMsg({
+        type: "success",
+        text: "Publicação atualizada com sucesso!",
+      });
       fetchBooks();
       if (data.slug && data.slug !== editingBookSlug) {
         setEditingBookSlug(data.slug);
       }
     } catch {
-      setEditBookMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setEditBookMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setSavingBook(false);
     }
@@ -671,7 +719,10 @@ export default function ConfiguracoesPage() {
       if (!res.ok) throw new Error("Falha no upload da imagem.");
       fetchBooks();
     } catch {
-      setEditBookMsg({ type: "error", text: "Erro ao enviar capa da publicação." });
+      setEditBookMsg({
+        type: "error",
+        text: "Erro ao enviar capa da publicação.",
+      });
     } finally {
       setUploadingBookImg(false);
     }
@@ -695,7 +746,10 @@ export default function ConfiguracoesPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setGameMsg({ type: "error", text: data.message || "Erro ao criar jogo." });
+        setGameMsg({
+          type: "error",
+          text: data.message || "Erro ao criar jogo.",
+        });
         return;
       }
       setNewGameName("");
@@ -738,7 +792,10 @@ export default function ConfiguracoesPage() {
       ]);
       const data = await gameRes.json();
       if (!gameRes.ok) {
-        setEditGameMsg({ type: "error", text: data.message || "Erro ao carregar jogo." });
+        setEditGameMsg({
+          type: "error",
+          text: data.message || "Erro ao carregar jogo.",
+        });
         return;
       }
       setEditGameForm({
@@ -778,11 +835,17 @@ export default function ConfiguracoesPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ url: newVideoUrl.trim(), caption: newVideoCaption.trim() || null }),
+        body: JSON.stringify({
+          url: newVideoUrl.trim(),
+          caption: newVideoCaption.trim() || null,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setVideoMsg({ type: "error", text: data.message || "Erro ao adicionar vídeo." });
+        setVideoMsg({
+          type: "error",
+          text: data.message || "Erro ao adicionar vídeo.",
+        });
         return;
       }
       setGameVideos((v) => [...v, data]);
@@ -796,10 +859,13 @@ export default function ConfiguracoesPage() {
   async function handleRemoveVideo(mediaId) {
     setRemovingVideoId(mediaId);
     try {
-      const res = await fetch(`/api/v1/games/${editingGameSlug}/media/${mediaId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      const res = await fetch(
+        `/api/v1/games/${editingGameSlug}/media/${mediaId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
       if (res.ok) {
         setGameVideos((v) => v.filter((m) => m.id !== mediaId));
       }
@@ -836,7 +902,10 @@ export default function ConfiguracoesPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setEditGameMsg({ type: "error", text: data.message || "Erro ao salvar jogo." });
+        setEditGameMsg({
+          type: "error",
+          text: data.message || "Erro ao salvar jogo.",
+        });
         return;
       }
       setEditGameMsg({ type: "success", text: "Jogo atualizado com sucesso!" });
@@ -846,7 +915,10 @@ export default function ConfiguracoesPage() {
         setEditingGameSlug(data.slug);
       }
     } catch {
-      setEditGameMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setEditGameMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setSavingGame(false);
     }
@@ -894,15 +966,24 @@ export default function ConfiguracoesPage() {
     setBgVideoMsg({ type: null, text: "" });
     setBgAddingVideo(true);
     try {
-      const res = await fetch(`/api/v1/boardgames/${editingBoardgameSlug}/media`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ url: bgNewVideoUrl.trim(), caption: bgNewVideoCaption.trim() || null }),
-      });
+      const res = await fetch(
+        `/api/v1/boardgames/${editingBoardgameSlug}/media`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            url: bgNewVideoUrl.trim(),
+            caption: bgNewVideoCaption.trim() || null,
+          }),
+        },
+      );
       const data = await res.json();
       if (!res.ok) {
-        setBgVideoMsg({ type: "error", text: data.message || "Erro ao adicionar vídeo." });
+        setBgVideoMsg({
+          type: "error",
+          text: data.message || "Erro ao adicionar vídeo.",
+        });
         return;
       }
       setBgVideos((v) => [...v, data]);
@@ -916,10 +997,13 @@ export default function ConfiguracoesPage() {
   async function handleRemoveBgVideo(mediaId) {
     setBgRemovingVideoId(mediaId);
     try {
-      const res = await fetch(`/api/v1/boardgames/${editingBoardgameSlug}/media/${mediaId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      const res = await fetch(
+        `/api/v1/boardgames/${editingBoardgameSlug}/media/${mediaId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
       if (res.ok) {
         setBgVideos((v) => v.filter((m) => m.id !== mediaId));
       }
@@ -958,7 +1042,10 @@ export default function ConfiguracoesPage() {
       if (!res.ok) throw new Error("Falha no upload da imagem.");
       fetchBoardgames();
     } catch {
-      setEditBoardgameMsg({ type: "error", text: "Erro ao enviar imagem do jogo de mesa." });
+      setEditBoardgameMsg({
+        type: "error",
+        text: "Erro ao enviar imagem do jogo de mesa.",
+      });
     } finally {
       setUploadingBgImg(false);
     }
@@ -967,45 +1054,63 @@ export default function ConfiguracoesPage() {
   function togglePlatform(platform) {
     setEditGameForm((f) => ({
       ...f,
-      platforms: f.platforms.includes(platform) ? f.platforms.filter((p) => p !== platform) : [...f.platforms, platform],
+      platforms: f.platforms.includes(platform)
+        ? f.platforms.filter((p) => p !== platform)
+        : [...f.platforms, platform],
     }));
   }
 
   function addStorePage() {
     setEditGameForm((f) => ({
       ...f,
-      store_pages: [...f.store_pages, { store_type_id: "", page_url: "", price: "" }],
+      store_pages: [
+        ...f.store_pages,
+        { store_type_id: "", page_url: "", price: "" },
+      ],
     }));
   }
 
   function updateStorePage(idx, field, value) {
     setEditGameForm((f) => {
-      const updated = f.store_pages.map((sp, i) => (i === idx ? { ...sp, [field]: value } : sp));
+      const updated = f.store_pages.map((sp, i) =>
+        i === idx ? { ...sp, [field]: value } : sp,
+      );
       return { ...f, store_pages: updated };
     });
   }
 
   function removeStorePage(idx) {
-    setEditGameForm((f) => ({ ...f, store_pages: f.store_pages.filter((_, i) => i !== idx) }));
+    setEditGameForm((f) => ({
+      ...f,
+      store_pages: f.store_pages.filter((_, i) => i !== idx),
+    }));
   }
 
   // --- Book store page helpers ---
   function addBookStorePage() {
     setEditBookForm((f) => ({
       ...f,
-      store_pages: [...f.store_pages, { store_type_id: "", page_url: "", price: "" }],
+      store_pages: [
+        ...f.store_pages,
+        { store_type_id: "", page_url: "", price: "" },
+      ],
     }));
   }
 
   function updateBookStorePage(idx, field, value) {
     setEditBookForm((f) => {
-      const updated = f.store_pages.map((sp, i) => (i === idx ? { ...sp, [field]: value } : sp));
+      const updated = f.store_pages.map((sp, i) =>
+        i === idx ? { ...sp, [field]: value } : sp,
+      );
       return { ...f, store_pages: updated };
     });
   }
 
   function removeBookStorePage(idx) {
-    setEditBookForm((f) => ({ ...f, store_pages: f.store_pages.filter((_, i) => i !== idx) }));
+    setEditBookForm((f) => ({
+      ...f,
+      store_pages: f.store_pages.filter((_, i) => i !== idx),
+    }));
   }
 
   async function handleCreateBoardgame(e) {
@@ -1026,7 +1131,10 @@ export default function ConfiguracoesPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setBoardgameMsg({ type: "error", text: data.message || "Erro ao criar jogo de mesa." });
+        setBoardgameMsg({
+          type: "error",
+          text: data.message || "Erro ao criar jogo de mesa.",
+        });
         return;
       }
       setNewBoardgameName("");
@@ -1036,7 +1144,10 @@ export default function ConfiguracoesPage() {
       fetchBoardgames();
       handleOpenBoardgameEdit(data.slug);
     } catch {
-      setBoardgameMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setBoardgameMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setCreatingBoardgame(false);
     }
@@ -1069,7 +1180,10 @@ export default function ConfiguracoesPage() {
       ]);
       const data = await bgRes.json();
       if (!bgRes.ok) {
-        setEditBoardgameMsg({ type: "error", text: data.message || "Erro ao carregar jogo de mesa." });
+        setEditBoardgameMsg({
+          type: "error",
+          text: data.message || "Erro ao carregar jogo de mesa.",
+        });
         return;
       }
       setEditBoardgameForm({
@@ -1106,12 +1220,30 @@ export default function ConfiguracoesPage() {
       const payload = {
         ...editBoardgameForm,
         name: editBoardgameForm.name.trim(),
-        player_count_min: editBoardgameForm.player_count_min === "" ? null : Number(editBoardgameForm.player_count_min),
-        player_count_max: editBoardgameForm.player_count_max === "" ? null : Number(editBoardgameForm.player_count_max),
-        play_time_min: editBoardgameForm.play_time_min === "" ? null : Number(editBoardgameForm.play_time_min),
-        play_time_max: editBoardgameForm.play_time_max === "" ? null : Number(editBoardgameForm.play_time_max),
-        age_rating: editBoardgameForm.age_rating === "" ? null : Number(editBoardgameForm.age_rating),
-        weight: editBoardgameForm.weight === "" ? null : Number(editBoardgameForm.weight),
+        player_count_min:
+          editBoardgameForm.player_count_min === ""
+            ? null
+            : Number(editBoardgameForm.player_count_min),
+        player_count_max:
+          editBoardgameForm.player_count_max === ""
+            ? null
+            : Number(editBoardgameForm.player_count_max),
+        play_time_min:
+          editBoardgameForm.play_time_min === ""
+            ? null
+            : Number(editBoardgameForm.play_time_min),
+        play_time_max:
+          editBoardgameForm.play_time_max === ""
+            ? null
+            : Number(editBoardgameForm.play_time_max),
+        age_rating:
+          editBoardgameForm.age_rating === ""
+            ? null
+            : Number(editBoardgameForm.age_rating),
+        weight:
+          editBoardgameForm.weight === ""
+            ? null
+            : Number(editBoardgameForm.weight),
         mechanics: editBoardgameForm.mechanics.filter(Boolean),
       };
       const res = await fetch(`/api/v1/boardgames/${editingBoardgameSlug}`, {
@@ -1122,16 +1254,25 @@ export default function ConfiguracoesPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setEditBoardgameMsg({ type: "error", text: data.message || "Erro ao salvar jogo de mesa." });
+        setEditBoardgameMsg({
+          type: "error",
+          text: data.message || "Erro ao salvar jogo de mesa.",
+        });
         return;
       }
-      setEditBoardgameMsg({ type: "success", text: "Jogo de mesa atualizado com sucesso!" });
+      setEditBoardgameMsg({
+        type: "success",
+        text: "Jogo de mesa atualizado com sucesso!",
+      });
       fetchBoardgames();
       if (data.slug && data.slug !== editingBoardgameSlug) {
         setEditingBoardgameSlug(data.slug);
       }
     } catch {
-      setEditBoardgameMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setEditBoardgameMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setSavingBoardgame(false);
     }
@@ -1148,13 +1289,22 @@ export default function ConfiguracoesPage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        setMemberMsg({ type: "error", text: data.message || "Erro ao remover membro." });
+        setMemberMsg({
+          type: "error",
+          text: data.message || "Erro ao remover membro.",
+        });
         return;
       }
-      setMemberMsg({ type: "success", text: `@${username} removido do estúdio.` });
+      setMemberMsg({
+        type: "success",
+        text: `@${username} removido do estúdio.`,
+      });
       fetchStudio();
     } catch {
-      setMemberMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setMemberMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setRemovingUsername(null);
     }
@@ -1183,11 +1333,17 @@ export default function ConfiguracoesPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ contact_type_id: Number(newContactTypeId), contact_value: newContactValue.trim() }),
+        body: JSON.stringify({
+          contact_type_id: Number(newContactTypeId),
+          contact_value: newContactValue.trim(),
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setContactMsg({ type: "error", text: data.message || "Erro ao adicionar contato." });
+        setContactMsg({
+          type: "error",
+          text: data.message || "Erro ao adicionar contato.",
+        });
         return;
       }
       setNewContactTypeId("");
@@ -1195,7 +1351,10 @@ export default function ConfiguracoesPage() {
       setContactMsg({ type: "success", text: "Contato adicionado." });
       fetchContacts();
     } catch {
-      setContactMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setContactMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setAddingContact(false);
     }
@@ -1247,13 +1406,22 @@ export default function ConfiguracoesPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setStatusMsg({ type: "error", text: data.message || "Erro ao salvar." });
+        setStatusMsg({
+          type: "error",
+          text: data.message || "Erro ao salvar.",
+        });
         return;
       }
 
-      setStatusMsg({ type: "success", text: "Informações salvas com sucesso!" });
+      setStatusMsg({
+        type: "success",
+        text: "Informações salvas com sucesso!",
+      });
     } catch {
-      setStatusMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setStatusMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setSaving(false);
     }
@@ -1302,7 +1470,12 @@ export default function ConfiguracoesPage() {
 
         {activeTab === "profile" && (
           <>
-            {statusMsg.text && <StatusMessageComponent type={statusMsg.type} message={statusMsg.text} />}
+            {statusMsg.text && (
+              <StatusMessageComponent
+                type={statusMsg.type}
+                message={statusMsg.text}
+              />
+            )}
             <form onSubmit={handleSubmit} className={styles.form}>
               {/* Informações básicas */}
               <section className={styles.section}>
@@ -1343,7 +1516,13 @@ export default function ConfiguracoesPage() {
                     <label className={styles.label} htmlFor="cfg-founded">
                       Fundado em
                     </label>
-                    <input id="cfg-founded" type="date" className={styles.input} value={foundedAt} onChange={(e) => setFoundedAt(e.target.value)} />
+                    <input
+                      id="cfg-founded"
+                      type="date"
+                      className={styles.input}
+                      value={foundedAt}
+                      onChange={(e) => setFoundedAt(e.target.value)}
+                    />
                   </div>
 
                   <div className={styles.field}>
@@ -1403,14 +1582,24 @@ export default function ConfiguracoesPage() {
               <section className={styles.section}>
                 <h2 className={styles.sectionTitle}>Endereço</h2>
                 <label className={styles.checkboxLabel}>
-                  <input type="checkbox" checked={hasAddress} onChange={(e) => setHasAddress(e.target.checked)} /> Adicionar endereço físico
+                  <input
+                    type="checkbox"
+                    checked={hasAddress}
+                    onChange={(e) => setHasAddress(e.target.checked)}
+                  />{" "}
+                  Adicionar endereço físico
                 </label>
 
                 {hasAddress && (
                   <div className={styles.addressBlock}>
-                    <AddressFormFields value={address} onChange={handleAddressChange} />
+                    <AddressFormFields
+                      value={address}
+                      onChange={handleAddressChange}
+                    />
                     {hasAddress && (!address.city || !address.state) && (
-                      <p className={styles.fieldHint}>Cidade e Estado são obrigatórios para salvar o endereço.</p>
+                      <p className={styles.fieldHint}>
+                        Cidade e Estado são obrigatórios para salvar o endereço.
+                      </p>
                     )}
                   </div>
                 )}
@@ -1420,7 +1609,11 @@ export default function ConfiguracoesPage() {
                 <Link href={`/estudios/${slug}`} className={styles.btnCancel}>
                   Cancelar
                 </Link>
-                <button type="submit" className={styles.btnSave} disabled={saving}>
+                <button
+                  type="submit"
+                  className={styles.btnSave}
+                  disabled={saving}
+                >
                   {saving ? <Spinner size="small" /> : "Salvar alterações"}
                 </button>
               </div>
@@ -1454,7 +1647,11 @@ export default function ConfiguracoesPage() {
             )}
 
             <form onSubmit={handleAddContact} className={styles.contactRow}>
-              <select className={styles.input} value={newContactTypeId} onChange={(e) => setNewContactTypeId(e.target.value)}>
+              <select
+                className={styles.input}
+                value={newContactTypeId}
+                onChange={(e) => setNewContactTypeId(e.target.value)}
+              >
                 <option value="">Tipo de contato</option>
                 {contactTypes.map((ct) => (
                   <option key={ct.id} value={ct.id}>
@@ -1470,12 +1667,23 @@ export default function ConfiguracoesPage() {
                 onChange={(e) => setNewContactValue(e.target.value)}
                 maxLength={255}
               />
-              <button type="submit" className={styles.btnSave} disabled={addingContact || !newContactTypeId || !newContactValue.trim()}>
+              <button
+                type="submit"
+                className={styles.btnSave}
+                disabled={
+                  addingContact || !newContactTypeId || !newContactValue.trim()
+                }
+              >
                 {addingContact ? <Spinner size="small" /> : "Adicionar"}
               </button>
             </form>
 
-            {contactMsg.text && <StatusMessageComponent type={contactMsg.type} message={contactMsg.text} />}
+            {contactMsg.text && (
+              <StatusMessageComponent
+                type={contactMsg.type}
+                message={contactMsg.text}
+              />
+            )}
           </section>
         )}
 
@@ -1490,7 +1698,9 @@ export default function ConfiguracoesPage() {
                   <li key={m.user_id ?? m.id} className={styles.pendingItem}>
                     <span className={styles.pendingUsername}>
                       {m.display_name || m.username}
-                      {m.user_id === ownerId && <span className={styles.ownerBadge}> (dono)</span>}
+                      {m.user_id === ownerId && (
+                        <span className={styles.ownerBadge}> (dono)</span>
+                      )}
                     </span>
                     {m.user_id !== ownerId && (
                       <button
@@ -1507,7 +1717,12 @@ export default function ConfiguracoesPage() {
               </ul>
             )}
 
-            {memberMsg.text && <StatusMessageComponent type={memberMsg.type} message={memberMsg.text} />}
+            {memberMsg.text && (
+              <StatusMessageComponent
+                type={memberMsg.type}
+                message={memberMsg.text}
+              />
+            )}
           </section>
         )}
 
@@ -1522,10 +1737,17 @@ export default function ConfiguracoesPage() {
                 {games.map((g) => (
                   <li key={g.id} className={styles.gameListItem}>
                     <div className={styles.gameListRow}>
-                      <Link href={`/jogos/${g.slug}`} className={styles.gameLink} target="_blank" rel="noopener noreferrer">
+                      <Link
+                        href={`/jogos/${g.slug}`}
+                        className={styles.gameLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         {g.name}
                       </Link>
-                      <span className={styles.gameStageBadge}>{STAGE_LABELS[g.stage] ?? g.stage}</span>
+                      <span className={styles.gameStageBadge}>
+                        {STAGE_LABELS[g.stage] ?? g.stage}
+                      </span>
                       <button
                         type="button"
                         className={`${styles.btnEditGame} ${editingGameSlug === g.slug ? styles.btnEditGameActive : ""}`}
@@ -1536,7 +1758,13 @@ export default function ConfiguracoesPage() {
                       <button
                         type="button"
                         className={styles.btnClassify}
-                        onClick={() => setRatingModal({ type: "game", slug: g.slug, name: g.name })}
+                        onClick={() =>
+                          setRatingModal({
+                            type: "game",
+                            slug: g.slug,
+                            name: g.name,
+                          })
+                        }
                       >
                         Classificar
                       </button>
@@ -1551,7 +1779,10 @@ export default function ConfiguracoesPage() {
                           </div>
                         )}
                         {!loadingGameEdit && editGameForm && (
-                          <form onSubmit={handleSaveGame} className={styles.gameEditForm}>
+                          <form
+                            onSubmit={handleSaveGame}
+                            className={styles.gameEditForm}
+                          >
                             <div className={styles.gameEditTabs}>
                               {[
                                 { id: "info", label: "Informações" },
@@ -1572,27 +1803,41 @@ export default function ConfiguracoesPage() {
                             {activeGameTab === "info" && (
                               <div className={styles.gameEditGrid}>
                                 {/* Nome */}
-                                <label className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}>
+                                <label
+                                  className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}
+                                >
                                   <span>Nome do jogo *</span>
                                   <input
                                     type="text"
                                     className={styles.input}
                                     value={editGameForm.name}
-                                    onChange={(e) => setEditGameForm((f) => ({ ...f, name: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditGameForm((f) => ({
+                                        ...f,
+                                        name: e.target.value,
+                                      }))
+                                    }
                                     maxLength={255}
                                     required
                                   />
                                 </label>
 
                                 {/* Tagline */}
-                                <label className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}>
+                                <label
+                                  className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}
+                                >
                                   <span>Tagline</span>
                                   <input
                                     type="text"
                                     className={styles.input}
                                     placeholder="Frase curta sobre o jogo"
                                     value={editGameForm.short_description}
-                                    onChange={(e) => setEditGameForm((f) => ({ ...f, short_description: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditGameForm((f) => ({
+                                        ...f,
+                                        short_description: e.target.value,
+                                      }))
+                                    }
                                     maxLength={255}
                                   />
                                 </label>
@@ -1605,7 +1850,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="Ex: Plataforma, RPG, Puzzle"
                                     value={editGameForm.genre}
-                                    onChange={(e) => setEditGameForm((f) => ({ ...f, genre: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditGameForm((f) => ({
+                                        ...f,
+                                        genre: e.target.value,
+                                      }))
+                                    }
                                     maxLength={50}
                                   />
                                 </label>
@@ -1618,7 +1868,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="Ex: Unity, Godot, Unreal"
                                     value={editGameForm.engine}
-                                    onChange={(e) => setEditGameForm((f) => ({ ...f, engine: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditGameForm((f) => ({
+                                        ...f,
+                                        engine: e.target.value,
+                                      }))
+                                    }
                                     maxLength={50}
                                   />
                                 </label>
@@ -1629,13 +1884,20 @@ export default function ConfiguracoesPage() {
                                   <select
                                     className={styles.input}
                                     value={editGameForm.stage}
-                                    onChange={(e) => setEditGameForm((f) => ({ ...f, stage: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditGameForm((f) => ({
+                                        ...f,
+                                        stage: e.target.value,
+                                      }))
+                                    }
                                   >
                                     <option value="concept">Conceito</option>
                                     <option value="prototype">Protótipo</option>
                                     <option value="alpha">Alpha</option>
                                     <option value="beta">Beta</option>
-                                    <option value="early_access">Acesso Antecipado</option>
+                                    <option value="early_access">
+                                      Acesso Antecipado
+                                    </option>
                                     <option value="released">Lançado</option>
                                     <option value="cancelled">Cancelado</option>
                                   </select>
@@ -1648,42 +1910,74 @@ export default function ConfiguracoesPage() {
                                     type="date"
                                     className={styles.input}
                                     value={editGameForm.release_date}
-                                    onChange={(e) => setEditGameForm((f) => ({ ...f, release_date: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditGameForm((f) => ({
+                                        ...f,
+                                        release_date: e.target.value,
+                                      }))
+                                    }
                                   />
                                 </label>
 
                                 {/* Website */}
-                                <label className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}>
+                                <label
+                                  className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}
+                                >
                                   <span>Site oficial</span>
                                   <input
                                     type="url"
                                     className={styles.input}
                                     placeholder="https://"
                                     value={editGameForm.website_url}
-                                    onChange={(e) => setEditGameForm((f) => ({ ...f, website_url: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditGameForm((f) => ({
+                                        ...f,
+                                        website_url: e.target.value,
+                                      }))
+                                    }
                                     maxLength={512}
                                   />
                                 </label>
 
                                 {/* Descrição completa */}
-                                <label className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}>
+                                <label
+                                  className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}
+                                >
                                   <span>Sobre o jogo</span>
                                   <textarea
                                     className={`${styles.input} ${styles.textarea}`}
                                     placeholder="Descreva o jogo em detalhes..."
                                     value={editGameForm.description}
-                                    onChange={(e) => setEditGameForm((f) => ({ ...f, description: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditGameForm((f) => ({
+                                        ...f,
+                                        description: e.target.value,
+                                      }))
+                                    }
                                     rows={8}
                                   />
                                 </label>
 
                                 {/* Plataformas */}
-                                <fieldset className={`${styles.fieldset} ${styles.fieldsetFull}`}>
-                                  <legend className={styles.fieldsetLegend}>Plataformas</legend>
+                                <fieldset
+                                  className={`${styles.fieldset} ${styles.fieldsetFull}`}
+                                >
+                                  <legend className={styles.fieldsetLegend}>
+                                    Plataformas
+                                  </legend>
                                   <div className={styles.platformsGrid}>
                                     {PLATFORM_OPTIONS.map(([key, label]) => (
-                                      <label key={key} className={styles.checkboxLabel}>
-                                        <input type="checkbox" checked={editGameForm.platforms.includes(key)} onChange={() => togglePlatform(key)} />
+                                      <label
+                                        key={key}
+                                        className={styles.checkboxLabel}
+                                      >
+                                        <input
+                                          type="checkbox"
+                                          checked={editGameForm.platforms.includes(
+                                            key,
+                                          )}
+                                          onChange={() => togglePlatform(key)}
+                                        />
                                         {label}
                                       </label>
                                     ))}
@@ -1696,27 +1990,45 @@ export default function ConfiguracoesPage() {
                               <>
                                 {/* Imagem do card */}
                                 <div className={styles.gameImgUpload}>
-                                  <span className={styles.gameImgLabel}>Imagem do card (460 × 215)</span>
+                                  <span className={styles.gameImgLabel}>
+                                    Imagem do card (460 × 215)
+                                  </span>
                                   <div className={styles.gameImgPreviewWrap}>
-                                    {games.find((g) => g.slug === editingGameSlug)?.banner_url ? (
+                                    {games.find(
+                                      (g) => g.slug === editingGameSlug,
+                                    )?.banner_url ? (
                                       <Image
-                                        src={games.find((g) => g.slug === editingGameSlug).banner_url}
+                                        src={
+                                          games.find(
+                                            (g) => g.slug === editingGameSlug,
+                                          ).banner_url
+                                        }
                                         alt="Card atual"
                                         fill
                                         className={styles.gameImgPreview}
                                         sizes="300px"
                                       />
                                     ) : (
-                                      <div className={styles.gameImgPlaceholder}>Sem imagem</div>
+                                      <div
+                                        className={styles.gameImgPlaceholder}
+                                      >
+                                        Sem imagem
+                                      </div>
                                     )}
                                   </div>
                                   <button
                                     type="button"
                                     className={styles.btnOutlineSmall}
-                                    onClick={() => openGameImgPicker(editingGameSlug)}
+                                    onClick={() =>
+                                      openGameImgPicker(editingGameSlug)
+                                    }
                                     disabled={uploadingGameImg}
                                   >
-                                    {uploadingGameImg ? <Spinner size="small" /> : "Enviar imagem"}
+                                    {uploadingGameImg ? (
+                                      <Spinner size="small" />
+                                    ) : (
+                                      "Enviar imagem"
+                                    )}
                                   </button>
                                 </div>
                                 {/* Trailer */}
@@ -1727,19 +2039,32 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="https://youtube.com/..."
                                     value={editGameForm.trailer_url}
-                                    onChange={(e) => setEditGameForm((f) => ({ ...f, trailer_url: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditGameForm((f) => ({
+                                        ...f,
+                                        trailer_url: e.target.value,
+                                      }))
+                                    }
                                     maxLength={512}
                                   />
                                 </label>
 
                                 {/* Vídeos adicionais */}
                                 <fieldset className={styles.fieldset}>
-                                  <legend className={styles.fieldsetLegend}>Vídeos</legend>
+                                  <legend className={styles.fieldsetLegend}>
+                                    Vídeos
+                                  </legend>
                                   {gameVideos.length > 0 && (
                                     <ul className={styles.videoList}>
                                       {gameVideos.map((v) => (
-                                        <li key={v.id} className={styles.videoItem}>
-                                          <span className={styles.videoUrl} title={v.url}>
+                                        <li
+                                          key={v.id}
+                                          className={styles.videoItem}
+                                        >
+                                          <span
+                                            className={styles.videoUrl}
+                                            title={v.url}
+                                          >
                                             {v.caption || v.url}
                                           </span>
                                           <button
@@ -1747,9 +2072,15 @@ export default function ConfiguracoesPage() {
                                             className={styles.btnRemoveStore}
                                             aria-label="Remover vídeo"
                                             disabled={removingVideoId === v.id}
-                                            onClick={() => handleRemoveVideo(v.id)}
+                                            onClick={() =>
+                                              handleRemoveVideo(v.id)
+                                            }
                                           >
-                                            {removingVideoId === v.id ? <Spinner size="small" /> : "✕"}
+                                            {removingVideoId === v.id ? (
+                                              <Spinner size="small" />
+                                            ) : (
+                                              "✕"
+                                            )}
                                           </button>
                                         </li>
                                       ))}
@@ -1761,12 +2092,18 @@ export default function ConfiguracoesPage() {
                                       className={styles.input}
                                       placeholder="URL do vídeo (YouTube, Vimeo…)"
                                       value={newVideoUrl}
-                                      onChange={(e) => setNewVideoUrl(e.target.value)}
+                                      onChange={(e) =>
+                                        setNewVideoUrl(e.target.value)
+                                      }
                                       maxLength={512}
                                       onKeyDown={(e) => {
                                         if (e.key === "Enter") {
                                           e.preventDefault();
-                                          if (!addingVideo && newVideoUrl.trim()) handleAddVideo(e);
+                                          if (
+                                            !addingVideo &&
+                                            newVideoUrl.trim()
+                                          )
+                                            handleAddVideo(e);
                                         }
                                       }}
                                     />
@@ -1775,19 +2112,32 @@ export default function ConfiguracoesPage() {
                                       className={styles.input}
                                       placeholder="Legenda (opcional)"
                                       value={newVideoCaption}
-                                      onChange={(e) => setNewVideoCaption(e.target.value)}
+                                      onChange={(e) =>
+                                        setNewVideoCaption(e.target.value)
+                                      }
                                       maxLength={120}
                                     />
                                     <button
                                       type="button"
                                       className={styles.btnAddStore}
-                                      disabled={addingVideo || !newVideoUrl.trim()}
+                                      disabled={
+                                        addingVideo || !newVideoUrl.trim()
+                                      }
                                       onClick={handleAddVideo}
                                     >
-                                      {addingVideo ? <Spinner size="small" /> : "+ Adicionar vídeo"}
+                                      {addingVideo ? (
+                                        <Spinner size="small" />
+                                      ) : (
+                                        "+ Adicionar vídeo"
+                                      )}
                                     </button>
                                   </div>
-                                  {videoMsg.text && <StatusMessageComponent type={videoMsg.type} message={videoMsg.text} />}
+                                  {videoMsg.text && (
+                                    <StatusMessageComponent
+                                      type={videoMsg.type}
+                                      message={videoMsg.text}
+                                    />
+                                  )}
                                 </fieldset>
                               </>
                             )}
@@ -1796,15 +2146,28 @@ export default function ConfiguracoesPage() {
                               <>
                                 {/* Links de lojas */}
                                 <fieldset className={styles.fieldset}>
-                                  <legend className={styles.fieldsetLegend}>Links de lojas</legend>
+                                  <legend className={styles.fieldsetLegend}>
+                                    Links de lojas
+                                  </legend>
                                   {editGameForm.store_pages.map((sp, idx) => (
-                                    <div key={`store-${sp.store_type_id ?? ""}-${idx}`} className={styles.storePageRow}>
+                                    <div
+                                      key={`store-${sp.store_type_id ?? ""}-${idx}`}
+                                      className={styles.storePageRow}
+                                    >
                                       <select
                                         className={styles.input}
                                         value={sp.store_type_id}
-                                        onChange={(e) => updateStorePage(idx, "store_type_id", e.target.value)}
+                                        onChange={(e) =>
+                                          updateStorePage(
+                                            idx,
+                                            "store_type_id",
+                                            e.target.value,
+                                          )
+                                        }
                                       >
-                                        <option value="">Selecione a loja</option>
+                                        <option value="">
+                                          Selecione a loja
+                                        </option>
                                         {STORE_TYPES.map((st) => (
                                           <option key={st.id} value={st.id}>
                                             {st.name}
@@ -1816,7 +2179,13 @@ export default function ConfiguracoesPage() {
                                         className={styles.input}
                                         placeholder="URL da página na loja"
                                         value={sp.page_url}
-                                        onChange={(e) => updateStorePage(idx, "page_url", e.target.value)}
+                                        onChange={(e) =>
+                                          updateStorePage(
+                                            idx,
+                                            "page_url",
+                                            e.target.value,
+                                          )
+                                        }
                                       />
                                       <input
                                         type="number"
@@ -1825,7 +2194,13 @@ export default function ConfiguracoesPage() {
                                         value={sp.price}
                                         min="0"
                                         step="0.01"
-                                        onChange={(e) => updateStorePage(idx, "price", e.target.value)}
+                                        onChange={(e) =>
+                                          updateStorePage(
+                                            idx,
+                                            "price",
+                                            e.target.value,
+                                          )
+                                        }
                                       />
                                       <button
                                         type="button"
@@ -1837,21 +2212,45 @@ export default function ConfiguracoesPage() {
                                       </button>
                                     </div>
                                   ))}
-                                  <button type="button" className={styles.btnAddStore} onClick={addStorePage}>
+                                  <button
+                                    type="button"
+                                    className={styles.btnAddStore}
+                                    onClick={addStorePage}
+                                  >
                                     + Adicionar loja
                                   </button>
                                 </fieldset>
                               </>
                             )}
 
-                            {editGameMsg.text && <StatusMessageComponent type={editGameMsg.type} message={editGameMsg.text} />}
+                            {editGameMsg.text && (
+                              <StatusMessageComponent
+                                type={editGameMsg.type}
+                                message={editGameMsg.text}
+                              />
+                            )}
 
                             <div className={styles.gameEditActions}>
-                              <Link href={`/jogos/${g.slug}`} target="_blank" rel="noopener noreferrer" className={styles.btnOutlineSmall}>
+                              <Link
+                                href={`/jogos/${g.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={styles.btnOutlineSmall}
+                              >
                                 Ver página
                               </Link>
-                              <button type="submit" className={styles.btnSave} disabled={savingGame || !editGameForm.name.trim()}>
-                                {savingGame ? <Spinner size="small" /> : "Salvar alterações"}
+                              <button
+                                type="submit"
+                                className={styles.btnSave}
+                                disabled={
+                                  savingGame || !editGameForm.name.trim()
+                                }
+                              >
+                                {savingGame ? (
+                                  <Spinner size="small" />
+                                ) : (
+                                  "Salvar alterações"
+                                )}
                               </button>
                             </div>
                           </form>
@@ -1884,7 +2283,11 @@ export default function ConfiguracoesPage() {
                   onChange={(e) => setNewGameGenre(e.target.value)}
                   maxLength={60}
                 />
-                <select className={styles.input} value={newGameStage} onChange={(e) => setNewGameStage(e.target.value)}>
+                <select
+                  className={styles.input}
+                  value={newGameStage}
+                  onChange={(e) => setNewGameStage(e.target.value)}
+                >
                   <option value="concept">Conceito</option>
                   <option value="prototype">Protótipo</option>
                   <option value="alpha">Alpha</option>
@@ -1893,12 +2296,21 @@ export default function ConfiguracoesPage() {
                   <option value="released">Lançado</option>
                 </select>
               </div>
-              <button type="submit" className={styles.btnSave} disabled={creatingGame || !newGameName.trim()}>
+              <button
+                type="submit"
+                className={styles.btnSave}
+                disabled={creatingGame || !newGameName.trim()}
+              >
                 {creatingGame ? <Spinner size="small" /> : "Criar jogo"}
               </button>
             </form>
 
-            {gameMsg.text && <StatusMessageComponent type={gameMsg.type} message={gameMsg.text} />}
+            {gameMsg.text && (
+              <StatusMessageComponent
+                type={gameMsg.type}
+                message={gameMsg.text}
+              />
+            )}
           </section>
         )}
 
@@ -1912,11 +2324,20 @@ export default function ConfiguracoesPage() {
                 {boardgames.map((bg) => (
                   <li key={bg.id} className={styles.gameListItem}>
                     <div className={styles.gameListRow}>
-                      <Link href={`/jogos-de-mesa/${bg.slug}`} className={styles.gameLink} target="_blank" rel="noopener noreferrer">
+                      <Link
+                        href={`/jogos-de-mesa/${bg.slug}`}
+                        className={styles.gameLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         {bg.name}
                       </Link>
-                      <span className={styles.gameStageBadge}>{BG_STAGE_LABELS[bg.stage] ?? bg.stage}</span>
-                      <span className={styles.gameStageBadge}>{BG_CATEGORY_LABELS[bg.category] ?? bg.category}</span>
+                      <span className={styles.gameStageBadge}>
+                        {BG_STAGE_LABELS[bg.stage] ?? bg.stage}
+                      </span>
+                      <span className={styles.gameStageBadge}>
+                        {BG_CATEGORY_LABELS[bg.category] ?? bg.category}
+                      </span>
                       <button
                         type="button"
                         className={`${styles.btnEditGame} ${editingBoardgameSlug === bg.slug ? styles.btnEditGameActive : ""}`}
@@ -1927,7 +2348,13 @@ export default function ConfiguracoesPage() {
                       <button
                         type="button"
                         className={styles.btnClassify}
-                        onClick={() => setRatingModal({ type: "boardgame", slug: bg.slug, name: bg.name })}
+                        onClick={() =>
+                          setRatingModal({
+                            type: "boardgame",
+                            slug: bg.slug,
+                            name: bg.name,
+                          })
+                        }
                       >
                         Classificar
                       </button>
@@ -1941,7 +2368,10 @@ export default function ConfiguracoesPage() {
                           </div>
                         )}
                         {!loadingBoardgameEdit && editBoardgameForm && (
-                          <form onSubmit={handleSaveBoardgame} className={styles.gameEditForm}>
+                          <form
+                            onSubmit={handleSaveBoardgame}
+                            className={styles.gameEditForm}
+                          >
                             <div className={styles.gameEditTabs}>
                               {[
                                 { id: "info", label: "Informações" },
@@ -1966,7 +2396,12 @@ export default function ConfiguracoesPage() {
                                     type="text"
                                     className={styles.input}
                                     value={editBoardgameForm.name}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, name: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        name: e.target.value,
+                                      }))
+                                    }
                                     maxLength={255}
                                     required
                                   />
@@ -1979,7 +2414,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="Frase curta sobre o jogo"
                                     value={editBoardgameForm.short_description}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, short_description: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        short_description: e.target.value,
+                                      }))
+                                    }
                                     maxLength={255}
                                   />
                                 </label>
@@ -1989,13 +2429,20 @@ export default function ConfiguracoesPage() {
                                   <select
                                     className={styles.input}
                                     value={editBoardgameForm.category}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, category: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        category: e.target.value,
+                                      }))
+                                    }
                                   >
-                                    {Object.entries(BG_CATEGORY_LABELS).map(([k, v]) => (
-                                      <option key={k} value={k}>
-                                        {v}
-                                      </option>
-                                    ))}
+                                    {Object.entries(BG_CATEGORY_LABELS).map(
+                                      ([k, v]) => (
+                                        <option key={k} value={k}>
+                                          {v}
+                                        </option>
+                                      ),
+                                    )}
                                   </select>
                                 </label>
 
@@ -2004,13 +2451,20 @@ export default function ConfiguracoesPage() {
                                   <select
                                     className={styles.input}
                                     value={editBoardgameForm.stage}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, stage: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        stage: e.target.value,
+                                      }))
+                                    }
                                   >
-                                    {Object.entries(BG_STAGE_LABELS).map(([k, v]) => (
-                                      <option key={k} value={k}>
-                                        {v}
-                                      </option>
-                                    ))}
+                                    {Object.entries(BG_STAGE_LABELS).map(
+                                      ([k, v]) => (
+                                        <option key={k} value={k}>
+                                          {v}
+                                        </option>
+                                      ),
+                                    )}
                                   </select>
                                 </label>
 
@@ -2021,7 +2475,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     min="1"
                                     value={editBoardgameForm.player_count_min}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, player_count_min: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        player_count_min: e.target.value,
+                                      }))
+                                    }
                                   />
                                 </label>
 
@@ -2032,7 +2491,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     min="1"
                                     value={editBoardgameForm.player_count_max}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, player_count_max: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        player_count_max: e.target.value,
+                                      }))
+                                    }
                                   />
                                 </label>
 
@@ -2043,7 +2507,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     min="1"
                                     value={editBoardgameForm.play_time_min}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, play_time_min: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        play_time_min: e.target.value,
+                                      }))
+                                    }
                                   />
                                 </label>
 
@@ -2054,7 +2523,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     min="1"
                                     value={editBoardgameForm.play_time_max}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, play_time_max: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        play_time_max: e.target.value,
+                                      }))
+                                    }
                                   />
                                 </label>
 
@@ -2066,7 +2540,12 @@ export default function ConfiguracoesPage() {
                                     min="0"
                                     max="99"
                                     value={editBoardgameForm.age_rating}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, age_rating: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        age_rating: e.target.value,
+                                      }))
+                                    }
                                   />
                                 </label>
 
@@ -2079,7 +2558,12 @@ export default function ConfiguracoesPage() {
                                     max="5"
                                     step="0.1"
                                     value={editBoardgameForm.weight}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, weight: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        weight: e.target.value,
+                                      }))
+                                    }
                                   />
                                 </label>
 
@@ -2089,7 +2573,12 @@ export default function ConfiguracoesPage() {
                                     type="date"
                                     className={styles.input}
                                     value={editBoardgameForm.release_date}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, release_date: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        release_date: e.target.value,
+                                      }))
+                                    }
                                   />
                                 </label>
 
@@ -2100,18 +2589,30 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="https://"
                                     value={editBoardgameForm.website_url}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, website_url: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        website_url: e.target.value,
+                                      }))
+                                    }
                                     maxLength={512}
                                   />
                                 </label>
 
-                                <label className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}>
+                                <label
+                                  className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}
+                                >
                                   <span>Sobre o jogo</span>
                                   <textarea
                                     className={`${styles.input} ${styles.textarea}`}
                                     placeholder="Descreva o jogo em detalhes..."
                                     value={editBoardgameForm.description}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, description: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        description: e.target.value,
+                                      }))
+                                    }
                                     rows={4}
                                   />
                                 </label>
@@ -2122,22 +2623,38 @@ export default function ConfiguracoesPage() {
                               <>
                                 {/* Vídeos */}
                                 <fieldset className={styles.fieldset}>
-                                  <legend className={styles.fieldsetLegend}>Vídeos</legend>
+                                  <legend className={styles.fieldsetLegend}>
+                                    Vídeos
+                                  </legend>
                                   {bgVideos.length > 0 && (
                                     <ul className={styles.videoList}>
                                       {bgVideos.map((v) => (
-                                        <li key={v.id} className={styles.videoItem}>
-                                          <span className={styles.videoUrl} title={v.url}>
+                                        <li
+                                          key={v.id}
+                                          className={styles.videoItem}
+                                        >
+                                          <span
+                                            className={styles.videoUrl}
+                                            title={v.url}
+                                          >
                                             {v.caption || v.url}
                                           </span>
                                           <button
                                             type="button"
                                             className={styles.btnRemoveStore}
                                             aria-label="Remover vídeo"
-                                            disabled={bgRemovingVideoId === v.id}
-                                            onClick={() => handleRemoveBgVideo(v.id)}
+                                            disabled={
+                                              bgRemovingVideoId === v.id
+                                            }
+                                            onClick={() =>
+                                              handleRemoveBgVideo(v.id)
+                                            }
                                           >
-                                            {bgRemovingVideoId === v.id ? <Spinner size="small" /> : "✕"}
+                                            {bgRemovingVideoId === v.id ? (
+                                              <Spinner size="small" />
+                                            ) : (
+                                              "✕"
+                                            )}
                                           </button>
                                         </li>
                                       ))}
@@ -2149,12 +2666,18 @@ export default function ConfiguracoesPage() {
                                       className={styles.input}
                                       placeholder="URL do vídeo (YouTube, Vimeo…)"
                                       value={bgNewVideoUrl}
-                                      onChange={(e) => setBgNewVideoUrl(e.target.value)}
+                                      onChange={(e) =>
+                                        setBgNewVideoUrl(e.target.value)
+                                      }
                                       maxLength={512}
                                       onKeyDown={(e) => {
                                         if (e.key === "Enter") {
                                           e.preventDefault();
-                                          if (!bgAddingVideo && bgNewVideoUrl.trim()) handleAddBgVideo(e);
+                                          if (
+                                            !bgAddingVideo &&
+                                            bgNewVideoUrl.trim()
+                                          )
+                                            handleAddBgVideo(e);
                                         }
                                       }}
                                     />
@@ -2163,57 +2686,110 @@ export default function ConfiguracoesPage() {
                                       className={styles.input}
                                       placeholder="Legenda (opcional)"
                                       value={bgNewVideoCaption}
-                                      onChange={(e) => setBgNewVideoCaption(e.target.value)}
+                                      onChange={(e) =>
+                                        setBgNewVideoCaption(e.target.value)
+                                      }
                                       maxLength={120}
                                     />
                                     <button
                                       type="button"
                                       className={styles.btnAddStore}
-                                      disabled={bgAddingVideo || !bgNewVideoUrl.trim()}
+                                      disabled={
+                                        bgAddingVideo || !bgNewVideoUrl.trim()
+                                      }
                                       onClick={handleAddBgVideo}
                                     >
-                                      {bgAddingVideo ? <Spinner size="small" /> : "+ Adicionar vídeo"}
+                                      {bgAddingVideo ? (
+                                        <Spinner size="small" />
+                                      ) : (
+                                        "+ Adicionar vídeo"
+                                      )}
                                     </button>
                                   </div>
-                                  {bgVideoMsg.text && <StatusMessageComponent type={bgVideoMsg.type} message={bgVideoMsg.text} />}
+                                  {bgVideoMsg.text && (
+                                    <StatusMessageComponent
+                                      type={bgVideoMsg.type}
+                                      message={bgVideoMsg.text}
+                                    />
+                                  )}
                                 </fieldset>
 
                                 {/* Imagem do card */}
                                 <div className={styles.gameImgUpload}>
-                                  <span className={styles.gameImgLabel}>Imagem do card (460 × 215)</span>
+                                  <span className={styles.gameImgLabel}>
+                                    Imagem do card (460 × 215)
+                                  </span>
                                   <div className={styles.gameImgPreviewWrap}>
-                                    {boardgames.find((b) => b.slug === editingBoardgameSlug)?.banner_url ? (
+                                    {boardgames.find(
+                                      (b) => b.slug === editingBoardgameSlug,
+                                    )?.banner_url ? (
                                       <Image
-                                        src={boardgames.find((b) => b.slug === editingBoardgameSlug).banner_url}
+                                        src={
+                                          boardgames.find(
+                                            (b) =>
+                                              b.slug === editingBoardgameSlug,
+                                          ).banner_url
+                                        }
                                         alt="Card atual"
                                         fill
                                         className={styles.gameImgPreview}
                                         sizes="300px"
                                       />
                                     ) : (
-                                      <div className={styles.gameImgPlaceholder}>Sem imagem</div>
+                                      <div
+                                        className={styles.gameImgPlaceholder}
+                                      >
+                                        Sem imagem
+                                      </div>
                                     )}
                                   </div>
                                   <button
                                     type="button"
                                     className={styles.btnOutlineSmall}
-                                    onClick={() => openBgImgPicker(editingBoardgameSlug)}
+                                    onClick={() =>
+                                      openBgImgPicker(editingBoardgameSlug)
+                                    }
                                     disabled={uploadingBgImg}
                                   >
-                                    {uploadingBgImg ? <Spinner size="small" /> : "Enviar imagem"}
+                                    {uploadingBgImg ? (
+                                      <Spinner size="small" />
+                                    ) : (
+                                      "Enviar imagem"
+                                    )}
                                   </button>
                                 </div>
                               </>
                             )}
 
-                            {editBoardgameMsg.text && <StatusMessageComponent type={editBoardgameMsg.type} message={editBoardgameMsg.text} />}
+                            {editBoardgameMsg.text && (
+                              <StatusMessageComponent
+                                type={editBoardgameMsg.type}
+                                message={editBoardgameMsg.text}
+                              />
+                            )}
 
                             <div className={styles.gameEditActions}>
-                              <Link href={`/jogos-de-mesa/${bg.slug}`} target="_blank" rel="noopener noreferrer" className={styles.btnOutlineSmall}>
+                              <Link
+                                href={`/jogos-de-mesa/${bg.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={styles.btnOutlineSmall}
+                              >
                                 Ver página
                               </Link>
-                              <button type="submit" className={styles.btnSave} disabled={savingBoardgame || !editBoardgameForm.name.trim()}>
-                                {savingBoardgame ? <Spinner size="small" /> : "Salvar alterações"}
+                              <button
+                                type="submit"
+                                className={styles.btnSave}
+                                disabled={
+                                  savingBoardgame ||
+                                  !editBoardgameForm.name.trim()
+                                }
+                              >
+                                {savingBoardgame ? (
+                                  <Spinner size="small" />
+                                ) : (
+                                  "Salvar alterações"
+                                )}
                               </button>
                             </div>
                           </form>
@@ -2238,14 +2814,22 @@ export default function ConfiguracoesPage() {
                 required
               />
               <div className={styles.gameFormRow}>
-                <select className={styles.input} value={newBoardgameCategory} onChange={(e) => setNewBoardgameCategory(e.target.value)}>
+                <select
+                  className={styles.input}
+                  value={newBoardgameCategory}
+                  onChange={(e) => setNewBoardgameCategory(e.target.value)}
+                >
                   {Object.entries(BG_CATEGORY_LABELS).map(([k, v]) => (
                     <option key={k} value={k}>
                       {v}
                     </option>
                   ))}
                 </select>
-                <select className={styles.input} value={newBoardgameStage} onChange={(e) => setNewBoardgameStage(e.target.value)}>
+                <select
+                  className={styles.input}
+                  value={newBoardgameStage}
+                  onChange={(e) => setNewBoardgameStage(e.target.value)}
+                >
                   {Object.entries(BG_STAGE_LABELS)
                     .filter(([k]) => k !== "cancelled")
                     .map(([k, v]) => (
@@ -2255,12 +2839,25 @@ export default function ConfiguracoesPage() {
                     ))}
                 </select>
               </div>
-              <button type="submit" className={styles.btnSave} disabled={creatingBoardgame || !newBoardgameName.trim()}>
-                {creatingBoardgame ? <Spinner size="small" /> : "Criar jogo de mesa"}
+              <button
+                type="submit"
+                className={styles.btnSave}
+                disabled={creatingBoardgame || !newBoardgameName.trim()}
+              >
+                {creatingBoardgame ? (
+                  <Spinner size="small" />
+                ) : (
+                  "Criar jogo de mesa"
+                )}
               </button>
             </form>
 
-            {boardgameMsg.text && <StatusMessageComponent type={boardgameMsg.type} message={boardgameMsg.text} />}
+            {boardgameMsg.text && (
+              <StatusMessageComponent
+                type={boardgameMsg.type}
+                message={boardgameMsg.text}
+              />
+            )}
           </section>
         )}
 
@@ -2278,12 +2875,21 @@ export default function ConfiguracoesPage() {
                 onChange={(e) => setInviteUsername(e.target.value)}
                 maxLength={50}
               />
-              <button type="submit" className={styles.btnSave} disabled={inviting || !inviteUsername.trim()}>
+              <button
+                type="submit"
+                className={styles.btnSave}
+                disabled={inviting || !inviteUsername.trim()}
+              >
                 {inviting ? <Spinner size="small" /> : "Convidar"}
               </button>
             </form>
 
-            {inviteMsg.text && <StatusMessageComponent type={inviteMsg.type} message={inviteMsg.text} />}
+            {inviteMsg.text && (
+              <StatusMessageComponent
+                type={inviteMsg.type}
+                message={inviteMsg.text}
+              />
+            )}
 
             {pendingInvites.length > 0 && (
               <>
@@ -2291,7 +2897,9 @@ export default function ConfiguracoesPage() {
                 <ul className={styles.pendingList}>
                   {pendingInvites.map((inv) => (
                     <li key={inv.id} className={styles.pendingItem}>
-                      <span className={styles.pendingUsername}>@{inv.invited_username}</span>
+                      <span className={styles.pendingUsername}>
+                        @{inv.invited_username}
+                      </span>
                       <button
                         type="button"
                         className={styles.btnCancelInvite}
@@ -2318,11 +2926,20 @@ export default function ConfiguracoesPage() {
                 {books.map((bk) => (
                   <li key={bk.id} className={styles.gameListItem}>
                     <div className={styles.gameListRow}>
-                      <Link href={`/quadrinhos/${bk.slug}`} className={styles.gameLink} target="_blank" rel="noopener noreferrer">
+                      <Link
+                        href={`/quadrinhos/${bk.slug}`}
+                        className={styles.gameLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         {bk.title}
                       </Link>
-                      <span className={styles.gameStageBadge}>{BOOK_STAGE_LABELS[bk.stage] ?? bk.stage}</span>
-                      <span className={styles.gameStageBadge}>{BOOK_TYPE_LABELS[bk.book_type] ?? bk.book_type}</span>
+                      <span className={styles.gameStageBadge}>
+                        {BOOK_STAGE_LABELS[bk.stage] ?? bk.stage}
+                      </span>
+                      <span className={styles.gameStageBadge}>
+                        {BOOK_TYPE_LABELS[bk.book_type] ?? bk.book_type}
+                      </span>
                       <button
                         type="button"
                         className={`${styles.btnEditGame} ${editingBookSlug === bk.slug ? styles.btnEditGameActive : ""}`}
@@ -2333,7 +2950,13 @@ export default function ConfiguracoesPage() {
                       <button
                         type="button"
                         className={styles.btnClassify}
-                        onClick={() => setRatingModal({ type: "book", slug: bk.slug, name: bk.title })}
+                        onClick={() =>
+                          setRatingModal({
+                            type: "book",
+                            slug: bk.slug,
+                            name: bk.title,
+                          })
+                        }
                       >
                         Classificar
                       </button>
@@ -2347,7 +2970,10 @@ export default function ConfiguracoesPage() {
                           </div>
                         )}
                         {!loadingBookEdit && editBookForm && (
-                          <form onSubmit={handleSaveBook} className={styles.gameEditForm}>
+                          <form
+                            onSubmit={handleSaveBook}
+                            className={styles.gameEditForm}
+                          >
                             <div className={styles.gameEditTabs}>
                               {[
                                 { id: "info", label: "Informações" },
@@ -2374,7 +3000,12 @@ export default function ConfiguracoesPage() {
                                     type="text"
                                     className={styles.input}
                                     value={editBookForm.title}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, title: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        title: e.target.value,
+                                      }))
+                                    }
                                     maxLength={255}
                                     required
                                   />
@@ -2387,7 +3018,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="Subtítulo da publicação"
                                     value={editBookForm.subtitle}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, subtitle: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        subtitle: e.target.value,
+                                      }))
+                                    }
                                     maxLength={255}
                                   />
                                 </label>
@@ -2399,7 +3035,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="Frase curta sobre a publicação"
                                     value={editBookForm.short_description}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, short_description: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        short_description: e.target.value,
+                                      }))
+                                    }
                                     maxLength={255}
                                   />
                                 </label>
@@ -2409,13 +3050,20 @@ export default function ConfiguracoesPage() {
                                   <select
                                     className={styles.input}
                                     value={editBookForm.book_type}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, book_type: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        book_type: e.target.value,
+                                      }))
+                                    }
                                   >
-                                    {Object.entries(BOOK_TYPE_LABELS).map(([k, v]) => (
-                                      <option key={k} value={k}>
-                                        {v}
-                                      </option>
-                                    ))}
+                                    {Object.entries(BOOK_TYPE_LABELS).map(
+                                      ([k, v]) => (
+                                        <option key={k} value={k}>
+                                          {v}
+                                        </option>
+                                      ),
+                                    )}
                                   </select>
                                 </label>
 
@@ -2424,13 +3072,20 @@ export default function ConfiguracoesPage() {
                                   <select
                                     className={styles.input}
                                     value={editBookForm.stage}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, stage: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        stage: e.target.value,
+                                      }))
+                                    }
                                   >
-                                    {Object.entries(BOOK_STAGE_LABELS).map(([k, v]) => (
-                                      <option key={k} value={k}>
-                                        {v}
-                                      </option>
-                                    ))}
+                                    {Object.entries(BOOK_STAGE_LABELS).map(
+                                      ([k, v]) => (
+                                        <option key={k} value={k}>
+                                          {v}
+                                        </option>
+                                      ),
+                                    )}
                                   </select>
                                 </label>
 
@@ -2441,7 +3096,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="Nome da editora"
                                     value={editBookForm.publisher}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, publisher: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        publisher: e.target.value,
+                                      }))
+                                    }
                                     maxLength={200}
                                   />
                                 </label>
@@ -2453,7 +3113,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="Ex: 1ª edição"
                                     value={editBookForm.edition}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, edition: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        edition: e.target.value,
+                                      }))
+                                    }
                                     maxLength={80}
                                   />
                                 </label>
@@ -2465,7 +3130,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="978-..."
                                     value={editBookForm.isbn}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, isbn: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        isbn: e.target.value,
+                                      }))
+                                    }
                                     maxLength={20}
                                   />
                                 </label>
@@ -2477,7 +3147,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     min="1"
                                     value={editBookForm.pages}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, pages: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        pages: e.target.value,
+                                      }))
+                                    }
                                   />
                                 </label>
 
@@ -2487,7 +3162,12 @@ export default function ConfiguracoesPage() {
                                     type="text"
                                     className={styles.input}
                                     value={editBookForm.language}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, language: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        language: e.target.value,
+                                      }))
+                                    }
                                     maxLength={60}
                                   />
                                 </label>
@@ -2498,7 +3178,12 @@ export default function ConfiguracoesPage() {
                                     type="date"
                                     className={styles.input}
                                     value={editBookForm.release_date}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, release_date: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        release_date: e.target.value,
+                                      }))
+                                    }
                                   />
                                 </label>
 
@@ -2509,7 +3194,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="https://"
                                     value={editBookForm.website_url}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, website_url: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        website_url: e.target.value,
+                                      }))
+                                    }
                                     maxLength={512}
                                   />
                                 </label>
@@ -2521,18 +3211,30 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="https://"
                                     value={editBookForm.buy_url}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, buy_url: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        buy_url: e.target.value,
+                                      }))
+                                    }
                                     maxLength={512}
                                   />
                                 </label>
 
-                                <label className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}>
+                                <label
+                                  className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}
+                                >
                                   <span>Sobre a publicação</span>
                                   <textarea
                                     className={`${styles.input} ${styles.textarea}`}
                                     placeholder="Descreva a publicação em detalhes..."
                                     value={editBookForm.description}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, description: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        description: e.target.value,
+                                      }))
+                                    }
                                     rows={4}
                                   />
                                 </label>
@@ -2541,36 +3243,58 @@ export default function ConfiguracoesPage() {
 
                             {activeBookTab === "cover" && (
                               <div className={styles.gameImgUpload}>
-                                <span className={styles.gameImgLabel}>Capa (proporção 2:3 — formato livro)</span>
+                                <span className={styles.gameImgLabel}>
+                                  Capa (proporção 2:3 — formato livro)
+                                </span>
                                 <div className={styles.bookCoverPreviewWrap}>
-                                  {books.find((b) => b.slug === editingBookSlug)?.cover_url ? (
+                                  {books.find((b) => b.slug === editingBookSlug)
+                                    ?.cover_url ? (
                                     <Image
-                                      src={books.find((b) => b.slug === editingBookSlug).cover_url}
+                                      src={
+                                        books.find(
+                                          (b) => b.slug === editingBookSlug,
+                                        ).cover_url
+                                      }
                                       alt="Capa atual"
                                       fill
                                       className={styles.gameImgPreview}
                                       sizes="200px"
                                     />
                                   ) : (
-                                    <div className={styles.gameImgPlaceholder}>Sem capa</div>
+                                    <div className={styles.gameImgPlaceholder}>
+                                      Sem capa
+                                    </div>
                                   )}
                                 </div>
-                                <p className={styles.fieldHint}>Ou informe uma URL externa:</p>
+                                <p className={styles.fieldHint}>
+                                  Ou informe uma URL externa:
+                                </p>
                                 <input
                                   type="url"
                                   className={styles.input}
                                   placeholder="https://..."
                                   value={editBookForm.cover_url_external}
-                                  onChange={(e) => setEditBookForm((f) => ({ ...f, cover_url_external: e.target.value }))}
+                                  onChange={(e) =>
+                                    setEditBookForm((f) => ({
+                                      ...f,
+                                      cover_url_external: e.target.value,
+                                    }))
+                                  }
                                   maxLength={512}
                                 />
                                 <button
                                   type="button"
                                   className={styles.btnOutlineSmall}
-                                  onClick={() => openBookImgPicker(editingBookSlug)}
+                                  onClick={() =>
+                                    openBookImgPicker(editingBookSlug)
+                                  }
                                   disabled={uploadingBookImg}
                                 >
-                                  {uploadingBookImg ? <Spinner size="small" /> : "Enviar imagem"}
+                                  {uploadingBookImg ? (
+                                    <Spinner size="small" />
+                                  ) : (
+                                    "Enviar imagem"
+                                  )}
                                 </button>
                               </div>
                             )}
@@ -2583,7 +3307,12 @@ export default function ConfiguracoesPage() {
                                   className={styles.input}
                                   placeholder="https://seupdf.com/meu-livro.pdf"
                                   value={editBookForm.pdf_url}
-                                  onChange={(e) => setEditBookForm((f) => ({ ...f, pdf_url: e.target.value }))}
+                                  onChange={(e) =>
+                                    setEditBookForm((f) => ({
+                                      ...f,
+                                      pdf_url: e.target.value,
+                                    }))
+                                  }
                                   maxLength={512}
                                 />
                               </label>
@@ -2591,13 +3320,24 @@ export default function ConfiguracoesPage() {
 
                             {activeBookTab === "stores" && (
                               <fieldset className={styles.fieldset}>
-                                <legend className={styles.fieldsetLegend}>Links de compra</legend>
+                                <legend className={styles.fieldsetLegend}>
+                                  Links de compra
+                                </legend>
                                 {editBookForm.store_pages.map((sp, idx) => (
-                                  <div key={`book-store-${sp.store_type_id ?? ""}-${idx}`} className={styles.storePageRow}>
+                                  <div
+                                    key={`book-store-${sp.store_type_id ?? ""}-${idx}`}
+                                    className={styles.storePageRow}
+                                  >
                                     <select
                                       className={styles.input}
                                       value={sp.store_type_id}
-                                      onChange={(e) => updateBookStorePage(idx, "store_type_id", e.target.value)}
+                                      onChange={(e) =>
+                                        updateBookStorePage(
+                                          idx,
+                                          "store_type_id",
+                                          e.target.value,
+                                        )
+                                      }
                                     >
                                       <option value="">Selecione a loja</option>
                                       {BOOK_STORE_TYPES.map((st) => (
@@ -2611,7 +3351,13 @@ export default function ConfiguracoesPage() {
                                       className={styles.input}
                                       placeholder="URL da página na loja"
                                       value={sp.page_url}
-                                      onChange={(e) => updateBookStorePage(idx, "page_url", e.target.value)}
+                                      onChange={(e) =>
+                                        updateBookStorePage(
+                                          idx,
+                                          "page_url",
+                                          e.target.value,
+                                        )
+                                      }
                                     />
                                     <input
                                       type="number"
@@ -2620,7 +3366,13 @@ export default function ConfiguracoesPage() {
                                       value={sp.price}
                                       min="0"
                                       step="0.01"
-                                      onChange={(e) => updateBookStorePage(idx, "price", e.target.value)}
+                                      onChange={(e) =>
+                                        updateBookStorePage(
+                                          idx,
+                                          "price",
+                                          e.target.value,
+                                        )
+                                      }
                                     />
                                     <button
                                       type="button"
@@ -2632,20 +3384,44 @@ export default function ConfiguracoesPage() {
                                     </button>
                                   </div>
                                 ))}
-                                <button type="button" className={styles.btnAddStore} onClick={addBookStorePage}>
+                                <button
+                                  type="button"
+                                  className={styles.btnAddStore}
+                                  onClick={addBookStorePage}
+                                >
                                   + Adicionar loja
                                 </button>
                               </fieldset>
                             )}
 
-                            {editBookMsg.text && <StatusMessageComponent type={editBookMsg.type} message={editBookMsg.text} />}
+                            {editBookMsg.text && (
+                              <StatusMessageComponent
+                                type={editBookMsg.type}
+                                message={editBookMsg.text}
+                              />
+                            )}
 
                             <div className={styles.gameEditActions}>
-                              <Link href={`/quadrinhos/${bk.slug}`} target="_blank" rel="noopener noreferrer" className={styles.btnOutlineSmall}>
+                              <Link
+                                href={`/quadrinhos/${bk.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={styles.btnOutlineSmall}
+                              >
                                 Ver página
                               </Link>
-                              <button type="submit" className={styles.btnSave} disabled={savingBook || !editBookForm.title.trim()}>
-                                {savingBook ? <Spinner size="small" /> : "Salvar alterações"}
+                              <button
+                                type="submit"
+                                className={styles.btnSave}
+                                disabled={
+                                  savingBook || !editBookForm.title.trim()
+                                }
+                              >
+                                {savingBook ? (
+                                  <Spinner size="small" />
+                                ) : (
+                                  "Salvar alterações"
+                                )}
                               </button>
                             </div>
                           </form>
@@ -2670,14 +3446,22 @@ export default function ConfiguracoesPage() {
                 required
               />
               <div className={styles.gameFormRow}>
-                <select className={styles.input} value={newBookType} onChange={(e) => setNewBookType(e.target.value)}>
+                <select
+                  className={styles.input}
+                  value={newBookType}
+                  onChange={(e) => setNewBookType(e.target.value)}
+                >
                   {Object.entries(BOOK_TYPE_LABELS).map(([k, v]) => (
                     <option key={k} value={k}>
                       {v}
                     </option>
                   ))}
                 </select>
-                <select className={styles.input} value={newBookStage} onChange={(e) => setNewBookStage(e.target.value)}>
+                <select
+                  className={styles.input}
+                  value={newBookStage}
+                  onChange={(e) => setNewBookStage(e.target.value)}
+                >
                   {Object.entries(BOOK_STAGE_LABELS)
                     .filter(([k]) => k !== "cancelled")
                     .map(([k, v]) => (
@@ -2687,25 +3471,45 @@ export default function ConfiguracoesPage() {
                     ))}
                 </select>
               </div>
-              <button type="submit" className={styles.btnSave} disabled={creatingBook || !newBookTitle.trim()}>
+              <button
+                type="submit"
+                className={styles.btnSave}
+                disabled={creatingBook || !newBookTitle.trim()}
+              >
                 {creatingBook ? <Spinner size="small" /> : "Criar publicação"}
               </button>
             </form>
 
-            {bookMsg.text && <StatusMessageComponent type={bookMsg.type} message={bookMsg.text} />}
+            {bookMsg.text && (
+              <StatusMessageComponent
+                type={bookMsg.type}
+                message={bookMsg.text}
+              />
+            )}
           </section>
         )}
 
         {/* ---- STREAMING TAB ---- */}
         {activeTab === "streaming" && (
           <>
-            {statusMsg.text && <StatusMessageComponent type={statusMsg.type} message={statusMsg.text} />}
+            {statusMsg.text && (
+              <StatusMessageComponent
+                type={statusMsg.type}
+                message={statusMsg.text}
+              />
+            )}
             <form onSubmit={handleSubmit} className={styles.form}>
               <section className={styles.section}>
                 <h2 className={styles.sectionTitle}>Canais de Streaming</h2>
                 <p className={styles.fieldHint}>
-                  Cadastre o canal do estúdio na Twitch e/ou YouTube. Quando o canal estiver ao vivo, ele aparecerá em destaque na{" "}
-                  <a href="/streams" className={styles.inlineLink} target="_blank" rel="noopener noreferrer">
+                  Cadastre o canal do estúdio na Twitch e/ou YouTube. Quando o
+                  canal estiver ao vivo, ele aparecerá em destaque na{" "}
+                  <a
+                    href="/streams"
+                    className={styles.inlineLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     página de streams
                   </a>
                   .
@@ -2721,7 +3525,13 @@ export default function ConfiguracoesPage() {
                       type="text"
                       className={styles.input}
                       value={twitchChannel}
-                      onChange={(e) => setTwitchChannel(e.target.value.replace(/\s/g, "").replace(/^https?:\/\/(www\.)?twitch\.tv\//i, ""))}
+                      onChange={(e) =>
+                        setTwitchChannel(
+                          e.target.value
+                            .replace(/\s/g, "")
+                            .replace(/^https?:\/\/(www\.)?twitch\.tv\//i, ""),
+                        )
+                      }
                       maxLength={100}
                       placeholder="seucanal"
                       autoComplete="off"
@@ -2729,7 +3539,12 @@ export default function ConfiguracoesPage() {
                     />
                   </div>
                   {twitchChannel && (
-                    <a href={`https://twitch.tv/${twitchChannel}`} target="_blank" rel="noopener noreferrer" className={styles.fieldLink}>
+                    <a
+                      href={`https://twitch.tv/${twitchChannel}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.fieldLink}
+                    >
                       Abrir canal ↗
                     </a>
                   )}
@@ -2751,8 +3566,14 @@ export default function ConfiguracoesPage() {
                     spellCheck={false}
                   />
                   <p className={styles.fieldHint}>
-                    O ID do canal começa com <code>UC</code>. Você pode encontrá-lo em{" "}
-                    <a href="https://www.youtube.com/account_advanced" target="_blank" rel="noopener noreferrer" className={styles.inlineLink}>
+                    O ID do canal começa com <code>UC</code>. Você pode
+                    encontrá-lo em{" "}
+                    <a
+                      href="https://www.youtube.com/account_advanced"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.inlineLink}
+                    >
                       youtube.com/account_advanced
                     </a>
                     .
@@ -2771,7 +3592,11 @@ export default function ConfiguracoesPage() {
               </section>
 
               <div className={styles.formActions}>
-                <button type="submit" className={styles.btnSave} disabled={saving}>
+                <button
+                  type="submit"
+                  className={styles.btnSave}
+                  disabled={saving}
+                >
                   {saving ? <Spinner size="small" /> : "Salvar alterações"}
                 </button>
               </div>
@@ -2781,25 +3606,64 @@ export default function ConfiguracoesPage() {
       </div>
 
       {/* Upload de imagem do jogo */}
-      <input ref={gameImgInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleGameFileSelected} />
+      <input
+        ref={gameImgInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={handleGameFileSelected}
+      />
       {gameImgCropSrc && (
-        <ImageCropModal imageSrc={gameImgCropSrc} preset="gameCapsule" onConfirm={handleGameCropConfirm} onClose={() => setGameImgCropSrc(null)} />
+        <ImageCropModal
+          imageSrc={gameImgCropSrc}
+          preset="gameCapsule"
+          onConfirm={handleGameCropConfirm}
+          onClose={() => setGameImgCropSrc(null)}
+        />
       )}
 
       {/* Upload de imagem do jogo de mesa */}
-      <input ref={bgImgInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleBgFileSelected} />
+      <input
+        ref={bgImgInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={handleBgFileSelected}
+      />
       {bgImgCropSrc && (
-        <ImageCropModal imageSrc={bgImgCropSrc} preset="gameCapsule" onConfirm={handleBgCropConfirm} onClose={() => setBgImgCropSrc(null)} />
+        <ImageCropModal
+          imageSrc={bgImgCropSrc}
+          preset="gameCapsule"
+          onConfirm={handleBgCropConfirm}
+          onClose={() => setBgImgCropSrc(null)}
+        />
       )}
 
       {/* Upload de capa de publicação */}
-      <input ref={bookImgInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleBookFileSelected} />
+      <input
+        ref={bookImgInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={handleBookFileSelected}
+      />
       {bookImgCropSrc && (
-        <ImageCropModal imageSrc={bookImgCropSrc} preset="bookCover" onConfirm={handleBookCropConfirm} onClose={() => setBookImgCropSrc(null)} />
+        <ImageCropModal
+          imageSrc={bookImgCropSrc}
+          preset="bookCover"
+          onConfirm={handleBookCropConfirm}
+          onClose={() => setBookImgCropSrc(null)}
+        />
       )}
 
       {/* Modal de classificação indicativa */}
-      {ratingModal && <ContentRatingModal type={ratingModal.type} itemName={ratingModal.name} onClose={handleRatingClose} />}
+      {ratingModal && (
+        <ContentRatingModal
+          type={ratingModal.type}
+          itemName={ratingModal.name}
+          onClose={handleRatingClose}
+        />
+      )}
     </>
   );
 }

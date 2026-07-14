@@ -14,13 +14,20 @@ export async function POST(request, { params }) {
     const user = request.context.user;
 
     if (!authorization.can(user, "create:event")) {
-      throw new ForbiddenError({ message: "Você precisa estar logado para confirmar presença." });
+      throw new ForbiddenError({
+        message: "Você precisa estar logado para confirmar presença.",
+      });
     }
 
     const { id } = await params;
     const { status, instance_id } = await request.json();
 
-    const counts = await event.upsertRsvp(id, user.id, status, instance_id ?? null);
+    const counts = await event.upsertRsvp(
+      id,
+      user.id,
+      status,
+      instance_id ?? null,
+    );
 
     return Response.json({ rsvp: status, counts }, { status: 200 });
   } catch (error) {
@@ -38,7 +45,9 @@ export async function DELETE(request, { params }) {
     const user = request.context.user;
 
     if (!authorization.can(user, "create:event")) {
-      throw new ForbiddenError({ message: "Você precisa estar logado para gerenciar sua presença." });
+      throw new ForbiddenError({
+        message: "Você precisa estar logado para gerenciar sua presença.",
+      });
     }
 
     const { id } = await params;

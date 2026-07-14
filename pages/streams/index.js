@@ -11,7 +11,8 @@ import { SITE_URL } from "@/lib/seo";
 import styles from "./index.module.css";
 
 const PAGE_TITLE = "Streams — Indies Brasil";
-const PAGE_DESCRIPTION = "Assista aos estúdios de jogos indie brasileiros ao vivo na Twitch e YouTube.";
+const PAGE_DESCRIPTION =
+  "Assista aos estúdios de jogos indie brasileiros ao vivo na Twitch e YouTube.";
 const PAGE_URL = `${SITE_URL}/streams`;
 
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // auto-refresh every 5 minutes
@@ -39,9 +40,12 @@ const studioPropType = PropTypes.shape({
 });
 
 function getStreamUrl(studio) {
-  if (studio.active_platform === "twitch") return `https://twitch.tv/${studio.twitch_channel}`;
-  if (studio.active_platform === "youtube") return `https://youtube.com/channel/${studio.youtube_channel_id}`;
-  if (studio.twitch_channel) return `https://twitch.tv/${studio.twitch_channel}`;
+  if (studio.active_platform === "twitch")
+    return `https://twitch.tv/${studio.twitch_channel}`;
+  if (studio.active_platform === "youtube")
+    return `https://youtube.com/channel/${studio.youtube_channel_id}`;
+  if (studio.twitch_channel)
+    return `https://twitch.tv/${studio.twitch_channel}`;
   return `https://youtube.com/channel/${studio.youtube_channel_id}`;
 }
 
@@ -54,12 +58,14 @@ function getPlatformLabel(studio) {
 }
 
 function getPlatformStyleClass(studio) {
-  const platform = studio.active_platform ?? (studio.twitch_channel ? "twitch" : "youtube");
+  const platform =
+    studio.active_platform ?? (studio.twitch_channel ? "twitch" : "youtube");
   return styles[`platform_${platform}`];
 }
 
 function getEmbedSrc(studio, hostname) {
-  const platform = studio.active_platform ?? (studio.twitch_channel ? "twitch" : "youtube");
+  const platform =
+    studio.active_platform ?? (studio.twitch_channel ? "twitch" : "youtube");
   if (platform === "twitch" && studio.twitch_channel) {
     return `https://player.twitch.tv/?channel=${studio.twitch_channel}&parent=${hostname}&muted=1`;
   }
@@ -77,7 +83,11 @@ function ThumbnailArea({ studio, featured, embedSrc, onPlay }) {
           src={studio.thumbnail_url}
           alt={`Thumbnail de ${studio.name}`}
           fill
-          sizes={featured ? "(max-width: 900px) 100vw, 640px" : "(max-width: 600px) 100vw, 320px"}
+          sizes={
+            featured
+              ? "(max-width: 900px) 100vw, 640px"
+              : "(max-width: 600px) 100vw, 320px"
+          }
           className={styles.thumbImg}
         />
       ) : (
@@ -93,7 +103,11 @@ function ThumbnailArea({ studio, featured, embedSrc, onPlay }) {
         </span>
       )}
       {embedSrc && (
-        <button className={styles.playBtn} onClick={onPlay} aria-label={`${studio.is_live ? "Assistir live" : "Abrir canal"} de ${studio.name}`}>
+        <button
+          className={styles.playBtn}
+          onClick={onPlay}
+          aria-label={`${studio.is_live ? "Assistir live" : "Abrir canal"} de ${studio.name}`}
+        >
           <span className={styles.playIcon}>▶</span>
           <span>{studio.is_live ? "Assistir ao vivo" : "Abrir canal"}</span>
         </button>
@@ -123,9 +137,18 @@ function StreamCard({ studio, featured, hostname }) {
   const embedSrc = getEmbedSrc(studio, hostname);
 
   const avatar = studio.logo_url ? (
-    <Image src={studio.logo_url} alt={studio.name} width={avatarSize} height={avatarSize} className={styles.avatarImg} />
+    <Image
+      src={studio.logo_url}
+      alt={studio.name}
+      width={avatarSize}
+      height={avatarSize}
+      className={styles.avatarImg}
+    />
   ) : (
-    <div className={styles.avatarPlaceholder} style={{ width: avatarSize, height: avatarSize }}>
+    <div
+      className={styles.avatarPlaceholder}
+      style={{ width: avatarSize, height: avatarSize }}
+    >
       {studio.name[0]}
     </div>
   );
@@ -134,31 +157,58 @@ function StreamCard({ studio, featured, hostname }) {
     playing && embedSrc ? (
       <iframe
         src={embedSrc}
-        title={studio.is_live ? `Transmissão ao vivo de ${studio.name}` : `Canal de ${studio.name}`}
+        title={
+          studio.is_live
+            ? `Transmissão ao vivo de ${studio.name}`
+            : `Canal de ${studio.name}`
+        }
         allow="autoplay; fullscreen"
         allowFullScreen
         className={styles.embedFrame}
       />
     ) : (
-      <ThumbnailArea studio={studio} featured={featured} embedSrc={embedSrc} onPlay={() => setPlaying(true)} />
+      <ThumbnailArea
+        studio={studio}
+        featured={featured}
+        embedSrc={embedSrc}
+        onPlay={() => setPlaying(true)}
+      />
     );
 
   return (
     <div className={featured ? styles.featuredCard : styles.streamCard}>
-      <div className={featured ? styles.featuredThumb : styles.streamThumb}>{thumbContent}</div>
+      <div className={featured ? styles.featuredThumb : styles.streamThumb}>
+        {thumbContent}
+      </div>
 
       <div className={styles.streamInfo}>
-        <a href={streamUrl} target="_blank" rel="noopener noreferrer" className={styles.streamInfoLink}>
+        <a
+          href={streamUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.streamInfoLink}
+        >
           <div className={styles.streamAvatar}>{avatar}</div>
           <div className={styles.streamMeta}>
-            <p className={styles.streamTitle}>{studio.stream_title || (studio.is_live ? "Transmissão ao vivo" : "Offline")}</p>
+            <p className={styles.streamTitle}>
+              {studio.stream_title ||
+                (studio.is_live ? "Transmissão ao vivo" : "Offline")}
+            </p>
             <p className={styles.streamStudio}>{studio.name}</p>
-            {studio.category_name && <span className={styles.categoryTag}>{studio.category_name}</span>}
-            <span className={`${styles.platformBadge} ${platformClass}`}>{platformLabel}</span>
+            {studio.category_name && (
+              <span className={styles.categoryTag}>{studio.category_name}</span>
+            )}
+            <span className={`${styles.platformBadge} ${platformClass}`}>
+              {platformLabel}
+            </span>
           </div>
         </a>
         {playing && (
-          <button className={styles.stopBtn} onClick={() => setPlaying(false)} aria-label="Fechar player">
+          <button
+            className={styles.stopBtn}
+            onClick={() => setPlaying(false)}
+            aria-label="Fechar player"
+          >
             ✕
           </button>
         )}
@@ -204,7 +254,10 @@ export default function StreamsPage() {
     if (refreshing) return;
     setRefreshing(true);
     try {
-      await fetch("/api/v1/streams/refresh", { method: "POST", credentials: "include" });
+      await fetch("/api/v1/streams/refresh", {
+        method: "POST",
+        credentials: "include",
+      });
       await fetchStudios();
     } finally {
       setRefreshing(false);
@@ -231,7 +284,11 @@ export default function StreamsPage() {
 
   return (
     <>
-      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} url={PAGE_URL} />
+      <SeoHead
+        title={PAGE_TITLE}
+        description={PAGE_DESCRIPTION}
+        url={PAGE_URL}
+      />
 
       <div className={styles.page}>
         {/* ---- Header ---- */}
@@ -248,17 +305,31 @@ export default function StreamsPage() {
                 </span>
               )}
             </div>
-            <p className={styles.pageSubtitle}>Estúdios brasileiros transmitindo ao vivo agora</p>
+            <p className={styles.pageSubtitle}>
+              Estúdios brasileiros transmitindo ao vivo agora
+            </p>
           </div>
 
           <div className={styles.headerActions}>
-            <button className={styles.refreshBtn} onClick={handleRefresh} disabled={refreshing} title="Atualizar status das transmissões">
-              <SyncIcon size={14} className={refreshing ? styles.spinning : ""} />
+            <button
+              className={styles.refreshBtn}
+              onClick={handleRefresh}
+              disabled={refreshing}
+              title="Atualizar status das transmissões"
+            >
+              <SyncIcon
+                size={14}
+                className={refreshing ? styles.spinning : ""}
+              />
               {refreshing ? "Atualizando…" : "Atualizar"}
             </button>
             {lastRefreshed && (
               <span className={styles.lastRefreshed}>
-                Atualizado às {lastRefreshed.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                Atualizado às{" "}
+                {lastRefreshed.toLocaleTimeString("pt-BR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </span>
             )}
           </div>
@@ -276,13 +347,18 @@ export default function StreamsPage() {
         {!loading && liveStudios.length > 0 && (
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>
-              <span className={styles.liveDot} /> Canais ao vivo que achamos que você vai gostar
+              <span className={styles.liveDot} /> Canais ao vivo que achamos que
+              você vai gostar
             </h2>
 
             {/* Featured (first live stream) */}
             {featuredStudio && (
               <div className={styles.featuredRow}>
-                <StreamCard studio={featuredStudio} featured hostname={hostname} />
+                <StreamCard
+                  studio={featuredStudio}
+                  featured
+                  hostname={hostname}
+                />
               </div>
             )}
 
@@ -301,8 +377,13 @@ export default function StreamsPage() {
         {!loading && liveStudios.length === 0 && studios.length > 0 && (
           <div className={styles.noLiveSection}>
             <BroadcastIcon size={32} className={styles.noLiveIcon} />
-            <p className={styles.noLiveTitle}>Nenhum canal ao vivo no momento</p>
-            <p className={styles.noLiveDesc}>Quando um estúdio iniciar uma transmissão, ela aparecerá aqui em destaque.</p>
+            <p className={styles.noLiveTitle}>
+              Nenhum canal ao vivo no momento
+            </p>
+            <p className={styles.noLiveDesc}>
+              Quando um estúdio iniciar uma transmissão, ela aparecerá aqui em
+              destaque.
+            </p>
           </div>
         )}
 
@@ -310,8 +391,13 @@ export default function StreamsPage() {
         {!loading && studios.length === 0 && (
           <div className={styles.emptyState}>
             <BroadcastIcon size={40} className={styles.emptyIcon} />
-            <p className={styles.emptyTitle}>Nenhum estúdio com canal cadastrado ainda</p>
-            <p className={styles.emptyDescription}>Estúdios podem cadastrar seus canais da Twitch ou YouTube nas configurações do estúdio.</p>
+            <p className={styles.emptyTitle}>
+              Nenhum estúdio com canal cadastrado ainda
+            </p>
+            <p className={styles.emptyDescription}>
+              Estúdios podem cadastrar seus canais da Twitch ou YouTube nas
+              configurações do estúdio.
+            </p>
             <Link href="/estudios" className={styles.emptyLink}>
               Ver estúdios
             </Link>

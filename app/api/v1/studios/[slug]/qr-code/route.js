@@ -8,7 +8,9 @@ export async function GET(request, context) {
     await controller.injectApiUser(request);
     const { slug } = await context.params;
     const studio = await organization.findBySlug(slug);
-    const settings = await qrCode.findByOrganizationId(studio.id).catch(() => null);
+    const settings = await qrCode
+      .findByOrganizationId(studio.id)
+      .catch(() => null);
     return Response.json(settings, { status: 200 });
   } catch (error) {
     return controller.onRouterErrorHandler(error);
@@ -38,7 +40,12 @@ export async function PUT(request, context) {
     const logoSize = Number.parseInt(formData.get("logo_size") || "24", 10);
     const logoFile = formData.get("logo_file") || null;
 
-    await qrCode.upsertForOrganization(studio.id, { fgColor, bgColor, logoSize, logoFile });
+    await qrCode.upsertForOrganization(studio.id, {
+      fgColor,
+      bgColor,
+      logoSize,
+      logoFile,
+    });
 
     const result = await qrCode.findByOrganizationId(studio.id);
     return Response.json(result, { status: 200 });

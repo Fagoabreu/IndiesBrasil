@@ -13,7 +13,9 @@ export async function GET(request, { params }) {
     const user = request.context.user;
 
     if (!authorization.can(user, "read:event")) {
-      throw new ForbiddenError({ message: "Você não possui permissão para visualizar eventos." });
+      throw new ForbiddenError({
+        message: "Você não possui permissão para visualizar eventos.",
+      });
     }
 
     const { id } = await params;

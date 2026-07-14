@@ -53,7 +53,11 @@ exports.up = (pgm) => {
     },
   });
 
-  pgm.addConstraint("event_org_rsvps", "uq_event_org_rsvp", "UNIQUE (event_id, organization_id)");
+  pgm.addConstraint(
+    "event_org_rsvps",
+    "uq_event_org_rsvp",
+    "UNIQUE (event_id, organization_id)",
+  );
 };
 
 exports.down = (pgm) => {

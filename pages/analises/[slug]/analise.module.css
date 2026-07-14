@@ -134,7 +134,11 @@
   gap: 0.5rem;
   padding: 0.5rem 0.9rem;
   border-radius: 10px;
-  background: linear-gradient(135deg, rgba(var(--brand-rgb-primary), 0.12), rgba(var(--brand-rgb-primary), 0.04));
+  background: linear-gradient(
+    135deg,
+    rgba(var(--brand-rgb-primary), 0.12),
+    rgba(var(--brand-rgb-primary), 0.04)
+  );
   border: 1px solid rgba(var(--brand-rgb-primary), 0.15);
   flex-shrink: 0;
 }

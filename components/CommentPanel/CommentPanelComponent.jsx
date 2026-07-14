@@ -23,7 +23,14 @@ CommentPanelComponent.propTypes = {
   onDeleteComment: PropTypes.func.isRequired,
 };
 
-export default function CommentPanelComponent({ comments, showCommentBox, showComments, onCloseCommentBox, onSubmitComment, onDeleteComment }) {
+export default function CommentPanelComponent({
+  comments,
+  showCommentBox,
+  showComments,
+  onCloseCommentBox,
+  onSubmitComment,
+  onDeleteComment,
+}) {
   const [newComment, setNewComment] = useState("");
 
   const handleSubmit = () => {
@@ -43,11 +50,18 @@ export default function CommentPanelComponent({ comments, showCommentBox, showCo
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
           />
-          <ButtonGroup className={styles.commentActions} disabled={!newComment.trim()}>
+          <ButtonGroup
+            className={styles.commentActions}
+            disabled={!newComment.trim()}
+          >
             <Button variant="danger" onClick={onCloseCommentBox}>
               Cancelar
             </Button>
-            <Button variant="primary" disabled={!newComment.trim()} onClick={handleSubmit}>
+            <Button
+              variant="primary"
+              disabled={!newComment.trim()}
+              onClick={handleSubmit}
+            >
               Comentar
             </Button>
           </ButtonGroup>
@@ -58,7 +72,11 @@ export default function CommentPanelComponent({ comments, showCommentBox, showCo
       {showComments && (
         <div className={styles.commentList}>
           {comments.map((comment) => (
-            <CommentComponent key={comment.id} comment={comment} onDelete={() => onDeleteComment(comment.id)} />
+            <CommentComponent
+              key={comment.id}
+              comment={comment}
+              onDelete={() => onDeleteComment(comment.id)}
+            />
           ))}
         </div>
       )}

@@ -24,12 +24,22 @@ export async function PATCH(request, { params }) {
 
     const studio = await organization.findBySlug(slug);
 
-    const isAdminOrOwner = (await organization.isAdmin(studio.id, user.id)) || (await organization.isOwner(studio.id, user.id));
+    const isAdminOrOwner =
+      (await organization.isAdmin(studio.id, user.id)) ||
+      (await organization.isOwner(studio.id, user.id));
     if (!isAdminOrOwner) {
-      throw new ForbiddenError({ message: "Apenas administradores do estúdio podem responder solicitações de relacionamento." });
+      throw new ForbiddenError({
+        message:
+          "Apenas administradores do estúdio podem responder solicitações de relacionamento.",
+      });
     }
 
-    const rel = await organization.respondToRelationship(id, studio.id, user.id, action);
+    const rel = await organization.respondToRelationship(
+      id,
+      studio.id,
+      user.id,
+      action,
+    );
 
     return Response.json(rel, { status: 200 });
   } catch (error) {
@@ -55,9 +65,14 @@ export async function DELETE(request, { params }) {
 
     const studio = await organization.findBySlug(slug);
 
-    const isAdminOrOwner = (await organization.isAdmin(studio.id, user.id)) || (await organization.isOwner(studio.id, user.id));
+    const isAdminOrOwner =
+      (await organization.isAdmin(studio.id, user.id)) ||
+      (await organization.isOwner(studio.id, user.id));
     if (!isAdminOrOwner) {
-      throw new ForbiddenError({ message: "Apenas administradores do estúdio podem encerrar relacionamentos." });
+      throw new ForbiddenError({
+        message:
+          "Apenas administradores do estúdio podem encerrar relacionamentos.",
+      });
     }
 
     await organization.removeRelationship(id, studio.id);

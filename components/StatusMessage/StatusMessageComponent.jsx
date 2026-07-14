@@ -15,7 +15,9 @@ export default function StatusMessageComponent({ errorMsg, successMsg }) {
       {errorMsg && (
         <Flash variant="danger">
           <strong>{errorMsg.message}</strong>
-          {errorMsg.action && <div style={{ marginTop: 4 }}>{errorMsg.action}</div>}
+          {errorMsg.action && (
+            <div style={{ marginTop: 4 }}>{errorMsg.action}</div>
+          )}
         </Flash>
       )}
       {successMsg && (

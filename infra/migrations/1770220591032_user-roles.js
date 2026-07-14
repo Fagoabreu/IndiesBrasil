@@ -17,8 +17,12 @@ exports.up = (pgm) => {
     using: "name::DEVELOPER_ROLE",
   });
 
-  pgm.sql("ALTER TYPE public.experience_type ADD VALUE 'Estudante' before 'Junior';");
-  pgm.sql("ALTER TYPE public.experience_type ADD VALUE 'Especialista' after 'Senior';");
+  pgm.sql(
+    "ALTER TYPE public.experience_type ADD VALUE 'Estudante' before 'Junior';",
+  );
+  pgm.sql(
+    "ALTER TYPE public.experience_type ADD VALUE 'Especialista' after 'Senior';",
+  );
   const sql = `
     ALTER TABLE public.portfolio_roles
     ALTER COLUMN name SET NOT NULL;

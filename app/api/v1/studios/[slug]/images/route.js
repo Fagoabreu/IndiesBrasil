@@ -34,7 +34,10 @@ export async function POST(request, context) {
     const file = formData.get("file");
 
     if (!file) {
-      return Response.json({ message: "Nenhum arquivo enviado." }, { status: 400 });
+      return Response.json(
+        { message: "Nenhum arquivo enviado." },
+        { status: 400 },
+      );
     }
 
     const folder = `studios/${studio.id}/${imgType}`;
@@ -45,10 +48,16 @@ export async function POST(request, context) {
     } else if (imgType === "banner") {
       await organization.saveBanner(slug, imageData.id);
     } else {
-      return Response.json({ message: "imgType inválido. Use 'logo' ou 'banner'." }, { status: 400 });
+      return Response.json(
+        { message: "imgType inválido. Use 'logo' ou 'banner'." },
+        { status: 400 },
+      );
     }
 
-    return Response.json({ id: imageData.id, url: imageData.secure_url }, { status: 201 });
+    return Response.json(
+      { id: imageData.id, url: imageData.secure_url },
+      { status: 201 },
+    );
   } catch (error) {
     return controller.onRouterErrorHandler(error);
   }

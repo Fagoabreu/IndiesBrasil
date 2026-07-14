@@ -111,14 +111,20 @@ export default function BoardgamePage() {
 
   const categoryLabel = CATEGORIES[bgData.category] ?? bgData.category;
   const stageLabel = STAGES[bgData.stage] ?? bgData.stage;
-  const playerCount = formatPlayerCount(bgData.player_count_min, bgData.player_count_max);
+  const playerCount = formatPlayerCount(
+    bgData.player_count_min,
+    bgData.player_count_max,
+  );
   const playTime = formatPlayTime(bgData.play_time_min, bgData.play_time_max);
 
   return (
     <>
       <Head>
         <title>{bgData.name} — Indies Brasil</title>
-        <meta name="description" content={bgData.short_description || bgData.name} />
+        <meta
+          name="description"
+          content={bgData.short_description || bgData.name}
+        />
       </Head>
 
       <div className={styles.page}>
@@ -132,23 +138,38 @@ export default function BoardgamePage() {
 
           {/* Hero ao estilo Steam */}
           <div className={styles.gameHero}>
-            <GameMediaPlayer media={bgMedia} bannerUrl={bgData.banner_url} name={bgData.name} />
+            <GameMediaPlayer
+              media={bgMedia}
+              bannerUrl={bgData.banner_url}
+              name={bgData.name}
+            />
 
             {/* Painel direito: informações */}
             <div className={styles.heroInfo}>
               {(bgData.banner_url || bgData.cover_url) && (
                 <div className={styles.heroCoverWrap}>
-                  <Image src={bgData.banner_url || bgData.cover_url} alt={bgData.name} fill sizes="320px" priority className={styles.heroCoverImg} />
+                  <Image
+                    src={bgData.banner_url || bgData.cover_url}
+                    alt={bgData.name}
+                    fill
+                    sizes="320px"
+                    priority
+                    className={styles.heroCoverImg}
+                  />
                 </div>
               )}
               <h1 className={styles.heroGameName}>{bgData.name}</h1>
-              {bgData.short_description && <p className={styles.heroTagline}>{bgData.short_description}</p>}
+              {bgData.short_description && (
+                <p className={styles.heroTagline}>{bgData.short_description}</p>
+              )}
               <hr className={styles.heroDivider} />
               <dl className={styles.heroMeta}>
                 <div className={styles.heroMetaRow}>
                   <dt className={styles.heroMetaLabel}>Avaliações</dt>
                   <dd className={styles.heroMetaValue}>
-                    {bgData.review_count > 0 ? `${Number(bgData.avg_rating).toFixed(1)} ★ (${bgData.review_count})` : "Nenhuma avaliação"}
+                    {bgData.review_count > 0
+                      ? `${Number(bgData.avg_rating).toFixed(1)} ★ (${bgData.review_count})`
+                      : "Nenhuma avaliação"}
                   </dd>
                 </div>
                 <div className={styles.heroMetaRow}>
@@ -176,7 +197,10 @@ export default function BoardgamePage() {
                     <dt className={styles.heroMetaLabel}>Estúdio</dt>
                     <dd className={styles.heroMetaValue}>
                       {bgData.studio_slug ? (
-                        <Link href={`/estudios/${bgData.studio_slug}`} className={styles.heroMetaLink}>
+                        <Link
+                          href={`/estudios/${bgData.studio_slug}`}
+                          className={styles.heroMetaLink}
+                        >
                           {bgData.studio_name}
                         </Link>
                       ) : (
@@ -228,16 +252,29 @@ export default function BoardgamePage() {
             </main>
 
             <aside className={styles.sidebar}>
-              <button type="button" className={following ? styles.btnUnfollow : styles.btnFollow} onClick={handleFollow} disabled={followLoading}>
+              <button
+                type="button"
+                className={following ? styles.btnUnfollow : styles.btnFollow}
+                onClick={handleFollow}
+                disabled={followLoading}
+              >
                 {getFollowLabel(followLoading, following)}
               </button>
 
-              <Link href={`/analises/novo?tipo=boardgame&content_id=${bgData.id}`} className={styles.btnAnalise}>
+              <Link
+                href={`/analises/novo?tipo=boardgame&content_id=${bgData.id}`}
+                className={styles.btnAnalise}
+              >
                 📝 Criar Análise
               </Link>
 
               {bgData.website_url && (
-                <a href={bgData.website_url} target="_blank" rel="noopener noreferrer" className={styles.btnWebsite}>
+                <a
+                  href={bgData.website_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.btnWebsite}
+                >
                   Visitar site oficial
                 </a>
               )}
@@ -278,7 +315,11 @@ export default function BoardgamePage() {
                 {bgData.release_date && (
                   <div className={styles.metaRow}>
                     <dt>Lançamento</dt>
-                    <dd>{new Date(bgData.release_date).toLocaleDateString("pt-BR")}</dd>
+                    <dd>
+                      {new Date(bgData.release_date).toLocaleDateString(
+                        "pt-BR",
+                      )}
+                    </dd>
                   </div>
                 )}
                 {bgData.studio_name && (
@@ -286,7 +327,10 @@ export default function BoardgamePage() {
                     <dt>Estúdio</dt>
                     <dd>
                       {bgData.studio_slug ? (
-                        <Link href={`/estudios/${bgData.studio_slug}`} className={styles.metaLink}>
+                        <Link
+                          href={`/estudios/${bgData.studio_slug}`}
+                          className={styles.metaLink}
+                        >
                           {bgData.studio_name}
                         </Link>
                       ) : (
@@ -298,13 +342,18 @@ export default function BoardgamePage() {
                 {Number(bgData.follower_count) > 0 && (
                   <div className={styles.metaRow}>
                     <dt>Seguidores</dt>
-                    <dd>{Number(bgData.follower_count).toLocaleString("pt-BR")}</dd>
+                    <dd>
+                      {Number(bgData.follower_count).toLocaleString("pt-BR")}
+                    </dd>
                   </div>
                 )}
               </dl>
 
               {bgData.viewer?.canEdit && (
-                <Link href={`/estudios/${bgData.studio_slug}/configuracoes`} className={styles.btnEdit}>
+                <Link
+                  href={`/estudios/${bgData.studio_slug}/configuracoes`}
+                  className={styles.btnEdit}
+                >
                   Editar jogo
                 </Link>
               )}

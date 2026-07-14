@@ -17,13 +17,19 @@ export async function GET(request, { params }) {
     const user = request.context.user;
 
     if (!authorization.can(user, "read:post")) {
-      throw new ForbiddenError({ message: "Você não possui permissão para visualizar posts." });
+      throw new ForbiddenError({
+        message: "Você não possui permissão para visualizar posts.",
+      });
     }
 
     const { slug } = await params;
     const studio = await organization.findBySlug(slug);
     const posts = await post.getPostsByOrgId(user?.id ?? null, studio.id);
-    const secureOutput = await authorization.filterOutput(user, "read:post:all", posts);
+    const secureOutput = await authorization.filterOutput(
+      user,
+      "read:post:all",
+      posts,
+    );
 
     return Response.json(secureOutput, { status: 200 });
   } catch (error) {
@@ -41,7 +47,9 @@ export async function POST(request, { params }) {
     const requestUser = request.context.user;
 
     if (!authorization.can(requestUser, "create:post")) {
-      throw new ForbiddenError({ message: "Você não possui permissão para criar posts." });
+      throw new ForbiddenError({
+        message: "Você não possui permissão para criar posts.",
+      });
     }
 
     const { slug } = await params;
@@ -52,7 +60,9 @@ export async function POST(request, { params }) {
     const isOwner = studio.owner_id === requestUser.id;
 
     if (!isMember && !isAdmin && !isOwner) {
-      throw new ForbiddenError({ message: "Apenas membros do estúdio podem criar postagens." });
+      throw new ForbiddenError({
+        message: "Apenas membros do estúdio podem criar postagens.",
+      });
     }
 
     const formData = await request.formData();
@@ -82,7 +92,11 @@ export async function POST(request, { params }) {
 
     const created = await post.create(inputValues);
     const result = await post.getPostById(requestUser.id, created.id);
-    const secureOutput = await authorization.filterOutput(requestUser, "read:post", result);
+    const secureOutput = await authorization.filterOutput(
+      requestUser,
+      "read:post",
+      result,
+    );
 
     return Response.json(secureOutput, { status: 201 });
   } catch (error) {

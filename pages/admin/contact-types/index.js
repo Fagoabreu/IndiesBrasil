@@ -65,7 +65,9 @@ export default function ContactTypesPage() {
   }
 
   async function handleDelete(contactTypeId) {
-    const confirmed = window.confirm("Tem certeza que deseja remover este tipo de contato?");
+    const confirmed = window.confirm(
+      "Tem certeza que deseja remover este tipo de contato?",
+    );
     if (!confirmed) return;
 
     try {
@@ -94,8 +96,16 @@ export default function ContactTypesPage() {
         {error && <Flash variant="danger">{error}</Flash>}
 
         <form onSubmit={handleSubmit} className="contact-form">
-          <TextInput placeholder="Nome (ex: LinkedIn)" value={iconKey} onChange={(e) => setIconKey(e.target.value)} />
-          <TextInput placeholder="Ícone (ex: linkedin)" value={iconImg} onChange={(e) => setIconImg(e.target.value)} />
+          <TextInput
+            placeholder="Nome (ex: LinkedIn)"
+            value={iconKey}
+            onChange={(e) => setIconKey(e.target.value)}
+          />
+          <TextInput
+            placeholder="Ícone (ex: linkedin)"
+            value={iconImg}
+            onChange={(e) => setIconImg(e.target.value)}
+          />
 
           <Button type="submit" variant="primary">
             Adicionar
@@ -107,10 +117,17 @@ export default function ContactTypesPage() {
             <li key={item.id}>
               <div className="contact-info">
                 <strong>{item.icon_key}</strong>
-                <IconSvg src={`/images/contacts/${item.icon_img}.svg`} alt={item.icon_key} />
+                <IconSvg
+                  src={`/images/contacts/${item.icon_img}.svg`}
+                  alt={item.icon_key}
+                />
               </div>
 
-              <Button size="small" variant="danger" onClick={() => handleDelete(item.id)}>
+              <Button
+                size="small"
+                variant="danger"
+                onClick={() => handleDelete(item.id)}
+              >
                 Remover
               </Button>
             </li>

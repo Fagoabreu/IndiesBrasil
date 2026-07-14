@@ -14,7 +14,9 @@ export async function POST(request, { params }) {
     const user = request.context.user;
 
     if (!authorization.can(user, "create:event")) {
-      throw new ForbiddenError({ message: "Você precisa estar logado para confirmar presença." });
+      throw new ForbiddenError({
+        message: "Você precisa estar logado para confirmar presença.",
+      });
     }
 
     const { id } = await params;
@@ -43,7 +45,9 @@ export async function DELETE(request, { params }) {
     const user = request.context.user;
 
     if (!authorization.can(user, "create:event")) {
-      throw new ForbiddenError({ message: "Você precisa estar logado para gerenciar sua presença." });
+      throw new ForbiddenError({
+        message: "Você precisa estar logado para gerenciar sua presença.",
+      });
     }
 
     const { id } = await params;

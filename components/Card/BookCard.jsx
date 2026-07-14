@@ -34,7 +34,14 @@ export default function BookCard({ book }) {
       <div className={styles.cardCover}>
         <div className={styles.coverInner}>
           {book.cover_url ? (
-            <Image src={book.cover_url} alt={book.title} width={200} height={300} className={styles.coverImg} unoptimized />
+            <Image
+              src={book.cover_url}
+              alt={book.title}
+              width={200}
+              height={300}
+              className={styles.coverImg}
+              unoptimized
+            />
           ) : (
             <div className={styles.coverPlaceholder}>
               <span>{book.title[0]}</span>
@@ -43,7 +50,9 @@ export default function BookCard({ book }) {
         </div>
         {/* Efeito de páginas (lado direito) — sempre presente */}
         <div className={styles.pagesEffect} />
-        <span className={`${styles.stageBadge} ${stageClass}`}>{stageLabel}</span>
+        <span className={`${styles.stageBadge} ${stageClass}`}>
+          {stageLabel}
+        </span>
         <span className={styles.ratingBadge}>
           <ContentRatingBadge rating={book.content_rating} size="sm" />
         </span>
@@ -51,7 +60,9 @@ export default function BookCard({ book }) {
 
       <div className={styles.cardBody}>
         <h2 className={styles.cardName}>{book.title}</h2>
-        {book.short_description && <p className={styles.cardDesc}>{book.short_description}</p>}
+        {book.short_description && (
+          <p className={styles.cardDesc}>{book.short_description}</p>
+        )}
 
         <div className={styles.cardMeta}>
           {book.studio_name && (
@@ -64,8 +75,16 @@ export default function BookCard({ book }) {
 
         {(book.avg_rating > 0 || Number(book.follower_count) > 0) && (
           <div className={styles.cardStats}>
-            {book.avg_rating > 0 && <span className={styles.rating}>★ {Number(book.avg_rating).toFixed(1)}</span>}
-            {Number(book.follower_count) > 0 && <span className={styles.stat}>{book.follower_count} seguindo</span>}
+            {book.avg_rating > 0 && (
+              <span className={styles.rating}>
+                ★ {Number(book.avg_rating).toFixed(1)}
+              </span>
+            )}
+            {Number(book.follower_count) > 0 && (
+              <span className={styles.stat}>
+                {book.follower_count} seguindo
+              </span>
+            )}
           </div>
         )}
       </div>

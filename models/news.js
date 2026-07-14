@@ -51,7 +51,8 @@ const baseJoins = `
 
 // ─── CREATE ───────────────────────────────────────────
 async function create(input) {
-  const { author_id, title, summary, body, img, source_url, source_label } = input;
+  const { author_id, title, summary, body, img, source_url, source_label } =
+    input;
 
   const result = await database.query({
     text: `
@@ -59,7 +60,15 @@ async function create(input) {
       VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
     `,
-    values: [author_id, title, summary, body, img || null, source_url || null, source_label || null],
+    values: [
+      author_id,
+      title,
+      summary,
+      body,
+      img || null,
+      source_url || null,
+      source_label || null,
+    ],
   });
 
   return result.rows[0];

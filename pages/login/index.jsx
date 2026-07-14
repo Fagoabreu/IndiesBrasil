@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router";
-import { Heading, Button, FormControl, TextInput, Stack, Spinner } from "@primer/react";
+import {
+  Heading,
+  Button,
+  FormControl,
+  TextInput,
+  Stack,
+  Spinner,
+} from "@primer/react";
 import { useUser } from "@/context/UserContext";
 import styles from "./Login.module.css";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
@@ -70,13 +77,23 @@ export default function Login() {
             {/* EMAIL */}
             <FormControl required>
               <FormControl.Label>Email</FormControl.Label>
-              <TextInput type="email" block value={email} onChange={(e) => setEmail(e.target.value)} />
+              <TextInput
+                type="email"
+                block
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </FormControl>
 
             {/* PASSWORD */}
             <FormControl required>
               <FormControl.Label>Senha</FormControl.Label>
-              <TextInput type="password" block value={password} onChange={(e) => setPassword(e.target.value)} />
+              <TextInput
+                type="password"
+                block
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </FormControl>
 
             <Button type="submit" variant="primary" block disabled={loading}>
@@ -84,11 +101,17 @@ export default function Login() {
             </Button>
 
             <div className={styles.links}>
-              <Button variant="invisible" onClick={() => router.push("/cadastro")}>
+              <Button
+                variant="invisible"
+                onClick={() => router.push("/cadastro")}
+              >
                 Criar conta
               </Button>
 
-              <Button variant="invisible" onClick={() => router.push("/cadastro/reset-password")}>
+              <Button
+                variant="invisible"
+                onClick={() => router.push("/cadastro/reset-password")}
+              >
                 Esqueci a senha
               </Button>
             </div>

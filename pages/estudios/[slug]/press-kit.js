@@ -65,7 +65,11 @@ const SOCIAL_ICONS = {
 
 function formatDateBR(dateStr) {
   if (!dateStr) return "";
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long", year: "numeric" }).format(new Date(dateStr));
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(dateStr));
 }
 
 function formatCNPJ(raw) {
@@ -77,8 +81,12 @@ function formatCNPJ(raw) {
 
 function buildAddressLines(addr) {
   if (!addr) return [];
-  const line1 = [addr.street, addr.number, addr.complement].filter(Boolean).join(", ");
-  const line2 = [addr.neighborhood, addr.city, addr.state].filter(Boolean).join(", ");
+  const line1 = [addr.street, addr.number, addr.complement]
+    .filter(Boolean)
+    .join(", ");
+  const line2 = [addr.neighborhood, addr.city, addr.state]
+    .filter(Boolean)
+    .join(", ");
   const line3 = [addr.zip_code, addr.country].filter(Boolean).join(" — ");
   return [line1, line2, line3].filter(Boolean);
 }
@@ -95,7 +103,9 @@ function getContactIcon(contact) {
 function getVideoId(url) {
   if (!url) return null;
   // YouTube
-  const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  const ytMatch = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+  );
   if (ytMatch) return { type: "youtube", id: ytMatch[1] };
   // Vimeo
   const vmMatch = url.match(/vimeo\.com\/(\d+)/);
@@ -127,25 +137,41 @@ function GameCard({ game }) {
             fill
             sizes="120px"
             className={styles.gameCover}
-            unoptimized={game.cover_url.startsWith("data:") || game.cover_url.startsWith("blob:")}
+            unoptimized={
+              game.cover_url.startsWith("data:") ||
+              game.cover_url.startsWith("blob:")
+            }
           />
         </div>
       )}
       <div className={styles.gameInfo}>
         <h3 className={styles.gameName}>{game.name}</h3>
         <div className={styles.gameMeta}>
-          {game.stage && <span className={styles.gameStage}>{STAGE_LABELS[game.stage] || game.stage}</span>}
-          {genres.length > 0 && <span className={styles.gameGenre}>{genres.join(" · ")}</span>}
+          {game.stage && (
+            <span className={styles.gameStage}>
+              {STAGE_LABELS[game.stage] || game.stage}
+            </span>
+          )}
+          {genres.length > 0 && (
+            <span className={styles.gameGenre}>{genres.join(" · ")}</span>
+          )}
         </div>
-        {game.short_description && <p className={styles.gameDesc}>{game.short_description}</p>}
-        {game.release_date && <span className={styles.gameRelease}>Lançamento: {formatDateBR(game.release_date)}</span>}
+        {game.short_description && (
+          <p className={styles.gameDesc}>{game.short_description}</p>
+        )}
+        {game.release_date && (
+          <span className={styles.gameRelease}>
+            Lançamento: {formatDateBR(game.release_date)}
+          </span>
+        )}
       </div>
     </article>
   );
 }
 
 function BookCard({ book }) {
-  const bookType = BOOK_TYPE_LABELS[book.book_type] || book.book_type || "Livro";
+  const bookType =
+    BOOK_TYPE_LABELS[book.book_type] || book.book_type || "Livro";
   return (
     <article className={styles.gameCard}>
       {book.cover_url && (
@@ -156,20 +182,37 @@ function BookCard({ book }) {
             fill
             sizes="120px"
             className={styles.gameCover}
-            unoptimized={book.cover_url.startsWith("data:") || book.cover_url.startsWith("blob:")}
+            unoptimized={
+              book.cover_url.startsWith("data:") ||
+              book.cover_url.startsWith("blob:")
+            }
           />
         </div>
       )}
       <div className={styles.gameInfo}>
         <h3 className={styles.gameName}>{book.title}</h3>
-        {book.subtitle && <p className={styles.bookSubtitle}>{book.subtitle}</p>}
+        {book.subtitle && (
+          <p className={styles.bookSubtitle}>{book.subtitle}</p>
+        )}
         <div className={styles.gameMeta}>
           <span className={styles.gameStage}>{bookType}</span>
-          {book.stage && <span className={styles.gameGenre}>{STAGE_LABELS[book.stage] || book.stage}</span>}
-          {book.publisher && <span className={styles.gameGenre}>{book.publisher}</span>}
+          {book.stage && (
+            <span className={styles.gameGenre}>
+              {STAGE_LABELS[book.stage] || book.stage}
+            </span>
+          )}
+          {book.publisher && (
+            <span className={styles.gameGenre}>{book.publisher}</span>
+          )}
         </div>
-        {book.short_description && <p className={styles.gameDesc}>{book.short_description}</p>}
-        {book.release_date && <span className={styles.gameRelease}>Publicação: {formatDateBR(book.release_date)}</span>}
+        {book.short_description && (
+          <p className={styles.gameDesc}>{book.short_description}</p>
+        )}
+        {book.release_date && (
+          <span className={styles.gameRelease}>
+            Publicação: {formatDateBR(book.release_date)}
+          </span>
+        )}
       </div>
     </article>
   );
@@ -188,8 +231,17 @@ function MediaGallery({ media, title }) {
       <div className={styles.mediaGrid}>
         {images.map((item) => (
           <div key={item.id} className={styles.mediaItem}>
-            <Image src={item.url} alt={item.caption || ""} width={320} height={180} className={styles.mediaImg} unoptimized />
-            {item.caption && <span className={styles.mediaCaption}>{item.caption}</span>}
+            <Image
+              src={item.url}
+              alt={item.caption || ""}
+              width={320}
+              height={180}
+              className={styles.mediaImg}
+              unoptimized
+            />
+            {item.caption && (
+              <span className={styles.mediaCaption}>{item.caption}</span>
+            )}
           </div>
         ))}
       </div>
@@ -214,9 +266,18 @@ function StoreTable({ stores }) {
           {stores.map((s) => (
             <tr key={s.id}>
               <td>{s.store_name}</td>
-              <td>{s.price ? `R$ ${Number(s.price).toFixed(2).replace(".", ",")}` : "—"}</td>
               <td>
-                <a href={s.page_url} target="_blank" rel="noopener noreferrer" className={styles.storeLink}>
+                {s.price
+                  ? `R$ ${Number(s.price).toFixed(2).replace(".", ",")}`
+                  : "—"}
+              </td>
+              <td>
+                <a
+                  href={s.page_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.storeLink}
+                >
                   {s.page_url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
                 </a>
               </td>
@@ -263,21 +324,30 @@ function GameDetail({ game }) {
               fill
               sizes="160px"
               className={styles.detailCover}
-              unoptimized={game.cover_url.startsWith("data:") || game.cover_url.startsWith("blob:")}
+              unoptimized={
+                game.cover_url.startsWith("data:") ||
+                game.cover_url.startsWith("blob:")
+              }
             />
           </div>
         )}
         <div className={styles.detailHeaderInfo}>
           <h3 className={styles.detailName}>{game.name}</h3>
           <div className={styles.detailMeta}>
-            {game.stage && <span className={styles.detailStage}>{STAGE_LABELS[game.stage] || game.stage}</span>}
+            {game.stage && (
+              <span className={styles.detailStage}>
+                {STAGE_LABELS[game.stage] || game.stage}
+              </span>
+            )}
             {genres.map((g) => (
               <span key={g} className={styles.detailTag}>
                 {g}
               </span>
             ))}
           </div>
-          {game.short_description && <p className={styles.detailShortDesc}>{game.short_description}</p>}
+          {game.short_description && (
+            <p className={styles.detailShortDesc}>{game.short_description}</p>
+          )}
         </div>
       </div>
 
@@ -290,20 +360,34 @@ function GameDetail({ game }) {
 
       {/* Technical specs */}
       <dl className={styles.specList}>
-        {platforms.length > 0 && <SpecRow label="Plataformas" value={platforms.map((p) => PLATFORM_LABELS[p] || p).join(", ")} />}
+        {platforms.length > 0 && (
+          <SpecRow
+            label="Plataformas"
+            value={platforms.map((p) => PLATFORM_LABELS[p] || p).join(", ")}
+          />
+        )}
         <SpecRow label="Lançamento" value={formatDateBR(game.release_date)} />
         <SpecRow label="Engine" value={game.engine} />
         <SpecRow
           label="Website"
           value={
             game.website_url ? (
-              <a href={game.website_url} target="_blank" rel="noopener noreferrer" className={styles.detailLink}>
-                {game.website_url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+              <a
+                href={game.website_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.detailLink}
+              >
+                {game.website_url
+                  .replace(/^https?:\/\//, "")
+                  .replace(/\/$/, "")}
               </a>
             ) : null
           }
         />
-        {tags.length > 0 && <SpecRow label="Tags" value={tags.map((t) => t.name).join(", ")} />}
+        {tags.length > 0 && (
+          <SpecRow label="Tags" value={tags.map((t) => t.name).join(", ")} />
+        )}
       </dl>
 
       {/* Trailer */}
@@ -320,7 +404,12 @@ function GameDetail({ game }) {
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               />
             ) : (
-              <iframe src={`https://player.vimeo.com/video/${videoInfo.id}`} title="Trailer" className={styles.videoIframe} allowFullScreen />
+              <iframe
+                src={`https://player.vimeo.com/video/${videoInfo.id}`}
+                title="Trailer"
+                className={styles.videoIframe}
+                allowFullScreen
+              />
             )}
           </div>
         </div>
@@ -340,11 +429,22 @@ function GameDetail({ game }) {
             {team.map((m) => (
               <div key={m.id} className={styles.teamCard}>
                 {m.avatar_url && (
-                  <Image src={m.avatar_url} alt={m.display_name || m.username} width={40} height={40} className={styles.teamAvatar} unoptimized />
+                  <Image
+                    src={m.avatar_url}
+                    alt={m.display_name || m.username}
+                    width={40}
+                    height={40}
+                    className={styles.teamAvatar}
+                    unoptimized
+                  />
                 )}
                 <div className={styles.teamInfo}>
-                  <span className={styles.teamName}>{m.display_name || m.username}</span>
-                  {m.roles && <span className={styles.teamRole}>{m.roles}</span>}
+                  <span className={styles.teamName}>
+                    {m.display_name || m.username}
+                  </span>
+                  {m.roles && (
+                    <span className={styles.teamRole}>{m.roles}</span>
+                  )}
                 </div>
               </div>
             ))}
@@ -364,11 +464,15 @@ function BoardgameDetail({ boardgame }) {
   const media = boardgame.media || [];
   const playerRange =
     boardgame.player_count_min || boardgame.player_count_max
-      ? [boardgame.player_count_min, boardgame.player_count_max].filter((v) => v != null).join("–")
+      ? [boardgame.player_count_min, boardgame.player_count_max]
+          .filter((v) => v != null)
+          .join("–")
       : null;
   const playTimeRange =
     boardgame.play_time_min || boardgame.play_time_max
-      ? [boardgame.play_time_min, boardgame.play_time_max].filter((v) => v != null).join("–") + " min"
+      ? [boardgame.play_time_min, boardgame.play_time_max]
+          .filter((v) => v != null)
+          .join("–") + " min"
       : null;
 
   return (
@@ -383,17 +487,30 @@ function BoardgameDetail({ boardgame }) {
               fill
               sizes="160px"
               className={styles.detailCover}
-              unoptimized={boardgame.cover_url.startsWith("data:") || boardgame.cover_url.startsWith("blob:")}
+              unoptimized={
+                boardgame.cover_url.startsWith("data:") ||
+                boardgame.cover_url.startsWith("blob:")
+              }
             />
           </div>
         )}
         <div className={styles.detailHeaderInfo}>
           <h3 className={styles.detailName}>{boardgame.name}</h3>
           <div className={styles.detailMeta}>
-            {boardgame.stage && <span className={styles.detailStage}>{STAGE_LABELS[boardgame.stage] || boardgame.stage}</span>}
-            {boardgame.category && <span className={styles.detailTag}>{boardgame.category}</span>}
+            {boardgame.stage && (
+              <span className={styles.detailStage}>
+                {STAGE_LABELS[boardgame.stage] || boardgame.stage}
+              </span>
+            )}
+            {boardgame.category && (
+              <span className={styles.detailTag}>{boardgame.category}</span>
+            )}
           </div>
-          {boardgame.short_description && <p className={styles.detailShortDesc}>{boardgame.short_description}</p>}
+          {boardgame.short_description && (
+            <p className={styles.detailShortDesc}>
+              {boardgame.short_description}
+            </p>
+          )}
         </div>
       </div>
 
@@ -408,16 +525,38 @@ function BoardgameDetail({ boardgame }) {
       <dl className={styles.specList}>
         <SpecRow label="Jogadores" value={playerRange} />
         <SpecRow label="Tempo de jogo" value={playTimeRange} />
-        <SpecRow label="Idade mínima" value={boardgame.age_rating ? `${boardgame.age_rating}+` : null} />
-        <SpecRow label="Peso (BGG)" value={boardgame.weight ? `${Number(boardgame.weight).toFixed(1)} / 5` : null} />
-        <SpecRow label="Lançamento" value={formatDateBR(boardgame.release_date)} />
-        {mechanics.length > 0 && <SpecRow label="Mecânicas" value={mechanics.join(", ")} />}
+        <SpecRow
+          label="Idade mínima"
+          value={boardgame.age_rating ? `${boardgame.age_rating}+` : null}
+        />
+        <SpecRow
+          label="Peso (BGG)"
+          value={
+            boardgame.weight
+              ? `${Number(boardgame.weight).toFixed(1)} / 5`
+              : null
+          }
+        />
+        <SpecRow
+          label="Lançamento"
+          value={formatDateBR(boardgame.release_date)}
+        />
+        {mechanics.length > 0 && (
+          <SpecRow label="Mecânicas" value={mechanics.join(", ")} />
+        )}
         <SpecRow
           label="Website"
           value={
             boardgame.website_url ? (
-              <a href={boardgame.website_url} target="_blank" rel="noopener noreferrer" className={styles.detailLink}>
-                {boardgame.website_url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+              <a
+                href={boardgame.website_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.detailLink}
+              >
+                {boardgame.website_url
+                  .replace(/^https?:\/\//, "")
+                  .replace(/\/$/, "")}
               </a>
             ) : null
           }
@@ -449,19 +588,36 @@ function BookDetail({ book }) {
               fill
               sizes="160px"
               className={styles.detailCover}
-              unoptimized={book.cover_url.startsWith("data:") || book.cover_url.startsWith("blob:")}
+              unoptimized={
+                book.cover_url.startsWith("data:") ||
+                book.cover_url.startsWith("blob:")
+              }
             />
           </div>
         )}
         <div className={styles.detailHeaderInfo}>
           <h3 className={styles.detailName}>{book.title}</h3>
-          {book.subtitle && <p className={styles.bookSubtitle}>{book.subtitle}</p>}
+          {book.subtitle && (
+            <p className={styles.bookSubtitle}>{book.subtitle}</p>
+          )}
           <div className={styles.detailMeta}>
-            {book.book_type && <span className={styles.detailStage}>{BOOK_TYPE_LABELS[book.book_type] || book.book_type}</span>}
-            {book.stage && <span className={styles.detailTag}>{STAGE_LABELS[book.stage] || book.stage}</span>}
-            {book.publisher && <span className={styles.detailTag}>{book.publisher}</span>}
+            {book.book_type && (
+              <span className={styles.detailStage}>
+                {BOOK_TYPE_LABELS[book.book_type] || book.book_type}
+              </span>
+            )}
+            {book.stage && (
+              <span className={styles.detailTag}>
+                {STAGE_LABELS[book.stage] || book.stage}
+              </span>
+            )}
+            {book.publisher && (
+              <span className={styles.detailTag}>{book.publisher}</span>
+            )}
           </div>
-          {book.short_description && <p className={styles.detailShortDesc}>{book.short_description}</p>}
+          {book.short_description && (
+            <p className={styles.detailShortDesc}>{book.short_description}</p>
+          )}
         </div>
       </div>
 
@@ -484,8 +640,15 @@ function BookDetail({ book }) {
           label="Website"
           value={
             book.website_url ? (
-              <a href={book.website_url} target="_blank" rel="noopener noreferrer" className={styles.detailLink}>
-                {book.website_url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+              <a
+                href={book.website_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.detailLink}
+              >
+                {book.website_url
+                  .replace(/^https?:\/\//, "")
+                  .replace(/\/$/, "")}
               </a>
             ) : null
           }
@@ -494,7 +657,12 @@ function BookDetail({ book }) {
           label="Comprar"
           value={
             book.buy_url ? (
-              <a href={book.buy_url} target="_blank" rel="noopener noreferrer" className={styles.detailLink}>
+              <a
+                href={book.buy_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.detailLink}
+              >
                 {book.buy_url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
               </a>
             ) : null
@@ -504,7 +672,12 @@ function BookDetail({ book }) {
           <SpecRow
             label="PDF"
             value={
-              <a href={book.pdf_url} target="_blank" rel="noopener noreferrer" className={styles.detailLink}>
+              <a
+                href={book.pdf_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.detailLink}
+              >
                 Download
               </a>
             }
@@ -582,7 +755,9 @@ export default function PressKitPage() {
         fetch(`/api/v1/boardgames/${bg.slug}/media`, { credentials: "include" })
           .then((r) => r.json())
           .catch(() => []),
-      ]).then(([data, media]) => (data ? { ...data, media: Array.isArray(media) ? media : [] } : null)),
+      ]).then(([data, media]) =>
+        data ? { ...data, media: Array.isArray(media) ? media : [] } : null,
+      ),
     );
 
     const bookFetches = books.map((b) =>
@@ -592,9 +767,15 @@ export default function PressKitPage() {
     );
 
     Promise.all([
-      Promise.all(gameFetches).then((results) => setRichGames(results.filter(Boolean))),
-      Promise.all(bgFetches).then((results) => setRichBoardgames(results.filter(Boolean))),
-      Promise.all(bookFetches).then((results) => setRichBooks(results.filter(Boolean))),
+      Promise.all(gameFetches).then((results) =>
+        setRichGames(results.filter(Boolean)),
+      ),
+      Promise.all(bgFetches).then((results) =>
+        setRichBoardgames(results.filter(Boolean)),
+      ),
+      Promise.all(bookFetches).then((results) =>
+        setRichBooks(results.filter(Boolean)),
+      ),
     ]);
   }, [games, boardGames, books]);
 
@@ -616,14 +797,32 @@ export default function PressKitPage() {
 
   // Collect platforms from rich game data
   const allPlatforms =
-    richGames !== null ? [...new Set(richGames.flatMap((g) => (g.platforms || []).map((p) => PLATFORM_LABELS[p] || p)))].sort() : [];
+    richGames !== null
+      ? [
+          ...new Set(
+            richGames.flatMap((g) =>
+              (g.platforms || []).map((p) => PLATFORM_LABELS[p] || p),
+            ),
+          ),
+        ].sort()
+      : [];
 
   // Separate contacts by type
   const socialContacts = contacts.filter((c) => {
     const key = (c.icon_key || "").toLowerCase();
-    return ["youtube", "twitch", "twitter", "instagram", "discord", "tiktok", "facebook", "linkedin", "github", "steam", "itch"].some((s) =>
-      key.includes(s),
-    );
+    return [
+      "youtube",
+      "twitch",
+      "twitter",
+      "instagram",
+      "discord",
+      "tiktok",
+      "facebook",
+      "linkedin",
+      "github",
+      "steam",
+      "itch",
+    ].some((s) => key.includes(s));
   });
   const otherContacts = contacts.filter((c) => !socialContacts.includes(c));
 
@@ -714,7 +913,12 @@ export default function PressKitPage() {
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     />
                   ) : (
-                    <iframe src={`https://player.vimeo.com/video/${videoInfo.id}`} title="Trailer" className={styles.videoIframe} allowFullScreen />
+                    <iframe
+                      src={`https://player.vimeo.com/video/${videoInfo.id}`}
+                      title="Trailer"
+                      className={styles.videoIframe}
+                      allowFullScreen
+                    />
                   )}
                 </div>
               </section>
@@ -735,8 +939,14 @@ export default function PressKitPage() {
                 <ul className={styles.memberList}>
                   {members.map((m) => (
                     <li key={m.user_id ?? m.id} className={styles.memberItem}>
-                      <span className={styles.memberName}>{m.display_name || m.username}</span>
-                      {m.roles?.length > 0 && <span className={styles.memberRole}>{m.roles.join(", ")}</span>}
+                      <span className={styles.memberName}>
+                        {m.display_name || m.username}
+                      </span>
+                      {m.roles?.length > 0 && (
+                        <span className={styles.memberRole}>
+                          {m.roles.join(", ")}
+                        </span>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -748,8 +958,10 @@ export default function PressKitPage() {
               <section className={styles.section}>
                 <h2 className={styles.sectionTitle}>Logos e Assets</h2>
                 <p className={styles.assetsIntro}>
-                  Os arquivos abaixo podem ser utilizados para cobertura da imprensa. Para baixar a logo em alta resolução, clique com o botão direito
-                  e selecione &ldquo;Salvar imagem como&hellip;&rdquo;.
+                  Os arquivos abaixo podem ser utilizados para cobertura da
+                  imprensa. Para baixar a logo em alta resolução, clique com o
+                  botão direito e selecione &ldquo;Salvar imagem
+                  como&hellip;&rdquo;.
                 </p>
                 <div className={styles.assetsGrid}>
                   <div className={styles.assetItem}>
@@ -777,7 +989,9 @@ export default function PressKitPage() {
                           style={{ objectFit: "cover" }}
                         />
                       </div>
-                      <span className={styles.assetLabel}>Banner / Key Art</span>
+                      <span className={styles.assetLabel}>
+                        Banner / Key Art
+                      </span>
                     </div>
                   )}
                 </div>
@@ -790,9 +1004,22 @@ export default function PressKitPage() {
                 <h2 className={styles.sectionTitle}>Redes Sociais</h2>
                 <div className={styles.socialGrid}>
                   {socialContacts.map((c) => (
-                    <a key={c.id ?? c.contact_value} href={c.contact_value} target="_blank" rel="noopener noreferrer" className={styles.socialLink}>
-                      <span className={styles.socialIcon}>{getContactIcon(c)}</span>
-                      <span className={styles.socialLabel}>{c.icon_key ? c.icon_key.charAt(0).toUpperCase() + c.icon_key.slice(1) : "Link"}</span>
+                    <a
+                      key={c.id ?? c.contact_value}
+                      href={c.contact_value}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.socialLink}
+                    >
+                      <span className={styles.socialIcon}>
+                        {getContactIcon(c)}
+                      </span>
+                      <span className={styles.socialLabel}>
+                        {c.icon_key
+                          ? c.icon_key.charAt(0).toUpperCase() +
+                            c.icon_key.slice(1)
+                          : "Link"}
+                      </span>
                     </a>
                   ))}
                 </div>
@@ -805,7 +1032,11 @@ export default function PressKitPage() {
                 <h2 className={styles.sectionTitle}>Jogos</h2>
                 <div className={styles.detailList}>
                   {(richGames !== null ? richGames : games).map((item) =>
-                    richGames !== null ? <GameDetail key={item.id} game={item} /> : <GameCard key={item.id} game={item} />,
+                    richGames !== null ? (
+                      <GameDetail key={item.id} game={item} />
+                    ) : (
+                      <GameCard key={item.id} game={item} />
+                    ),
                   )}
                 </div>
               </section>
@@ -816,8 +1047,13 @@ export default function PressKitPage() {
               <section className={styles.section}>
                 <h2 className={styles.sectionTitle}>Jogos de Mesa</h2>
                 <div className={styles.detailList}>
-                  {(richBoardgames !== null ? richBoardgames : boardGames).map((item) =>
-                    richBoardgames !== null ? <BoardgameDetail key={item.id} boardgame={item} /> : <GameCard key={item.id} game={item} />,
+                  {(richBoardgames !== null ? richBoardgames : boardGames).map(
+                    (item) =>
+                      richBoardgames !== null ? (
+                        <BoardgameDetail key={item.id} boardgame={item} />
+                      ) : (
+                        <GameCard key={item.id} game={item} />
+                      ),
                   )}
                 </div>
               </section>
@@ -829,7 +1065,11 @@ export default function PressKitPage() {
                 <h2 className={styles.sectionTitle}>Livros e Quadrinhos</h2>
                 <div className={styles.detailList}>
                   {(richBooks !== null ? richBooks : books).map((item) =>
-                    richBooks !== null ? <BookDetail key={item.id} book={item} /> : <BookCard key={item.id} book={item} />,
+                    richBooks !== null ? (
+                      <BookDetail key={item.id} book={item} />
+                    ) : (
+                      <BookCard key={item.id} book={item} />
+                    ),
                   )}
                 </div>
               </section>
@@ -839,7 +1079,9 @@ export default function PressKitPage() {
             {allContent.length === 0 && (
               <section className={styles.section}>
                 <h2 className={styles.sectionTitle}>Jogos</h2>
-                <p className={styles.emptyHint}>Os jogos do estúdio serão listados aqui em breve.</p>
+                <p className={styles.emptyHint}>
+                  Os jogos do estúdio serão listados aqui em breve.
+                </p>
               </section>
             )}
           </main>
@@ -865,8 +1107,15 @@ export default function PressKitPage() {
                 <div className={styles.factRow}>
                   <dt>Website</dt>
                   <dd>
-                    <a href={studio.website} target="_blank" rel="noopener noreferrer" className={styles.factLink}>
-                      {studio.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                    <a
+                      href={studio.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.factLink}
+                    >
+                      {studio.website
+                        .replace(/^https?:\/\//, "")
+                        .replace(/\/$/, "")}
                     </a>
                   </dd>
                 </div>
@@ -904,7 +1153,10 @@ export default function PressKitPage() {
                   <dt>Contato</dt>
                   <dd>
                     {otherContacts.map((c) => (
-                      <span key={c.id ?? c.contact_value} className={styles.factContactRow}>
+                      <span
+                        key={c.id ?? c.contact_value}
+                        className={styles.factContactRow}
+                      >
                         {c.contact_value}
                       </span>
                     ))}
@@ -915,7 +1167,12 @@ export default function PressKitPage() {
 
             {/* QR Code */}
             <div className={styles.qrBlock}>
-              <QRCodeSVG value={studioUrl} size={96} bgColor="#ffffff" fgColor="#1a1a2e" />
+              <QRCodeSVG
+                value={studioUrl}
+                size={96}
+                bgColor="#ffffff"
+                fgColor="#1a1a2e"
+              />
               <span className={styles.qrLabel}>{studioUrl}</span>
             </div>
           </aside>
@@ -923,7 +1180,9 @@ export default function PressKitPage() {
 
         {/* RODAPÉ */}
         <footer className={styles.pkFooter}>
-          <span>Gerado em {new Intl.DateTimeFormat("pt-BR").format(new Date())}</span>
+          <span>
+            Gerado em {new Intl.DateTimeFormat("pt-BR").format(new Date())}
+          </span>
           <span>{studioUrl}</span>
         </footer>
       </div>

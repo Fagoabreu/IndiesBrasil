@@ -11,7 +11,14 @@ export default function useTiltEffect(options = {}) {
     const el = ref.current;
     if (!el) return;
 
-    const { max = 10, perspective = 800, scale = 1.02, speed = 300, glare = true, maxGlare = 0.15 } = options;
+    const {
+      max = 10,
+      perspective = 800,
+      scale = 1.02,
+      speed = 300,
+      glare = true,
+      maxGlare = 0.15,
+    } = options;
 
     let glareEl = null;
 
@@ -25,7 +32,8 @@ export default function useTiltEffect(options = {}) {
         borderRadius: "inherit",
         pointerEvents: "none",
         zIndex: "3",
-        background: "linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 50%, rgba(255,255,255,0.05) 100%)",
+        background:
+          "linear-gradient(135deg, rgba(255,255,255,0.25) 0%, transparent 50%, rgba(255,255,255,0.05) 100%)",
         opacity: "0",
         transition: `opacity ${speed}ms ease`,
       });

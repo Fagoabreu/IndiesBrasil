@@ -1,5 +1,9 @@
 import database from "infra/database";
-import { NotFoundError, ValidationError, ForbiddenError } from "infra/errors.js";
+import {
+  NotFoundError,
+  ValidationError,
+  ForbiddenError,
+} from "infra/errors.js";
 import organization from "models/organization.js";
 
 /* =========================================================
@@ -49,7 +53,13 @@ function generateSlug(name, id) {
  * Leitura
  * ========================================================= */
 
-async function findAll({ page = 1, limit = 20, search = "", genre = "", stage = "" } = {}) {
+async function findAll({
+  page = 1,
+  limit = 20,
+  search = "",
+  genre = "",
+  stage = "",
+} = {}) {
   const offset = (page - 1) * limit;
   const result = await database.query({
     text: `
@@ -166,7 +176,8 @@ async function findById(id) {
     text: `SELECT * FROM games WHERE id = $1`,
     values: [id],
   });
-  if (!result.rows[0]) throw new NotFoundError({ message: "Jogo não encontrado." });
+  if (!result.rows[0])
+    throw new NotFoundError({ message: "Jogo não encontrado." });
   return result.rows[0];
 }
 
@@ -236,7 +247,9 @@ async function findTags(gameId) {
 }
 
 async function findStoreTypes() {
-  const result = await database.query({ text: `SELECT id, name FROM game_store ORDER BY id` });
+  const result = await database.query({
+    text: `SELECT id, name FROM game_store ORDER BY id`,
+  });
   return result.rows;
 }
 
@@ -249,7 +262,9 @@ async function create(orgId, userId, data) {
     throw new ValidationError({ message: "O nome do jogo é obrigatório." });
   }
 
-  const idResult = await database.query({ text: `SELECT gen_random_uuid() AS id` });
+  const idResult = await database.query({
+    text: `SELECT gen_random_uuid() AS id`,
+  });
   const newId = idResult.rows[0].id;
   const slug = generateSlug(data.name, newId);
 
@@ -286,9 +301,26 @@ async function create(orgId, userId, data) {
  * ========================================================= */
 
 async function update(slug, data) {
-  const game = await findById((await database.query({ text: `SELECT id FROM games WHERE slug = $1`, values: [slug] })).rows[0]?.id);
+  const game = await findById(
+    (
+      await database.query({
+        text: `SELECT id FROM games WHERE slug = $1`,
+        values: [slug],
+      })
+    ).rows[0]?.id,
+  );
 
-  const updatable = ["name", "short_description", "description", "genre", "engine", "stage", "release_date", "website_url", "trailer_url"];
+  const updatable = [
+    "name",
+    "short_description",
+    "description",
+    "genre",
+    "engine",
+    "stage",
+    "release_date",
+    "website_url",
+    "trailer_url",
+  ];
   const fields = [];
   const values = [];
   let idx = 1;
@@ -374,9 +406,14 @@ async function saveBanner(slug, imageId) {
  * Mídia (screenshots e vídeos)
  * ========================================================= */
 
-async function addMedia(gameId, { media_type, url, caption = null, display_order = 0 }) {
+async function addMedia(
+  gameId,
+  { media_type, url, caption = null, display_order = 0 },
+) {
   if (!["image", "video"].includes(media_type)) {
-    throw new ValidationError({ message: "media_type deve ser 'image' ou 'video'." });
+    throw new ValidationError({
+      message: "media_type deve ser 'image' ou 'video'.",
+    });
   }
   const result = await database.query({
     text: `
@@ -394,7 +431,8 @@ async function removeMedia(mediaId, gameId) {
     text: `DELETE FROM game_media WHERE id = $1 AND game_id = $2 RETURNING id`,
     values: [mediaId, gameId],
   });
-  if (!result.rowCount) throw new NotFoundError({ message: "Mídia não encontrada." });
+  if (!result.rowCount)
+    throw new NotFoundError({ message: "Mídia não encontrada." });
 }
 
 /* =========================================================
@@ -465,7 +503,9 @@ async function findFollowedBy(userId) {
 async function createReview(gameId, userId, { rating, content = null }) {
   rating = Number(rating);
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-    throw new ValidationError({ message: "A nota deve ser um número inteiro entre 1 e 5." });
+    throw new ValidationError({
+      message: "A nota deve ser um número inteiro entre 1 e 5.",
+    });
   }
 
   // Verifica se já avaliou
@@ -474,7 +514,9 @@ async function createReview(gameId, userId, { rating, content = null }) {
     values: [gameId, userId],
   });
   if (existing.rows[0]) {
-    throw new ValidationError({ message: "Você já avaliou este jogo. Edite sua avaliação existente." });
+    throw new ValidationError({
+      message: "Você já avaliou este jogo. Edite sua avaliação existente.",
+    });
   }
 
   const result = await database.query({
@@ -492,7 +534,9 @@ async function updateReview(reviewId, userId, { rating, content }) {
   if (rating !== undefined) {
     rating = Number(rating);
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-      throw new ValidationError({ message: "A nota deve ser um número inteiro entre 1 e 5." });
+      throw new ValidationError({
+        message: "A nota deve ser um número inteiro entre 1 e 5.",
+      });
     }
   }
 
@@ -500,8 +544,12 @@ async function updateReview(reviewId, userId, { rating, content }) {
     text: `SELECT * FROM game_reviews WHERE id = $1`,
     values: [reviewId],
   });
-  if (!existing.rows[0]) throw new NotFoundError({ message: "Avaliação não encontrada." });
-  if (existing.rows[0].reviewer_id !== userId) throw new ForbiddenError({ message: "Você não pode editar a avaliação de outro usuário." });
+  if (!existing.rows[0])
+    throw new NotFoundError({ message: "Avaliação não encontrada." });
+  if (existing.rows[0].reviewer_id !== userId)
+    throw new ForbiddenError({
+      message: "Você não pode editar a avaliação de outro usuário.",
+    });
 
   const fields = [];
   const values = [];
@@ -576,7 +624,8 @@ async function deleteGame(slug) {
     text: `DELETE FROM games WHERE slug = $1 RETURNING id`,
     values: [slug],
   });
-  if (!result.rowCount) throw new NotFoundError({ message: "Jogo não encontrado." });
+  if (!result.rowCount)
+    throw new NotFoundError({ message: "Jogo não encontrado." });
 }
 
 const game = {

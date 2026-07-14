@@ -21,7 +21,8 @@ export async function POST(request, context) {
     const canEdit = await book.canEdit(bookData.id, requestUser);
     if (!canEdit) {
       throw new ForbiddenError({
-        message: "Apenas administradores do estúdio podem alterar as imagens do livro/quadrinho.",
+        message:
+          "Apenas administradores do estúdio podem alterar as imagens do livro/quadrinho.",
       });
     }
 
@@ -30,11 +31,17 @@ export async function POST(request, context) {
     const file = formData.get("file");
 
     if (!file) {
-      return Response.json({ message: "Nenhum arquivo enviado." }, { status: 400 });
+      return Response.json(
+        { message: "Nenhum arquivo enviado." },
+        { status: 400 },
+      );
     }
 
     if (imgType !== "cover") {
-      return Response.json({ message: "imgType inválido. Use 'cover'." }, { status: 400 });
+      return Response.json(
+        { message: "imgType inválido. Use 'cover'." },
+        { status: 400 },
+      );
     }
 
     const folder = `books/${bookData.id}/cover`;
@@ -48,7 +55,10 @@ export async function POST(request, context) {
     });
   } catch (err) {
     if (err.statusCode) {
-      return Response.json({ message: err.message }, { status: err.statusCode });
+      return Response.json(
+        { message: err.message },
+        { status: err.statusCode },
+      );
     }
     console.error(err);
     return Response.json({ message: "Erro interno." }, { status: 500 });

@@ -20,7 +20,11 @@
   top: 0;
   bottom: 0;
   width: 3px;
-  background: linear-gradient(180deg, var(--brand-primary), var(--brand-secondary));
+  background: linear-gradient(
+    180deg,
+    var(--brand-primary),
+    var(--brand-secondary)
+  );
 }
 
 .headerTitle {
@@ -105,7 +109,8 @@
   font-size: 0.82rem;
   background: rgba(var(--brand-rgb-primary), 0.08);
   color: var(--fgColor-danger);
-  border: 1px solid var(--borderColor-danger, rgba(var(--brand-rgb-primary), 0.2));
+  border: 1px solid
+    var(--borderColor-danger, rgba(var(--brand-rgb-primary), 0.2));
 }
 
 .btnPrimary {

@@ -70,9 +70,13 @@ exports.up = (pgm) => {
     },
   });
 
-  pgm.createIndex("portfolio_historico", "portfolio_id", { name: "idx_portfolio_historico_portfolio_id" });
+  pgm.createIndex("portfolio_historico", "portfolio_id", {
+    name: "idx_portfolio_historico_portfolio_id",
+  });
 
-  pgm.createIndex("portfolio_historico", ["portfolio_id", "ordem"], { name: "idx_portfolio_historico_portfolio_ordem" });
+  pgm.createIndex("portfolio_historico", ["portfolio_id", "ordem"], {
+    name: "idx_portfolio_historico_portfolio_ordem",
+  });
 
   /* PORTFOLIO FORMACAO */
   pgm.createTable("portfolio_formacao", {
@@ -115,9 +119,13 @@ exports.up = (pgm) => {
     },
   });
 
-  pgm.createIndex("portfolio_formacao", "portfolio_id", { name: "idx_portfolio_formacao_portfolio_id" });
+  pgm.createIndex("portfolio_formacao", "portfolio_id", {
+    name: "idx_portfolio_formacao_portfolio_id",
+  });
 
-  pgm.createIndex("portfolio_formacao", ["portfolio_id", "ordem"], { name: "idx_portfolio_formacao_portfolio_ordem" });
+  pgm.createIndex("portfolio_formacao", ["portfolio_id", "ordem"], {
+    name: "idx_portfolio_formacao_portfolio_ordem",
+  });
 
   /* CONTACT TYPE */
   pgm.dropConstraint("contact_type", "contact_images_id_fkey");

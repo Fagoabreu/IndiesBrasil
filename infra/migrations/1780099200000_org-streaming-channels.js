@@ -24,7 +24,11 @@ exports.up = (pgm) => {
     },
   });
 
-  pgm.addConstraint("org_stream_status", "org_stream_status_pkey", "PRIMARY KEY (org_id, platform)");
+  pgm.addConstraint(
+    "org_stream_status",
+    "org_stream_status_pkey",
+    "PRIMARY KEY (org_id, platform)",
+  );
 };
 
 exports.down = (pgm) => {

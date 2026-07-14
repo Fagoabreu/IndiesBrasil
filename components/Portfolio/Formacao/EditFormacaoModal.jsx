@@ -43,22 +43,40 @@ export default function EditFormacaoModal({ onClose, onSave, initialData }) {
       >
         <FormControl>
           <FormControl.Label>Curso</FormControl.Label>
-          <TextInput block value={form.nome} onChange={(e) => update("nome", e.target.value)} />
+          <TextInput
+            block
+            value={form.nome}
+            onChange={(e) => update("nome", e.target.value)}
+          />
         </FormControl>
 
         <FormControl>
           <FormControl.Label>Instituição</FormControl.Label>
-          <TextInput block value={form.instituicao} onChange={(e) => update("instituicao", e.target.value)} />
+          <TextInput
+            block
+            value={form.instituicao}
+            onChange={(e) => update("instituicao", e.target.value)}
+          />
         </FormControl>
 
         <FormControl>
           <FormControl.Label>Início</FormControl.Label>
-          <TextInput type="date" block value={form.init_date} onChange={(e) => update("init_date", e.target.value)} />
+          <TextInput
+            type="date"
+            block
+            value={form.init_date}
+            onChange={(e) => update("init_date", e.target.value)}
+          />
         </FormControl>
 
         <FormControl>
           <FormControl.Label>Conclusão</FormControl.Label>
-          <TextInput type="date" block value={form.end_date} onChange={(e) => update("end_date", e.target.value)} />
+          <TextInput
+            type="date"
+            block
+            value={form.end_date}
+            onChange={(e) => update("end_date", e.target.value)}
+          />
         </FormControl>
       </div>
 

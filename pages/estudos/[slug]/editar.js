@@ -12,7 +12,16 @@ import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComp
 import ImageCropModal from "@/components/ImageTools/ImageCropTool/ImageCropModal";
 import styles from "./editar.module.css";
 
-const SUGGESTED_TAGS = ["Jogo", "Unity", "Godot", "Arte", "Som", "Programação", "Design", "Marketing"];
+const SUGGESTED_TAGS = [
+  "Jogo",
+  "Unity",
+  "Godot",
+  "Arte",
+  "Som",
+  "Programação",
+  "Design",
+  "Marketing",
+];
 
 export default function EditarCursoPage() {
   const router = useRouter();
@@ -70,7 +79,9 @@ export default function EditarCursoPage() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/v1/courses/${slug}`, { credentials: "include" });
+        const res = await fetch(`/api/v1/courses/${slug}`, {
+          credentials: "include",
+        });
         const data = await res.json();
         if (!res.ok || data.status_code) {
           router.replace(`/estudos/${slug}`);
@@ -138,7 +149,10 @@ export default function EditarCursoPage() {
         const data = await res.json();
         setModules(data.modules || []);
         setUnassignedLessons(data.unassignedLessons || []);
-        setLessons([...data.modules.flatMap((m) => m.lessons || []), ...(data.unassignedLessons || [])]);
+        setLessons([
+          ...data.modules.flatMap((m) => m.lessons || []),
+          ...(data.unassignedLessons || []),
+        ]);
       }
     } catch {
       // silent
@@ -146,7 +160,9 @@ export default function EditarCursoPage() {
   }
 
   function toggleTag(tag) {
-    setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+    );
   }
 
   function addCustomTag() {
@@ -194,7 +210,10 @@ export default function EditarCursoPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setStatusMsg({ type: "error", text: data.message || "Erro ao enviar capa." });
+        setStatusMsg({
+          type: "error",
+          text: data.message || "Erro ao enviar capa.",
+        });
         return;
       }
       setCoverUrl(data.cover_url);
@@ -216,7 +235,10 @@ export default function EditarCursoPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setStatusMsg({ type: "error", text: data.message || "Erro ao remover capa." });
+        setStatusMsg({
+          type: "error",
+          text: data.message || "Erro ao remover capa.",
+        });
         return;
       }
       setCoverUrl(null);
@@ -238,7 +260,10 @@ export default function EditarCursoPage() {
     }
 
     if (title.trim().length < 3) {
-      setStatusMsg({ type: "error", text: "O título do curso deve ter pelo menos 3 caracteres." });
+      setStatusMsg({
+        type: "error",
+        text: "O título do curso deve ter pelo menos 3 caracteres.",
+      });
       return;
     }
 
@@ -260,7 +285,10 @@ export default function EditarCursoPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setStatusMsg({ type: "error", text: data.message || "Erro ao salvar." });
+        setStatusMsg({
+          type: "error",
+          text: data.message || "Erro ao salvar.",
+        });
         return;
       }
 
@@ -268,10 +296,15 @@ export default function EditarCursoPage() {
 
       if (data.slug && data.slug !== courseSlug) {
         setCourseSlug(data.slug);
-        router.replace(`/estudos/${data.slug}/editar`, undefined, { shallow: true });
+        router.replace(`/estudos/${data.slug}/editar`, undefined, {
+          shallow: true,
+        });
       }
     } catch {
-      setStatusMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setStatusMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setSaving(false);
     }
@@ -290,7 +323,10 @@ export default function EditarCursoPage() {
     setLessonMsg({ type: null, text: "" });
     setAddingLesson(true);
     try {
-      const body = { title: addLessonTitle.trim(), moduleId: moduleId === "unassigned" ? null : moduleId };
+      const body = {
+        title: addLessonTitle.trim(),
+        moduleId: moduleId === "unassigned" ? null : moduleId,
+      };
 
       const res = await fetch(`/api/v1/courses/${slug}/lessons`, {
         method: "POST",
@@ -300,7 +336,10 @@ export default function EditarCursoPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setLessonMsg({ type: "error", text: data.message || "Erro ao criar aula." });
+        setLessonMsg({
+          type: "error",
+          text: data.message || "Erro ao criar aula.",
+        });
         return;
       }
       setAddLessonTitle("");
@@ -309,7 +348,10 @@ export default function EditarCursoPage() {
       openLessonEditForLesson(data);
       await fetchModules();
     } catch {
-      setLessonMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setLessonMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setAddingLesson(false);
     }
@@ -357,22 +399,31 @@ export default function EditarCursoPage() {
         moduleId: editLessonForm.module_id?.trim() || null,
       };
 
-      const res = await fetch(`/api/v1/courses/${slug}/lessons/${editingLessonOrder}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        `/api/v1/courses/${slug}/lessons/${editingLessonOrder}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        },
+      );
       const data = await res.json();
       if (!res.ok) {
-        setEditLessonMsg({ type: "error", text: data.message || "Erro ao salvar aula." });
+        setEditLessonMsg({
+          type: "error",
+          text: data.message || "Erro ao salvar aula.",
+        });
         return;
       }
       setEditLessonMsg({ type: "success", text: "Aula atualizada!" });
       setEditingLessonOrder(data.order_index);
       await fetchModules();
     } catch {
-      setEditLessonMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setEditLessonMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setSavingLesson(false);
     }
@@ -382,7 +433,10 @@ export default function EditarCursoPage() {
     if (!confirm("Remover esta aula? Esta ação não pode ser desfeita.")) return;
     setDeletingLessonOrder(orderIndex);
     try {
-      const res = await fetch(`/api/v1/courses/${slug}/lessons/${orderIndex}`, { method: "DELETE", credentials: "include" });
+      const res = await fetch(`/api/v1/courses/${slug}/lessons/${orderIndex}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       if (res.ok) {
         setEditingLessonOrder(null);
         setEditLessonForm(null);
@@ -412,14 +466,20 @@ export default function EditarCursoPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setModuleMsg({ type: "error", text: data.message || "Erro ao criar módulo." });
+        setModuleMsg({
+          type: "error",
+          text: data.message || "Erro ao criar módulo.",
+        });
         return;
       }
       setNewModuleTitle("");
       setModuleMsg({ type: "success", text: `Módulo "${data.title}" criado!` });
       await fetchModules();
     } catch {
-      setModuleMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setModuleMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setCreatingModule(false);
     }
@@ -437,7 +497,10 @@ export default function EditarCursoPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setModuleMsg({ type: "error", text: data.message || "Erro ao salvar módulo." });
+        setModuleMsg({
+          type: "error",
+          text: data.message || "Erro ao salvar módulo.",
+        });
         return;
       }
       setEditingModuleId(null);
@@ -445,14 +508,20 @@ export default function EditarCursoPage() {
       setModuleMsg({ type: "success", text: "Módulo atualizado!" });
       await fetchModules();
     } catch {
-      setModuleMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setModuleMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setSavingModule(false);
     }
   }
 
   async function handleDeleteModule(moduleId) {
-    if (!confirm("Remover este módulo? As aulas dentro dele ficarão sem módulo.")) return;
+    if (
+      !confirm("Remover este módulo? As aulas dentro dele ficarão sem módulo.")
+    )
+      return;
     try {
       const res = await fetch(`/api/v1/courses/${slug}/modules`, {
         method: "DELETE",
@@ -462,7 +531,10 @@ export default function EditarCursoPage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        setModuleMsg({ type: "error", text: data.message || "Erro ao remover módulo." });
+        setModuleMsg({
+          type: "error",
+          text: data.message || "Erro ao remover módulo.",
+        });
         return;
       }
       setEditingModuleId(null);
@@ -470,7 +542,10 @@ export default function EditarCursoPage() {
       setModuleMsg({ type: "success", text: "Módulo removido." });
       await fetchModules();
     } catch {
-      setModuleMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setModuleMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     }
   }
 
@@ -487,7 +562,9 @@ export default function EditarCursoPage() {
                 type="text"
                 className={styles.input}
                 value={editLessonForm.title}
-                onChange={(e) => setEditLessonForm((f) => ({ ...f, title: e.target.value }))}
+                onChange={(e) =>
+                  setEditLessonForm((f) => ({ ...f, title: e.target.value }))
+                }
                 maxLength={255}
                 required
               />
@@ -500,7 +577,12 @@ export default function EditarCursoPage() {
                 className={styles.input}
                 min="0"
                 value={editLessonForm.order_index}
-                onChange={(e) => setEditLessonForm((f) => ({ ...f, order_index: e.target.value }))}
+                onChange={(e) =>
+                  setEditLessonForm((f) => ({
+                    ...f,
+                    order_index: e.target.value,
+                  }))
+                }
               />
             </label>
 
@@ -510,7 +592,12 @@ export default function EditarCursoPage() {
                 <select
                   className={styles.input}
                   value={editLessonForm.module_id}
-                  onChange={(e) => setEditLessonForm((f) => ({ ...f, module_id: e.target.value }))}
+                  onChange={(e) =>
+                    setEditLessonForm((f) => ({
+                      ...f,
+                      module_id: e.target.value,
+                    }))
+                  }
                 >
                   <option value="">Sem módulo</option>
                   {modules.map((mod) => (
@@ -529,7 +616,12 @@ export default function EditarCursoPage() {
                 className={styles.input}
                 placeholder="https://youtube.com/..."
                 value={editLessonForm.video_url}
-                onChange={(e) => setEditLessonForm((f) => ({ ...f, video_url: e.target.value }))}
+                onChange={(e) =>
+                  setEditLessonForm((f) => ({
+                    ...f,
+                    video_url: e.target.value,
+                  }))
+                }
                 maxLength={512}
               />
             </label>
@@ -541,7 +633,12 @@ export default function EditarCursoPage() {
                 className={styles.input}
                 placeholder="https://..."
                 value={editLessonForm.reading_material}
-                onChange={(e) => setEditLessonForm((f) => ({ ...f, reading_material: e.target.value }))}
+                onChange={(e) =>
+                  setEditLessonForm((f) => ({
+                    ...f,
+                    reading_material: e.target.value,
+                  }))
+                }
                 maxLength={512}
               />
             </label>
@@ -552,13 +649,23 @@ export default function EditarCursoPage() {
                 className={`${styles.input} ${styles.textarea}`}
                 placeholder="Resumo do conteúdo da aula..."
                 value={editLessonForm.description}
-                onChange={(e) => setEditLessonForm((f) => ({ ...f, description: e.target.value }))}
+                onChange={(e) =>
+                  setEditLessonForm((f) => ({
+                    ...f,
+                    description: e.target.value,
+                  }))
+                }
                 rows={3}
               />
             </label>
           </div>
 
-          {editLessonMsg.text && <StatusMessageComponent type={editLessonMsg.type} message={editLessonMsg.text} />}
+          {editLessonMsg.text && (
+            <StatusMessageComponent
+              type={editLessonMsg.type}
+              message={editLessonMsg.text}
+            />
+          )}
 
           <div className={styles.lessonEditActions}>
             <button
@@ -567,9 +674,17 @@ export default function EditarCursoPage() {
               onClick={() => handleDeleteLesson(lesson.order_index)}
               disabled={deletingLessonOrder === lesson.order_index}
             >
-              {deletingLessonOrder === lesson.order_index ? <Spinner size="small" /> : "Remover aula"}
+              {deletingLessonOrder === lesson.order_index ? (
+                <Spinner size="small" />
+              ) : (
+                "Remover aula"
+              )}
             </button>
-            <button type="submit" className={styles.btnSave} disabled={savingLesson || !editLessonForm.title.trim()}>
+            <button
+              type="submit"
+              className={styles.btnSave}
+              disabled={savingLesson || !editLessonForm.title.trim()}
+            >
               {savingLesson ? <Spinner size="small" /> : "Salvar aula"}
             </button>
           </div>
@@ -592,7 +707,10 @@ export default function EditarCursoPage() {
 
       <div className={styles.page}>
         <div className={styles.topBar}>
-          <Link href={`/estudos/${courseSlug || slug}`} className={styles.backLink}>
+          <Link
+            href={`/estudos/${courseSlug || slug}`}
+            className={styles.backLink}
+          >
             <ArrowLeftIcon size={14} /> Voltar para o curso
           </Link>
           <h1 className={styles.pageTitle}>Editar curso</h1>
@@ -618,7 +736,12 @@ export default function EditarCursoPage() {
         {/* ---- TAB: Informações ---- */}
         {activeTab === "info" && (
           <>
-            {statusMsg.text && <StatusMessageComponent type={statusMsg.type} message={statusMsg.text} />}
+            {statusMsg.text && (
+              <StatusMessageComponent
+                type={statusMsg.type}
+                message={statusMsg.text}
+              />
+            )}
 
             <form onSubmit={handleSubmit} className={styles.form}>
               {/* Capa */}
@@ -637,14 +760,36 @@ export default function EditarCursoPage() {
                   </div>
                 )}
 
-                <input ref={coverInputRef} type="file" accept="image/*" className={styles.hiddenFileInput} onChange={handleCoverFileSelected} />
+                <input
+                  ref={coverInputRef}
+                  type="file"
+                  accept="image/*"
+                  className={styles.hiddenFileInput}
+                  onChange={handleCoverFileSelected}
+                />
 
                 <div className={styles.coverActions}>
-                  <button type="button" className={styles.btnCoverUpload} onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}>
-                    {uploadingCover ? <Spinner size="small" /> : coverUrl ? "Alterar capa" : "Adicionar capa"}
+                  <button
+                    type="button"
+                    className={styles.btnCoverUpload}
+                    onClick={() => coverInputRef.current?.click()}
+                    disabled={uploadingCover}
+                  >
+                    {uploadingCover ? (
+                      <Spinner size="small" />
+                    ) : coverUrl ? (
+                      "Alterar capa"
+                    ) : (
+                      "Adicionar capa"
+                    )}
                   </button>
                   {coverUrl && (
-                    <button type="button" className={styles.btnCoverRemove} onClick={handleRemoveCover} disabled={uploadingCover}>
+                    <button
+                      type="button"
+                      className={styles.btnCoverRemove}
+                      onClick={handleRemoveCover}
+                      disabled={uploadingCover}
+                    >
                       Remover capa
                     </button>
                   )}
@@ -652,7 +797,12 @@ export default function EditarCursoPage() {
               </section>
 
               {coverCropSrc && (
-                <ImageCropModal imageSrc={coverCropSrc} preset="cover" onConfirm={handleCoverCropConfirm} onClose={() => setCoverCropSrc(null)} />
+                <ImageCropModal
+                  imageSrc={coverCropSrc}
+                  preset="cover"
+                  onConfirm={handleCoverCropConfirm}
+                  onClose={() => setCoverCropSrc(null)}
+                />
               )}
 
               {/* Informações básicas */}
@@ -674,7 +824,9 @@ export default function EditarCursoPage() {
                     disabled={saving}
                     placeholder="Título do curso"
                   />
-                  <span className={styles.hint}>{title.length}/200 caracteres</span>
+                  <span className={styles.hint}>
+                    {title.length}/200 caracteres
+                  </span>
                 </div>
 
                 <div className={styles.field}>
@@ -726,7 +878,12 @@ export default function EditarCursoPage() {
                     placeholder="Adicionar tag personalizada..."
                     disabled={saving}
                   />
-                  <button type="button" className={styles.btnTagAdd} onClick={addCustomTag} disabled={saving || customTag.trim().length < 2}>
+                  <button
+                    type="button"
+                    className={styles.btnTagAdd}
+                    onClick={addCustomTag}
+                    disabled={saving || customTag.trim().length < 2}
+                  >
                     Adicionar
                   </button>
                 </div>
@@ -752,10 +909,17 @@ export default function EditarCursoPage() {
               </section>
 
               <div className={styles.formActions}>
-                <Link href={`/estudos/${courseSlug || slug}`} className={styles.btnCancel}>
+                <Link
+                  href={`/estudos/${courseSlug || slug}`}
+                  className={styles.btnCancel}
+                >
                   Cancelar
                 </Link>
-                <button type="submit" className={styles.btnSave} disabled={saving}>
+                <button
+                  type="submit"
+                  className={styles.btnSave}
+                  disabled={saving}
+                >
                   {saving ? <Spinner size="small" /> : "Salvar alterações"}
                 </button>
               </div>
@@ -768,10 +932,18 @@ export default function EditarCursoPage() {
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>Estrutura do curso</h2>
 
-            {moduleMsg.text && <StatusMessageComponent type={moduleMsg.type} message={moduleMsg.text} />}
+            {moduleMsg.text && (
+              <StatusMessageComponent
+                type={moduleMsg.type}
+                message={moduleMsg.text}
+              />
+            )}
             {lessonMsg.text && !activeAddLessonModule && (
               <div className={styles.lessonMsg}>
-                <StatusMessageComponent type={lessonMsg.type} message={lessonMsg.text} />
+                <StatusMessageComponent
+                  type={lessonMsg.type}
+                  message={lessonMsg.text}
+                />
               </div>
             )}
 
@@ -787,7 +959,11 @@ export default function EditarCursoPage() {
                   maxLength={255}
                   required
                 />
-                <button type="submit" className={styles.btnSaveSmall} disabled={creatingModule || !newModuleTitle.trim()}>
+                <button
+                  type="submit"
+                  className={styles.btnSaveSmall}
+                  disabled={creatingModule || !newModuleTitle.trim()}
+                >
                   {creatingModule ? <Spinner size="small" /> : "Criar módulo"}
                 </button>
               </div>
@@ -819,7 +995,8 @@ export default function EditarCursoPage() {
                           <h3 className={styles.moduleTitle}>
                             {mod.title}{" "}
                             <span className={styles.moduleLessonCount}>
-                              ({mod.lesson_count || 0} aula{mod.lesson_count !== 1 ? "s" : ""})
+                              ({mod.lesson_count || 0} aula
+                              {mod.lesson_count !== 1 ? "s" : ""})
                             </span>
                           </h3>
                         )}
@@ -833,7 +1010,11 @@ export default function EditarCursoPage() {
                               onClick={() => handleSaveModule(mod.id)}
                               disabled={savingModule || !editModuleTitle.trim()}
                             >
-                              {savingModule ? <Spinner size="small" /> : "Salvar"}
+                              {savingModule ? (
+                                <Spinner size="small" />
+                              ) : (
+                                "Salvar"
+                              )}
                             </button>
                             <button
                               type="button"
@@ -849,7 +1030,11 @@ export default function EditarCursoPage() {
                           </>
                         ) : (
                           <>
-                            <button type="button" className={styles.btnAddLesson} onClick={() => openAddLessonFor(mod.id)}>
+                            <button
+                              type="button"
+                              className={styles.btnAddLesson}
+                              onClick={() => openAddLessonFor(mod.id)}
+                            >
                               + Aula
                             </button>
                             <button
@@ -862,7 +1047,11 @@ export default function EditarCursoPage() {
                             >
                               Renomear
                             </button>
-                            <button type="button" className={styles.btnDeleteModule} onClick={() => handleDeleteModule(mod.id)}>
+                            <button
+                              type="button"
+                              className={styles.btnDeleteModule}
+                              onClick={() => handleDeleteModule(mod.id)}
+                            >
                               Remover
                             </button>
                           </>
@@ -894,7 +1083,11 @@ export default function EditarCursoPage() {
                           onClick={() => handleAddLesson(mod.id)}
                           disabled={addingLesson || !addLessonTitle.trim()}
                         >
-                          {addingLesson ? <Spinner size="small" /> : "Adicionar"}
+                          {addingLesson ? (
+                            <Spinner size="small" />
+                          ) : (
+                            "Adicionar"
+                          )}
                         </button>
                         <button
                           type="button"
@@ -916,7 +1109,9 @@ export default function EditarCursoPage() {
                         {mod.lessons.map((lesson) => (
                           <li key={lesson.id} className={styles.lessonListItem}>
                             <div className={styles.lessonListRow}>
-                              <span className={styles.lessonOrderBadge}>#{lesson.order_index + 1}</span>
+                              <span className={styles.lessonOrderBadge}>
+                                #{lesson.order_index + 1}
+                              </span>
                               <Link
                                 href={`/estudos/${courseSlug}/aulas/${lesson.order_index}`}
                                 className={styles.lessonLink}
@@ -928,21 +1123,29 @@ export default function EditarCursoPage() {
                               <button
                                 type="button"
                                 className={`${styles.btnEditLesson} ${editingLessonOrder === lesson.order_index ? styles.btnEditLessonActive : ""}`}
-                                onClick={() => handleOpenLessonEdit(lesson.order_index)}
+                                onClick={() =>
+                                  handleOpenLessonEdit(lesson.order_index)
+                                }
                               >
-                                {editingLessonOrder === lesson.order_index ? "Fechar" : "Editar"}
+                                {editingLessonOrder === lesson.order_index
+                                  ? "Fechar"
+                                  : "Editar"}
                               </button>
                             </div>
 
-                            {editingLessonOrder === lesson.order_index && renderLessonEditForm(lesson)}
+                            {editingLessonOrder === lesson.order_index &&
+                              renderLessonEditForm(lesson)}
                           </li>
                         ))}
                       </ul>
                     )}
 
-                    {(!mod.lessons || mod.lessons.length === 0) && !activeAddLessonModule && (
-                      <p className={styles.moduleEmpty}>Nenhuma aula neste módulo ainda.</p>
-                    )}
+                    {(!mod.lessons || mod.lessons.length === 0) &&
+                      !activeAddLessonModule && (
+                        <p className={styles.moduleEmpty}>
+                          Nenhuma aula neste módulo ainda.
+                        </p>
+                      )}
                   </div>
                 ))}
               </div>
@@ -952,9 +1155,14 @@ export default function EditarCursoPage() {
             <div className={styles.unassignedSection}>
               <div className={styles.unassignedHeader}>
                 <h3 className={styles.unassignedTitle}>
-                  Sem módulo ({unassignedLessons.length} aula{unassignedLessons.length !== 1 ? "s" : ""})
+                  Sem módulo ({unassignedLessons.length} aula
+                  {unassignedLessons.length !== 1 ? "s" : ""})
                 </h3>
-                <button type="button" className={styles.btnAddLesson} onClick={() => openAddLessonFor("unassigned")}>
+                <button
+                  type="button"
+                  className={styles.btnAddLesson}
+                  onClick={() => openAddLessonFor("unassigned")}
+                >
                   + Aula
                 </button>
               </div>
@@ -1004,7 +1212,9 @@ export default function EditarCursoPage() {
                   {unassignedLessons.map((lesson) => (
                     <li key={lesson.id} className={styles.lessonListItem}>
                       <div className={styles.lessonListRow}>
-                        <span className={styles.lessonOrderBadge}>#{lesson.order_index + 1}</span>
+                        <span className={styles.lessonOrderBadge}>
+                          #{lesson.order_index + 1}
+                        </span>
                         <Link
                           href={`/estudos/${courseSlug}/aulas/${lesson.order_index}`}
                           className={styles.lessonLink}
@@ -1016,21 +1226,30 @@ export default function EditarCursoPage() {
                         <button
                           type="button"
                           className={`${styles.btnEditLesson} ${editingLessonOrder === lesson.order_index ? styles.btnEditLessonActive : ""}`}
-                          onClick={() => handleOpenLessonEdit(lesson.order_index)}
+                          onClick={() =>
+                            handleOpenLessonEdit(lesson.order_index)
+                          }
                         >
-                          {editingLessonOrder === lesson.order_index ? "Fechar" : "Editar"}
+                          {editingLessonOrder === lesson.order_index
+                            ? "Fechar"
+                            : "Editar"}
                         </button>
                       </div>
 
-                      {editingLessonOrder === lesson.order_index && renderLessonEditForm(lesson)}
+                      {editingLessonOrder === lesson.order_index &&
+                        renderLessonEditForm(lesson)}
                     </li>
                   ))}
                 </ul>
               )}
 
-              {unassignedLessons.length === 0 && !activeAddLessonModule && modules.length === 0 && (
-                <p className={styles.moduleEmpty}>Crie um módulo acima e depois adicione aulas dentro dele.</p>
-              )}
+              {unassignedLessons.length === 0 &&
+                !activeAddLessonModule &&
+                modules.length === 0 && (
+                  <p className={styles.moduleEmpty}>
+                    Crie um módulo acima e depois adicione aulas dentro dele.
+                  </p>
+                )}
             </div>
           </section>
         )}

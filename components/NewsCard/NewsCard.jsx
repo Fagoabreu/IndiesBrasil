@@ -1,13 +1,23 @@
 import Link from "next/link";
 import Image from "next/image";
-import { StarFillIcon, CommentDiscussionIcon, CheckIcon, XIcon } from "@primer/octicons-react";
+import {
+  StarFillIcon,
+  CommentDiscussionIcon,
+  CheckIcon,
+  XIcon,
+} from "@primer/octicons-react";
 import styles from "./NewsCard.module.css";
 
 export default function NewsCard({ news }) {
   const hasImage = news.img_url;
   const firstLetter = (news.title || "N")[0].toUpperCase();
 
-  const fakePct = news.factcheck_count + news.fake_count > 0 ? Math.round((news.fake_count / (news.factcheck_count + news.fake_count)) * 100) : null;
+  const fakePct =
+    news.factcheck_count + news.fake_count > 0
+      ? Math.round(
+          (news.fake_count / (news.factcheck_count + news.fake_count)) * 100,
+        )
+      : null;
 
   let factcheckStatus = "neutral";
   let factcheckLabel = "Sem verificação";
@@ -28,14 +38,23 @@ export default function NewsCard({ news }) {
     <article className={styles.card}>
       <Link href={`/noticias/${news.id}`} className={styles.coverLink}>
         {hasImage ? (
-          <Image src={news.img_url} alt={news.title} fill className={styles.coverImg} sizes="(max-width: 600px) 100vw, 400px" />
+          <Image
+            src={news.img_url}
+            alt={news.title}
+            fill
+            className={styles.coverImg}
+            sizes="(max-width: 600px) 100vw, 400px"
+          />
         ) : (
           <div className={styles.coverPlaceholder}>{firstLetter}</div>
         )}
       </Link>
 
       <div className={styles.body}>
-        <Link href={`/noticias/${news.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+        <Link
+          href={`/noticias/${news.id}`}
+          style={{ textDecoration: "none", color: "inherit" }}
+        >
           <h3 className={styles.title}>{news.title}</h3>
         </Link>
 
@@ -44,9 +63,17 @@ export default function NewsCard({ news }) {
         <div className={styles.meta}>
           <div className={styles.author}>
             {news.author_avatar_url ? (
-              <Image src={news.author_avatar_url} alt={news.author_username} width={20} height={20} className={styles.avatar} />
+              <Image
+                src={news.author_avatar_url}
+                alt={news.author_username}
+                width={20}
+                height={20}
+                className={styles.avatar}
+              />
             ) : (
-              <div className={styles.avatarPlaceholder}>{news.author_username?.[0]?.toUpperCase() || "?"}</div>
+              <div className={styles.avatarPlaceholder}>
+                {news.author_username?.[0]?.toUpperCase() || "?"}
+              </div>
             )}
             <span>{news.author_username}</span>
           </div>
@@ -78,7 +105,11 @@ export default function NewsCard({ news }) {
           </span>
           <span
             className={`${styles.factcheckBadge} ${
-              factcheckStatus === "ok" ? styles.factcheckOk : factcheckStatus === "warning" ? styles.factcheckWarning : styles.factcheckNeutral
+              factcheckStatus === "ok"
+                ? styles.factcheckOk
+                : factcheckStatus === "warning"
+                  ? styles.factcheckWarning
+                  : styles.factcheckNeutral
             }`}
           >
             {factcheckLabel}

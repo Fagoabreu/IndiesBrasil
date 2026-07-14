@@ -65,7 +65,9 @@ export default function ContactTypesPage() {
   }
 
   async function handleDelete(name) {
-    const confirmed = window.confirm("Tem certeza que deseja remover esta profissão?");
+    const confirmed = window.confirm(
+      "Tem certeza que deseja remover esta profissão?",
+    );
     if (!confirmed) return;
 
     try {
@@ -94,8 +96,16 @@ export default function ContactTypesPage() {
         {error && <Flash variant="danger">{error}</Flash>}
 
         <form onSubmit={handleSubmit} className="contact-form">
-          <TextInput placeholder="Profissão (ex: 2d Artist)" value={name} onChange={(e) => setName(e.target.value)} />
-          <TextInput placeholder="Ícone (ex: 2DArtist)" value={iconImg} onChange={(e) => setIconImg(e.target.value)} />
+          <TextInput
+            placeholder="Profissão (ex: 2d Artist)"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <TextInput
+            placeholder="Ícone (ex: 2DArtist)"
+            value={iconImg}
+            onChange={(e) => setIconImg(e.target.value)}
+          />
 
           <Button type="submit" variant="primary">
             Adicionar
@@ -106,10 +116,17 @@ export default function ContactTypesPage() {
           {items.map((item) => (
             <li key={item.id}>
               <div className="contact-info">
-                <IconSvg src={`/images/professions/${item.icon_img}.png`} alt={item.name} />
+                <IconSvg
+                  src={`/images/professions/${item.icon_img}.png`}
+                  alt={item.name}
+                />
                 <strong>{item.name}</strong>
 
-                <Button size="small" variant="danger" onClick={() => handleDelete(item.name)}>
+                <Button
+                  size="small"
+                  variant="danger"
+                  onClick={() => handleDelete(item.name)}
+                >
                   Remover
                 </Button>
               </div>

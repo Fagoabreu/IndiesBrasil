@@ -10,11 +10,22 @@ VerticalCardComponent.propTypes = {
   description: PropTypes.string,
 };
 
-export default function VerticalCardComponent({ image, alt, title, description }) {
+export default function VerticalCardComponent({
+  image,
+  alt,
+  title,
+  description,
+}) {
   return (
     <div className={styles.card}>
       <div className={styles.imageWrapper}>
-        <Image src={image} alt={alt} fill className={styles.image} unoptimized />
+        <Image
+          src={image}
+          alt={alt}
+          fill
+          className={styles.image}
+          unoptimized
+        />
       </div>
 
       <div className={styles.cardBody}>

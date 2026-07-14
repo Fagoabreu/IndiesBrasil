@@ -467,7 +467,7 @@ describe("Patch /api/v1/users/[username]", () => {
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
       expect(responseBody.updated_at > responseBody.created_at).toBe(true);
 
-      const userInDatabase = await user.findOneByUsername(createdUser.username);
+      const userInDatabase = await user.findOneByUsername(user1.username);
       expect(userInDatabase.email).toBe("uniqueEmail2@gmail.com");
     });
 

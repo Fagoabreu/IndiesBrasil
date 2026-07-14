@@ -25,7 +25,9 @@ export default function PostDetailPage() {
       setNotFound(false);
       setError(null);
       try {
-        const res = await fetch(`/api/v1/posts/${id}`, { credentials: "include" });
+        const res = await fetch(`/api/v1/posts/${id}`, {
+          credentials: "include",
+        });
         if (res.status === 404) {
           setNotFound(true);
           return;
@@ -46,7 +48,10 @@ export default function PostDetailPage() {
 
   if (loading) {
     return (
-      <div className="posts-page" style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
+      <div
+        className="posts-page"
+        style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}
+      >
         <Spinner size="large" />
       </div>
     );
@@ -86,20 +91,35 @@ export default function PostDetailPage() {
     <div className="posts-page">
       <SeoHead
         title={`Post de ${post.username} — Indies Brasil`}
-        description={post.content?.slice(0, 160) || "Veja este post na comunidade Indies Brasil."}
+        description={
+          post.content?.slice(0, 160) ||
+          "Veja este post na comunidade Indies Brasil."
+        }
         canonical={`${SITE_URL}/posts/${id}`}
       />
 
       <div style={{ marginBottom: 12 }}>
         <Link
           href="/posts"
-          style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "0.85rem", color: "var(--fgColor-muted)", textDecoration: "none" }}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4,
+            fontSize: "0.85rem",
+            color: "var(--fgColor-muted)",
+            textDecoration: "none",
+          }}
         >
           <ArrowLeftIcon size={14} /> Voltar ao feed
         </Link>
       </div>
 
-      <PostCardComponent key={post.id} post={post} canInteract={!!user} onDelete={() => router.push("/posts")} />
+      <PostCardComponent
+        key={post.id}
+        post={post}
+        canInteract={!!user}
+        onDelete={() => router.push("/posts")}
+      />
     </div>
   );
 }

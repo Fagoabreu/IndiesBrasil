@@ -28,11 +28,19 @@ export async function GET(request) {
           const f = await news.getFactcheckByUser(item.id, user.id);
           userFactcheck = f?.vote || null;
         }
-        return { ...item, user_rating: userRating, user_factcheck: userFactcheck };
+        return {
+          ...item,
+          user_rating: userRating,
+          user_factcheck: userFactcheck,
+        };
       }),
     );
 
-    const secureOutput = authorization.filterOutput(user, "read:news:all", enriched);
+    const secureOutput = authorization.filterOutput(
+      user,
+      "read:news:all",
+      enriched,
+    );
     return Response.json(secureOutput, { status: 200 });
   } catch (error) {
     return controller.onRouterErrorHandler(error);
@@ -60,7 +68,10 @@ export async function POST(request) {
     const file = formData.get("file");
 
     if (!title || !summary || !body) {
-      return Response.json({ error: "title, summary e body são obrigatórios." }, { status: 400 });
+      return Response.json(
+        { error: "title, summary e body são obrigatórios." },
+        { status: 400 },
+      );
     }
 
     let imgId = null;
@@ -89,8 +100,16 @@ export async function POST(request) {
     const f = await news.getFactcheckByUser(fullNews.id, user.id);
     userFactcheck = f?.vote || null;
 
-    const enriched = { ...fullNews, user_rating: userRating, user_factcheck: userFactcheck };
-    const secureOutput = authorization.filterOutput(user, "read:news", enriched);
+    const enriched = {
+      ...fullNews,
+      user_rating: userRating,
+      user_factcheck: userFactcheck,
+    };
+    const secureOutput = authorization.filterOutput(
+      user,
+      "read:news",
+      enriched,
+    );
     return Response.json(secureOutput, { status: 201 });
   } catch (error) {
     return controller.onRouterErrorHandler(error);

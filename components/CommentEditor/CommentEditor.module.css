@@ -73,7 +73,15 @@
 }
 
 .tbCodeBlock {
-  font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace);
+  font-family: var(
+    --font-mono,
+    ui-monospace,
+    SFMono-Regular,
+    "SF Mono",
+    Menlo,
+    Consolas,
+    monospace
+  );
   font-size: 0.7rem;
   font-weight: 700;
   line-height: 1;
@@ -178,7 +186,15 @@
 .preview code {
   padding: 1px 5px;
   border-radius: 4px;
-  font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace);
+  font-family: var(
+    --font-mono,
+    ui-monospace,
+    SFMono-Regular,
+    "SF Mono",
+    Menlo,
+    Consolas,
+    monospace
+  );
   font-size: 0.82rem;
   background: var(--bgColor-inset);
   border: 1px solid var(--borderColor-muted);

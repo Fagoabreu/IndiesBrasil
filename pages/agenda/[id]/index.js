@@ -3,7 +3,13 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import Image from "next/image";
 import { Spinner } from "@primer/react";
-import { CalendarIcon, LocationIcon, BroadcastIcon, PersonIcon, ArrowLeftIcon } from "@primer/octicons-react";
+import {
+  CalendarIcon,
+  LocationIcon,
+  BroadcastIcon,
+  PersonIcon,
+  ArrowLeftIcon,
+} from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL } from "@/lib/seo";
@@ -21,7 +27,20 @@ const TYPE_LABELS = {
 };
 
 const PT_WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-const PT_MONTHS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+const PT_MONTHS = [
+  "jan",
+  "fev",
+  "mar",
+  "abr",
+  "mai",
+  "jun",
+  "jul",
+  "ago",
+  "set",
+  "out",
+  "nov",
+  "dez",
+];
 
 function formatDateTime(dateStr, isAllDay) {
   const d = new Date(dateStr);
@@ -30,7 +49,10 @@ function formatDateTime(dateStr, isAllDay) {
   const month = PT_MONTHS[d.getMonth()];
   const year = d.getFullYear();
   if (isAllDay) return `${weekday}, ${day} de ${month} de ${year}`;
-  const time = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const time = d.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
   return `${weekday}, ${day} de ${month} de ${year} às ${time}`;
 }
 
@@ -41,7 +63,11 @@ function formatShortDate(dateStr) {
 
 function timeAgo(dateStr) {
   const d = new Date(dateStr);
-  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+  return d.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 export default function EventDetailPage() {
@@ -104,7 +130,10 @@ export default function EventDetailPage() {
     setRsvpLoading(true);
     try {
       if (userRsvp === status) {
-        const res = await fetch(`/api/v1/events/${id}/rsvp`, { method: "DELETE", credentials: "include" });
+        const res = await fetch(`/api/v1/events/${id}/rsvp`, {
+          method: "DELETE",
+          credentials: "include",
+        });
         const data = await res.json();
         if (res.ok) {
           setUserRsvp(null);
@@ -142,7 +171,11 @@ export default function EventDetailPage() {
         if (file) formData.append("file", file);
       }
       formData.append("event_id", id);
-      const res = await fetch("/api/v1/posts", { method: "POST", credentials: "include", body: formData });
+      const res = await fetch("/api/v1/posts", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
       if (!res.ok) {
         const err = await res.json();
         console.error("Erro ao criar post:", err);
@@ -172,7 +205,9 @@ export default function EventDetailPage() {
         });
         if (res.ok) {
           const data = await res.json();
-          setOrgRsvps((prev) => prev.filter((o) => o.organization_id !== selectedOrgId));
+          setOrgRsvps((prev) =>
+            prev.filter((o) => o.organization_id !== selectedOrgId),
+          );
           setCounts(data.counts);
         }
       } else {
@@ -207,8 +242,12 @@ export default function EventDetailPage() {
 
   async function handleCancel() {
     if (!ev || !user) return;
-    if (!globalThis.confirm("Tem certeza que deseja cancelar este evento?")) return;
-    await fetch(`/api/v1/events/${id}`, { method: "DELETE", credentials: "include" });
+    if (!globalThis.confirm("Tem certeza que deseja cancelar este evento?"))
+      return;
+    await fetch(`/api/v1/events/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
     router.push("/agenda");
   }
 
@@ -234,7 +273,11 @@ export default function EventDetailPage() {
 
   return (
     <>
-      <SeoHead title={pageTitle} description={ev.description || ev.title} url={pageUrl} />
+      <SeoHead
+        title={pageTitle}
+        description={ev.description || ev.title}
+        url={pageUrl}
+      />
 
       <div className={styles.page}>
         <Link
@@ -272,10 +315,20 @@ export default function EventDetailPage() {
           <div className={styles.headerContent}>
             <div className={styles.header}>
               <div className={styles.badges}>
-                <span className={`${styles.typeBadge} ${styles[ev.event_type]}`}>{TYPE_LABELS[ev.event_type] ?? ev.event_type}</span>
-                {ev.status === "cancelled" && <span className={styles.cancelledBadge}>Cancelado</span>}
-                {ev.visibility === "private" && <span className={styles.privateBadge}>🔒 Privado</span>}
-                {ev.is_recurring && <span className={styles.recurringBadge}>🔁 Recorrente</span>}
+                <span
+                  className={`${styles.typeBadge} ${styles[ev.event_type]}`}
+                >
+                  {TYPE_LABELS[ev.event_type] ?? ev.event_type}
+                </span>
+                {ev.status === "cancelled" && (
+                  <span className={styles.cancelledBadge}>Cancelado</span>
+                )}
+                {ev.visibility === "private" && (
+                  <span className={styles.privateBadge}>🔒 Privado</span>
+                )}
+                {ev.is_recurring && (
+                  <span className={styles.recurringBadge}>🔁 Recorrente</span>
+                )}
               </div>
               <h1 className={styles.title}>{ev.title}</h1>
             </div>
@@ -285,22 +338,41 @@ export default function EventDetailPage() {
         <div className={styles.layout}>
           {/* ── COLUNA PRINCIPAL ── */}
           <div className={styles.main}>
-            {ev.description && <p className={styles.description}>{ev.description}</p>}
+            {ev.description && (
+              <p className={styles.description}>{ev.description}</p>
+            )}
 
             {ev.is_recurring && ev.upcoming_instances?.length > 1 && (
               <div className={styles.instancesSection}>
                 <h2 className={styles.sectionTitle}>Próximas Ocorrências</h2>
                 {ev.upcoming_instances.slice(0, 5).map((inst) => (
                   <div key={inst.id} className={styles.instanceItem}>
-                    <span className={styles.instanceDate}>{formatShortDate(inst.starts_at)}</span>
+                    <span className={styles.instanceDate}>
+                      {formatShortDate(inst.starts_at)}
+                    </span>
                     {!ev.is_all_day && (
                       <span>
-                        {new Date(inst.starts_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(inst.starts_at).toLocaleTimeString("pt-BR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                         {" – "}
-                        {new Date(inst.ends_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(inst.ends_at).toLocaleTimeString("pt-BR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </span>
                     )}
-                    {inst.override_title && <span style={{ color: "var(--brand-primary)", fontWeight: 600 }}>{inst.override_title}</span>}
+                    {inst.override_title && (
+                      <span
+                        style={{
+                          color: "var(--brand-primary)",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {inst.override_title}
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
@@ -308,14 +380,28 @@ export default function EventDetailPage() {
 
             {orgRsvps.length > 0 && (
               <div className={styles.orgRsvpAttendees}>
-                <div className={styles.orgRsvpAttendeesLabel}>Estúdios confirmados ({orgRsvps.length})</div>
+                <div className={styles.orgRsvpAttendeesLabel}>
+                  Estúdios confirmados ({orgRsvps.length})
+                </div>
                 <div className={styles.orgRsvpAttendeesList}>
                   {orgRsvps.map((org) => (
-                    <Link key={org.organization_id} href={`/estudios/${org.org_slug}`} className={styles.orgCard}>
+                    <Link
+                      key={org.organization_id}
+                      href={`/estudios/${org.org_slug}`}
+                      className={styles.orgCard}
+                    >
                       {org.org_logo_url ? (
-                        <Image src={org.org_logo_url} alt={org.org_name} width={38} height={38} className={styles.orgCardLogo} />
+                        <Image
+                          src={org.org_logo_url}
+                          alt={org.org_name}
+                          width={38}
+                          height={38}
+                          className={styles.orgCardLogo}
+                        />
                       ) : (
-                        <span className={styles.orgCardInitial}>{(org.org_name || "E")[0].toUpperCase()}</span>
+                        <span className={styles.orgCardInitial}>
+                          {(org.org_name || "E")[0].toUpperCase()}
+                        </span>
                       )}
                       <span className={styles.orgCardName}>{org.org_name}</span>
                       <span className={styles.orgCardGoingBadge}>✓ Vai</span>
@@ -327,7 +413,8 @@ export default function EventDetailPage() {
 
             <div className={styles.postsSection}>
               <h2 className={styles.sectionTitle}>
-                <CalendarIcon size={14} /> Posts sobre este evento ({posts.length})
+                <CalendarIcon size={14} /> Posts sobre este evento (
+                {posts.length})
               </h2>
 
               {user && (
@@ -337,7 +424,9 @@ export default function EventDetailPage() {
               )}
 
               {posts.length === 0 ? (
-                <p className={styles.noPostsHint}>Nenhum post ainda. Seja o primeiro a comentar!</p>
+                <p className={styles.noPostsHint}>
+                  Nenhum post ainda. Seja o primeiro a comentar!
+                </p>
               ) : (
                 posts.map((p) => (
                   <div key={p.id} className={styles.postCard}>
@@ -349,12 +438,19 @@ export default function EventDetailPage() {
                         height={28}
                         className={styles.postAvatar}
                       />
-                      <Link href={`/perfil/${p.author_username}`} className={styles.postAuthor}>
+                      <Link
+                        href={`/perfil/${p.author_username}`}
+                        className={styles.postAuthor}
+                      >
                         @{p.author_username}
                       </Link>
-                      <span className={styles.postDate}>{timeAgo(p.created_at)}</span>
+                      <span className={styles.postDate}>
+                        {timeAgo(p.created_at)}
+                      </span>
                     </div>
-                    {p.content && <p className={styles.postContent}>{p.content}</p>}
+                    {p.content && (
+                      <p className={styles.postContent}>{p.content}</p>
+                    )}
                   </div>
                 ))
               )}
@@ -388,7 +484,12 @@ export default function EventDetailPage() {
                   <div>
                     <div className={styles.infoLabel}>Online</div>
                     {ev.online_url ? (
-                      <a href={ev.online_url} className={styles.infoLink} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={ev.online_url}
+                        className={styles.infoLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         Acessar link do evento ↗
                       </a>
                     ) : (
@@ -402,7 +503,11 @@ export default function EventDetailPage() {
                   <LocationIcon size={16} className={styles.infoIcon} />
                   <div style={{ width: "100%" }}>
                     <div className={styles.infoLabel}>Local</div>
-                    <AddressDisplay address={ev.address} locationName={ev.location_name} locationUrl={ev.location_url} />
+                    <AddressDisplay
+                      address={ev.address}
+                      locationName={ev.location_name}
+                      locationUrl={ev.location_url}
+                    />
                   </div>
                 </div>
               )}
@@ -412,7 +517,10 @@ export default function EventDetailPage() {
               <div className={styles.infoLabel} style={{ marginBottom: 8 }}>
                 <PersonIcon size={13} /> Organizador
               </div>
-              <Link href={`/perfil/${ev.organizer_username}`} className={styles.organizer}>
+              <Link
+                href={`/perfil/${ev.organizer_username}`}
+                className={styles.organizer}
+              >
                 <Image
                   src={ev.organizer_avatar_url || "/images/avatar.png"}
                   alt={ev.organizer_username}
@@ -421,7 +529,9 @@ export default function EventDetailPage() {
                   className={styles.organizerAvatar}
                 />
                 <div>
-                  <div className={styles.organizerName}>@{ev.organizer_username}</div>
+                  <div className={styles.organizerName}>
+                    @{ev.organizer_username}
+                  </div>
                   <div className={styles.organizerRole}>Organizador</div>
                 </div>
               </Link>
@@ -432,15 +542,23 @@ export default function EventDetailPage() {
                 <h3 className={styles.rsvpTitle}>Presença</h3>
                 <div className={styles.rsvpCounts}>
                   <div className={styles.rsvpStat}>
-                    <span className={`${styles.rsvpStatNum} ${styles.going}`}>{counts.going}</span>
+                    <span className={`${styles.rsvpStatNum} ${styles.going}`}>
+                      {counts.going}
+                    </span>
                     <span className={styles.rsvpStatLabel}>Vão</span>
                   </div>
                   <div className={styles.rsvpStat}>
-                    <span className={`${styles.rsvpStatNum} ${styles.maybe}`}>{counts.maybe}</span>
+                    <span className={`${styles.rsvpStatNum} ${styles.maybe}`}>
+                      {counts.maybe}
+                    </span>
                     <span className={styles.rsvpStatLabel}>Talvez</span>
                   </div>
                   <div className={styles.rsvpStat}>
-                    <span className={`${styles.rsvpStatNum} ${styles.not_going}`}>{counts.not_going}</span>
+                    <span
+                      className={`${styles.rsvpStatNum} ${styles.not_going}`}
+                    >
+                      {counts.not_going}
+                    </span>
                     <span className={styles.rsvpStatLabel}>Não vão</span>
                   </div>
                 </div>
@@ -448,22 +566,49 @@ export default function EventDetailPage() {
                 {user ? (
                   <>
                     <div className={styles.rsvpBtns}>
-                      <button type="button" className={rsvpBtnClass("going")} onClick={() => handleRsvp("going")} disabled={rsvpLoading}>
+                      <button
+                        type="button"
+                        className={rsvpBtnClass("going")}
+                        onClick={() => handleRsvp("going")}
+                        disabled={rsvpLoading}
+                      >
                         ✅ {userRsvp === "going" ? "Confirmado!" : "Vou!"}
                       </button>
-                      <button type="button" className={rsvpBtnClass("maybe")} onClick={() => handleRsvp("maybe")} disabled={rsvpLoading}>
-                        🤔 {userRsvp === "maybe" ? "Marcado como talvez" : "Talvez"}
+                      <button
+                        type="button"
+                        className={rsvpBtnClass("maybe")}
+                        onClick={() => handleRsvp("maybe")}
+                        disabled={rsvpLoading}
+                      >
+                        🤔{" "}
+                        {userRsvp === "maybe"
+                          ? "Marcado como talvez"
+                          : "Talvez"}
                       </button>
-                      <button type="button" className={rsvpBtnClass("not_going")} onClick={() => handleRsvp("not_going")} disabled={rsvpLoading}>
-                        ❌ {userRsvp === "not_going" ? "Marcado como não vou" : "Não vou"}
+                      <button
+                        type="button"
+                        className={rsvpBtnClass("not_going")}
+                        onClick={() => handleRsvp("not_going")}
+                        disabled={rsvpLoading}
+                      >
+                        ❌{" "}
+                        {userRsvp === "not_going"
+                          ? "Marcado como não vou"
+                          : "Não vou"}
                       </button>
                     </div>
 
                     {userStudios.length > 0 && (
                       <div className={styles.orgRsvpSection}>
-                        <div className={styles.orgRsvpLabel}>Confirmar como estúdio</div>
+                        <div className={styles.orgRsvpLabel}>
+                          Confirmar como estúdio
+                        </div>
                         <div className={styles.orgRsvpRow}>
-                          <select className={styles.orgRsvpSelect} value={selectedOrgId} onChange={(e) => setSelectedOrgId(e.target.value)}>
+                          <select
+                            className={styles.orgRsvpSelect}
+                            value={selectedOrgId}
+                            onChange={(e) => setSelectedOrgId(e.target.value)}
+                          >
                             <option value="">Selecione um estúdio…</option>
                             {userStudios.map((s) => (
                               <option key={s.id} value={s.id}>
@@ -507,7 +652,11 @@ export default function EventDetailPage() {
                   <Link
                     href={`/agenda/${id}/editar`}
                     className={styles.ownerBtn}
-                    style={{ textAlign: "center", textDecoration: "none", display: "block" }}
+                    style={{
+                      textAlign: "center",
+                      textDecoration: "none",
+                      display: "block",
+                    }}
                   >
                     ✏️ Editar
                   </Link>

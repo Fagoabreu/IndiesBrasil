@@ -16,7 +16,8 @@ export async function POST(request, context) {
     if (!authorization.can(requestUser, "update:user", targetUser)) {
       throw new ForbiddenError({
         message: "Você não possui permissão para executar esta ação",
-        action: 'Verifique se o seu usuário possui a feature "update:user" para executar esta ação.',
+        action:
+          'Verifique se o seu usuário possui a feature "update:user" para executar esta ação.',
       });
     }
 
@@ -29,7 +30,10 @@ export async function POST(request, context) {
     };
 
     if (file) {
-      const imageData = await uploadedImages.uploadImage(file, `users/${targetUser.id}/${imgType}`);
+      const imageData = await uploadedImages.uploadImage(
+        file,
+        `users/${targetUser.id}/${imgType}`,
+      );
       if (imgType === "avatar_image") {
         userInputValues.avatar_image = imageData.id;
       } else if (imgType === "background_image") {
@@ -37,7 +41,11 @@ export async function POST(request, context) {
       }
     }
     const resultImage = await profile.saveImages(userInputValues);
-    const secureOutputValues = await authorization.filterOutput(requestUser, "read:user", resultImage);
+    const secureOutputValues = await authorization.filterOutput(
+      requestUser,
+      "read:user",
+      resultImage,
+    );
 
     return Response.json(secureOutputValues, { status: 201 });
   } catch (error) {

@@ -9,7 +9,8 @@ import { SITE_URL } from "@/lib/seo";
 import styles from "./index.module.css";
 
 const PAGE_TITLE = "Jogos de Mesa — Indies Brasil";
-const PAGE_DESCRIPTION = "Descubra jogos de tabuleiro, cartas e RPGs criados por desenvolvedores indie brasileiros.";
+const PAGE_DESCRIPTION =
+  "Descubra jogos de tabuleiro, cartas e RPGs criados por desenvolvedores indie brasileiros.";
 const PAGE_URL = `${SITE_URL}/jogos-de-mesa`;
 
 const CATEGORIES = {
@@ -49,25 +50,28 @@ export default function JogosDeMessaPage() {
   const [followingGames, setFollowingGames] = useState([]);
   const [followingLoading, setFollowingLoading] = useState(false);
 
-  const loadAll = useCallback(async (pageNum, searchQuery, categoryQuery, stageQuery) => {
-    setAllLoading(true);
-    try {
-      const params = new URLSearchParams({
-        page: pageNum,
-        limit: LIMIT,
-        search: searchQuery,
-        category: categoryQuery,
-        stage: stageQuery,
-      });
-      const res = await fetch(`/api/v1/boardgames?${params}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      setAllGames((prev) => (pageNum === 1 ? data : [...prev, ...data]));
-      setAllHasMore(data.length === LIMIT);
-    } finally {
-      setAllLoading(false);
-    }
-  }, []);
+  const loadAll = useCallback(
+    async (pageNum, searchQuery, categoryQuery, stageQuery) => {
+      setAllLoading(true);
+      try {
+        const params = new URLSearchParams({
+          page: pageNum,
+          limit: LIMIT,
+          search: searchQuery,
+          category: categoryQuery,
+          stage: stageQuery,
+        });
+        const res = await fetch(`/api/v1/boardgames?${params}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        setAllGames((prev) => (pageNum === 1 ? data : [...prev, ...data]));
+        setAllHasMore(data.length === LIMIT);
+      } finally {
+        setAllLoading(false);
+      }
+    },
+    [],
+  );
 
   // Debounce filters for "Descubra"
   useEffect(() => {
@@ -124,7 +128,11 @@ export default function JogosDeMessaPage() {
 
   return (
     <div className={styles.page}>
-      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} />
+      <SeoHead
+        title={PAGE_TITLE}
+        description={PAGE_DESCRIPTION}
+        canonical={PAGE_URL}
+      />
 
       {/* PAGE HEADER */}
       <header className={styles.pageHeader}>
@@ -137,7 +145,9 @@ export default function JogosDeMessaPage() {
               </span>
             )}
           </div>
-          <p className={styles.pageSubtitle}>Descubra jogos de tabuleiro, cartas e RPGs indie brasileiros.</p>
+          <p className={styles.pageSubtitle}>
+            Descubra jogos de tabuleiro, cartas e RPGs indie brasileiros.
+          </p>
 
           {tab === "all" && (
             <div className={styles.searchWrapper}>
@@ -150,7 +160,11 @@ export default function JogosDeMessaPage() {
                 className={styles.searchInput}
               />
               <div className={styles.selectRow}>
-                <select className={styles.select} value={category} onChange={(e) => setCategory(e.target.value)}>
+                <select
+                  className={styles.select}
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                >
                   <option value="">Todas as categorias</option>
                   {Object.entries(CATEGORIES).map(([k, v]) => (
                     <option key={k} value={k}>
@@ -158,7 +172,11 @@ export default function JogosDeMessaPage() {
                     </option>
                   ))}
                 </select>
-                <select className={styles.select} value={stage} onChange={(e) => setStage(e.target.value)}>
+                <select
+                  className={styles.select}
+                  value={stage}
+                  onChange={(e) => setStage(e.target.value)}
+                >
                   <option value="">Todas as fases</option>
                   {Object.entries(STAGES).map(([k, v]) => (
                     <option key={k} value={k}>
@@ -172,7 +190,11 @@ export default function JogosDeMessaPage() {
         </div>
 
         {user && (
-          <div className={styles.feedTabs} role="tablist" aria-label="Filtros de jogos de mesa">
+          <div
+            className={styles.feedTabs}
+            role="tablist"
+            aria-label="Filtros de jogos de mesa"
+          >
             <button
               type="button"
               role="tab"
@@ -223,7 +245,11 @@ export default function JogosDeMessaPage() {
 
           {tab === "all" && allHasMore && (
             <div className={styles.loadMoreWrapper}>
-              <button className={styles.loadMore} disabled={allLoading} onClick={() => setAllPage((p) => p + 1)}>
+              <button
+                className={styles.loadMore}
+                disabled={allLoading}
+                onClick={() => setAllPage((p) => p + 1)}
+              >
                 {allLoading ? <Spinner size="small" /> : "Carregar mais"}
               </button>
             </div>

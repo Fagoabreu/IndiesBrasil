@@ -106,11 +106,21 @@ export default function QrCodeCustomizer({
           <div className={styles.colorRow}>
             <FormControl>
               <FormControl.Label>Cor Principal</FormControl.Label>
-              <input type="color" className={styles.colorPicker} value={fgColor} onChange={(e) => update("fgColor", e.target.value)} />
+              <input
+                type="color"
+                className={styles.colorPicker}
+                value={fgColor}
+                onChange={(e) => update("fgColor", e.target.value)}
+              />
             </FormControl>
             <FormControl>
               <FormControl.Label>Cor de Fundo</FormControl.Label>
-              <input type="color" className={styles.colorPicker} value={bgColor} onChange={(e) => update("bgColor", e.target.value)} />
+              <input
+                type="color"
+                className={styles.colorPicker}
+                value={bgColor}
+                onChange={(e) => update("bgColor", e.target.value)}
+              />
             </FormControl>
           </div>
         </div>
@@ -124,12 +134,22 @@ export default function QrCodeCustomizer({
               <label className={styles.fileBtn}>
                 <UploadIcon size={14} />
                 Escolher arquivo
-                <input type="file" accept="image/*" className={styles.fileInput} onChange={handleLogoChange} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className={styles.fileInput}
+                  onChange={handleLogoChange}
+                />
               </label>
             </div>
             <FormControl>
               <FormControl.Label>Tamanho da logo</FormControl.Label>
-              <Select value={String(logoSize)} onChange={(e) => update("logoSize", Number.parseInt(e.target.value))}>
+              <Select
+                value={String(logoSize)}
+                onChange={(e) =>
+                  update("logoSize", Number.parseInt(e.target.value))
+                }
+              >
                 <Select.Option value="24">24px × 24px</Select.Option>
                 <Select.Option value="38">38px × 38px</Select.Option>
                 <Select.Option value="50">50px × 50px</Select.Option>

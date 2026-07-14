@@ -33,8 +33,12 @@ exports.up = (pgm) => {
     },
   });
 
-  pgm.createConstraint("course_enrollments", "course_enrollments_pkey", { primaryKey: "id" });
-  pgm.createIndex("course_enrollments", ["course_id", "user_id"], { unique: true });
+  pgm.createConstraint("course_enrollments", "course_enrollments_pkey", {
+    primaryKey: "id",
+  });
+  pgm.createIndex("course_enrollments", ["course_id", "user_id"], {
+    unique: true,
+  });
   pgm.createIndex("course_enrollments", ["user_id"]);
 };
 

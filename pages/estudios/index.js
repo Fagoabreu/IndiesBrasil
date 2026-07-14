@@ -11,7 +11,8 @@ import { SITE_URL } from "@/lib/seo";
 import styles from "./index.module.css";
 
 const PAGE_TITLE = "Estúdios — Indies Brasil";
-const PAGE_DESCRIPTION = "Conheça os estúdios de jogos indie brasileiros: press kits, membros, projetos e muito mais.";
+const PAGE_DESCRIPTION =
+  "Conheça os estúdios de jogos indie brasileiros: press kits, membros, projetos e muito mais.";
 const PAGE_URL = `${SITE_URL}/estudios`;
 
 export default function StudiosPage() {
@@ -42,8 +43,14 @@ export default function StudiosPage() {
   async function loadAll(pageNum, searchQuery) {
     setAllLoading(true);
     try {
-      const params = new URLSearchParams({ page: pageNum, limit: 20, search: searchQuery });
-      const res = await fetch(`/api/v1/studios?${params}`, { credentials: "include" });
+      const params = new URLSearchParams({
+        page: pageNum,
+        limit: 20,
+        search: searchQuery,
+      });
+      const res = await fetch(`/api/v1/studios?${params}`, {
+        credentials: "include",
+      });
       const data = await res.json();
       const rows = Array.isArray(data) ? data : [];
       setAllStudios((prev) => (pageNum === 1 ? rows : [...prev, ...rows]));
@@ -106,8 +113,18 @@ export default function StudiosPage() {
   const followingLoading = followingStudios === null;
   const memberLoading = memberStudios === null;
 
-  const activeList = (tab === "following" ? followingStudios : tab === "member" ? memberStudios : allStudios) ?? [];
-  const isLoading = tab === "following" ? followingLoading : tab === "member" ? memberLoading : allLoading;
+  const activeList =
+    (tab === "following"
+      ? followingStudios
+      : tab === "member"
+        ? memberStudios
+        : allStudios) ?? [];
+  const isLoading =
+    tab === "following"
+      ? followingLoading
+      : tab === "member"
+        ? memberLoading
+        : allLoading;
 
   const countNum = activeList.length;
   const countStr = countNum.toLocaleString("pt-BR");
@@ -141,7 +158,11 @@ export default function StudiosPage() {
         title={PAGE_TITLE}
         description={PAGE_DESCRIPTION}
         canonical={PAGE_URL}
-        openGraph={{ title: PAGE_TITLE, description: PAGE_DESCRIPTION, url: PAGE_URL }}
+        openGraph={{
+          title: PAGE_TITLE,
+          description: PAGE_DESCRIPTION,
+          url: PAGE_URL,
+        }}
       />
 
       {/* PAGE HEADER */}
@@ -155,7 +176,9 @@ export default function StudiosPage() {
               </span>
             )}
           </div>
-          <p className={styles.pageSubtitle}>Conheça os estúdios de jogos indie do Brasil.</p>
+          <p className={styles.pageSubtitle}>
+            Conheça os estúdios de jogos indie do Brasil.
+          </p>
 
           {tab === "all" && (
             <div className={styles.searchWrapper}>
@@ -179,7 +202,11 @@ export default function StudiosPage() {
           )}
 
           {user && (
-            <div className={styles.feedTabs} role="tablist" aria-label="Filtros de estúdios">
+            <div
+              className={styles.feedTabs}
+              role="tablist"
+              aria-label="Filtros de estúdios"
+            >
               <button
                 type="button"
                 role="tab"
@@ -240,7 +267,11 @@ export default function StudiosPage() {
 
           {tab === "all" && allHasMore && (
             <div className={styles.loadMore}>
-              <button className={styles.btnOutline} disabled={allLoading} onClick={loadMore}>
+              <button
+                className={styles.btnOutline}
+                disabled={allLoading}
+                onClick={loadMore}
+              >
                 {allLoading ? <Spinner size="small" /> : "Carregar mais"}
               </button>
             </div>
@@ -252,14 +283,21 @@ export default function StudiosPage() {
 }
 
 function StudioCard({ studio }) {
-  const tiltRef = useTiltEffect({ max: 8, perspective: 900, scale: 1.02, maxGlare: 0.12 });
+  const tiltRef = useTiltEffect({
+    max: 8,
+    perspective: 900,
+    scale: 1.02,
+    maxGlare: 0.12,
+  });
 
   return (
     <li className={styles.studioCard} ref={tiltRef}>
       <Link href={`/estudios/${studio.slug}`} className={styles.cardLink}>
         <div className={styles.cardBanner}>
           {studio.banner_url ? (
-            <div style={{ position: "relative", width: "100%", height: "100%" }}>
+            <div
+              style={{ position: "relative", width: "100%", height: "100%" }}
+            >
               <Image
                 src={studio.banner_url}
                 alt=""
@@ -275,18 +313,25 @@ function StudioCard({ studio }) {
         </div>
         <div className={styles.cardBody}>
           <div className={styles.cardLogoRow}>
-            <Avatar src={studio.logo_url || "/images/studio.jpg"} size={48} alt={studio.name} className={styles.studioLogo} />
+            <Avatar
+              src={studio.logo_url || "/images/studio.jpg"}
+              size={48}
+              alt={studio.name}
+              className={styles.studioLogo}
+            />
           </div>
           <h2 className={styles.studioName}>{studio.name}</h2>
           {studio.pitch && <p className={styles.studioPitch}>{studio.pitch}</p>}
           <div className={styles.cardMeta}>
             <span className={styles.metaItem}>
               <PeopleIcon size={13} />
-              {studio.member_count ?? 0} {studio.member_count === 1 ? "membro" : "membros"}
+              {studio.member_count ?? 0}{" "}
+              {studio.member_count === 1 ? "membro" : "membros"}
             </span>
             {(studio.follower_count ?? 0) > 0 && (
               <span className={styles.metaItem}>
-                {studio.follower_count} {studio.follower_count === 1 ? "seguidor" : "seguidores"}
+                {studio.follower_count}{" "}
+                {studio.follower_count === 1 ? "seguidor" : "seguidores"}
               </span>
             )}
           </div>

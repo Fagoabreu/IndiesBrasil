@@ -2,7 +2,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeftIcon, LinkExternalIcon, CheckIcon, XIcon, TrashIcon, PencilIcon } from "@primer/octicons-react";
+import {
+  ArrowLeftIcon,
+  LinkExternalIcon,
+  CheckIcon,
+  XIcon,
+  TrashIcon,
+  PencilIcon,
+} from "@primer/octicons-react";
 import { Spinner } from "@primer/react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
@@ -47,7 +54,9 @@ export default function NewsDetailPage() {
       setNotFound(false);
       setError(null);
       try {
-        const res = await fetch(`/api/v1/news/${id}`, { credentials: "include" });
+        const res = await fetch(`/api/v1/news/${id}`, {
+          credentials: "include",
+        });
         if (res.status === 404) {
           setNotFound(true);
           return;
@@ -62,7 +71,9 @@ export default function NewsDetailPage() {
         setUserFactcheck(data.user_factcheck);
 
         // Carregar comentários
-        const commentsRes = await fetch(`/api/v1/news/${id}/comments`, { credentials: "include" });
+        const commentsRes = await fetch(`/api/v1/news/${id}/comments`, {
+          credentials: "include",
+        });
         if (commentsRes.ok) {
           setComments(await commentsRes.json());
         }
@@ -183,7 +194,10 @@ export default function NewsDetailPage() {
   // ─── Render ───────────────────────────────────
   if (loading || loadingUser) {
     return (
-      <div className={styles.page} style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
+      <div
+        className={styles.page}
+        style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}
+      >
         <Spinner size="large" />
       </div>
     );
@@ -220,14 +234,17 @@ export default function NewsDetailPage() {
 
   // Status factcheck
   const totalFC = news.factcheck_count + news.fake_count;
-  const fakePct = totalFC > 0 ? Math.round((news.fake_count / totalFC) * 100) : 0;
+  const fakePct =
+    totalFC > 0 ? Math.round((news.fake_count / totalFC) * 100) : 0;
   const isFakeNews = totalFC > 0 && fakePct >= 50;
 
   return (
     <div className={styles.page}>
       <SeoHead
         title={`${news.title} — Indies Brasil`}
-        description={news.summary?.slice(0, 160) || "Notícia na comunidade Indies Brasil."}
+        description={
+          news.summary?.slice(0, 160) || "Notícia na comunidade Indies Brasil."
+        }
         canonical={`${SITE_URL}/noticias/${id}`}
       />
 
@@ -238,7 +255,14 @@ export default function NewsDetailPage() {
       {/* Capa */}
       <div className={styles.hero}>
         {news.img_url ? (
-          <Image src={news.img_url} alt={news.title} fill className={styles.heroImg} sizes="(max-width: 812px) calc(100vw - 32px), 780px" priority />
+          <Image
+            src={news.img_url}
+            alt={news.title}
+            fill
+            className={styles.heroImg}
+            sizes="(max-width: 812px) calc(100vw - 32px), 780px"
+            priority
+          />
         ) : (
           <div className={styles.heroPlaceholder}>{firstLetter}</div>
         )}
@@ -251,9 +275,17 @@ export default function NewsDetailPage() {
         <div className={styles.meta}>
           <div className={styles.authorInfo}>
             {news.avatar_url ? (
-              <Image src={news.avatar_url} alt={news.author_username} width={24} height={24} className={styles.avatar} />
+              <Image
+                src={news.avatar_url}
+                alt={news.author_username}
+                width={24}
+                height={24}
+                className={styles.avatar}
+              />
             ) : (
-              <div className={styles.avatarPlaceholder}>{news.author_username?.[0]?.toUpperCase() || "?"}</div>
+              <div className={styles.avatarPlaceholder}>
+                {news.author_username?.[0]?.toUpperCase() || "?"}
+              </div>
             )}
             <span>{news.author_username}</span>
           </div>
@@ -280,7 +312,12 @@ export default function NewsDetailPage() {
         {editing ? (
           <div className={styles.editForm}>
             <h4>Editar notícia</h4>
-            <input className={styles.commentInput} value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder="Título" />
+            <input
+              className={styles.commentInput}
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              placeholder="Título"
+            />
             <textarea
               className={styles.commentInput}
               value={editSummary}
@@ -288,12 +325,25 @@ export default function NewsDetailPage() {
               placeholder="Resumo"
               rows={2}
             />
-            <textarea className={styles.commentInput} value={editBody} onChange={(e) => setEditBody(e.target.value)} placeholder="Corpo" rows={6} />
+            <textarea
+              className={styles.commentInput}
+              value={editBody}
+              onChange={(e) => setEditBody(e.target.value)}
+              placeholder="Corpo"
+              rows={6}
+            />
             <div className={styles.editActions}>
-              <button className={styles.cancelBtn} onClick={() => setEditing(false)}>
+              <button
+                className={styles.cancelBtn}
+                onClick={() => setEditing(false)}
+              >
                 Cancelar
               </button>
-              <button className={styles.saveBtn} onClick={handleSaveEdit} disabled={saving}>
+              <button
+                className={styles.saveBtn}
+                onClick={handleSaveEdit}
+                disabled={saving}
+              >
                 {saving ? "Salvando..." : "Salvar"}
               </button>
             </div>
@@ -303,7 +353,12 @@ export default function NewsDetailPage() {
             <div className={styles.body}>{news.body}</div>
 
             {news.source_url && (
-              <a href={news.source_url} target="_blank" rel="noopener noreferrer" className={styles.source}>
+              <a
+                href={news.source_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.source}
+              >
                 <LinkExternalIcon size={14} />
                 {news.source_label || "Fonte externa"}
               </a>
@@ -329,7 +384,8 @@ export default function NewsDetailPage() {
               ))}
             </div>
             <span className={styles.ratingValue}>
-              {Number(news.avg_rating).toFixed(1)} ({news.rating_count} {news.rating_count === 1 ? "voto" : "votos"})
+              {Number(news.avg_rating).toFixed(1)} ({news.rating_count}{" "}
+              {news.rating_count === 1 ? "voto" : "votos"})
             </span>
           </div>
 
@@ -353,10 +409,13 @@ export default function NewsDetailPage() {
             </div>
             <div className={styles.factcheckResult}>
               {isFakeNews ? (
-                <span style={{ color: "#cf222e", fontWeight: 600 }}>⚠️ Possível Fake News</span>
+                <span style={{ color: "#cf222e", fontWeight: 600 }}>
+                  ⚠️ Possível Fake News
+                </span>
               ) : totalFC > 0 ? (
                 <span style={{ color: "#1a7f37" }}>
-                  ✓ {news.factcheck_count} fact-check{news.factcheck_count !== 1 ? "s" : ""}
+                  ✓ {news.factcheck_count} fact-check
+                  {news.factcheck_count !== 1 ? "s" : ""}
                 </span>
               ) : (
                 <span>Ainda sem verificação</span>
@@ -379,7 +438,9 @@ export default function NewsDetailPage() {
 
         {/* Comentários */}
         <div className={styles.commentsSection}>
-          <h3 className={styles.commentsHeading}>Comentários ({comments.length})</h3>
+          <h3 className={styles.commentsHeading}>
+            Comentários ({comments.length})
+          </h3>
 
           {user ? (
             <div className={styles.commentForm}>
@@ -390,12 +451,22 @@ export default function NewsDetailPage() {
                 onChange={(e) => setCommentText(e.target.value)}
                 rows={1}
               />
-              <button className={styles.commentBtn} onClick={handleComment} disabled={!commentText.trim() || sendingComment}>
+              <button
+                className={styles.commentBtn}
+                onClick={handleComment}
+                disabled={!commentText.trim() || sendingComment}
+              >
                 {sendingComment ? "..." : "Comentar"}
               </button>
             </div>
           ) : (
-            <p style={{ fontSize: "0.85rem", color: "var(--fgColor-muted)", marginBottom: 16 }}>
+            <p
+              style={{
+                fontSize: "0.85rem",
+                color: "var(--fgColor-muted)",
+                marginBottom: 16,
+              }}
+            >
               <Link href="/login" style={{ color: "var(--brand-primary)" }}>
                 Faça login
               </Link>{" "}
@@ -404,16 +475,27 @@ export default function NewsDetailPage() {
           )}
 
           {comments.length === 0 ? (
-            <div className={styles.commentEmpty}>Nenhum comentário ainda. Seja o primeiro!</div>
+            <div className={styles.commentEmpty}>
+              Nenhum comentário ainda. Seja o primeiro!
+            </div>
           ) : (
             <div className={styles.commentList}>
               {comments.map((c) => (
                 <div key={c.id} className={styles.commentItem}>
                   <div className={styles.commentAuthor}>
                     {c.author_avatar_url ? (
-                      <Image src={c.author_avatar_url} alt={c.author_username} width={18} height={18} className={styles.avatar} />
+                      <Image
+                        src={c.author_avatar_url}
+                        alt={c.author_username}
+                        width={18}
+                        height={18}
+                        className={styles.avatar}
+                      />
                     ) : (
-                      <div className={styles.avatarPlaceholder} style={{ width: 18, height: 18, fontSize: "0.6rem" }}>
+                      <div
+                        className={styles.avatarPlaceholder}
+                        style={{ width: 18, height: 18, fontSize: "0.6rem" }}
+                      >
                         {c.author_username?.[0]?.toUpperCase() || "?"}
                       </div>
                     )}

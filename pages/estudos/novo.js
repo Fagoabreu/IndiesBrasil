@@ -11,7 +11,16 @@ import styles from "./[slug]/curso.module.css";
 const PAGE_TITLE = "Criar curso — Indies Brasil";
 const PAGE_URL = `${SITE_URL}/estudos/novo`;
 
-const SUGGESTED_TAGS = ["Jogo", "Unity", "Godot", "Arte", "Som", "Programação", "Design", "Marketing"];
+const SUGGESTED_TAGS = [
+  "Jogo",
+  "Unity",
+  "Godot",
+  "Arte",
+  "Som",
+  "Programação",
+  "Design",
+  "Marketing",
+];
 
 export default function NovoCursoPage() {
   const router = useRouter();
@@ -24,7 +33,9 @@ export default function NovoCursoPage() {
   const [error, setError] = useState("");
 
   function toggleTag(tag) {
-    setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+    );
   }
 
   function addCustomTag() {
@@ -83,7 +94,11 @@ export default function NovoCursoPage() {
 
   return (
     <div className={styles.page}>
-      <SeoHead title={PAGE_TITLE} canonical={PAGE_URL} openGraph={{ title: PAGE_TITLE, url: PAGE_URL }} />
+      <SeoHead
+        title={PAGE_TITLE}
+        canonical={PAGE_URL}
+        openGraph={{ title: PAGE_TITLE, url: PAGE_URL }}
+      />
 
       <Link href="/estudos" className={styles.backLink}>
         <ArrowLeftIcon size={14} /> Voltar para cursos
@@ -167,7 +182,12 @@ export default function NovoCursoPage() {
               placeholder="Adicionar tag personalizada..."
               disabled={submitting}
             />
-            <Button type="button" variant="default" onClick={addCustomTag} disabled={submitting || customTag.trim().length < 2}>
+            <Button
+              type="button"
+              variant="default"
+              onClick={addCustomTag}
+              disabled={submitting || customTag.trim().length < 2}
+            >
               Adicionar
             </Button>
           </div>
@@ -197,7 +217,11 @@ export default function NovoCursoPage() {
           <Link href="/estudos" className={styles.btnOutline}>
             Cancelar
           </Link>
-          <button type="submit" className={styles.btnPrimary} disabled={submitting}>
+          <button
+            type="submit"
+            className={styles.btnPrimary}
+            disabled={submitting}
+          >
             {submitting ? (
               <>
                 <Spinner size="small" /> Criando...

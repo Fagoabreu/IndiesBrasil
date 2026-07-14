@@ -12,7 +12,8 @@ import { SITE_URL } from "@/lib/seo";
 const MAX_INPUT_LENGTH = 500_000;
 
 const PAGE_TITLE = "Visualizador de HTML Online | Indies Brasil";
-const PAGE_DESCRIPTION = "Cole seu código HTML e visualize a página renderizada em tempo real. Ferramenta online gratuita, segura e sem cadastro.";
+const PAGE_DESCRIPTION =
+  "Cole seu código HTML e visualize a página renderizada em tempo real. Ferramenta online gratuita, segura e sem cadastro.";
 const PAGE_URL = `${SITE_URL}/ferramentas/htmlviewer`;
 const JSON_LD = {
   "@context": "https://schema.org",
@@ -40,7 +41,9 @@ export default function HtmlViewerPage() {
     if (!raw) return;
 
     if (raw.length > MAX_INPUT_LENGTH) {
-      setError(`Entrada muito grande. O limite é ${(MAX_INPUT_LENGTH / 1000).toFixed(0)} KB.`);
+      setError(
+        `Entrada muito grande. O limite é ${(MAX_INPUT_LENGTH / 1000).toFixed(0)} KB.`,
+      );
       return;
     }
 
@@ -55,13 +58,19 @@ export default function HtmlViewerPage() {
 
   return (
     <div className={shared.container}>
-      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} jsonLd={JSON_LD} />
+      <SeoHead
+        title={PAGE_TITLE}
+        description={PAGE_DESCRIPTION}
+        canonical={PAGE_URL}
+        jsonLd={JSON_LD}
+      />
 
       {/* Page header */}
       <header className={shared.pageHeader}>
         <h1 className={shared.pageTitle}>Visualizador de HTML</h1>
         <p className={shared.pageSubtitle}>
-          Cole seu código HTML e clique em <strong>Renderizar</strong> para ver a página. A prévia é completamente isolada do site.
+          Cole seu código HTML e clique em <strong>Renderizar</strong> para ver
+          a página. A prévia é completamente isolada do site.
         </p>
       </header>
 
@@ -70,7 +79,12 @@ export default function HtmlViewerPage() {
         <section className={styles.panel}>
           <div className={shared.panelHeader}>
             <span className={shared.panelLabel}>Código HTML</span>
-            <Button size="small" variant="invisible" onClick={clear} aria-label="Limpar">
+            <Button
+              size="small"
+              variant="invisible"
+              onClick={clear}
+              aria-label="Limpar"
+            >
               <TrashIcon size={14} />
               Limpar
             </Button>
@@ -80,14 +94,18 @@ export default function HtmlViewerPage() {
             className={styles.textarea}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={"Cole seu HTML aqui...\n\n<!DOCTYPE html>\n<html>\n  <body>\n    <h1>Olá mundo!</h1>\n  </body>\n</html>"}
+            placeholder={
+              "Cole seu HTML aqui...\n\n<!DOCTYPE html>\n<html>\n  <body>\n    <h1>Olá mundo!</h1>\n  </body>\n</html>"
+            }
             spellCheck={false}
             autoCapitalize="off"
             autoCorrect="off"
           />
 
           <div className={shared.panelFooter}>
-            <span className={shared.charCount}>{input.length > 0 ? `${input.length} caracteres` : ""}</span>
+            <span className={shared.charCount}>
+              {input.length > 0 ? `${input.length} caracteres` : ""}
+            </span>
             <Button onClick={render} disabled={!input.trim()}>
               <PlayIcon size={14} />
               Renderizar
@@ -100,7 +118,10 @@ export default function HtmlViewerPage() {
           <div className={shared.panelHeader}>
             <span className={shared.panelLabel}>
               {"Prévia"}
-              <span className={styles.sandboxBadge} title="Executado em sandbox isolada — sem acesso a cookies, localStorage ou ao site">
+              <span
+                className={styles.sandboxBadge}
+                title="Executado em sandbox isolada — sem acesso a cookies, localStorage ou ao site"
+              >
                 sandbox
               </span>
             </span>
@@ -134,7 +155,11 @@ export default function HtmlViewerPage() {
             />
           )}
 
-          {!error && !rendered && <div className={shared.emptyOutput}>A prévia renderizada aparecerá aqui.</div>}
+          {!error && !rendered && (
+            <div className={shared.emptyOutput}>
+              A prévia renderizada aparecerá aqui.
+            </div>
+          )}
         </section>
       </div>
     </div>

@@ -3,7 +3,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { Heading, Spinner } from "@primer/react";
-import { ChevronLeftIcon, ChevronRightIcon, CheckIcon, CommentDiscussionIcon, PencilIcon, TrashIcon } from "@primer/octicons-react";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CheckIcon,
+  CommentDiscussionIcon,
+  PencilIcon,
+  TrashIcon,
+} from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL } from "@/lib/seo";
@@ -48,7 +55,9 @@ export default function AulaPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/v1/courses/${slug}`, { credentials: "include" });
+      const res = await fetch(`/api/v1/courses/${slug}`, {
+        credentials: "include",
+      });
       if (!res.ok) {
         setError("Curso não encontrado.");
         return;
@@ -58,10 +67,15 @@ export default function AulaPage() {
       setLessons(courseData.lessons || []);
 
       // Find current lesson
-      const currentLesson = courseData.lessons?.find((l) => l.order_index === Number(order));
+      const currentLesson = courseData.lessons?.find(
+        (l) => l.order_index === Number(order),
+      );
       if (!currentLesson) {
         // Fetch lesson directly
-        const lessonRes = await fetch(`/api/v1/courses/${slug}/lessons/${order}`, { credentials: "include" });
+        const lessonRes = await fetch(
+          `/api/v1/courses/${slug}/lessons/${order}`,
+          { credentials: "include" },
+        );
         if (!lessonRes.ok) {
           setError("Aula não encontrada.");
           return;
@@ -73,7 +87,9 @@ export default function AulaPage() {
 
       // Check if completed
       if (user && courseData.viewer?.progress?.lessons) {
-        const prog = courseData.viewer.progress.lessons.find((p) => p.lesson_id === currentLesson?.id);
+        const prog = courseData.viewer.progress.lessons.find(
+          (p) => p.lesson_id === currentLesson?.id,
+        );
         setCompleted(!!prog?.completed);
       }
 
@@ -89,7 +105,10 @@ export default function AulaPage() {
   async function loadComments() {
     setCommentsLoading(true);
     try {
-      const res = await fetch(`/api/v1/courses/${slug}/lessons/${order}/comments`, { credentials: "include" });
+      const res = await fetch(
+        `/api/v1/courses/${slug}/lessons/${order}/comments`,
+        { credentials: "include" },
+      );
       if (res.ok) {
         setComments(await res.json());
       }
@@ -122,12 +141,15 @@ export default function AulaPage() {
     if (!user || !newComment.trim() || commentSubmitting) return;
     setCommentSubmitting(true);
     try {
-      const res = await fetch(`/api/v1/courses/${slug}/lessons/${order}/comments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ content: newComment.trim() }),
-      });
+      const res = await fetch(
+        `/api/v1/courses/${slug}/lessons/${order}/comments`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ content: newComment.trim() }),
+        },
+      );
       if (res.ok) {
         setNewComment("");
         loadComments();
@@ -153,12 +175,15 @@ export default function AulaPage() {
     if (!editCommentContent.trim() || editSubmitting) return;
     setEditSubmitting(true);
     try {
-      const res = await fetch(`/api/v1/courses/${slug}/lessons/${order}/comments/${editCommentId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ content: editCommentContent.trim() }),
-      });
+      const res = await fetch(
+        `/api/v1/courses/${slug}/lessons/${order}/comments/${editCommentId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ content: editCommentContent.trim() }),
+        },
+      );
       if (res.ok) {
         handleCancelEdit();
         loadComments();
@@ -171,13 +196,20 @@ export default function AulaPage() {
   }
 
   async function handleDeleteComment(commentId) {
-    if (!window.confirm("Tem certeza que deseja excluir este comentário?") || deleteSubmitting) return;
+    if (
+      !window.confirm("Tem certeza que deseja excluir este comentário?") ||
+      deleteSubmitting
+    )
+      return;
     setDeleteSubmitting(commentId);
     try {
-      const res = await fetch(`/api/v1/courses/${slug}/lessons/${order}/comments/${commentId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      const res = await fetch(
+        `/api/v1/courses/${slug}/lessons/${order}/comments/${commentId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
       if (res.ok) {
         loadComments();
       }
@@ -220,12 +252,15 @@ export default function AulaPage() {
 
   const currentIdx = lessons.findIndex((l) => l.order_index === Number(order));
   const prevLesson = currentIdx > 0 ? lessons[currentIdx - 1] : null;
-  const nextLesson = currentIdx < lessons.length - 1 ? lessons[currentIdx + 1] : null;
+  const nextLesson =
+    currentIdx < lessons.length - 1 ? lessons[currentIdx + 1] : null;
   return (
     <div className={styles.page}>
       <SeoHead
         title={`${lesson.title} — ${course?.title || ""} — Indies Brasil`}
-        description={lesson.description?.slice(0, 160) || `Aula: ${lesson.title}`}
+        description={
+          lesson.description?.slice(0, 160) || `Aula: ${lesson.title}`
+        }
         canonical={`${SITE_URL}/estudos/${slug}/aulas/${order}`}
       />
 
@@ -245,7 +280,9 @@ export default function AulaPage() {
           <Heading as="h1" className={styles.lessonTitle}>
             {lesson.title}
           </Heading>
-          {lesson.description && <p className={styles.lessonDesc}>{lesson.description}</p>}
+          {lesson.description && (
+            <p className={styles.lessonDesc}>{lesson.description}</p>
+          )}
         </div>
         {user && (
           <button
@@ -272,21 +309,30 @@ export default function AulaPage() {
         <section className={styles.readingSection}>
           <Heading as="h2">Material de Leitura</Heading>
           {/* We use dangerouslySetInnerHTML because reading_material may contain formatted text from a rich editor */}
-          <div className={styles.readingContent} dangerouslySetInnerHTML={{ __html: lesson.reading_material }} />
+          <div
+            className={styles.readingContent}
+            dangerouslySetInnerHTML={{ __html: lesson.reading_material }}
+          />
         </section>
       )}
 
       {/* Navigation */}
       <nav className={styles.lessonNav}>
         {prevLesson ? (
-          <Link href={`/estudos/${slug}/aulas/${prevLesson.order_index}`} className={styles.navLink}>
+          <Link
+            href={`/estudos/${slug}/aulas/${prevLesson.order_index}`}
+            className={styles.navLink}
+          >
             <ChevronLeftIcon size={16} /> {prevLesson.title}
           </Link>
         ) : (
           <span />
         )}
         {nextLesson ? (
-          <Link href={`/estudos/${slug}/aulas/${nextLesson.order_index}`} className={styles.navLink}>
+          <Link
+            href={`/estudos/${slug}/aulas/${nextLesson.order_index}`}
+            className={styles.navLink}
+          >
             {nextLesson.title} <ChevronRightIcon size={16} />
           </Link>
         ) : (
@@ -324,13 +370,19 @@ export default function AulaPage() {
           </div>
         )}
 
-        {!commentsLoading && comments.length === 0 && <p className={styles.noComments}>Nenhuma dúvida ainda. Seja o primeiro a perguntar!</p>}
+        {!commentsLoading && comments.length === 0 && (
+          <p className={styles.noComments}>
+            Nenhuma dúvida ainda. Seja o primeiro a perguntar!
+          </p>
+        )}
 
         <ul className={styles.commentList}>
           {comments.map((c) => (
             <li key={c.id} className={styles.commentItem}>
               <div className={styles.commentHeader}>
-                <span className={styles.commentAuthor}>{c.author_username}</span>
+                <span className={styles.commentAuthor}>
+                  {c.author_username}
+                </span>
                 <span className={styles.commentMeta}>
                   <span className={styles.commentDate}>
                     {new Date(c.created_at).toLocaleDateString("pt-BR", {
@@ -343,7 +395,12 @@ export default function AulaPage() {
                   </span>
                   {user && c.author_id === user.id && (
                     <span className={styles.commentActions}>
-                      <button type="button" className={styles.commentActionBtn} title="Editar" onClick={() => handleStartEdit(c)}>
+                      <button
+                        type="button"
+                        className={styles.commentActionBtn}
+                        title="Editar"
+                        onClick={() => handleStartEdit(c)}
+                      >
                         <PencilIcon size={14} />
                       </button>
                       <button
@@ -367,7 +424,12 @@ export default function AulaPage() {
                     onSubmit={handleSubmitEdit}
                     submitting={editSubmitting}
                   />
-                  <button type="button" className={styles.commentCancelBtn} onClick={handleCancelEdit} disabled={editSubmitting}>
+                  <button
+                    type="button"
+                    className={styles.commentCancelBtn}
+                    onClick={handleCancelEdit}
+                    disabled={editSubmitting}
+                  >
                     Cancelar
                   </button>
                 </div>
@@ -377,7 +439,9 @@ export default function AulaPage() {
                   onClick={handleSpoilerClick}
                   /* dangerouslySetInnerHTML: comentário markdown convertido
                    * para HTML com sanitização via utils/markdown. */
-                  dangerouslySetInnerHTML={{ __html: markdownToHtml(c.content) }}
+                  dangerouslySetInnerHTML={{
+                    __html: markdownToHtml(c.content),
+                  }}
                 />
               )}
             </li>
@@ -392,7 +456,9 @@ function VideoEmbed({ url }) {
   if (!url) return null;
 
   // YouTube
-  const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]+)/i);
+  const ytMatch = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]+)/i,
+  );
   if (ytMatch) {
     return (
       <iframe

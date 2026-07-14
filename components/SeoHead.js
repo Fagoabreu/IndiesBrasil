@@ -1,12 +1,24 @@
 import Head from "next/head";
 import PropTypes from "prop-types";
-import { SITE_NAME, SITE_LOCALE, DEFAULT_OG_IMAGE, TWITTER_HANDLE } from "@/lib/seo";
+import {
+  SITE_NAME,
+  SITE_LOCALE,
+  DEFAULT_OG_IMAGE,
+  TWITTER_HANDLE,
+} from "@/lib/seo";
 
 /**
  * Componente de SEO reutilizável para todas as páginas.
  * Injeta <title>, <meta>, Open Graph, Twitter Card e JSON-LD via next/head.
  */
-export default function SeoHead({ title, description, canonical, ogImage, jsonLd, noIndex }) {
+export default function SeoHead({
+  title,
+  description,
+  canonical,
+  ogImage,
+  jsonLd,
+  noIndex,
+}) {
   const image = ogImage || DEFAULT_OG_IMAGE;
 
   return (
@@ -14,7 +26,10 @@ export default function SeoHead({ title, description, canonical, ogImage, jsonLd
       <title>{title}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={canonical} />
-      <meta name="robots" content={noIndex ? "noindex, nofollow" : "index, follow"} />
+      <meta
+        name="robots"
+        content={noIndex ? "noindex, nofollow" : "index, follow"}
+      />
       <meta httpEquiv="content-language" content="pt-BR" />
 
       {/* Open Graph */}
@@ -34,7 +49,12 @@ export default function SeoHead({ title, description, canonical, ogImage, jsonLd
       <meta name="twitter:image" content={image} />
 
       {/* JSON-LD estruturado (opcional) */}
-      {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />}
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
     </Head>
   );
 }

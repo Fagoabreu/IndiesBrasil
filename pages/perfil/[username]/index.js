@@ -141,8 +141,12 @@ export default function Perfil() {
     if (!isOwn || !username || activeTab !== "notifications") return;
     let cancelled = false;
     Promise.all([
-      fetch(`/api/v1/users/${username}/notifications`, { credentials: "include" }),
-      fetch(`/api/v1/users/${username}/notifications/post`, { credentials: "include" }),
+      fetch(`/api/v1/users/${username}/notifications`, {
+        credentials: "include",
+      }),
+      fetch(`/api/v1/users/${username}/notifications/post`, {
+        credentials: "include",
+      }),
     ]).then(async ([userRes, postRes]) => {
       if (!cancelled) {
         setUserNotifs(userRes.ok ? await userRes.json() : []);
@@ -166,7 +170,9 @@ export default function Perfil() {
     return (
       <div className={style.stateCard}>
         <p className={style.stateTitle}>Perfil não encontrado</p>
-        <p className={style.stateDescription}>Esse usuário não existe ou foi removido.</p>
+        <p className={style.stateDescription}>
+          Esse usuário não existe ou foi removido.
+        </p>
       </div>
     );
   }
@@ -183,7 +189,10 @@ export default function Perfil() {
 
   function handleDeletePost(postId) {
     setPosts((prev) => prev.filter((p) => p.id !== postId));
-    fetch(`/api/v1/posts/${postId}`, { method: "DELETE", credentials: "include" }).catch(() => {});
+    fetch(`/api/v1/posts/${postId}`, {
+      method: "DELETE",
+      credentials: "include",
+    }).catch(() => {});
   }
 
   return (
@@ -195,7 +204,9 @@ export default function Perfil() {
 
           <div className={style.imageWrapper}>
             <Image
-              src={perfilUser.user.background_image || "/images/default_header.png"}
+              src={
+                perfilUser.user.background_image || "/images/default_header.png"
+              }
               alt="Capa do perfil"
               fill
               unoptimized
@@ -203,12 +214,21 @@ export default function Perfil() {
             />
             {isOwnProfile && (
               <div className={style.coverUploader}>
-                <ProfileImageUploader endpoint={`/api/v1/users/${username}/avatar`} onUploaded={reloadProfile} label="Alterar capa" type="cover" />
+                <ProfileImageUploader
+                  endpoint={`/api/v1/users/${username}/avatar`}
+                  onUploaded={reloadProfile}
+                  label="Alterar capa"
+                  type="cover"
+                />
               </div>
             )}
           </div>
           <div className={style.avatarContainer}>
-            <Avatar size={128} src={perfilUser.user.avatar_image || "/images/avatar.png"} className={style.profileAvatar} />
+            <Avatar
+              size={128}
+              src={perfilUser.user.avatar_image || "/images/avatar.png"}
+              className={style.profileAvatar}
+            />
             {isOwnProfile && (
               <div className={style.avatarUploader}>
                 <ProfileImageUploader
@@ -224,29 +244,46 @@ export default function Perfil() {
 
           <div className={style.profileHeaderRow}>
             <div className={style.profileHeaderInfo}>
-              <Heading as="h2">{perfilUser.name || perfilUser.user.username}</Heading>
+              <Heading as="h2">
+                {perfilUser.name || perfilUser.user.username}
+              </Heading>
 
-              <Text size="medium">Desde: {formatDateBR(perfilUser.user.created_at)}</Text>
+              <Text size="medium">
+                Desde: {formatDateBR(perfilUser.user.created_at)}
+              </Text>
 
               <Text size="medium" className={style.profileStats}>
-                <strong>{perfilUser.user.following_count ?? 0}</strong> acompanhando · <strong>{perfilUser.user.followers_count ?? 0}</strong>{" "}
-                seguidores · <strong>{perfilUser.user.posts_count ?? 0}</strong> postagens
+                <strong>{perfilUser.user.following_count ?? 0}</strong>{" "}
+                acompanhando ·{" "}
+                <strong>{perfilUser.user.followers_count ?? 0}</strong>{" "}
+                seguidores · <strong>{perfilUser.user.posts_count ?? 0}</strong>{" "}
+                postagens
               </Text>
 
               {!isOwnProfile && authUser && (
                 <div className={style.profileHeaderActions}>
-                  <FollowButton username={username} isFollowing={perfilUser.user.is_following ?? false} />
+                  <FollowButton
+                    username={username}
+                    isFollowing={perfilUser.user.is_following ?? false}
+                  />
                   <Button>Enviar mensagem</Button>
                 </div>
               )}
 
               <div className={style.profilePrintActions}>
-                <button type="button" className={style.printBtn} onClick={handlePrint}>
+                <button
+                  type="button"
+                  className={style.printBtn}
+                  onClick={handlePrint}
+                >
                   <DownloadIcon size={14} />
                   Exportar PDF
                 </button>
                 {isOwnProfile && (
-                  <Link href={`/perfil/${username}/configuracoes`} className={style.printBtn}>
+                  <Link
+                    href={`/perfil/${username}/configuracoes`}
+                    className={style.printBtn}
+                  >
                     <GearIcon size={14} />
                     Configurações
                   </Link>
@@ -260,11 +297,27 @@ export default function Perfil() {
           </div>
 
           {/* ===== TABS ===== */}
-          <div className={style.profileTabs} role="tablist" aria-label="Seções do perfil">
-            <button type="button" role="tab" aria-selected={activeTab === "info"} className={style.profileTab} onClick={() => setActiveTab("info")}>
+          <div
+            className={style.profileTabs}
+            role="tablist"
+            aria-label="Seções do perfil"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "info"}
+              className={style.profileTab}
+              onClick={() => setActiveTab("info")}
+            >
               Informações
             </button>
-            <button type="button" role="tab" aria-selected={activeTab === "posts"} className={style.profileTab} onClick={() => setActiveTab("posts")}>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "posts"}
+              className={style.profileTab}
+              onClick={() => setActiveTab("posts")}
+            >
               Postagens
             </button>
             {isOwnProfile && (
@@ -289,9 +342,21 @@ export default function Perfil() {
                 <SectionPanel
                   title="Descrição"
                   atributes={[
-                    { title: "Visibilidade", content: perfilUser.user.visibility, alignment: "row" },
-                    { title: "Resumo", content: perfilUser.user.resumo || "Resumo ainda não informado." },
-                    { title: "Bio", content: perfilUser.user.bio || "Bio ainda não informada." },
+                    {
+                      title: "Visibilidade",
+                      content: perfilUser.user.visibility,
+                      alignment: "row",
+                    },
+                    {
+                      title: "Resumo",
+                      content:
+                        perfilUser.user.resumo || "Resumo ainda não informado.",
+                    },
+                    {
+                      title: "Bio",
+                      content:
+                        perfilUser.user.bio || "Bio ainda não informada.",
+                    },
                   ]}
                 />
 
@@ -346,11 +411,20 @@ export default function Perfil() {
           {/* ===== POSTS ===== */}
           {activeTab === "posts" && (
             <div className={style.postsFeed}>
-              {loadingPosts && <p className={style.postsState}>Carregando postagens...</p>}
-              {!loadingPosts && posts.length === 0 && <p className={style.postsState}>Nenhuma postagem ainda.</p>}
+              {loadingPosts && (
+                <p className={style.postsState}>Carregando postagens...</p>
+              )}
+              {!loadingPosts && posts.length === 0 && (
+                <p className={style.postsState}>Nenhuma postagem ainda.</p>
+              )}
               {!loadingPosts &&
                 posts.map((p) => (
-                  <PostCardComponent key={p.id} post={p} canInteract={!!authUser} onDelete={isOwnProfile ? handleDeletePost : undefined} />
+                  <PostCardComponent
+                    key={p.id}
+                    post={p}
+                    canInteract={!!authUser}
+                    onDelete={isOwnProfile ? handleDeletePost : undefined}
+                  />
                 ))}
             </div>
           )}
@@ -358,8 +432,15 @@ export default function Perfil() {
           {/* ===== NOTIFICAÇÕES ===== */}
           {activeTab === "notifications" && isOwnProfile && (
             <div className={style.notifSection}>
-              {loadingNotifs && <p className={style.postsState}>Carregando notificações...</p>}
-              {!loadingNotifs && <NotificationList userNotifs={userNotifs} postNotifs={postNotifs} />}
+              {loadingNotifs && (
+                <p className={style.postsState}>Carregando notificações...</p>
+              )}
+              {!loadingNotifs && (
+                <NotificationList
+                  userNotifs={userNotifs}
+                  postNotifs={postNotifs}
+                />
+              )}
             </div>
           )}
         </section>
@@ -374,7 +455,9 @@ export default function Perfil() {
 
 function NotificationList({ userNotifs, postNotifs }) {
   const router = useRouter();
-  const all = [...userNotifs, ...postNotifs].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const all = [...userNotifs, ...postNotifs].sort(
+    (a, b) => new Date(b.created_at) - new Date(a.created_at),
+  );
 
   if (all.length === 0) {
     return <p className={style.postsState}>Nenhuma notificação.</p>;
@@ -392,7 +475,10 @@ function NotificationList({ userNotifs, postNotifs }) {
     <div className={style.notifList}>
       {all.map((n) => {
         const nid = `${n.user_id}_${n.type}_${n.source_user_id}${n.post_id != null ? `_${n.post_id}` : ""}`;
-        const isClickable = n.type === "post_liked" || n.type === "post_commented" || (n.type === "studio_invitation" && n.org_slug);
+        const isClickable =
+          n.type === "post_liked" ||
+          n.type === "post_commented" ||
+          (n.type === "studio_invitation" && n.org_slug);
         return (
           <div
             key={nid}
@@ -411,10 +497,16 @@ function NotificationList({ userNotifs, postNotifs }) {
             <div className={style.notifHeader}>
               <span className={style.notifTitle}>{notificationTitle(n)}</span>
               <span className={style.notifDate}>
-                {new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(n.created_at))}
+                {new Intl.DateTimeFormat("pt-BR", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                }).format(new Date(n.created_at))}
               </span>
             </div>
-            {notificationMessage(n) && <p className={style.notifMessage}>{notificationMessage(n)}</p>}
+            {notificationMessage(n) && (
+              <p className={style.notifMessage}>{notificationMessage(n)}</p>
+            )}
             {!n.is_read && <span className={style.notifUnreadDot} />}
           </div>
         );

@@ -47,7 +47,8 @@ export default function CarouselComponent({ cards }) {
     return () => track.removeEventListener("scroll", onScroll);
   }, [total]);
 
-  const noopLoader = ({ src, width, quality }) => `${src}?w=${width}&q=${quality || 75}`;
+  const noopLoader = ({ src, width, quality }) =>
+    `${src}?w=${width}&q=${quality || 75}`;
 
   function renderCard(card, i) {
     const inner = (
@@ -94,7 +95,11 @@ export default function CarouselComponent({ cards }) {
       <div className={styles.fadeRight} />
 
       {activeIndex > 0 && (
-        <button className={`${styles.navBtn} ${styles.navLeft}`} onClick={handlePrev} aria-label="Anterior">
+        <button
+          className={`${styles.navBtn} ${styles.navLeft}`}
+          onClick={handlePrev}
+          aria-label="Anterior"
+        >
           <svg
             width="20"
             height="20"
@@ -110,7 +115,11 @@ export default function CarouselComponent({ cards }) {
         </button>
       )}
       {activeIndex < total - 1 && (
-        <button className={`${styles.navBtn} ${styles.navRight}`} onClick={handleNext} aria-label="Próximo">
+        <button
+          className={`${styles.navBtn} ${styles.navRight}`}
+          onClick={handleNext}
+          aria-label="Próximo"
+        >
           <svg
             width="20"
             height="20"

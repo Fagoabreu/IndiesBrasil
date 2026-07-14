@@ -35,7 +35,10 @@ async function findByUserId(userId) {
 async function upsertForUser(userId, { fgColor, bgColor, logoSize, logoFile }) {
   let logoImageId = null;
   if (logoFile) {
-    const imageData = await uploadedImages.uploadImage(logoFile, `users/${userId}/qr_logo`);
+    const imageData = await uploadedImages.uploadImage(
+      logoFile,
+      `users/${userId}/qr_logo`,
+    );
     logoImageId = imageData.id;
   }
 
@@ -47,7 +50,9 @@ async function upsertForUser(userId, { fgColor, bgColor, logoSize, logoFile }) {
 
   if (existingQrId) {
     const values = [existingQrId, fgColor, bgColor, logoSize];
-    const extraSet = logoImageId ? `, logo_image_id = $${values.length + 1}` : "";
+    const extraSet = logoImageId
+      ? `, logo_image_id = $${values.length + 1}`
+      : "";
     if (logoImageId) values.push(logoImageId);
 
     const result = await database.query({
@@ -94,7 +99,12 @@ async function upsertForUser(userId, { fgColor, bgColor, logoSize, logoFile }) {
   return newQr;
 }
 
-const qrCode = { findByUserId, upsertForUser, findByOrganizationId, upsertForOrganization };
+const qrCode = {
+  findByUserId,
+  upsertForUser,
+  findByOrganizationId,
+  upsertForOrganization,
+};
 export default qrCode;
 
 // ─────────────────────────────────────────────────────────────
@@ -119,10 +129,16 @@ async function findByOrganizationId(orgId) {
   return result.rows[0] ?? null;
 }
 
-async function upsertForOrganization(orgId, { fgColor, bgColor, logoSize, logoFile }) {
+async function upsertForOrganization(
+  orgId,
+  { fgColor, bgColor, logoSize, logoFile },
+) {
   let logoImageId = null;
   if (logoFile) {
-    const imageData = await uploadedImages.uploadImage(logoFile, `organizations/${orgId}/qr_logo`);
+    const imageData = await uploadedImages.uploadImage(
+      logoFile,
+      `organizations/${orgId}/qr_logo`,
+    );
     logoImageId = imageData.id;
   }
 
@@ -134,7 +150,9 @@ async function upsertForOrganization(orgId, { fgColor, bgColor, logoSize, logoFi
 
   if (existingQrId) {
     const values = [existingQrId, fgColor, bgColor, logoSize];
-    const extraSet = logoImageId ? `, logo_image_id = $${values.length + 1}` : "";
+    const extraSet = logoImageId
+      ? `, logo_image_id = $${values.length + 1}`
+      : "";
     if (logoImageId) values.push(logoImageId);
 
     const result = await database.query({

@@ -1,7 +1,14 @@
 import { Heading } from "@primer/react";
 import "./MetricCard.css";
 
-export default function MetricCard({ title, period, value, previousLabel, previousValue, icon }) {
+export default function MetricCard({
+  title,
+  period,
+  value,
+  previousLabel,
+  previousValue,
+  icon,
+}) {
   return (
     <div className="metric-card">
       <div className="metric-header">

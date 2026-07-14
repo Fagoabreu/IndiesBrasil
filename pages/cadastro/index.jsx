@@ -1,6 +1,16 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router";
-import { Heading, Button, FormControl, TextInput, Select, Stack, Spinner, ProgressBar, IconButton } from "@primer/react";
+import {
+  Heading,
+  Button,
+  FormControl,
+  TextInput,
+  Select,
+  Stack,
+  Spinner,
+  ProgressBar,
+  IconButton,
+} from "@primer/react";
 import { EyeIcon, EyeClosedIcon } from "@primer/octicons-react";
 import PasswordRule from "@/components/PasswordRule.js";
 import styles from "./Cadastro.module.css";
@@ -25,7 +35,10 @@ export default function Cadastro() {
   const [birthDay, setBirthDay] = useState("");
   const [birthMonth, setBirthMonth] = useState("");
   const [birthYear, setBirthYear] = useState("");
-  const birthDateValue = birthDay && birthMonth && birthYear ? `${birthYear}-${birthMonth}-${birthDay}` : "";
+  const birthDateValue =
+    birthDay && birthMonth && birthYear
+      ? `${birthYear}-${birthMonth}-${birthDay}`
+      : "";
   const [password, setPassword] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
 
@@ -121,7 +134,8 @@ export default function Cadastro() {
     if (!username) {
       newErrors[FIELD_KEYS.username] = "Informe um nome de usuário.";
     } else if (username.length < 3) {
-      newErrors[FIELD_KEYS.username] = "O nome de usuário deve ter ao menos 3 caracteres.";
+      newErrors[FIELD_KEYS.username] =
+        "O nome de usuário deve ter ao menos 3 caracteres.";
     }
     if (!email) newErrors[FIELD_KEYS.email] = "Informe um email.";
 
@@ -147,7 +161,8 @@ export default function Cadastro() {
       if (Number.isNaN(birth.getTime())) {
         newErrors[FIELD_KEYS.birthDate] = "Data de nascimento inválida.";
       } else if (birth >= today) {
-        newErrors[FIELD_KEYS.birthDate] = "A data de nascimento deve ser no passado.";
+        newErrors[FIELD_KEYS.birthDate] =
+          "A data de nascimento deve ser no passado.";
       }
     } else {
       newErrors[FIELD_KEYS.birthDate] = "Informe a data de nascimento.";
@@ -165,11 +180,19 @@ export default function Cadastro() {
       const response = await fetch("/api/v1/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password, cpf: rawCpf, birth_date: birthDateValue }),
+        body: JSON.stringify({
+          username,
+          email,
+          password,
+          cpf: rawCpf,
+          birth_date: birthDateValue,
+        }),
       });
 
       if (response.status === 201) {
-        setSuccessMsg("Sua conta criada com sucesso!\no Link de ativação foi enviado ao email informado.");
+        setSuccessMsg(
+          "Sua conta criada com sucesso!\no Link de ativação foi enviado ao email informado.",
+        );
         setShowForm(false);
       } else {
         const data = await response.json();
@@ -196,9 +219,11 @@ export default function Cadastro() {
   const statusUser = username ? "success" : undefined;
   const statusEmail = !fieldErrors.email && email ? "success" : undefined;
   const statusCpf = cpf && isValidCPF(cpf) ? "success" : undefined;
-  const statusBirthDate = birthDateValue && !fieldErrors.birthDate ? "success" : undefined;
+  const statusBirthDate =
+    birthDateValue && !fieldErrors.birthDate ? "success" : undefined;
   const statusPass = password && strongEnough ? "success" : undefined;
-  const statusConfirm = confirmPass && confirmPass === password ? "success" : undefined;
+  const statusConfirm =
+    confirmPass && confirmPass === password ? "success" : undefined;
 
   return (
     <div className={styles.page}>
@@ -209,11 +234,17 @@ export default function Cadastro() {
 
         <form onSubmit={handleSubmit}>
           <Stack gap={4}>
-            <StatusMessageComponent errorMsg={errorMsg} successMsg={successMsg} />
+            <StatusMessageComponent
+              errorMsg={errorMsg}
+              successMsg={successMsg}
+            />
 
             {/* USERNAME */}
             {showForm && (
-              <FormControl required validationStatus={fieldErrors.username ? "error" : statusUser}>
+              <FormControl
+                required
+                validationStatus={fieldErrors.username ? "error" : statusUser}
+              >
                 <FormControl.Label>Nome de usuário</FormControl.Label>
                 <TextInput
                   block
@@ -223,13 +254,20 @@ export default function Cadastro() {
                     cleanFieldError("username");
                   }}
                 />
-                {fieldErrors.username && <FormControl.Validation variant="error">{fieldErrors.username}</FormControl.Validation>}
+                {fieldErrors.username && (
+                  <FormControl.Validation variant="error">
+                    {fieldErrors.username}
+                  </FormControl.Validation>
+                )}
               </FormControl>
             )}
 
             {/* EMAIL */}
             {showForm && (
-              <FormControl required validationStatus={fieldErrors.email ? "error" : statusEmail}>
+              <FormControl
+                required
+                validationStatus={fieldErrors.email ? "error" : statusEmail}
+              >
                 <FormControl.Label>Email</FormControl.Label>
                 <TextInput
                   type="email"
@@ -240,13 +278,20 @@ export default function Cadastro() {
                     cleanFieldError("email");
                   }}
                 />
-                {fieldErrors.email && <FormControl.Validation variant="error">{fieldErrors.email}</FormControl.Validation>}
+                {fieldErrors.email && (
+                  <FormControl.Validation variant="error">
+                    {fieldErrors.email}
+                  </FormControl.Validation>
+                )}
               </FormControl>
             )}
 
             {/* CPF */}
             {showForm && (
-              <FormControl required validationStatus={fieldErrors.cpf ? "error" : statusCpf}>
+              <FormControl
+                required
+                validationStatus={fieldErrors.cpf ? "error" : statusCpf}
+              >
                 <FormControl.Label>CPF</FormControl.Label>
                 <TextInput
                   block
@@ -258,13 +303,22 @@ export default function Cadastro() {
                   }}
                   placeholder="000.000.000-00"
                 />
-                {fieldErrors.cpf && <FormControl.Validation variant="error">{fieldErrors.cpf}</FormControl.Validation>}
+                {fieldErrors.cpf && (
+                  <FormControl.Validation variant="error">
+                    {fieldErrors.cpf}
+                  </FormControl.Validation>
+                )}
               </FormControl>
             )}
 
             {/* BIRTH DATE */}
             {showForm && (
-              <FormControl required validationStatus={fieldErrors.birthDate ? "error" : statusBirthDate}>
+              <FormControl
+                required
+                validationStatus={
+                  fieldErrors.birthDate ? "error" : statusBirthDate
+                }
+              >
                 <FormControl.Label>Data de nascimento</FormControl.Label>
                 <div className={styles.birthDateRow}>
                   <Select
@@ -279,14 +333,17 @@ export default function Cadastro() {
                     <Select.Option value="" disabled>
                       Dia
                     </Select.Option>
-                    {Array.from({ length: getMaxDays(birthMonth, birthYear) }, (_, i) => {
-                      const d = String(i + 1).padStart(2, "0");
-                      return (
-                        <Select.Option key={d} value={d}>
-                          {i + 1}
-                        </Select.Option>
-                      );
-                    })}
+                    {Array.from(
+                      { length: getMaxDays(birthMonth, birthYear) },
+                      (_, i) => {
+                        const d = String(i + 1).padStart(2, "0");
+                        return (
+                          <Select.Option key={d} value={d}>
+                            {i + 1}
+                          </Select.Option>
+                        );
+                      },
+                    )}
                   </Select>
                   <Select
                     aria-label="Mês"
@@ -295,7 +352,11 @@ export default function Cadastro() {
                     onChange={(e) => {
                       const newMonth = e.target.value;
                       setBirthMonth(newMonth);
-                      if (birthDay && parseInt(birthDay) > getMaxDays(newMonth, birthYear)) setBirthDay("");
+                      if (
+                        birthDay &&
+                        parseInt(birthDay) > getMaxDays(newMonth, birthYear)
+                      )
+                        setBirthDay("");
                       cleanFieldError("birthDate");
                     }}
                   >
@@ -331,30 +392,44 @@ export default function Cadastro() {
                     onChange={(e) => {
                       const newYear = e.target.value;
                       setBirthYear(newYear);
-                      if (birthDay && parseInt(birthDay) > getMaxDays(birthMonth, newYear)) setBirthDay("");
+                      if (
+                        birthDay &&
+                        parseInt(birthDay) > getMaxDays(birthMonth, newYear)
+                      )
+                        setBirthDay("");
                       cleanFieldError("birthDate");
                     }}
                   >
                     <Select.Option value="" disabled>
                       Ano
                     </Select.Option>
-                    {Array.from({ length: new Date().getFullYear() - 1899 }, (_, i) => {
-                      const y = String(new Date().getFullYear() - i);
-                      return (
-                        <Select.Option key={y} value={y}>
-                          {y}
-                        </Select.Option>
-                      );
-                    })}
+                    {Array.from(
+                      { length: new Date().getFullYear() - 1899 },
+                      (_, i) => {
+                        const y = String(new Date().getFullYear() - i);
+                        return (
+                          <Select.Option key={y} value={y}>
+                            {y}
+                          </Select.Option>
+                        );
+                      },
+                    )}
                   </Select>
                 </div>
-                {fieldErrors.birthDate && <FormControl.Validation variant="error">{fieldErrors.birthDate}</FormControl.Validation>}
+                {fieldErrors.birthDate && (
+                  <FormControl.Validation variant="error">
+                    {fieldErrors.birthDate}
+                  </FormControl.Validation>
+                )}
               </FormControl>
             )}
 
             {/* PASSWORD */}
             {showForm && (
-              <FormControl required validationStatus={fieldErrors.password ? "error" : statusPass}>
+              <FormControl
+                required
+                validationStatus={fieldErrors.password ? "error" : statusPass}
+              >
                 <FormControl.Label>Senha</FormControl.Label>
                 <TextInput
                   block
@@ -377,10 +452,19 @@ export default function Cadastro() {
 
                 {/* RULES */}
                 <div className={styles.rules}>
-                  <PasswordRule ok={password.length >= 8} label="Mínimo de 8 caracteres" />
-                  <PasswordRule ok={/[A-Z]/.test(password)} label="Letra maiúscula" />
+                  <PasswordRule
+                    ok={password.length >= 8}
+                    label="Mínimo de 8 caracteres"
+                  />
+                  <PasswordRule
+                    ok={/[A-Z]/.test(password)}
+                    label="Letra maiúscula"
+                  />
                   <PasswordRule ok={/\d/.test(password)} label="Número" />
-                  <PasswordRule ok={/[^A-Za-z0-9]/.test(password)} label="Caractere especial" />
+                  <PasswordRule
+                    ok={/[^A-Za-z0-9]/.test(password)}
+                    label="Caractere especial"
+                  />
                 </div>
 
                 {/* STRENGTH */}
@@ -395,18 +479,32 @@ export default function Cadastro() {
                     aria-label="Força da senha"
                     sx={{
                       bg: "var(--borderColor-muted)",
-                      color: strength <= 1 ? "var(--fgColor-danger)" : strength === 2 ? "var(--fgColor-attention)" : "var(--fgColor-success)",
+                      color:
+                        strength <= 1
+                          ? "var(--fgColor-danger)"
+                          : strength === 2
+                            ? "var(--fgColor-attention)"
+                            : "var(--fgColor-success)",
                     }}
                   />
                 </div>
 
-                {fieldErrors.password && <FormControl.Validation variant="error">{fieldErrors.password}</FormControl.Validation>}
+                {fieldErrors.password && (
+                  <FormControl.Validation variant="error">
+                    {fieldErrors.password}
+                  </FormControl.Validation>
+                )}
               </FormControl>
             )}
 
             {/* CONFIRM */}
             {showForm && (
-              <FormControl required validationStatus={fieldErrors.confirmPass ? "error" : statusConfirm}>
+              <FormControl
+                required
+                validationStatus={
+                  fieldErrors.confirmPass ? "error" : statusConfirm
+                }
+              >
                 <FormControl.Label>Confirmar Senha</FormControl.Label>
                 <TextInput
                   block
@@ -425,7 +523,11 @@ export default function Cadastro() {
                     />
                   }
                 />
-                {fieldErrors.confirmPass && <FormControl.Validation variant="error">{fieldErrors.confirmPass}</FormControl.Validation>}
+                {fieldErrors.confirmPass && (
+                  <FormControl.Validation variant="error">
+                    {fieldErrors.confirmPass}
+                  </FormControl.Validation>
+                )}
               </FormControl>
             )}
 

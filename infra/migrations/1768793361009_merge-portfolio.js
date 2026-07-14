@@ -20,11 +20,23 @@ exports.up = (pgm) => {
   /**
    * 2. Remover constraints que dependem de portfolios
    */
-  pgm.dropConstraint("portfolio_formacao", "portfolio_formacao_portfolio_id_fkey");
-  pgm.dropConstraint("portfolio_historico", "portfolio_historico_portfolio_id_fkey");
+  pgm.dropConstraint(
+    "portfolio_formacao",
+    "portfolio_formacao_portfolio_id_fkey",
+  );
+  pgm.dropConstraint(
+    "portfolio_historico",
+    "portfolio_historico_portfolio_id_fkey",
+  );
   pgm.dropConstraint("portfolio_medias", "portfolio_medias_portfolio_id_fkey");
-  pgm.dropConstraint("portfolio_role_ref", "portfolio_role_ref_portfolio_id_fkey");
-  pgm.dropConstraint("portfolio_tool_ref", "portfolio_tool_ref_portfolio_id_fkey");
+  pgm.dropConstraint(
+    "portfolio_role_ref",
+    "portfolio_role_ref_portfolio_id_fkey",
+  );
+  pgm.dropConstraint(
+    "portfolio_tool_ref",
+    "portfolio_tool_ref_portfolio_id_fkey",
+  );
   pgm.dropConstraint("notifications", "notifications_portfolio_id_fkey");
 
   /**

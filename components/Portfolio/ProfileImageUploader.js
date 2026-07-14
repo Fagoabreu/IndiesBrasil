@@ -73,16 +73,29 @@ export default function ProfileImageUploader({
   async function uploadBlob(data) {
     const formData = new FormData();
     formData.append("file", data);
-    formData.append("imgType", type === "cover" ? "background_image" : "avatar_image");
+    formData.append(
+      "imgType",
+      type === "cover" ? "background_image" : "avatar_image",
+    );
     setLoading(true);
-    await fetch(endpoint, { method: "POST", credentials: "include", body: formData });
+    await fetch(endpoint, {
+      method: "POST",
+      credentials: "include",
+      body: formData,
+    });
     setLoading(false);
     if (onUploaded) await onUploaded();
   }
 
   return (
     <div className={styles.wrapper}>
-      <input ref={inputRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={handleFileChange} />
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className={styles.hiddenInput}
+        onChange={handleFileChange}
+      />
 
       {/* Crop modal (withCrop flow) */}
       {cropSrc && (
@@ -96,13 +109,25 @@ export default function ProfileImageUploader({
 
       {/* Trigger button */}
       {!previewUrl && type === "cover" && (
-        <Button size="small" variant="primary" onClick={openFileDialog} disabled={disabled || loading}>
+        <Button
+          size="small"
+          variant="primary"
+          onClick={openFileDialog}
+          disabled={disabled || loading}
+        >
           {label}
         </Button>
       )}
 
       {!previewUrl && type !== "cover" && (
-        <IconButton icon={PencilIcon} size="small" variant="primary" aria-label={label} onClick={openFileDialog} disabled={disabled || loading} />
+        <IconButton
+          icon={PencilIcon}
+          size="small"
+          variant="primary"
+          aria-label={label}
+          onClick={openFileDialog}
+          disabled={disabled || loading}
+        />
       )}
 
       {/* Plain preview (withCrop=false) */}
@@ -111,14 +136,27 @@ export default function ProfileImageUploader({
           {type === "avatar" ? (
             <Avatar size={96} src={previewUrl} />
           ) : (
-            <div className={styles.coverPreview} style={{ backgroundImage: `url(${previewUrl})` }} />
+            <div
+              className={styles.coverPreview}
+              style={{ backgroundImage: `url(${previewUrl})` }}
+            />
           )}
 
           <div className={styles.actions}>
-            <Button size="small" variant="primary" loading={loading} onClick={confirmUpload}>
+            <Button
+              size="small"
+              variant="primary"
+              loading={loading}
+              onClick={confirmUpload}
+            >
               Confirmar
             </Button>
-            <Button size="small" variant="invisible" onClick={cancelPreview} disabled={loading}>
+            <Button
+              size="small"
+              variant="invisible"
+              onClick={cancelPreview}
+              disabled={loading}
+            >
               Cancelar
             </Button>
           </div>

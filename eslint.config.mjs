@@ -1,10 +1,6 @@
 // eslint.config.mjs
 import js from "@eslint/js";
 import globals from "globals";
-import json from "@eslint/json";
-import markdown from "@eslint/markdown";
-import css from "@eslint/css";
-import { defineConfig } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import next from "eslint-config-next";
 import jest from "eslint-plugin-jest";
@@ -13,8 +9,6 @@ import primerReact from "eslint-plugin-primer-react";
 
 // 👉 regra resolvida: criar constante nomeada
 const config = [
-  js.configs.recommended,
-
   // Primer React Lint — versão recomendada pela documentação
   {
     plugins: {
@@ -50,54 +44,35 @@ const config = [
   // Regras globais da aplicação
   {
     files: ["**/*.{js,jsx}"],
+    ...js.configs.recommended,
     rules: {
+      ...js.configs.recommended.rules,
       "no-unused-vars": "warn",
       "no-undef": "error",
     },
-    plugins: { js },
-    extends: ["js/recommended"],
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
   },
   ...next,
   ...nextVitals,
 
-  {
-    files: ["**/*.json"],
-    plugins: { json },
-    language: "json/json",
-    extends: ["json/recommended"],
-    ignores: ["package-lock.json"],
-  },
-  {
-    files: ["**/*.jsonc"],
-    plugins: { json },
-    language: "json/jsonc",
-    extends: ["json/recommended"],
-  },
-  {
-    files: ["**/*.json5"],
-    plugins: { json },
-    language: "json/json5",
-    extends: ["json/recommended"],
-  },
-  {
-    files: ["**/*.md"],
-    plugins: { markdown },
-    language: "markdown/gfm",
-    extends: ["markdown/recommended"],
-  },
-  {
-    files: ["**/*.css"],
-    plugins: { css },
-    language: "css/css",
-    extends: ["css/recommended"],
-  },
-
   // Prettier desativa regras conflitantes
   prettier,
   // Pastas ignoradas
   {
-    ignores: ["node_modules", ".next", "dist", "coverage", "infra/**/*.js"],
+    ignores: [
+      "node_modules",
+      ".next",
+      "dist",
+      "coverage",
+      "infra/**/*.js",
+      ".deepseek/",
+      ".vscode/",
+      "**/*.json",
+      "**/*.jsonc",
+      "**/*.json5",
+      "**/*.md",
+      "**/*.css",
+    ],
   },
 ];
 

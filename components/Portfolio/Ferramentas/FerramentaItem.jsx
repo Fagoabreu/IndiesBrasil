@@ -17,7 +17,14 @@ export default function FerramentaItem({ item }) {
 
   return (
     <div className={styles.item}>
-      {item.icon_img && <IconSvg src={`/images/tools/${item.icon_img}.svg`} alt={item.name} width={20} height={20} />}
+      {item.icon_img && (
+        <IconSvg
+          src={`/images/tools/${item.icon_img}.svg`}
+          alt={item.name}
+          width={20}
+          height={20}
+        />
+      )}
 
       <div className={styles.info}>
         <Text size="medium">{item.name}</Text>

@@ -113,7 +113,11 @@ export default function CreatePost({ user, onPost }) {
                   <button
                     type="button"
                     className={styles.tagSuggestItem}
-                    onClick={() => setContent((prev) => prev.replace(/#\w*$/, `#${tag.name} `))}
+                    onClick={() =>
+                      setContent((prev) =>
+                        prev.replace(/#\w*$/, `#${tag.name} `),
+                      )
+                    }
                   >
                     #{tag.name}
                   </button>
@@ -124,9 +128,21 @@ export default function CreatePost({ user, onPost }) {
 
           {imagePreview && (
             <div className={styles.previewBox}>
-              <Image src={imagePreview} alt="Pré-visualização da imagem" width={300} height={300} unoptimized className={styles.previewImg} />
+              <Image
+                src={imagePreview}
+                alt="Pré-visualização da imagem"
+                width={300}
+                height={300}
+                unoptimized
+                className={styles.previewImg}
+              />
 
-              <IconButton icon={TrashIcon} aria-label="Remover imagem" className={styles.removeImageBtn} onClick={() => setImagePreview(null)} />
+              <IconButton
+                icon={TrashIcon}
+                aria-label="Remover imagem"
+                className={styles.removeImageBtn}
+                onClick={() => setImagePreview(null)}
+              />
             </div>
           )}
 
@@ -151,13 +167,24 @@ export default function CreatePost({ user, onPost }) {
                     disabled={isPosting}
                   />
                   {pollOptions.length > 2 && (
-                    <IconButton icon={XIcon} aria-label="Remover opção" size="small" variant="invisible" onClick={() => removePollOption(index)} />
+                    <IconButton
+                      icon={XIcon}
+                      aria-label="Remover opção"
+                      size="small"
+                      variant="invisible"
+                      onClick={() => removePollOption(index)}
+                    />
                   )}
                 </div>
               ))}
 
               {pollOptions.length < 10 && (
-                <button type="button" className={styles.addOptionBtn} onClick={addPollOption} disabled={isPosting}>
+                <button
+                  type="button"
+                  className={styles.addOptionBtn}
+                  onClick={addPollOption}
+                  disabled={isPosting}
+                >
                   <PlusIcon size={12} /> Adicionar opção
                 </button>
               )}
@@ -166,8 +193,18 @@ export default function CreatePost({ user, onPost }) {
 
           <div className={styles.actionBar}>
             <Stack direction="horizontal" gap={1}>
-              <IconButton icon={ImageIcon} aria-label="Adicionar imagem" onClick={() => fileInputRef.current.click()} />
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className={styles.fileInput} />
+              <IconButton
+                icon={ImageIcon}
+                aria-label="Adicionar imagem"
+                onClick={() => fileInputRef.current.click()}
+              />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                className={styles.fileInput}
+              />
 
               <button
                 type="button"
@@ -179,7 +216,13 @@ export default function CreatePost({ user, onPost }) {
               </button>
             </Stack>
 
-            <Button variant="primary" disabled={(!content.trim() && !imagePreview && !showPoll) || isPosting} onClick={handleSubmit}>
+            <Button
+              variant="primary"
+              disabled={
+                (!content.trim() && !imagePreview && !showPoll) || isPosting
+              }
+              onClick={handleSubmit}
+            >
               {isPosting ? "Postando..." : "Postar"}
             </Button>
           </div>

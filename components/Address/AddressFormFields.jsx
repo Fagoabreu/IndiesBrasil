@@ -41,7 +41,11 @@ const BR_STATES = [
  *   onChange — (field: string, value: string) => void
  *   disabled — boolean (opcional)
  */
-export default function AddressFormFields({ value, onChange, disabled = false }) {
+export default function AddressFormFields({
+  value,
+  onChange,
+  disabled = false,
+}) {
   const [cepLoading, setCepLoading] = useState(false);
   const [cepError, setCepError] = useState("");
 
@@ -90,7 +94,12 @@ export default function AddressFormFields({ value, onChange, disabled = false })
             disabled={disabled}
           />
         </div>
-        <button type="button" className={styles.cepBtn} onClick={handleCepLookup} disabled={disabled || cepLoading}>
+        <button
+          type="button"
+          className={styles.cepBtn}
+          onClick={handleCepLookup}
+          disabled={disabled || cepLoading}
+        >
           {cepLoading ? "Buscando…" : "Buscar CEP"}
         </button>
       </div>

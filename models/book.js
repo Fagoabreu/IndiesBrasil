@@ -1,11 +1,21 @@
 import database from "infra/database.js";
-import { ForbiddenError, NotFoundError, ValidationError } from "infra/errors.js";
+import {
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+} from "infra/errors.js";
 
 /* =========================================================
  * List / Search
  * ========================================================= */
 
-async function findAll({ page = 1, limit = 20, search = "", book_type = "", stage = "" } = {}) {
+async function findAll({
+  page = 1,
+  limit = 20,
+  search = "",
+  book_type = "",
+  stage = "",
+} = {}) {
   const offset = (page - 1) * limit;
   const result = await database.query({
     text: `
@@ -97,7 +107,9 @@ async function findBySlug(slug) {
   });
 
   if (!result.rows[0]) {
-    throw new NotFoundError({ message: `Livro/quadrinho "${slug}" não encontrado.` });
+    throw new NotFoundError({
+      message: `Livro/quadrinho "${slug}" não encontrado.`,
+    });
   }
 
   const bookData = result.rows[0];
@@ -133,7 +145,11 @@ async function findByOrg(orgId) {
  * Create / Update
  * ========================================================= */
 
-async function create(userId, orgId, { title, book_type = "book", stage = "concept" }) {
+async function create(
+  userId,
+  orgId,
+  { title, book_type = "book", stage = "concept" },
+) {
   if (!title?.trim()) {
     throw new ValidationError({ message: "O título é obrigatório." });
   }
@@ -202,7 +218,8 @@ async function update(slug, body) {
     values,
   });
 
-  if (!result.rows[0]) throw new NotFoundError({ message: "Livro não encontrado." });
+  if (!result.rows[0])
+    throw new NotFoundError({ message: "Livro não encontrado." });
 
   // Atualizar store_pages se fornecido no body (não apenas se array vazio)
   if (Array.isArray(body.store_pages) && body.store_pages.length >= 0) {
@@ -228,7 +245,9 @@ async function saveCover(slug, imageId) {
  * ========================================================= */
 
 async function findStoreTypes() {
-  const result = await database.query({ text: `SELECT id, name FROM book_store ORDER BY id` });
+  const result = await database.query({
+    text: `SELECT id, name FROM book_store ORDER BY id`,
+  });
   return result.rows;
 }
 
@@ -256,7 +275,12 @@ async function updateStorePages(bookId, storePages) {
     if (!sp.store_type_id || !sp.page_url?.trim()) continue;
     await database.query({
       text: `INSERT INTO book_store_page (book_id, store_type_id, page_url, price) VALUES ($1, $2, $3, $4)`,
-      values: [bookId, Number(sp.store_type_id), sp.page_url.trim(), sp.price ?? null],
+      values: [
+        bookId,
+        Number(sp.store_type_id),
+        sp.page_url.trim(),
+        sp.price ?? null,
+      ],
     });
   }
 }
@@ -341,7 +365,9 @@ async function generateSlug(name, currentSlug = null) {
 async function createReview(bookId, userId, { rating, content = null }) {
   rating = Number(rating);
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-    throw new ValidationError({ message: "A nota deve ser um número inteiro entre 1 e 5." });
+    throw new ValidationError({
+      message: "A nota deve ser um número inteiro entre 1 e 5.",
+    });
   }
 
   const existing = await database.query({
@@ -350,7 +376,9 @@ async function createReview(bookId, userId, { rating, content = null }) {
   });
 
   if (existing.rows.length > 0) {
-    throw new ValidationError({ message: "Você já avaliou este livro/quadrinho. Use PATCH para editar." });
+    throw new ValidationError({
+      message: "Você já avaliou este livro/quadrinho. Use PATCH para editar.",
+    });
   }
 
   const result = await database.query({
@@ -375,7 +403,9 @@ async function updateReview(reviewId, userId, { rating, content }) {
   }
 
   if (existing.rows[0].reviewer_id !== userId) {
-    throw new ForbiddenError({ message: "Você não pode editar a avaliação de outro usuário." });
+    throw new ForbiddenError({
+      message: "Você não pode editar a avaliação de outro usuário.",
+    });
   }
 
   const fields = [];
@@ -385,7 +415,9 @@ async function updateReview(reviewId, userId, { rating, content }) {
   if (rating != null) {
     const r = Number(rating);
     if (!Number.isInteger(r) || r < 1 || r > 5) {
-      throw new ValidationError({ message: "A nota deve ser um número inteiro entre 1 e 5." });
+      throw new ValidationError({
+        message: "A nota deve ser um número inteiro entre 1 e 5.",
+      });
     }
     fields.push(`rating = $${idx++}`);
     values.push(r);

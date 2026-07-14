@@ -27,7 +27,8 @@ export async function PUT(request, context) {
     if (!authorization.can(requestUser, "update:user", targetUser)) {
       throw new ForbiddenError({
         message: "Você não possui permissão para executar esta ação",
-        action: 'Verifique se o seu usuário possui a feature "update:user" para executar esta ação.',
+        action:
+          'Verifique se o seu usuário possui a feature "update:user" para executar esta ação.',
       });
     }
 

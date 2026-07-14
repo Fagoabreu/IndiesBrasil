@@ -20,7 +20,12 @@ async function createUserNotification(userInputValues) {
       VALUES ($1,$2,$3,$4,false,NOW())
       ON CONFLICT (user_id, type, source_user_id, org_slug) DO NOTHING
       RETURNING *`,
-      values: [userInputValues.user_id, userInputValues.type, userInputValues.source_user_id, orgSlug],
+      values: [
+        userInputValues.user_id,
+        userInputValues.type,
+        userInputValues.source_user_id,
+        orgSlug,
+      ],
     });
     return results.rows[0] ?? null;
   }
@@ -44,7 +49,12 @@ async function createPostNotification(userInputValues) {
       VALUES ($1,$2,$3,$4,false,NOW())
       ON CONFLICT (user_id, source_user_id, post_id, type) DO NOTHING
       RETURNING *`,
-      values: [userInputValues.user_id, userInputValues.type, userInputValues.source_user_id, userInputValues.post_id],
+      values: [
+        userInputValues.user_id,
+        userInputValues.type,
+        userInputValues.source_user_id,
+        userInputValues.post_id,
+      ],
     });
     return results.rows[0] ?? null;
   }
@@ -65,7 +75,13 @@ async function updatePostNotification(userInputValues) {
         AND source_user_id = $3
         AND post_id = $4
       RETURNING *`,
-      values: [userInputValues.user_id, userInputValues.type, userInputValues.source_user_id, userInputValues.post_id, userInputValues.is_read],
+      values: [
+        userInputValues.user_id,
+        userInputValues.type,
+        userInputValues.source_user_id,
+        userInputValues.post_id,
+        userInputValues.is_read,
+      ],
     });
     return results.rows[0];
   }
@@ -87,13 +103,24 @@ async function updateUserNotification(userInputValues) {
         AND source_user_id = $3
         AND org_slug = $4
       RETURNING *`,
-      values: [userInputValues.user_id, userInputValues.type, userInputValues.source_user_id, orgSlug, userInputValues.is_read],
+      values: [
+        userInputValues.user_id,
+        userInputValues.type,
+        userInputValues.source_user_id,
+        orgSlug,
+        userInputValues.is_read,
+      ],
     });
     return results.rows[0];
   }
 }
 
-async function findPostNotificationByKey({ user_id, type, source_user_id, post_id }) {
+async function findPostNotificationByKey({
+  user_id,
+  type,
+  source_user_id,
+  post_id,
+}) {
   const notification = await runSelectQuery();
   return notification;
 
@@ -134,7 +161,11 @@ async function findUserNotificationsByKey(userInputValues) {
         AND type = $2
         AND source_user_id = $3
     `,
-      values: [userInputValues.user_id, userInputValues.type, userInputValues.source_user_id],
+      values: [
+        userInputValues.user_id,
+        userInputValues.type,
+        userInputValues.source_user_id,
+      ],
     });
 
     if (results.rowCount === 0) {

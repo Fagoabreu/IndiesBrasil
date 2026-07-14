@@ -30,7 +30,10 @@ export default function ResetPasswordRequest() {
         <form onSubmit={handleSubmit} className={styles.form}>
           <FormControl>
             <FormControl.Label>Email</FormControl.Label>
-            <TextInput value={email} onChange={(e) => setEmail(e.target.value)} />
+            <TextInput
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </FormControl>
 
           <FormControl>

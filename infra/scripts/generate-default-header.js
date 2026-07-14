@@ -108,7 +108,12 @@ function crc32(buf) {
 function makeChunk(type, data) {
   const typeBytes = Buffer.from(type, "ascii");
   const payload = Buffer.concat([typeBytes, data]);
-  return Buffer.concat([u32be(data.length), typeBytes, data, u32be(crc32(payload))]);
+  return Buffer.concat([
+    u32be(data.length),
+    typeBytes,
+    data,
+    u32be(crc32(payload)),
+  ]);
 }
 
 // IHDR
@@ -123,7 +128,12 @@ ihdr[12] = 0; // non-interlaced
 
 const PNG_SIG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
-const png = Buffer.concat([PNG_SIG, makeChunk("IHDR", ihdr), makeChunk("IDAT", compressed), makeChunk("IEND", Buffer.alloc(0))]);
+const png = Buffer.concat([
+  PNG_SIG,
+  makeChunk("IHDR", ihdr),
+  makeChunk("IDAT", compressed),
+  makeChunk("IEND", Buffer.alloc(0)),
+]);
 
 // ─── Escrita em disco ─────────────────────────────────────────────────────────
 const outDir = join(process.cwd(), "public", "images");
@@ -132,4 +142,6 @@ const outPath = join(outDir, "default_header.png");
 writeFileSync(outPath, png);
 
 console.log(`✓ Gerado: ${outPath}`);
-console.log(`  Dimensões: ${W}×${H}px | Tamanho: ${(png.length / 1024).toFixed(1)} KB`);
+console.log(
+  `  Dimensões: ${W}×${H}px | Tamanho: ${(png.length / 1024).toFixed(1)} KB`,
+);

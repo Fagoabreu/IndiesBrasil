@@ -30,8 +30,12 @@ function resolveMessage(n) {
 
 async function loadNotifications(username) {
   const [userRes, postRes] = await Promise.all([
-    fetch(`/api/v1/users/${username}/notifications`, { credentials: "include" }),
-    fetch(`/api/v1/users/${username}/notifications/post`, { credentials: "include" }),
+    fetch(`/api/v1/users/${username}/notifications`, {
+      credentials: "include",
+    }),
+    fetch(`/api/v1/users/${username}/notifications/post`, {
+      credentials: "include",
+    }),
   ]);
   return {
     userNotifs: userRes.ok ? await userRes.json() : [],
@@ -41,7 +45,9 @@ async function loadNotifications(username) {
 
 async function markNotificationRead(username, n) {
   const isPost = n.post_id != null;
-  const url = isPost ? `/api/v1/users/${username}/notifications/post` : `/api/v1/users/${username}/notifications`;
+  const url = isPost
+    ? `/api/v1/users/${username}/notifications/post`
+    : `/api/v1/users/${username}/notifications`;
   const body = {
     user_id: n.user_id,
     type: n.type,
@@ -67,11 +73,13 @@ export default function NotificationButton() {
   useEffect(() => {
     if (!user?.username) return;
     let active = true;
-    loadNotifications(user.username).then(({ userNotifs: u, postNotifs: p }) => {
-      if (!active) return;
-      setUserNotifs(u);
-      setPostNotifs(p);
-    });
+    loadNotifications(user.username).then(
+      ({ userNotifs: u, postNotifs: p }) => {
+        if (!active) return;
+        setUserNotifs(u);
+        setPostNotifs(p);
+      },
+    );
     return () => {
       active = false;
     };
@@ -79,10 +87,12 @@ export default function NotificationButton() {
 
   function handleMenuOpen(open) {
     if (!open || !user?.username) return;
-    loadNotifications(user.username).then(({ userNotifs: u, postNotifs: p }) => {
-      setUserNotifs(u);
-      setPostNotifs(p);
-    });
+    loadNotifications(user.username).then(
+      ({ userNotifs: u, postNotifs: p }) => {
+        setUserNotifs(u);
+        setPostNotifs(p);
+      },
+    );
   }
 
   function handleMarkRead(n) {
@@ -90,7 +100,10 @@ export default function NotificationButton() {
     if (n.post_id != null) {
       setPostNotifs((prev) =>
         prev.map((p) =>
-          p.user_id === n.user_id && p.type === n.type && p.source_user_id === n.source_user_id && p.post_id === n.post_id
+          p.user_id === n.user_id &&
+          p.type === n.type &&
+          p.source_user_id === n.source_user_id &&
+          p.post_id === n.post_id
             ? { ...p, is_read: true }
             : p,
         ),
@@ -98,7 +111,10 @@ export default function NotificationButton() {
     } else {
       setUserNotifs((prev) =>
         prev.map((u) =>
-          u.user_id === n.user_id && u.type === n.type && u.source_user_id === n.source_user_id && u.org_slug === n.org_slug
+          u.user_id === n.user_id &&
+          u.type === n.type &&
+          u.source_user_id === n.source_user_id &&
+          u.org_slug === n.org_slug
             ? { ...u, is_read: true }
             : u,
         ),
@@ -112,14 +128,20 @@ export default function NotificationButton() {
     }
   }
 
-  const all = [...userNotifs, ...postNotifs].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const all = [...userNotifs, ...postNotifs].sort(
+    (a, b) => new Date(b.created_at) - new Date(a.created_at),
+  );
   const unreadCount = all.filter((n) => !n.is_read).length;
 
   return (
     <div className={styles.bellWrapper}>
       <ActionMenu onOpenChange={handleMenuOpen}>
         <ActionMenu.Anchor>
-          <IconButton icon={BellIcon} variant="invisible" aria-label={`Notificações${unreadCount > 0 ? `, ${unreadCount} não lidas` : ""}`} />
+          <IconButton
+            icon={BellIcon}
+            variant="invisible"
+            aria-label={`Notificações${unreadCount > 0 ? `, ${unreadCount} não lidas` : ""}`}
+          />
         </ActionMenu.Anchor>
 
         <ActionMenu.Overlay width="medium">
@@ -136,10 +158,17 @@ export default function NotificationButton() {
                   <span className={styles.notifRow}>
                     <span className={styles.notifTitle}>{resolveTitle(n)}</span>
                     <span className={styles.notifDate}>
-                      {new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(new Date(n.created_at))}
+                      {new Intl.DateTimeFormat("pt-BR", {
+                        day: "2-digit",
+                        month: "2-digit",
+                      }).format(new Date(n.created_at))}
                     </span>
                   </span>
-                  {resolveMessage(n) && <span className={styles.notifMessage}>{resolveMessage(n)}</span>}
+                  {resolveMessage(n) && (
+                    <span className={styles.notifMessage}>
+                      {resolveMessage(n)}
+                    </span>
+                  )}
                 </ActionList.Item>
               ))
             )}

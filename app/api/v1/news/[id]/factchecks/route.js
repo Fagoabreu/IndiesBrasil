@@ -11,7 +11,8 @@ export async function POST(request, { params }) {
     if (!authorization.can(user, "create:news:factcheck")) {
       throw new ForbiddenError({
         message: "Você não possui permissão para checar fatos.",
-        action: 'Verifique se o seu usuário possui a feature "create:news:factcheck".',
+        action:
+          'Verifique se o seu usuário possui a feature "create:news:factcheck".',
       });
     }
 
@@ -20,7 +21,10 @@ export async function POST(request, { params }) {
     const vote = body.vote;
 
     if (!["factcheck", "fake"].includes(vote)) {
-      return Response.json({ error: "Voto inválido. Use 'factcheck' ou 'fake'." }, { status: 400 });
+      return Response.json(
+        { error: "Voto inválido. Use 'factcheck' ou 'fake'." },
+        { status: 400 },
+      );
     }
 
     await news.setFactcheck(id, user.id, vote);

@@ -13,7 +13,9 @@ function isInstagramUrl(url) {
 function toEmbedUrl(url) {
   if (!url) return url;
   // youtube.com/watch?v=ID
-  let match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+  let match = url.match(
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/,
+  );
   if (match) return `https://www.youtube.com/embed/${match[1]}`;
   // youtube.com/shorts/ID
   match = url.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]+)/);
@@ -24,7 +26,9 @@ function toEmbedUrl(url) {
 function getVideoThumbnail(url) {
   if (!url) return null;
   // youtube.com/watch?v=ID  /  youtu.be/ID  /  youtube.com/shorts/ID
-  let match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]+)/);
+  let match = url.match(
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]+)/,
+  );
   if (match) return `https://img.youtube.com/vi/${match[1]}/mqdefault.jpg`;
   return null;
 }
@@ -38,9 +42,23 @@ function getVideoThumbnail(url) {
  *   bannerUrl  — fallback image shown when there is no active media entry
  *   name       — product name for alt text
  */
-export default function GameMediaPlayer({ media = [], trailerUrl, bannerUrl, name = "" }) {
+export default function GameMediaPlayer({
+  media = [],
+  trailerUrl,
+  bannerUrl,
+  name = "",
+}) {
   const trailerEntry =
-    trailerUrl && !media.some((m) => m.url === trailerUrl) ? [{ id: "__trailer__", media_type: "video", url: trailerUrl, caption: "Trailer" }] : [];
+    trailerUrl && !media.some((m) => m.url === trailerUrl)
+      ? [
+          {
+            id: "__trailer__",
+            media_type: "video",
+            url: trailerUrl,
+            caption: "Trailer",
+          },
+        ]
+      : [];
   const allMedia = [...trailerEntry, ...media];
 
   const [activeMedia, setActiveMedia] = useState(allMedia[0] ?? null);
@@ -80,14 +98,28 @@ export default function GameMediaPlayer({ media = [], trailerUrl, bannerUrl, nam
       />
     );
   } else if (bannerUrl) {
-    mainView = <Image src={bannerUrl} alt={name} fill priority sizes="(max-width: 860px) 100vw, 640px" className={styles.mainImg} />;
+    mainView = (
+      <Image
+        src={bannerUrl}
+        alt={name}
+        fill
+        priority
+        sizes="(max-width: 860px) 100vw, 640px"
+        className={styles.mainImg}
+      />
+    );
   }
 
-  const isInstagram = activeMedia?.media_type === "video" && isInstagramUrl(activeMedia.url);
+  const isInstagram =
+    activeMedia?.media_type === "video" && isInstagramUrl(activeMedia.url);
 
   return (
     <div className={styles.wrapper}>
-      <div className={`${styles.main} ${isInstagram ? styles.mainInstagram : ""}`}>{mainView}</div>
+      <div
+        className={`${styles.main} ${isInstagram ? styles.mainInstagram : ""}`}
+      >
+        {mainView}
+      </div>
 
       {allMedia.length > 0 && (
         <div className={styles.thumbs}>
@@ -101,14 +133,27 @@ export default function GameMediaPlayer({ media = [], trailerUrl, bannerUrl, nam
               {m.media_type === "video" ? (
                 getVideoThumbnail(m.url) ? (
                   <>
-                    <Image src={getVideoThumbnail(m.url)} alt={m.caption || ""} fill sizes="120px" className={styles.thumbImg} unoptimized />
+                    <Image
+                      src={getVideoThumbnail(m.url)}
+                      alt={m.caption || ""}
+                      fill
+                      sizes="120px"
+                      className={styles.thumbImg}
+                      unoptimized
+                    />
                     <span className={styles.thumbVideo}>▶</span>
                   </>
                 ) : (
                   <span className={styles.thumbVideo}>▶</span>
                 )
               ) : (
-                <Image src={m.url} alt={m.caption || ""} fill sizes="120px" className={styles.thumbImg} />
+                <Image
+                  src={m.url}
+                  alt={m.caption || ""}
+                  fill
+                  sizes="120px"
+                  className={styles.thumbImg}
+                />
               )}
             </button>
           ))}

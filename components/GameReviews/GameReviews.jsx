@@ -32,7 +32,14 @@ StarRating.propTypes = {
   readOnly: PropTypes.bool,
 };
 
-export default function GameReviews({ reviewsApiUrl, avgRating, reviewCount, userReview, user, onReviewChange }) {
+export default function GameReviews({
+  reviewsApiUrl,
+  avgRating,
+  reviewCount,
+  userReview,
+  user,
+  onReviewChange,
+}) {
   const [reviews, setReviews] = useState([]);
   // Estado rastreia edicoes do usuario; null = usar valor da prop
   const [editedRating, setEditedRating] = useState(null);
@@ -58,7 +65,10 @@ export default function GameReviews({ reviewsApiUrl, avgRating, reviewCount, use
   async function handleSubmit(e) {
     e.preventDefault();
     if (!reviewRating) {
-      setReviewMsg({ type: "error", text: "Selecione uma nota de 1 a 5 estrelas." });
+      setReviewMsg({
+        type: "error",
+        text: "Selecione uma nota de 1 a 5 estrelas.",
+      });
       return;
     }
     setReviewMsg({ type: null, text: "" });
@@ -70,12 +80,21 @@ export default function GameReviews({ reviewsApiUrl, avgRating, reviewCount, use
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify(
-          isEdit ? { reviewId: userReview.id, rating: reviewRating, content: reviewContent } : { rating: reviewRating, content: reviewContent },
+          isEdit
+            ? {
+                reviewId: userReview.id,
+                rating: reviewRating,
+                content: reviewContent,
+              }
+            : { rating: reviewRating, content: reviewContent },
         ),
       });
       const data = await res.json();
       if (!res.ok) {
-        setReviewMsg({ type: "error", text: data.message || "Erro ao salvar avaliação." });
+        setReviewMsg({
+          type: "error",
+          text: data.message || "Erro ao salvar avaliação.",
+        });
         return;
       }
       setReviewMsg({ type: "success", text: "Avaliação salva!" });
@@ -103,7 +122,9 @@ export default function GameReviews({ reviewsApiUrl, avgRating, reviewCount, use
 
       {avgRating > 0 && (
         <div className={styles.avgRating}>
-          <span className={styles.avgScore}>{Number(avgRating).toFixed(1)}</span>
+          <span className={styles.avgScore}>
+            {Number(avgRating).toFixed(1)}
+          </span>
           <StarRating value={Math.round(avgRating)} readOnly />
           <span className={styles.avgLabel}>
             {count} avaliação{count === 1 ? "" : "ões"}
@@ -117,14 +138,22 @@ export default function GameReviews({ reviewsApiUrl, avgRating, reviewCount, use
             <div className={styles.userReviewBox}>
               <p className={styles.reviewFormTitle}>Sua avaliação</p>
               <StarRating value={userReview.rating} readOnly />
-              {userReview.content && <p className={styles.userReviewContent}>{userReview.content}</p>}
-              <button type="button" className={styles.btnEditReview} onClick={() => setEditingReview(true)}>
+              {userReview.content && (
+                <p className={styles.userReviewContent}>{userReview.content}</p>
+              )}
+              <button
+                type="button"
+                className={styles.btnEditReview}
+                onClick={() => setEditingReview(true)}
+              >
                 Editar avaliação
               </button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className={styles.reviewForm}>
-              <p className={styles.reviewFormTitle}>{hasUserReview ? "Editar avaliação" : "Avaliar este jogo"}</p>
+              <p className={styles.reviewFormTitle}>
+                {hasUserReview ? "Editar avaliação" : "Avaliar este jogo"}
+              </p>
               <StarRating value={reviewRating} onChange={setEditedRating} />
               <textarea
                 className={styles.reviewTextarea}
@@ -135,15 +164,27 @@ export default function GameReviews({ reviewsApiUrl, avgRating, reviewCount, use
                 maxLength={1000}
               />
               {reviewMsg.text && (
-                <p className={`${styles.reviewMsg} ${reviewMsg.type === "error" ? styles.msgError : styles.msgSuccess}`}>{reviewMsg.text}</p>
+                <p
+                  className={`${styles.reviewMsg} ${reviewMsg.type === "error" ? styles.msgError : styles.msgSuccess}`}
+                >
+                  {reviewMsg.text}
+                </p>
               )}
               <div className={styles.reviewFormActions}>
                 {hasUserReview && (
-                  <button type="button" className={styles.btnCancel} onClick={() => setEditingReview(false)}>
+                  <button
+                    type="button"
+                    className={styles.btnCancel}
+                    onClick={() => setEditingReview(false)}
+                  >
                     Cancelar
                   </button>
                 )}
-                <button type="submit" className={styles.btnSubmit} disabled={reviewSubmitting || !reviewRating}>
+                <button
+                  type="submit"
+                  className={styles.btnSubmit}
+                  disabled={reviewSubmitting || !reviewRating}
+                >
                   {reviewSubmitting ? "Salvando..." : "Salvar avaliação"}
                 </button>
               </div>
@@ -164,16 +205,29 @@ export default function GameReviews({ reviewsApiUrl, avgRating, reviewCount, use
           {reviews.map((r) => (
             <li key={r.id} className={styles.reviewItem}>
               <div className={styles.reviewHeader}>
-                <Link href={`/perfil/${r.username}`} className={styles.reviewAuthor}>
+                <Link
+                  href={`/perfil/${r.username}`}
+                  className={styles.reviewAuthor}
+                >
                   {r.avatar_url ? (
-                    <Image src={r.avatar_url} alt={r.username} width={28} height={28} className={styles.reviewAvatar} />
+                    <Image
+                      src={r.avatar_url}
+                      alt={r.username}
+                      width={28}
+                      height={28}
+                      className={styles.reviewAvatar}
+                    />
                   ) : (
-                    <span className={styles.reviewAvatarPlaceholder}>{r.username[0].toUpperCase()}</span>
+                    <span className={styles.reviewAvatarPlaceholder}>
+                      {r.username[0].toUpperCase()}
+                    </span>
                   )}
                   <span>{r.display_name || r.username}</span>
                 </Link>
                 <StarRating value={r.rating} readOnly />
-                <time className={styles.reviewDate}>{new Date(r.created_at).toLocaleDateString("pt-BR")}</time>
+                <time className={styles.reviewDate}>
+                  {new Date(r.created_at).toLocaleDateString("pt-BR")}
+                </time>
               </div>
               {r.content && <p className={styles.reviewContent}>{r.content}</p>}
             </li>

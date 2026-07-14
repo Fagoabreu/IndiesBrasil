@@ -15,7 +15,9 @@ export async function POST(request, { params }) {
     const currentUser = request.context.user;
 
     if (!authorization.can(currentUser, "create:event")) {
-      throw new ForbiddenError({ message: "Você não possui permissão para convidar usuários." });
+      throw new ForbiddenError({
+        message: "Você não possui permissão para convidar usuários.",
+      });
     }
 
     const { id } = await params;
@@ -41,7 +43,9 @@ export async function PATCH(request, { params }) {
     const currentUser = request.context.user;
 
     if (!authorization.can(currentUser, "create:event")) {
-      throw new ForbiddenError({ message: "Você precisa estar logado para responder convites." });
+      throw new ForbiddenError({
+        message: "Você precisa estar logado para responder convites.",
+      });
     }
 
     const { id } = await params;

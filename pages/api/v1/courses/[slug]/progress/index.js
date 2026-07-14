@@ -15,15 +15,13 @@ async function getHandler(request, response) {
   const requestUser = request.context.user;
 
   if (!requestUser?.id) {
-    return response
-      .status(200)
-      .json({
-        lessons: [],
-        completedCount: 0,
-        totalCount: 0,
-        lastCompletedOrder: null,
-        nextLessonOrder: null,
-      });
+    return response.status(200).json({
+      lessons: [],
+      completedCount: 0,
+      totalCount: 0,
+      lastCompletedOrder: null,
+      nextLessonOrder: null,
+    });
   }
 
   const progress = await course.getCourseProgress(slug, requestUser.id);

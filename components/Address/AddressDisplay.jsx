@@ -39,14 +39,20 @@ export default function AddressDisplay({ address, locationName, locationUrl }) {
   const lines = hasAddress ? buildAddressLines(address) : [];
 
   /* Query para o iframe do Maps: usa endereço completo ou nome do local */
-  const mapQuery = lines.length > 0 ? lines.slice(0, 4).join(", ") : locationName;
+  const mapQuery =
+    lines.length > 0 ? lines.slice(0, 4).join(", ") : locationName;
 
   return (
     <div className={styles.container}>
       {/* Nome do local (venue) */}
       {locationName &&
         (locationUrl ? (
-          <a href={locationUrl} className={styles.venueName} target="_blank" rel="noopener noreferrer">
+          <a
+            href={locationUrl}
+            className={styles.venueName}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             {locationName} ↗
           </a>
         ) : (
@@ -66,7 +72,11 @@ export default function AddressDisplay({ address, locationName, locationUrl }) {
 
       {/* Botão toggle do mapa */}
       {mapQuery && (
-        <button type="button" className={styles.mapToggle} onClick={() => setShowMap((v) => !v)}>
+        <button
+          type="button"
+          className={styles.mapToggle}
+          onClick={() => setShowMap((v) => !v)}
+        >
           {showMap ? "Ocultar mapa" : "Ver no mapa"}
         </button>
       )}
@@ -76,7 +86,11 @@ export default function AddressDisplay({ address, locationName, locationUrl }) {
         <div className={styles.mapContainer}>
           <iframe
             title="Localização no mapa"
-            src={"https://maps.google.com/maps?q=" + encodeURIComponent(mapQuery) + "&output=embed&hl=pt-BR"}
+            src={
+              "https://maps.google.com/maps?q=" +
+              encodeURIComponent(mapQuery) +
+              "&output=embed&hl=pt-BR"
+            }
             className={styles.mapIframe}
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"

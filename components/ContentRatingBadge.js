@@ -13,7 +13,12 @@ const BASE_CLASS = "crBadge";
  *   size     — "sm" (cards) | "md" (default, detail pages)
  *   reasons  — array opcional de motivos (mostrado em tooltip)
  */
-export default function ContentRatingBadge({ rating, size = "md", reasons, className }) {
+export default function ContentRatingBadge({
+  rating,
+  size = "md",
+  reasons,
+  className,
+}) {
   if (!rating) {
     return (
       <span

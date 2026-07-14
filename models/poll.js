@@ -119,7 +119,9 @@ async function endPoll(postId, userId) {
   const { author_id, ended_at } = pollData.rows[0];
 
   if (author_id !== userId) {
-    throw new ValidationError({ message: "Apenas o criador pode encerrar a enquete." });
+    throw new ValidationError({
+      message: "Apenas o criador pode encerrar a enquete.",
+    });
   }
 
   if (ended_at) {

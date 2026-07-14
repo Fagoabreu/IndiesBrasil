@@ -20,14 +20,29 @@ MemberCard.propTypes = {
 };
 
 export default function MemberCard({ user }) {
-  const tiltRef = useTiltEffect({ max: 10, perspective: 900, scale: 1.03, maxGlare: 0.15 });
+  const tiltRef = useTiltEffect({
+    max: 10,
+    perspective: 900,
+    scale: 1.03,
+    maxGlare: 0.15,
+  });
 
   return (
-    <Link className={styles.card} ref={tiltRef} href={`/perfil/${user.username}`} inline={true}>
+    <Link
+      className={styles.card}
+      ref={tiltRef}
+      href={`/perfil/${user.username}`}
+      inline={true}
+    >
       {/* Faixa superior com imagem de fundo */}
       <div className={styles.topDivider}>
         {user.background_image ? (
-          <Image src={user.background_image} alt="" fill className={styles.topBgImg} />
+          <Image
+            src={user.background_image}
+            alt=""
+            fill
+            className={styles.topBgImg}
+          />
         ) : (
           <div className={styles.topBgPlaceholder} />
         )}
@@ -35,7 +50,11 @@ export default function MemberCard({ user }) {
 
       {/* Avatar — sobreposto à divisória */}
       <div className={styles.avatarWrapper}>
-        <Avatar src={user.avatar_image || "/images/avatar.png"} size={88} className={styles.avatar} />
+        <Avatar
+          src={user.avatar_image || "/images/avatar.png"}
+          size={88}
+          className={styles.avatar}
+        />
       </div>
 
       {/* Nome */}

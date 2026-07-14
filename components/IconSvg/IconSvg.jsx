@@ -9,5 +9,14 @@ IconSvg.propTypes = {
 
 export default function IconSvg({ src, alt }) {
   if (!src) return null;
-  return <Image className={styles.contactIcon} src={src} alt={alt} width={25} height={25} unoptimized />;
+  return (
+    <Image
+      className={styles.contactIcon}
+      src={src}
+      alt={alt}
+      width={25}
+      height={25}
+      unoptimized
+    />
+  );
 }

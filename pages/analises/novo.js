@@ -29,7 +29,9 @@ export default function NovaAnalisePage() {
   const { tipo, content_id, edit } = router.query;
 
   const [title, setTitle] = useState("");
-  const [contentType, setContentType] = useState(() => (tipo && CONTENT_TYPE_OPTIONS.find((o) => o.value === tipo) ? tipo : ""));
+  const [contentType, setContentType] = useState(() =>
+    tipo && CONTENT_TYPE_OPTIONS.find((o) => o.value === tipo) ? tipo : "",
+  );
   const [contentId, setContentId] = useState(() => content_id ?? "");
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [rating, setRating] = useState(null);
@@ -53,7 +55,9 @@ export default function NovaAnalisePage() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/v1/analises/${edit}`, { credentials: "include" });
+        const res = await fetch(`/api/v1/analises/${edit}`, {
+          credentials: "include",
+        });
         if (!res.ok || cancelled) return;
         const data = await res.json();
         if (cancelled) return;
@@ -62,9 +66,15 @@ export default function NovaAnalisePage() {
         setContentId(data.content_id);
         setCoverImageUrl(data.cover_url || "");
         setRating(data.rating);
-        setSections(data.sections?.length ? data.sections : [emptySection("text")]);
-        setPositivePoints(data.positive_points?.length ? data.positive_points : [""]);
-        setNegativePoints(data.negative_points?.length ? data.negative_points : [""]);
+        setSections(
+          data.sections?.length ? data.sections : [emptySection("text")],
+        );
+        setPositivePoints(
+          data.positive_points?.length ? data.positive_points : [""],
+        );
+        setNegativePoints(
+          data.negative_points?.length ? data.negative_points : [""],
+        );
         setIsEditing(true);
         setEditingSlug(data.slug);
       } catch {
@@ -205,7 +215,9 @@ export default function NovaAnalisePage() {
       return;
     }
     if (!contentId) {
-      setError("Informe o conteúdo (jogo/boardgame/livro) que está sendo analisado.");
+      setError(
+        "Informe o conteúdo (jogo/boardgame/livro) que está sendo analisado.",
+      );
       return;
     }
 
@@ -270,11 +282,15 @@ export default function NovaAnalisePage() {
   return (
     <>
       <Head>
-        <title>{isEditing ? "Editar Análise" : "Nova Análise"} — Indies Brasil</title>
+        <title>
+          {isEditing ? "Editar Análise" : "Nova Análise"} — Indies Brasil
+        </title>
       </Head>
 
       <div className={styles.page}>
-        <h1 className={styles.pageTitle}>{isEditing ? "Editar Análise" : "Nova Análise"}</h1>
+        <h1 className={styles.pageTitle}>
+          {isEditing ? "Editar Análise" : "Nova Análise"}
+        </h1>
 
         {error && <div className={styles.error}>{error}</div>}
 
@@ -295,7 +311,12 @@ export default function NovaAnalisePage() {
           <div className={styles.row}>
             <div className={styles.fieldGroup}>
               <label className={styles.label}>Tipo de Conteúdo *</label>
-              <select className={styles.select} value={contentType} onChange={(e) => setContentType(e.target.value)} disabled={!!tipo}>
+              <select
+                className={styles.select}
+                value={contentType}
+                onChange={(e) => setContentType(e.target.value)}
+                disabled={!!tipo}
+              >
                 <option value="">Selecione...</option>
                 {CONTENT_TYPE_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -336,7 +357,13 @@ export default function NovaAnalisePage() {
 
           <div className={styles.fieldGroup}>
             <label className={styles.label}>Imagem de Capa</label>
-            <input ref={coverInputRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={handleCoverFileChange} />
+            <input
+              ref={coverInputRef}
+              type="file"
+              accept="image/*"
+              className={styles.hiddenInput}
+              onChange={handleCoverFileChange}
+            />
             {coverImageUrl ? (
               <div className={styles.coverPreview}>
                 <Image
@@ -345,36 +372,71 @@ export default function NovaAnalisePage() {
                   fill
                   sizes="400px"
                   className={styles.coverPreviewImg}
-                  unoptimized={coverImageUrl.startsWith("data:") || coverImageUrl.startsWith("blob:")}
+                  unoptimized={
+                    coverImageUrl.startsWith("data:") ||
+                    coverImageUrl.startsWith("blob:")
+                  }
                 />
                 <div className={styles.coverActions}>
-                  <button type="button" className={styles.coverActionBtn} onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}>
+                  <button
+                    type="button"
+                    className={styles.coverActionBtn}
+                    onClick={() => coverInputRef.current?.click()}
+                    disabled={uploadingCover}
+                  >
                     {uploadingCover ? "Enviando..." : "✏️ Alterar capa"}
                   </button>
-                  <button type="button" className={styles.coverRemoveBtn} onClick={handleRemoveCover} disabled={uploadingCover}>
+                  <button
+                    type="button"
+                    className={styles.coverRemoveBtn}
+                    onClick={handleRemoveCover}
+                    disabled={uploadingCover}
+                  >
                     🗑️ Remover
                   </button>
                 </div>
               </div>
             ) : (
-              <button type="button" className={styles.coverUploadBtn} onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}>
-                {uploadingCover ? "Enviando capa..." : "📷 Selecionar imagem de capa"}
+              <button
+                type="button"
+                className={styles.coverUploadBtn}
+                onClick={() => coverInputRef.current?.click()}
+                disabled={uploadingCover}
+              >
+                {uploadingCover
+                  ? "Enviando capa..."
+                  : "📷 Selecionar imagem de capa"}
               </button>
             )}
-            <p className={styles.hint}>A capa aparece no topo da análise e nos cards de listagem. Recomendamos 16:9 (ex: 1200×675).</p>
+            <p className={styles.hint}>
+              A capa aparece no topo da análise e nos cards de listagem.
+              Recomendamos 16:9 (ex: 1200×675).
+            </p>
           </div>
 
           {/* Seções */}
           <div className={styles.sectionsHeader}>
             <h2 className={styles.sectionTitle}>Seções do Conteúdo</h2>
             <div className={styles.addSectionBtns}>
-              <button type="button" className={styles.addBtn} onClick={() => addSection("text")}>
+              <button
+                type="button"
+                className={styles.addBtn}
+                onClick={() => addSection("text")}
+              >
                 + Texto
               </button>
-              <button type="button" className={styles.addBtn} onClick={() => addSection("image")}>
+              <button
+                type="button"
+                className={styles.addBtn}
+                onClick={() => addSection("image")}
+              >
                 + Imagem
               </button>
-              <button type="button" className={styles.addBtn} onClick={() => addSection("video")}>
+              <button
+                type="button"
+                className={styles.addBtn}
+                onClick={() => addSection("video")}
+              >
                 + Vídeo
               </button>
             </div>
@@ -384,10 +446,18 @@ export default function NovaAnalisePage() {
             <div key={i} className={styles.sectionCard}>
               <div className={styles.sectionCardHeader}>
                 <span className={styles.sectionBadge}>
-                  {section.type === "text" ? "📝 Texto" : section.type === "image" ? "🖼️ Imagem" : "🎬 Vídeo"}
+                  {section.type === "text"
+                    ? "📝 Texto"
+                    : section.type === "image"
+                      ? "🖼️ Imagem"
+                      : "🎬 Vídeo"}
                 </span>
                 {sections.length > 1 && (
-                  <button type="button" className={styles.removeBtn} onClick={() => removeSection(i)}>
+                  <button
+                    type="button"
+                    className={styles.removeBtn}
+                    onClick={() => removeSection(i)}
+                  >
                     ✕ Remover
                   </button>
                 )}
@@ -410,7 +480,9 @@ export default function NovaAnalisePage() {
                   <textarea
                     className={styles.textarea}
                     value={section.content}
-                    onChange={(e) => updateSection(i, "content", e.target.value)}
+                    onChange={(e) =>
+                      updateSection(i, "content", e.target.value)
+                    }
                     placeholder="Escreva o conteúdo da seção..."
                     rows={8}
                   />
@@ -424,12 +496,21 @@ export default function NovaAnalisePage() {
                     type="text"
                     className={styles.input}
                     value={section.image_url}
-                    onChange={(e) => updateSection(i, "image_url", e.target.value)}
+                    onChange={(e) =>
+                      updateSection(i, "image_url", e.target.value)
+                    }
                     placeholder="https://... (URL da imagem)"
                   />
                   {section.image_url && (
                     <div className={styles.coverPreview}>
-                      <Image src={section.image_url} alt="Preview" fill sizes="400px" className={styles.coverPreviewImg} unoptimized />
+                      <Image
+                        src={section.image_url}
+                        alt="Preview"
+                        fill
+                        sizes="400px"
+                        className={styles.coverPreviewImg}
+                        unoptimized
+                      />
                     </div>
                   )}
                 </div>
@@ -442,10 +523,17 @@ export default function NovaAnalisePage() {
                     type="text"
                     className={styles.input}
                     value={section.embed_url}
-                    onChange={(e) => updateSection(i, "embed_url", e.target.value)}
+                    onChange={(e) =>
+                      updateSection(i, "embed_url", e.target.value)
+                    }
                     placeholder="https://www.youtube.com/embed/VIDEO_ID"
                   />
-                  {section.embed_url && <p className={styles.hint}>Cole a URL de embed (ex: YouTube embed, não a URL normal do vídeo).</p>}
+                  {section.embed_url && (
+                    <p className={styles.hint}>
+                      Cole a URL de embed (ex: YouTube embed, não a URL normal
+                      do vídeo).
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -460,17 +548,34 @@ export default function NovaAnalisePage() {
                   type="text"
                   className={styles.input}
                   value={p}
-                  onChange={(e) => updatePoint(positivePoints, setPositivePoints, i, e.target.value)}
+                  onChange={(e) =>
+                    updatePoint(
+                      positivePoints,
+                      setPositivePoints,
+                      i,
+                      e.target.value,
+                    )
+                  }
                   placeholder="Descreva um ponto positivo..."
                 />
                 {positivePoints.length > 1 && (
-                  <button type="button" className={styles.removeBtn} onClick={() => removePoint(positivePoints, setPositivePoints, i)}>
+                  <button
+                    type="button"
+                    className={styles.removeBtn}
+                    onClick={() =>
+                      removePoint(positivePoints, setPositivePoints, i)
+                    }
+                  >
                     ✕
                   </button>
                 )}
               </div>
             ))}
-            <button type="button" className={styles.addBtn} onClick={() => addPoint(positivePoints, setPositivePoints)}>
+            <button
+              type="button"
+              className={styles.addBtn}
+              onClick={() => addPoint(positivePoints, setPositivePoints)}
+            >
               + Adicionar ponto positivo
             </button>
           </div>
@@ -484,32 +589,64 @@ export default function NovaAnalisePage() {
                   type="text"
                   className={styles.input}
                   value={p}
-                  onChange={(e) => updatePoint(negativePoints, setNegativePoints, i, e.target.value)}
+                  onChange={(e) =>
+                    updatePoint(
+                      negativePoints,
+                      setNegativePoints,
+                      i,
+                      e.target.value,
+                    )
+                  }
                   placeholder="Descreva um ponto negativo..."
                 />
                 {negativePoints.length > 1 && (
-                  <button type="button" className={styles.removeBtn} onClick={() => removePoint(negativePoints, setNegativePoints, i)}>
+                  <button
+                    type="button"
+                    className={styles.removeBtn}
+                    onClick={() =>
+                      removePoint(negativePoints, setNegativePoints, i)
+                    }
+                  >
                     ✕
                   </button>
                 )}
               </div>
             ))}
-            <button type="button" className={styles.addBtn} onClick={() => addPoint(negativePoints, setNegativePoints)}>
+            <button
+              type="button"
+              className={styles.addBtn}
+              onClick={() => addPoint(negativePoints, setNegativePoints)}
+            >
               + Adicionar ponto negativo
             </button>
           </div>
 
           {/* Submit */}
           <div className={styles.submitRow}>
-            <button type="submit" className={styles.submitBtn} disabled={submitting}>
-              {submitting ? "Salvando..." : isEditing ? "Atualizar Análise" : "Publicar Análise"}
+            <button
+              type="submit"
+              className={styles.submitBtn}
+              disabled={submitting}
+            >
+              {submitting
+                ? "Salvando..."
+                : isEditing
+                  ? "Atualizar Análise"
+                  : "Publicar Análise"}
             </button>
           </div>
         </form>
       </div>
 
       {/* Image crop modal */}
-      {coverCropSrc && <ImageCropModal imageSrc={coverCropSrc} preset="cover" onConfirm={handleCoverCropConfirm} onClose={handleCoverCropClose} />}
+      {coverCropSrc && (
+        <ImageCropModal
+          imageSrc={coverCropSrc}
+          preset="cover"
+          onConfirm={handleCoverCropConfirm}
+          onClose={handleCoverCropClose}
+        />
+      )}
     </>
   );
 }

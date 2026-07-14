@@ -65,7 +65,9 @@ export default function ContactTypesPage() {
   }
 
   async function handleDelete(toolId) {
-    const confirmed = window.confirm("Tem certeza que deseja remover esta ferramenta?");
+    const confirmed = window.confirm(
+      "Tem certeza que deseja remover esta ferramenta?",
+    );
     if (!confirmed) return;
 
     try {
@@ -94,8 +96,16 @@ export default function ContactTypesPage() {
         {error && <Flash variant="danger">{error}</Flash>}
 
         <form onSubmit={handleSubmit} className="contact-form">
-          <TextInput placeholder="Nome (ex: Unity)" value={name} onChange={(e) => setName(e.target.value)} />
-          <TextInput placeholder="Ícone (ex: Unity)" value={iconImg} onChange={(e) => setIconImg(e.target.value)} />
+          <TextInput
+            placeholder="Nome (ex: Unity)"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <TextInput
+            placeholder="Ícone (ex: Unity)"
+            value={iconImg}
+            onChange={(e) => setIconImg(e.target.value)}
+          />
 
           <Button type="submit" variant="primary">
             Adicionar
@@ -107,10 +117,17 @@ export default function ContactTypesPage() {
             <li key={item.id}>
               <div className="contact-info">
                 <strong>{item.name}</strong>
-                <IconSvg src={`/images/tools/${item.icon_img}.svg`} alt={item.name} />
+                <IconSvg
+                  src={`/images/tools/${item.icon_img}.svg`}
+                  alt={item.name}
+                />
               </div>
 
-              <Button size="small" variant="danger" onClick={() => handleDelete(item.id)}>
+              <Button
+                size="small"
+                variant="danger"
+                onClick={() => handleDelete(item.id)}
+              >
                 Remover
               </Button>
             </li>

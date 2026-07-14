@@ -43,7 +43,11 @@
 
 .bannerPlaceholder {
   height: 150px;
-  background: linear-gradient(135deg, rgba(var(--brand-rgb-primary), 0.12), rgba(var(--brand-rgb-secondary), 0.08));
+  background: linear-gradient(
+    135deg,
+    rgba(var(--brand-rgb-primary), 0.12),
+    rgba(var(--brand-rgb-secondary), 0.08)
+  );
 }
 
 /* ── Header content inside card ── */

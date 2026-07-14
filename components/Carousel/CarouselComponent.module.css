@@ -93,7 +93,11 @@
 
 .fadeLeft {
   left: 0;
-  background: linear-gradient(to right, var(--bgColor-default) 20%, transparent);
+  background: linear-gradient(
+    to right,
+    var(--bgColor-default) 20%,
+    transparent
+  );
 }
 
 .fadeRight {

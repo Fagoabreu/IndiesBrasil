@@ -1,5 +1,9 @@
 import database from "infra/database.js";
-import { NotFoundError, ValidationError, ForbiddenError } from "infra/errors.js";
+import {
+  NotFoundError,
+  ValidationError,
+  ForbiddenError,
+} from "infra/errors.js";
 
 const VALID_CONTENT_TYPES = ["game", "boardgame", "book"];
 
@@ -24,13 +28,19 @@ function validateSections(sections) {
   }
   for (const s of sections) {
     if (!["text", "image", "video"].includes(s.type)) {
-      throw new ValidationError({ message: `Tipo de seção inválido: ${s.type}. Use text, image ou video.` });
+      throw new ValidationError({
+        message: `Tipo de seção inválido: ${s.type}. Use text, image ou video.`,
+      });
     }
     if (s.type === "image" && !s.image_url && !s.image_id) {
-      throw new ValidationError({ message: "Seções do tipo image precisam de image_url ou image_id." });
+      throw new ValidationError({
+        message: "Seções do tipo image precisam de image_url ou image_id.",
+      });
     }
     if (s.type === "video" && !s.embed_url) {
-      throw new ValidationError({ message: "Seções do tipo video precisam de embed_url." });
+      throw new ValidationError({
+        message: "Seções do tipo video precisam de embed_url.",
+      });
     }
   }
 }
@@ -106,7 +116,12 @@ async function findAll({ page = 1, limit = 20, contentType = "" } = {}) {
   return result.rows.map(parseReviewRow);
 }
 
-async function findByContent({ contentType, contentId, page = 1, limit = 10 } = {}) {
+async function findByContent({
+  contentType,
+  contentId,
+  page = 1,
+  limit = 10,
+} = {}) {
   if (!contentType || !contentId) return [];
   const offset = (page - 1) * limit;
 
@@ -237,10 +252,14 @@ async function create({
     throw new ValidationError({ message: "Autor é obrigatório." });
   }
   if (!VALID_CONTENT_TYPES.includes(contentType)) {
-    throw new ValidationError({ message: `Tipo de conteúdo inválido: ${contentType}.` });
+    throw new ValidationError({
+      message: `Tipo de conteúdo inválido: ${contentType}.`,
+    });
   }
   if (!contentId) {
-    throw new ValidationError({ message: "Conteúdo (jogo/boardgame/livro) é obrigatório." });
+    throw new ValidationError({
+      message: "Conteúdo (jogo/boardgame/livro) é obrigatório.",
+    });
   }
   if (rating != null && (rating < 1 || rating > 5)) {
     throw new ValidationError({ message: "Nota deve ser entre 1 e 5." });
@@ -288,10 +307,20 @@ async function update(reviewId, userId, fields) {
   const existing = await findById(reviewId);
 
   if (existing.author_id !== userId) {
-    throw new ForbiddenError({ message: "Você não pode editar a análise de outro usuário." });
+    throw new ForbiddenError({
+      message: "Você não pode editar a análise de outro usuário.",
+    });
   }
 
-  const allowedFields = ["title", "cover_image_id", "cover_url", "rating", "sections", "positive_points", "negative_points"];
+  const allowedFields = [
+    "title",
+    "cover_image_id",
+    "cover_url",
+    "rating",
+    "sections",
+    "positive_points",
+    "negative_points",
+  ];
   const setClauses = [];
   const values = [];
   let idx = 1;
@@ -320,9 +349,12 @@ async function update(reviewId, userId, fields) {
       setClauses.push(`slug = $${idx++}`);
       values.push(generateSlug(fields[key].trim(), reviewId));
     } else if (key === "cover_image_id") {
-      const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      const UUID_REGEX =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       setClauses.push(`${key} = $${idx++}`);
-      values.push(fields[key] && UUID_REGEX.test(fields[key]) ? fields[key] : null);
+      values.push(
+        fields[key] && UUID_REGEX.test(fields[key]) ? fields[key] : null,
+      );
     } else {
       setClauses.push(`${key} = $${idx++}`);
       values.push(fields[key]);
@@ -350,7 +382,9 @@ async function deleteReview(reviewId, userId) {
   const existing = await findById(reviewId);
 
   if (existing.author_id !== userId) {
-    throw new ForbiddenError({ message: "Você não pode excluir a análise de outro usuário." });
+    throw new ForbiddenError({
+      message: "Você não pode excluir a análise de outro usuário.",
+    });
   }
 
   await database.query({
@@ -367,7 +401,9 @@ async function updateCoverImage(reviewSlug, userId, imageId) {
   const existing = await findBySlug(reviewSlug);
 
   if (existing.author_id !== userId) {
-    throw new ForbiddenError({ message: "Você não pode alterar a capa de outra pessoa." });
+    throw new ForbiddenError({
+      message: "Você não pode alterar a capa de outra pessoa.",
+    });
   }
 
   const result = await database.query({
@@ -382,7 +418,9 @@ async function removeCoverImage(reviewSlug, userId) {
   const existing = await findBySlug(reviewSlug);
 
   if (existing.author_id !== userId) {
-    throw new ForbiddenError({ message: "Você não pode alterar a capa de outra pessoa." });
+    throw new ForbiddenError({
+      message: "Você não pode alterar a capa de outra pessoa.",
+    });
   }
 
   const result = await database.query({
