@@ -3,6 +3,7 @@ import session from "models/session";
 import { version as uuidVersion } from "uuid";
 import setCookieParser from "set-cookie-parser";
 import TEST_CREDENTIALS from "tests/helpers/testCredentials.js";
+import webserver from "@/infra/webserver";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -17,7 +18,7 @@ describe("Post /api/v1/sessions", () => {
         password: TEST_CREDENTIALS.correctLogin,
       });
 
-      const response = await fetch("http://localhost:3000/api/v1/sessions", {
+      const response = await fetch(`${webserver.origin}/api/v1/sessions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -43,7 +44,7 @@ describe("Post /api/v1/sessions", () => {
         email: "email.correto@gmail.com",
       });
 
-      const response = await fetch("http://localhost:3000/api/v1/sessions", {
+      const response = await fetch(`${webserver.origin}/api/v1/sessions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -67,7 +68,7 @@ describe("Post /api/v1/sessions", () => {
     test("With incorrect `email` and incorrect `password`", async () => {
       await orchestrator.createUser();
 
-      const response = await fetch("http://localhost:3000/api/v1/sessions", {
+      const response = await fetch(`${webserver.origin}/api/v1/sessions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -95,7 +96,7 @@ describe("Post /api/v1/sessions", () => {
       });
       await orchestrator.activateUser(createdUser);
 
-      const response = await fetch("http://localhost:3000/api/v1/sessions", {
+      const response = await fetch(`${webserver.origin}/api/v1/sessions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -127,7 +128,8 @@ describe("Post /api/v1/sessions", () => {
       expect(expiresAt >= createdAt).toBe(true);
 
       const actualLifetimeInMilliseconds = expiresAt - createdAt;
-      const lifetimeDifferenceInMilliseconds = session.EXPIRATION_IN_MILLISECONDS - actualLifetimeInMilliseconds;
+      const lifetimeDifferenceInMilliseconds =
+        session.EXPIRATION_IN_MILLISECONDS - actualLifetimeInMilliseconds;
       expect(lifetimeDifferenceInMilliseconds).toBeLessThanOrEqual(5000);
 
       const parsedSetCookie = setCookieParser(response, {

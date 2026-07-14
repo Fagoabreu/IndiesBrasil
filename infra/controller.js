@@ -4,7 +4,14 @@ import user from "models/user.js";
 import authorization from "models/authorization.js";
 import { NextResponse } from "next/server";
 
-const { InternalServerError, MethodNotAllowedError, ValidationError, NotFoundError, UnauthorizedError, ForbiddenError } = require("./errors");
+const {
+  InternalServerError,
+  MethodNotAllowedError,
+  ValidationError,
+  NotFoundError,
+  UnauthorizedError,
+  ForbiddenError,
+} = require("./errors");
 
 function onNoMatchHandler(request, response) {
   const publicErrorObject = new MethodNotAllowedError();
@@ -12,7 +19,11 @@ function onNoMatchHandler(request, response) {
 }
 
 function onErrorHandler(error, request, response) {
-  if (error instanceof ValidationError || error instanceof NotFoundError || error instanceof ForbiddenError) {
+  if (
+    error instanceof ValidationError ||
+    error instanceof NotFoundError ||
+    error instanceof ForbiddenError
+  ) {
     return response.status(error.statusCode).json(error);
   }
 
@@ -29,7 +40,11 @@ function onErrorHandler(error, request, response) {
 }
 
 function onRouterErrorHandler(error) {
-  if (error instanceof ValidationError || error instanceof NotFoundError || error instanceof ForbiddenError) {
+  if (
+    error instanceof ValidationError ||
+    error instanceof NotFoundError ||
+    error instanceof ForbiddenError
+  ) {
     return NextResponse.json(error, { status: error.statusCode });
   }
   if (error instanceof UnauthorizedError) {
@@ -41,7 +56,9 @@ function onRouterErrorHandler(error) {
     cause: error,
   });
   console.error(publicErrorObject);
-  return NextResponse.json(publicErrorObject, { status: publicErrorObject.statusCode });
+  return NextResponse.json(publicErrorObject, {
+    status: publicErrorObject.statusCode,
+  });
 }
 
 function clearSessionCookieAppRouter(response) {
@@ -54,7 +71,7 @@ function clearSessionCookieAppRouter(response) {
   response.headers.set("Set-Cookie", setCookie);
 }
 
-async function setSessionCookie(sessionToken, response) {
+function setSessionCookie(sessionToken, response) {
   const isProduction = process.env.NODE_ENV === "production";
   const setCookie = cookie.serialize("session_id", sessionToken, {
     path: "/",
@@ -67,7 +84,7 @@ async function setSessionCookie(sessionToken, response) {
   response.setHeader("Set-Cookie", setCookie);
 }
 
-async function clearSessionCookie(response) {
+function clearSessionCookie(response) {
   const setCookie = cookie.serialize("session_id", "invalid", {
     path: "/",
     maxAge: -1,
@@ -76,6 +93,7 @@ async function clearSessionCookie(response) {
   });
   response.setHeader("Set-Cookie", setCookie);
 }
+
 async function injectAnonymousOrUser(request, response, next) {
   if (request.cookies?.session_id) {
     await injectAuthenticatedUser(request, request.cookies.session_id);

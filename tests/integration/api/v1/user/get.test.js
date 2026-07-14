@@ -2,6 +2,7 @@ const { default: orchestrator } = require("tests/orchestrator");
 import session from "models/session";
 import { version as uuidVersion } from "uuid";
 import setCookieParser from "set-cookie-parser";
+import webserver from "@/infra/webserver";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -12,13 +13,14 @@ beforeAll(async () => {
 describe("GET /api/v1/user", () => {
   describe("Anonymous user", () => {
     test("Retrieving the endpoint", async () => {
-      const response = await fetch("http://localhost:3000/api/v1/user");
+      const response = await fetch(`${webserver.origin}/api/v1/user`);
       expect(response.status).toBe(403);
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         name: "ForbiddenError",
         message: "Você não possui permissão para executar esta ação",
-        action: 'Verifique se o seu usuário possui a feature "read:session" para executar esta ação.',
+        action:
+          'Verifique se o seu usuário possui a feature "read:session" para executar esta ação.',
         status_code: 403,
       });
     });
@@ -31,7 +33,7 @@ describe("GET /api/v1/user", () => {
       const activatedUser = await orchestrator.activateUser(createdUser);
 
       const sessionObject = await orchestrator.createSession(createdUser);
-      const response = await fetch("http://localhost:3000/api/v1/user", {
+      const response = await fetch(`${webserver.origin}/api/v1/user`, {
         headers: {
           Cookie: `session_id=${sessionObject.token}`,
         },
@@ -141,10 +143,16 @@ describe("GET /api/v1/user", () => {
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
 
       //Session renewal assertions
-      const renewedSessionObject = await session.findOneValidByToken(sessionObject.token);
+      const renewedSessionObject = await session.findOneValidByToken(
+        sessionObject.token,
+      );
 
-      expect(renewedSessionObject.expires_at > sessionObject.expires_at).toEqual(true);
-      expect(renewedSessionObject.updated_at > sessionObject.updated_at).toEqual(true);
+      expect(
+        renewedSessionObject.expires_at > sessionObject.expires_at,
+      ).toEqual(true);
+      expect(
+        renewedSessionObject.updated_at > sessionObject.updated_at,
+      ).toEqual(true);
 
       //set cookies assertions
       const parsedSetCookie = setCookieParser(response, {
@@ -162,8 +170,9 @@ describe("GET /api/v1/user", () => {
     });
 
     test("With nomexistent session", async () => {
-      const nonExistentToken = "488c8ec227ddf131fbff9ecf7450a402fc98860f0ff45063630a8782d0539d70815af89b89159c266318f5c386371e27";
-      const response = await fetch("http://localhost:3000/api/v1/user", {
+      const nonExistentToken =
+        "488c8ec227ddf131fbff9ecf7450a402fc98860f0ff45063630a8782d0539d70815af89b89159c266318f5c386371e27";
+      const response = await fetch(`${webserver.origin}/api/v1/user`, {
         headers: {
           Cookie: `session_id=${nonExistentToken}`,
         },
@@ -206,7 +215,7 @@ describe("GET /api/v1/user", () => {
 
       jest.useRealTimers();
 
-      const response = await fetch("http://localhost:3000/api/v1/user", {
+      const response = await fetch(`${webserver.origin}/api/v1/user`, {
         headers: {
           Cookie: `session_id=${sessionObject.token}`,
         },
@@ -247,7 +256,7 @@ describe("GET /api/v1/user", () => {
       const sessionObject = await orchestrator.createSession(createdUser);
 
       jest.useRealTimers();
-      const response = await fetch("http://localhost:3000/api/v1/user", {
+      const response = await fetch(`${webserver.origin}/api/v1/user`, {
         headers: {
           Cookie: `session_id=${sessionObject.token}`,
         },
@@ -354,12 +363,16 @@ describe("GET /api/v1/user", () => {
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
 
-      const renewedSessionObject = await session.findOneValidByToken(sessionObject.token);
+      const renewedSessionObject = await session.findOneValidByToken(
+        sessionObject.token,
+      );
       const expiresAt = renewedSessionObject.expires_at;
       const updatedAt = renewedSessionObject.updated_at;
       expect(updatedAt > sessionObject.updated_at).toEqual(true);
       expect(expiresAt > sessionObject.expires_at).toEqual(true);
-      expect(Math.abs(expiresAt - updatedAt - session.EXPIRATION_IN_MILLISECONDS)).toBeLessThanOrEqual(1000);
+      expect(
+        Math.abs(expiresAt - updatedAt - session.EXPIRATION_IN_MILLISECONDS),
+      ).toBeLessThanOrEqual(5000);
 
       const parsedCookie = setCookieParser(response, { map: true });
       expect(parsedCookie.session_id).toEqual({

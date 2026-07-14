@@ -3,6 +3,7 @@ import { version as uuidVersion } from "uuid";
 import user from "models/user";
 import password from "models/password";
 import TEST_CREDENTIALS from "tests/helpers/testCredentials.js";
+import webserver from "@/infra/webserver";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -19,7 +20,7 @@ describe("POST /api/v1/users", () => {
         cpf: "11111111111",
       };
 
-      const response = await fetch("http://localhost:3000/api/v1/users", {
+      const response = await fetch(`${webserver.origin}/api/v1/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -51,16 +52,24 @@ describe("POST /api/v1/users", () => {
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
 
-      const userInDatabase = await user.findOneByUsername(responseBody.username);
+      const userInDatabase = await user.findOneByUsername(
+        responseBody.username,
+      );
 
-      const correctPasswordMatch = await password.compare(testUser.password, userInDatabase.password);
-      const incorrectPasswordMatch = await password.compare(TEST_CREDENTIALS.wrongCheck, userInDatabase.password);
+      const correctPasswordMatch = await password.compare(
+        testUser.password,
+        userInDatabase.password,
+      );
+      const incorrectPasswordMatch = await password.compare(
+        TEST_CREDENTIALS.wrongCheck,
+        userInDatabase.password,
+      );
       expect(correctPasswordMatch).toBe(true);
       expect(incorrectPasswordMatch).toBe(false);
     });
 
-    test("With duplicated 'Email'", async () => {
-      const response1 = await fetch("http://localhost:3000/api/v1/users", {
+    test("With duplicated `email`", async () => {
+      const response1 = await fetch(`${webserver.origin}/api/v1/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -75,7 +84,7 @@ describe("POST /api/v1/users", () => {
 
       expect(response1.status).toBe(201);
 
-      const response2 = await fetch("http://localhost:3000/api/v1/users", {
+      const response2 = await fetch(`${webserver.origin}/api/v1/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -98,8 +107,8 @@ describe("POST /api/v1/users", () => {
       });
     });
 
-    test("With duplicated 'Username'", async () => {
-      const response = await fetch("http://localhost:3000/api/v1/users", {
+    test("With duplicated `username`", async () => {
+      const response = await fetch(`${webserver.origin}/api/v1/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -123,7 +132,7 @@ describe("POST /api/v1/users", () => {
     });
 
     test("With duplicated 'CPF'", async () => {
-      const response1 = await fetch("http://localhost:3000/api/v1/users", {
+      const response1 = await fetch(`${webserver.origin}/api/v1/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -153,7 +162,7 @@ describe("POST /api/v1/users", () => {
       await orchestrator.activateUser(user1);
       const user1SessionObject = await orchestrator.createSession(user1);
 
-      const response = await fetch("http://localhost:3000/api/v1/users", {
+      const response = await fetch(`${webserver.origin}/api/v1/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -172,7 +181,8 @@ describe("POST /api/v1/users", () => {
       expect(responseBody).toEqual({
         name: "ForbiddenError",
         message: "Você não possui permissão para executar esta ação",
-        action: 'Verifique se o seu usuário possui a feature "create:user" para executar esta ação.',
+        action:
+          'Verifique se o seu usuário possui a feature "create:user" para executar esta ação.',
         status_code: 403,
       });
     });

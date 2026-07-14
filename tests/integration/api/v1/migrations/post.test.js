@@ -1,3 +1,4 @@
+import webserver from "@/infra/webserver";
 import orchestrator from "tests/orchestrator";
 
 beforeAll(async () => {
@@ -8,8 +9,8 @@ beforeAll(async () => {
 
 describe("POST /api/v1/migrations", () => {
   describe("anonymous user", () => {
-    test("Retrieve Pending Migrations", async () => {
-      const response1 = await fetch("http://localhost:3000/api/v1/migrations", {
+    test("Running pending Migrations", async () => {
+      const response1 = await fetch(`${webserver.origin}/api/v1/migrations`, {
         method: "POST",
       });
       expect(response1.status).toBe(403);
@@ -19,19 +20,20 @@ describe("POST /api/v1/migrations", () => {
       expect(responseBody).toEqual({
         name: "ForbiddenError",
         message: "Você não possui permissão para executar esta ação",
-        action: 'Verifique se o seu usuário possui a feature "create:migration" para executar esta ação.',
+        action:
+          'Verifique se o seu usuário possui a feature "create:migration" para executar esta ação.',
         status_code: 403,
       });
     });
   });
 
   describe("default user", () => {
-    test("Retrieve Pending Migrations", async () => {
+    test("Running pending Migrations", async () => {
       const createdUser = await orchestrator.createUser();
       const activatedUser = await orchestrator.activateUser(createdUser);
       const sessionObject = await orchestrator.createSession(activatedUser);
 
-      const response1 = await fetch("http://localhost:3000/api/v1/migrations", {
+      const response1 = await fetch(`${webserver.origin}/api/v1/migrations`, {
         method: "POST",
         headers: {
           Cookies: `session_id=${sessionObject.token}`,
@@ -43,7 +45,8 @@ describe("POST /api/v1/migrations", () => {
       expect(responseBody).toEqual({
         name: "ForbiddenError",
         message: "Você não possui permissão para executar esta ação",
-        action: 'Verifique se o seu usuário possui a feature "create:migration" para executar esta ação.',
+        action:
+          'Verifique se o seu usuário possui a feature "create:migration" para executar esta ação.',
         status_code: 403,
       });
     });
@@ -57,7 +60,7 @@ describe("POST /api/v1/migrations", () => {
 
       const sessionObject = await orchestrator.createSession(activatedUser);
 
-      const response = await fetch("http://localhost:3000/api/v1/migrations", {
+      const response = await fetch(`${webserver.origin}/api/v1/migrations`, {
         method: "POST",
         headers: {
           Cookie: `session_id=${sessionObject.token}`,
