@@ -38,7 +38,12 @@ export async function PUT(request, context) {
     const logoSize = Number.parseInt(formData.get("logo_size") || "24", 10);
     const logoFile = formData.get("logo_file") || null;
 
-    await qrCode.upsertForOrganization(studio.id, { fgColor, bgColor, logoSize, logoFile });
+    await qrCode.upsertForOrganization(studio.id, {
+      fgColor,
+      bgColor,
+      logoSize,
+      logoFile,
+    });
 
     const result = await qrCode.findByOrganizationId(studio.id);
     return Response.json(result, { status: 200 });

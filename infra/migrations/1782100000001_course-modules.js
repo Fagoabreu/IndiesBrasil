@@ -38,8 +38,12 @@ exports.up = (pgm) => {
       default: pgm.func("timezone('utc', now())"),
     },
   });
-  pgm.createConstraint("course_modules", "course_modules_pkey", { primaryKey: "id" });
-  pgm.createIndex("course_modules", ["course_id", "order_index"], { unique: true });
+  pgm.createConstraint("course_modules", "course_modules_pkey", {
+    primaryKey: "id",
+  });
+  pgm.createIndex("course_modules", ["course_id", "order_index"], {
+    unique: true,
+  });
 
   pgm.addColumn("course_lessons", {
     module_id: {

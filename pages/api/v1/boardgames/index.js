@@ -2,12 +2,10 @@ import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import boardgame from "models/boardgame";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(controller.canRequest("read:boardgame:all"), getHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:boardgame:all"), getHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const { page = 1, limit = 20, search = "", category = "", stage = "", isfollowing } = request.query;

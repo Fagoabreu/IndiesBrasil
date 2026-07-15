@@ -28,7 +28,11 @@ export async function GET(request) {
           const f = await news.getFactcheckByUser(item.id, user.id);
           userFactcheck = f?.vote || null;
         }
-        return { ...item, user_rating: userRating, user_factcheck: userFactcheck };
+        return {
+          ...item,
+          user_rating: userRating,
+          user_factcheck: userFactcheck,
+        };
       }),
     );
 
@@ -89,7 +93,11 @@ export async function POST(request) {
     const f = await news.getFactcheckByUser(fullNews.id, user.id);
     userFactcheck = f?.vote || null;
 
-    const enriched = { ...fullNews, user_rating: userRating, user_factcheck: userFactcheck };
+    const enriched = {
+      ...fullNews,
+      user_rating: userRating,
+      user_factcheck: userFactcheck,
+    };
     const secureOutput = authorization.filterOutput(user, "read:news", enriched);
     return Response.json(secureOutput, { status: 201 });
   } catch (error) {

@@ -112,7 +112,9 @@ async function findBySlug(slug) {
   });
 
   if (!result.rows[0]) {
-    throw new NotFoundError({ message: `Jogo de mesa "${slug}" não encontrado.` });
+    throw new NotFoundError({
+      message: `Jogo de mesa "${slug}" não encontrado.`,
+    });
   }
   return result.rows[0];
 }
@@ -222,7 +224,9 @@ async function findMedia(boardgameId) {
 
 async function addMedia(boardgameId, { media_type, url, caption = null, display_order = 0 }) {
   if (!["image", "video"].includes(media_type)) {
-    throw new ValidationError({ message: "media_type deve ser 'image' ou 'video'." });
+    throw new ValidationError({
+      message: "media_type deve ser 'image' ou 'video'.",
+    });
   }
   const result = await database.query({
     text: `
@@ -250,14 +254,18 @@ async function removeMedia(mediaId, boardgameId) {
 async function createReview(boardgameId, userId, { rating, content = null }) {
   rating = Number(rating);
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-    throw new ValidationError({ message: "A nota deve ser um número inteiro entre 1 e 5." });
+    throw new ValidationError({
+      message: "A nota deve ser um número inteiro entre 1 e 5.",
+    });
   }
   const existing = await database.query({
     text: `SELECT id FROM boardgame_reviews WHERE boardgame_id = $1 AND reviewer_id = $2`,
     values: [boardgameId, userId],
   });
   if (existing.rows[0]) {
-    throw new ValidationError({ message: "Você já avaliou este jogo. Edite sua avaliação existente." });
+    throw new ValidationError({
+      message: "Você já avaliou este jogo. Edite sua avaliação existente.",
+    });
   }
   const result = await database.query({
     text: `
@@ -274,7 +282,9 @@ async function updateReview(reviewId, userId, { rating, content }) {
   if (rating !== undefined) {
     rating = Number(rating);
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-      throw new ValidationError({ message: "A nota deve ser um número inteiro entre 1 e 5." });
+      throw new ValidationError({
+        message: "A nota deve ser um número inteiro entre 1 e 5.",
+      });
     }
   }
   const existing = await database.query({
@@ -283,7 +293,9 @@ async function updateReview(reviewId, userId, { rating, content }) {
   });
   if (!existing.rows[0]) throw new NotFoundError({ message: "Avaliação não encontrada." });
   if (existing.rows[0].reviewer_id !== userId) {
-    throw new ForbiddenError({ message: "Você não pode editar a avaliação de outro usuário." });
+    throw new ForbiddenError({
+      message: "Você não pode editar a avaliação de outro usuário.",
+    });
   }
   const fields = [];
   const values = [];
@@ -396,16 +408,24 @@ async function create(ownerId, ownerOrgId, data) {
 
   if (mechanics.length > 0) {
     const values = mechanics.map((m) => `('${boardgame.id}', '${m.replaceAll("'", "''")}')`).join(",");
-    await database.query({ text: `INSERT INTO boardgame_mechanics (boardgame_id, mechanic) VALUES ${values} ON CONFLICT DO NOTHING` });
+    await database.query({
+      text: `INSERT INTO boardgame_mechanics (boardgame_id, mechanic) VALUES ${values} ON CONFLICT DO NOTHING`,
+    });
   }
 
   return boardgame;
 }
 
 async function update(slug, data) {
-  const existing = await database.query({ text: `SELECT id FROM boardgames WHERE slug = $1`, values: [slug] });
+  const existing = await database.query({
+    text: `SELECT id FROM boardgames WHERE slug = $1`,
+    values: [slug],
+  });
   const boardgameId = existing.rows[0]?.id;
-  if (!boardgameId) throw new NotFoundError({ message: `Jogo de mesa "${slug}" não encontrado.` });
+  if (!boardgameId)
+    throw new NotFoundError({
+      message: `Jogo de mesa "${slug}" não encontrado.`,
+    });
 
   const updatable = [
     "name",
@@ -442,10 +462,15 @@ async function update(slug, data) {
   }
 
   if (Array.isArray(data.mechanics)) {
-    await database.query({ text: `DELETE FROM boardgame_mechanics WHERE boardgame_id = $1`, values: [boardgameId] });
+    await database.query({
+      text: `DELETE FROM boardgame_mechanics WHERE boardgame_id = $1`,
+      values: [boardgameId],
+    });
     if (data.mechanics.length > 0) {
       const mechValues = data.mechanics.map((m) => `('${boardgameId}', '${m.replaceAll("'", "''")}')`).join(",");
-      await database.query({ text: `INSERT INTO boardgame_mechanics (boardgame_id, mechanic) VALUES ${mechValues} ON CONFLICT DO NOTHING` });
+      await database.query({
+        text: `INSERT INTO boardgame_mechanics (boardgame_id, mechanic) VALUES ${mechValues} ON CONFLICT DO NOTHING`,
+      });
     }
   }
 

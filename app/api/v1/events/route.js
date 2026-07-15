@@ -14,7 +14,9 @@ export async function GET(request) {
     const user = request.context.user;
 
     if (!authorization.can(user, "read:event")) {
-      throw new ForbiddenError({ message: "Você não possui permissão para listar eventos." });
+      throw new ForbiddenError({
+        message: "Você não possui permissão para listar eventos.",
+      });
     }
 
     const { searchParams } = request.nextUrl;
@@ -47,7 +49,9 @@ export async function POST(request) {
     const user = request.context.user;
 
     if (!authorization.can(user, "create:event")) {
-      throw new ForbiddenError({ message: "Você não possui permissão para criar eventos." });
+      throw new ForbiddenError({
+        message: "Você não possui permissão para criar eventos.",
+      });
     }
 
     const data = await request.json();

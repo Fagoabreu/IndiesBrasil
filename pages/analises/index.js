@@ -34,7 +34,9 @@ export default function AnalisesPage() {
     try {
       const params = new URLSearchParams({ page, limit: 20 });
       if (filter) params.set("content_type", filter);
-      const res = await fetch(`/api/v1/analises?${params}`, { credentials: "include" });
+      const res = await fetch(`/api/v1/analises?${params}`, {
+        credentials: "include",
+      });
       if (res.ok) {
         setAnalises(await res.json());
       }

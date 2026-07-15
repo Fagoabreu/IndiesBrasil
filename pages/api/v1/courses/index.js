@@ -4,13 +4,11 @@ import authorization from "models/authorization";
 import course from "models/course";
 import { ForbiddenError } from "infra/errors";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(controller.canRequest("read:course"), listHandler);
-router.post(controller.canRequest("create:course"), createHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:course"), listHandler)
+  .post(controller.canRequest("create:course"), createHandler)
+  .handler(controller.errorHandlers);
 
 async function listHandler(request, response) {
   const { page = 1, limit = 20, search = "", tag = "" } = request.query;

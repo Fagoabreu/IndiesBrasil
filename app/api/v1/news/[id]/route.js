@@ -28,7 +28,11 @@ export async function GET(request, { params }) {
       userFactcheck = f?.vote || null;
     }
 
-    const enriched = { ...newsItem, user_rating: userRating, user_factcheck: userFactcheck };
+    const enriched = {
+      ...newsItem,
+      user_rating: userRating,
+      user_factcheck: userFactcheck,
+    };
     const secureOutput = authorization.filterOutput(user, "read:news", enriched);
     return Response.json(secureOutput, { status: 200 });
   } catch (error) {
@@ -84,7 +88,11 @@ export async function PUT(request, { params }) {
     const f = await news.getFactcheckByUser(fullNews.id, user.id);
     userFactcheck = f?.vote || null;
 
-    const enriched = { ...fullNews, user_rating: userRating, user_factcheck: userFactcheck };
+    const enriched = {
+      ...fullNews,
+      user_rating: userRating,
+      user_factcheck: userFactcheck,
+    };
     const secureOutput = authorization.filterOutput(user, "read:news", enriched);
     return Response.json(secureOutput, { status: 200 });
   } catch (error) {
@@ -108,7 +116,9 @@ export async function DELETE(request, { params }) {
 
     const newsItem = await news.findById(id);
     if (newsItem.author_id !== user.id) {
-      throw new ForbiddenError({ message: "Você não é o autor desta notícia." });
+      throw new ForbiddenError({
+        message: "Você não é o autor desta notícia.",
+      });
     }
 
     if (newsItem.img) {

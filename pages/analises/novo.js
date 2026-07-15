@@ -53,7 +53,9 @@ export default function NovaAnalisePage() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/v1/analises/${edit}`, { credentials: "include" });
+        const res = await fetch(`/api/v1/analises/${edit}`, {
+          credentials: "include",
+        });
         if (!res.ok || cancelled) return;
         const data = await res.json();
         if (cancelled) return;

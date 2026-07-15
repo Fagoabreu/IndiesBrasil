@@ -224,7 +224,10 @@ export default function ConfiguracoesPage() {
   const [editBoardgameForm, setEditBoardgameForm] = useState(null);
   const [loadingBoardgameEdit, setLoadingBoardgameEdit] = useState(false);
   const [savingBoardgame, setSavingBoardgame] = useState(false);
-  const [editBoardgameMsg, setEditBoardgameMsg] = useState({ type: null, text: "" });
+  const [editBoardgameMsg, setEditBoardgameMsg] = useState({
+    type: null,
+    text: "",
+  });
 
   // Mídia de jogo de mesa
   const [activeBgTab, setActiveBgTab] = useState("info");
@@ -267,7 +270,9 @@ export default function ConfiguracoesPage() {
   async function fetchStudio() {
     if (!slug) return;
     try {
-      const res = await fetch(`/api/v1/studios/${slug}`, { credentials: "include" });
+      const res = await fetch(`/api/v1/studios/${slug}`, {
+        credentials: "include",
+      });
       const data = await res.json();
       if (!res.ok || data.status_code) {
         router.replace(`/estudios/${slug}`);
@@ -304,7 +309,9 @@ export default function ConfiguracoesPage() {
   async function fetchInvites() {
     if (!slug) return;
     try {
-      const res = await fetch(`/api/v1/studios/${slug}/invitations`, { credentials: "include" });
+      const res = await fetch(`/api/v1/studios/${slug}/invitations`, {
+        credentials: "include",
+      });
       if (res.ok) setPendingInvites(await res.json());
     } catch {
       // silently ignore
@@ -314,7 +321,9 @@ export default function ConfiguracoesPage() {
   async function fetchContacts() {
     if (!slug) return;
     try {
-      const res = await fetch(`/api/v1/studios/${slug}/contacts`, { credentials: "include" });
+      const res = await fetch(`/api/v1/studios/${slug}/contacts`, {
+        credentials: "include",
+      });
       if (res.ok) setContacts(await res.json());
     } catch {
       // silently ignore
@@ -324,7 +333,9 @@ export default function ConfiguracoesPage() {
   async function fetchGames() {
     if (!slug) return;
     try {
-      const res = await fetch(`/api/v1/studios/${slug}/games`, { credentials: "include" });
+      const res = await fetch(`/api/v1/studios/${slug}/games`, {
+        credentials: "include",
+      });
       if (res.ok) setGames(await res.json());
     } catch {
       // silently ignore
@@ -334,7 +345,9 @@ export default function ConfiguracoesPage() {
   async function fetchBoardgames() {
     if (!slug) return;
     try {
-      const res = await fetch(`/api/v1/studios/${slug}/boardgames`, { credentials: "include" });
+      const res = await fetch(`/api/v1/studios/${slug}/boardgames`, {
+        credentials: "include",
+      });
       if (res.ok) setBoardgames(await res.json());
     } catch {
       // silently ignore
@@ -344,7 +357,9 @@ export default function ConfiguracoesPage() {
   async function fetchBooks() {
     if (!slug) return;
     try {
-      const res = await fetch(`/api/v1/studios/${slug}/books`, { credentials: "include" });
+      const res = await fetch(`/api/v1/studios/${slug}/books`, {
+        credentials: "include",
+      });
       if (res.ok) setBooks(await res.json());
     } catch {
       // silently ignore
@@ -501,14 +516,23 @@ export default function ConfiguracoesPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setInviteMsg({ type: "error", text: data.message || "Erro ao enviar convite." });
+        setInviteMsg({
+          type: "error",
+          text: data.message || "Erro ao enviar convite.",
+        });
         return;
       }
       setInviteUsername("");
-      setInviteMsg({ type: "success", text: `Convite enviado para @${inviteUsername.trim()}.` });
+      setInviteMsg({
+        type: "success",
+        text: `Convite enviado para @${inviteUsername.trim()}.`,
+      });
       fetchInvites();
     } catch {
-      setInviteMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setInviteMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setInviting(false);
     }
@@ -532,13 +556,19 @@ export default function ConfiguracoesPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setBookMsg({ type: "error", text: data.message || "Erro ao criar publicação." });
+        setBookMsg({
+          type: "error",
+          text: data.message || "Erro ao criar publicação.",
+        });
         return;
       }
       setNewBookTitle("");
       setNewBookType("book");
       setNewBookStage("concept");
-      setBookMsg({ type: "success", text: `Publicação "${data.title}" criada!` });
+      setBookMsg({
+        type: "success",
+        text: `Publicação "${data.title}" criada!`,
+      });
       fetchBooks();
       handleOpenBookEdit(data.slug);
     } catch {
@@ -561,10 +591,15 @@ export default function ConfiguracoesPage() {
     setActiveBookTab("info");
     setLoadingBookEdit(true);
     try {
-      const res = await fetch(`/api/v1/books/${bookSlug}`, { credentials: "include" });
+      const res = await fetch(`/api/v1/books/${bookSlug}`, {
+        credentials: "include",
+      });
       const data = await res.json();
       if (!res.ok) {
-        setEditBookMsg({ type: "error", text: data.message || "Erro ao carregar publicação." });
+        setEditBookMsg({
+          type: "error",
+          text: data.message || "Erro ao carregar publicação.",
+        });
         return;
       }
       setEditBookForm({
@@ -626,16 +661,25 @@ export default function ConfiguracoesPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setEditBookMsg({ type: "error", text: data.message || "Erro ao salvar publicação." });
+        setEditBookMsg({
+          type: "error",
+          text: data.message || "Erro ao salvar publicação.",
+        });
         return;
       }
-      setEditBookMsg({ type: "success", text: "Publicação atualizada com sucesso!" });
+      setEditBookMsg({
+        type: "success",
+        text: "Publicação atualizada com sucesso!",
+      });
       fetchBooks();
       if (data.slug && data.slug !== editingBookSlug) {
         setEditingBookSlug(data.slug);
       }
     } catch {
-      setEditBookMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setEditBookMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setSavingBook(false);
     }
@@ -671,7 +715,10 @@ export default function ConfiguracoesPage() {
       if (!res.ok) throw new Error("Falha no upload da imagem.");
       fetchBooks();
     } catch {
-      setEditBookMsg({ type: "error", text: "Erro ao enviar capa da publicação." });
+      setEditBookMsg({
+        type: "error",
+        text: "Erro ao enviar capa da publicação.",
+      });
     } finally {
       setUploadingBookImg(false);
     }
@@ -695,7 +742,10 @@ export default function ConfiguracoesPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setGameMsg({ type: "error", text: data.message || "Erro ao criar jogo." });
+        setGameMsg({
+          type: "error",
+          text: data.message || "Erro ao criar jogo.",
+        });
         return;
       }
       setNewGameName("");
@@ -738,7 +788,10 @@ export default function ConfiguracoesPage() {
       ]);
       const data = await gameRes.json();
       if (!gameRes.ok) {
-        setEditGameMsg({ type: "error", text: data.message || "Erro ao carregar jogo." });
+        setEditGameMsg({
+          type: "error",
+          text: data.message || "Erro ao carregar jogo.",
+        });
         return;
       }
       setEditGameForm({
@@ -778,11 +831,17 @@ export default function ConfiguracoesPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ url: newVideoUrl.trim(), caption: newVideoCaption.trim() || null }),
+        body: JSON.stringify({
+          url: newVideoUrl.trim(),
+          caption: newVideoCaption.trim() || null,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setVideoMsg({ type: "error", text: data.message || "Erro ao adicionar vídeo." });
+        setVideoMsg({
+          type: "error",
+          text: data.message || "Erro ao adicionar vídeo.",
+        });
         return;
       }
       setGameVideos((v) => [...v, data]);
@@ -836,7 +895,10 @@ export default function ConfiguracoesPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setEditGameMsg({ type: "error", text: data.message || "Erro ao salvar jogo." });
+        setEditGameMsg({
+          type: "error",
+          text: data.message || "Erro ao salvar jogo.",
+        });
         return;
       }
       setEditGameMsg({ type: "success", text: "Jogo atualizado com sucesso!" });
@@ -846,7 +908,10 @@ export default function ConfiguracoesPage() {
         setEditingGameSlug(data.slug);
       }
     } catch {
-      setEditGameMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setEditGameMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setSavingGame(false);
     }
@@ -898,11 +963,17 @@ export default function ConfiguracoesPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ url: bgNewVideoUrl.trim(), caption: bgNewVideoCaption.trim() || null }),
+        body: JSON.stringify({
+          url: bgNewVideoUrl.trim(),
+          caption: bgNewVideoCaption.trim() || null,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setBgVideoMsg({ type: "error", text: data.message || "Erro ao adicionar vídeo." });
+        setBgVideoMsg({
+          type: "error",
+          text: data.message || "Erro ao adicionar vídeo.",
+        });
         return;
       }
       setBgVideos((v) => [...v, data]);
@@ -958,7 +1029,10 @@ export default function ConfiguracoesPage() {
       if (!res.ok) throw new Error("Falha no upload da imagem.");
       fetchBoardgames();
     } catch {
-      setEditBoardgameMsg({ type: "error", text: "Erro ao enviar imagem do jogo de mesa." });
+      setEditBoardgameMsg({
+        type: "error",
+        text: "Erro ao enviar imagem do jogo de mesa.",
+      });
     } finally {
       setUploadingBgImg(false);
     }
@@ -986,7 +1060,10 @@ export default function ConfiguracoesPage() {
   }
 
   function removeStorePage(idx) {
-    setEditGameForm((f) => ({ ...f, store_pages: f.store_pages.filter((_, i) => i !== idx) }));
+    setEditGameForm((f) => ({
+      ...f,
+      store_pages: f.store_pages.filter((_, i) => i !== idx),
+    }));
   }
 
   // --- Book store page helpers ---
@@ -1005,7 +1082,10 @@ export default function ConfiguracoesPage() {
   }
 
   function removeBookStorePage(idx) {
-    setEditBookForm((f) => ({ ...f, store_pages: f.store_pages.filter((_, i) => i !== idx) }));
+    setEditBookForm((f) => ({
+      ...f,
+      store_pages: f.store_pages.filter((_, i) => i !== idx),
+    }));
   }
 
   async function handleCreateBoardgame(e) {
@@ -1026,7 +1106,10 @@ export default function ConfiguracoesPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setBoardgameMsg({ type: "error", text: data.message || "Erro ao criar jogo de mesa." });
+        setBoardgameMsg({
+          type: "error",
+          text: data.message || "Erro ao criar jogo de mesa.",
+        });
         return;
       }
       setNewBoardgameName("");
@@ -1036,7 +1119,10 @@ export default function ConfiguracoesPage() {
       fetchBoardgames();
       handleOpenBoardgameEdit(data.slug);
     } catch {
-      setBoardgameMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setBoardgameMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setCreatingBoardgame(false);
     }
@@ -1069,7 +1155,10 @@ export default function ConfiguracoesPage() {
       ]);
       const data = await bgRes.json();
       if (!bgRes.ok) {
-        setEditBoardgameMsg({ type: "error", text: data.message || "Erro ao carregar jogo de mesa." });
+        setEditBoardgameMsg({
+          type: "error",
+          text: data.message || "Erro ao carregar jogo de mesa.",
+        });
         return;
       }
       setEditBoardgameForm({
@@ -1122,16 +1211,25 @@ export default function ConfiguracoesPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setEditBoardgameMsg({ type: "error", text: data.message || "Erro ao salvar jogo de mesa." });
+        setEditBoardgameMsg({
+          type: "error",
+          text: data.message || "Erro ao salvar jogo de mesa.",
+        });
         return;
       }
-      setEditBoardgameMsg({ type: "success", text: "Jogo de mesa atualizado com sucesso!" });
+      setEditBoardgameMsg({
+        type: "success",
+        text: "Jogo de mesa atualizado com sucesso!",
+      });
       fetchBoardgames();
       if (data.slug && data.slug !== editingBoardgameSlug) {
         setEditingBoardgameSlug(data.slug);
       }
     } catch {
-      setEditBoardgameMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setEditBoardgameMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setSavingBoardgame(false);
     }
@@ -1148,13 +1246,22 @@ export default function ConfiguracoesPage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        setMemberMsg({ type: "error", text: data.message || "Erro ao remover membro." });
+        setMemberMsg({
+          type: "error",
+          text: data.message || "Erro ao remover membro.",
+        });
         return;
       }
-      setMemberMsg({ type: "success", text: `@${username} removido do estúdio.` });
+      setMemberMsg({
+        type: "success",
+        text: `@${username} removido do estúdio.`,
+      });
       fetchStudio();
     } catch {
-      setMemberMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setMemberMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setRemovingUsername(null);
     }
@@ -1183,11 +1290,17 @@ export default function ConfiguracoesPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ contact_type_id: Number(newContactTypeId), contact_value: newContactValue.trim() }),
+        body: JSON.stringify({
+          contact_type_id: Number(newContactTypeId),
+          contact_value: newContactValue.trim(),
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setContactMsg({ type: "error", text: data.message || "Erro ao adicionar contato." });
+        setContactMsg({
+          type: "error",
+          text: data.message || "Erro ao adicionar contato.",
+        });
         return;
       }
       setNewContactTypeId("");
@@ -1195,7 +1308,10 @@ export default function ConfiguracoesPage() {
       setContactMsg({ type: "success", text: "Contato adicionado." });
       fetchContacts();
     } catch {
-      setContactMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setContactMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setAddingContact(false);
     }
@@ -1247,13 +1363,22 @@ export default function ConfiguracoesPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setStatusMsg({ type: "error", text: data.message || "Erro ao salvar." });
+        setStatusMsg({
+          type: "error",
+          text: data.message || "Erro ao salvar.",
+        });
         return;
       }
 
-      setStatusMsg({ type: "success", text: "Informações salvas com sucesso!" });
+      setStatusMsg({
+        type: "success",
+        text: "Informações salvas com sucesso!",
+      });
     } catch {
-      setStatusMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setStatusMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setSaving(false);
     }
@@ -1536,7 +1661,13 @@ export default function ConfiguracoesPage() {
                       <button
                         type="button"
                         className={styles.btnClassify}
-                        onClick={() => setRatingModal({ type: "game", slug: g.slug, name: g.name })}
+                        onClick={() =>
+                          setRatingModal({
+                            type: "game",
+                            slug: g.slug,
+                            name: g.name,
+                          })
+                        }
                       >
                         Classificar
                       </button>
@@ -1578,7 +1709,12 @@ export default function ConfiguracoesPage() {
                                     type="text"
                                     className={styles.input}
                                     value={editGameForm.name}
-                                    onChange={(e) => setEditGameForm((f) => ({ ...f, name: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditGameForm((f) => ({
+                                        ...f,
+                                        name: e.target.value,
+                                      }))
+                                    }
                                     maxLength={255}
                                     required
                                   />
@@ -1592,7 +1728,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="Frase curta sobre o jogo"
                                     value={editGameForm.short_description}
-                                    onChange={(e) => setEditGameForm((f) => ({ ...f, short_description: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditGameForm((f) => ({
+                                        ...f,
+                                        short_description: e.target.value,
+                                      }))
+                                    }
                                     maxLength={255}
                                   />
                                 </label>
@@ -1605,7 +1746,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="Ex: Plataforma, RPG, Puzzle"
                                     value={editGameForm.genre}
-                                    onChange={(e) => setEditGameForm((f) => ({ ...f, genre: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditGameForm((f) => ({
+                                        ...f,
+                                        genre: e.target.value,
+                                      }))
+                                    }
                                     maxLength={50}
                                   />
                                 </label>
@@ -1618,7 +1764,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="Ex: Unity, Godot, Unreal"
                                     value={editGameForm.engine}
-                                    onChange={(e) => setEditGameForm((f) => ({ ...f, engine: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditGameForm((f) => ({
+                                        ...f,
+                                        engine: e.target.value,
+                                      }))
+                                    }
                                     maxLength={50}
                                   />
                                 </label>
@@ -1629,7 +1780,12 @@ export default function ConfiguracoesPage() {
                                   <select
                                     className={styles.input}
                                     value={editGameForm.stage}
-                                    onChange={(e) => setEditGameForm((f) => ({ ...f, stage: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditGameForm((f) => ({
+                                        ...f,
+                                        stage: e.target.value,
+                                      }))
+                                    }
                                   >
                                     <option value="concept">Conceito</option>
                                     <option value="prototype">Protótipo</option>
@@ -1648,7 +1804,12 @@ export default function ConfiguracoesPage() {
                                     type="date"
                                     className={styles.input}
                                     value={editGameForm.release_date}
-                                    onChange={(e) => setEditGameForm((f) => ({ ...f, release_date: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditGameForm((f) => ({
+                                        ...f,
+                                        release_date: e.target.value,
+                                      }))
+                                    }
                                   />
                                 </label>
 
@@ -1660,7 +1821,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="https://"
                                     value={editGameForm.website_url}
-                                    onChange={(e) => setEditGameForm((f) => ({ ...f, website_url: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditGameForm((f) => ({
+                                        ...f,
+                                        website_url: e.target.value,
+                                      }))
+                                    }
                                     maxLength={512}
                                   />
                                 </label>
@@ -1672,7 +1838,12 @@ export default function ConfiguracoesPage() {
                                     className={`${styles.input} ${styles.textarea}`}
                                     placeholder="Descreva o jogo em detalhes..."
                                     value={editGameForm.description}
-                                    onChange={(e) => setEditGameForm((f) => ({ ...f, description: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditGameForm((f) => ({
+                                        ...f,
+                                        description: e.target.value,
+                                      }))
+                                    }
                                     rows={8}
                                   />
                                 </label>
@@ -1727,7 +1898,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="https://youtube.com/..."
                                     value={editGameForm.trailer_url}
-                                    onChange={(e) => setEditGameForm((f) => ({ ...f, trailer_url: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditGameForm((f) => ({
+                                        ...f,
+                                        trailer_url: e.target.value,
+                                      }))
+                                    }
                                     maxLength={512}
                                   />
                                 </label>
@@ -1927,7 +2103,13 @@ export default function ConfiguracoesPage() {
                       <button
                         type="button"
                         className={styles.btnClassify}
-                        onClick={() => setRatingModal({ type: "boardgame", slug: bg.slug, name: bg.name })}
+                        onClick={() =>
+                          setRatingModal({
+                            type: "boardgame",
+                            slug: bg.slug,
+                            name: bg.name,
+                          })
+                        }
                       >
                         Classificar
                       </button>
@@ -1966,7 +2148,12 @@ export default function ConfiguracoesPage() {
                                     type="text"
                                     className={styles.input}
                                     value={editBoardgameForm.name}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, name: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        name: e.target.value,
+                                      }))
+                                    }
                                     maxLength={255}
                                     required
                                   />
@@ -1979,7 +2166,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="Frase curta sobre o jogo"
                                     value={editBoardgameForm.short_description}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, short_description: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        short_description: e.target.value,
+                                      }))
+                                    }
                                     maxLength={255}
                                   />
                                 </label>
@@ -1989,7 +2181,12 @@ export default function ConfiguracoesPage() {
                                   <select
                                     className={styles.input}
                                     value={editBoardgameForm.category}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, category: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        category: e.target.value,
+                                      }))
+                                    }
                                   >
                                     {Object.entries(BG_CATEGORY_LABELS).map(([k, v]) => (
                                       <option key={k} value={k}>
@@ -2004,7 +2201,12 @@ export default function ConfiguracoesPage() {
                                   <select
                                     className={styles.input}
                                     value={editBoardgameForm.stage}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, stage: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        stage: e.target.value,
+                                      }))
+                                    }
                                   >
                                     {Object.entries(BG_STAGE_LABELS).map(([k, v]) => (
                                       <option key={k} value={k}>
@@ -2021,7 +2223,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     min="1"
                                     value={editBoardgameForm.player_count_min}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, player_count_min: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        player_count_min: e.target.value,
+                                      }))
+                                    }
                                   />
                                 </label>
 
@@ -2032,7 +2239,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     min="1"
                                     value={editBoardgameForm.player_count_max}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, player_count_max: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        player_count_max: e.target.value,
+                                      }))
+                                    }
                                   />
                                 </label>
 
@@ -2043,7 +2255,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     min="1"
                                     value={editBoardgameForm.play_time_min}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, play_time_min: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        play_time_min: e.target.value,
+                                      }))
+                                    }
                                   />
                                 </label>
 
@@ -2054,7 +2271,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     min="1"
                                     value={editBoardgameForm.play_time_max}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, play_time_max: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        play_time_max: e.target.value,
+                                      }))
+                                    }
                                   />
                                 </label>
 
@@ -2066,7 +2288,12 @@ export default function ConfiguracoesPage() {
                                     min="0"
                                     max="99"
                                     value={editBoardgameForm.age_rating}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, age_rating: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        age_rating: e.target.value,
+                                      }))
+                                    }
                                   />
                                 </label>
 
@@ -2079,7 +2306,12 @@ export default function ConfiguracoesPage() {
                                     max="5"
                                     step="0.1"
                                     value={editBoardgameForm.weight}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, weight: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        weight: e.target.value,
+                                      }))
+                                    }
                                   />
                                 </label>
 
@@ -2089,7 +2321,12 @@ export default function ConfiguracoesPage() {
                                     type="date"
                                     className={styles.input}
                                     value={editBoardgameForm.release_date}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, release_date: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        release_date: e.target.value,
+                                      }))
+                                    }
                                   />
                                 </label>
 
@@ -2100,7 +2337,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="https://"
                                     value={editBoardgameForm.website_url}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, website_url: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        website_url: e.target.value,
+                                      }))
+                                    }
                                     maxLength={512}
                                   />
                                 </label>
@@ -2111,7 +2353,12 @@ export default function ConfiguracoesPage() {
                                     className={`${styles.input} ${styles.textarea}`}
                                     placeholder="Descreva o jogo em detalhes..."
                                     value={editBoardgameForm.description}
-                                    onChange={(e) => setEditBoardgameForm((f) => ({ ...f, description: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBoardgameForm((f) => ({
+                                        ...f,
+                                        description: e.target.value,
+                                      }))
+                                    }
                                     rows={4}
                                   />
                                 </label>
@@ -2333,7 +2580,13 @@ export default function ConfiguracoesPage() {
                       <button
                         type="button"
                         className={styles.btnClassify}
-                        onClick={() => setRatingModal({ type: "book", slug: bk.slug, name: bk.title })}
+                        onClick={() =>
+                          setRatingModal({
+                            type: "book",
+                            slug: bk.slug,
+                            name: bk.title,
+                          })
+                        }
                       >
                         Classificar
                       </button>
@@ -2374,7 +2627,12 @@ export default function ConfiguracoesPage() {
                                     type="text"
                                     className={styles.input}
                                     value={editBookForm.title}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, title: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        title: e.target.value,
+                                      }))
+                                    }
                                     maxLength={255}
                                     required
                                   />
@@ -2387,7 +2645,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="Subtítulo da publicação"
                                     value={editBookForm.subtitle}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, subtitle: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        subtitle: e.target.value,
+                                      }))
+                                    }
                                     maxLength={255}
                                   />
                                 </label>
@@ -2399,7 +2662,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="Frase curta sobre a publicação"
                                     value={editBookForm.short_description}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, short_description: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        short_description: e.target.value,
+                                      }))
+                                    }
                                     maxLength={255}
                                   />
                                 </label>
@@ -2409,7 +2677,12 @@ export default function ConfiguracoesPage() {
                                   <select
                                     className={styles.input}
                                     value={editBookForm.book_type}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, book_type: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        book_type: e.target.value,
+                                      }))
+                                    }
                                   >
                                     {Object.entries(BOOK_TYPE_LABELS).map(([k, v]) => (
                                       <option key={k} value={k}>
@@ -2424,7 +2697,12 @@ export default function ConfiguracoesPage() {
                                   <select
                                     className={styles.input}
                                     value={editBookForm.stage}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, stage: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        stage: e.target.value,
+                                      }))
+                                    }
                                   >
                                     {Object.entries(BOOK_STAGE_LABELS).map(([k, v]) => (
                                       <option key={k} value={k}>
@@ -2441,7 +2719,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="Nome da editora"
                                     value={editBookForm.publisher}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, publisher: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        publisher: e.target.value,
+                                      }))
+                                    }
                                     maxLength={200}
                                   />
                                 </label>
@@ -2453,7 +2736,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="Ex: 1ª edição"
                                     value={editBookForm.edition}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, edition: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        edition: e.target.value,
+                                      }))
+                                    }
                                     maxLength={80}
                                   />
                                 </label>
@@ -2465,7 +2753,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="978-..."
                                     value={editBookForm.isbn}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, isbn: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        isbn: e.target.value,
+                                      }))
+                                    }
                                     maxLength={20}
                                   />
                                 </label>
@@ -2477,7 +2770,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     min="1"
                                     value={editBookForm.pages}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, pages: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        pages: e.target.value,
+                                      }))
+                                    }
                                   />
                                 </label>
 
@@ -2487,7 +2785,12 @@ export default function ConfiguracoesPage() {
                                     type="text"
                                     className={styles.input}
                                     value={editBookForm.language}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, language: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        language: e.target.value,
+                                      }))
+                                    }
                                     maxLength={60}
                                   />
                                 </label>
@@ -2498,7 +2801,12 @@ export default function ConfiguracoesPage() {
                                     type="date"
                                     className={styles.input}
                                     value={editBookForm.release_date}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, release_date: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        release_date: e.target.value,
+                                      }))
+                                    }
                                   />
                                 </label>
 
@@ -2509,7 +2817,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="https://"
                                     value={editBookForm.website_url}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, website_url: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        website_url: e.target.value,
+                                      }))
+                                    }
                                     maxLength={512}
                                   />
                                 </label>
@@ -2521,7 +2834,12 @@ export default function ConfiguracoesPage() {
                                     className={styles.input}
                                     placeholder="https://"
                                     value={editBookForm.buy_url}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, buy_url: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        buy_url: e.target.value,
+                                      }))
+                                    }
                                     maxLength={512}
                                   />
                                 </label>
@@ -2532,7 +2850,12 @@ export default function ConfiguracoesPage() {
                                     className={`${styles.input} ${styles.textarea}`}
                                     placeholder="Descreva a publicação em detalhes..."
                                     value={editBookForm.description}
-                                    onChange={(e) => setEditBookForm((f) => ({ ...f, description: e.target.value }))}
+                                    onChange={(e) =>
+                                      setEditBookForm((f) => ({
+                                        ...f,
+                                        description: e.target.value,
+                                      }))
+                                    }
                                     rows={4}
                                   />
                                 </label>
@@ -2561,7 +2884,12 @@ export default function ConfiguracoesPage() {
                                   className={styles.input}
                                   placeholder="https://..."
                                   value={editBookForm.cover_url_external}
-                                  onChange={(e) => setEditBookForm((f) => ({ ...f, cover_url_external: e.target.value }))}
+                                  onChange={(e) =>
+                                    setEditBookForm((f) => ({
+                                      ...f,
+                                      cover_url_external: e.target.value,
+                                    }))
+                                  }
                                   maxLength={512}
                                 />
                                 <button
@@ -2583,7 +2911,12 @@ export default function ConfiguracoesPage() {
                                   className={styles.input}
                                   placeholder="https://seupdf.com/meu-livro.pdf"
                                   value={editBookForm.pdf_url}
-                                  onChange={(e) => setEditBookForm((f) => ({ ...f, pdf_url: e.target.value }))}
+                                  onChange={(e) =>
+                                    setEditBookForm((f) => ({
+                                      ...f,
+                                      pdf_url: e.target.value,
+                                    }))
+                                  }
                                   maxLength={512}
                                 />
                               </label>

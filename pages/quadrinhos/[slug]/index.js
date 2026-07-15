@@ -45,7 +45,9 @@ export default function BookPage() {
   const fetchBook = useCallback(async () => {
     if (!slug) return;
     try {
-      const res = await fetch(`/api/v1/books/${slug}`, { credentials: "include" });
+      const res = await fetch(`/api/v1/books/${slug}`, {
+        credentials: "include",
+      });
       if (!res.ok) {
         router.replace("/quadrinhos");
         return;

@@ -36,7 +36,9 @@ export default function ContentRatingModal({ type, itemName, onClose }) {
   // Carregar questionário
   useEffect(() => {
     let cancelled = false;
-    fetch(`/api/v1/content-rating?type=${encodeURIComponent(type)}`, { credentials: "include" })
+    fetch(`/api/v1/content-rating?type=${encodeURIComponent(type)}`, {
+      credentials: "include",
+    })
       .then(async (res) => {
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Erro ao carregar questionário.");
@@ -218,7 +220,17 @@ export default function ContentRatingModal({ type, itemName, onClose }) {
                 </div>
               )}
 
-            {error && <p style={{ color: "var(--fgColor-danger)", marginTop: 12, fontSize: 13 }}>{error}</p>}
+            {error && (
+              <p
+                style={{
+                  color: "var(--fgColor-danger)",
+                  marginTop: 12,
+                  fontSize: 13,
+                }}
+              >
+                {error}
+              </p>
+            )}
           </div>
           <div className={styles.footer}>
             {!saved ? (
@@ -232,7 +244,15 @@ export default function ContentRatingModal({ type, itemName, onClose }) {
               </>
             ) : (
               <>
-                <span style={{ fontSize: 13, color: "var(--fgColor-success)", fontWeight: 600 }}>✓ Classificação salva com sucesso!</span>
+                <span
+                  style={{
+                    fontSize: 13,
+                    color: "var(--fgColor-success)",
+                    fontWeight: 600,
+                  }}
+                >
+                  ✓ Classificação salva com sucesso!
+                </span>
                 <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={handleClose}>
                   Concluir
                 </button>

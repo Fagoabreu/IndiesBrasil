@@ -30,7 +30,10 @@ function formatDateTime(dateStr, isAllDay) {
   const month = PT_MONTHS[d.getMonth()];
   const year = d.getFullYear();
   if (isAllDay) return `${weekday}, ${day} de ${month} de ${year}`;
-  const time = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const time = d.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
   return `${weekday}, ${day} de ${month} de ${year} às ${time}`;
 }
 
@@ -41,7 +44,11 @@ function formatShortDate(dateStr) {
 
 function timeAgo(dateStr) {
   const d = new Date(dateStr);
-  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+  return d.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 export default function EventDetailPage() {
@@ -104,7 +111,10 @@ export default function EventDetailPage() {
     setRsvpLoading(true);
     try {
       if (userRsvp === status) {
-        const res = await fetch(`/api/v1/events/${id}/rsvp`, { method: "DELETE", credentials: "include" });
+        const res = await fetch(`/api/v1/events/${id}/rsvp`, {
+          method: "DELETE",
+          credentials: "include",
+        });
         const data = await res.json();
         if (res.ok) {
           setUserRsvp(null);
@@ -142,7 +152,11 @@ export default function EventDetailPage() {
         if (file) formData.append("file", file);
       }
       formData.append("event_id", id);
-      const res = await fetch("/api/v1/posts", { method: "POST", credentials: "include", body: formData });
+      const res = await fetch("/api/v1/posts", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
       if (!res.ok) {
         const err = await res.json();
         console.error("Erro ao criar post:", err);
@@ -208,7 +222,10 @@ export default function EventDetailPage() {
   async function handleCancel() {
     if (!ev || !user) return;
     if (!globalThis.confirm("Tem certeza que deseja cancelar este evento?")) return;
-    await fetch(`/api/v1/events/${id}`, { method: "DELETE", credentials: "include" });
+    await fetch(`/api/v1/events/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
     router.push("/agenda");
   }
 
@@ -295,12 +312,27 @@ export default function EventDetailPage() {
                     <span className={styles.instanceDate}>{formatShortDate(inst.starts_at)}</span>
                     {!ev.is_all_day && (
                       <span>
-                        {new Date(inst.starts_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(inst.starts_at).toLocaleTimeString("pt-BR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                         {" – "}
-                        {new Date(inst.ends_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(inst.ends_at).toLocaleTimeString("pt-BR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </span>
                     )}
-                    {inst.override_title && <span style={{ color: "var(--brand-primary)", fontWeight: 600 }}>{inst.override_title}</span>}
+                    {inst.override_title && (
+                      <span
+                        style={{
+                          color: "var(--brand-primary)",
+                          fontWeight: 600,
+                        }}
+                      >
+                        {inst.override_title}
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
@@ -507,7 +539,11 @@ export default function EventDetailPage() {
                   <Link
                     href={`/agenda/${id}/editar`}
                     className={styles.ownerBtn}
-                    style={{ textAlign: "center", textDecoration: "none", display: "block" }}
+                    style={{
+                      textAlign: "center",
+                      textDecoration: "none",
+                      display: "block",
+                    }}
                   >
                     ✏️ Editar
                   </Link>

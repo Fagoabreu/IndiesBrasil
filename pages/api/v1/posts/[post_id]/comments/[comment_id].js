@@ -4,11 +4,10 @@ import comment from "@/models/comment.js";
 
 import { createRouter } from "next-connect";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-router.delete(controller.canRequest("create:post"), deleteHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .delete(controller.canRequest("create:post"), deleteHandler)
+  .handler(controller.errorHandlers);
 
 async function deleteHandler(request, response) {
   const comment_id = request.query.comment_id;

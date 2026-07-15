@@ -2,14 +2,12 @@ import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import book from "models/book";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(controller.canRequest("read:book"), getHandler);
-router.post(controller.canRequest("create:book:review"), postHandler);
-router.patch(controller.canRequest("update:book:review"), patchHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:book"), getHandler)
+  .post(controller.canRequest("create:book:review"), postHandler)
+  .patch(controller.canRequest("update:book:review"), patchHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const { slug, page = 1, limit = 10 } = request.query;

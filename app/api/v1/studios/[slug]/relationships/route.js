@@ -50,7 +50,9 @@ export async function POST(request, { params }) {
 
     const isAdminOrOwner = (await organization.isAdmin(studio.id, user.id)) || (await organization.isOwner(studio.id, user.id));
     if (!isAdminOrOwner) {
-      throw new ForbiddenError({ message: "Apenas administradores do estúdio podem solicitar relacionamentos." });
+      throw new ForbiddenError({
+        message: "Apenas administradores do estúdio podem solicitar relacionamentos.",
+      });
     }
 
     const rel = await organization.requestRelationship(studio.id, target_slug.trim(), type, user.id);

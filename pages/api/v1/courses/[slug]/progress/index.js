@@ -4,20 +4,24 @@ import authorization from "models/authorization";
 import course from "models/course";
 import { ForbiddenError } from "infra/errors";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(controller.canRequest("read:course:progress"), getHandler);
-router.post(controller.canRequest("create:course:progress"), markHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:course:progress"), getHandler)
+  .post(controller.canRequest("create:course:progress"), markHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const { slug } = request.query;
   const requestUser = request.context.user;
 
   if (!requestUser?.id) {
-    return response.status(200).json({ lessons: [], completedCount: 0, totalCount: 0, lastCompletedOrder: null, nextLessonOrder: null });
+    return response.status(200).json({
+      lessons: [],
+      completedCount: 0,
+      totalCount: 0,
+      lastCompletedOrder: null,
+      nextLessonOrder: null,
+    });
   }
 
   const progress = await course.getCourseProgress(slug, requestUser.id);

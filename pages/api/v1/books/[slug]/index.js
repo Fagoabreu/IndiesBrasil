@@ -3,13 +3,11 @@ import controller from "infra/controller";
 import book from "models/book";
 import { ForbiddenError } from "infra/errors";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(controller.canRequest("read:book"), getHandler);
-router.patch(controller.canRequest("update:book"), patchHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:book"), getHandler)
+  .patch(controller.canRequest("update:book"), patchHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const { slug } = request.query;

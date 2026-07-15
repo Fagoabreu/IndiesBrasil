@@ -30,8 +30,12 @@ function resolveMessage(n) {
 
 async function loadNotifications(username) {
   const [userRes, postRes] = await Promise.all([
-    fetch(`/api/v1/users/${username}/notifications`, { credentials: "include" }),
-    fetch(`/api/v1/users/${username}/notifications/post`, { credentials: "include" }),
+    fetch(`/api/v1/users/${username}/notifications`, {
+      credentials: "include",
+    }),
+    fetch(`/api/v1/users/${username}/notifications/post`, {
+      credentials: "include",
+    }),
   ]);
   return {
     userNotifs: userRes.ok ? await userRes.json() : [],
@@ -136,7 +140,10 @@ export default function NotificationButton() {
                   <span className={styles.notifRow}>
                     <span className={styles.notifTitle}>{resolveTitle(n)}</span>
                     <span className={styles.notifDate}>
-                      {new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(new Date(n.created_at))}
+                      {new Intl.DateTimeFormat("pt-BR", {
+                        day: "2-digit",
+                        month: "2-digit",
+                      }).format(new Date(n.created_at))}
                     </span>
                   </span>
                   {resolveMessage(n) && <span className={styles.notifMessage}>{resolveMessage(n)}</span>}

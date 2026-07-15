@@ -40,7 +40,16 @@ function getVideoThumbnail(url) {
  */
 export default function GameMediaPlayer({ media = [], trailerUrl, bannerUrl, name = "" }) {
   const trailerEntry =
-    trailerUrl && !media.some((m) => m.url === trailerUrl) ? [{ id: "__trailer__", media_type: "video", url: trailerUrl, caption: "Trailer" }] : [];
+    trailerUrl && !media.some((m) => m.url === trailerUrl)
+      ? [
+          {
+            id: "__trailer__",
+            media_type: "video",
+            url: trailerUrl,
+            caption: "Trailer",
+          },
+        ]
+      : [];
   const allMedia = [...trailerEntry, ...media];
 
   const [activeMedia, setActiveMedia] = useState(allMedia[0] ?? null);

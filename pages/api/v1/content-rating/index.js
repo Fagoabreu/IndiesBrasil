@@ -2,8 +2,7 @@ import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import contentRating from "models/content-rating";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
+export default createRouter().use(controller.injectAnonymousOrUser).get(getHandler).post(postHandler).handler(controller.errorHandlers);
 
 /**
  * GET /api/v1/content-rating?type=game|boardgame|book
@@ -76,7 +75,9 @@ async function postHandler(request, response) {
       rating: result.rating,
       reasons: result.reasons,
       label: contentRating.RATING_LABELS[result.rating],
-      ...(result.monetizationFlags && { monetizationFlags: result.monetizationFlags }),
+      ...(result.monetizationFlags && {
+        monetizationFlags: result.monetizationFlags,
+      }),
     });
   }
 
@@ -105,8 +106,3 @@ async function postHandler(request, response) {
     message: 'Campo "action" deve ser "calculate" ou "save".',
   });
 }
-
-router.get(getHandler);
-router.post(postHandler);
-
-export default router.handler(controller.errorHandlers);

@@ -36,9 +36,26 @@ export default function EmConstrucao() {
         <ToolsIcon size={48} />
       </div>
 
-      <h1 style={{ fontSize: "1.4rem", fontWeight: 700, margin: 0, color: "var(--fgColor-default)" }}>{label}</h1>
+      <h1
+        style={{
+          fontSize: "1.4rem",
+          fontWeight: 700,
+          margin: 0,
+          color: "var(--fgColor-default)",
+        }}
+      >
+        {label}
+      </h1>
 
-      <p style={{ fontSize: "0.95rem", color: "var(--fgColor-muted)", maxWidth: 400, margin: 0, lineHeight: 1.5 }}>
+      <p
+        style={{
+          fontSize: "0.95rem",
+          color: "var(--fgColor-muted)",
+          maxWidth: 400,
+          margin: 0,
+          lineHeight: 1.5,
+        }}
+      >
         Esta página está em construção. Em breve você poderá acessar todo o conteúdo de {label.toLowerCase()} aqui. Fique de olho nas novidades!
       </p>
 

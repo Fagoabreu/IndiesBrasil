@@ -31,14 +31,23 @@ export default function CursosPage() {
       try {
         if (showEnrolled) {
           const params = new URLSearchParams({ search: searchQuery });
-          const res = await fetch(`/api/v1/courses/enrolled?${params}`, { credentials: "include" });
+          const res = await fetch(`/api/v1/courses/enrolled?${params}`, {
+            credentials: "include",
+          });
           const data = await res.json();
           const rows = Array.isArray(data) ? data : [];
           setCourses(rows);
           setHasMore(false);
         } else {
-          const params = new URLSearchParams({ page: pageNum, limit: 20, search: searchQuery, tag: tagFilter });
-          const res = await fetch(`/api/v1/courses?${params}`, { credentials: "include" });
+          const params = new URLSearchParams({
+            page: pageNum,
+            limit: 20,
+            search: searchQuery,
+            tag: tagFilter,
+          });
+          const res = await fetch(`/api/v1/courses?${params}`, {
+            credentials: "include",
+          });
           const data = await res.json();
           const rows = Array.isArray(data) ? data : [];
           setCourses((prev) => (pageNum === 1 ? rows : [...prev, ...rows]));
@@ -75,7 +84,11 @@ export default function CursosPage() {
         title={PAGE_TITLE}
         description={PAGE_DESCRIPTION}
         canonical={PAGE_URL}
-        openGraph={{ title: PAGE_TITLE, description: PAGE_DESCRIPTION, url: PAGE_URL }}
+        openGraph={{
+          title: PAGE_TITLE,
+          description: PAGE_DESCRIPTION,
+          url: PAGE_URL,
+        }}
       />
 
       <header className={styles.pageHeader}>
@@ -192,7 +205,12 @@ export default function CursosPage() {
 }
 
 function CourseCard({ course }) {
-  const tiltRef = useTiltEffect({ max: 8, perspective: 900, scale: 1.02, maxGlare: 0.12 });
+  const tiltRef = useTiltEffect({
+    max: 8,
+    perspective: 900,
+    scale: 1.02,
+    maxGlare: 0.12,
+  });
 
   return (
     <li className={styles.courseCard} ref={tiltRef}>

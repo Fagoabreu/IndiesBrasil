@@ -4,13 +4,11 @@ import authorization from "models/authorization";
 import organization from "models/organization";
 import { ForbiddenError } from "infra/errors";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(controller.canRequest("read:studio"), listHandler);
-router.post(controller.canRequest("create:studio"), createHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:studio"), listHandler)
+  .post(controller.canRequest("create:studio"), createHandler)
+  .handler(controller.errorHandlers);
 
 async function listHandler(request, response) {
   const { page = 1, limit = 20, search = "", isfollowing, member } = request.query;
@@ -26,7 +24,11 @@ async function listHandler(request, response) {
       search,
     });
   } else {
-    studios = await organization.findAll({ page: Number(page), limit: Number(limit), search });
+    studios = await organization.findAll({
+      page: Number(page),
+      limit: Number(limit),
+      search,
+    });
   }
 
   return response.status(200).json(studios);

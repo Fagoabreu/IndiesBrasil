@@ -141,8 +141,12 @@ export default function Perfil() {
     if (!isOwn || !username || activeTab !== "notifications") return;
     let cancelled = false;
     Promise.all([
-      fetch(`/api/v1/users/${username}/notifications`, { credentials: "include" }),
-      fetch(`/api/v1/users/${username}/notifications/post`, { credentials: "include" }),
+      fetch(`/api/v1/users/${username}/notifications`, {
+        credentials: "include",
+      }),
+      fetch(`/api/v1/users/${username}/notifications/post`, {
+        credentials: "include",
+      }),
     ]).then(async ([userRes, postRes]) => {
       if (!cancelled) {
         setUserNotifs(userRes.ok ? await userRes.json() : []);
@@ -183,7 +187,10 @@ export default function Perfil() {
 
   function handleDeletePost(postId) {
     setPosts((prev) => prev.filter((p) => p.id !== postId));
-    fetch(`/api/v1/posts/${postId}`, { method: "DELETE", credentials: "include" }).catch(() => {});
+    fetch(`/api/v1/posts/${postId}`, {
+      method: "DELETE",
+      credentials: "include",
+    }).catch(() => {});
   }
 
   return (
@@ -289,9 +296,19 @@ export default function Perfil() {
                 <SectionPanel
                   title="Descrição"
                   atributes={[
-                    { title: "Visibilidade", content: perfilUser.user.visibility, alignment: "row" },
-                    { title: "Resumo", content: perfilUser.user.resumo || "Resumo ainda não informado." },
-                    { title: "Bio", content: perfilUser.user.bio || "Bio ainda não informada." },
+                    {
+                      title: "Visibilidade",
+                      content: perfilUser.user.visibility,
+                      alignment: "row",
+                    },
+                    {
+                      title: "Resumo",
+                      content: perfilUser.user.resumo || "Resumo ainda não informado.",
+                    },
+                    {
+                      title: "Bio",
+                      content: perfilUser.user.bio || "Bio ainda não informada.",
+                    },
                   ]}
                 />
 
@@ -411,7 +428,11 @@ function NotificationList({ userNotifs, postNotifs }) {
             <div className={style.notifHeader}>
               <span className={style.notifTitle}>{notificationTitle(n)}</span>
               <span className={style.notifDate}>
-                {new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(n.created_at))}
+                {new Intl.DateTimeFormat("pt-BR", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                }).format(new Date(n.created_at))}
               </span>
             </div>
             {notificationMessage(n) && <p className={style.notifMessage}>{notificationMessage(n)}</p>}

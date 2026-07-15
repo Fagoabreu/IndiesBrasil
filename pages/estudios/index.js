@@ -42,8 +42,14 @@ export default function StudiosPage() {
   async function loadAll(pageNum, searchQuery) {
     setAllLoading(true);
     try {
-      const params = new URLSearchParams({ page: pageNum, limit: 20, search: searchQuery });
-      const res = await fetch(`/api/v1/studios?${params}`, { credentials: "include" });
+      const params = new URLSearchParams({
+        page: pageNum,
+        limit: 20,
+        search: searchQuery,
+      });
+      const res = await fetch(`/api/v1/studios?${params}`, {
+        credentials: "include",
+      });
       const data = await res.json();
       const rows = Array.isArray(data) ? data : [];
       setAllStudios((prev) => (pageNum === 1 ? rows : [...prev, ...rows]));
@@ -141,7 +147,11 @@ export default function StudiosPage() {
         title={PAGE_TITLE}
         description={PAGE_DESCRIPTION}
         canonical={PAGE_URL}
-        openGraph={{ title: PAGE_TITLE, description: PAGE_DESCRIPTION, url: PAGE_URL }}
+        openGraph={{
+          title: PAGE_TITLE,
+          description: PAGE_DESCRIPTION,
+          url: PAGE_URL,
+        }}
       />
 
       {/* PAGE HEADER */}
@@ -252,7 +262,12 @@ export default function StudiosPage() {
 }
 
 function StudioCard({ studio }) {
-  const tiltRef = useTiltEffect({ max: 8, perspective: 900, scale: 1.02, maxGlare: 0.12 });
+  const tiltRef = useTiltEffect({
+    max: 8,
+    perspective: 900,
+    scale: 1.02,
+    maxGlare: 0.12,
+  });
 
   return (
     <li className={styles.studioCard} ref={tiltRef}>

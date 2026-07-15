@@ -94,7 +94,12 @@ async function upsertForUser(userId, { fgColor, bgColor, logoSize, logoFile }) {
   return newQr;
 }
 
-const qrCode = { findByUserId, upsertForUser, findByOrganizationId, upsertForOrganization };
+const qrCode = {
+  findByUserId,
+  upsertForUser,
+  findByOrganizationId,
+  upsertForOrganization,
+};
 export default qrCode;
 
 // ─────────────────────────────────────────────────────────────

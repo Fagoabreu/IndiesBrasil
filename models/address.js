@@ -10,7 +10,9 @@ function validate(data) {
     throw new ValidationError({ message: "Cidade é obrigatória no endereço." });
   }
   if (!data.state?.trim()) {
-    throw new ValidationError({ message: "Estado (UF) é obrigatório no endereço." });
+    throw new ValidationError({
+      message: "Estado (UF) é obrigatório no endereço.",
+    });
   }
 }
 

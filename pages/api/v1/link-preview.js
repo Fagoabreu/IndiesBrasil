@@ -2,10 +2,7 @@ import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import embededResolver from "infra/embededResolver";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-router.get(getHandler);
-export default router.handler(controller.errorHandlers);
+export default createRouter().use(controller.injectAnonymousOrUser).get(getHandler).handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const { url } = request.query;

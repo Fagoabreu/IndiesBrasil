@@ -4,13 +4,11 @@ import user from "models/user.js";
 import activation from "models/activation.js";
 import authorization from "@/models/authorization";
 
-const router = createRouter();
-
-router.use(controller.injectAnonymousOrUser);
-router.post(controller.canRequest("create:user"), postHandler);
-router.get(controller.canRequest("read:user"), getHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .post(controller.canRequest("create:user"), postHandler)
+  .get(controller.canRequest("read:user"), getHandler)
+  .handler(controller.errorHandlers);
 
 async function postHandler(request, response) {
   const userTryingToPost = request.context.user;

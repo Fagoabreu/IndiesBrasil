@@ -7,8 +7,19 @@ export default function DeleteConfirm({ itemName, onConfirm, onCancel, loading }
       title="Confirmação de Exclusão"
       onClose={onCancel}
       footerButtons={[
-        { buttonType: "default", content: "Cancelar", onClick: onCancel, disabled: loading },
-        { buttonType: "danger", content: "Excluir", onClick: onConfirm, loading, disabled: loading },
+        {
+          buttonType: "default",
+          content: "Cancelar",
+          onClick: onCancel,
+          disabled: loading,
+        },
+        {
+          buttonType: "danger",
+          content: "Excluir",
+          onClick: onConfirm,
+          loading,
+          disabled: loading,
+        },
       ]}
     >
       <div style={{ padding: 16 }}>

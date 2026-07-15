@@ -106,7 +106,9 @@ async function create(ownerUser, data) {
   await validateOwnerHasNoStudio(ownerUser.id);
 
   // Gera o UUID antecipadamente para poder compor o slug na mesma query
-  const idResult = await database.query({ text: `SELECT gen_random_uuid() AS id` });
+  const idResult = await database.query({
+    text: `SELECT gen_random_uuid() AS id`,
+  });
   const newId = idResult.rows[0].id;
   const slug = generateSlug(data.name, newId);
 
@@ -318,7 +320,9 @@ async function createInvitation(orgId, invitedUserId, invitedBy, { role = "membe
   // Verifica se já é membro
   const alreadyMember = await isMember(orgId, invitedUserId);
   if (alreadyMember) {
-    throw new ValidationError({ message: "Usuário já é membro deste estúdio." });
+    throw new ValidationError({
+      message: "Usuário já é membro deste estúdio.",
+    });
   }
 
   const result = await database.query({
@@ -406,10 +410,16 @@ async function respondToInvitation(invitationId, userId, accept) {
 
 async function cancelInvitation(invitationId, requestingUserId, org) {
   const inv = await findInvitationById(invitationId);
-  if (inv.org_id !== org.id) throw new ForbiddenError({ message: "Convite não pertence a este estúdio." });
+  if (inv.org_id !== org.id)
+    throw new ForbiddenError({
+      message: "Convite não pertence a este estúdio.",
+    });
 
   const canCancel = inv.invited_by === requestingUserId || (await isAdmin(org.id, requestingUserId)) || org.owner_id === requestingUserId;
-  if (!canCancel) throw new ForbiddenError({ message: "Sem permissão para cancelar este convite." });
+  if (!canCancel)
+    throw new ForbiddenError({
+      message: "Sem permissão para cancelar este convite.",
+    });
 
   await database.query({
     text: `UPDATE org_invitations SET status = 'cancelled', updated_at = now() WHERE id = $1`,
@@ -482,7 +492,9 @@ async function requestOwnershipTransfer(orgId, fromUserId, toUserId) {
   // Verifica que o destinatário é membro
   const targetIsMember = await isMember(orgId, toUserId);
   if (!targetIsMember) {
-    throw new ValidationError({ message: "O destinatário precisa ser membro do estúdio antes de receber a responsabilidade." });
+    throw new ValidationError({
+      message: "O destinatário precisa ser membro do estúdio antes de receber a responsabilidade.",
+    });
   }
 
   // Verifica que não há transferência pendente
@@ -491,7 +503,9 @@ async function requestOwnershipTransfer(orgId, fromUserId, toUserId) {
     values: [orgId],
   });
   if (existing.rows.length > 0) {
-    throw new ValidationError({ message: "Já existe uma transferência pendente para este estúdio." });
+    throw new ValidationError({
+      message: "Já existe uma transferência pendente para este estúdio.",
+    });
   }
 
   const result = await database.query({
@@ -511,8 +525,14 @@ async function respondToTransfer(transferId, userId, accept) {
   });
   const transfer = result.rows[0];
   if (!transfer) throw new NotFoundError({ message: "Transferência não encontrada." });
-  if (transfer.to_user_id !== userId) throw new ForbiddenError({ message: "Esta transferência não é para você." });
-  if (transfer.status !== "pending") throw new ValidationError({ message: "Esta transferência já foi respondida." });
+  if (transfer.to_user_id !== userId)
+    throw new ForbiddenError({
+      message: "Esta transferência não é para você.",
+    });
+  if (transfer.status !== "pending")
+    throw new ValidationError({
+      message: "Esta transferência já foi respondida.",
+    });
 
   const newStatus = accept ? "accepted" : "declined";
   await database.query({
@@ -730,12 +750,16 @@ const VALID_RELATIONSHIP_TYPES = [
  */
 async function requestRelationship(fromOrgId, toSlug, type, userId) {
   if (!VALID_RELATIONSHIP_TYPES.includes(type)) {
-    throw new ValidationError({ message: `Tipo de relacionamento inválido: ${type}` });
+    throw new ValidationError({
+      message: `Tipo de relacionamento inválido: ${type}`,
+    });
   }
 
   const target = await findBySlug(toSlug);
   if (target.id === fromOrgId) {
-    throw new ValidationError({ message: "Um estúdio não pode criar um relacionamento consigo mesmo." });
+    throw new ValidationError({
+      message: "Um estúdio não pode criar um relacionamento consigo mesmo.",
+    });
   }
 
   const orgAId = fromOrgId < target.id ? fromOrgId : target.id;
@@ -747,8 +771,14 @@ async function requestRelationship(fromOrgId, toSlug, type, userId) {
   });
   if (existing.rowCount) {
     const s = existing.rows[0].status;
-    if (s === "accepted") throw new ValidationError({ message: "Já existe um relacionamento ativo entre esses estúdios." });
-    if (s === "pending") throw new ValidationError({ message: "Já existe uma solicitação pendente entre esses estúdios." });
+    if (s === "accepted")
+      throw new ValidationError({
+        message: "Já existe um relacionamento ativo entre esses estúdios.",
+      });
+    if (s === "pending")
+      throw new ValidationError({
+        message: "Já existe uma solicitação pendente entre esses estúdios.",
+      });
   }
 
   const result = await database.query({
@@ -770,7 +800,9 @@ async function requestRelationship(fromOrgId, toSlug, type, userId) {
  */
 async function respondToRelationship(relationshipId, orgId, userId, action) {
   if (!["accept", "reject"].includes(action)) {
-    throw new ValidationError({ message: "Ação inválida. Use 'accept' ou 'reject'." });
+    throw new ValidationError({
+      message: "Ação inválida. Use 'accept' ou 'reject'.",
+    });
   }
 
   const rel = await database.query({
@@ -780,11 +812,16 @@ async function respondToRelationship(relationshipId, orgId, userId, action) {
   if (!rel.rowCount) throw new NotFoundError({ message: "Relacionamento não encontrado." });
 
   const row = rel.rows[0];
-  if (row.status !== "pending") throw new ValidationError({ message: "Apenas solicitações pendentes podem ser respondidas." });
+  if (row.status !== "pending")
+    throw new ValidationError({
+      message: "Apenas solicitações pendentes podem ser respondidas.",
+    });
 
   const receiverOrgId = row.requested_by_org_id === row.org_a_id ? row.org_b_id : row.org_a_id;
   if (receiverOrgId !== orgId) {
-    throw new ForbiddenError({ message: "Apenas o estúdio que recebeu a solicitação pode respondê-la." });
+    throw new ForbiddenError({
+      message: "Apenas o estúdio que recebeu a solicitação pode respondê-la.",
+    });
   }
 
   const newStatus = action === "accept" ? "accepted" : "rejected";
@@ -812,7 +849,9 @@ async function removeRelationship(relationshipId, orgId) {
 
   const { org_a_id, org_b_id } = rel.rows[0];
   if (orgId !== org_a_id && orgId !== org_b_id) {
-    throw new ForbiddenError({ message: "Você não tem permissão para remover este relacionamento." });
+    throw new ForbiddenError({
+      message: "Você não tem permissão para remover este relacionamento.",
+    });
   }
 
   await database.query({

@@ -56,7 +56,10 @@ function makeInstancePusher(eventStart, eventEnd, until, maxCount) {
   const instances = [];
   function push(d) {
     if (d >= eventStart && d <= until && instances.length < maxCount) {
-      instances.push({ starts_at: new Date(d), ends_at: new Date(d.getTime() + duration) });
+      instances.push({
+        starts_at: new Date(d),
+        ends_at: new Date(d.getTime() + duration),
+      });
     }
   }
   return { push, instances };
@@ -248,11 +251,15 @@ async function create(data, userId) {
   const endsAt = new Date(data.ends_at);
 
   if (endsAt < startsAt) {
-    throw new ValidationError({ message: "Data de término não pode ser anterior à de início." });
+    throw new ValidationError({
+      message: "Data de término não pode ser anterior à de início.",
+    });
   }
 
   if (data.is_recurring && !data.recurrence_rule) {
-    throw new ValidationError({ message: "Eventos recorrentes precisam de uma regra de recorrência." });
+    throw new ValidationError({
+      message: "Eventos recorrentes precisam de uma regra de recorrência.",
+    });
   }
 
   const slug = `${slugify(data.title)}-${Date.now().toString(36)}`;
@@ -510,11 +517,15 @@ async function update(id, data, userId) {
   const event = await findById(id, userId);
 
   if (event.created_by !== userId) {
-    throw new ForbiddenError({ message: "Apenas o organizador pode editar este evento." });
+    throw new ForbiddenError({
+      message: "Apenas o organizador pode editar este evento.",
+    });
   }
 
   if (event.status === "cancelled") {
-    throw new ValidationError({ message: "Não é possível editar um evento cancelado." });
+    throw new ValidationError({
+      message: "Não é possível editar um evento cancelado.",
+    });
   }
 
   const allowed = [
@@ -567,7 +578,9 @@ async function cancel(id, userId) {
   const event = await findById(id, userId);
 
   if (event.created_by !== userId) {
-    throw new ForbiddenError({ message: "Apenas o organizador pode cancelar este evento." });
+    throw new ForbiddenError({
+      message: "Apenas o organizador pode cancelar este evento.",
+    });
   }
 
   await database.query({
@@ -590,7 +603,9 @@ async function cancel(id, userId) {
 async function upsertRsvp(eventId, userId, status, instanceId = null) {
   const validStatuses = ["going", "maybe", "not_going"];
   if (!validStatuses.includes(status)) {
-    throw new ValidationError({ message: `Status de RSVP inválido. Use: ${validStatuses.join(", ")}.` });
+    throw new ValidationError({
+      message: `Status de RSVP inválido. Use: ${validStatuses.join(", ")}.`,
+    });
   }
 
   // Verifica se o evento existe
@@ -602,7 +617,9 @@ async function upsertRsvp(eventId, userId, status, instanceId = null) {
 
   const event = eventResult.rows[0];
   if (event.event_status === "cancelled") {
-    throw new ValidationError({ message: "Não é possível confirmar presença em evento cancelado." });
+    throw new ValidationError({
+      message: "Não é possível confirmar presença em evento cancelado.",
+    });
   }
 
   // Evento privado: verificar convite
@@ -612,7 +629,9 @@ async function upsertRsvp(eventId, userId, status, instanceId = null) {
       values: [eventId, userId],
     });
     if (!inviteResult.rowCount) {
-      throw new ForbiddenError({ message: "Você precisa de um convite aceito para confirmar presença." });
+      throw new ForbiddenError({
+        message: "Você precisa de um convite aceito para confirmar presença.",
+      });
     }
   }
 
@@ -668,7 +687,9 @@ async function upsertOrgRsvp(eventId, orgId, userId) {
   });
   if (!eventResult.rowCount) throw new NotFoundError({ message: "Evento não encontrado." });
   if (eventResult.rows[0].event_status === "cancelled") {
-    throw new ValidationError({ message: "Não é possível confirmar presença em evento cancelado." });
+    throw new ValidationError({
+      message: "Não é possível confirmar presença em evento cancelado.",
+    });
   }
 
   // Valida membro da org
@@ -759,7 +780,9 @@ async function invite(eventId, targetUserId, inviterUserId) {
 
   const event = eventResult.rows[0];
   if (event.created_by !== inviterUserId) {
-    throw new ForbiddenError({ message: "Apenas o organizador pode convidar usuários." });
+    throw new ForbiddenError({
+      message: "Apenas o organizador pode convidar usuários.",
+    });
   }
 
   await database.query({
@@ -775,7 +798,9 @@ async function invite(eventId, targetUserId, inviterUserId) {
 async function respondInvitation(eventId, userId, status) {
   const validStatuses = ["accepted", "declined"];
   if (!validStatuses.includes(status)) {
-    throw new ValidationError({ message: "Status inválido. Use: accepted ou declined." });
+    throw new ValidationError({
+      message: "Status inválido. Use: accepted ou declined.",
+    });
   }
 
   const result = await database.query({
@@ -881,7 +906,9 @@ async function extendInstances(eventId, windowEnd) {
 async function setBannerImage(id, file, userId) {
   const ev = await findById(id, userId);
   if (ev.created_by !== userId) {
-    throw new ForbiddenError({ message: "Apenas o organizador pode editar este evento." });
+    throw new ForbiddenError({
+      message: "Apenas o organizador pode editar este evento.",
+    });
   }
   if (ev.banner_image_id) {
     try {
@@ -901,7 +928,9 @@ async function setBannerImage(id, file, userId) {
 async function setBannerExternalUrl(id, url, userId) {
   const ev = await findById(id, userId);
   if (ev.created_by !== userId) {
-    throw new ForbiddenError({ message: "Apenas o organizador pode editar este evento." });
+    throw new ForbiddenError({
+      message: "Apenas o organizador pode editar este evento.",
+    });
   }
   if (!url?.trim()) throw new ValidationError({ message: "URL da imagem inválida." });
   if (ev.banner_image_id) {
@@ -921,7 +950,9 @@ async function setBannerExternalUrl(id, url, userId) {
 async function removeBanner(id, userId) {
   const ev = await findById(id, userId);
   if (ev.created_by !== userId) {
-    throw new ForbiddenError({ message: "Apenas o organizador pode editar este evento." });
+    throw new ForbiddenError({
+      message: "Apenas o organizador pode editar este evento.",
+    });
   }
   if (ev.banner_image_id) {
     try {

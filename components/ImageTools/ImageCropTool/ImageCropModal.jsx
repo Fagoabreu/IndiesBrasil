@@ -79,8 +79,19 @@ export default function ImageCropModal({ imageSrc, preset = "avatar", onConfirm,
       onClose={onClose}
       returnFocusRef={returnFocusRef}
       footerButtons={[
-        { buttonType: "default", content: "Cancelar", onClick: onClose, disabled: loading },
-        { buttonType: "primary", content: "Confirmar recorte", onClick: handleConfirm, loading, disabled: loading },
+        {
+          buttonType: "default",
+          content: "Cancelar",
+          onClick: onClose,
+          disabled: loading,
+        },
+        {
+          buttonType: "primary",
+          content: "Confirmar recorte",
+          onClick: handleConfirm,
+          loading,
+          disabled: loading,
+        },
       ]}
     >
       <div className={styles.body}>

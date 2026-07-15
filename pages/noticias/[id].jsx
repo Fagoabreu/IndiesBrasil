@@ -47,7 +47,9 @@ export default function NewsDetailPage() {
       setNotFound(false);
       setError(null);
       try {
-        const res = await fetch(`/api/v1/news/${id}`, { credentials: "include" });
+        const res = await fetch(`/api/v1/news/${id}`, {
+          credentials: "include",
+        });
         if (res.status === 404) {
           setNotFound(true);
           return;
@@ -62,7 +64,9 @@ export default function NewsDetailPage() {
         setUserFactcheck(data.user_factcheck);
 
         // Carregar comentários
-        const commentsRes = await fetch(`/api/v1/news/${id}/comments`, { credentials: "include" });
+        const commentsRes = await fetch(`/api/v1/news/${id}/comments`, {
+          credentials: "include",
+        });
         if (commentsRes.ok) {
           setComments(await commentsRes.json());
         }
@@ -356,7 +360,8 @@ export default function NewsDetailPage() {
                 <span style={{ color: "#cf222e", fontWeight: 600 }}>⚠️ Possível Fake News</span>
               ) : totalFC > 0 ? (
                 <span style={{ color: "#1a7f37" }}>
-                  ✓ {news.factcheck_count} fact-check{news.factcheck_count !== 1 ? "s" : ""}
+                  ✓ {news.factcheck_count} fact-check
+                  {news.factcheck_count !== 1 ? "s" : ""}
                 </span>
               ) : (
                 <span>Ainda sem verificação</span>
@@ -395,7 +400,13 @@ export default function NewsDetailPage() {
               </button>
             </div>
           ) : (
-            <p style={{ fontSize: "0.85rem", color: "var(--fgColor-muted)", marginBottom: 16 }}>
+            <p
+              style={{
+                fontSize: "0.85rem",
+                color: "var(--fgColor-muted)",
+                marginBottom: 16,
+              }}
+            >
               <Link href="/login" style={{ color: "var(--brand-primary)" }}>
                 Faça login
               </Link>{" "}

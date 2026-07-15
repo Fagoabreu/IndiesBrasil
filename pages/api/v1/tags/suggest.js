@@ -3,11 +3,10 @@ import controller from "infra/controller";
 import tags from "@/models/tags";
 import authorization from "@/models/authorization";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-router.get(controller.canRequest("read:post"), getHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:post"), getHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const userTryingToGet = request.context.user;

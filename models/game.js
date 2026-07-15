@@ -236,7 +236,9 @@ async function findTags(gameId) {
 }
 
 async function findStoreTypes() {
-  const result = await database.query({ text: `SELECT id, name FROM game_store ORDER BY id` });
+  const result = await database.query({
+    text: `SELECT id, name FROM game_store ORDER BY id`,
+  });
   return result.rows;
 }
 
@@ -249,7 +251,9 @@ async function create(orgId, userId, data) {
     throw new ValidationError({ message: "O nome do jogo é obrigatório." });
   }
 
-  const idResult = await database.query({ text: `SELECT gen_random_uuid() AS id` });
+  const idResult = await database.query({
+    text: `SELECT gen_random_uuid() AS id`,
+  });
   const newId = idResult.rows[0].id;
   const slug = generateSlug(data.name, newId);
 
@@ -286,7 +290,14 @@ async function create(orgId, userId, data) {
  * ========================================================= */
 
 async function update(slug, data) {
-  const game = await findById((await database.query({ text: `SELECT id FROM games WHERE slug = $1`, values: [slug] })).rows[0]?.id);
+  const game = await findById(
+    (
+      await database.query({
+        text: `SELECT id FROM games WHERE slug = $1`,
+        values: [slug],
+      })
+    ).rows[0]?.id,
+  );
 
   const updatable = ["name", "short_description", "description", "genre", "engine", "stage", "release_date", "website_url", "trailer_url"];
   const fields = [];
@@ -376,7 +387,9 @@ async function saveBanner(slug, imageId) {
 
 async function addMedia(gameId, { media_type, url, caption = null, display_order = 0 }) {
   if (!["image", "video"].includes(media_type)) {
-    throw new ValidationError({ message: "media_type deve ser 'image' ou 'video'." });
+    throw new ValidationError({
+      message: "media_type deve ser 'image' ou 'video'.",
+    });
   }
   const result = await database.query({
     text: `
@@ -465,7 +478,9 @@ async function findFollowedBy(userId) {
 async function createReview(gameId, userId, { rating, content = null }) {
   rating = Number(rating);
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-    throw new ValidationError({ message: "A nota deve ser um número inteiro entre 1 e 5." });
+    throw new ValidationError({
+      message: "A nota deve ser um número inteiro entre 1 e 5.",
+    });
   }
 
   // Verifica se já avaliou
@@ -474,7 +489,9 @@ async function createReview(gameId, userId, { rating, content = null }) {
     values: [gameId, userId],
   });
   if (existing.rows[0]) {
-    throw new ValidationError({ message: "Você já avaliou este jogo. Edite sua avaliação existente." });
+    throw new ValidationError({
+      message: "Você já avaliou este jogo. Edite sua avaliação existente.",
+    });
   }
 
   const result = await database.query({
@@ -492,7 +509,9 @@ async function updateReview(reviewId, userId, { rating, content }) {
   if (rating !== undefined) {
     rating = Number(rating);
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-      throw new ValidationError({ message: "A nota deve ser um número inteiro entre 1 e 5." });
+      throw new ValidationError({
+        message: "A nota deve ser um número inteiro entre 1 e 5.",
+      });
     }
   }
 
@@ -501,7 +520,10 @@ async function updateReview(reviewId, userId, { rating, content }) {
     values: [reviewId],
   });
   if (!existing.rows[0]) throw new NotFoundError({ message: "Avaliação não encontrada." });
-  if (existing.rows[0].reviewer_id !== userId) throw new ForbiddenError({ message: "Você não pode editar a avaliação de outro usuário." });
+  if (existing.rows[0].reviewer_id !== userId)
+    throw new ForbiddenError({
+      message: "Você não pode editar a avaliação de outro usuário.",
+    });
 
   const fields = [];
   const values = [];

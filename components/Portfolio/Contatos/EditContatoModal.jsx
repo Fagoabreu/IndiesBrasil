@@ -51,7 +51,14 @@ export default function EditContatoModal({ onClose, onSave, initialData }) {
     <Dialog onDismiss={onClose} onClose={onClose}>
       <Dialog.Header>Contato</Dialog.Header>
 
-      <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+      <div
+        style={{
+          padding: 16,
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+        }}
+      >
         {loadingTypes ? (
           <Spinner />
         ) : (

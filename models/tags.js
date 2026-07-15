@@ -4,7 +4,10 @@ import database from "infra/database";
 async function create(tagName) {
   const tagLen = tagName.lenght;
   if (tagLen < 3 || tagLen > 50) {
-    throw new ValidationError({ message: "Tamanho de Tag inválido.", action: "Verifique se as tags enviadas possuem entre 3 e 50 caracters" });
+    throw new ValidationError({
+      message: "Tamanho de Tag inválido.",
+      action: "Verifique se as tags enviadas possuem entre 3 e 50 caracters",
+    });
   }
   const newPost = await runInsertQuery(tagName.toLowerCase());
   return newPost;
@@ -39,7 +42,10 @@ async function selectByName(tagName) {
       values: [tagName],
     });
     if (results.rowCount === 0) {
-      throw new NotFoundError({ message: "Tag não encontrada", action: "Verifique se a tag foi digitada corretamente." });
+      throw new NotFoundError({
+        message: "Tag não encontrada",
+        action: "Verifique se a tag foi digitada corretamente.",
+      });
     }
     return results.rows[0];
   }
@@ -72,7 +78,10 @@ async function getTagsFromText(text) {
 async function getTrendingByPeriod(period, limit = 30) {
   const matchPeriod = period.match(/^\d+d$/);
   if (!matchPeriod) {
-    throw new ValidationError({ message: "formato periodo inválido", action: "verifique o formato do período #número+d" });
+    throw new ValidationError({
+      message: "formato periodo inválido",
+      action: "verifique o formato do período #número+d",
+    });
   }
   const tags = await runSelectQuery(matchPeriod, limit);
   return tags;
@@ -94,7 +103,10 @@ async function getTrendingByPeriod(period, limit = 30) {
       values: [limit],
     });
     if (results.rowCount === 0) {
-      throw new NotFoundError({ message: "Tag não encontrada", action: "Verifique se a tag foi digitada corretamente." });
+      throw new NotFoundError({
+        message: "Tag não encontrada",
+        action: "Verifique se a tag foi digitada corretamente.",
+      });
     }
     return results.rows;
   }
@@ -102,7 +114,10 @@ async function getTrendingByPeriod(period, limit = 30) {
 
 async function getSuggestByName(name, limit = 5) {
   if (name.length < 3) {
-    throw new ValidationError({ message: "Parametro de busca insuficiente", action: "Tamanho minimo para pesquisa é de 3 caracteres" });
+    throw new ValidationError({
+      message: "Parametro de busca insuficiente",
+      action: "Tamanho minimo para pesquisa é de 3 caracteres",
+    });
   }
 
   const tags = await runSelectQuery(`${name}%`, limit);
@@ -120,7 +135,10 @@ async function getSuggestByName(name, limit = 5) {
       values: [name, limit],
     });
     if (results.rowCount === 0) {
-      throw new NotFoundError({ message: "Tag não encontrada", action: "Verifique se a tag foi digitada corretamente." });
+      throw new NotFoundError({
+        message: "Tag não encontrada",
+        action: "Verifique se a tag foi digitada corretamente.",
+      });
     }
     return results.rows;
   }

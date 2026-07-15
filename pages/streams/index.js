@@ -204,7 +204,10 @@ export default function StreamsPage() {
     if (refreshing) return;
     setRefreshing(true);
     try {
-      await fetch("/api/v1/streams/refresh", { method: "POST", credentials: "include" });
+      await fetch("/api/v1/streams/refresh", {
+        method: "POST",
+        credentials: "include",
+      });
       await fetchStudios();
     } finally {
       setRefreshing(false);
@@ -258,7 +261,11 @@ export default function StreamsPage() {
             </button>
             {lastRefreshed && (
               <span className={styles.lastRefreshed}>
-                Atualizado às {lastRefreshed.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                Atualizado às{" "}
+                {lastRefreshed.toLocaleTimeString("pt-BR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </span>
             )}
           </div>

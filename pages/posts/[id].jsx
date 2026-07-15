@@ -25,7 +25,9 @@ export default function PostDetailPage() {
       setNotFound(false);
       setError(null);
       try {
-        const res = await fetch(`/api/v1/posts/${id}`, { credentials: "include" });
+        const res = await fetch(`/api/v1/posts/${id}`, {
+          credentials: "include",
+        });
         if (res.status === 404) {
           setNotFound(true);
           return;
@@ -93,7 +95,14 @@ export default function PostDetailPage() {
       <div style={{ marginBottom: 12 }}>
         <Link
           href="/posts"
-          style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "0.85rem", color: "var(--fgColor-muted)", textDecoration: "none" }}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4,
+            fontSize: "0.85rem",
+            color: "var(--fgColor-muted)",
+            textDecoration: "none",
+          }}
         >
           <ArrowLeftIcon size={14} /> Voltar ao feed
         </Link>

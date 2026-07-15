@@ -5,13 +5,12 @@ import comment from "@/models/comment.js";
 
 import { createRouter } from "next-connect";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-router.get(controller.canRequest("read:post"), getHandler);
-router.post(controller.canRequest("create:post"), postHandler);
-router.delete(controller.canRequest("create:post"), deleteHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:post"), getHandler)
+  .post(controller.canRequest("create:post"), postHandler)
+  .delete(controller.canRequest("create:post"), deleteHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const post_id = request.query.post_id;

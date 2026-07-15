@@ -4,14 +4,12 @@ import authorization from "models/authorization";
 import organization from "models/organization";
 import { ForbiddenError } from "infra/errors";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(controller.canRequest("read:studio"), getHandler);
-router.patch(controller.canRequest("update:studio"), updateHandler);
-router.delete(controller.canRequest("delete:studio"), deleteHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:studio"), getHandler)
+  .patch(controller.canRequest("update:studio"), updateHandler)
+  .delete(controller.canRequest("delete:studio"), deleteHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const { slug } = request.query;
@@ -29,7 +27,19 @@ async function getHandler(request, response) {
 
   // Agrupar campos de endereço em objeto aninhado (vêm como colunas planas do JOIN)
   const { street, number, complement, neighborhood, city, state, zip_code, country, ...studioData } = studio;
-  const address = city || street ? { street, number, complement, neighborhood, city, state, zip_code, country } : null;
+  const address =
+    city || street
+      ? {
+          street,
+          number,
+          complement,
+          neighborhood,
+          city,
+          state,
+          zip_code,
+          country,
+        }
+      : null;
 
   return response.status(200).json({
     ...studioData,
@@ -58,7 +68,19 @@ async function updateHandler(request, response) {
 
   // Mesma normalização do getHandler: agrupar campos de endereço
   const { street, number, complement, neighborhood, city, state, zip_code, country, ...studioData } = raw;
-  const address = city || street ? { street, number, complement, neighborhood, city, state, zip_code, country } : null;
+  const address =
+    city || street
+      ? {
+          street,
+          number,
+          complement,
+          neighborhood,
+          city,
+          state,
+          zip_code,
+          country,
+        }
+      : null;
 
   return response.status(200).json({ ...studioData, address });
 }
@@ -70,7 +92,9 @@ async function deleteHandler(request, response) {
   const studio = await organization.findBySlug(slug);
 
   if (studio.owner_id !== requestUser.id && !authorization.can(requestUser, "delete:studio")) {
-    throw new ForbiddenError({ message: "Apenas o responsável pelo estúdio pode excluí-lo." });
+    throw new ForbiddenError({
+      message: "Apenas o responsável pelo estúdio pode excluí-lo.",
+    });
   }
 
   // Soft delete não implementado: a tabela organizations não possui deleted_at.

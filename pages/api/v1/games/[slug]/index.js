@@ -3,14 +3,12 @@ import controller from "infra/controller";
 import game from "models/game";
 import { ForbiddenError } from "infra/errors";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(controller.canRequest("read:game"), getHandler);
-router.patch(controller.canRequest("update:game"), patchHandler);
-router.delete(controller.canRequest("delete:game"), deleteHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:game"), getHandler)
+  .patch(controller.canRequest("update:game"), patchHandler)
+  .delete(controller.canRequest("delete:game"), deleteHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const requestUser = request.context.user;

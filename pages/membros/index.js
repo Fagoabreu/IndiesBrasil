@@ -49,7 +49,9 @@ export default function MembersPage() {
 
     async function loadFollowing() {
       try {
-        const res = await fetch("/api/v1/users?isfollowing=true", { credentials: "include" });
+        const res = await fetch("/api/v1/users?isfollowing=true", {
+          credentials: "include",
+        });
         const data = await res.json();
         if (res.ok) {
           setFollowing(data || []);

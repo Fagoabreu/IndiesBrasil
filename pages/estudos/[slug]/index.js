@@ -41,7 +41,9 @@ export default function CursoPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/v1/courses/${slug}`, { credentials: "include" });
+      const res = await fetch(`/api/v1/courses/${slug}`, {
+        credentials: "include",
+      });
       if (!res.ok) {
         if (res.status === 404) setError("Curso não encontrado.");
         else setError("Erro ao carregar o curso.");
@@ -60,7 +62,9 @@ export default function CursoPage() {
 
   async function loadEnrollmentStatus() {
     try {
-      const res = await fetch(`/api/v1/courses/${slug}/enrollments`, { credentials: "include" });
+      const res = await fetch(`/api/v1/courses/${slug}/enrollments`, {
+        credentials: "include",
+      });
       if (res.ok) {
         const data = await res.json();
         setIsEnrolled(data.enrolled);
@@ -105,7 +109,10 @@ export default function CursoPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ rating: userRating, review: userReview || null }),
+        body: JSON.stringify({
+          rating: userRating,
+          review: userReview || null,
+        }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -122,7 +129,10 @@ export default function CursoPage() {
   async function handleDelete() {
     if (!confirm("Tem certeza que deseja remover este curso?")) return;
     try {
-      await fetch(`/api/v1/courses/${slug}`, { method: "DELETE", credentials: "include" });
+      await fetch(`/api/v1/courses/${slug}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       router.push("/estudos");
     } catch {
       // silently fail

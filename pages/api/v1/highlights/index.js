@@ -2,11 +2,7 @@ import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import database from "infra/database";
 
-const router = createRouter();
-
-router.get(getHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter().get(getHandler).handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const [games, boardgames, books] = await Promise.all([

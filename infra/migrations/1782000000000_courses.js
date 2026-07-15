@@ -100,8 +100,12 @@ exports.up = (pgm) => {
       default: pgm.func("timezone('utc', now())"),
     },
   });
-  pgm.createConstraint("course_lessons", "course_lessons_pkey", { primaryKey: "id" });
-  pgm.createIndex("course_lessons", ["course_id", "order_index"], { unique: true });
+  pgm.createConstraint("course_lessons", "course_lessons_pkey", {
+    primaryKey: "id",
+  });
+  pgm.createIndex("course_lessons", ["course_id", "order_index"], {
+    unique: true,
+  });
 
   /* ---------------------------------------------------------------
    * 3. course_tags
@@ -120,7 +124,9 @@ exports.up = (pgm) => {
       onDelete: "CASCADE",
     },
   });
-  pgm.createConstraint("course_tags", "course_tags_pkey", { primaryKey: ["course_id", "tag_id"] });
+  pgm.createConstraint("course_tags", "course_tags_pkey", {
+    primaryKey: ["course_id", "tag_id"],
+  });
 
   /* ---------------------------------------------------------------
    * 4. course_ratings
@@ -148,7 +154,9 @@ exports.up = (pgm) => {
       default: pgm.func("timezone('utc', now())"),
     },
   });
-  pgm.createConstraint("course_ratings", "course_ratings_pkey", { primaryKey: ["course_id", "user_id"] });
+  pgm.createConstraint("course_ratings", "course_ratings_pkey", {
+    primaryKey: ["course_id", "user_id"],
+  });
 
   /* ---------------------------------------------------------------
    * 5. course_progress
@@ -175,7 +183,9 @@ exports.up = (pgm) => {
       type: "timestamptz",
     },
   });
-  pgm.createConstraint("course_progress", "course_progress_pkey", { primaryKey: ["user_id", "lesson_id"] });
+  pgm.createConstraint("course_progress", "course_progress_pkey", {
+    primaryKey: ["user_id", "lesson_id"],
+  });
 
   /* ---------------------------------------------------------------
    * 6. lesson_comments
@@ -208,7 +218,9 @@ exports.up = (pgm) => {
       default: pgm.func("timezone('utc', now())"),
     },
   });
-  pgm.createConstraint("lesson_comments", "lesson_comments_pkey", { primaryKey: "id" });
+  pgm.createConstraint("lesson_comments", "lesson_comments_pkey", {
+    primaryKey: "id",
+  });
   pgm.createIndex("lesson_comments", ["lesson_id", "created_at"]);
 };
 

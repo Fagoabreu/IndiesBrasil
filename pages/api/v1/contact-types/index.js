@@ -3,12 +3,11 @@ import authorization from "@/models/authorization";
 import contact from "@/models/contact";
 import { createRouter } from "next-connect";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-router.get(controller.canRequest("read:session"), getHandler);
-router.post(controller.canRequest("read:admin"), postHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:session"), getHandler)
+  .post(controller.canRequest("read:admin"), postHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const userTryingToRequest = request.context.user;

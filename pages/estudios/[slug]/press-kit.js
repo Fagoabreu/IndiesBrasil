@@ -65,7 +65,11 @@ const SOCIAL_ICONS = {
 
 function formatDateBR(dateStr) {
   if (!dateStr) return "";
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long", year: "numeric" }).format(new Date(dateStr));
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(dateStr));
 }
 
 function formatCNPJ(raw) {

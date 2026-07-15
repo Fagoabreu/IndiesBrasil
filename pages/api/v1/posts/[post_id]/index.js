@@ -5,12 +5,11 @@ import post from "@/models/post.js";
 import uploadedImages from "@/models/uploadedImages";
 import { createRouter } from "next-connect";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-router.get(getHandler);
-router.delete(controller.canRequest("read:session"), deleteHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(getHandler)
+  .delete(controller.canRequest("read:session"), deleteHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const { post_id } = request.query;

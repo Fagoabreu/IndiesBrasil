@@ -58,7 +58,10 @@ export default function GameReviews({ reviewsApiUrl, avgRating, reviewCount, use
   async function handleSubmit(e) {
     e.preventDefault();
     if (!reviewRating) {
-      setReviewMsg({ type: "error", text: "Selecione uma nota de 1 a 5 estrelas." });
+      setReviewMsg({
+        type: "error",
+        text: "Selecione uma nota de 1 a 5 estrelas.",
+      });
       return;
     }
     setReviewMsg({ type: null, text: "" });
@@ -70,12 +73,21 @@ export default function GameReviews({ reviewsApiUrl, avgRating, reviewCount, use
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify(
-          isEdit ? { reviewId: userReview.id, rating: reviewRating, content: reviewContent } : { rating: reviewRating, content: reviewContent },
+          isEdit
+            ? {
+                reviewId: userReview.id,
+                rating: reviewRating,
+                content: reviewContent,
+              }
+            : { rating: reviewRating, content: reviewContent },
         ),
       });
       const data = await res.json();
       if (!res.ok) {
-        setReviewMsg({ type: "error", text: data.message || "Erro ao salvar avaliação." });
+        setReviewMsg({
+          type: "error",
+          text: data.message || "Erro ao salvar avaliação.",
+        });
         return;
       }
       setReviewMsg({ type: "success", text: "Avaliação salva!" });

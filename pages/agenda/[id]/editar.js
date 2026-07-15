@@ -109,7 +109,9 @@ export default function EditarEventoPage() {
     async function load() {
       setLoading(true);
       try {
-        const res = await fetch(`/api/v1/events/${id}`, { credentials: "include" });
+        const res = await fetch(`/api/v1/events/${id}`, {
+          credentials: "include",
+        });
         if (res.status === 404) {
           setNotFound(true);
           return;
@@ -173,7 +175,10 @@ export default function EditarEventoPage() {
   async function handleRemoveBanner() {
     setBannerLoading(true);
     try {
-      await fetch(`/api/v1/events/${id}/banner`, { method: "DELETE", credentials: "include" });
+      await fetch(`/api/v1/events/${id}/banner`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       setCurrentBannerUrl(null);
     } finally {
       setBannerLoading(false);

@@ -25,7 +25,11 @@ import styles from "./studio.module.css";
 
 function formatDateBR(dateStr) {
   if (!dateStr) return "";
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long", year: "numeric" }).format(new Date(dateStr));
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(dateStr));
 }
 
 /** Extrai URL de embed para YouTube a partir de uma URL fornecida pelo usuário. */
@@ -81,7 +85,12 @@ export default function StudioPage() {
   const { user: authUser, loadingUser } = useUser();
 
   const [studio, setStudio] = useState(null);
-  const [viewer, setViewer] = useState({ isFollowing: false, isMember: false, isAdmin: false, isOwner: false });
+  const [viewer, setViewer] = useState({
+    isFollowing: false,
+    isMember: false,
+    isAdmin: false,
+    isOwner: false,
+  });
   const [loading, setLoading] = useState(true);
   const [statusMsg, setStatusMsg] = useState({ type: null, text: "" });
 
@@ -112,7 +121,11 @@ export default function StudioPage() {
   const loadingPosts = studioPosts === null;
 
   // Relacionamentos
-  const [relationships, setRelationships] = useState({ accepted: [], pending_incoming: [], pending_outgoing: [] });
+  const [relationships, setRelationships] = useState({
+    accepted: [],
+    pending_incoming: [],
+    pending_outgoing: [],
+  });
   const [relForm, setRelForm] = useState({ targetSlug: "", type: "partner" });
   const [relFormOpen, setRelFormOpen] = useState(false);
   const [relFormLoading, setRelFormLoading] = useState(false);
@@ -126,7 +139,9 @@ export default function StudioPage() {
     if (!slug) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/v1/studios/${slug}`, { credentials: "include" });
+      const res = await fetch(`/api/v1/studios/${slug}`, {
+        credentials: "include",
+      });
       const data = await res.json();
       if (!res.ok || data.status_code) {
         setStudio(null);
@@ -148,7 +163,9 @@ export default function StudioPage() {
     const loadStudio = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/v1/studios/${slug}`, { credentials: "include" });
+        const res = await fetch(`/api/v1/studios/${slug}`, {
+          credentials: "include",
+        });
         const data = await res.json();
         if (cancelled) return;
         if (!res.ok || data.status_code) {
@@ -246,7 +263,9 @@ export default function StudioPage() {
   async function fetchRelationships() {
     if (!slug) return;
     try {
-      const res = await fetch(`/api/v1/studios/${slug}/relationships`, { credentials: "include" });
+      const res = await fetch(`/api/v1/studios/${slug}/relationships`, {
+        credentials: "include",
+      });
       if (res.ok) {
         const data = await res.json();
         setRelationships(data);
@@ -280,7 +299,14 @@ export default function StudioPage() {
 
   const handleFollowChange = useCallback((nowFollowing) => {
     setViewer((v) => ({ ...v, isFollowing: nowFollowing }));
-    setStudio((s) => (s ? { ...s, follower_count: (s.follower_count ?? 0) + (nowFollowing ? 1 : -1) } : s));
+    setStudio((s) =>
+      s
+        ? {
+            ...s,
+            follower_count: (s.follower_count ?? 0) + (nowFollowing ? 1 : -1),
+          }
+        : s,
+    );
   }, []);
 
   const [respondingInvite, setRespondingInvite] = useState(false);
@@ -300,7 +326,10 @@ export default function StudioPage() {
         if (accept) fetchStudio();
       } else {
         const err = await res.json();
-        setStatusMsg({ type: "error", text: err.message || "Erro ao responder convite." });
+        setStatusMsg({
+          type: "error",
+          text: err.message || "Erro ao responder convite.",
+        });
       }
     } catch {
       setStatusMsg({ type: "error", text: "Erro ao responder convite." });
@@ -358,7 +387,9 @@ export default function StudioPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ banner_video_url: videoUrlDraft.trim() || null }),
+        body: JSON.stringify({
+          banner_video_url: videoUrlDraft.trim() || null,
+        }),
       });
       if (!res.ok) throw new Error("Falha ao salvar URL do vídeo.");
       await fetchStudio();
@@ -414,7 +445,10 @@ export default function StudioPage() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ target_slug: relForm.targetSlug.trim(), type: relForm.type }),
+        body: JSON.stringify({
+          target_slug: relForm.targetSlug.trim(),
+          type: relForm.type,
+        }),
       });
       if (res.ok) {
         setRelForm({ targetSlug: "", type: "partner" });
@@ -885,13 +919,23 @@ export default function StudioPage() {
                             className={styles.relFormInput}
                             placeholder="Slug do estúdio (ex: acme-games)"
                             value={relForm.targetSlug}
-                            onChange={(e) => setRelForm((f) => ({ ...f, targetSlug: e.target.value }))}
+                            onChange={(e) =>
+                              setRelForm((f) => ({
+                                ...f,
+                                targetSlug: e.target.value,
+                              }))
+                            }
                             required
                           />
                           <select
                             className={styles.relFormSelect}
                             value={relForm.type}
-                            onChange={(e) => setRelForm((f) => ({ ...f, type: e.target.value }))}
+                            onChange={(e) =>
+                              setRelForm((f) => ({
+                                ...f,
+                                type: e.target.value,
+                              }))
+                            }
                           >
                             {Object.entries(RELATIONSHIP_TYPE_LABELS).map(([val, label]) => (
                               <option key={val} value={val}>

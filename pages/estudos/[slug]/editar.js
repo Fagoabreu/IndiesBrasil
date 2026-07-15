@@ -70,7 +70,9 @@ export default function EditarCursoPage() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/v1/courses/${slug}`, { credentials: "include" });
+        const res = await fetch(`/api/v1/courses/${slug}`, {
+          credentials: "include",
+        });
         const data = await res.json();
         if (!res.ok || data.status_code) {
           router.replace(`/estudos/${slug}`);
@@ -194,7 +196,10 @@ export default function EditarCursoPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setStatusMsg({ type: "error", text: data.message || "Erro ao enviar capa." });
+        setStatusMsg({
+          type: "error",
+          text: data.message || "Erro ao enviar capa.",
+        });
         return;
       }
       setCoverUrl(data.cover_url);
@@ -216,7 +221,10 @@ export default function EditarCursoPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setStatusMsg({ type: "error", text: data.message || "Erro ao remover capa." });
+        setStatusMsg({
+          type: "error",
+          text: data.message || "Erro ao remover capa.",
+        });
         return;
       }
       setCoverUrl(null);
@@ -238,7 +246,10 @@ export default function EditarCursoPage() {
     }
 
     if (title.trim().length < 3) {
-      setStatusMsg({ type: "error", text: "O título do curso deve ter pelo menos 3 caracteres." });
+      setStatusMsg({
+        type: "error",
+        text: "O título do curso deve ter pelo menos 3 caracteres.",
+      });
       return;
     }
 
@@ -260,7 +271,10 @@ export default function EditarCursoPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setStatusMsg({ type: "error", text: data.message || "Erro ao salvar." });
+        setStatusMsg({
+          type: "error",
+          text: data.message || "Erro ao salvar.",
+        });
         return;
       }
 
@@ -268,10 +282,15 @@ export default function EditarCursoPage() {
 
       if (data.slug && data.slug !== courseSlug) {
         setCourseSlug(data.slug);
-        router.replace(`/estudos/${data.slug}/editar`, undefined, { shallow: true });
+        router.replace(`/estudos/${data.slug}/editar`, undefined, {
+          shallow: true,
+        });
       }
     } catch {
-      setStatusMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setStatusMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setSaving(false);
     }
@@ -290,7 +309,10 @@ export default function EditarCursoPage() {
     setLessonMsg({ type: null, text: "" });
     setAddingLesson(true);
     try {
-      const body = { title: addLessonTitle.trim(), moduleId: moduleId === "unassigned" ? null : moduleId };
+      const body = {
+        title: addLessonTitle.trim(),
+        moduleId: moduleId === "unassigned" ? null : moduleId,
+      };
 
       const res = await fetch(`/api/v1/courses/${slug}/lessons`, {
         method: "POST",
@@ -300,7 +322,10 @@ export default function EditarCursoPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setLessonMsg({ type: "error", text: data.message || "Erro ao criar aula." });
+        setLessonMsg({
+          type: "error",
+          text: data.message || "Erro ao criar aula.",
+        });
         return;
       }
       setAddLessonTitle("");
@@ -309,7 +334,10 @@ export default function EditarCursoPage() {
       openLessonEditForLesson(data);
       await fetchModules();
     } catch {
-      setLessonMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setLessonMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setAddingLesson(false);
     }
@@ -365,14 +393,20 @@ export default function EditarCursoPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setEditLessonMsg({ type: "error", text: data.message || "Erro ao salvar aula." });
+        setEditLessonMsg({
+          type: "error",
+          text: data.message || "Erro ao salvar aula.",
+        });
         return;
       }
       setEditLessonMsg({ type: "success", text: "Aula atualizada!" });
       setEditingLessonOrder(data.order_index);
       await fetchModules();
     } catch {
-      setEditLessonMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setEditLessonMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setSavingLesson(false);
     }
@@ -382,7 +416,10 @@ export default function EditarCursoPage() {
     if (!confirm("Remover esta aula? Esta ação não pode ser desfeita.")) return;
     setDeletingLessonOrder(orderIndex);
     try {
-      const res = await fetch(`/api/v1/courses/${slug}/lessons/${orderIndex}`, { method: "DELETE", credentials: "include" });
+      const res = await fetch(`/api/v1/courses/${slug}/lessons/${orderIndex}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       if (res.ok) {
         setEditingLessonOrder(null);
         setEditLessonForm(null);
@@ -412,14 +449,20 @@ export default function EditarCursoPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setModuleMsg({ type: "error", text: data.message || "Erro ao criar módulo." });
+        setModuleMsg({
+          type: "error",
+          text: data.message || "Erro ao criar módulo.",
+        });
         return;
       }
       setNewModuleTitle("");
       setModuleMsg({ type: "success", text: `Módulo "${data.title}" criado!` });
       await fetchModules();
     } catch {
-      setModuleMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setModuleMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setCreatingModule(false);
     }
@@ -437,7 +480,10 @@ export default function EditarCursoPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setModuleMsg({ type: "error", text: data.message || "Erro ao salvar módulo." });
+        setModuleMsg({
+          type: "error",
+          text: data.message || "Erro ao salvar módulo.",
+        });
         return;
       }
       setEditingModuleId(null);
@@ -445,7 +491,10 @@ export default function EditarCursoPage() {
       setModuleMsg({ type: "success", text: "Módulo atualizado!" });
       await fetchModules();
     } catch {
-      setModuleMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setModuleMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     } finally {
       setSavingModule(false);
     }
@@ -462,7 +511,10 @@ export default function EditarCursoPage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        setModuleMsg({ type: "error", text: data.message || "Erro ao remover módulo." });
+        setModuleMsg({
+          type: "error",
+          text: data.message || "Erro ao remover módulo.",
+        });
         return;
       }
       setEditingModuleId(null);
@@ -470,7 +522,10 @@ export default function EditarCursoPage() {
       setModuleMsg({ type: "success", text: "Módulo removido." });
       await fetchModules();
     } catch {
-      setModuleMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
+      setModuleMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
     }
   }
 
@@ -500,7 +555,12 @@ export default function EditarCursoPage() {
                 className={styles.input}
                 min="0"
                 value={editLessonForm.order_index}
-                onChange={(e) => setEditLessonForm((f) => ({ ...f, order_index: e.target.value }))}
+                onChange={(e) =>
+                  setEditLessonForm((f) => ({
+                    ...f,
+                    order_index: e.target.value,
+                  }))
+                }
               />
             </label>
 
@@ -510,7 +570,12 @@ export default function EditarCursoPage() {
                 <select
                   className={styles.input}
                   value={editLessonForm.module_id}
-                  onChange={(e) => setEditLessonForm((f) => ({ ...f, module_id: e.target.value }))}
+                  onChange={(e) =>
+                    setEditLessonForm((f) => ({
+                      ...f,
+                      module_id: e.target.value,
+                    }))
+                  }
                 >
                   <option value="">Sem módulo</option>
                   {modules.map((mod) => (
@@ -529,7 +594,12 @@ export default function EditarCursoPage() {
                 className={styles.input}
                 placeholder="https://youtube.com/..."
                 value={editLessonForm.video_url}
-                onChange={(e) => setEditLessonForm((f) => ({ ...f, video_url: e.target.value }))}
+                onChange={(e) =>
+                  setEditLessonForm((f) => ({
+                    ...f,
+                    video_url: e.target.value,
+                  }))
+                }
                 maxLength={512}
               />
             </label>
@@ -541,7 +611,12 @@ export default function EditarCursoPage() {
                 className={styles.input}
                 placeholder="https://..."
                 value={editLessonForm.reading_material}
-                onChange={(e) => setEditLessonForm((f) => ({ ...f, reading_material: e.target.value }))}
+                onChange={(e) =>
+                  setEditLessonForm((f) => ({
+                    ...f,
+                    reading_material: e.target.value,
+                  }))
+                }
                 maxLength={512}
               />
             </label>
@@ -552,7 +627,12 @@ export default function EditarCursoPage() {
                 className={`${styles.input} ${styles.textarea}`}
                 placeholder="Resumo do conteúdo da aula..."
                 value={editLessonForm.description}
-                onChange={(e) => setEditLessonForm((f) => ({ ...f, description: e.target.value }))}
+                onChange={(e) =>
+                  setEditLessonForm((f) => ({
+                    ...f,
+                    description: e.target.value,
+                  }))
+                }
                 rows={3}
               />
             </label>
@@ -819,7 +899,8 @@ export default function EditarCursoPage() {
                           <h3 className={styles.moduleTitle}>
                             {mod.title}{" "}
                             <span className={styles.moduleLessonCount}>
-                              ({mod.lesson_count || 0} aula{mod.lesson_count !== 1 ? "s" : ""})
+                              ({mod.lesson_count || 0} aula
+                              {mod.lesson_count !== 1 ? "s" : ""})
                             </span>
                           </h3>
                         )}
@@ -952,7 +1033,8 @@ export default function EditarCursoPage() {
             <div className={styles.unassignedSection}>
               <div className={styles.unassignedHeader}>
                 <h3 className={styles.unassignedTitle}>
-                  Sem módulo ({unassignedLessons.length} aula{unassignedLessons.length !== 1 ? "s" : ""})
+                  Sem módulo ({unassignedLessons.length} aula
+                  {unassignedLessons.length !== 1 ? "s" : ""})
                 </h3>
                 <button type="button" className={styles.btnAddLesson} onClick={() => openAddLessonFor("unassigned")}>
                   + Aula

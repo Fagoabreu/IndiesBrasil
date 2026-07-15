@@ -165,7 +165,13 @@ export default function Cadastro() {
       const response = await fetch("/api/v1/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password, cpf: rawCpf, birth_date: birthDateValue }),
+        body: JSON.stringify({
+          username,
+          email,
+          password,
+          cpf: rawCpf,
+          birth_date: birthDateValue,
+        }),
       });
 
       if (response.status === 201) {

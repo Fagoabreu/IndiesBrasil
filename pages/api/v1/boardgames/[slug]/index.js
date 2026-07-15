@@ -3,13 +3,11 @@ import controller from "infra/controller";
 import boardgame from "models/boardgame";
 import { ForbiddenError } from "infra/errors";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(controller.canRequest("read:boardgame"), getHandler);
-router.patch(controller.canRequest("update:boardgame"), patchHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:boardgame"), getHandler)
+  .patch(controller.canRequest("update:boardgame"), patchHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const { slug } = request.query;

@@ -5,12 +5,11 @@ import authorization from "@/models/authorization";
 import { ForbiddenError } from "@/infra/errors";
 import profile from "@/models/profile.js";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-router.patch(controller.canRequest("update:user"), patchHandler);
-router.delete(controller.canRequest("update:user"), deleteHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .patch(controller.canRequest("update:user"), patchHandler)
+  .delete(controller.canRequest("update:user"), deleteHandler)
+  .handler(controller.errorHandlers);
 
 async function patchHandler(request, response) {
   const username = request.query.username;

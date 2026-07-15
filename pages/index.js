@@ -29,7 +29,10 @@ const JSON_LD = {
       inLanguage: "pt-BR",
       potentialAction: {
         "@type": "SearchAction",
-        target: { "@type": "EntryPoint", urlTemplate: `${SITE_URL}/membros?q={search_term_string}` },
+        target: {
+          "@type": "EntryPoint",
+          urlTemplate: `${SITE_URL}/membros?q={search_term_string}`,
+        },
         "query-input": "required name=search_term_string",
       },
     },
@@ -42,7 +45,10 @@ const JSON_LD = {
       description: PAGE_DESCRIPTION,
       inLanguage: "pt-BR",
       offers: { "@type": "Offer", price: "0", priceCurrency: "BRL" },
-      audience: { "@type": "Audience", geographicArea: { "@type": "Country", name: "Brasil" } },
+      audience: {
+        "@type": "Audience",
+        geographicArea: { "@type": "Country", name: "Brasil" },
+      },
     },
   ],
 };
@@ -273,12 +279,27 @@ function Home() {
 
         <CarouselComponent
           cards={[
-            { content: "Instagram Imagem", image_src: "/images/instagram_image.png" },
-            { content: "Instagram Vídeo", image_src: "/images/instagram_video.png" },
+            {
+              content: "Instagram Imagem",
+              image_src: "/images/instagram_image.png",
+            },
+            {
+              content: "Instagram Vídeo",
+              image_src: "/images/instagram_video.png",
+            },
             { content: "Steam Widget", image_src: "/images/steam_widget.png" },
-            { content: "Canal Twitch", image_src: "/images/twitch_channel.png" },
-            { content: "YouTube Shorts", image_src: "/images/youtube_shorts.png" },
-            { content: "YouTube Vídeo", image_src: "/images/youtube_video.png" },
+            {
+              content: "Canal Twitch",
+              image_src: "/images/twitch_channel.png",
+            },
+            {
+              content: "YouTube Shorts",
+              image_src: "/images/youtube_shorts.png",
+            },
+            {
+              content: "YouTube Vídeo",
+              image_src: "/images/youtube_video.png",
+            },
           ]}
         />
       </SectionReveal>

@@ -75,7 +75,9 @@ function HistoricoItemRow({ item, username, onSaved, onDeleted }) {
     if (!confirm(`Remover "${item.cargo}"?`)) return;
     setDeleting(true);
     try {
-      await fetchJSON(`/api/v1/users/${username}/historico/${item.id}`, { method: "DELETE" });
+      await fetchJSON(`/api/v1/users/${username}/historico/${item.id}`, {
+        method: "DELETE",
+      });
       onDeleted();
     } catch (err) {
       alert(err.message);
@@ -196,7 +198,9 @@ function FormacaoItemRow({ item, username, onSaved, onDeleted }) {
     if (!confirm(`Remover "${item.nome}"?`)) return;
     setDeleting(true);
     try {
-      await fetchJSON(`/api/v1/users/${username}/formacoes/${item.id}`, { method: "DELETE" });
+      await fetchJSON(`/api/v1/users/${username}/formacoes/${item.id}`, {
+        method: "DELETE",
+      });
       onDeleted();
     } catch (err) {
       alert(err.message);
@@ -301,7 +305,9 @@ function ContatoItemRow({ item, contactTypes, username, onSaved, onDeleted }) {
     if (!confirm(`Remover contato "${typeName}"?`)) return;
     setDeleting(true);
     try {
-      await fetchJSON(`/api/v1/users/${username}/contacts/${item.id}`, { method: "DELETE" });
+      await fetchJSON(`/api/v1/users/${username}/contacts/${item.id}`, {
+        method: "DELETE",
+      });
       onDeleted();
     } catch (err) {
       alert(err.message);
@@ -381,7 +387,10 @@ function RoleItemRow({ item, professions, username, onSaved, onDeleted }) {
       await fetchJSON(`/api/v1/users/${username}/roles/${item.portfolio_role_name}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: form.name, experience: form.experience }),
+        body: JSON.stringify({
+          name: form.name,
+          experience: form.experience,
+        }),
       });
       setOpen(false);
       onSaved();
@@ -482,7 +491,10 @@ function FerramentaItemRow({ item, tools, username, onSaved, onDeleted }) {
       await fetchJSON(`/api/v1/users/${username}/tools/${item.portfolio_tool_id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ portfolio_tool_id: Number(form.tool_id), experience: form.experience }),
+        body: JSON.stringify({
+          portfolio_tool_id: Number(form.tool_id),
+          experience: form.experience,
+        }),
       });
       setOpen(false);
       onSaved();
@@ -601,12 +613,20 @@ export default function ProfileConfiguracoesPage() {
 
   // ---- Formação — add form ----
   const [showAddFormacao, setShowAddFormacao] = useState(false);
-  const [newFormacao, setNewFormacao] = useState({ nome: "", instituicao: "", init_date: "", end_date: "" });
+  const [newFormacao, setNewFormacao] = useState({
+    nome: "",
+    instituicao: "",
+    init_date: "",
+    end_date: "",
+  });
   const [addingFormacao, setAddingFormacao] = useState(false);
 
   // ---- Contatos — add form ----
   const [showAddContato, setShowAddContato] = useState(false);
-  const [newContato, setNewContato] = useState({ contact_type_id: "", contact_value: "" });
+  const [newContato, setNewContato] = useState({
+    contact_type_id: "",
+    contact_value: "",
+  });
   const [addingContato, setAddingContato] = useState(false);
   const [contatoMsg, setContatoMsg] = useState({ type: null, text: "" });
 
@@ -617,7 +637,10 @@ export default function ProfileConfiguracoesPage() {
 
   // ---- Ferramentas — add form ----
   const [showAddFerramenta, setShowAddFerramenta] = useState(false);
-  const [newFerramenta, setNewFerramenta] = useState({ tool_id: "", experience: "Estudante" });
+  const [newFerramenta, setNewFerramenta] = useState({
+    tool_id: "",
+    experience: "Estudante",
+  });
   const [addingFerramenta, setAddingFerramenta] = useState(false);
 
   /* ---------- load profile ---------- */
@@ -730,7 +753,15 @@ export default function ProfileConfiguracoesPage() {
           ordem: (profile.historico || []).length,
         }),
       });
-      setNewHistorico({ cargo: "", company: "", cidade: "", estado: "", init_date: "", end_date: "", atribuicoes: "" });
+      setNewHistorico({
+        cargo: "",
+        company: "",
+        cidade: "",
+        estado: "",
+        init_date: "",
+        end_date: "",
+        atribuicoes: "",
+      });
       setShowAddHistorico(false);
       await reloadProfile();
     } catch (err) {
@@ -756,7 +787,12 @@ export default function ProfileConfiguracoesPage() {
           ordem: (profile.formacoes || []).length,
         }),
       });
-      setNewFormacao({ nome: "", instituicao: "", init_date: "", end_date: "" });
+      setNewFormacao({
+        nome: "",
+        instituicao: "",
+        init_date: "",
+        end_date: "",
+      });
       setShowAddFormacao(false);
       await reloadProfile();
     } catch (err) {
@@ -952,7 +988,12 @@ export default function ProfileConfiguracoesPage() {
                     <input
                       className={styles.input}
                       value={newHistorico.cargo}
-                      onChange={(e) => setNewHistorico((p) => ({ ...p, cargo: e.target.value }))}
+                      onChange={(e) =>
+                        setNewHistorico((p) => ({
+                          ...p,
+                          cargo: e.target.value,
+                        }))
+                      }
                       required
                     />
                   </div>
@@ -961,7 +1002,12 @@ export default function ProfileConfiguracoesPage() {
                     <input
                       className={styles.input}
                       value={newHistorico.company}
-                      onChange={(e) => setNewHistorico((p) => ({ ...p, company: e.target.value }))}
+                      onChange={(e) =>
+                        setNewHistorico((p) => ({
+                          ...p,
+                          company: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                 </div>
@@ -971,7 +1017,12 @@ export default function ProfileConfiguracoesPage() {
                     <input
                       className={styles.input}
                       value={newHistorico.cidade}
-                      onChange={(e) => setNewHistorico((p) => ({ ...p, cidade: e.target.value }))}
+                      onChange={(e) =>
+                        setNewHistorico((p) => ({
+                          ...p,
+                          cidade: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                   <div className={styles.field}>
@@ -979,7 +1030,12 @@ export default function ProfileConfiguracoesPage() {
                     <input
                       className={styles.input}
                       value={newHistorico.estado}
-                      onChange={(e) => setNewHistorico((p) => ({ ...p, estado: e.target.value }))}
+                      onChange={(e) =>
+                        setNewHistorico((p) => ({
+                          ...p,
+                          estado: e.target.value,
+                        }))
+                      }
                       maxLength={2}
                     />
                   </div>
@@ -991,7 +1047,12 @@ export default function ProfileConfiguracoesPage() {
                       type="date"
                       className={styles.input}
                       value={newHistorico.init_date}
-                      onChange={(e) => setNewHistorico((p) => ({ ...p, init_date: e.target.value }))}
+                      onChange={(e) =>
+                        setNewHistorico((p) => ({
+                          ...p,
+                          init_date: e.target.value,
+                        }))
+                      }
                       required
                     />
                   </div>
@@ -1001,7 +1062,12 @@ export default function ProfileConfiguracoesPage() {
                       type="date"
                       className={styles.input}
                       value={newHistorico.end_date}
-                      onChange={(e) => setNewHistorico((p) => ({ ...p, end_date: e.target.value }))}
+                      onChange={(e) =>
+                        setNewHistorico((p) => ({
+                          ...p,
+                          end_date: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                 </div>
@@ -1011,7 +1077,12 @@ export default function ProfileConfiguracoesPage() {
                     className={styles.textarea}
                     rows={3}
                     value={newHistorico.atribuicoes}
-                    onChange={(e) => setNewHistorico((p) => ({ ...p, atribuicoes: e.target.value }))}
+                    onChange={(e) =>
+                      setNewHistorico((p) => ({
+                        ...p,
+                        atribuicoes: e.target.value,
+                      }))
+                    }
                   />
                 </div>
                 <div className={styles.addFormActions}>
@@ -1066,7 +1137,12 @@ export default function ProfileConfiguracoesPage() {
                     <input
                       className={styles.input}
                       value={newFormacao.instituicao}
-                      onChange={(e) => setNewFormacao((p) => ({ ...p, instituicao: e.target.value }))}
+                      onChange={(e) =>
+                        setNewFormacao((p) => ({
+                          ...p,
+                          instituicao: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                 </div>
@@ -1077,7 +1153,12 @@ export default function ProfileConfiguracoesPage() {
                       type="date"
                       className={styles.input}
                       value={newFormacao.init_date}
-                      onChange={(e) => setNewFormacao((p) => ({ ...p, init_date: e.target.value }))}
+                      onChange={(e) =>
+                        setNewFormacao((p) => ({
+                          ...p,
+                          init_date: e.target.value,
+                        }))
+                      }
                       required
                     />
                   </div>
@@ -1087,7 +1168,12 @@ export default function ProfileConfiguracoesPage() {
                       type="date"
                       className={styles.input}
                       value={newFormacao.end_date}
-                      onChange={(e) => setNewFormacao((p) => ({ ...p, end_date: e.target.value }))}
+                      onChange={(e) =>
+                        setNewFormacao((p) => ({
+                          ...p,
+                          end_date: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                 </div>
@@ -1142,7 +1228,12 @@ export default function ProfileConfiguracoesPage() {
                   <select
                     className={styles.select}
                     value={newContato.contact_type_id}
-                    onChange={(e) => setNewContato((p) => ({ ...p, contact_type_id: e.target.value }))}
+                    onChange={(e) =>
+                      setNewContato((p) => ({
+                        ...p,
+                        contact_type_id: e.target.value,
+                      }))
+                    }
                     required
                   >
                     <option value="">Selecione...</option>
@@ -1158,7 +1249,12 @@ export default function ProfileConfiguracoesPage() {
                   <input
                     className={styles.input}
                     value={newContato.contact_value}
-                    onChange={(e) => setNewContato((p) => ({ ...p, contact_value: e.target.value }))}
+                    onChange={(e) =>
+                      setNewContato((p) => ({
+                        ...p,
+                        contact_value: e.target.value,
+                      }))
+                    }
                     required
                   />
                 </div>
@@ -1226,7 +1322,12 @@ export default function ProfileConfiguracoesPage() {
                     <select
                       className={styles.select}
                       value={newRole.experience}
-                      onChange={(e) => setNewRole((p) => ({ ...p, experience: e.target.value }))}
+                      onChange={(e) =>
+                        setNewRole((p) => ({
+                          ...p,
+                          experience: e.target.value,
+                        }))
+                      }
                     >
                       {EXPERIENCE_LEVELS.map((l) => (
                         <option key={l} value={l}>
@@ -1277,7 +1378,12 @@ export default function ProfileConfiguracoesPage() {
                     <select
                       className={styles.select}
                       value={newFerramenta.tool_id}
-                      onChange={(e) => setNewFerramenta((p) => ({ ...p, tool_id: e.target.value }))}
+                      onChange={(e) =>
+                        setNewFerramenta((p) => ({
+                          ...p,
+                          tool_id: e.target.value,
+                        }))
+                      }
                       required
                     >
                       <option value="">Selecione...</option>
@@ -1293,7 +1399,12 @@ export default function ProfileConfiguracoesPage() {
                     <select
                       className={styles.select}
                       value={newFerramenta.experience}
-                      onChange={(e) => setNewFerramenta((p) => ({ ...p, experience: e.target.value }))}
+                      onChange={(e) =>
+                        setNewFerramenta((p) => ({
+                          ...p,
+                          experience: e.target.value,
+                        }))
+                      }
                     >
                       {EXPERIENCE_LEVELS.map((l) => (
                         <option key={l} value={l}>

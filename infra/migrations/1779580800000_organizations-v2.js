@@ -62,7 +62,10 @@ exports.up = (pgm) => {
   pgm.createIndex("organizations", ["slug"], { unique: true });
 
   // Garante que cada usuário seja dono de no máximo 1 estúdio por vez
-  pgm.createIndex("organizations", ["owner_id"], { unique: true, name: "organizations_owner_id_unique_idx" });
+  pgm.createIndex("organizations", ["owner_id"], {
+    unique: true,
+    name: "organizations_owner_id_unique_idx",
+  });
 
   /* ---------------------------------------------------------------
    * 3. MODIFICAR org_members
@@ -241,9 +244,13 @@ exports.down = (pgm) => {
 
   pgm.dropColumn("org_members", "joined_at");
   pgm.dropColumn("org_members", "status");
-  pgm.addColumn("org_members", { roles: { type: "text", notNull: true, default: "[]" } });
+  pgm.addColumn("org_members", {
+    roles: { type: "text", notNull: true, default: "[]" },
+  });
 
-  pgm.dropIndex("organizations", ["owner_id"], { name: "organizations_owner_id_unique_idx" });
+  pgm.dropIndex("organizations", ["owner_id"], {
+    name: "organizations_owner_id_unique_idx",
+  });
   pgm.dropIndex("organizations", ["slug"]);
   pgm.dropColumn("organizations", "slug");
   pgm.dropColumn("organizations", "cnpj");

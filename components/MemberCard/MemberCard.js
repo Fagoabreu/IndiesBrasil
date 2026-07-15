@@ -20,7 +20,12 @@ MemberCard.propTypes = {
 };
 
 export default function MemberCard({ user }) {
-  const tiltRef = useTiltEffect({ max: 10, perspective: 900, scale: 1.03, maxGlare: 0.15 });
+  const tiltRef = useTiltEffect({
+    max: 10,
+    perspective: 900,
+    scale: 1.03,
+    maxGlare: 0.15,
+  });
 
   return (
     <Link className={styles.card} ref={tiltRef} href={`/perfil/${user.username}`} inline={true}>

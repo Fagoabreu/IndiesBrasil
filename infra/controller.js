@@ -41,7 +41,9 @@ function onRouterErrorHandler(error) {
     cause: error,
   });
   console.error(publicErrorObject);
-  return NextResponse.json(publicErrorObject, { status: publicErrorObject.statusCode });
+  return NextResponse.json(publicErrorObject, {
+    status: publicErrorObject.statusCode,
+  });
 }
 
 function clearSessionCookieAppRouter(response) {
@@ -54,7 +56,7 @@ function clearSessionCookieAppRouter(response) {
   response.headers.set("Set-Cookie", setCookie);
 }
 
-async function setSessionCookie(sessionToken, response) {
+function setSessionCookie(sessionToken, response) {
   const isProduction = process.env.NODE_ENV === "production";
   const setCookie = cookie.serialize("session_id", sessionToken, {
     path: "/",
@@ -67,7 +69,7 @@ async function setSessionCookie(sessionToken, response) {
   response.setHeader("Set-Cookie", setCookie);
 }
 
-async function clearSessionCookie(response) {
+function clearSessionCookie(response) {
   const setCookie = cookie.serialize("session_id", "invalid", {
     path: "/",
     maxAge: -1,
@@ -76,6 +78,7 @@ async function clearSessionCookie(response) {
   });
   response.setHeader("Set-Cookie", setCookie);
 }
+
 async function injectAnonymousOrUser(request, response, next) {
   if (request.cookies?.session_id) {
     await injectAuthenticatedUser(request, request.cookies.session_id);

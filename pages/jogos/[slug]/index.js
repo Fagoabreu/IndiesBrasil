@@ -68,7 +68,9 @@ export default function GamePage() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/v1/games/${slug}`, { credentials: "include" });
+        const res = await fetch(`/api/v1/games/${slug}`, {
+          credentials: "include",
+        });
         if (!res.ok) {
           router.replace("/jogos");
           return;
@@ -361,7 +363,9 @@ export default function GamePage() {
                     userReview={viewer?.userReview ?? null}
                     user={user}
                     onReviewChange={async () => {
-                      const res = await fetch(`/api/v1/games/${slug}`, { credentials: "include" });
+                      const res = await fetch(`/api/v1/games/${slug}`, {
+                        credentials: "include",
+                      });
                       if (res.ok) {
                         const data = await res.json();
                         setGameData(data);
@@ -454,7 +458,8 @@ export default function GamePage() {
               </button>
               {gameData.follower_count > 0 && (
                 <p className={styles.followerCount}>
-                  {gameData.follower_count} seguidor{gameData.follower_count !== 1 ? "es" : ""}
+                  {gameData.follower_count} seguidor
+                  {gameData.follower_count !== 1 ? "es" : ""}
                 </p>
               )}
 

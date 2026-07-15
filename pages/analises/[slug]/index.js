@@ -14,7 +14,11 @@ const CONTENT_TYPE_LABELS = {
 };
 
 function getContentUrl(contentType, slug) {
-  const prefix = { game: "/jogos", boardgame: "/jogos-de-mesa", book: "/quadrinhos" };
+  const prefix = {
+    game: "/jogos",
+    boardgame: "/jogos-de-mesa",
+    book: "/quadrinhos",
+  };
   return `${prefix[contentType] || ""}/${slug}`;
 }
 
@@ -43,7 +47,9 @@ export default function AnalisePage() {
   const fetchAnalise = useCallback(async () => {
     if (!slug) return;
     try {
-      const res = await fetch(`/api/v1/analises/${slug}`, { credentials: "include" });
+      const res = await fetch(`/api/v1/analises/${slug}`, {
+        credentials: "include",
+      });
       if (!res.ok) {
         if (res.status === 404) {
           router.replace("/analises");

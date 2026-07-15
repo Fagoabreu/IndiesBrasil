@@ -3,11 +3,10 @@ import authorization from "@/models/authorization";
 import contact from "@/models/contact";
 import { createRouter } from "next-connect";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-router.delete(controller.canRequest("read:admin"), deleteHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .delete(controller.canRequest("read:admin"), deleteHandler)
+  .handler(controller.errorHandlers);
 
 async function deleteHandler(request, response) {
   const userTryingToRead = request.context.user;

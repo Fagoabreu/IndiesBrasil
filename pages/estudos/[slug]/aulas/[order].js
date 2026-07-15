@@ -48,7 +48,9 @@ export default function AulaPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/v1/courses/${slug}`, { credentials: "include" });
+      const res = await fetch(`/api/v1/courses/${slug}`, {
+        credentials: "include",
+      });
       if (!res.ok) {
         setError("Curso não encontrado.");
         return;
@@ -377,7 +379,9 @@ export default function AulaPage() {
                   onClick={handleSpoilerClick}
                   /* dangerouslySetInnerHTML: comentário markdown convertido
                    * para HTML com sanitização via utils/markdown. */
-                  dangerouslySetInnerHTML={{ __html: markdownToHtml(c.content) }}
+                  dangerouslySetInnerHTML={{
+                    __html: markdownToHtml(c.content),
+                  }}
                 />
               )}
             </li>

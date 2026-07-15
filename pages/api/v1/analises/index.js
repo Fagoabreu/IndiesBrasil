@@ -2,13 +2,11 @@ import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import contentReview from "models/content-review";
 
-const router = createRouter();
-router.use(controller.injectAnonymousOrUser);
-
-router.get(controller.canRequest("read:content_review:all"), getHandler);
-router.post(controller.canRequest("create:content_review"), postHandler);
-
-export default router.handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.canRequest("read:content_review:all"), getHandler)
+  .post(controller.canRequest("create:content_review"), postHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const { page = 1, limit = 20, content_type = "" } = request.query;
