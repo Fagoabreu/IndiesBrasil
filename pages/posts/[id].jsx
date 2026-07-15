@@ -48,10 +48,7 @@ export default function PostDetailPage() {
 
   if (loading) {
     return (
-      <div
-        className="posts-page"
-        style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}
-      >
+      <div className="posts-page" style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
         <Spinner size="large" />
       </div>
     );
@@ -91,10 +88,7 @@ export default function PostDetailPage() {
     <div className="posts-page">
       <SeoHead
         title={`Post de ${post.username} — Indies Brasil`}
-        description={
-          post.content?.slice(0, 160) ||
-          "Veja este post na comunidade Indies Brasil."
-        }
+        description={post.content?.slice(0, 160) || "Veja este post na comunidade Indies Brasil."}
         canonical={`${SITE_URL}/posts/${id}`}
       />
 
@@ -114,12 +108,7 @@ export default function PostDetailPage() {
         </Link>
       </div>
 
-      <PostCardComponent
-        key={post.id}
-        post={post}
-        canInteract={!!user}
-        onDelete={() => router.push("/posts")}
-      />
+      <PostCardComponent key={post.id} post={post} canInteract={!!user} onDelete={() => router.push("/posts")} />
     </div>
   );
 }

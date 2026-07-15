@@ -32,8 +32,7 @@ export default function TyperwriterComponent({ initText, frases }) {
           isDeleting.current = true;
         } else if (isDeleting.current && charIndex.current === 0) {
           isDeleting.current = false;
-          fraseIndex.current =
-            (fraseIndex.current + 1) % frasesRef.current.length;
+          fraseIndex.current = (fraseIndex.current + 1) % frasesRef.current.length;
         }
       },
       isDeleting.current ? 100 : 200,

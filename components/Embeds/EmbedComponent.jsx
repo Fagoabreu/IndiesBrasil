@@ -7,13 +7,7 @@ EmbedComponent.propTypes = {
   embeds: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-      type: PropTypes.oneOf([
-        "youtube",
-        "twitch",
-        "instagram",
-        "preview",
-        "steam",
-      ]).isRequired,
+      type: PropTypes.oneOf(["youtube", "twitch", "instagram", "preview", "steam"]).isRequired,
 
       embedUrl: PropTypes.string,
       url: PropTypes.string,
@@ -32,16 +26,7 @@ export default function EmbedComponent({ embeds }) {
         if (!embed) return null;
         const key = embed.id ?? i;
         if (embed.type === "youtube") {
-          return (
-            <iframe
-              key={key}
-              title={embed.title}
-              src={embed.embedUrl}
-              height="400"
-              width="100%"
-              allowFullScreen
-            />
-          );
+          return <iframe key={key} title={embed.title} src={embed.embedUrl} height="400" width="100%" allowFullScreen />;
         }
 
         if (embed.type === "twitch") {
@@ -88,13 +73,7 @@ export default function EmbedComponent({ embeds }) {
 
         if (embed.type === "preview") {
           return (
-            <a
-              key={key}
-              href={embed.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.previewCard}
-            >
+            <a key={key} href={embed.url} target="_blank" rel="noopener noreferrer" className={styles.previewCard}>
               {embed.image && (
                 <div className={styles.previewImageWrapper}>
                   <Image

@@ -2,10 +2,7 @@ import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import post from "models/post";
 
-export default createRouter()
-  .use(controller.injectAnonymousOrUser)
-  .get(getHandler)
-  .handler(controller.errorHandlers);
+export default createRouter().use(controller.injectAnonymousOrUser).get(getHandler).handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const { username } = request.query;

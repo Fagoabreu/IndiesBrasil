@@ -33,11 +33,7 @@ export default function ResetNewPassword() {
         <form onSubmit={handleSubmit} className={styles.form}>
           <FormControl>
             <FormControl.Label>Nova senha</FormControl.Label>
-            <TextInput
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <TextInput type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
           </FormControl>
 
           <Button type="submit">Alterar Senha</Button>

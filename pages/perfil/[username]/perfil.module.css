@@ -44,11 +44,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to bottom,
-    transparent 55%,
-    rgba(var(--brand-rgb-primary), 0.07) 100%
-  );
+  background: linear-gradient(to bottom, transparent 55%, rgba(var(--brand-rgb-primary), 0.07) 100%);
   pointer-events: none;
 }
 

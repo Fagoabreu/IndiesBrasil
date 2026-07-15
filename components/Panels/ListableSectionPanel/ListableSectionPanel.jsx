@@ -1,11 +1,5 @@
 import { Button, ButtonGroup, Heading, Text } from "@primer/react";
-import {
-  ChevronDownIcon,
-  ChevronUpIcon,
-  DiffAddedIcon,
-  PencilIcon,
-  TrashIcon,
-} from "@primer/octicons-react";
+import { ChevronDownIcon, ChevronUpIcon, DiffAddedIcon, PencilIcon, TrashIcon } from "@primer/octicons-react";
 import style from "./ListableSectionPanel.module.css";
 
 export default function ListablePanel({
@@ -22,9 +16,7 @@ export default function ListablePanel({
 }) {
   const safeItems = Array.isArray(items) ? items : [];
 
-  const sortedItems = [...safeItems].sort(
-    (a, b) => (a?.ordem ?? 0) - (b?.ordem ?? 0),
-  );
+  const sortedItems = [...safeItems].sort((a, b) => (a?.ordem ?? 0) - (b?.ordem ?? 0));
 
   return (
     <section className={style.panelCard}>
@@ -48,10 +40,7 @@ export default function ListablePanel({
 
       <ul className={style.panelBody}>
         {sortedItems.map((item, index) => (
-          <li
-            key={item.id}
-            className={`${style.panelItem} ${style[variant] || style.normal}`}
-          >
+          <li key={item.id} className={`${style.panelItem} ${style[variant] || style.normal}`}>
             <div className={style.panelItemActionLine}>
               {canEdit && (
                 <ButtonGroup className={style.panelItemActions}>
@@ -73,24 +62,8 @@ export default function ListablePanel({
                       onClick={() => OnMove(index, index + 1)}
                     />
                   )}
-                  {OnEdit && (
-                    <Button
-                      size="small"
-                      icon={PencilIcon}
-                      variant="primary"
-                      aria-label="Editar Item"
-                      onClick={() => OnEdit(item)}
-                    />
-                  )}
-                  {OnDelete && (
-                    <Button
-                      size="small"
-                      icon={TrashIcon}
-                      variant="danger"
-                      aria-label="Excluir Item"
-                      onClick={() => OnDelete(item)}
-                    />
-                  )}
+                  {OnEdit && <Button size="small" icon={PencilIcon} variant="primary" aria-label="Editar Item" onClick={() => OnEdit(item)} />}
+                  {OnDelete && <Button size="small" icon={TrashIcon} variant="danger" aria-label="Excluir Item" onClick={() => OnDelete(item)} />}
                 </ButtonGroup>
               )}
             </div>

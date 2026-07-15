@@ -21,9 +21,7 @@ export function markdownToHtml(text) {
 
   // 2. Blocos de código (``` ... ```) — processar antes de inline
   html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_m, lang, code) => {
-    const escaped = code
-      .replace(/&lt;/g, "&amp;lt;")
-      .replace(/&gt;/g, "&amp;gt;");
+    const escaped = code.replace(/&lt;/g, "&amp;lt;").replace(/&gt;/g, "&amp;gt;");
     return `<pre><code>${escaped.trim()}</code></pre>`;
   });
 
@@ -43,10 +41,7 @@ export function markdownToHtml(text) {
   html = html.replace(/~~([^~\n]+)~~/g, "<del>$1</del>");
 
   // 7. Links [texto](url)
-  html = html.replace(
-    /\[([^\]]+)\]\((\S+?)\)/g,
-    '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
-  );
+  html = html.replace(/\[([^\]]+)\]\((\S+?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
 
   // 8. Parágrafos (separados por \n\n+)
   html = html
@@ -68,11 +63,7 @@ export function markdownToHtml(text) {
  * Escapa caracteres HTML especiais.
  */
 function escapeHtml(str) {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 export function escapeHtmlString(str) {

@@ -1,21 +1,11 @@
 import database from "infra/database.js";
-import {
-  ForbiddenError,
-  NotFoundError,
-  ValidationError,
-} from "infra/errors.js";
+import { ForbiddenError, NotFoundError, ValidationError } from "infra/errors.js";
 
 /* =========================================================
  * List / Search
  * ========================================================= */
 
-async function findAll({
-  page = 1,
-  limit = 20,
-  search = "",
-  category = "",
-  stage = "",
-} = {}) {
+async function findAll({ page = 1, limit = 20, search = "", category = "", stage = "" } = {}) {
   const offset = (page - 1) * limit;
   const result = await database.query({
     text: `
@@ -232,10 +222,7 @@ async function findMedia(boardgameId) {
   return result.rows;
 }
 
-async function addMedia(
-  boardgameId,
-  { media_type, url, caption = null, display_order = 0 },
-) {
+async function addMedia(boardgameId, { media_type, url, caption = null, display_order = 0 }) {
   if (!["image", "video"].includes(media_type)) {
     throw new ValidationError({
       message: "media_type deve ser 'image' ou 'video'.",
@@ -257,8 +244,7 @@ async function removeMedia(mediaId, boardgameId) {
     text: `DELETE FROM boardgame_media WHERE id = $1 AND boardgame_id = $2 RETURNING id`,
     values: [mediaId, boardgameId],
   });
-  if (!result.rowCount)
-    throw new NotFoundError({ message: "Mídia não encontrada." });
+  if (!result.rowCount) throw new NotFoundError({ message: "Mídia não encontrada." });
 }
 
 /* =========================================================
@@ -305,8 +291,7 @@ async function updateReview(reviewId, userId, { rating, content }) {
     text: `SELECT * FROM boardgame_reviews WHERE id = $1`,
     values: [reviewId],
   });
-  if (!existing.rows[0])
-    throw new NotFoundError({ message: "Avaliação não encontrada." });
+  if (!existing.rows[0]) throw new NotFoundError({ message: "Avaliação não encontrada." });
   if (existing.rows[0].reviewer_id !== userId) {
     throw new ForbiddenError({
       message: "Você não pode editar a avaliação de outro usuário.",
@@ -422,9 +407,7 @@ async function create(ownerId, ownerOrgId, data) {
   const boardgame = result.rows[0];
 
   if (mechanics.length > 0) {
-    const values = mechanics
-      .map((m) => `('${boardgame.id}', '${m.replaceAll("'", "''")}')`)
-      .join(",");
+    const values = mechanics.map((m) => `('${boardgame.id}', '${m.replaceAll("'", "''")}')`).join(",");
     await database.query({
       text: `INSERT INTO boardgame_mechanics (boardgame_id, mechanic) VALUES ${values} ON CONFLICT DO NOTHING`,
     });
@@ -484,9 +467,7 @@ async function update(slug, data) {
       values: [boardgameId],
     });
     if (data.mechanics.length > 0) {
-      const mechValues = data.mechanics
-        .map((m) => `('${boardgameId}', '${m.replaceAll("'", "''")}')`)
-        .join(",");
+      const mechValues = data.mechanics.map((m) => `('${boardgameId}', '${m.replaceAll("'", "''")}')`).join(",");
       await database.query({
         text: `INSERT INTO boardgame_mechanics (boardgame_id, mechanic) VALUES ${mechValues} ON CONFLICT DO NOTHING`,
       });

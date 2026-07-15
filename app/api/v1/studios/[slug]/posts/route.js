@@ -25,11 +25,7 @@ export async function GET(request, { params }) {
     const { slug } = await params;
     const studio = await organization.findBySlug(slug);
     const posts = await post.getPostsByOrgId(user?.id ?? null, studio.id);
-    const secureOutput = await authorization.filterOutput(
-      user,
-      "read:post:all",
-      posts,
-    );
+    const secureOutput = await authorization.filterOutput(user, "read:post:all", posts);
 
     return Response.json(secureOutput, { status: 200 });
   } catch (error) {
@@ -92,11 +88,7 @@ export async function POST(request, { params }) {
 
     const created = await post.create(inputValues);
     const result = await post.getPostById(requestUser.id, created.id);
-    const secureOutput = await authorization.filterOutput(
-      requestUser,
-      "read:post",
-      result,
-    );
+    const secureOutput = await authorization.filterOutput(requestUser, "read:post", result);
 
     return Response.json(secureOutput, { status: 201 });
   } catch (error) {

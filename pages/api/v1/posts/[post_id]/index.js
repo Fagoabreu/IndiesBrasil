@@ -20,11 +20,7 @@ async function getHandler(request, response) {
     throw new NotFoundError();
   }
 
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToGet,
-    "read:post",
-    postData,
-  );
+  const secureOutputValues = authorization.filterOutput(userTryingToGet, "read:post", postData);
   return response.status(200).json(secureOutputValues);
 }
 
@@ -44,20 +40,13 @@ async function deleteHandler(request, response) {
   }
 
   await post.deleteCommentsByPostId(postToDelete.id);
-  const resultPost = await post.deletePostByIdAndAuthorId(
-    author_id,
-    postToDelete.id,
-  );
+  const resultPost = await post.deletePostByIdAndAuthorId(author_id, postToDelete.id);
 
   if (imgId) {
     await uploadedImages.deleteImage(imgId);
   }
 
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToDelete,
-    "read:post",
-    resultPost,
-  );
+  const secureOutputValues = authorization.filterOutput(userTryingToDelete, "read:post", resultPost);
 
   return response.status(200).json(secureOutputValues);
 }

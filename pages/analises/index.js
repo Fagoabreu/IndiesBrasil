@@ -15,10 +15,7 @@ function StarRating({ value }) {
   return (
     <span className={styles.stars} aria-label={`${value} de 5 estrelas`}>
       {[1, 2, 3, 4, 5].map((s) => (
-        <span
-          key={s}
-          className={value >= s ? styles.starFilled : styles.starEmpty}
-        >
+        <span key={s} className={value >= s ? styles.starFilled : styles.starEmpty}>
           ★
         </span>
       ))}
@@ -57,18 +54,13 @@ export default function AnalisesPage() {
     <>
       <Head>
         <title>Análises — Indies Brasil</title>
-        <meta
-          name="description"
-          content="Análises e reviews de jogos, jogos de mesa e livros feitas pela comunidade Indies Brasil."
-        />
+        <meta name="description" content="Análises e reviews de jogos, jogos de mesa e livros feitas pela comunidade Indies Brasil." />
       </Head>
 
       <div className={styles.page}>
         <header className={styles.header}>
           <h1 className={styles.title}>Análises</h1>
-          <p className={styles.subtitle}>
-            Reviews da comunidade sobre jogos, jogos de mesa e livros
-          </p>
+          <p className={styles.subtitle}>Reviews da comunidade sobre jogos, jogos de mesa e livros</p>
         </header>
 
         <div className={styles.toolbar}>
@@ -100,20 +92,10 @@ export default function AnalisesPage() {
         ) : (
           <div className={styles.grid}>
             {analises.map((a) => (
-              <Link
-                key={a.id}
-                href={`/analises/${a.slug}`}
-                className={styles.card}
-              >
+              <Link key={a.id} href={`/analises/${a.slug}`} className={styles.card}>
                 <div className={styles.cardImageWrap}>
                   {a.cover_url ? (
-                    <Image
-                      src={a.cover_url}
-                      alt={a.title}
-                      fill
-                      sizes="400px"
-                      className={styles.cardImage}
-                    />
+                    <Image src={a.cover_url} alt={a.title} fill sizes="400px" className={styles.cardImage} />
                   ) : (
                     <div className={styles.cardImagePlaceholder}>
                       <span>📝</span>
@@ -121,9 +103,7 @@ export default function AnalisesPage() {
                   )}
                 </div>
                 <div className={styles.cardBody}>
-                  <span className={styles.cardBadge}>
-                    {CONTENT_TYPE_LABELS[a.content_type] || a.content_type}
-                  </span>
+                  <span className={styles.cardBadge}>{CONTENT_TYPE_LABELS[a.content_type] || a.content_type}</span>
                   <h2 className={styles.cardTitle}>{a.title}</h2>
                   {a.rating && (
                     <div className={styles.cardRating}>
@@ -140,20 +120,13 @@ export default function AnalisesPage() {
                             width={32}
                             height={32}
                             className={styles.cardContentThumbImg}
-                            unoptimized={
-                              a.content_cover_url.startsWith("data:") ||
-                              a.content_cover_url.startsWith("blob:")
-                            }
+                            unoptimized={a.content_cover_url.startsWith("data:") || a.content_cover_url.startsWith("blob:")}
                           />
                         ) : (
-                          <span className={styles.cardContentThumbPlaceholder}>
-                            📦
-                          </span>
+                          <span className={styles.cardContentThumbPlaceholder}>📦</span>
                         )}
                       </div>
-                      <span className={styles.cardContentName}>
-                        {a.content_name}
-                      </span>
+                      <span className={styles.cardContentName}>{a.content_name}</span>
                     </div>
                   )}
                   <div className={styles.cardMeta}>
@@ -164,20 +137,13 @@ export default function AnalisesPage() {
                         width={18}
                         height={18}
                         className={styles.cardAuthorAvatar}
-                        unoptimized={
-                          a.author_avatar_url.startsWith("data:") ||
-                          a.author_avatar_url.startsWith("blob:")
-                        }
+                        unoptimized={a.author_avatar_url.startsWith("data:") || a.author_avatar_url.startsWith("blob:")}
                       />
                     ) : (
-                      <span className={styles.cardAuthorAvatarPlaceholder}>
-                        👤
-                      </span>
+                      <span className={styles.cardAuthorAvatarPlaceholder}>👤</span>
                     )}
                     <span>Por {a.author_username}</span>
-                    <span>
-                      {new Date(a.published_at).toLocaleDateString("pt-BR")}
-                    </span>
+                    <span>{new Date(a.published_at).toLocaleDateString("pt-BR")}</span>
                   </div>
                 </div>
               </Link>

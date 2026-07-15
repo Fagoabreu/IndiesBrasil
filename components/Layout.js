@@ -16,22 +16,9 @@ export default function Layout({ children, RightSidebar = null }) {
       </Head>
 
       {/* Mobile sidebar drawer */}
-      {mobileNavOpen && (
-        <div
-          className="mobile-drawer-overlay"
-          onClick={() => setMobileNavOpen(false)}
-          aria-hidden="true"
-        />
-      )}
-      <nav
-        className={`mobile-drawer${mobileNavOpen ? " open" : ""}`}
-        aria-label="Menu de navegação"
-      >
-        <button
-          className="mobile-drawer-close-btn"
-          onClick={() => setMobileNavOpen(false)}
-          aria-label="Fechar menu"
-        >
+      {mobileNavOpen && <div className="mobile-drawer-overlay" onClick={() => setMobileNavOpen(false)} aria-hidden="true" />}
+      <nav className={`mobile-drawer${mobileNavOpen ? " open" : ""}`} aria-label="Menu de navegação">
+        <button className="mobile-drawer-close-btn" onClick={() => setMobileNavOpen(false)} aria-label="Fechar menu">
           <XIcon size={20} />
         </button>
         <LeftSidebarComponent onNavigate={() => setMobileNavOpen(false)} />
@@ -46,9 +33,7 @@ export default function Layout({ children, RightSidebar = null }) {
             <LeftSidebarComponent />
           </div>
           <main className="main-content">{children}</main>
-          {RightSidebar && (
-            <div className="layout-right-pane">{RightSidebar}</div>
-          )}
+          {RightSidebar && <div className="layout-right-pane">{RightSidebar}</div>}
         </div>
       </div>
     </>

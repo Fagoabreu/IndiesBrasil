@@ -8,9 +8,7 @@ export async function GET(request, context) {
     await controller.injectApiUser(request);
     const { slug } = await context.params;
     const studio = await organization.findBySlug(slug);
-    const settings = await qrCode
-      .findByOrganizationId(studio.id)
-      .catch(() => null);
+    const settings = await qrCode.findByOrganizationId(studio.id).catch(() => null);
     return Response.json(settings, { status: 200 });
   } catch (error) {
     return controller.onRouterErrorHandler(error);

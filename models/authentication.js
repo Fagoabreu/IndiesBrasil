@@ -35,10 +35,7 @@ async function getUser(providedEmail, providedPassword) {
   }
 
   async function validatePassword(providedPassword, storedPassword) {
-    const correctPasswordMatch = await password.compare(
-      providedPassword,
-      storedPassword,
-    );
+    const correctPasswordMatch = await password.compare(providedPassword, storedPassword);
     if (!correctPasswordMatch) {
       throw new UnauthorizedError({
         message: "Senha não confere.",

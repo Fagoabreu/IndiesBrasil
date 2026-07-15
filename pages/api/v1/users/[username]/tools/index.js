@@ -20,18 +20,13 @@ async function postHandler(request, response) {
   if (!authorization.can(userTryingToPost, "update:user", targetUser)) {
     throw new ForbiddenError({
       message: "Você não possui permissão para atualizar outro usuário.",
-      action:
-        "Verifique se você possui a feature necessária para atualizar outro usuário",
+      action: "Verifique se você possui a feature necessária para atualizar outro usuário",
     });
   }
 
   userInputValues.user_id = targetUser.id;
   const postedTool = await profile.saveTools(userInputValues);
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToPost,
-    "read:profile_tool",
-    postedTool,
-  );
+  const secureOutputValues = authorization.filterOutput(userTryingToPost, "read:profile_tool", postedTool);
   return response.status(200).json(secureOutputValues);
 }
 
@@ -39,14 +34,8 @@ async function getHandler(request, response) {
   const userTryingToGet = request.context.user;
   const username = request.query.username;
   const targetUser = await user.findOneByUsernameSecured(username);
-  const profileToolsFound = await profile.findPortfolioToolsByPortfolioId(
-    targetUser.id,
-  );
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToGet,
-    "read:profile_tool:all",
-    profileToolsFound,
-  );
+  const profileToolsFound = await profile.findPortfolioToolsByPortfolioId(targetUser.id);
+  const secureOutputValues = authorization.filterOutput(userTryingToGet, "read:profile_tool:all", profileToolsFound);
 
   return response.status(200).json(secureOutputValues);
 }

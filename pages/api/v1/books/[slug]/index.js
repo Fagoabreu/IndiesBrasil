@@ -14,13 +14,9 @@ async function getHandler(request, response) {
   const requestUser = request.context.user;
 
   const bookData = await book.findBySlug(slug);
-  const isFollowingBook = requestUser?.id
-    ? await book.isFollowing(bookData.id, requestUser.id)
-    : false;
+  const isFollowingBook = requestUser?.id ? await book.isFollowing(bookData.id, requestUser.id) : false;
   const canEditBook = await book.canEdit(bookData.id, requestUser);
-  const userReview = requestUser?.id
-    ? await book.getUserReview(bookData.id, requestUser.id)
-    : null;
+  const userReview = requestUser?.id ? await book.getUserReview(bookData.id, requestUser.id) : null;
 
   return response.status(200).json({
     ...bookData,

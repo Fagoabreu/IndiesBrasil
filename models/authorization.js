@@ -262,8 +262,7 @@ function filterOutput(user, feature, resource) {
     };
 
     if (can(user, "read:status:all")) {
-      output.dependencies.database.version =
-        resource.dependencies.database.version;
+      output.dependencies.database.version = resource.dependencies.database.version;
     }
 
     return output;
@@ -717,8 +716,7 @@ function validateUser(user) {
 function validateFeature(feature) {
   if (!feature || !availableFeatures.has(feature)) {
     throw new InternalServerError({
-      cause:
-        "É necessário fornecer uma `feature` conhecida no model authorization.",
+      cause: "É necessário fornecer uma `feature` conhecida no model authorization.",
     });
   }
 }
@@ -726,8 +724,7 @@ function validateFeature(feature) {
 function validateResource(resource) {
   if (!resource) {
     throw new InternalServerError({
-      cause:
-        "É necessário fornecer um `resource` em `authorization.filterOutput`.",
+      cause: "É necessário fornecer um `resource` em `authorization.filterOutput`.",
     });
   }
 }

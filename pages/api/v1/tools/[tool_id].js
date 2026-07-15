@@ -12,10 +12,6 @@ async function deleteHandler(request, response) {
   const userTryingToDelete = request.context.user;
   const tool_id = request.query.tool_id;
   const postToDelete = await tool.deleteTool(tool_id);
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToDelete,
-    "read:tool",
-    postToDelete,
-  );
+  const secureOutputValues = authorization.filterOutput(userTryingToDelete, "read:tool", postToDelete);
   return response.status(200).json(secureOutputValues);
 }

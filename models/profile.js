@@ -40,10 +40,7 @@ async function findByUsername(username, readerUser) {
   const profile_tools = await findPortfolioToolsByPortfolioId(currentUser.id);
   const profile_contacts = await findContactsByUserId(currentUser.id);
   const profile_roles = await findRolesByUserId(currentUser.id);
-  const is_following = await user.isFollowingUser(
-    readerUser.id,
-    currentUser.id,
-  );
+  const is_following = await user.isFollowingUser(readerUser.id, currentUser.id);
 
   return {
     user: { ...currentUser, is_following },
@@ -232,12 +229,7 @@ async function saveRoles(userInputValues) {
         $1,$2,$3,$4
         )
           `,
-      values: [
-        userInputValues.user_id,
-        userInputValues.name,
-        userInputValues.experience,
-        userInputValues.ordem,
-      ],
+      values: [userInputValues.user_id, userInputValues.name, userInputValues.experience, userInputValues.ordem],
     });
     return results.rows;
   }
@@ -279,21 +271,14 @@ async function saveImages(userInputValues) {
         where id=$3
           returning id as user_id, avatar_image, background_image
         `,
-      values: [
-        imagesNewValues.avatar_image,
-        imagesNewValues.background_image,
-        imagesNewValues.user_id,
-      ],
+      values: [imagesNewValues.avatar_image, imagesNewValues.background_image, imagesNewValues.user_id],
     });
     return results.rows[0];
   }
 }
 
 async function patchRoles(user_id, portfolio_role_name, userInputValues) {
-  const currentRole = await selectRoleByUserAndRole(
-    user_id,
-    portfolio_role_name,
-  );
+  const currentRole = await selectRoleByUserAndRole(user_id, portfolio_role_name);
   const roleWithNewValues = {
     ...currentRole,
     ...userInputValues,
@@ -350,12 +335,7 @@ async function updateRoleByUserAndTool(userInputValues) {
           and portfolio_role_name=$2
         returning *
       `,
-      values: [
-        userInputValues.user_id,
-        userInputValues.portfolio_role_name,
-        userInputValues.experience,
-        userInputValues.ordem,
-      ],
+      values: [userInputValues.user_id, userInputValues.portfolio_role_name, userInputValues.experience, userInputValues.ordem],
     });
 
     if (results.rowCount === 0) {
@@ -625,11 +605,7 @@ async function saveContato(userInputValues) {
         $1,$2,$3
         )
           `,
-      values: [
-        userInputValues.user_id,
-        userInputValues.contact_value,
-        userInputValues.contact_type_id,
-      ],
+      values: [userInputValues.user_id, userInputValues.contact_value, userInputValues.contact_type_id],
     });
     return results.rows;
   }
@@ -691,12 +667,7 @@ async function updateContatoById(userInputValues) {
         id = $1
       returning *
         `,
-      values: [
-        userInputValues.id,
-        userInputValues.user_id,
-        userInputValues.contact_type_id,
-        userInputValues.contact_value,
-      ],
+      values: [userInputValues.id, userInputValues.user_id, userInputValues.contact_type_id, userInputValues.contact_value],
     });
     if (results.rowCount === 0) {
       throw new NotFoundError({
@@ -768,11 +739,7 @@ async function saveTools(userInputValues) {
         $1,$2,$3
         )
           `,
-      values: [
-        userInputValues.user_id,
-        userInputValues.portfolio_tool_id,
-        userInputValues.experience,
-      ],
+      values: [userInputValues.user_id, userInputValues.portfolio_tool_id, userInputValues.experience],
     });
     return results.rows;
   }
@@ -835,11 +802,7 @@ async function updateToolByUserAndTool(userInputValues) {
         and portfolio_tool_id = $2
       returning *
         `,
-      values: [
-        userInputValues.user_id,
-        userInputValues.portfolio_tool_id,
-        userInputValues.experience,
-      ],
+      values: [userInputValues.user_id, userInputValues.portfolio_tool_id, userInputValues.experience],
     });
     if (results.rowCount === 0) {
       throw new NotFoundError({

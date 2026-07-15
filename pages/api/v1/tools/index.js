@@ -12,11 +12,7 @@ export default createRouter()
 async function getHandler(request, response) {
   const userTryingToGet = request.context.user;
   const selectedTools = await tool.findAllTool();
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToGet,
-    "read:tool:all",
-    selectedTools,
-  );
+  const secureOutputValues = authorization.filterOutput(userTryingToGet, "read:tool:all", selectedTools);
   return response.status(200).json(secureOutputValues);
 }
 
@@ -24,10 +20,6 @@ async function postHandler(request, response) {
   const userTryingToPost = request.context.user;
   const inputValues = request.body;
   const insertedTool = await tool.createTool(inputValues);
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToPost,
-    "read:tool",
-    insertedTool,
-  );
+  const secureOutputValues = authorization.filterOutput(userTryingToPost, "read:tool", insertedTool);
   return response.status(200).json(secureOutputValues);
 }

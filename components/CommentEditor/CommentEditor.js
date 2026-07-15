@@ -1,16 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import { Textarea } from "@primer/react";
-import {
-  BoldIcon,
-  ItalicIcon,
-  CodeIcon,
-  LinkIcon,
-  EyeIcon,
-  EyeClosedIcon,
-  PencilIcon,
-  SmileyIcon,
-} from "@primer/octicons-react";
+import { BoldIcon, ItalicIcon, CodeIcon, LinkIcon, EyeIcon, EyeClosedIcon, PencilIcon, SmileyIcon } from "@primer/octicons-react";
 import { markdownToHtml } from "@/utils/markdown";
 import styles from "./CommentEditor.module.css";
 
@@ -81,13 +72,7 @@ const EMOJIS = [
   "💚",
 ];
 
-export default function CommentEditor({
-  value,
-  onChange,
-  onSubmit,
-  submitting,
-  placeholder,
-}) {
+export default function CommentEditor({ value, onChange, onSubmit, submitting, placeholder }) {
   const [preview, setPreview] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
   const textareaRef = useRef(null);
@@ -100,16 +85,13 @@ export default function CommentEditor({
     const start = el.selectionStart;
     const end = el.selectionEnd;
     const selected = value.slice(start, end);
-    const newText =
-      value.slice(0, start) + before + selected + after + value.slice(end);
+    const newText = value.slice(0, start) + before + selected + after + value.slice(end);
 
     onChange(newText);
 
     // Restaura cursor após o React re-renderizar com o novo value
     setTimeout(() => {
-      const pos = selected
-        ? start + before.length + selected.length + after.length
-        : start + before.length;
+      const pos = selected ? start + before.length + selected.length + after.length : start + before.length;
       el.setSelectionRange(pos, pos);
       el.focus();
     }, 0);
@@ -141,31 +123,13 @@ export default function CommentEditor({
       {/* Toolbar */}
       <div className={styles.toolbar}>
         <div className={styles.tbGroup}>
-          <button
-            type="button"
-            className={styles.tbBtn}
-            onClick={() => insertAtCursor("**", "**")}
-            title="Negrito (Ctrl+B)"
-            aria-label="Negrito"
-          >
+          <button type="button" className={styles.tbBtn} onClick={() => insertAtCursor("**", "**")} title="Negrito (Ctrl+B)" aria-label="Negrito">
             <BoldIcon size={14} />
           </button>
-          <button
-            type="button"
-            className={styles.tbBtn}
-            onClick={() => insertAtCursor("*", "*")}
-            title="Itálico (Ctrl+I)"
-            aria-label="Itálico"
-          >
+          <button type="button" className={styles.tbBtn} onClick={() => insertAtCursor("*", "*")} title="Itálico (Ctrl+I)" aria-label="Itálico">
             <ItalicIcon size={14} />
           </button>
-          <button
-            type="button"
-            className={styles.tbBtn}
-            onClick={() => insertAtCursor("~~", "~~")}
-            title="Tachado (~~texto~~)"
-            aria-label="Tachado"
-          >
+          <button type="button" className={styles.tbBtn} onClick={() => insertAtCursor("~~", "~~")} title="Tachado (~~texto~~)" aria-label="Tachado">
             <span className={styles.tbStrike}>S</span>
           </button>
           <button
@@ -186,22 +150,10 @@ export default function CommentEditor({
           >
             <span className={styles.tbCodeBlock}>{"</>"}</span>
           </button>
-          <button
-            type="button"
-            className={styles.tbBtn}
-            onClick={() => insertAtCursor("[", "](url)")}
-            title="Link ([texto](url))"
-            aria-label="Link"
-          >
+          <button type="button" className={styles.tbBtn} onClick={() => insertAtCursor("[", "](url)")} title="Link ([texto](url))" aria-label="Link">
             <LinkIcon size={14} />
           </button>
-          <button
-            type="button"
-            className={styles.tbBtn}
-            onClick={() => insertAtCursor("||", "||")}
-            title="Spoiler (||texto||)"
-            aria-label="Spoiler"
-          >
+          <button type="button" className={styles.tbBtn} onClick={() => insertAtCursor("||", "||")} title="Spoiler (||texto||)" aria-label="Spoiler">
             <EyeClosedIcon size={14} />
           </button>
         </div>
@@ -261,9 +213,7 @@ export default function CommentEditor({
           /* dangerouslySetInnerHTML: markdown convertido para HTML com
            * sanitização de tags. Conteúdo vindo de usuário autenticado. */
           dangerouslySetInnerHTML={{
-            __html:
-              previewHtml ||
-              '<em style="color:var(--fgColor-muted);font-style:italic">Nada para pré-visualizar</em>',
+            __html: previewHtml || '<em style="color:var(--fgColor-muted);font-style:italic">Nada para pré-visualizar</em>',
           }}
         />
       ) : (
@@ -282,16 +232,10 @@ export default function CommentEditor({
       {/* Footer */}
       <div className={styles.footer}>
         <span className={styles.footerHint}>
-          Markdown: **negrito** *itálico* ~~tachado~~ `código` ```bloco```
-          [link](url). Ctrl+Enter para enviar.
+          Markdown: **negrito** *itálico* ~~tachado~~ `código` ```bloco``` [link](url). Ctrl+Enter para enviar.
         </span>
         {onSubmit && (
-          <button
-            type="button"
-            className={styles.footerBtn}
-            disabled={!value.trim() || submitting}
-            onClick={onSubmit}
-          >
+          <button type="button" className={styles.footerBtn} disabled={!value.trim() || submitting} onClick={onSubmit}>
             {submitting ? "Enviando..." : "Comentar"}
           </button>
         )}

@@ -20,18 +20,13 @@ async function postHandler(request, response) {
   if (!authorization.can(userTryingToPost, "update:user", targetUser)) {
     throw new ForbiddenError({
       message: "Você não possui permissão para atualizar outro usuário.",
-      action:
-        "Verifique se você possui a feature necessária para atualizar outro usuário",
+      action: "Verifique se você possui a feature necessária para atualizar outro usuário",
     });
   }
 
   userInputValues.user_id = targetUser.id;
   const postedRole = await profile.saveRoles(userInputValues);
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToPost,
-    "read:profile_role",
-    postedRole,
-  );
+  const secureOutputValues = authorization.filterOutput(userTryingToPost, "read:profile_role", postedRole);
   return response.status(200).json(secureOutputValues);
 }
 
@@ -40,10 +35,6 @@ async function getHandler(request, response) {
   const username = request.query.username;
   const targetUser = await user.findOneByUsernameSecured(username);
   const profileRolesFound = await profile.findRolesByUserId(targetUser.id);
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToGet,
-    "read:profile_role:all",
-    profileRolesFound,
-  );
+  const secureOutputValues = authorization.filterOutput(userTryingToGet, "read:profile_role:all", profileRolesFound);
   return response.status(200).json(secureOutputValues);
 }

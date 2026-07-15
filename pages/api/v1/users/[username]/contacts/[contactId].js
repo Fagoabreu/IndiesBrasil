@@ -21,18 +21,13 @@ async function patchHandler(request, response) {
   if (!authorization.can(userTryingToPatch, "update:user", targetUser)) {
     throw new ForbiddenError({
       message: "Você não possui permissão para atualizar outro usuário.",
-      action:
-        "Verifique se você possui a feature necessária para atualizar outro usuário",
+      action: "Verifique se você possui a feature necessária para atualizar outro usuário",
     });
   }
 
   userInputValues.id = contactId;
   const postedContact = await profile.patchContacts(userInputValues);
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToPatch,
-    "read:profile_contact",
-    postedContact,
-  );
+  const secureOutputValues = authorization.filterOutput(userTryingToPatch, "read:profile_contact", postedContact);
   return response.status(200).json(secureOutputValues);
 }
 
@@ -45,17 +40,12 @@ async function deleteHandler(request, response) {
   if (!authorization.can(userTryingToPatch, "update:user", targetUser)) {
     throw new ForbiddenError({
       message: "Você não possui permissão para atualizar outro usuário.",
-      action:
-        "Verifique se você possui a feature necessária para atualizar outro usuário",
+      action: "Verifique se você possui a feature necessária para atualizar outro usuário",
     });
   }
 
   const postedContact = await profile.deleteContatoById(contactId);
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToPatch,
-    "read:profile_contact",
-    postedContact,
-  );
+  const secureOutputValues = authorization.filterOutput(userTryingToPatch, "read:profile_contact", postedContact);
 
   return response.status(200).json(secureOutputValues);
 }

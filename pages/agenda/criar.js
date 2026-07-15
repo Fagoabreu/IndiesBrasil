@@ -114,9 +114,7 @@ export default function CriarEventoPage() {
   }
 
   const toggleDay = useCallback((day) => {
-    setDaysOfWeek((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day],
-    );
+    setDaysOfWeek((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
   }, []);
 
   function handleAddressChange(field, value) {
@@ -132,11 +130,7 @@ export default function CriarEventoPage() {
       return;
     }
 
-    if (
-      isAllDay
-        ? new Date(endsAt) < new Date(startsAt)
-        : new Date(endsAt) <= new Date(startsAt)
-    ) {
+    if (isAllDay ? new Date(endsAt) < new Date(startsAt) : new Date(endsAt) <= new Date(startsAt)) {
       setError("A data de término deve ser posterior à data de início.");
       return;
     }
@@ -151,25 +145,18 @@ export default function CriarEventoPage() {
       is_all_day: isAllDay,
       is_online: isOnline,
       online_url: isOnline && onlineUrl.trim() ? onlineUrl.trim() : null,
-      location_name:
-        !isOnline && locationName.trim() ? locationName.trim() : null,
+      location_name: !isOnline && locationName.trim() ? locationName.trim() : null,
       location_url: !isOnline && locationUrl.trim() ? locationUrl.trim() : null,
       address: !isOnline && address.city ? address : undefined,
       is_recurring: isRecurring,
-      banner_external_url:
-        bannerMode === "url" && bannerExternalUrl.trim()
-          ? bannerExternalUrl.trim()
-          : undefined,
+      banner_external_url: bannerMode === "url" && bannerExternalUrl.trim() ? bannerExternalUrl.trim() : undefined,
     };
 
     if (isRecurring) {
       body.recurrence_rule = {
         frequency,
         interval: Number(interval) || 1,
-        days_of_week:
-          frequency === "weekly" && daysOfWeek.length > 0
-            ? daysOfWeek
-            : undefined,
+        days_of_week: frequency === "weekly" && daysOfWeek.length > 0 ? daysOfWeek : undefined,
         until_date: untilDate || undefined,
       };
     }
@@ -220,10 +207,7 @@ export default function CriarEventoPage() {
 
   return (
     <>
-      <SeoHead
-        title="Criar Evento — Agenda Indies Brasil"
-        description="Crie um novo evento na agenda da comunidade Indies Brasil."
-      />
+      <SeoHead title="Criar Evento — Agenda Indies Brasil" description="Crie um novo evento na agenda da comunidade Indies Brasil." />
 
       <div className={styles.pageWrapper}>
         <Link href="/agenda" className={styles.backLink}>
@@ -271,16 +255,9 @@ export default function CriarEventoPage() {
           <div className={styles.field}>
             <label className={styles.label}>Imagem de Capa</label>
 
-            <input
-              ref={bannerFileInputRef}
-              type="file"
-              accept="image/*"
-              className={styles.hiddenInput}
-              onChange={handleBannerFileChange}
-            />
+            <input ref={bannerFileInputRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={handleBannerFileChange} />
 
-            {(bannerFilePreview ||
-              (bannerMode === "url" && bannerExternalUrl)) && (
+            {(bannerFilePreview || (bannerMode === "url" && bannerExternalUrl)) && (
               <div className={styles.bannerPreviewWrap}>
                 <Image
                   src={bannerFilePreview || bannerExternalUrl}
@@ -290,11 +267,7 @@ export default function CriarEventoPage() {
                   sizes="700px"
                   unoptimized={!!bannerFilePreview}
                 />
-                <button
-                  type="button"
-                  className={styles.removeBannerBtn}
-                  onClick={handleClearBanner}
-                >
+                <button type="button" className={styles.removeBannerBtn} onClick={handleClearBanner}>
                   Remover
                 </button>
               </div>
@@ -303,10 +276,7 @@ export default function CriarEventoPage() {
             <div className={styles.bannerModeToggle}>
               <button
                 type="button"
-                className={[
-                  styles.bannerModeBtn,
-                  bannerMode === "upload" ? styles.bannerModeBtnActive : "",
-                ].join(" ")}
+                className={[styles.bannerModeBtn, bannerMode === "upload" ? styles.bannerModeBtnActive : ""].join(" ")}
                 onClick={() => {
                   setBannerMode("upload");
                   bannerFileInputRef.current?.click();
@@ -316,10 +286,7 @@ export default function CriarEventoPage() {
               </button>
               <button
                 type="button"
-                className={[
-                  styles.bannerModeBtn,
-                  bannerMode === "url" ? styles.bannerModeBtnActive : "",
-                ].join(" ")}
+                className={[styles.bannerModeBtn, bannerMode === "url" ? styles.bannerModeBtnActive : ""].join(" ")}
                 onClick={() => setBannerMode("url")}
               >
                 Link externo
@@ -336,9 +303,7 @@ export default function CriarEventoPage() {
               />
             )}
 
-            <span className={styles.hint}>
-              Opcional — imagem exibida no topo da página do evento.
-            </span>
+            <span className={styles.hint}>Opcional — imagem exibida no topo da página do evento.</span>
           </div>
 
           {/* Tipo e Visibilidade */}
@@ -347,12 +312,7 @@ export default function CriarEventoPage() {
               <label className={styles.label} htmlFor="eventType">
                 Tipo <span className={styles.required}>*</span>
               </label>
-              <select
-                id="eventType"
-                className={styles.select}
-                value={eventType}
-                onChange={(e) => setEventType(e.target.value)}
-              >
+              <select id="eventType" className={styles.select} value={eventType} onChange={(e) => setEventType(e.target.value)}>
                 {EVENT_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>
                     {t.label}
@@ -365,12 +325,7 @@ export default function CriarEventoPage() {
               <label className={styles.label} htmlFor="visibility">
                 Visibilidade
               </label>
-              <select
-                id="visibility"
-                className={styles.select}
-                value={visibility}
-                onChange={(e) => setVisibility(e.target.value)}
-              >
+              <select id="visibility" className={styles.select} value={visibility} onChange={(e) => setVisibility(e.target.value)}>
                 {VISIBILITY_OPTIONS.map((v) => (
                   <option key={v.value} value={v.value}>
                     {v.label}
@@ -385,11 +340,7 @@ export default function CriarEventoPage() {
 
           {/* Dia inteiro */}
           <label className={styles.checkboxField}>
-            <input
-              type="checkbox"
-              checked={isAllDay}
-              onChange={(e) => setIsAllDay(e.target.checked)}
-            />
+            <input type="checkbox" checked={isAllDay} onChange={(e) => setIsAllDay(e.target.checked)} />
             <span className={styles.checkboxLabel}>Evento de dia inteiro</span>
           </label>
 
@@ -429,11 +380,7 @@ export default function CriarEventoPage() {
 
           {/* Online toggle */}
           <label className={styles.checkboxField}>
-            <input
-              type="checkbox"
-              checked={isOnline}
-              onChange={(e) => setIsOnline(e.target.checked)}
-            />
+            <input type="checkbox" checked={isOnline} onChange={(e) => setIsOnline(e.target.checked)} />
             <span className={styles.checkboxLabel}>Evento online</span>
           </label>
 
@@ -450,9 +397,7 @@ export default function CriarEventoPage() {
                 onChange={(e) => setOnlineUrl(e.target.value)}
                 placeholder="https://..."
               />
-              <span className={styles.hint}>
-                Pode ser deixado em branco e divulgado depois.
-              </span>
+              <span className={styles.hint}>Pode ser deixado em branco e divulgado depois.</span>
             </div>
           )}
 
@@ -492,10 +437,7 @@ export default function CriarEventoPage() {
               <p className={styles.sectionTitle} style={{ marginTop: 8 }}>
                 Endereço
               </p>
-              <AddressFormFields
-                value={address}
-                onChange={handleAddressChange}
-              />
+              <AddressFormFields value={address} onChange={handleAddressChange} />
             </>
           )}
 
@@ -504,11 +446,7 @@ export default function CriarEventoPage() {
 
           {/* Recorrente toggle */}
           <label className={styles.checkboxField}>
-            <input
-              type="checkbox"
-              checked={isRecurring}
-              onChange={(e) => setIsRecurring(e.target.checked)}
-            />
+            <input type="checkbox" checked={isRecurring} onChange={(e) => setIsRecurring(e.target.checked)} />
             <span className={styles.checkboxLabel}>Evento recorrente</span>
           </label>
 
@@ -519,12 +457,7 @@ export default function CriarEventoPage() {
                   <label className={styles.label} htmlFor="frequency">
                     Frequência
                   </label>
-                  <select
-                    id="frequency"
-                    className={styles.select}
-                    value={frequency}
-                    onChange={(e) => setFrequency(e.target.value)}
-                  >
+                  <select id="frequency" className={styles.select} value={frequency} onChange={(e) => setFrequency(e.target.value)}>
                     {FREQUENCIES.map((f) => (
                       <option key={f.value} value={f.value}>
                         {f.label}
@@ -551,31 +484,21 @@ export default function CriarEventoPage() {
               </div>
 
               {frequency === "weekly" && (
-                <fieldset
-                  className={styles.field}
-                  style={{ border: "none", padding: 0, margin: 0 }}
-                >
+                <fieldset className={styles.field} style={{ border: "none", padding: 0, margin: 0 }}>
                   <legend className={styles.label}>Dias da semana</legend>
                   <div className={styles.daysGrid}>
                     {WEEK_DAYS.map((d) => (
                       <button
                         key={d.value}
                         type="button"
-                        className={[
-                          styles.dayToggle,
-                          daysOfWeek.includes(d.value) ? styles.active : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
+                        className={[styles.dayToggle, daysOfWeek.includes(d.value) ? styles.active : ""].filter(Boolean).join(" ")}
                         onClick={() => toggleDay(d.value)}
                       >
                         {d.label}
                       </button>
                     ))}
                   </div>
-                  <span className={styles.hint}>
-                    Deixe em branco para usar o dia de início.
-                  </span>
+                  <span className={styles.hint}>Deixe em branco para usar o dia de início.</span>
                 </fieldset>
               )}
 
@@ -583,16 +506,8 @@ export default function CriarEventoPage() {
                 <label className={styles.label} htmlFor="untilDate">
                   Encerrar em (opcional)
                 </label>
-                <input
-                  id="untilDate"
-                  type="date"
-                  className={styles.input}
-                  value={untilDate}
-                  onChange={(e) => setUntilDate(e.target.value)}
-                />
-                <span className={styles.hint}>
-                  Deixe em branco para gerar ocorrências por 12 meses.
-                </span>
+                <input id="untilDate" type="date" className={styles.input} value={untilDate} onChange={(e) => setUntilDate(e.target.value)} />
+                <span className={styles.hint}>Deixe em branco para gerar ocorrências por 12 meses.</span>
               </div>
             </div>
           )}
@@ -602,11 +517,7 @@ export default function CriarEventoPage() {
             <Link href="/agenda" className={styles.cancelBtn}>
               Cancelar
             </Link>
-            <button
-              type="submit"
-              className={styles.submitBtn}
-              disabled={submitting}
-            >
+            <button type="submit" className={styles.submitBtn} disabled={submitting}>
               {submitting ? <Spinner size="small" /> : "Criar Evento"}
             </button>
           </div>

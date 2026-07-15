@@ -188,8 +188,7 @@ export default function ConfiguracoesPage() {
   // Jogos de Mesa
   const [boardgames, setBoardgames] = useState([]);
   const [newBoardgameName, setNewBoardgameName] = useState("");
-  const [newBoardgameCategory, setNewBoardgameCategory] =
-    useState("board_game");
+  const [newBoardgameCategory, setNewBoardgameCategory] = useState("board_game");
   const [newBoardgameStage, setNewBoardgameStage] = useState("concept");
   const [creatingBoardgame, setCreatingBoardgame] = useState(false);
   const [boardgameMsg, setBoardgameMsg] = useState({ type: null, text: "" });
@@ -641,10 +640,7 @@ export default function ConfiguracoesPage() {
       const payload = {
         ...editBookForm,
         title: editBookForm.title.trim(),
-        pages:
-          editBookForm.pages === ""
-            ? null
-            : Number.parseInt(editBookForm.pages, 10),
+        pages: editBookForm.pages === "" ? null : Number.parseInt(editBookForm.pages, 10),
       };
       // Só incluir store_pages se o usuário interagiu com a aba Lojas
       if (Array.isArray(editBookForm.store_pages)) {
@@ -859,13 +855,10 @@ export default function ConfiguracoesPage() {
   async function handleRemoveVideo(mediaId) {
     setRemovingVideoId(mediaId);
     try {
-      const res = await fetch(
-        `/api/v1/games/${editingGameSlug}/media/${mediaId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        },
-      );
+      const res = await fetch(`/api/v1/games/${editingGameSlug}/media/${mediaId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       if (res.ok) {
         setGameVideos((v) => v.filter((m) => m.id !== mediaId));
       }
@@ -966,18 +959,15 @@ export default function ConfiguracoesPage() {
     setBgVideoMsg({ type: null, text: "" });
     setBgAddingVideo(true);
     try {
-      const res = await fetch(
-        `/api/v1/boardgames/${editingBoardgameSlug}/media`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            url: bgNewVideoUrl.trim(),
-            caption: bgNewVideoCaption.trim() || null,
-          }),
-        },
-      );
+      const res = await fetch(`/api/v1/boardgames/${editingBoardgameSlug}/media`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          url: bgNewVideoUrl.trim(),
+          caption: bgNewVideoCaption.trim() || null,
+        }),
+      });
       const data = await res.json();
       if (!res.ok) {
         setBgVideoMsg({
@@ -997,13 +987,10 @@ export default function ConfiguracoesPage() {
   async function handleRemoveBgVideo(mediaId) {
     setBgRemovingVideoId(mediaId);
     try {
-      const res = await fetch(
-        `/api/v1/boardgames/${editingBoardgameSlug}/media/${mediaId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        },
-      );
+      const res = await fetch(`/api/v1/boardgames/${editingBoardgameSlug}/media/${mediaId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       if (res.ok) {
         setBgVideos((v) => v.filter((m) => m.id !== mediaId));
       }
@@ -1054,27 +1041,20 @@ export default function ConfiguracoesPage() {
   function togglePlatform(platform) {
     setEditGameForm((f) => ({
       ...f,
-      platforms: f.platforms.includes(platform)
-        ? f.platforms.filter((p) => p !== platform)
-        : [...f.platforms, platform],
+      platforms: f.platforms.includes(platform) ? f.platforms.filter((p) => p !== platform) : [...f.platforms, platform],
     }));
   }
 
   function addStorePage() {
     setEditGameForm((f) => ({
       ...f,
-      store_pages: [
-        ...f.store_pages,
-        { store_type_id: "", page_url: "", price: "" },
-      ],
+      store_pages: [...f.store_pages, { store_type_id: "", page_url: "", price: "" }],
     }));
   }
 
   function updateStorePage(idx, field, value) {
     setEditGameForm((f) => {
-      const updated = f.store_pages.map((sp, i) =>
-        i === idx ? { ...sp, [field]: value } : sp,
-      );
+      const updated = f.store_pages.map((sp, i) => (i === idx ? { ...sp, [field]: value } : sp));
       return { ...f, store_pages: updated };
     });
   }
@@ -1090,18 +1070,13 @@ export default function ConfiguracoesPage() {
   function addBookStorePage() {
     setEditBookForm((f) => ({
       ...f,
-      store_pages: [
-        ...f.store_pages,
-        { store_type_id: "", page_url: "", price: "" },
-      ],
+      store_pages: [...f.store_pages, { store_type_id: "", page_url: "", price: "" }],
     }));
   }
 
   function updateBookStorePage(idx, field, value) {
     setEditBookForm((f) => {
-      const updated = f.store_pages.map((sp, i) =>
-        i === idx ? { ...sp, [field]: value } : sp,
-      );
+      const updated = f.store_pages.map((sp, i) => (i === idx ? { ...sp, [field]: value } : sp));
       return { ...f, store_pages: updated };
     });
   }
@@ -1220,30 +1195,12 @@ export default function ConfiguracoesPage() {
       const payload = {
         ...editBoardgameForm,
         name: editBoardgameForm.name.trim(),
-        player_count_min:
-          editBoardgameForm.player_count_min === ""
-            ? null
-            : Number(editBoardgameForm.player_count_min),
-        player_count_max:
-          editBoardgameForm.player_count_max === ""
-            ? null
-            : Number(editBoardgameForm.player_count_max),
-        play_time_min:
-          editBoardgameForm.play_time_min === ""
-            ? null
-            : Number(editBoardgameForm.play_time_min),
-        play_time_max:
-          editBoardgameForm.play_time_max === ""
-            ? null
-            : Number(editBoardgameForm.play_time_max),
-        age_rating:
-          editBoardgameForm.age_rating === ""
-            ? null
-            : Number(editBoardgameForm.age_rating),
-        weight:
-          editBoardgameForm.weight === ""
-            ? null
-            : Number(editBoardgameForm.weight),
+        player_count_min: editBoardgameForm.player_count_min === "" ? null : Number(editBoardgameForm.player_count_min),
+        player_count_max: editBoardgameForm.player_count_max === "" ? null : Number(editBoardgameForm.player_count_max),
+        play_time_min: editBoardgameForm.play_time_min === "" ? null : Number(editBoardgameForm.play_time_min),
+        play_time_max: editBoardgameForm.play_time_max === "" ? null : Number(editBoardgameForm.play_time_max),
+        age_rating: editBoardgameForm.age_rating === "" ? null : Number(editBoardgameForm.age_rating),
+        weight: editBoardgameForm.weight === "" ? null : Number(editBoardgameForm.weight),
         mechanics: editBoardgameForm.mechanics.filter(Boolean),
       };
       const res = await fetch(`/api/v1/boardgames/${editingBoardgameSlug}`, {
@@ -1470,12 +1427,7 @@ export default function ConfiguracoesPage() {
 
         {activeTab === "profile" && (
           <>
-            {statusMsg.text && (
-              <StatusMessageComponent
-                type={statusMsg.type}
-                message={statusMsg.text}
-              />
-            )}
+            {statusMsg.text && <StatusMessageComponent type={statusMsg.type} message={statusMsg.text} />}
             <form onSubmit={handleSubmit} className={styles.form}>
               {/* Informações básicas */}
               <section className={styles.section}>
@@ -1516,13 +1468,7 @@ export default function ConfiguracoesPage() {
                     <label className={styles.label} htmlFor="cfg-founded">
                       Fundado em
                     </label>
-                    <input
-                      id="cfg-founded"
-                      type="date"
-                      className={styles.input}
-                      value={foundedAt}
-                      onChange={(e) => setFoundedAt(e.target.value)}
-                    />
+                    <input id="cfg-founded" type="date" className={styles.input} value={foundedAt} onChange={(e) => setFoundedAt(e.target.value)} />
                   </div>
 
                   <div className={styles.field}>
@@ -1582,24 +1528,14 @@ export default function ConfiguracoesPage() {
               <section className={styles.section}>
                 <h2 className={styles.sectionTitle}>Endereço</h2>
                 <label className={styles.checkboxLabel}>
-                  <input
-                    type="checkbox"
-                    checked={hasAddress}
-                    onChange={(e) => setHasAddress(e.target.checked)}
-                  />{" "}
-                  Adicionar endereço físico
+                  <input type="checkbox" checked={hasAddress} onChange={(e) => setHasAddress(e.target.checked)} /> Adicionar endereço físico
                 </label>
 
                 {hasAddress && (
                   <div className={styles.addressBlock}>
-                    <AddressFormFields
-                      value={address}
-                      onChange={handleAddressChange}
-                    />
+                    <AddressFormFields value={address} onChange={handleAddressChange} />
                     {hasAddress && (!address.city || !address.state) && (
-                      <p className={styles.fieldHint}>
-                        Cidade e Estado são obrigatórios para salvar o endereço.
-                      </p>
+                      <p className={styles.fieldHint}>Cidade e Estado são obrigatórios para salvar o endereço.</p>
                     )}
                   </div>
                 )}
@@ -1609,11 +1545,7 @@ export default function ConfiguracoesPage() {
                 <Link href={`/estudios/${slug}`} className={styles.btnCancel}>
                   Cancelar
                 </Link>
-                <button
-                  type="submit"
-                  className={styles.btnSave}
-                  disabled={saving}
-                >
+                <button type="submit" className={styles.btnSave} disabled={saving}>
                   {saving ? <Spinner size="small" /> : "Salvar alterações"}
                 </button>
               </div>
@@ -1647,11 +1579,7 @@ export default function ConfiguracoesPage() {
             )}
 
             <form onSubmit={handleAddContact} className={styles.contactRow}>
-              <select
-                className={styles.input}
-                value={newContactTypeId}
-                onChange={(e) => setNewContactTypeId(e.target.value)}
-              >
+              <select className={styles.input} value={newContactTypeId} onChange={(e) => setNewContactTypeId(e.target.value)}>
                 <option value="">Tipo de contato</option>
                 {contactTypes.map((ct) => (
                   <option key={ct.id} value={ct.id}>
@@ -1667,23 +1595,12 @@ export default function ConfiguracoesPage() {
                 onChange={(e) => setNewContactValue(e.target.value)}
                 maxLength={255}
               />
-              <button
-                type="submit"
-                className={styles.btnSave}
-                disabled={
-                  addingContact || !newContactTypeId || !newContactValue.trim()
-                }
-              >
+              <button type="submit" className={styles.btnSave} disabled={addingContact || !newContactTypeId || !newContactValue.trim()}>
                 {addingContact ? <Spinner size="small" /> : "Adicionar"}
               </button>
             </form>
 
-            {contactMsg.text && (
-              <StatusMessageComponent
-                type={contactMsg.type}
-                message={contactMsg.text}
-              />
-            )}
+            {contactMsg.text && <StatusMessageComponent type={contactMsg.type} message={contactMsg.text} />}
           </section>
         )}
 
@@ -1698,9 +1615,7 @@ export default function ConfiguracoesPage() {
                   <li key={m.user_id ?? m.id} className={styles.pendingItem}>
                     <span className={styles.pendingUsername}>
                       {m.display_name || m.username}
-                      {m.user_id === ownerId && (
-                        <span className={styles.ownerBadge}> (dono)</span>
-                      )}
+                      {m.user_id === ownerId && <span className={styles.ownerBadge}> (dono)</span>}
                     </span>
                     {m.user_id !== ownerId && (
                       <button
@@ -1717,12 +1632,7 @@ export default function ConfiguracoesPage() {
               </ul>
             )}
 
-            {memberMsg.text && (
-              <StatusMessageComponent
-                type={memberMsg.type}
-                message={memberMsg.text}
-              />
-            )}
+            {memberMsg.text && <StatusMessageComponent type={memberMsg.type} message={memberMsg.text} />}
           </section>
         )}
 
@@ -1737,17 +1647,10 @@ export default function ConfiguracoesPage() {
                 {games.map((g) => (
                   <li key={g.id} className={styles.gameListItem}>
                     <div className={styles.gameListRow}>
-                      <Link
-                        href={`/jogos/${g.slug}`}
-                        className={styles.gameLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
+                      <Link href={`/jogos/${g.slug}`} className={styles.gameLink} target="_blank" rel="noopener noreferrer">
                         {g.name}
                       </Link>
-                      <span className={styles.gameStageBadge}>
-                        {STAGE_LABELS[g.stage] ?? g.stage}
-                      </span>
+                      <span className={styles.gameStageBadge}>{STAGE_LABELS[g.stage] ?? g.stage}</span>
                       <button
                         type="button"
                         className={`${styles.btnEditGame} ${editingGameSlug === g.slug ? styles.btnEditGameActive : ""}`}
@@ -1779,10 +1682,7 @@ export default function ConfiguracoesPage() {
                           </div>
                         )}
                         {!loadingGameEdit && editGameForm && (
-                          <form
-                            onSubmit={handleSaveGame}
-                            className={styles.gameEditForm}
-                          >
+                          <form onSubmit={handleSaveGame} className={styles.gameEditForm}>
                             <div className={styles.gameEditTabs}>
                               {[
                                 { id: "info", label: "Informações" },
@@ -1803,9 +1703,7 @@ export default function ConfiguracoesPage() {
                             {activeGameTab === "info" && (
                               <div className={styles.gameEditGrid}>
                                 {/* Nome */}
-                                <label
-                                  className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}
-                                >
+                                <label className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}>
                                   <span>Nome do jogo *</span>
                                   <input
                                     type="text"
@@ -1823,9 +1721,7 @@ export default function ConfiguracoesPage() {
                                 </label>
 
                                 {/* Tagline */}
-                                <label
-                                  className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}
-                                >
+                                <label className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}>
                                   <span>Tagline</span>
                                   <input
                                     type="text"
@@ -1895,9 +1791,7 @@ export default function ConfiguracoesPage() {
                                     <option value="prototype">Protótipo</option>
                                     <option value="alpha">Alpha</option>
                                     <option value="beta">Beta</option>
-                                    <option value="early_access">
-                                      Acesso Antecipado
-                                    </option>
+                                    <option value="early_access">Acesso Antecipado</option>
                                     <option value="released">Lançado</option>
                                     <option value="cancelled">Cancelado</option>
                                   </select>
@@ -1920,9 +1814,7 @@ export default function ConfiguracoesPage() {
                                 </label>
 
                                 {/* Website */}
-                                <label
-                                  className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}
-                                >
+                                <label className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}>
                                   <span>Site oficial</span>
                                   <input
                                     type="url"
@@ -1940,9 +1832,7 @@ export default function ConfiguracoesPage() {
                                 </label>
 
                                 {/* Descrição completa */}
-                                <label
-                                  className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}
-                                >
+                                <label className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}>
                                   <span>Sobre o jogo</span>
                                   <textarea
                                     className={`${styles.input} ${styles.textarea}`}
@@ -1959,25 +1849,12 @@ export default function ConfiguracoesPage() {
                                 </label>
 
                                 {/* Plataformas */}
-                                <fieldset
-                                  className={`${styles.fieldset} ${styles.fieldsetFull}`}
-                                >
-                                  <legend className={styles.fieldsetLegend}>
-                                    Plataformas
-                                  </legend>
+                                <fieldset className={`${styles.fieldset} ${styles.fieldsetFull}`}>
+                                  <legend className={styles.fieldsetLegend}>Plataformas</legend>
                                   <div className={styles.platformsGrid}>
                                     {PLATFORM_OPTIONS.map(([key, label]) => (
-                                      <label
-                                        key={key}
-                                        className={styles.checkboxLabel}
-                                      >
-                                        <input
-                                          type="checkbox"
-                                          checked={editGameForm.platforms.includes(
-                                            key,
-                                          )}
-                                          onChange={() => togglePlatform(key)}
-                                        />
+                                      <label key={key} className={styles.checkboxLabel}>
+                                        <input type="checkbox" checked={editGameForm.platforms.includes(key)} onChange={() => togglePlatform(key)} />
                                         {label}
                                       </label>
                                     ))}
@@ -1990,45 +1867,27 @@ export default function ConfiguracoesPage() {
                               <>
                                 {/* Imagem do card */}
                                 <div className={styles.gameImgUpload}>
-                                  <span className={styles.gameImgLabel}>
-                                    Imagem do card (460 × 215)
-                                  </span>
+                                  <span className={styles.gameImgLabel}>Imagem do card (460 × 215)</span>
                                   <div className={styles.gameImgPreviewWrap}>
-                                    {games.find(
-                                      (g) => g.slug === editingGameSlug,
-                                    )?.banner_url ? (
+                                    {games.find((g) => g.slug === editingGameSlug)?.banner_url ? (
                                       <Image
-                                        src={
-                                          games.find(
-                                            (g) => g.slug === editingGameSlug,
-                                          ).banner_url
-                                        }
+                                        src={games.find((g) => g.slug === editingGameSlug).banner_url}
                                         alt="Card atual"
                                         fill
                                         className={styles.gameImgPreview}
                                         sizes="300px"
                                       />
                                     ) : (
-                                      <div
-                                        className={styles.gameImgPlaceholder}
-                                      >
-                                        Sem imagem
-                                      </div>
+                                      <div className={styles.gameImgPlaceholder}>Sem imagem</div>
                                     )}
                                   </div>
                                   <button
                                     type="button"
                                     className={styles.btnOutlineSmall}
-                                    onClick={() =>
-                                      openGameImgPicker(editingGameSlug)
-                                    }
+                                    onClick={() => openGameImgPicker(editingGameSlug)}
                                     disabled={uploadingGameImg}
                                   >
-                                    {uploadingGameImg ? (
-                                      <Spinner size="small" />
-                                    ) : (
-                                      "Enviar imagem"
-                                    )}
+                                    {uploadingGameImg ? <Spinner size="small" /> : "Enviar imagem"}
                                   </button>
                                 </div>
                                 {/* Trailer */}
@@ -2051,20 +1910,12 @@ export default function ConfiguracoesPage() {
 
                                 {/* Vídeos adicionais */}
                                 <fieldset className={styles.fieldset}>
-                                  <legend className={styles.fieldsetLegend}>
-                                    Vídeos
-                                  </legend>
+                                  <legend className={styles.fieldsetLegend}>Vídeos</legend>
                                   {gameVideos.length > 0 && (
                                     <ul className={styles.videoList}>
                                       {gameVideos.map((v) => (
-                                        <li
-                                          key={v.id}
-                                          className={styles.videoItem}
-                                        >
-                                          <span
-                                            className={styles.videoUrl}
-                                            title={v.url}
-                                          >
+                                        <li key={v.id} className={styles.videoItem}>
+                                          <span className={styles.videoUrl} title={v.url}>
                                             {v.caption || v.url}
                                           </span>
                                           <button
@@ -2072,15 +1923,9 @@ export default function ConfiguracoesPage() {
                                             className={styles.btnRemoveStore}
                                             aria-label="Remover vídeo"
                                             disabled={removingVideoId === v.id}
-                                            onClick={() =>
-                                              handleRemoveVideo(v.id)
-                                            }
+                                            onClick={() => handleRemoveVideo(v.id)}
                                           >
-                                            {removingVideoId === v.id ? (
-                                              <Spinner size="small" />
-                                            ) : (
-                                              "✕"
-                                            )}
+                                            {removingVideoId === v.id ? <Spinner size="small" /> : "✕"}
                                           </button>
                                         </li>
                                       ))}
@@ -2092,18 +1937,12 @@ export default function ConfiguracoesPage() {
                                       className={styles.input}
                                       placeholder="URL do vídeo (YouTube, Vimeo…)"
                                       value={newVideoUrl}
-                                      onChange={(e) =>
-                                        setNewVideoUrl(e.target.value)
-                                      }
+                                      onChange={(e) => setNewVideoUrl(e.target.value)}
                                       maxLength={512}
                                       onKeyDown={(e) => {
                                         if (e.key === "Enter") {
                                           e.preventDefault();
-                                          if (
-                                            !addingVideo &&
-                                            newVideoUrl.trim()
-                                          )
-                                            handleAddVideo(e);
+                                          if (!addingVideo && newVideoUrl.trim()) handleAddVideo(e);
                                         }
                                       }}
                                     />
@@ -2112,32 +1951,19 @@ export default function ConfiguracoesPage() {
                                       className={styles.input}
                                       placeholder="Legenda (opcional)"
                                       value={newVideoCaption}
-                                      onChange={(e) =>
-                                        setNewVideoCaption(e.target.value)
-                                      }
+                                      onChange={(e) => setNewVideoCaption(e.target.value)}
                                       maxLength={120}
                                     />
                                     <button
                                       type="button"
                                       className={styles.btnAddStore}
-                                      disabled={
-                                        addingVideo || !newVideoUrl.trim()
-                                      }
+                                      disabled={addingVideo || !newVideoUrl.trim()}
                                       onClick={handleAddVideo}
                                     >
-                                      {addingVideo ? (
-                                        <Spinner size="small" />
-                                      ) : (
-                                        "+ Adicionar vídeo"
-                                      )}
+                                      {addingVideo ? <Spinner size="small" /> : "+ Adicionar vídeo"}
                                     </button>
                                   </div>
-                                  {videoMsg.text && (
-                                    <StatusMessageComponent
-                                      type={videoMsg.type}
-                                      message={videoMsg.text}
-                                    />
-                                  )}
+                                  {videoMsg.text && <StatusMessageComponent type={videoMsg.type} message={videoMsg.text} />}
                                 </fieldset>
                               </>
                             )}
@@ -2146,28 +1972,15 @@ export default function ConfiguracoesPage() {
                               <>
                                 {/* Links de lojas */}
                                 <fieldset className={styles.fieldset}>
-                                  <legend className={styles.fieldsetLegend}>
-                                    Links de lojas
-                                  </legend>
+                                  <legend className={styles.fieldsetLegend}>Links de lojas</legend>
                                   {editGameForm.store_pages.map((sp, idx) => (
-                                    <div
-                                      key={`store-${sp.store_type_id ?? ""}-${idx}`}
-                                      className={styles.storePageRow}
-                                    >
+                                    <div key={`store-${sp.store_type_id ?? ""}-${idx}`} className={styles.storePageRow}>
                                       <select
                                         className={styles.input}
                                         value={sp.store_type_id}
-                                        onChange={(e) =>
-                                          updateStorePage(
-                                            idx,
-                                            "store_type_id",
-                                            e.target.value,
-                                          )
-                                        }
+                                        onChange={(e) => updateStorePage(idx, "store_type_id", e.target.value)}
                                       >
-                                        <option value="">
-                                          Selecione a loja
-                                        </option>
+                                        <option value="">Selecione a loja</option>
                                         {STORE_TYPES.map((st) => (
                                           <option key={st.id} value={st.id}>
                                             {st.name}
@@ -2179,13 +1992,7 @@ export default function ConfiguracoesPage() {
                                         className={styles.input}
                                         placeholder="URL da página na loja"
                                         value={sp.page_url}
-                                        onChange={(e) =>
-                                          updateStorePage(
-                                            idx,
-                                            "page_url",
-                                            e.target.value,
-                                          )
-                                        }
+                                        onChange={(e) => updateStorePage(idx, "page_url", e.target.value)}
                                       />
                                       <input
                                         type="number"
@@ -2194,13 +2001,7 @@ export default function ConfiguracoesPage() {
                                         value={sp.price}
                                         min="0"
                                         step="0.01"
-                                        onChange={(e) =>
-                                          updateStorePage(
-                                            idx,
-                                            "price",
-                                            e.target.value,
-                                          )
-                                        }
+                                        onChange={(e) => updateStorePage(idx, "price", e.target.value)}
                                       />
                                       <button
                                         type="button"
@@ -2212,45 +2013,21 @@ export default function ConfiguracoesPage() {
                                       </button>
                                     </div>
                                   ))}
-                                  <button
-                                    type="button"
-                                    className={styles.btnAddStore}
-                                    onClick={addStorePage}
-                                  >
+                                  <button type="button" className={styles.btnAddStore} onClick={addStorePage}>
                                     + Adicionar loja
                                   </button>
                                 </fieldset>
                               </>
                             )}
 
-                            {editGameMsg.text && (
-                              <StatusMessageComponent
-                                type={editGameMsg.type}
-                                message={editGameMsg.text}
-                              />
-                            )}
+                            {editGameMsg.text && <StatusMessageComponent type={editGameMsg.type} message={editGameMsg.text} />}
 
                             <div className={styles.gameEditActions}>
-                              <Link
-                                href={`/jogos/${g.slug}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={styles.btnOutlineSmall}
-                              >
+                              <Link href={`/jogos/${g.slug}`} target="_blank" rel="noopener noreferrer" className={styles.btnOutlineSmall}>
                                 Ver página
                               </Link>
-                              <button
-                                type="submit"
-                                className={styles.btnSave}
-                                disabled={
-                                  savingGame || !editGameForm.name.trim()
-                                }
-                              >
-                                {savingGame ? (
-                                  <Spinner size="small" />
-                                ) : (
-                                  "Salvar alterações"
-                                )}
+                              <button type="submit" className={styles.btnSave} disabled={savingGame || !editGameForm.name.trim()}>
+                                {savingGame ? <Spinner size="small" /> : "Salvar alterações"}
                               </button>
                             </div>
                           </form>
@@ -2283,11 +2060,7 @@ export default function ConfiguracoesPage() {
                   onChange={(e) => setNewGameGenre(e.target.value)}
                   maxLength={60}
                 />
-                <select
-                  className={styles.input}
-                  value={newGameStage}
-                  onChange={(e) => setNewGameStage(e.target.value)}
-                >
+                <select className={styles.input} value={newGameStage} onChange={(e) => setNewGameStage(e.target.value)}>
                   <option value="concept">Conceito</option>
                   <option value="prototype">Protótipo</option>
                   <option value="alpha">Alpha</option>
@@ -2296,21 +2069,12 @@ export default function ConfiguracoesPage() {
                   <option value="released">Lançado</option>
                 </select>
               </div>
-              <button
-                type="submit"
-                className={styles.btnSave}
-                disabled={creatingGame || !newGameName.trim()}
-              >
+              <button type="submit" className={styles.btnSave} disabled={creatingGame || !newGameName.trim()}>
                 {creatingGame ? <Spinner size="small" /> : "Criar jogo"}
               </button>
             </form>
 
-            {gameMsg.text && (
-              <StatusMessageComponent
-                type={gameMsg.type}
-                message={gameMsg.text}
-              />
-            )}
+            {gameMsg.text && <StatusMessageComponent type={gameMsg.type} message={gameMsg.text} />}
           </section>
         )}
 
@@ -2324,20 +2088,11 @@ export default function ConfiguracoesPage() {
                 {boardgames.map((bg) => (
                   <li key={bg.id} className={styles.gameListItem}>
                     <div className={styles.gameListRow}>
-                      <Link
-                        href={`/jogos-de-mesa/${bg.slug}`}
-                        className={styles.gameLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
+                      <Link href={`/jogos-de-mesa/${bg.slug}`} className={styles.gameLink} target="_blank" rel="noopener noreferrer">
                         {bg.name}
                       </Link>
-                      <span className={styles.gameStageBadge}>
-                        {BG_STAGE_LABELS[bg.stage] ?? bg.stage}
-                      </span>
-                      <span className={styles.gameStageBadge}>
-                        {BG_CATEGORY_LABELS[bg.category] ?? bg.category}
-                      </span>
+                      <span className={styles.gameStageBadge}>{BG_STAGE_LABELS[bg.stage] ?? bg.stage}</span>
+                      <span className={styles.gameStageBadge}>{BG_CATEGORY_LABELS[bg.category] ?? bg.category}</span>
                       <button
                         type="button"
                         className={`${styles.btnEditGame} ${editingBoardgameSlug === bg.slug ? styles.btnEditGameActive : ""}`}
@@ -2368,10 +2123,7 @@ export default function ConfiguracoesPage() {
                           </div>
                         )}
                         {!loadingBoardgameEdit && editBoardgameForm && (
-                          <form
-                            onSubmit={handleSaveBoardgame}
-                            className={styles.gameEditForm}
-                          >
+                          <form onSubmit={handleSaveBoardgame} className={styles.gameEditForm}>
                             <div className={styles.gameEditTabs}>
                               {[
                                 { id: "info", label: "Informações" },
@@ -2436,13 +2188,11 @@ export default function ConfiguracoesPage() {
                                       }))
                                     }
                                   >
-                                    {Object.entries(BG_CATEGORY_LABELS).map(
-                                      ([k, v]) => (
-                                        <option key={k} value={k}>
-                                          {v}
-                                        </option>
-                                      ),
-                                    )}
+                                    {Object.entries(BG_CATEGORY_LABELS).map(([k, v]) => (
+                                      <option key={k} value={k}>
+                                        {v}
+                                      </option>
+                                    ))}
                                   </select>
                                 </label>
 
@@ -2458,13 +2208,11 @@ export default function ConfiguracoesPage() {
                                       }))
                                     }
                                   >
-                                    {Object.entries(BG_STAGE_LABELS).map(
-                                      ([k, v]) => (
-                                        <option key={k} value={k}>
-                                          {v}
-                                        </option>
-                                      ),
-                                    )}
+                                    {Object.entries(BG_STAGE_LABELS).map(([k, v]) => (
+                                      <option key={k} value={k}>
+                                        {v}
+                                      </option>
+                                    ))}
                                   </select>
                                 </label>
 
@@ -2599,9 +2347,7 @@ export default function ConfiguracoesPage() {
                                   />
                                 </label>
 
-                                <label
-                                  className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}
-                                >
+                                <label className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}>
                                   <span>Sobre o jogo</span>
                                   <textarea
                                     className={`${styles.input} ${styles.textarea}`}
@@ -2623,38 +2369,22 @@ export default function ConfiguracoesPage() {
                               <>
                                 {/* Vídeos */}
                                 <fieldset className={styles.fieldset}>
-                                  <legend className={styles.fieldsetLegend}>
-                                    Vídeos
-                                  </legend>
+                                  <legend className={styles.fieldsetLegend}>Vídeos</legend>
                                   {bgVideos.length > 0 && (
                                     <ul className={styles.videoList}>
                                       {bgVideos.map((v) => (
-                                        <li
-                                          key={v.id}
-                                          className={styles.videoItem}
-                                        >
-                                          <span
-                                            className={styles.videoUrl}
-                                            title={v.url}
-                                          >
+                                        <li key={v.id} className={styles.videoItem}>
+                                          <span className={styles.videoUrl} title={v.url}>
                                             {v.caption || v.url}
                                           </span>
                                           <button
                                             type="button"
                                             className={styles.btnRemoveStore}
                                             aria-label="Remover vídeo"
-                                            disabled={
-                                              bgRemovingVideoId === v.id
-                                            }
-                                            onClick={() =>
-                                              handleRemoveBgVideo(v.id)
-                                            }
+                                            disabled={bgRemovingVideoId === v.id}
+                                            onClick={() => handleRemoveBgVideo(v.id)}
                                           >
-                                            {bgRemovingVideoId === v.id ? (
-                                              <Spinner size="small" />
-                                            ) : (
-                                              "✕"
-                                            )}
+                                            {bgRemovingVideoId === v.id ? <Spinner size="small" /> : "✕"}
                                           </button>
                                         </li>
                                       ))}
@@ -2666,18 +2396,12 @@ export default function ConfiguracoesPage() {
                                       className={styles.input}
                                       placeholder="URL do vídeo (YouTube, Vimeo…)"
                                       value={bgNewVideoUrl}
-                                      onChange={(e) =>
-                                        setBgNewVideoUrl(e.target.value)
-                                      }
+                                      onChange={(e) => setBgNewVideoUrl(e.target.value)}
                                       maxLength={512}
                                       onKeyDown={(e) => {
                                         if (e.key === "Enter") {
                                           e.preventDefault();
-                                          if (
-                                            !bgAddingVideo &&
-                                            bgNewVideoUrl.trim()
-                                          )
-                                            handleAddBgVideo(e);
+                                          if (!bgAddingVideo && bgNewVideoUrl.trim()) handleAddBgVideo(e);
                                         }
                                       }}
                                     />
@@ -2686,110 +2410,57 @@ export default function ConfiguracoesPage() {
                                       className={styles.input}
                                       placeholder="Legenda (opcional)"
                                       value={bgNewVideoCaption}
-                                      onChange={(e) =>
-                                        setBgNewVideoCaption(e.target.value)
-                                      }
+                                      onChange={(e) => setBgNewVideoCaption(e.target.value)}
                                       maxLength={120}
                                     />
                                     <button
                                       type="button"
                                       className={styles.btnAddStore}
-                                      disabled={
-                                        bgAddingVideo || !bgNewVideoUrl.trim()
-                                      }
+                                      disabled={bgAddingVideo || !bgNewVideoUrl.trim()}
                                       onClick={handleAddBgVideo}
                                     >
-                                      {bgAddingVideo ? (
-                                        <Spinner size="small" />
-                                      ) : (
-                                        "+ Adicionar vídeo"
-                                      )}
+                                      {bgAddingVideo ? <Spinner size="small" /> : "+ Adicionar vídeo"}
                                     </button>
                                   </div>
-                                  {bgVideoMsg.text && (
-                                    <StatusMessageComponent
-                                      type={bgVideoMsg.type}
-                                      message={bgVideoMsg.text}
-                                    />
-                                  )}
+                                  {bgVideoMsg.text && <StatusMessageComponent type={bgVideoMsg.type} message={bgVideoMsg.text} />}
                                 </fieldset>
 
                                 {/* Imagem do card */}
                                 <div className={styles.gameImgUpload}>
-                                  <span className={styles.gameImgLabel}>
-                                    Imagem do card (460 × 215)
-                                  </span>
+                                  <span className={styles.gameImgLabel}>Imagem do card (460 × 215)</span>
                                   <div className={styles.gameImgPreviewWrap}>
-                                    {boardgames.find(
-                                      (b) => b.slug === editingBoardgameSlug,
-                                    )?.banner_url ? (
+                                    {boardgames.find((b) => b.slug === editingBoardgameSlug)?.banner_url ? (
                                       <Image
-                                        src={
-                                          boardgames.find(
-                                            (b) =>
-                                              b.slug === editingBoardgameSlug,
-                                          ).banner_url
-                                        }
+                                        src={boardgames.find((b) => b.slug === editingBoardgameSlug).banner_url}
                                         alt="Card atual"
                                         fill
                                         className={styles.gameImgPreview}
                                         sizes="300px"
                                       />
                                     ) : (
-                                      <div
-                                        className={styles.gameImgPlaceholder}
-                                      >
-                                        Sem imagem
-                                      </div>
+                                      <div className={styles.gameImgPlaceholder}>Sem imagem</div>
                                     )}
                                   </div>
                                   <button
                                     type="button"
                                     className={styles.btnOutlineSmall}
-                                    onClick={() =>
-                                      openBgImgPicker(editingBoardgameSlug)
-                                    }
+                                    onClick={() => openBgImgPicker(editingBoardgameSlug)}
                                     disabled={uploadingBgImg}
                                   >
-                                    {uploadingBgImg ? (
-                                      <Spinner size="small" />
-                                    ) : (
-                                      "Enviar imagem"
-                                    )}
+                                    {uploadingBgImg ? <Spinner size="small" /> : "Enviar imagem"}
                                   </button>
                                 </div>
                               </>
                             )}
 
-                            {editBoardgameMsg.text && (
-                              <StatusMessageComponent
-                                type={editBoardgameMsg.type}
-                                message={editBoardgameMsg.text}
-                              />
-                            )}
+                            {editBoardgameMsg.text && <StatusMessageComponent type={editBoardgameMsg.type} message={editBoardgameMsg.text} />}
 
                             <div className={styles.gameEditActions}>
-                              <Link
-                                href={`/jogos-de-mesa/${bg.slug}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={styles.btnOutlineSmall}
-                              >
+                              <Link href={`/jogos-de-mesa/${bg.slug}`} target="_blank" rel="noopener noreferrer" className={styles.btnOutlineSmall}>
                                 Ver página
                               </Link>
-                              <button
-                                type="submit"
-                                className={styles.btnSave}
-                                disabled={
-                                  savingBoardgame ||
-                                  !editBoardgameForm.name.trim()
-                                }
-                              >
-                                {savingBoardgame ? (
-                                  <Spinner size="small" />
-                                ) : (
-                                  "Salvar alterações"
-                                )}
+                              <button type="submit" className={styles.btnSave} disabled={savingBoardgame || !editBoardgameForm.name.trim()}>
+                                {savingBoardgame ? <Spinner size="small" /> : "Salvar alterações"}
                               </button>
                             </div>
                           </form>
@@ -2814,22 +2485,14 @@ export default function ConfiguracoesPage() {
                 required
               />
               <div className={styles.gameFormRow}>
-                <select
-                  className={styles.input}
-                  value={newBoardgameCategory}
-                  onChange={(e) => setNewBoardgameCategory(e.target.value)}
-                >
+                <select className={styles.input} value={newBoardgameCategory} onChange={(e) => setNewBoardgameCategory(e.target.value)}>
                   {Object.entries(BG_CATEGORY_LABELS).map(([k, v]) => (
                     <option key={k} value={k}>
                       {v}
                     </option>
                   ))}
                 </select>
-                <select
-                  className={styles.input}
-                  value={newBoardgameStage}
-                  onChange={(e) => setNewBoardgameStage(e.target.value)}
-                >
+                <select className={styles.input} value={newBoardgameStage} onChange={(e) => setNewBoardgameStage(e.target.value)}>
                   {Object.entries(BG_STAGE_LABELS)
                     .filter(([k]) => k !== "cancelled")
                     .map(([k, v]) => (
@@ -2839,25 +2502,12 @@ export default function ConfiguracoesPage() {
                     ))}
                 </select>
               </div>
-              <button
-                type="submit"
-                className={styles.btnSave}
-                disabled={creatingBoardgame || !newBoardgameName.trim()}
-              >
-                {creatingBoardgame ? (
-                  <Spinner size="small" />
-                ) : (
-                  "Criar jogo de mesa"
-                )}
+              <button type="submit" className={styles.btnSave} disabled={creatingBoardgame || !newBoardgameName.trim()}>
+                {creatingBoardgame ? <Spinner size="small" /> : "Criar jogo de mesa"}
               </button>
             </form>
 
-            {boardgameMsg.text && (
-              <StatusMessageComponent
-                type={boardgameMsg.type}
-                message={boardgameMsg.text}
-              />
-            )}
+            {boardgameMsg.text && <StatusMessageComponent type={boardgameMsg.type} message={boardgameMsg.text} />}
           </section>
         )}
 
@@ -2875,21 +2525,12 @@ export default function ConfiguracoesPage() {
                 onChange={(e) => setInviteUsername(e.target.value)}
                 maxLength={50}
               />
-              <button
-                type="submit"
-                className={styles.btnSave}
-                disabled={inviting || !inviteUsername.trim()}
-              >
+              <button type="submit" className={styles.btnSave} disabled={inviting || !inviteUsername.trim()}>
                 {inviting ? <Spinner size="small" /> : "Convidar"}
               </button>
             </form>
 
-            {inviteMsg.text && (
-              <StatusMessageComponent
-                type={inviteMsg.type}
-                message={inviteMsg.text}
-              />
-            )}
+            {inviteMsg.text && <StatusMessageComponent type={inviteMsg.type} message={inviteMsg.text} />}
 
             {pendingInvites.length > 0 && (
               <>
@@ -2897,9 +2538,7 @@ export default function ConfiguracoesPage() {
                 <ul className={styles.pendingList}>
                   {pendingInvites.map((inv) => (
                     <li key={inv.id} className={styles.pendingItem}>
-                      <span className={styles.pendingUsername}>
-                        @{inv.invited_username}
-                      </span>
+                      <span className={styles.pendingUsername}>@{inv.invited_username}</span>
                       <button
                         type="button"
                         className={styles.btnCancelInvite}
@@ -2926,20 +2565,11 @@ export default function ConfiguracoesPage() {
                 {books.map((bk) => (
                   <li key={bk.id} className={styles.gameListItem}>
                     <div className={styles.gameListRow}>
-                      <Link
-                        href={`/quadrinhos/${bk.slug}`}
-                        className={styles.gameLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
+                      <Link href={`/quadrinhos/${bk.slug}`} className={styles.gameLink} target="_blank" rel="noopener noreferrer">
                         {bk.title}
                       </Link>
-                      <span className={styles.gameStageBadge}>
-                        {BOOK_STAGE_LABELS[bk.stage] ?? bk.stage}
-                      </span>
-                      <span className={styles.gameStageBadge}>
-                        {BOOK_TYPE_LABELS[bk.book_type] ?? bk.book_type}
-                      </span>
+                      <span className={styles.gameStageBadge}>{BOOK_STAGE_LABELS[bk.stage] ?? bk.stage}</span>
+                      <span className={styles.gameStageBadge}>{BOOK_TYPE_LABELS[bk.book_type] ?? bk.book_type}</span>
                       <button
                         type="button"
                         className={`${styles.btnEditGame} ${editingBookSlug === bk.slug ? styles.btnEditGameActive : ""}`}
@@ -2970,10 +2600,7 @@ export default function ConfiguracoesPage() {
                           </div>
                         )}
                         {!loadingBookEdit && editBookForm && (
-                          <form
-                            onSubmit={handleSaveBook}
-                            className={styles.gameEditForm}
-                          >
+                          <form onSubmit={handleSaveBook} className={styles.gameEditForm}>
                             <div className={styles.gameEditTabs}>
                               {[
                                 { id: "info", label: "Informações" },
@@ -3057,13 +2684,11 @@ export default function ConfiguracoesPage() {
                                       }))
                                     }
                                   >
-                                    {Object.entries(BOOK_TYPE_LABELS).map(
-                                      ([k, v]) => (
-                                        <option key={k} value={k}>
-                                          {v}
-                                        </option>
-                                      ),
-                                    )}
+                                    {Object.entries(BOOK_TYPE_LABELS).map(([k, v]) => (
+                                      <option key={k} value={k}>
+                                        {v}
+                                      </option>
+                                    ))}
                                   </select>
                                 </label>
 
@@ -3079,13 +2704,11 @@ export default function ConfiguracoesPage() {
                                       }))
                                     }
                                   >
-                                    {Object.entries(BOOK_STAGE_LABELS).map(
-                                      ([k, v]) => (
-                                        <option key={k} value={k}>
-                                          {v}
-                                        </option>
-                                      ),
-                                    )}
+                                    {Object.entries(BOOK_STAGE_LABELS).map(([k, v]) => (
+                                      <option key={k} value={k}>
+                                        {v}
+                                      </option>
+                                    ))}
                                   </select>
                                 </label>
 
@@ -3221,9 +2844,7 @@ export default function ConfiguracoesPage() {
                                   />
                                 </label>
 
-                                <label
-                                  className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}
-                                >
+                                <label className={`${styles.fieldLabel} ${styles.fieldLabelFull}`}>
                                   <span>Sobre a publicação</span>
                                   <textarea
                                     className={`${styles.input} ${styles.textarea}`}
@@ -3243,32 +2864,21 @@ export default function ConfiguracoesPage() {
 
                             {activeBookTab === "cover" && (
                               <div className={styles.gameImgUpload}>
-                                <span className={styles.gameImgLabel}>
-                                  Capa (proporção 2:3 — formato livro)
-                                </span>
+                                <span className={styles.gameImgLabel}>Capa (proporção 2:3 — formato livro)</span>
                                 <div className={styles.bookCoverPreviewWrap}>
-                                  {books.find((b) => b.slug === editingBookSlug)
-                                    ?.cover_url ? (
+                                  {books.find((b) => b.slug === editingBookSlug)?.cover_url ? (
                                     <Image
-                                      src={
-                                        books.find(
-                                          (b) => b.slug === editingBookSlug,
-                                        ).cover_url
-                                      }
+                                      src={books.find((b) => b.slug === editingBookSlug).cover_url}
                                       alt="Capa atual"
                                       fill
                                       className={styles.gameImgPreview}
                                       sizes="200px"
                                     />
                                   ) : (
-                                    <div className={styles.gameImgPlaceholder}>
-                                      Sem capa
-                                    </div>
+                                    <div className={styles.gameImgPlaceholder}>Sem capa</div>
                                   )}
                                 </div>
-                                <p className={styles.fieldHint}>
-                                  Ou informe uma URL externa:
-                                </p>
+                                <p className={styles.fieldHint}>Ou informe uma URL externa:</p>
                                 <input
                                   type="url"
                                   className={styles.input}
@@ -3285,16 +2895,10 @@ export default function ConfiguracoesPage() {
                                 <button
                                   type="button"
                                   className={styles.btnOutlineSmall}
-                                  onClick={() =>
-                                    openBookImgPicker(editingBookSlug)
-                                  }
+                                  onClick={() => openBookImgPicker(editingBookSlug)}
                                   disabled={uploadingBookImg}
                                 >
-                                  {uploadingBookImg ? (
-                                    <Spinner size="small" />
-                                  ) : (
-                                    "Enviar imagem"
-                                  )}
+                                  {uploadingBookImg ? <Spinner size="small" /> : "Enviar imagem"}
                                 </button>
                               </div>
                             )}
@@ -3320,24 +2924,13 @@ export default function ConfiguracoesPage() {
 
                             {activeBookTab === "stores" && (
                               <fieldset className={styles.fieldset}>
-                                <legend className={styles.fieldsetLegend}>
-                                  Links de compra
-                                </legend>
+                                <legend className={styles.fieldsetLegend}>Links de compra</legend>
                                 {editBookForm.store_pages.map((sp, idx) => (
-                                  <div
-                                    key={`book-store-${sp.store_type_id ?? ""}-${idx}`}
-                                    className={styles.storePageRow}
-                                  >
+                                  <div key={`book-store-${sp.store_type_id ?? ""}-${idx}`} className={styles.storePageRow}>
                                     <select
                                       className={styles.input}
                                       value={sp.store_type_id}
-                                      onChange={(e) =>
-                                        updateBookStorePage(
-                                          idx,
-                                          "store_type_id",
-                                          e.target.value,
-                                        )
-                                      }
+                                      onChange={(e) => updateBookStorePage(idx, "store_type_id", e.target.value)}
                                     >
                                       <option value="">Selecione a loja</option>
                                       {BOOK_STORE_TYPES.map((st) => (
@@ -3351,13 +2944,7 @@ export default function ConfiguracoesPage() {
                                       className={styles.input}
                                       placeholder="URL da página na loja"
                                       value={sp.page_url}
-                                      onChange={(e) =>
-                                        updateBookStorePage(
-                                          idx,
-                                          "page_url",
-                                          e.target.value,
-                                        )
-                                      }
+                                      onChange={(e) => updateBookStorePage(idx, "page_url", e.target.value)}
                                     />
                                     <input
                                       type="number"
@@ -3366,13 +2953,7 @@ export default function ConfiguracoesPage() {
                                       value={sp.price}
                                       min="0"
                                       step="0.01"
-                                      onChange={(e) =>
-                                        updateBookStorePage(
-                                          idx,
-                                          "price",
-                                          e.target.value,
-                                        )
-                                      }
+                                      onChange={(e) => updateBookStorePage(idx, "price", e.target.value)}
                                     />
                                     <button
                                       type="button"
@@ -3384,44 +2965,20 @@ export default function ConfiguracoesPage() {
                                     </button>
                                   </div>
                                 ))}
-                                <button
-                                  type="button"
-                                  className={styles.btnAddStore}
-                                  onClick={addBookStorePage}
-                                >
+                                <button type="button" className={styles.btnAddStore} onClick={addBookStorePage}>
                                   + Adicionar loja
                                 </button>
                               </fieldset>
                             )}
 
-                            {editBookMsg.text && (
-                              <StatusMessageComponent
-                                type={editBookMsg.type}
-                                message={editBookMsg.text}
-                              />
-                            )}
+                            {editBookMsg.text && <StatusMessageComponent type={editBookMsg.type} message={editBookMsg.text} />}
 
                             <div className={styles.gameEditActions}>
-                              <Link
-                                href={`/quadrinhos/${bk.slug}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={styles.btnOutlineSmall}
-                              >
+                              <Link href={`/quadrinhos/${bk.slug}`} target="_blank" rel="noopener noreferrer" className={styles.btnOutlineSmall}>
                                 Ver página
                               </Link>
-                              <button
-                                type="submit"
-                                className={styles.btnSave}
-                                disabled={
-                                  savingBook || !editBookForm.title.trim()
-                                }
-                              >
-                                {savingBook ? (
-                                  <Spinner size="small" />
-                                ) : (
-                                  "Salvar alterações"
-                                )}
+                              <button type="submit" className={styles.btnSave} disabled={savingBook || !editBookForm.title.trim()}>
+                                {savingBook ? <Spinner size="small" /> : "Salvar alterações"}
                               </button>
                             </div>
                           </form>
@@ -3446,22 +3003,14 @@ export default function ConfiguracoesPage() {
                 required
               />
               <div className={styles.gameFormRow}>
-                <select
-                  className={styles.input}
-                  value={newBookType}
-                  onChange={(e) => setNewBookType(e.target.value)}
-                >
+                <select className={styles.input} value={newBookType} onChange={(e) => setNewBookType(e.target.value)}>
                   {Object.entries(BOOK_TYPE_LABELS).map(([k, v]) => (
                     <option key={k} value={k}>
                       {v}
                     </option>
                   ))}
                 </select>
-                <select
-                  className={styles.input}
-                  value={newBookStage}
-                  onChange={(e) => setNewBookStage(e.target.value)}
-                >
+                <select className={styles.input} value={newBookStage} onChange={(e) => setNewBookStage(e.target.value)}>
                   {Object.entries(BOOK_STAGE_LABELS)
                     .filter(([k]) => k !== "cancelled")
                     .map(([k, v]) => (
@@ -3471,45 +3020,25 @@ export default function ConfiguracoesPage() {
                     ))}
                 </select>
               </div>
-              <button
-                type="submit"
-                className={styles.btnSave}
-                disabled={creatingBook || !newBookTitle.trim()}
-              >
+              <button type="submit" className={styles.btnSave} disabled={creatingBook || !newBookTitle.trim()}>
                 {creatingBook ? <Spinner size="small" /> : "Criar publicação"}
               </button>
             </form>
 
-            {bookMsg.text && (
-              <StatusMessageComponent
-                type={bookMsg.type}
-                message={bookMsg.text}
-              />
-            )}
+            {bookMsg.text && <StatusMessageComponent type={bookMsg.type} message={bookMsg.text} />}
           </section>
         )}
 
         {/* ---- STREAMING TAB ---- */}
         {activeTab === "streaming" && (
           <>
-            {statusMsg.text && (
-              <StatusMessageComponent
-                type={statusMsg.type}
-                message={statusMsg.text}
-              />
-            )}
+            {statusMsg.text && <StatusMessageComponent type={statusMsg.type} message={statusMsg.text} />}
             <form onSubmit={handleSubmit} className={styles.form}>
               <section className={styles.section}>
                 <h2 className={styles.sectionTitle}>Canais de Streaming</h2>
                 <p className={styles.fieldHint}>
-                  Cadastre o canal do estúdio na Twitch e/ou YouTube. Quando o
-                  canal estiver ao vivo, ele aparecerá em destaque na{" "}
-                  <a
-                    href="/streams"
-                    className={styles.inlineLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                  Cadastre o canal do estúdio na Twitch e/ou YouTube. Quando o canal estiver ao vivo, ele aparecerá em destaque na{" "}
+                  <a href="/streams" className={styles.inlineLink} target="_blank" rel="noopener noreferrer">
                     página de streams
                   </a>
                   .
@@ -3525,13 +3054,7 @@ export default function ConfiguracoesPage() {
                       type="text"
                       className={styles.input}
                       value={twitchChannel}
-                      onChange={(e) =>
-                        setTwitchChannel(
-                          e.target.value
-                            .replace(/\s/g, "")
-                            .replace(/^https?:\/\/(www\.)?twitch\.tv\//i, ""),
-                        )
-                      }
+                      onChange={(e) => setTwitchChannel(e.target.value.replace(/\s/g, "").replace(/^https?:\/\/(www\.)?twitch\.tv\//i, ""))}
                       maxLength={100}
                       placeholder="seucanal"
                       autoComplete="off"
@@ -3539,12 +3062,7 @@ export default function ConfiguracoesPage() {
                     />
                   </div>
                   {twitchChannel && (
-                    <a
-                      href={`https://twitch.tv/${twitchChannel}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.fieldLink}
-                    >
+                    <a href={`https://twitch.tv/${twitchChannel}`} target="_blank" rel="noopener noreferrer" className={styles.fieldLink}>
                       Abrir canal ↗
                     </a>
                   )}
@@ -3566,14 +3084,8 @@ export default function ConfiguracoesPage() {
                     spellCheck={false}
                   />
                   <p className={styles.fieldHint}>
-                    O ID do canal começa com <code>UC</code>. Você pode
-                    encontrá-lo em{" "}
-                    <a
-                      href="https://www.youtube.com/account_advanced"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.inlineLink}
-                    >
+                    O ID do canal começa com <code>UC</code>. Você pode encontrá-lo em{" "}
+                    <a href="https://www.youtube.com/account_advanced" target="_blank" rel="noopener noreferrer" className={styles.inlineLink}>
                       youtube.com/account_advanced
                     </a>
                     .
@@ -3592,11 +3104,7 @@ export default function ConfiguracoesPage() {
               </section>
 
               <div className={styles.formActions}>
-                <button
-                  type="submit"
-                  className={styles.btnSave}
-                  disabled={saving}
-                >
+                <button type="submit" className={styles.btnSave} disabled={saving}>
                   {saving ? <Spinner size="small" /> : "Salvar alterações"}
                 </button>
               </div>
@@ -3606,64 +3114,25 @@ export default function ConfiguracoesPage() {
       </div>
 
       {/* Upload de imagem do jogo */}
-      <input
-        ref={gameImgInputRef}
-        type="file"
-        accept="image/*"
-        style={{ display: "none" }}
-        onChange={handleGameFileSelected}
-      />
+      <input ref={gameImgInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleGameFileSelected} />
       {gameImgCropSrc && (
-        <ImageCropModal
-          imageSrc={gameImgCropSrc}
-          preset="gameCapsule"
-          onConfirm={handleGameCropConfirm}
-          onClose={() => setGameImgCropSrc(null)}
-        />
+        <ImageCropModal imageSrc={gameImgCropSrc} preset="gameCapsule" onConfirm={handleGameCropConfirm} onClose={() => setGameImgCropSrc(null)} />
       )}
 
       {/* Upload de imagem do jogo de mesa */}
-      <input
-        ref={bgImgInputRef}
-        type="file"
-        accept="image/*"
-        style={{ display: "none" }}
-        onChange={handleBgFileSelected}
-      />
+      <input ref={bgImgInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleBgFileSelected} />
       {bgImgCropSrc && (
-        <ImageCropModal
-          imageSrc={bgImgCropSrc}
-          preset="gameCapsule"
-          onConfirm={handleBgCropConfirm}
-          onClose={() => setBgImgCropSrc(null)}
-        />
+        <ImageCropModal imageSrc={bgImgCropSrc} preset="gameCapsule" onConfirm={handleBgCropConfirm} onClose={() => setBgImgCropSrc(null)} />
       )}
 
       {/* Upload de capa de publicação */}
-      <input
-        ref={bookImgInputRef}
-        type="file"
-        accept="image/*"
-        style={{ display: "none" }}
-        onChange={handleBookFileSelected}
-      />
+      <input ref={bookImgInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleBookFileSelected} />
       {bookImgCropSrc && (
-        <ImageCropModal
-          imageSrc={bookImgCropSrc}
-          preset="bookCover"
-          onConfirm={handleBookCropConfirm}
-          onClose={() => setBookImgCropSrc(null)}
-        />
+        <ImageCropModal imageSrc={bookImgCropSrc} preset="bookCover" onConfirm={handleBookCropConfirm} onClose={() => setBookImgCropSrc(null)} />
       )}
 
       {/* Modal de classificação indicativa */}
-      {ratingModal && (
-        <ContentRatingModal
-          type={ratingModal.type}
-          itemName={ratingModal.name}
-          onClose={handleRatingClose}
-        />
-      )}
+      {ratingModal && <ContentRatingModal type={ratingModal.type} itemName={ratingModal.name} onClose={handleRatingClose} />}
     </>
   );
 }

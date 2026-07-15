@@ -20,9 +20,7 @@ describe("GET /api/v1/users/[username]", () => {
         avatar_image: "https://avatars.com/mesmocase",
       });
 
-      const response2 = await fetch(
-        `${webserver.origin}/api/v1/users/MesmoCase`,
-      );
+      const response2 = await fetch(`${webserver.origin}/api/v1/users/MesmoCase`);
       expect(response2.status).toBe(200);
 
       const response2Body = await response2.json();
@@ -54,9 +52,7 @@ describe("GET /api/v1/users/[username]", () => {
         cpf: 32454643232,
       });
 
-      const response2 = await fetch(
-        `${webserver.origin}/api/v1/users/casediFerente`,
-      );
+      const response2 = await fetch(`${webserver.origin}/api/v1/users/casediFerente`);
       expect(response2.status).toBe(200);
 
       const response2Body = await response2.json();
@@ -81,9 +77,7 @@ describe("GET /api/v1/users/[username]", () => {
     });
 
     test("With NonExist username", async () => {
-      const response = await fetch(
-        `${webserver.origin}/api/v1/users/UsuarioInexistente`,
-      );
+      const response = await fetch(`${webserver.origin}/api/v1/users/UsuarioInexistente`);
       expect(response.status).toBe(404);
 
       const response2Body = await response.json();

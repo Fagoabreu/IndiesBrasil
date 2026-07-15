@@ -1,11 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  Button,
-  Dialog,
-  FormControl,
-  ActionMenu,
-  ActionList,
-} from "@primer/react";
+import { Button, Dialog, FormControl, ActionMenu, ActionList } from "@primer/react";
 import IconSvg from "@/components/IconSvg/IconSvg";
 import StarExperienceSelector from "@/components/Selectors/StarExperienceSelector";
 import styles from "./EditRoleModal.module.css";
@@ -55,9 +49,7 @@ export default function EditRoleModal({ initialData, onSave, onClose }) {
     onClose();
   }
 
-  const selectedProfession = professionsCatalog.find(
-    (p) => p.name === form.name,
-  );
+  const selectedProfession = professionsCatalog.find((p) => p.name === form.name);
 
   return (
     <Dialog onDismiss={onClose}>
@@ -70,26 +62,14 @@ export default function EditRoleModal({ initialData, onSave, onClose }) {
           <FormControl.Label>Especialização</FormControl.Label>
 
           <ActionMenu>
-            <ActionMenu.Button block>
-              {selectedProfession
-                ? selectedProfession.name
-                : "Selecionar especialização"}
-            </ActionMenu.Button>
+            <ActionMenu.Button block>{selectedProfession ? selectedProfession.name : "Selecionar especialização"}</ActionMenu.Button>
 
             <ActionMenu.Overlay className={styles.professionsOverlay}>
               <ActionList>
                 {professionsCatalog.map((p) => (
-                  <ActionList.Item
-                    key={p.name}
-                    selected={form.name === p.name}
-                    onSelect={() => update("name", p.name)}
-                  >
+                  <ActionList.Item key={p.name} selected={form.name === p.name} onSelect={() => update("name", p.name)}>
                     <ActionList.LeadingVisual>
-                      <IconSvg
-                        src={`/images/professions/${p.icon_img}.png`}
-                        alt={p.name}
-                        size={16}
-                      />
+                      <IconSvg src={`/images/professions/${p.icon_img}.png`} alt={p.name} size={16} />
                     </ActionList.LeadingVisual>
                     {p.name}
                   </ActionList.Item>
@@ -101,21 +81,13 @@ export default function EditRoleModal({ initialData, onSave, onClose }) {
 
         <FormControl className={styles.formControl}>
           <FormControl.Label>Nível de experiência</FormControl.Label>
-          <StarExperienceSelector
-            value={form.experience}
-            onChange={(v) => update("experience", v)}
-          />
+          <StarExperienceSelector value={form.experience} onChange={(v) => update("experience", v)} />
         </FormControl>
       </div>
 
       <Dialog.Footer>
         <Button onClick={onClose}>Cancelar</Button>
-        <Button
-          variant="primary"
-          loading={loading}
-          disabled={!form.name}
-          onClick={handleSave}
-        >
+        <Button variant="primary" loading={loading} disabled={!form.name} onClick={handleSave}>
           Salvar
         </Button>
       </Dialog.Footer>

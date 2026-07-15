@@ -12,10 +12,6 @@ async function getHandler(request, response) {
   const readUser = request.context.user;
   const username = request.query.username;
   const newFound = await profile.findByUsername(username, readUser);
-  const secureOutputValues = authorization.filterOutput(
-    readUser,
-    "read:profile",
-    newFound,
-  );
+  const secureOutputValues = authorization.filterOutput(readUser, "read:profile", newFound);
   return response.status(200).json(secureOutputValues);
 }

@@ -92,11 +92,7 @@ describe("models/authorization.js", () => {
         cpf: "000.000.000-00",
       };
 
-      const result = authorization.filterOutput(
-        createdUser,
-        "read:user",
-        resource,
-      );
+      const result = authorization.filterOutput(createdUser, "read:user", resource);
 
       expect(result).toEqual({
         id: 1,

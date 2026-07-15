@@ -24,11 +24,7 @@ async function postHandler(request, response) {
   const { slug } = request.query;
 
   const bgData = await boardgame.findBySlug(slug);
-  const review = await boardgame.createReview(
-    bgData.id,
-    requestUser.id,
-    request.body,
-  );
+  const review = await boardgame.createReview(bgData.id, requestUser.id, request.body);
   return response.status(201).json(review);
 }
 
@@ -40,10 +36,6 @@ async function patchHandler(request, response) {
     return response.status(400).json({ message: "reviewId é obrigatório." });
   }
 
-  const review = await boardgame.updateReview(
-    reviewId,
-    requestUser.id,
-    request.body,
-  );
+  const review = await boardgame.updateReview(reviewId, requestUser.id, request.body);
   return response.status(200).json(review);
 }

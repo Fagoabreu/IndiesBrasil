@@ -41,8 +41,7 @@ export default function ContentRatingModal({ type, itemName, onClose }) {
     })
       .then(async (res) => {
         const data = await res.json();
-        if (!res.ok)
-          throw new Error(data.message || "Erro ao carregar questionário.");
+        if (!res.ok) throw new Error(data.message || "Erro ao carregar questionário.");
         if (!cancelled) setQuestionnaire(data);
       })
       .catch((err) => {
@@ -86,8 +85,7 @@ export default function ContentRatingModal({ type, itemName, onClose }) {
         body: JSON.stringify({ action: "calculate", type, answers }),
       });
       const data = await res.json();
-      if (!res.ok)
-        throw new Error(data.message || "Erro ao calcular classificação.");
+      if (!res.ok) throw new Error(data.message || "Erro ao calcular classificação.");
       setResult(data);
     } catch (err) {
       setError(err.message);
@@ -129,11 +127,7 @@ export default function ContentRatingModal({ type, itemName, onClose }) {
             <div className={styles.headerInfo}>
               <h2 className={styles.title}>Classificação Indicativa</h2>
             </div>
-            <button
-              className={styles.closeBtn}
-              onClick={handleClose}
-              aria-label="Fechar"
-            >
+            <button className={styles.closeBtn} onClick={handleClose} aria-label="Fechar">
               ✕
             </button>
           </div>
@@ -151,11 +145,7 @@ export default function ContentRatingModal({ type, itemName, onClose }) {
             <div className={styles.headerInfo}>
               <h2 className={styles.title}>Erro</h2>
             </div>
-            <button
-              className={styles.closeBtn}
-              onClick={handleClose}
-              aria-label="Fechar"
-            >
+            <button className={styles.closeBtn} onClick={handleClose} aria-label="Fechar">
               ✕
             </button>
           </div>
@@ -189,28 +179,18 @@ export default function ContentRatingModal({ type, itemName, onClose }) {
               <p className={styles.description}>{itemName}</p>
             </div>
             {!saved && (
-              <button
-                className={styles.closeBtn}
-                onClick={handleClose}
-                aria-label="Cancelar"
-              >
+              <button className={styles.closeBtn} onClick={handleClose} aria-label="Cancelar">
                 ✕
               </button>
             )}
           </div>
           <div className={styles.body}>
             <div className={styles.resultSection}>
-              <div
-                className={styles.resultRating}
-                style={{ backgroundColor: ratingColor }}
-              >
+              <div className={styles.resultRating} style={{ backgroundColor: ratingColor }}>
                 {result.rating === "L" ? "L" : result.rating}
               </div>
               <p className={styles.resultLabel}>{result.label}</p>
-              <p className={styles.resultInfo}>
-                Classificação calculada com base nas diretrizes oficiais
-                brasileiras.
-              </p>
+              <p className={styles.resultInfo}>Classificação calculada com base nas diretrizes oficiais brasileiras.</p>
             </div>
 
             <ul className={styles.reasonsList}>
@@ -222,39 +202,20 @@ export default function ContentRatingModal({ type, itemName, onClose }) {
             </ul>
 
             {result.monetizationFlags &&
-              (result.monetizationFlags.hasLootboxes ||
-                result.monetizationFlags.hasInGamePurchases ||
-                result.monetizationFlags.hasExcessiveAds) && (
+              (result.monetizationFlags.hasLootboxes || result.monetizationFlags.hasInGamePurchases || result.monetizationFlags.hasExcessiveAds) && (
                 <div className={styles.monetizationResult}>
-                  <p className={styles.monetizationTitle}>
-                    Selos Lei Felca (PL 412/2022)
-                  </p>
+                  <p className={styles.monetizationTitle}>Selos Lei Felca (PL 412/2022)</p>
                   <div className={styles.monetizationTags}>
-                    {result.monetizationFlags.hasLootboxes && (
-                      <span
-                        className={`${styles.monetizationTag} ${styles.mzLootboxes}`}
-                      >
-                        🎁 Lootboxes
-                      </span>
-                    )}
+                    {result.monetizationFlags.hasLootboxes && <span className={`${styles.monetizationTag} ${styles.mzLootboxes}`}>🎁 Lootboxes</span>}
                     {result.monetizationFlags.hasInGamePurchases && (
-                      <span
-                        className={`${styles.monetizationTag} ${styles.mzPurchases}`}
-                      >
-                        💳 Compras no jogo
-                      </span>
+                      <span className={`${styles.monetizationTag} ${styles.mzPurchases}`}>💳 Compras no jogo</span>
                     )}
                     {result.monetizationFlags.hasExcessiveAds && (
-                      <span
-                        className={`${styles.monetizationTag} ${styles.mzAds}`}
-                      >
-                        📢 Anúncios excessivos
-                      </span>
+                      <span className={`${styles.monetizationTag} ${styles.mzAds}`}>📢 Anúncios excessivos</span>
                     )}
                   </div>
                   <p className={styles.monetizationHint}>
-                    Estes selos serão exibidos no card do jogo para informar os
-                    consumidores, conforme determina a Lei Felca.
+                    Estes selos serão exibidos no card do jogo para informar os consumidores, conforme determina a Lei Felca.
                   </p>
                 </div>
               )}
@@ -277,11 +238,7 @@ export default function ContentRatingModal({ type, itemName, onClose }) {
                 <button className={styles.btn} onClick={handleClose}>
                   Cancelar
                 </button>
-                <button
-                  className={`${styles.btn} ${styles.btnPrimary}`}
-                  onClick={confirmSave}
-                  disabled={saving}
-                >
+                <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={confirmSave} disabled={saving}>
                   {saving ? "Salvando..." : "Confirmar Classificação"}
                 </button>
               </>
@@ -296,10 +253,7 @@ export default function ContentRatingModal({ type, itemName, onClose }) {
                 >
                   ✓ Classificação salva com sucesso!
                 </span>
-                <button
-                  className={`${styles.btn} ${styles.btnPrimary}`}
-                  onClick={handleClose}
-                >
+                <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={handleClose}>
                   Concluir
                 </button>
               </>
@@ -325,11 +279,7 @@ export default function ContentRatingModal({ type, itemName, onClose }) {
             <h2 className={styles.title}>{questionnaire.title}</h2>
             <p className={styles.description}>{questionnaire.description}</p>
           </div>
-          <button
-            className={styles.closeBtn}
-            onClick={handleClose}
-            aria-label="Cancelar"
-          >
+          <button className={styles.closeBtn} onClick={handleClose} aria-label="Cancelar">
             ✕
           </button>
         </div>
@@ -358,11 +308,7 @@ export default function ContentRatingModal({ type, itemName, onClose }) {
                     className={`${styles.option} ${answers[q.id] === opt.value ? styles.optionSelected : ""}`}
                     onClick={() => selectAnswer(q.id, opt.value)}
                   >
-                    <div className={styles.optionRadio}>
-                      {answers[q.id] === opt.value && (
-                        <div className={styles.optionRadioInner} />
-                      )}
-                    </div>
+                    <div className={styles.optionRadio}>{answers[q.id] === opt.value && <div className={styles.optionRadioInner} />}</div>
                     <span className={styles.optionLabel}>{opt.label}</span>
                   </div>
                 ))}
@@ -379,16 +325,8 @@ export default function ContentRatingModal({ type, itemName, onClose }) {
           ) : (
             <span />
           )}
-          <button
-            className={`${styles.btn} ${styles.btnPrimary}`}
-            onClick={goNext}
-            disabled={!allAnswered || loading}
-          >
-            {loading
-              ? "Calculando..."
-              : isLast
-                ? "Ver Classificação"
-                : "Próximo →"}
+          <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={goNext} disabled={!allAnswered || loading}>
+            {loading ? "Calculando..." : isLast ? "Ver Classificação" : "Próximo →"}
           </button>
         </div>
       </div>

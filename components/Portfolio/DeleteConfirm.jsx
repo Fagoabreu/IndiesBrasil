@@ -1,12 +1,7 @@
 import { Dialog, Text } from "@primer/react";
 import PropTypes from "prop-types";
 
-export default function DeleteConfirm({
-  itemName,
-  onConfirm,
-  onCancel,
-  loading,
-}) {
+export default function DeleteConfirm({ itemName, onConfirm, onCancel, loading }) {
   return (
     <Dialog
       title="Confirmação de Exclusão"

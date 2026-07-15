@@ -19,8 +19,7 @@ async function patchHandler(request, response) {
   if (!authorization.can(userTryingToPatch, "update:user", targetUser)) {
     throw new ForbiddenError({
       message: "Você não possui permissão para atualizar outro usuário.",
-      action:
-        "Verifique se você possui a feature necessária para atualizar outro usuário",
+      action: "Verifique se você possui a feature necessária para atualizar outro usuário",
     });
   }
 
@@ -29,10 +28,6 @@ async function patchHandler(request, response) {
       return await profile.patchHistorico(historyValues);
     }),
   );
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToPatch,
-    "read:profile_history:all",
-    postedHistory,
-  );
+  const secureOutputValues = authorization.filterOutput(userTryingToPatch, "read:profile_history:all", postedHistory);
   return response.status(200).json(secureOutputValues);
 }

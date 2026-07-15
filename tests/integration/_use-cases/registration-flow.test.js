@@ -55,24 +55,18 @@ describe("Use case: Registration Flow (all successful)", () => {
     expect(lastEmail.text).toContain("RegistrationFlow");
 
     activationTokenId = orchestrator.extractUUID(lastEmail.text);
-    expect(lastEmail.text).toContain(
-      `${webserver.origin}/cadastro/ativar/${activationTokenId}`,
-    );
+    expect(lastEmail.text).toContain(`${webserver.origin}/cadastro/ativar/${activationTokenId}`);
 
-    const activationTokenObject =
-      await activation.findOneValidById(activationTokenId);
+    const activationTokenObject = await activation.findOneValidById(activationTokenId);
 
     expect(activationTokenObject.user_id).toBe(createUserResponseBody.id);
     expect(activationTokenObject.used_at).toBeNull();
   });
 
   test("Active account", async () => {
-    const activationResponse = await fetch(
-      `${webserver.origin}/api/v1/activations/${activationTokenId}`,
-      {
-        method: "PATCH",
-      },
-    );
+    const activationResponse = await fetch(`${webserver.origin}/api/v1/activations/${activationTokenId}`, {
+      method: "PATCH",
+    });
     expect(activationResponse.status).toBe(200);
     const activationResponseBody = await activationResponse.json();
     expect(Date.parse(activationResponseBody.used_at)).not.toBeNaN();
@@ -162,19 +156,16 @@ describe("Use case: Registration Flow (all successful)", () => {
   });
 
   test("Login", async () => {
-    const createSessionResponse = await fetch(
-      `${webserver.origin}/api/v1/sessions`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: "registration.flow@curso.dev",
-          password: TEST_CREDENTIALS.registrationFlow,
-        }),
+    const createSessionResponse = await fetch(`${webserver.origin}/api/v1/sessions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        email: "registration.flow@curso.dev",
+        password: TEST_CREDENTIALS.registrationFlow,
+      }),
+    });
     expect(createSessionResponse.status).toBe(201);
 
     createSessionResponseBody = await createSessionResponse.json();

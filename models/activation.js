@@ -1,10 +1,6 @@
 import database from "infra/database.js";
 import email from "infra/email.js";
-import {
-  ForbiddenError,
-  NotFoundError,
-  ValidationError,
-} from "infra/errors.js";
+import { ForbiddenError, NotFoundError, ValidationError } from "infra/errors.js";
 import webserver from "infra/webserver.js";
 import user from "./user.js";
 import authorization from "./authorization.js";
@@ -35,8 +31,7 @@ async function findOneValidById(tokenId) {
 
     if (results.rowCount === 0) {
       throw new NotFoundError({
-        message:
-          "O token de ativação utilizado não foi encontrado no sistema ou expirou.",
+        message: "O token de ativação utilizado não foi encontrado no sistema ou expirou.",
         action: "Faça um novo cadastro.",
       });
     }
@@ -67,8 +62,7 @@ async function markTokenAsUsed(tokenId) {
 
     if (results.rowCount === 0) {
       throw new NotFoundError({
-        message:
-          "O token de ativação utilizado não foi encontrado no sistema ou expirou.",
+        message: "O token de ativação utilizado não foi encontrado no sistema ou expirou.",
         action: "Faça um novo cadastro.",
       });
     }
@@ -213,10 +207,7 @@ async function changePasswordByToken(tokenId, password) {
 
   const tokenData = await activation.findOneValidById(tokenId);
   const usertoPatch = await user.findOneById(tokenData.user_id);
-  if (
-    !authorization.can(usertoPatch, "read:activation_token") &&
-    !authorization.can(usertoPatch, "create:session")
-  ) {
+  if (!authorization.can(usertoPatch, "read:activation_token") && !authorization.can(usertoPatch, "create:session")) {
     throw new ForbiddenError({
       message: "Você não pode mudar a senha.",
       action: "Entre em contato com o suporte.",

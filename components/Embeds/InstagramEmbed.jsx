@@ -26,12 +26,7 @@ export default function InstagramEmbed({ url }) {
           globalThis.instgrm?.Embeds.process();
         }}
       />
-      <blockquote
-        ref={ref}
-        className="instagram-media"
-        data-instgrm-permalink={url}
-        data-instgrm-version="14"
-      />
+      <blockquote ref={ref} className="instagram-media" data-instgrm-permalink={url} data-instgrm-version="14" />
     </div>
   );
 }

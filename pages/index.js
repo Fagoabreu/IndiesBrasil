@@ -7,22 +7,14 @@ import styles from "./index.module.css";
 import VerticalCardComponent from "@/components/Card/VerticalCardComponent";
 import MetricCard from "@/components/Card/MetricCard";
 import HighlightCard from "@/components/HighlightCard/HighlightCard";
-import {
-  PeopleIcon,
-  StarIcon,
-  PeopleIcon as TeamIcon,
-  TagIcon,
-  VideoIcon,
-} from "@primer/octicons-react";
+import { PeopleIcon, StarIcon, PeopleIcon as TeamIcon, TagIcon, VideoIcon } from "@primer/octicons-react";
 import { useEffect, useState } from "react";
 import TyperwriterComponent from "@/components/TypeWriter/TyperwriterComponent";
 import { SITE_URL, SITE_NAME } from "@/lib/seo";
 import useInView from "@/hooks/useInView";
 
-const PAGE_TITLE =
-  "Indies Brasil — Rede Social de Desenvolvedores Indie Brasileiros";
-const PAGE_DESCRIPTION =
-  "Conecte-se com desenvolvedores, artistas e gamers, no coop chegaremos mais longe.";
+const PAGE_TITLE = "Indies Brasil — Rede Social de Desenvolvedores Indie Brasileiros";
+const PAGE_DESCRIPTION = "Conecte-se com desenvolvedores, artistas e gamers, no coop chegaremos mais longe.";
 const PAGE_URL = SITE_URL;
 
 const JSON_LD = {
@@ -94,19 +86,10 @@ const FEATURES = [
   },
 ];
 
-function SectionReveal({
-  children,
-  className = "",
-  as: Tag = "section",
-  ...props
-}) {
+function SectionReveal({ children, className = "", as: Tag = "section", ...props }) {
   const [ref, isVisible] = useInView({ threshold: 0.08 });
   return (
-    <Tag
-      ref={ref}
-      className={`${styles.reveal} ${isVisible ? styles.revealVisible : ""} ${className}`}
-      {...props}
-    >
+    <Tag ref={ref} className={`${styles.reveal} ${isVisible ? styles.revealVisible : ""} ${className}`} {...props}>
       {children}
     </Tag>
   );
@@ -164,12 +147,7 @@ function Home() {
 
   return (
     <main className={styles.page}>
-      <SeoHead
-        title={PAGE_TITLE}
-        description={PAGE_DESCRIPTION}
-        canonical={PAGE_URL}
-        jsonLd={JSON_LD}
-      />
+      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} jsonLd={JSON_LD} />
 
       {/* ════════════════════════════════════
           HERO — Primeira impressão
@@ -177,9 +155,7 @@ function Home() {
       <section className={styles.hero}>
         <div className={styles.heroInner}>
           <div className={styles.heroContent}>
-            <span className={styles.heroBadge}>
-              🎮 A comunidade indie do Brasil
-            </span>
+            <span className={styles.heroBadge}>🎮 A comunidade indie do Brasil</span>
 
             <h1 className={styles.heroHeading}>
               Bem-vindo.
@@ -187,8 +163,7 @@ function Home() {
             </h1>
 
             <p className={styles.heroSub}>
-              Conecte-se com desenvolvedores, artistas, gamers e criadores que
-              constroem o futuro dos jogos independentes no Brasil.
+              Conecte-se com desenvolvedores, artistas, gamers e criadores que constroem o futuro dos jogos independentes no Brasil.
             </p>
 
             <div className={styles.heroCta}>
@@ -204,13 +179,7 @@ function Home() {
           {/* Card promocional — ao lado do hero */}
           <div className={styles.heroPromo}>
             <Link href="/cadastro" className={styles.promoCard}>
-              <Image
-                src="/images/ArteSite.png"
-                alt="Junte-se à comunidade Indies Brasil"
-                className={styles.promoImage}
-                width={400}
-                height={300}
-              />
+              <Image src="/images/ArteSite.png" alt="Junte-se à comunidade Indies Brasil" className={styles.promoImage} width={400} height={300} />
             </Link>
           </div>
         </div>
@@ -253,14 +222,7 @@ function Home() {
             previousValue={summary ? summary.new_organizations : "..."}
             icon={<TagIcon />}
           />
-          <MetricCard
-            title="Jogos"
-            period="Total"
-            value="..."
-            previousLabel="Em Desenvolvimento"
-            previousValue="..."
-            icon={<VideoIcon />}
-          />
+          <MetricCard title="Jogos" period="Total" value="..." previousLabel="Em Desenvolvimento" previousValue="..." icon={<VideoIcon />} />
         </div>
       </SectionReveal>
 
@@ -272,10 +234,7 @@ function Home() {
           <header className={styles.sectionHeader}>
             <p className={styles.sectionLabel}>Destaques</p>
             <h2 className={styles.sectionTitle}>Conteúdos dos Estúdios</h2>
-            <p className={styles.sectionSub}>
-              Jogos, boardgames e publicações em destaque dos estúdios
-              brasileiros.
-            </p>
+            <p className={styles.sectionSub}>Jogos, boardgames e publicações em destaque dos estúdios brasileiros.</p>
           </header>
           <div className={styles.highlightGrid}>
             {highlights.map((item) => (
@@ -291,13 +250,8 @@ function Home() {
       <SectionReveal className={styles.section}>
         <header className={styles.sectionHeader}>
           <p className={styles.sectionLabel}>Plataforma</p>
-          <h2 className={styles.sectionTitle}>
-            Tudo que você precisa, num só lugar
-          </h2>
-          <p className={styles.sectionSub}>
-            Ferramentas pensadas para profissionais e entusiastas da indústria
-            indie brasileira.
-          </p>
+          <h2 className={styles.sectionTitle}>Tudo que você precisa, num só lugar</h2>
+          <p className={styles.sectionSub}>Ferramentas pensadas para profissionais e entusiastas da indústria indie brasileira.</p>
         </header>
 
         <div className={styles.featureGrid}>
@@ -317,12 +271,9 @@ function Home() {
       <SectionReveal className={styles.section}>
         <header className={styles.sectionHeader}>
           <p className={styles.sectionLabel}>Integrações</p>
-          <h2 className={styles.sectionTitle}>
-            YouTube, Twitch, Instagram e Steam
-          </h2>
+          <h2 className={styles.sectionTitle}>YouTube, Twitch, Instagram e Steam</h2>
           <p className={styles.sectionSub}>
-            Incorpore vídeos, lives e posts diretamente nas publicações para
-            compartilhar conteúdo multimídia com a comunidade.
+            Incorpore vídeos, lives e posts diretamente nas publicações para compartilhar conteúdo multimídia com a comunidade.
           </p>
         </header>
 
@@ -360,9 +311,7 @@ function Home() {
         <header className={styles.sectionHeader}>
           <p className={styles.sectionLabel}>Descoberta</p>
           <h2 className={styles.sectionTitle}>Sistema de Tags</h2>
-          <p className={styles.sectionSub}>
-            Tags para identificar o assunto ou uma trending do post.
-          </p>
+          <p className={styles.sectionSub}>Tags para identificar o assunto ou uma trending do post.</p>
         </header>
         <VerticalCardComponent
           image="/images/sistematags.png"

@@ -13,15 +13,10 @@ async function respondHandler(request, response) {
   const { id } = request.query;
   const requestUser = request.context.user;
 
-  if (!requestUser.id)
-    throw new ForbiddenError({ message: "Autenticacao necessaria." });
+  if (!requestUser.id) throw new ForbiddenError({ message: "Autenticacao necessaria." });
 
   const { accept } = request.body;
-  const result = await organization.respondToInvitation(
-    id,
-    requestUser.id,
-    accept,
-  );
+  const result = await organization.respondToInvitation(id, requestUser.id, accept);
   return response.status(200).json(result);
 }
 

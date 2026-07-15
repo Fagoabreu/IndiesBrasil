@@ -20,11 +20,7 @@ async function postHandler(request, response) {
     });
   }
   const toggleFollow = await user.addFollow(logedUser.id, userFound.id);
-  const secureOutputValues = authorization.filterOutput(
-    logedUser,
-    "read:user_follow",
-    toggleFollow,
-  );
+  const secureOutputValues = authorization.filterOutput(logedUser, "read:user_follow", toggleFollow);
 
   return response.status(200).json(secureOutputValues);
 }
@@ -39,11 +35,7 @@ async function deleteHandler(request, response) {
     });
   }
   const toggleFollow = await user.removeFollow(logedUser.id, userFound.id);
-  const secureOutputValues = authorization.filterOutput(
-    logedUser,
-    "read:user_follow",
-    toggleFollow,
-  );
+  const secureOutputValues = authorization.filterOutput(logedUser, "read:user_follow", toggleFollow);
 
   return response.status(200).json(secureOutputValues);
 }

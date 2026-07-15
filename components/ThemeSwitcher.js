@@ -47,11 +47,7 @@ const ThemeSwitcher = () => {
       className={styles.toggle}
       onClick={handleToggle}
     >
-      <span
-        className={`${styles.knob} ${isDay ? styles.knobDay : styles.knobNight}`}
-      >
-        {isDay ? <SunIcon size={12} /> : <MoonIcon size={12} />}
-      </span>
+      <span className={`${styles.knob} ${isDay ? styles.knobDay : styles.knobNight}`}>{isDay ? <SunIcon size={12} /> : <MoonIcon size={12} />}</span>
     </button>
   );
 };

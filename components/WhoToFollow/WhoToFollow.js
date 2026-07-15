@@ -46,19 +46,9 @@ export default function WhoToFollow() {
         Quem seguir
       </Text>
 
-      <Stack
-        className={styles.followStack}
-        gap="condensed"
-        direction="vertical"
-        justify="start"
-      >
+      <Stack className={styles.followStack} gap="condensed" direction="vertical" justify="start">
         {users.map((u) => (
-          <UserCardComponent
-            user={u}
-            onToggleFollow={handleToggleFollow}
-            canFollow={user}
-            key={u.username}
-          />
+          <UserCardComponent user={u} onToggleFollow={handleToggleFollow} canFollow={user} key={u.username} />
         ))}
       </Stack>
     </Stack>

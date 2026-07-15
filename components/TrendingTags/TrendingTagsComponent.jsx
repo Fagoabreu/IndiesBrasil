@@ -41,25 +41,13 @@ export default function TrendingTags() {
         <h3 className="trending-title">Assuntos do momento</h3>
 
         <ButtonGroup size="small" className="trending-filters">
-          <Button
-            size="small"
-            variant={period === "1d" ? "primary" : "default"}
-            onClick={() => setPeriod("1d")}
-          >
+          <Button size="small" variant={period === "1d" ? "primary" : "default"} onClick={() => setPeriod("1d")}>
             1 dia
           </Button>
-          <Button
-            size="small"
-            variant={period === "7d" ? "primary" : "default"}
-            onClick={() => setPeriod("7d")}
-          >
+          <Button size="small" variant={period === "7d" ? "primary" : "default"} onClick={() => setPeriod("7d")}>
             7 dias
           </Button>
-          <Button
-            size="small"
-            variant={period === "30d" ? "primary" : "default"}
-            onClick={() => setPeriod("30d")}
-          >
+          <Button size="small" variant={period === "30d" ? "primary" : "default"} onClick={() => setPeriod("30d")}>
             30 dias
           </Button>
         </ButtonGroup>
@@ -68,11 +56,7 @@ export default function TrendingTags() {
       <ul className="trending-list">
         {data?.map((tag, index) => (
           <li key={tag.name} className="trending-item">
-            <button
-              type="button"
-              className="trending-button"
-              onClick={() => handleTagClick(tag.name)}
-            >
+            <button type="button" className="trending-button" onClick={() => handleTagClick(tag.name)}>
               <span className="rank">#{index + 1}</span>
               <span className="tag">#{tag.name}</span>
               <span className="count">{tag.usage_count}</span>

@@ -3,10 +3,7 @@ import controller from "infra/controller";
 import database from "infra/database.js";
 import { createRouter } from "next-connect";
 
-export default createRouter()
-  .use(controller.injectAnonymousOrUser)
-  .get(getHandler)
-  .handler(controller.errorHandlers);
+export default createRouter().use(controller.injectAnonymousOrUser).get(getHandler).handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const userTryingToGet = request.context.user;
@@ -36,11 +33,7 @@ async function getHandler(request, response) {
     },
   };
 
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToGet,
-    "read:status",
-    statusObject,
-  );
+  const secureOutputValues = authorization.filterOutput(userTryingToGet, "read:status", statusObject);
 
   return response.status(200).json(secureOutputValues);
 }

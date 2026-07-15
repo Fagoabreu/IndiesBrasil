@@ -130,9 +130,7 @@ export default function StatusPage() {
               {" "}
               <span className="text1">
                 {data.dependencies.database.opened_connections} Conexões{" "}
-                <span className="text2">
-                  de {data.dependencies.database.max_connections}
-                </span>
+                <span className="text2">de {data.dependencies.database.max_connections}</span>
               </span>{" "}
             </div>
           </div>

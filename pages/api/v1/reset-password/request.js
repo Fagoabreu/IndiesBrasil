@@ -26,7 +26,6 @@ async function postHandler(request, response) {
   }
 
   return response.status(200).json({
-    message:
-      "Se o email cadastrado existir junto ao CPF, enviaremos instruções.",
+    message: "Se o email cadastrado existir junto ao CPF, enviaremos instruções.",
   });
 }

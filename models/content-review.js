@@ -1,9 +1,5 @@
 import database from "infra/database.js";
-import {
-  NotFoundError,
-  ValidationError,
-  ForbiddenError,
-} from "infra/errors.js";
+import { NotFoundError, ValidationError, ForbiddenError } from "infra/errors.js";
 
 const VALID_CONTENT_TYPES = ["game", "boardgame", "book"];
 
@@ -116,12 +112,7 @@ async function findAll({ page = 1, limit = 20, contentType = "" } = {}) {
   return result.rows.map(parseReviewRow);
 }
 
-async function findByContent({
-  contentType,
-  contentId,
-  page = 1,
-  limit = 10,
-} = {}) {
+async function findByContent({ contentType, contentId, page = 1, limit = 10 } = {}) {
   if (!contentType || !contentId) return [];
   const offset = (page - 1) * limit;
 
@@ -312,15 +303,7 @@ async function update(reviewId, userId, fields) {
     });
   }
 
-  const allowedFields = [
-    "title",
-    "cover_image_id",
-    "cover_url",
-    "rating",
-    "sections",
-    "positive_points",
-    "negative_points",
-  ];
+  const allowedFields = ["title", "cover_image_id", "cover_url", "rating", "sections", "positive_points", "negative_points"];
   const setClauses = [];
   const values = [];
   let idx = 1;
@@ -349,12 +332,9 @@ async function update(reviewId, userId, fields) {
       setClauses.push(`slug = $${idx++}`);
       values.push(generateSlug(fields[key].trim(), reviewId));
     } else if (key === "cover_image_id") {
-      const UUID_REGEX =
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       setClauses.push(`${key} = $${idx++}`);
-      values.push(
-        fields[key] && UUID_REGEX.test(fields[key]) ? fields[key] : null,
-      );
+      values.push(fields[key] && UUID_REGEX.test(fields[key]) ? fields[key] : null);
     } else {
       setClauses.push(`${key} = $${idx++}`);
       values.push(fields[key]);

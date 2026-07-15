@@ -12,11 +12,7 @@ export default createRouter()
 async function getHandler(request, response) {
   const userTryingToRequest = request.context.user;
   const selectedContactTypes = await contact.findAllType();
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToRequest,
-    "read:contact_type:all",
-    selectedContactTypes,
-  );
+  const secureOutputValues = authorization.filterOutput(userTryingToRequest, "read:contact_type:all", selectedContactTypes);
   return response.status(200).json(secureOutputValues);
 }
 
@@ -24,10 +20,6 @@ async function postHandler(request, response) {
   const userTryingToPost = request.context.user;
   const inputValues = request.body;
   const insertedContactType = await contact.createType(inputValues);
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToPost,
-    "read:contact_type",
-    insertedContactType,
-  );
+  const secureOutputValues = authorization.filterOutput(userTryingToPost, "read:contact_type", insertedContactType);
   return response.status(200).json(secureOutputValues);
 }

@@ -20,11 +20,7 @@ async function patchHandler(request, response) {
   const { slug } = request.query;
 
   const review = await contentReview.findBySlug(slug);
-  const updated = await contentReview.update(
-    review.id,
-    requestUser.id,
-    request.body,
-  );
+  const updated = await contentReview.update(review.id, requestUser.id, request.body);
   return response.status(200).json(updated);
 }
 

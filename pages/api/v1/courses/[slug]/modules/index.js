@@ -64,12 +64,7 @@ async function patchHandler(request, response) {
   const requestUser = request.context.user;
   const { moduleId, title, orderIndex } = request.body;
 
-  const updatedModule = await course.updateModule(
-    slug,
-    moduleId,
-    requestUser.id,
-    { title, orderIndex },
-  );
+  const updatedModule = await course.updateModule(slug, moduleId, requestUser.id, { title, orderIndex });
 
   return response.status(200).json(updatedModule);
 }

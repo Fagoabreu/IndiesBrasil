@@ -1,14 +1,7 @@
 import { useState } from "react";
 import styles from "./PollComponent.module.css";
 
-export default function PollComponent({
-  postId,
-  question,
-  options,
-  userVote,
-  endedAt,
-  isAuthor,
-}) {
+export default function PollComponent({ postId, question, options, userVote, endedAt, isAuthor }) {
   const [voteData, setVoteData] = useState(userVote || null);
   const [results, setResults] = useState(options);
   const [ended, setEnded] = useState(!!endedAt);
@@ -31,12 +24,7 @@ export default function PollComponent({
       // Recarrega resultados
       const updated = results.map((o) => ({
         ...o,
-        votes_count:
-          o.id === optionId
-            ? data.voted
-              ? o.votes_count + 1
-              : o.votes_count - 1
-            : o.votes_count,
+        votes_count: o.id === optionId ? (data.voted ? o.votes_count + 1 : o.votes_count - 1) : o.votes_count,
       }));
       setResults(updated);
     }
@@ -56,8 +44,7 @@ export default function PollComponent({
     <div className={styles.poll}>
       {question && <p className={styles.question}>{question}</p>}
       {results.map((opt) => {
-        const pct =
-          totalVotes > 0 ? Math.round((opt.votes_count / totalVotes) * 100) : 0;
+        const pct = totalVotes > 0 ? Math.round((opt.votes_count / totalVotes) * 100) : 0;
         const isSelected = voteData === opt.id;
 
         return (
@@ -70,10 +57,7 @@ export default function PollComponent({
           >
             {showResults ? (
               <div className={styles.resultBar}>
-                <div
-                  className={styles.resultFill}
-                  style={{ width: `${pct}%` }}
-                />
+                <div className={styles.resultFill} style={{ width: `${pct}%` }} />
                 <span className={styles.resultLabel}>
                   {opt.label}
                   <span className={styles.resultPct}>{pct}%</span>

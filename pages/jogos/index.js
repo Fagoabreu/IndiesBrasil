@@ -9,8 +9,7 @@ import { SITE_URL } from "@/lib/seo";
 import styles from "./index.module.css";
 
 const PAGE_TITLE = "Jogos — Indies Brasil";
-const PAGE_DESCRIPTION =
-  "Descubra jogos criados por desenvolvedores indie brasileiros.";
+const PAGE_DESCRIPTION = "Descubra jogos criados por desenvolvedores indie brasileiros.";
 const PAGE_URL = `${SITE_URL}/jogos`;
 
 const STAGES = {
@@ -60,28 +59,25 @@ export default function JogosPage() {
   const [followingGames, setFollowingGames] = useState([]);
   const [followingLoading, setFollowingLoading] = useState(false);
 
-  const loadAll = useCallback(
-    async (pageNum, searchQuery, genreQuery, stageQuery) => {
-      setAllLoading(true);
-      try {
-        const params = new URLSearchParams({
-          page: pageNum,
-          limit: LIMIT,
-          search: searchQuery,
-          genre: genreQuery,
-          stage: stageQuery,
-        });
-        const res = await fetch(`/api/v1/games?${params}`);
-        if (!res.ok) return;
-        const data = await res.json();
-        setAllGames((prev) => (pageNum === 1 ? data : [...prev, ...data]));
-        setAllHasMore(data.length === LIMIT);
-      } finally {
-        setAllLoading(false);
-      }
-    },
-    [],
-  );
+  const loadAll = useCallback(async (pageNum, searchQuery, genreQuery, stageQuery) => {
+    setAllLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: pageNum,
+        limit: LIMIT,
+        search: searchQuery,
+        genre: genreQuery,
+        stage: stageQuery,
+      });
+      const res = await fetch(`/api/v1/games?${params}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setAllGames((prev) => (pageNum === 1 ? data : [...prev, ...data]));
+      setAllHasMore(data.length === LIMIT);
+    } finally {
+      setAllLoading(false);
+    }
+  }, []);
 
   // Debounce filters for "Descubra"
   useEffect(() => {
@@ -138,11 +134,7 @@ export default function JogosPage() {
 
   return (
     <div className={styles.page}>
-      <SeoHead
-        title={PAGE_TITLE}
-        description={PAGE_DESCRIPTION}
-        canonical={PAGE_URL}
-      />
+      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} />
 
       {/* PAGE HEADER */}
       <header className={styles.pageHeader}>
@@ -155,9 +147,7 @@ export default function JogosPage() {
               </span>
             )}
           </div>
-          <p className={styles.pageSubtitle}>
-            Descubra projetos de desenvolvedores indie brasileiros.
-          </p>
+          <p className={styles.pageSubtitle}>Descubra projetos de desenvolvedores indie brasileiros.</p>
 
           {tab === "all" && (
             <div className={styles.searchWrapper}>
@@ -170,11 +160,7 @@ export default function JogosPage() {
                 className={styles.searchInput}
               />
               <div className={styles.selectRow}>
-                <select
-                  className={styles.select}
-                  value={genre}
-                  onChange={(e) => setGenre(e.target.value)}
-                >
+                <select className={styles.select} value={genre} onChange={(e) => setGenre(e.target.value)}>
                   <option value="">Todos os gêneros</option>
                   {GENRES.map((g) => (
                     <option key={g} value={g}>
@@ -182,11 +168,7 @@ export default function JogosPage() {
                     </option>
                   ))}
                 </select>
-                <select
-                  className={styles.select}
-                  value={stage}
-                  onChange={(e) => setStage(e.target.value)}
-                >
+                <select className={styles.select} value={stage} onChange={(e) => setStage(e.target.value)}>
                   <option value="">Todas as fases</option>
                   {Object.entries(STAGES).map(([k, v]) => (
                     <option key={k} value={k}>
@@ -200,11 +182,7 @@ export default function JogosPage() {
         </div>
 
         {user && (
-          <div
-            className={styles.feedTabs}
-            role="tablist"
-            aria-label="Filtros de jogos"
-          >
+          <div className={styles.feedTabs} role="tablist" aria-label="Filtros de jogos">
             <button
               type="button"
               role="tab"
@@ -255,11 +233,7 @@ export default function JogosPage() {
 
           {tab === "all" && allHasMore && (
             <div className={styles.loadMoreWrapper}>
-              <button
-                className={styles.loadMore}
-                disabled={allLoading}
-                onClick={() => setAllPage((p) => p + 1)}
-              >
+              <button className={styles.loadMore} disabled={allLoading} onClick={() => setAllPage((p) => p + 1)}>
                 {allLoading ? <Spinner size="small" /> : "Carregar mais"}
               </button>
             </div>

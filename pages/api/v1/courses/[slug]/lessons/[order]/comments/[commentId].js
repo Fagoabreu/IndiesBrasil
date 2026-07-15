@@ -13,13 +13,7 @@ async function patchHandler(request, response) {
   const requestUser = request.context.user;
   const { content } = request.body;
 
-  const updated = await course.updateLessonComment(
-    slug,
-    order,
-    commentId,
-    requestUser.id,
-    content,
-  );
+  const updated = await course.updateLessonComment(slug, order, commentId, requestUser.id, content);
   return response.status(200).json(updated);
 }
 

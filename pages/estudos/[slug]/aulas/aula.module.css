@@ -414,15 +414,7 @@
 .commentContent code {
   padding: 1px 5px;
   border-radius: 4px;
-  font-family: var(
-    --font-mono,
-    ui-monospace,
-    SFMono-Regular,
-    "SF Mono",
-    Menlo,
-    Consolas,
-    monospace
-  );
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace);
   font-size: 0.85em;
   background: var(--bgColor-inset);
   border: 1px solid var(--borderColor-muted);

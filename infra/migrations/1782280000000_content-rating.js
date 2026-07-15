@@ -45,14 +45,6 @@ exports.down = (pgm) => {
     "has_in_game_purchases",
     "has_excessive_ads",
   ]);
-  pgm.dropColumns("boardgames", [
-    "content_rating",
-    "content_rating_reasons",
-    "content_rated_at",
-  ]);
-  pgm.dropColumns("books", [
-    "content_rating",
-    "content_rating_reasons",
-    "content_rated_at",
-  ]);
+  pgm.dropColumns("boardgames", ["content_rating", "content_rating_reasons", "content_rated_at"]);
+  pgm.dropColumns("books", ["content_rating", "content_rating_reasons", "content_rated_at"]);
 };

@@ -147,9 +147,7 @@ export default function NovoEstudioPage() {
               maxLength={200}
               placeholder="Uma frase curta que descreve o estúdio"
             />
-            <span className={styles.hint}>
-              Máx. 200 caracteres. Aparece nos cards de listagem.
-            </span>
+            <span className={styles.hint}>Máx. 200 caracteres. Aparece nos cards de listagem.</span>
           </div>
 
           {/* DESCRIÇÃO */}
@@ -205,32 +203,19 @@ export default function NovoEstudioPage() {
               <label className={styles.label} htmlFor="studio_founded">
                 Data de fundação
               </label>
-              <input
-                id="studio_founded"
-                type="date"
-                className={styles.input}
-                value={foundedAt}
-                onChange={(e) => setFoundedAt(e.target.value)}
-              />
+              <input id="studio_founded" type="date" className={styles.input} value={foundedAt} onChange={(e) => setFoundedAt(e.target.value)} />
             </div>
           </div>
 
           {/* ENDEREÇO */}
           <label className={styles.checkboxField}>
-            <input
-              type="checkbox"
-              checked={showAddress}
-              onChange={(e) => setShowAddress(e.target.checked)}
-            />
+            <input type="checkbox" checked={showAddress} onChange={(e) => setShowAddress(e.target.checked)} />
             <span className={styles.checkboxLabel}>Adicionar endereço</span>
           </label>
 
           {showAddress && (
             <div className={styles.addressBox}>
-              <AddressFormFields
-                value={address}
-                onChange={handleAddressChange}
-              />
+              <AddressFormFields value={address} onChange={handleAddressChange} />
             </div>
           )}
 
@@ -241,11 +226,7 @@ export default function NovoEstudioPage() {
             <Link href="/estudios" className={styles.cancelBtn}>
               Cancelar
             </Link>
-            <button
-              type="submit"
-              className={styles.submitBtn}
-              disabled={submitting}
-            >
+            <button type="submit" className={styles.submitBtn} disabled={submitting}>
               {submitting ? <Spinner size="small" /> : "Criar estúdio"}
             </button>
           </div>

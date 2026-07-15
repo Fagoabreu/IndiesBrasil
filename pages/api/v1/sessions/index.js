@@ -13,10 +13,7 @@ export default createRouter()
 
 async function postHandler(request, response) {
   const userInputValues = request.body;
-  const authenticatedUser = await authentication.getUser(
-    userInputValues.email,
-    userInputValues.password,
-  );
+  const authenticatedUser = await authentication.getUser(userInputValues.email, userInputValues.password);
   if (!authorization.can(authenticatedUser, "create:session")) {
     throw new ForbiddenError({
       message: "Você não possui permissão para realizar login",
@@ -27,11 +24,7 @@ async function postHandler(request, response) {
   const newSession = await session.create(authenticatedUser.id);
   controller.setSessionCookie(newSession.token, response);
 
-  const secureOutputValues = authorization.filterOutput(
-    authenticatedUser,
-    "read:session",
-    newSession,
-  );
+  const secureOutputValues = authorization.filterOutput(authenticatedUser, "read:session", newSession);
 
   return response.status(201).json(secureOutputValues);
 }
@@ -44,11 +37,7 @@ async function deleteHandler(request, response) {
   const expiredSession = await session.expireById(sessionObject.id);
   controller.clearSessionCookie(response);
 
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToDelete,
-    "read:session",
-    expiredSession,
-  );
+  const secureOutputValues = authorization.filterOutput(userTryingToDelete, "read:session", expiredSession);
 
   return response.status(200).json(secureOutputValues);
 }

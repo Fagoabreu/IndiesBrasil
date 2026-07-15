@@ -96,12 +96,7 @@ async function findBySlug(slug) {
 }
 
 async function create(ownerId, courseData) {
-  const {
-    title,
-    description = "",
-    coverImageId = null,
-    tags = [],
-  } = courseData;
+  const { title, description = "", coverImageId = null, tags = [] } = courseData;
 
   if (!title || title.trim().length < 3) {
     throw new ValidationError({
@@ -109,12 +104,7 @@ async function create(ownerId, courseData) {
     });
   }
 
-  const newCourse = await runInsertQuery(
-    ownerId,
-    title.trim(),
-    description,
-    coverImageId,
-  );
+  const newCourse = await runInsertQuery(ownerId, title.trim(), description, coverImageId);
 
   // Associa tags
   if (tags.length > 0) {
@@ -166,12 +156,7 @@ async function update(slug, ownerId, courseData) {
       WHERE id = $4
       RETURNING *
     `,
-    values: [
-      title || null,
-      description !== undefined ? description : null,
-      coverImageId || null,
-      course.id,
-    ],
+    values: [title || null, description !== undefined ? description : null, coverImageId || null, course.id],
   });
 
   // Atualiza slug se título mudou
@@ -378,14 +363,7 @@ async function createLesson(slug, ownerId, lessonData) {
     });
   }
 
-  const {
-    title,
-    description = "",
-    videoUrl = null,
-    readingMaterial = null,
-    orderIndex,
-    moduleId = null,
-  } = lessonData;
+  const { title, description = "", videoUrl = null, readingMaterial = null, orderIndex, moduleId = null } = lessonData;
 
   if (!title || title.trim().length < 2) {
     throw new ValidationError({
@@ -409,15 +387,7 @@ async function createLesson(slug, ownerId, lessonData) {
       VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
     `,
-    values: [
-      course.id,
-      title.trim(),
-      description,
-      videoUrl,
-      readingMaterial,
-      Number(order),
-      moduleId,
-    ],
+    values: [course.id, title.trim(), description, videoUrl, readingMaterial, Number(order), moduleId],
   });
 
   return { ...results.rows[0], course_slug: slug };
@@ -433,14 +403,7 @@ async function updateLesson(slug, orderIndex, ownerId, lessonData) {
     });
   }
 
-  const {
-    title,
-    description,
-    videoUrl,
-    readingMaterial,
-    orderIndex: newOrder,
-    moduleId,
-  } = lessonData;
+  const { title, description, videoUrl, readingMaterial, orderIndex: newOrder, moduleId } = lessonData;
 
   const results = await database.query({
     text: `
@@ -571,12 +534,7 @@ async function updateModule(slug, moduleId, ownerId, moduleData) {
       WHERE id = $3 AND course_id = $4
       RETURNING *
     `,
-    values: [
-      title || null,
-      orderIndex !== undefined ? Number(orderIndex) : null,
-      moduleId,
-      course.id,
-    ],
+    values: [title || null, orderIndex !== undefined ? Number(orderIndex) : null, moduleId, course.id],
   });
 
   if (results.rowCount === 0) {
@@ -723,10 +681,8 @@ async function getCourseProgress(slug, userId) {
     lessons: results.rows,
     completedCount,
     totalCount,
-    lastCompletedOrder:
-      results.rows.filter((r) => r.completed).pop()?.order_index ?? null,
-    nextLessonOrder:
-      results.rows.find((r) => !r.completed)?.order_index ?? null,
+    lastCompletedOrder: results.rows.filter((r) => r.completed).pop()?.order_index ?? null,
+    nextLessonOrder: results.rows.find((r) => !r.completed)?.order_index ?? null,
   };
 }
 
@@ -779,13 +735,7 @@ async function createLessonComment(slug, orderIndex, authorId, content) {
   return results.rows[0];
 }
 
-async function updateLessonComment(
-  slug,
-  orderIndex,
-  commentId,
-  authorId,
-  content,
-) {
+async function updateLessonComment(slug, orderIndex, commentId, authorId, content) {
   const lesson = await findLessonByOrder(slug, orderIndex);
 
   if (!content || content.trim().length === 0) {
@@ -806,8 +756,7 @@ async function updateLessonComment(
 
   if (results.rowCount === 0) {
     throw new NotFoundError({
-      message:
-        "Comentário não encontrado ou você não tem permissão para editá-lo.",
+      message: "Comentário não encontrado ou você não tem permissão para editá-lo.",
     });
   }
 
@@ -828,8 +777,7 @@ async function deleteLessonComment(slug, orderIndex, commentId, authorId) {
 
   if (results.rowCount === 0) {
     throw new NotFoundError({
-      message:
-        "Comentário não encontrado ou você não tem permissão para removê-lo.",
+      message: "Comentário não encontrado ou você não tem permissão para removê-lo.",
     });
   }
 }

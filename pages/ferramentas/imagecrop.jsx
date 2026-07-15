@@ -22,8 +22,7 @@ const JSON_LD = {
   inLanguage: "pt-BR",
   description: PAGE_DESCRIPTION,
   offers: { "@type": "Offer", price: "0", priceCurrency: "BRL" },
-  featureList:
-    "recortar imagem, ajuste de brilho, contraste, saturação, exportar PNG JPG WebP",
+  featureList: "recortar imagem, ajuste de brilho, contraste, saturação, exportar PNG JPG WebP",
 };
 
 export default function FerramentasPage() {
@@ -94,16 +93,7 @@ export default function FerramentasPage() {
     setPreview(result.url);
     setFileSize(result.size);
     setIsProcessing(false);
-  }, [
-    imageSrc,
-    croppedAreaPixels,
-    rotation,
-    shape,
-    brightness,
-    contrast,
-    saturation,
-    format,
-  ]);
+  }, [imageSrc, croppedAreaPixels, rotation, shape, brightness, contrast, saturation, format]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -130,19 +120,12 @@ export default function FerramentasPage() {
 
   return (
     <div className={styles.container}>
-      <SeoHead
-        title={PAGE_TITLE}
-        description={PAGE_DESCRIPTION}
-        canonical={PAGE_URL}
-        jsonLd={JSON_LD}
-      />
+      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} jsonLd={JSON_LD} />
 
       {/* Page header */}
       <header className={styles.pageHeader}>
         <h1 className={styles.pageTitle}>Editor de Imagem</h1>
-        <p className={styles.pageSubtitle}>
-          Recorte, ajuste e exporte imagens para qualquer formato.
-        </p>
+        <p className={styles.pageSubtitle}>Recorte, ajuste e exporte imagens para qualquer formato.</p>
       </header>
 
       {/* File input */}
@@ -151,11 +134,7 @@ export default function FerramentasPage() {
           📁 Escolher imagem
           <input type="file" accept="image/*" onChange={handleFile} />
         </label>
-        {imageSrc && (
-          <span style={{ fontSize: 13, color: "var(--fgColor-muted)" }}>
-            Imagem carregada
-          </span>
-        )}
+        {imageSrc && <span style={{ fontSize: 13, color: "var(--fgColor-muted)" }}>Imagem carregada</span>}
       </div>
 
       {imageSrc && (
@@ -184,77 +163,37 @@ export default function FerramentasPage() {
           <div className={styles.controls}>
             <label>
               Zoom ({zoom.toFixed(1)})
-              <input
-                type="range"
-                min={1}
-                max={3}
-                step={0.1}
-                value={zoom}
-                onChange={(e) => setZoom(Number(e.target.value))}
-              />
+              <input type="range" min={1} max={3} step={0.1} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} />
             </label>
 
             <label>
               Rotação ({rotation}°)
-              <input
-                type="range"
-                min={0}
-                max={360}
-                value={rotation}
-                onChange={(e) => setRotation(Number(e.target.value))}
-              />
+              <input type="range" min={0} max={360} value={rotation} onChange={(e) => setRotation(Number(e.target.value))} />
             </label>
 
             <label>
               Shape ({shape}%)
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={shape}
-                onChange={(e) => setShape(Number(e.target.value))}
-              />
+              <input type="range" min={0} max={100} value={shape} onChange={(e) => setShape(Number(e.target.value))} />
             </label>
 
             <label>
               Brightness ({brightness}%)
-              <input
-                type="range"
-                min={0}
-                max={200}
-                value={brightness}
-                onChange={(e) => setBrightness(Number(e.target.value))}
-              />
+              <input type="range" min={0} max={200} value={brightness} onChange={(e) => setBrightness(Number(e.target.value))} />
             </label>
 
             <label>
               Contrast ({contrast}%)
-              <input
-                type="range"
-                min={0}
-                max={200}
-                value={contrast}
-                onChange={(e) => setContrast(Number(e.target.value))}
-              />
+              <input type="range" min={0} max={200} value={contrast} onChange={(e) => setContrast(Number(e.target.value))} />
             </label>
 
             <label>
               Saturation ({saturation}%)
-              <input
-                type="range"
-                min={0}
-                max={200}
-                value={saturation}
-                onChange={(e) => setSaturation(Number(e.target.value))}
-              />
+              <input type="range" min={0} max={200} value={saturation} onChange={(e) => setSaturation(Number(e.target.value))} />
             </label>
 
             <label>
               Formato
-              <select
-                value={format}
-                onChange={(e) => setFormat(e.target.value)}
-              >
+              <select value={format} onChange={(e) => setFormat(e.target.value)}>
                 <option value="image/png">PNG</option>
                 <option value="image/jpeg">JPG</option>
                 <option value="image/webp">WEBP</option>
@@ -269,19 +208,9 @@ export default function FerramentasPage() {
         <div className={styles.preview}>
           <h3 style={{ fontWeight: 700, fontSize: "1rem" }}>Preview</h3>
 
-          <Image
-            src={preview}
-            alt="preview"
-            unoptimized
-            width={300}
-            height={Math.round(300 / aspect)}
-          />
+          <Image src={preview} alt="preview" unoptimized width={300} height={Math.round(300 / aspect)} />
 
-          {isProcessing ? (
-            <span>Atualizando preview...</span>
-          ) : (
-            <span>Tamanho: {fileSize} KB</span>
-          )}
+          {isProcessing ? <span>Atualizando preview...</span> : <span>Tamanho: {fileSize} KB</span>}
 
           <Button as="a" href={preview} download="imagem-editada">
             Download

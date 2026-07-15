@@ -1,12 +1,5 @@
 import { useRouter } from "next/router";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 const UserContext = createContext();
 
@@ -103,9 +96,7 @@ export function UserProvider({ children }) {
     [user, loadingUser],
   );
 
-  return (
-    <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>
-  );
+  return <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>;
 }
 
 export { UserContext };

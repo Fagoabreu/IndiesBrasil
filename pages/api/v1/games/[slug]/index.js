@@ -16,13 +16,9 @@ async function getHandler(request, response) {
 
   const gameData = await game.findBySlug(slug);
 
-  const isFollowingGame = requestUser.id
-    ? await game.isFollowing(gameData.id, requestUser.id)
-    : false;
+  const isFollowingGame = requestUser.id ? await game.isFollowing(gameData.id, requestUser.id) : false;
 
-  const userReview = requestUser.id
-    ? await game.getUserReview(gameData.id, requestUser.id)
-    : null;
+  const userReview = requestUser.id ? await game.getUserReview(gameData.id, requestUser.id) : null;
 
   const canEditGame = await game.canEdit(gameData, requestUser.id);
 

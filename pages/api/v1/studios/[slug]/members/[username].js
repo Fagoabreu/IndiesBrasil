@@ -36,20 +36,14 @@ async function patchHandler(request, response) {
         message: `Role inválida: ${addRole}. Use 'admin' ou 'member'.`,
       });
     }
-    await organization.setMemberRole(
-      studio.id,
-      targetUser.id,
-      addRole,
-      requestUser.id,
-    );
+    await organization.setMemberRole(studio.id, targetUser.id, addRole, requestUser.id);
   }
 
   if (removeRole) {
     // Não permite remover a role de admin do dono
     if (removeRole === "admin" && studio.owner_id === targetUser.id) {
       throw new ForbiddenError({
-        message:
-          "Não é possível remover a role de admin do responsável pelo estúdio.",
+        message: "Não é possível remover a role de admin do responsável pelo estúdio.",
       });
     }
     await organization.revokeMemberRole(studio.id, targetUser.id, removeRole);
@@ -79,8 +73,7 @@ async function deleteHandler(request, response) {
 
   if (studio.owner_id === targetUser.id) {
     throw new ForbiddenError({
-      message:
-        "O responsável pelo estúdio não pode ser removido. Transfira a responsabilidade primeiro.",
+      message: "O responsável pelo estúdio não pode ser removido. Transfira a responsabilidade primeiro.",
     });
   }
 

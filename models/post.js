@@ -161,10 +161,7 @@ async function create(postInputValues) {
 
   // Cria poll se tiver dados
   if (postInputValues.poll_question && postInputValues.poll_options) {
-    const newPoll = await poll.create(
-      postInputValues.poll_question,
-      postInputValues.poll_options,
-    );
+    const newPoll = await poll.create(postInputValues.poll_question, postInputValues.poll_options);
     await database.query({
       text: "UPDATE posts SET poll_id = $1 WHERE id = $2",
       values: [newPoll.id, newPost.id],
@@ -351,8 +348,7 @@ async function deletePostByIdAndAuthorId(userId, postId) {
 
     if (results.rowCount === 0) {
       throw new NotFoundError({
-        message:
-          "O post informado não foi encontrado ou usuario não é o criador do post.",
+        message: "O post informado não foi encontrado ou usuario não é o criador do post.",
         action: "Verifique se o post se o post a ser deletado está correto",
       });
     }
@@ -372,8 +368,7 @@ async function setPostLikes(postId, userId, liked) {
 
   if (post.is_current_user) {
     throw new ValidationError({
-      message:
-        "O criador do post não pode marcar a propria postagem com gostei",
+      message: "O criador do post não pode marcar a propria postagem com gostei",
       action: "Verifique se o post não é seu",
     });
   }
@@ -442,17 +437,13 @@ async function setPostLikes(postId, userId, liked) {
 async function getPostsByOrgId(viewerUserId, orgId) {
   if (viewerUserId) {
     const results = await database.query({
-      text:
-        baseSelectQuery +
-        ` WHERE p.organization_id = $2 ORDER BY p.created_at DESC`,
+      text: baseSelectQuery + ` WHERE p.organization_id = $2 ORDER BY p.created_at DESC`,
       values: [viewerUserId, orgId],
     });
     return results.rows;
   }
   const results = await database.query({
-    text:
-      baseNoUserSelectQuery +
-      ` WHERE p.organization_id = $2 ORDER BY p.created_at DESC`,
+    text: baseNoUserSelectQuery + ` WHERE p.organization_id = $2 ORDER BY p.created_at DESC`,
     values: [null, orgId],
   });
   return results.rows;
@@ -461,16 +452,13 @@ async function getPostsByOrgId(viewerUserId, orgId) {
 async function getPostsByUsername(viewerUserId, authorUsername) {
   if (viewerUserId) {
     const results = await database.query({
-      text:
-        baseSelectQuery + ` WHERE u.username = $2 ORDER BY p.created_at DESC`,
+      text: baseSelectQuery + ` WHERE u.username = $2 ORDER BY p.created_at DESC`,
       values: [viewerUserId, authorUsername],
     });
     return results.rows;
   }
   const results = await database.query({
-    text:
-      baseNoUserSelectQuery +
-      ` WHERE u.username = $2 ORDER BY p.created_at DESC`,
+    text: baseNoUserSelectQuery + ` WHERE u.username = $2 ORDER BY p.created_at DESC`,
     values: [null, authorUsername],
   });
   return results.rows;

@@ -24,14 +24,8 @@ const PRESETS = {
   bookCover: { aspect: 2 / 3, shape: 0, label: "Capa de Livro" },
 };
 
-export default function ImageCropModal({
-  imageSrc,
-  preset = "avatar",
-  onConfirm,
-  onClose,
-}) {
-  const { aspect: initialAspect, shape: initialShape } =
-    PRESETS[preset] ?? PRESETS.avatar;
+export default function ImageCropModal({ imageSrc, preset = "avatar", onConfirm, onClose }) {
+  const { aspect: initialAspect, shape: initialShape } = PRESETS[preset] ?? PRESETS.avatar;
   const returnFocusRef = useRef(null);
 
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -171,17 +165,7 @@ export default function ImageCropModal({
 
 ImageCropModal.propTypes = {
   imageSrc: PropTypes.string.isRequired,
-  preset: PropTypes.oneOf([
-    "avatar",
-    "cover",
-    "banner",
-    "thumbnail",
-    "squareLogo",
-    "headerBanner",
-    "profileBanner",
-    "gameCapsule",
-    "bookCover",
-  ]),
+  preset: PropTypes.oneOf(["avatar", "cover", "banner", "thumbnail", "squareLogo", "headerBanner", "profileBanner", "gameCapsule", "bookCover"]),
   onConfirm: PropTypes.func.isRequired,
   onClose: PropTypes.func.isRequired,
 };

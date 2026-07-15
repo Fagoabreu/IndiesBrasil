@@ -21,21 +21,12 @@ async function patchHandler(request, response) {
   if (!authorization.can(userTryingToPatch, "update:user", targetUser)) {
     throw new ForbiddenError({
       message: "Você não possui permissão para atualizar outro usuário.",
-      action:
-        "Verifique se você possui a feature necessária para atualizar outro usuário",
+      action: "Verifique se você possui a feature necessária para atualizar outro usuário",
     });
   }
 
-  const patchedFormacao = await profile.patchFormacoes(
-    targetUser.id,
-    formacaoId,
-    userInputValues,
-  );
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToPatch,
-    "read:profile_formacoes",
-    patchedFormacao,
-  );
+  const patchedFormacao = await profile.patchFormacoes(targetUser.id, formacaoId, userInputValues);
+  const secureOutputValues = authorization.filterOutput(userTryingToPatch, "read:profile_formacoes", patchedFormacao);
   return response.status(200).json(secureOutputValues);
 }
 
@@ -48,20 +39,12 @@ async function deleteHandler(request, response) {
   if (!authorization.can(userTryingToPatch, "update:user", targetUser)) {
     throw new ForbiddenError({
       message: "Você não possui permissão para atualizar outro usuário.",
-      action:
-        "Verifique se você possui a feature necessária para atualizar outro usuário",
+      action: "Verifique se você possui a feature necessária para atualizar outro usuário",
     });
   }
 
-  const deletedFormacao = await profile.deleteFormacaoByUserAndId(
-    targetUser.id,
-    formacaoId,
-  );
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToPatch,
-    "read:profile_formacoes",
-    deletedFormacao,
-  );
+  const deletedFormacao = await profile.deleteFormacaoByUserAndId(targetUser.id, formacaoId);
+  const secureOutputValues = authorization.filterOutput(userTryingToPatch, "read:profile_formacoes", deletedFormacao);
 
   return response.status(200).json(secureOutputValues);
 }

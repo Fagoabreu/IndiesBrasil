@@ -18,11 +18,7 @@
 
 import database from "infra/database.js";
 import { NotFoundError, ValidationError } from "infra/errors.js";
-import {
-  RATING_LABELS,
-  RATING_COLORS,
-  RATING_ORDER,
-} from "@/lib/rating-constants";
+import { RATING_LABELS, RATING_COLORS, RATING_ORDER } from "@/lib/rating-constants";
 
 export { RATING_LABELS, RATING_COLORS, RATING_ORDER };
 
@@ -59,18 +55,15 @@ export const GAME_QUESTIONNAIRE = {
             { value: "L", label: "Não contém armas." },
             {
               value: "10",
-              label:
-                "Armas de fantasia ou lúdicas, sem realismo (ex: varinha mágica, espada cartoon).",
+              label: "Armas de fantasia ou lúdicas, sem realismo (ex: varinha mágica, espada cartoon).",
             },
             {
               value: "12",
-              label:
-                "Armas brancas ou de fogo com baixo detalhamento, sem ferimentos visíveis.",
+              label: "Armas brancas ou de fogo com baixo detalhamento, sem ferimentos visíveis.",
             },
             {
               value: "14",
-              label:
-                "Armas realistas com impacto visual moderado (sangue estilizado).",
+              label: "Armas realistas com impacto visual moderado (sangue estilizado).",
             },
             {
               value: "16",
@@ -78,8 +71,7 @@ export const GAME_QUESTIONNAIRE = {
             },
             {
               value: "18",
-              label:
-                "Violência armada extrema, mutilação ou tortura com riqueza de detalhes.",
+              label: "Violência armada extrema, mutilação ou tortura com riqueza de detalhes.",
             },
           ],
         },
@@ -89,33 +81,27 @@ export const GAME_QUESTIONNAIRE = {
           options: [
             {
               value: "L",
-              label:
-                "Não há confronto físico ou é exclusivamente cômico/cartoon (ex: personagem achata e volta).",
+              label: "Não há confronto físico ou é exclusivamente cômico/cartoon (ex: personagem achata e volta).",
             },
             {
               value: "10",
-              label:
-                "Confronto lúdico, sem sofrimento visível (ex: derrotar inimigos que somem).",
+              label: "Confronto lúdico, sem sofrimento visível (ex: derrotar inimigos que somem).",
             },
             {
               value: "12",
-              label:
-                "Lutas com impacto leve, personagens caem mas sem ferimentos visíveis.",
+              label: "Lutas com impacto leve, personagens caem mas sem ferimentos visíveis.",
             },
             {
               value: "14",
-              label:
-                "Lutas com ferimentos moderados, hematomas ou sangue estilizado.",
+              label: "Lutas com ferimentos moderados, hematomas ou sangue estilizado.",
             },
             {
               value: "16",
-              label:
-                "Violência física intensa com ferimentos graves e sofrimento visível.",
+              label: "Violência física intensa com ferimentos graves e sofrimento visível.",
             },
             {
               value: "18",
-              label:
-                "Violência gráfica extrema, desmembramento, tortura ou execuções.",
+              label: "Violência gráfica extrema, desmembramento, tortura ou execuções.",
             },
           ],
         },
@@ -126,8 +112,7 @@ export const GAME_QUESTIONNAIRE = {
             { value: "L", label: "Não há morte de personagens." },
             {
               value: "10",
-              label:
-                "Morte implícita ou simbólica (personagem 'desmaia' ou vira estrela).",
+              label: "Morte implícita ou simbólica (personagem 'desmaia' ou vira estrela).",
             },
             {
               value: "12",
@@ -143,8 +128,7 @@ export const GAME_QUESTIONNAIRE = {
             },
             {
               value: "18",
-              label:
-                "Mortes extremamente gráficas, assassinatos com riqueza de detalhes ou crueldade.",
+              label: "Mortes extremamente gráficas, assassinatos com riqueza de detalhes ou crueldade.",
             },
           ],
         },
@@ -159,13 +143,11 @@ export const GAME_QUESTIONNAIRE = {
             },
             {
               value: "16",
-              label:
-                "Há representação moderada de violência contra vulneráveis.",
+              label: "Há representação moderada de violência contra vulneráveis.",
             },
             {
               value: "18",
-              label:
-                "Violência explícita contra vulneráveis ou apologia a crimes de ódio.",
+              label: "Violência explícita contra vulneráveis ou apologia a crimes de ódio.",
             },
           ],
         },
@@ -183,18 +165,15 @@ export const GAME_QUESTIONNAIRE = {
             { value: "L", label: "Não há nudez." },
             {
               value: "10",
-              label:
-                "Nudez não erótica e muito breve (ex: personagem de fralda, bebê).",
+              label: "Nudez não erótica e muito breve (ex: personagem de fralda, bebê).",
             },
             {
               value: "12",
-              label:
-                "Nudez parcial ou insinuação velada, sem conotação sexual.",
+              label: "Nudez parcial ou insinuação velada, sem conotação sexual.",
             },
             {
               value: "14",
-              label:
-                "Nudez de relance em contexto não sexual (ex: silhueta, banho).",
+              label: "Nudez de relance em contexto não sexual (ex: silhueta, banho).",
             },
             { value: "16", label: "Nudez prolongada com conotação erótica." },
             {
@@ -254,8 +233,7 @@ export const GAME_QUESTIONNAIRE = {
     {
       id: "drugs",
       title: "Drogas",
-      description:
-        "Avalie a presença de conteúdo relacionado a drogas lícitas e ilícitas.",
+      description: "Avalie a presença de conteúdo relacionado a drogas lícitas e ilícitas.",
       questions: [
         {
           id: "d_licit",
@@ -268,8 +246,7 @@ export const GAME_QUESTIONNAIRE = {
             },
             {
               value: "12",
-              label:
-                "Consumo moderado sem glamourização (ex: personagem adulto bebe vinho).",
+              label: "Consumo moderado sem glamourização (ex: personagem adulto bebe vinho).",
             },
             {
               value: "14",
@@ -277,13 +254,11 @@ export const GAME_QUESTIONNAIRE = {
             },
             {
               value: "16",
-              label:
-                "Apologia ao consumo ou embriaguez como elemento cômico/habitual.",
+              label: "Apologia ao consumo ou embriaguez como elemento cômico/habitual.",
             },
             {
               value: "18",
-              label:
-                "Glamourização do consumo excessivo ou associação a recompensas.",
+              label: "Glamourização do consumo excessivo ou associação a recompensas.",
             },
           ],
         },
@@ -298,8 +273,7 @@ export const GAME_QUESTIONNAIRE = {
             },
             {
               value: "14",
-              label:
-                "Aparição de drogas sem consumo explícito (ex: item de inventário).",
+              label: "Aparição de drogas sem consumo explícito (ex: item de inventário).",
             },
             {
               value: "16",
@@ -307,8 +281,7 @@ export const GAME_QUESTIONNAIRE = {
             },
             {
               value: "18",
-              label:
-                "Consumo explícito, glamourização ou tráfico como mecânica.",
+              label: "Consumo explícito, glamourização ou tráfico como mecânica.",
             },
           ],
         },
@@ -327,13 +300,11 @@ export const GAME_QUESTIONNAIRE = {
             { value: "L", label: "Não há lootboxes." },
             {
               value: "L",
-              label:
-                "Lootboxes apenas cosméticas e gratuitas (ganhas jogando, sem dinheiro real).",
+              label: "Lootboxes apenas cosméticas e gratuitas (ganhas jogando, sem dinheiro real).",
             },
             {
               value: "16",
-              label:
-                "Lootboxes pagas com dinheiro real, mas com divulgação clara de probabilidades e sem vantagem competitiva.",
+              label: "Lootboxes pagas com dinheiro real, mas com divulgação clara de probabilidades e sem vantagem competitiva.",
             },
             {
               value: "18",
@@ -349,23 +320,19 @@ export const GAME_QUESTIONNAIRE = {
             { value: "L", label: "Não há compras dentro do jogo." },
             {
               value: "10",
-              label:
-                "Apenas expansões ou DLCs que adicionam conteúdo substancial ao jogo base.",
+              label: "Apenas expansões ou DLCs que adicionam conteúdo substancial ao jogo base.",
             },
             {
               value: "12",
-              label:
-                "Itens cosméticos pagos (skins, roupas, efeitos visuais) que não afetam a jogabilidade.",
+              label: "Itens cosméticos pagos (skins, roupas, efeitos visuais) que não afetam a jogabilidade.",
             },
             {
               value: "16",
-              label:
-                "Itens pagos que aceleram progressão ou oferecem vantagem competitiva (pay-to-win).",
+              label: "Itens pagos que aceleram progressão ou oferecem vantagem competitiva (pay-to-win).",
             },
             {
               value: "18",
-              label:
-                "Compras predatórias: mecânicas que pressionam o jogador a gastar repetidamente (gacha, energia paga, mecânicas de cassino).",
+              label: "Compras predatórias: mecânicas que pressionam o jogador a gastar repetidamente (gacha, energia paga, mecânicas de cassino).",
             },
           ],
         },
@@ -375,28 +342,23 @@ export const GAME_QUESTIONNAIRE = {
           options: [
             {
               value: "L",
-              label:
-                "Sem anúncios ou apenas divulgação de outros jogos do mesmo estúdio de forma não intrusiva.",
+              label: "Sem anúncios ou apenas divulgação de outros jogos do mesmo estúdio de forma não intrusiva.",
             },
             {
               value: "10",
-              label:
-                "Anúncios em áreas não interruptivas (ex: menu principal, tela de loading).",
+              label: "Anúncios em áreas não interruptivas (ex: menu principal, tela de loading).",
             },
             {
               value: "12",
-              label:
-                "Anúncios entre fases ou momentos de pausa, sem interromper a jogabilidade.",
+              label: "Anúncios entre fases ou momentos de pausa, sem interromper a jogabilidade.",
             },
             {
               value: "14",
-              label:
-                "Anúncios frequentes ou direcionados a menores de idade com apelo comercial.",
+              label: "Anúncios frequentes ou direcionados a menores de idade com apelo comercial.",
             },
             {
               value: "16",
-              label:
-                "Anúncios excessivos que interrompem a jogabilidade repetidamente ou induzem compras.",
+              label: "Anúncios excessivos que interrompem a jogabilidade repetidamente ou induzem compras.",
             },
           ],
         },
@@ -425,8 +387,7 @@ export const BOARDGAME_QUESTIONNAIRE = {
     {
       id: "safety",
       title: "Segurança Física (Inmetro)",
-      description:
-        "Avalie riscos físicos conforme regulamentação do Inmetro para brinquedos e jogos.",
+      description: "Avalie riscos físicos conforme regulamentação do Inmetro para brinquedos e jogos.",
       questions: [
         {
           id: "bf_small_parts",
@@ -438,8 +399,7 @@ export const BOARDGAME_QUESTIONNAIRE = {
             },
             {
               value: "L",
-              label:
-                "Sim, mas jogo é claramente para maiores de 3 anos (aviso na embalagem).",
+              label: "Sim, mas jogo é claramente para maiores de 3 anos (aviso na embalagem).",
             },
             {
               value: "6",
@@ -458,13 +418,11 @@ export const BOARDGAME_QUESTIONNAIRE = {
             { value: "L", label: "Não." },
             {
               value: "10",
-              label:
-                "Peças com bordas finas ou materiais que exigem cuidado (ex: cartas de papel couché).",
+              label: "Peças com bordas finas ou materiais que exigem cuidado (ex: cartas de papel couché).",
             },
             {
               value: "14",
-              label:
-                "Componentes metálicos, miniaturas com partes pontiagudas ou vidro.",
+              label: "Componentes metálicos, miniaturas com partes pontiagudas ou vidro.",
             },
           ],
         },
@@ -478,8 +436,7 @@ export const BOARDGAME_QUESTIONNAIRE = {
             },
             {
               value: "6",
-              label:
-                "Materiais atóxicos, mas que exigem supervisão para crianças pequenas.",
+              label: "Materiais atóxicos, mas que exigem supervisão para crianças pequenas.",
             },
             {
               value: "10",
@@ -525,8 +482,7 @@ export const BOARDGAME_QUESTIONNAIRE = {
             },
             {
               value: "14",
-              label:
-                "Cálculo estratégico com múltiplas variáveis, probabilidade.",
+              label: "Cálculo estratégico com múltiplas variáveis, probabilidade.",
             },
           ],
         },
@@ -542,8 +498,7 @@ export const BOARDGAME_QUESTIONNAIRE = {
             },
             {
               value: "14",
-              label:
-                "Estratégia de longo prazo com múltiplos caminhos de vitória.",
+              label: "Estratégia de longo prazo com múltiplos caminhos de vitória.",
             },
             {
               value: "16",
@@ -576,13 +531,11 @@ export const BOARDGAME_QUESTIONNAIRE = {
             { value: "L", label: "Não." },
             {
               value: "10",
-              label:
-                "Temas leves de mistério ou fantasia sombria (ex: Halloween cartoon).",
+              label: "Temas leves de mistério ou fantasia sombria (ex: Halloween cartoon).",
             },
             {
               value: "14",
-              label:
-                "Horror moderado com imagens impactantes ou atmosfera opressiva.",
+              label: "Horror moderado com imagens impactantes ou atmosfera opressiva.",
             },
             {
               value: "16",
@@ -597,8 +550,7 @@ export const BOARDGAME_QUESTIONNAIRE = {
             { value: "L", label: "Não." },
             {
               value: "12",
-              label:
-                "Conflito abstrato (ex: xadrez, War com peças sem representação humana).",
+              label: "Conflito abstrato (ex: xadrez, War com peças sem representação humana).",
             },
             {
               value: "14",
@@ -606,8 +558,7 @@ export const BOARDGAME_QUESTIONNAIRE = {
             },
             {
               value: "16",
-              label:
-                "Guerra representada com violência gráfica em ilustrações ou miniaturas.",
+              label: "Guerra representada com violência gráfica em ilustrações ou miniaturas.",
             },
           ],
         },
@@ -619,8 +570,7 @@ export const BOARDGAME_QUESTIONNAIRE = {
             { value: "14", label: "Insunuação leve em cartas ou ilustrações." },
             {
               value: "18",
-              label:
-                "Conteúdo adulto explícito (ex: Cards Against Humanity, jogos eróticos).",
+              label: "Conteúdo adulto explícito (ex: Cards Against Humanity, jogos eróticos).",
             },
           ],
         },
@@ -651,28 +601,23 @@ export const BOOK_QUESTIONNAIRE = {
           options: [
             {
               value: "L",
-              label:
-                "Não há violência ou é exclusivamente cômica/cartoon, sem consequências.",
+              label: "Não há violência ou é exclusivamente cômica/cartoon, sem consequências.",
             },
             {
               value: "10",
-              label:
-                "Violência leve e não gráfica (empurrões, quedas cômicas).",
+              label: "Violência leve e não gráfica (empurrões, quedas cômicas).",
             },
             {
               value: "12",
-              label:
-                "Conflitos físicos com consequências, mas sem descrições gráficas de ferimentos.",
+              label: "Conflitos físicos com consequências, mas sem descrições gráficas de ferimentos.",
             },
             {
               value: "16",
-              label:
-                "Violência intensa ou frequente com descrições detalhadas.",
+              label: "Violência intensa ou frequente com descrições detalhadas.",
             },
             {
               value: "18",
-              label:
-                "Violência gráfica extrema, tortura ou crueldade com riqueza de detalhes.",
+              label: "Violência gráfica extrema, tortura ou crueldade com riqueza de detalhes.",
             },
           ],
         },
@@ -687,8 +632,7 @@ export const BOOK_QUESTIONNAIRE = {
             },
             {
               value: "12",
-              label:
-                "Romance com alguma intensidade emocional (primeiros amores, descobertas). Sem descrições gráficas.",
+              label: "Romance com alguma intensidade emocional (primeiros amores, descobertas). Sem descrições gráficas.",
             },
             {
               value: "16",
@@ -742,28 +686,23 @@ export const BOOK_QUESTIONNAIRE = {
           options: [
             {
               value: "L",
-              label:
-                "Livro ilustrado ou de atividades. Texto mínimo com muitas imagens. Foco em mediação de leitura.",
+              label: "Livro ilustrado ou de atividades. Texto mínimo com muitas imagens. Foco em mediação de leitura.",
             },
             {
               value: "10",
-              label:
-                "Textos mais longos com capítulos curtos. Vocabulário acessível para leitores iniciantes.",
+              label: "Textos mais longos com capítulos curtos. Vocabulário acessível para leitores iniciantes.",
             },
             {
               value: "12",
-              label:
-                "Narrativa com tramas mais elaboradas. Adequado para leitores fluentes.",
+              label: "Narrativa com tramas mais elaboradas. Adequado para leitores fluentes.",
             },
             {
               value: "14",
-              label:
-                "Obra complexa com múltiplos personagens, tramas paralelas ou vocabulário avançado.",
+              label: "Obra complexa com múltiplos personagens, tramas paralelas ou vocabulário avançado.",
             },
             {
               value: "16",
-              label:
-                "Alta densidade literária. Temas filosóficos, políticos ou existenciais complexos.",
+              label: "Alta densidade literária. Temas filosóficos, políticos ou existenciais complexos.",
             },
           ],
         },
@@ -787,12 +726,7 @@ export function calculateGameRating(answers) {
   let maxRating = "L";
 
   // Violência
-  const violenceQuestions = [
-    "v_arms",
-    "v_confrontation",
-    "v_death",
-    "v_vulnerable",
-  ];
+  const violenceQuestions = ["v_arms", "v_confrontation", "v_death", "v_vulnerable"];
   const violenceMax = getMaxFromAnswers(answers, violenceQuestions);
   if (RATING_ORDER.indexOf(violenceMax) > RATING_ORDER.indexOf(maxRating)) {
     maxRating = violenceMax;
@@ -814,12 +748,7 @@ export function calculateGameRating(answers) {
   }
 
   // Sexo e Nudez
-  const sexQuestions = [
-    "s_nudity",
-    "s_sexual_acts",
-    "s_sexual_language",
-    "s_exploitation",
-  ];
+  const sexQuestions = ["s_nudity", "s_sexual_acts", "s_sexual_language", "s_exploitation"];
   const sexMax = getMaxFromAnswers(answers, sexQuestions);
   if (RATING_ORDER.indexOf(sexMax) > RATING_ORDER.indexOf(maxRating)) {
     maxRating = sexMax;
@@ -872,10 +801,7 @@ export function calculateGameRating(answers) {
   // Flags de monetização para o selo à parte (Lei Felca)
   const monetizationFlags = {
     hasLootboxes: answers.m_lootboxes === "16" || answers.m_lootboxes === "18",
-    hasInGamePurchases:
-      answers.m_purchases === "12" ||
-      answers.m_purchases === "16" ||
-      answers.m_purchases === "18",
+    hasInGamePurchases: answers.m_purchases === "12" || answers.m_purchases === "16" || answers.m_purchases === "18",
     hasExcessiveAds: answers.m_ads === "14" || answers.m_ads === "16",
   };
 
@@ -883,11 +809,8 @@ export function calculateGameRating(answers) {
     const flagParts = [];
     if (monetizationFlags.hasLootboxes) flagParts.push("lootboxes pagas");
     if (monetizationFlags.hasInGamePurchases) flagParts.push("compras no jogo");
-    if (monetizationFlags.hasExcessiveAds)
-      flagParts.push("anúncios excessivos");
-    reasons.push(
-      `Monetização (Lei Felca): classificação ${monetizationMax} — ${flagParts.join(", ") || "microtransações"}`,
-    );
+    if (monetizationFlags.hasExcessiveAds) flagParts.push("anúncios excessivos");
+    reasons.push(`Monetização (Lei Felca): classificação ${monetizationMax} — ${flagParts.join(", ") || "microtransações"}`);
   }
 
   if (maxRating === "L") {
@@ -926,12 +849,7 @@ export function calculateBoardgameRating(answers) {
   }
 
   // Complexidade cognitiva
-  const cognitiveQuestions = [
-    "bc_reading",
-    "bc_math",
-    "bc_strategy",
-    "bc_duration",
-  ];
+  const cognitiveQuestions = ["bc_reading", "bc_math", "bc_strategy", "bc_duration"];
   const cognitiveMax = getMaxFromAnswers(answers, cognitiveQuestions);
   if (RATING_ORDER.indexOf(cognitiveMax) > RATING_ORDER.indexOf(maxRating)) {
     maxRating = cognitiveMax;
@@ -975,9 +893,7 @@ export function calculateBoardgameRating(answers) {
   }
 
   if (maxRating === "L") {
-    reasons.push(
-      "Jogo adequado para todas as idades, sem riscos de segurança.",
-    );
+    reasons.push("Jogo adequado para todas as idades, sem riscos de segurança.");
   }
 
   return { rating: maxRating, reasons };
@@ -993,13 +909,7 @@ export function calculateBookRating(answers) {
   const reasons = [];
   let maxRating = "L";
 
-  const contentQuestions = [
-    "bk_violence",
-    "bk_sexual",
-    "bk_language",
-    "bk_drugs",
-    "bk_complexity",
-  ];
+  const contentQuestions = ["bk_violence", "bk_sexual", "bk_language", "bk_drugs", "bk_complexity"];
   const contentMax = getMaxFromAnswers(answers, contentQuestions);
   maxRating = contentMax;
 
@@ -1041,11 +951,7 @@ export function calculateBookRating(answers) {
     if (r !== "L") {
       reasons.push(
         `Linguagem: ${RATING_LABELS[r] || r} — ${
-          r === "18"
-            ? "linguagem obscena ou degradante"
-            : r === "14"
-              ? "linguagem vulgar frequente"
-              : "palavrões ocasionais"
+          r === "18" ? "linguagem obscena ou degradante" : r === "14" ? "linguagem vulgar frequente" : "palavrões ocasionais"
         }`,
       );
     }
@@ -1084,9 +990,7 @@ export function calculateBookRating(answers) {
   }
 
   if (maxRating === "L") {
-    reasons.push(
-      "Obra adequada para todas as idades. Livro ilustrado ou de atividades com mediação de leitura.",
-    );
+    reasons.push("Obra adequada para todas as idades. Livro ilustrado ou de atividades com mediação de leitura.");
   }
 
   return { rating: maxRating, reasons };
@@ -1134,14 +1038,7 @@ const TABLE_DISPLAY = {
  * @param {Object} [monetizationFlags] — { hasLootboxes, hasInGamePurchases, hasExcessiveAds } (apenas para games, Lei Felca)
  * @returns {Object} — item atualizado
  */
-async function saveRating(
-  type,
-  slug,
-  rating,
-  reasons,
-  userId,
-  monetizationFlags,
-) {
+async function saveRating(type, slug, rating, reasons, userId, monetizationFlags) {
   const table = TABLE_MAP[type];
   if (!table) {
     throw new ValidationError({
@@ -1230,10 +1127,7 @@ async function getRating(type, slug) {
     throw new ValidationError({ message: `Tipo inválido: "${type}".` });
   }
 
-  const monetizationCols =
-    type === "game"
-      ? ", has_lootboxes, has_in_game_purchases, has_excessive_ads"
-      : "";
+  const monetizationCols = type === "game" ? ", has_lootboxes, has_in_game_purchases, has_excessive_ads" : "";
 
   const result = await database.query({
     text: `SELECT content_rating, content_rating_reasons, content_rated_at${monetizationCols} FROM ${table} WHERE slug = $1`,
@@ -1249,9 +1143,7 @@ async function getRating(type, slug) {
   const row = result.rows[0];
   const response = {
     rating: row.content_rating || null,
-    reasons: row.content_rating_reasons
-      ? JSON.parse(row.content_rating_reasons)
-      : null,
+    reasons: row.content_rating_reasons ? JSON.parse(row.content_rating_reasons) : null,
     ratedAt: row.content_rated_at || null,
   };
 

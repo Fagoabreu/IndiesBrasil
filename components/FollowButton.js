@@ -3,13 +3,7 @@ import { Button } from "@primer/react";
 import PropTypes from "prop-types";
 import baseStyles from "./FollowButton.module.css";
 
-export default function FollowButton({
-  username,
-  endpoint,
-  isFollowing = false,
-  onToggle = () => {},
-  className,
-}) {
+export default function FollowButton({ username, endpoint, isFollowing = false, onToggle = () => {}, className }) {
   const [loading, setLoading] = useState(false);
   const [following, setFollowing] = useState(isFollowing);
 
@@ -44,13 +38,7 @@ export default function FollowButton({
   if (loading) label = "...";
 
   return (
-    <Button
-      size="small"
-      variant={following ? "default" : "primary"}
-      onClick={handleToggle}
-      disabled={loading}
-      className={btnClass}
-    >
+    <Button size="small" variant={following ? "default" : "primary"} onClick={handleToggle} disabled={loading} className={btnClass}>
       {label}
     </Button>
   );

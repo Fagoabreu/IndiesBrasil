@@ -69,11 +69,7 @@ export default function PostsPage() {
   }, [fetchPosts, loadingUser]);
 
   // POST /api/v1/posts
-  const handleAddPost = async (
-    content,
-    file = null,
-    existingFormData = null,
-  ) => {
+  const handleAddPost = async (content, file = null, existingFormData = null) => {
     try {
       const formData = existingFormData || new FormData();
       // Se não veio formData pré-preenchido (com poll), monta manualmente
@@ -129,19 +125,13 @@ export default function PostsPage() {
 
   return (
     <div className="posts-page">
-      <SeoHead
-        title={PAGE_TITLE}
-        description={PAGE_DESCRIPTION}
-        canonical={PAGE_URL}
-      />
+      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} />
 
       {/* HEADER DO FEED */}
       <div className="social-feed-header">
         <div className="feed-title-block">
           <Heading as="h2">Posts</Heading>
-          <p className="feed-subtitle">
-            Acompanhe a comunidade e compartilhe atualizacoes com seu feed.
-          </p>
+          <p className="feed-subtitle">Acompanhe a comunidade e compartilhe atualizacoes com seu feed.</p>
         </div>
 
         <div className="feed-tabs" role="tablist" aria-label="Filtros de posts">
@@ -191,10 +181,7 @@ export default function PostsPage() {
       {posts.length === 0 ? (
         <div className="posts-empty" role="status" aria-live="polite">
           <p className="posts-empty-title">Nenhum post encontrado</p>
-          <p className="posts-empty-description">
-            Tente trocar o filtro ou volte mais tarde para ver novas
-            publicacoes.
-          </p>
+          <p className="posts-empty-description">Tente trocar o filtro ou volte mais tarde para ver novas publicacoes.</p>
         </div>
       ) : (
         posts.map((post) => (

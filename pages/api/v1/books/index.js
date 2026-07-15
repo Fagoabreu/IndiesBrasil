@@ -8,14 +8,7 @@ export default createRouter()
   .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
-  const {
-    page = 1,
-    limit = 20,
-    search = "",
-    book_type = "",
-    stage = "",
-    isfollowing,
-  } = request.query;
+  const { page = 1, limit = 20, search = "", book_type = "", stage = "", isfollowing } = request.query;
   const requestUser = request.context.user;
 
   if (isfollowing === "true" && requestUser?.id) {

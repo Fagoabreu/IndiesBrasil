@@ -8,9 +8,7 @@
 exports.noTransaction = true;
 
 exports.up = (pgm) => {
-  pgm.sql(
-    `ALTER TYPE notification_type ADD VALUE IF NOT EXISTS 'studio_invitation';`,
-  );
+  pgm.sql(`ALTER TYPE notification_type ADD VALUE IF NOT EXISTS 'studio_invitation';`);
 
   pgm.sql(`
     ALTER TABLE user_notifications

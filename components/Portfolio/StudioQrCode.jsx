@@ -94,13 +94,7 @@ export default function StudioQrCode({ slug, canEdit, size = 120 }) {
       </div>
 
       <div className={styles.actions}>
-        <IconButton
-          icon={DownloadIcon}
-          aria-label="Baixar QR Code"
-          size="small"
-          variant="invisible"
-          onClick={handleDownload}
-        />
+        <IconButton icon={DownloadIcon} aria-label="Baixar QR Code" size="small" variant="invisible" onClick={handleDownload} />
         {canEdit && (
           <IconButton
             icon={PencilIcon}
@@ -113,14 +107,7 @@ export default function StudioQrCode({ slug, canEdit, size = 120 }) {
         )}
       </div>
 
-      {modalOpen && (
-        <QrCodeModal
-          value={studioUrl}
-          initialSettings={settings}
-          onSave={handleSave}
-          onClose={() => setModalOpen(false)}
-        />
-      )}
+      {modalOpen && <QrCodeModal value={studioUrl} initialSettings={settings} onSave={handleSave} onClose={() => setModalOpen(false)} />}
     </div>
   );
 }

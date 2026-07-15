@@ -28,12 +28,7 @@ async function patchHandler(request, response) {
     });
   }
 
-  const updated = await course.updateLesson(
-    slug,
-    order,
-    requestUser.id,
-    request.body,
-  );
+  const updated = await course.updateLesson(slug, order, requestUser.id, request.body);
   return response.status(200).json(updated);
 }
 

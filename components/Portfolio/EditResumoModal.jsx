@@ -1,20 +1,7 @@
 import { useState } from "react";
-import {
-  Dialog,
-  Button,
-  Textarea,
-  TextInput,
-  FormControl,
-  Select,
-} from "@primer/react";
+import { Dialog, Button, Textarea, TextInput, FormControl, Select } from "@primer/react";
 
-export default function EditResumoModal({
-  onClose,
-  initVisibility,
-  initResume,
-  initBio,
-  onSave,
-}) {
+export default function EditResumoModal({ onClose, initVisibility, initResume, initBio, onSave }) {
   const [visibility, setVisibility] = useState(initVisibility || "public");
   const [resume, setResume] = useState(initResume || "");
   const [bio, setBio] = useState(initBio || "");
@@ -47,10 +34,7 @@ export default function EditResumoModal({
       >
         <FormControl>
           <FormControl.Label>Visibilidade</FormControl.Label>
-          <Select
-            value={visibility}
-            onChange={(e) => setVisibility(e.target.value)}
-          >
+          <Select value={visibility} onChange={(e) => setVisibility(e.target.value)}>
             <Select.Option value="public">Público</Select.Option>
             <Select.Option value="followers">Seguidores</Select.Option>
             <Select.Option value="private">Privado</Select.Option>
@@ -59,21 +43,12 @@ export default function EditResumoModal({
 
         <FormControl>
           <FormControl.Label>Resumo profissional</FormControl.Label>
-          <TextInput
-            block
-            value={resume}
-            onChange={(e) => setResume(e.target.value)}
-          />
+          <TextInput block value={resume} onChange={(e) => setResume(e.target.value)} />
         </FormControl>
 
         <FormControl>
           <FormControl.Label>Bio</FormControl.Label>
-          <Textarea
-            block
-            rows={5}
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-          />
+          <Textarea block rows={5} value={bio} onChange={(e) => setBio(e.target.value)} />
         </FormControl>
       </div>
 

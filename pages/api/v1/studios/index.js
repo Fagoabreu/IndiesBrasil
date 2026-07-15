@@ -11,13 +11,7 @@ export default createRouter()
   .handler(controller.errorHandlers);
 
 async function listHandler(request, response) {
-  const {
-    page = 1,
-    limit = 20,
-    search = "",
-    isfollowing,
-    member,
-  } = request.query;
+  const { page = 1, limit = 20, search = "", isfollowing, member } = request.query;
   const requestUser = request.context.user;
 
   let studios;

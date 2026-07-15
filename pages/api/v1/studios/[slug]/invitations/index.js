@@ -44,15 +44,10 @@ async function createHandler(request, response) {
   const { username: invitedUsername, role, message } = request.body;
   const invitedUser = await user.findOneByUsername(invitedUsername);
 
-  const invitation = await organization.createInvitation(
-    studio.id,
-    invitedUser.id,
-    requestUser.id,
-    {
-      role,
-      message,
-    },
-  );
+  const invitation = await organization.createInvitation(studio.id, invitedUser.id, requestUser.id, {
+    role,
+    message,
+  });
 
   // Notifica o convidado de forma assíncrona
   notification
@@ -62,9 +57,7 @@ async function createHandler(request, response) {
       source_user_id: requestUser.id,
       org_slug: slug,
     })
-    .catch((err) =>
-      console.error("[invitation] erro ao criar notificação:", err?.message),
-    );
+    .catch((err) => console.error("[invitation] erro ao criar notificação:", err?.message));
 
   return response.status(201).json(invitation);
 }

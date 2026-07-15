@@ -14,16 +14,9 @@ async function getHandler(request, response) {
   const requestUser = request.context.user;
 
   const boardgameData = await boardgame.findBySlug(slug);
-  const isFollowingBoardgame = requestUser.id
-    ? await boardgame.isFollowing(boardgameData.id, requestUser.id)
-    : false;
-  const canEditBoardgame = await boardgame.canEdit(
-    boardgameData.id,
-    requestUser,
-  );
-  const userReview = requestUser.id
-    ? await boardgame.getUserReview(boardgameData.id, requestUser.id)
-    : null;
+  const isFollowingBoardgame = requestUser.id ? await boardgame.isFollowing(boardgameData.id, requestUser.id) : false;
+  const canEditBoardgame = await boardgame.canEdit(boardgameData.id, requestUser);
+  const userReview = requestUser.id ? await boardgame.getUserReview(boardgameData.id, requestUser.id) : null;
 
   return response.status(200).json({
     ...boardgameData,
@@ -40,10 +33,7 @@ async function patchHandler(request, response) {
   const { slug } = request.query;
 
   const boardgameData = await boardgame.findBySlug(slug);
-  const canEditBoardgame = await boardgame.canEdit(
-    boardgameData.id,
-    requestUser,
-  );
+  const canEditBoardgame = await boardgame.canEdit(boardgameData.id, requestUser);
 
   if (!canEditBoardgame) {
     throw new ForbiddenError({

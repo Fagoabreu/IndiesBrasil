@@ -28,11 +28,6 @@ async function createHandler(request, response) {
   }
 
   const { content } = request.body;
-  const comment = await course.createLessonComment(
-    slug,
-    order,
-    requestUser.id,
-    content,
-  );
+  const comment = await course.createLessonComment(slug, order, requestUser.id, content);
   return response.status(201).json(comment);
 }

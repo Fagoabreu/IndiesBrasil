@@ -9,8 +9,7 @@ import { SITE_URL } from "@/lib/seo";
 import styles from "./NewsPage.module.css";
 
 const PAGE_TITLE = "Notícias | Indies Brasil";
-const PAGE_DESCRIPTION =
-  "Fique por dentro das últimas notícias, novidades e atualizações do cenário indie brasileiro.";
+const PAGE_DESCRIPTION = "Fique por dentro das últimas notícias, novidades e atualizações do cenário indie brasileiro.";
 const PAGE_URL = `${SITE_URL}/noticias`;
 
 export default function NewsPage() {
@@ -67,8 +66,7 @@ export default function NewsPage() {
       formData.append("summary", summary.trim());
       formData.append("body", body.trim());
       if (sourceUrl.trim()) formData.append("source_url", sourceUrl.trim());
-      if (sourceLabel.trim())
-        formData.append("source_label", sourceLabel.trim());
+      if (sourceLabel.trim()) formData.append("source_label", sourceLabel.trim());
       if (file) formData.append("file", file);
 
       const res = await fetch("/api/v1/news", {
@@ -83,16 +81,10 @@ export default function NewsPage() {
         resetForm();
       } else {
         const data = await res.json().catch(() => ({}));
-        setSubmitError(
-          data?.error?.message ||
-            data?.message ||
-            `Erro ao publicar (${res.status})`,
-        );
+        setSubmitError(data?.error?.message || data?.message || `Erro ao publicar (${res.status})`);
       }
     } catch {
-      setSubmitError(
-        "Erro de conexão. Verifique sua internet e tente novamente.",
-      );
+      setSubmitError("Erro de conexão. Verifique sua internet e tente novamente.");
     } finally {
       setSaving(false);
     }
@@ -112,20 +104,13 @@ export default function NewsPage() {
 
   return (
     <div className={styles.page}>
-      <SeoHead
-        title={PAGE_TITLE}
-        description={PAGE_DESCRIPTION}
-        canonical={PAGE_URL}
-      />
+      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} />
 
       <div className={styles.header}>
         <Heading as="h2" className={styles.headerTitle}>
           Notícias
         </Heading>
-        <p className={styles.headerDesc}>
-          Fique por dentro das últimas notícias, novidades e atualizações do
-          cenário indie brasileiro.
-        </p>
+        <p className={styles.headerDesc}>Fique por dentro das últimas notícias, novidades e atualizações do cenário indie brasileiro.</p>
       </div>
 
       {/* Criar notícia */}
@@ -145,12 +130,7 @@ export default function NewsPage() {
             <div className={styles.createCard}>
               <h3>Nova notícia</h3>
 
-              <input
-                className={styles.input}
-                placeholder="Título da notícia"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
+              <input className={styles.input} placeholder="Título da notícia" value={title} onChange={(e) => setTitle(e.target.value)} />
 
               <textarea
                 className={styles.textarea}
@@ -187,23 +167,11 @@ export default function NewsPage() {
               <div>
                 <label className={styles.fileInput}>
                   <ImageIcon size={14} /> Imagem de capa (opcional)
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    hidden
-                  />
+                  <input type="file" accept="image/*" onChange={handleFileChange} hidden />
                 </label>
                 {preview && (
                   <div className={styles.imagePreviewArea}>
-                    <Image
-                      src={preview}
-                      alt="Preview"
-                      className={styles.previewImage}
-                      width={300}
-                      height={200}
-                      unoptimized
-                    />
+                    <Image src={preview} alt="Preview" className={styles.previewImage} width={300} height={200} unoptimized />
                     <button
                       className={styles.removeImage}
                       onClick={() => {
@@ -217,21 +185,13 @@ export default function NewsPage() {
                 )}
               </div>
 
-              {submitError && (
-                <div className={styles.errorMessage}>{submitError}</div>
-              )}
+              {submitError && <div className={styles.errorMessage}>{submitError}</div>}
 
               <div className={styles.actions}>
                 <button className={styles.btnSecondary} onClick={resetForm}>
                   Cancelar
                 </button>
-                <button
-                  className={styles.btnPrimary}
-                  onClick={handleSubmit}
-                  disabled={
-                    saving || !title.trim() || !summary.trim() || !body.trim()
-                  }
-                >
+                <button className={styles.btnPrimary} onClick={handleSubmit} disabled={saving || !title.trim() || !summary.trim() || !body.trim()}>
                   {saving ? "Publicando..." : "Publicar notícia"}
                 </button>
               </div>

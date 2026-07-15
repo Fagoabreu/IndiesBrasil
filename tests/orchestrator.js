@@ -104,9 +104,7 @@ async function getLastEmail() {
     return null;
   }
 
-  const emailTextResponse = await fetch(
-    `${emailHttpUrl}/messages/${lastEmailItem.id}.plain`,
-  );
+  const emailTextResponse = await fetch(`${emailHttpUrl}/messages/${lastEmailItem.id}.plain`);
   const emailTextBody = await emailTextResponse.text();
   lastEmailItem.text = emailTextBody;
   return lastEmailItem;

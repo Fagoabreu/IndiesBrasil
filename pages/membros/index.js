@@ -70,11 +70,7 @@ export default function MembersPage() {
     setSearch(value);
     const term = value.toLowerCase();
 
-    const results = members.filter(
-      (u) =>
-        u.name?.toLowerCase().includes(term) ||
-        u.username?.toLowerCase().includes(term),
-    );
+    const results = members.filter((u) => u.name?.toLowerCase().includes(term) || u.username?.toLowerCase().includes(term));
 
     setFiltered(results);
   }
@@ -108,11 +104,7 @@ export default function MembersPage() {
 
   return (
     <div className={styles.page}>
-      <SeoHead
-        title={PAGE_TITLE}
-        description={PAGE_DESCRIPTION}
-        canonical={PAGE_URL}
-      />
+      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} />
 
       {/* PAGE HEADER */}
       <header className={styles.pageHeader}>
@@ -125,9 +117,7 @@ export default function MembersPage() {
               </span>
             )}
           </div>
-          <p className={styles.pageSubtitle}>
-            Conheça as pessoas que constroem jogos indie no Brasil.
-          </p>
+          <p className={styles.pageSubtitle}>Conheça as pessoas que constroem jogos indie no Brasil.</p>
 
           {tab === "all" && (
             <div className={styles.searchWrapper}>
@@ -144,11 +134,7 @@ export default function MembersPage() {
         </div>
 
         {user && (
-          <div
-            className={styles.feedTabs}
-            role="tablist"
-            aria-label="Filtros de membros"
-          >
+          <div className={styles.feedTabs} role="tablist" aria-label="Filtros de membros">
             <button
               type="button"
               role="tab"

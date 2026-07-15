@@ -103,13 +103,7 @@ export default function ProfileQrCode({ username, isOwnProfile }) {
       </div>
 
       <div className={styles.actions}>
-        <IconButton
-          icon={DownloadIcon}
-          aria-label="Baixar QR Code"
-          size="small"
-          variant="invisible"
-          onClick={handleDownload}
-        />
+        <IconButton icon={DownloadIcon} aria-label="Baixar QR Code" size="small" variant="invisible" onClick={handleDownload} />
         {isOwnProfile && (
           <IconButton
             icon={PencilIcon}
@@ -122,14 +116,7 @@ export default function ProfileQrCode({ username, isOwnProfile }) {
         )}
       </div>
 
-      {modalOpen && (
-        <QrCodeModal
-          value={profileUrl}
-          initialSettings={settings}
-          onSave={handleSave}
-          onClose={() => setModalOpen(false)}
-        />
-      )}
+      {modalOpen && <QrCodeModal value={profileUrl} initialSettings={settings} onSave={handleSave} onClose={() => setModalOpen(false)} />}
     </div>
   );
 }

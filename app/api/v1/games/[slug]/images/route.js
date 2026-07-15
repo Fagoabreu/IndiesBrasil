@@ -23,8 +23,7 @@ export async function POST(request, context) {
     const canEdit = await game.canEdit(gameData, requestUser.id);
     if (!canEdit) {
       throw new ForbiddenError({
-        message:
-          "Apenas administradores do estúdio podem alterar as imagens do jogo.",
+        message: "Apenas administradores do estúdio podem alterar as imagens do jogo.",
       });
     }
 
@@ -33,17 +32,11 @@ export async function POST(request, context) {
     const file = formData.get("file");
 
     if (!file) {
-      return Response.json(
-        { message: "Nenhum arquivo enviado." },
-        { status: 400 },
-      );
+      return Response.json({ message: "Nenhum arquivo enviado." }, { status: 400 });
     }
 
     if (!["cover", "banner"].includes(imgType)) {
-      return Response.json(
-        { message: "imgType inválido. Use 'cover' ou 'banner'." },
-        { status: 400 },
-      );
+      return Response.json({ message: "imgType inválido. Use 'cover' ou 'banner'." }, { status: 400 });
     }
 
     const folder = `games/${gameData.id}/${imgType}`;
@@ -61,10 +54,7 @@ export async function POST(request, context) {
     });
   } catch (err) {
     if (err.statusCode) {
-      return Response.json(
-        { message: err.message },
-        { status: err.statusCode },
-      );
+      return Response.json({ message: err.message }, { status: err.statusCode });
     }
     console.error(err);
     return Response.json({ message: "Erro interno." }, { status: 500 });

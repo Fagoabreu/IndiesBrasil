@@ -95,13 +95,7 @@
   bottom: 0;
   left: 220px;
   width: 12px;
-  background: linear-gradient(
-    to right,
-    rgba(0, 0, 0, 0.04) 0%,
-    transparent 30%,
-    transparent 70%,
-    rgba(0, 0, 0, 0.04) 100%
-  );
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.04) 0%, transparent 30%, transparent 70%, rgba(0, 0, 0, 0.04) 100%);
   pointer-events: none;
   z-index: 5;
 }
@@ -139,11 +133,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(
-    135deg,
-    var(--brand-secondary) 0%,
-    var(--brand-primary) 100%
-  );
+  background: linear-gradient(135deg, var(--brand-secondary) 0%, var(--brand-primary) 100%);
   font-size: 4rem;
   font-weight: 900;
   color: #fff;

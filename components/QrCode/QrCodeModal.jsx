@@ -13,24 +13,12 @@ import styles from "./QrCodeModal.module.css";
  * @param {function} onSave          - Chamado com o novo objeto settings ao salvar
  * @param {function} onClose         - Chamado ao fechar/cancelar
  */
-export default function QrCodeModal({
-  value,
-  initialSettings,
-  onSave,
-  onClose,
-}) {
-  const [settings, setSettings] = useState(
-    initialSettings ?? DEFAULT_QR_SETTINGS,
-  );
+export default function QrCodeModal({ value, initialSettings, onSave, onClose }) {
+  const [settings, setSettings] = useState(initialSettings ?? DEFAULT_QR_SETTINGS);
   const [logoFile, setLogoFile] = useState(null);
 
   return (
-    <Dialog
-      onDismiss={onClose}
-      onClose={onClose}
-      aria-labelledby="qr-modal-title"
-      wide
-    >
+    <Dialog onDismiss={onClose} onClose={onClose} aria-labelledby="qr-modal-title" wide>
       <Dialog.Header id="qr-modal-title">Personalizar QR Code</Dialog.Header>
 
       <div className={styles.body}>

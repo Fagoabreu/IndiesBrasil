@@ -27,10 +27,7 @@ function StarRating({ value }) {
   return (
     <span className={styles.stars} aria-label={`${value} de 5`}>
       {[1, 2, 3, 4, 5].map((s) => (
-        <span
-          key={s}
-          className={value >= s ? styles.starFilled : styles.starEmpty}
-        >
+        <span key={s} className={value >= s ? styles.starFilled : styles.starEmpty}>
           ★
         </span>
       ))}
@@ -108,9 +105,7 @@ export default function AnalisePage() {
         <meta name="description" content={analise.title} />
         <meta property="og:title" content={analise.title} />
         <meta property="og:type" content="article" />
-        {analise.cover_url && (
-          <meta property="og:image" content={analise.cover_url} />
-        )}
+        {analise.cover_url && <meta property="og:image" content={analise.cover_url} />}
       </Head>
 
       <article className={styles.page}>
@@ -120,10 +115,7 @@ export default function AnalisePage() {
           {analise.content_type && (
             <>
               <span> / </span>
-              <Link href={`/analises?content_type=${analise.content_type}`}>
-                {CONTENT_TYPE_LABELS[analise.content_type] ||
-                  analise.content_type}
-              </Link>
+              <Link href={`/analises?content_type=${analise.content_type}`}>{CONTENT_TYPE_LABELS[analise.content_type] || analise.content_type}</Link>
             </>
           )}
         </nav>
@@ -139,33 +131,20 @@ export default function AnalisePage() {
                   fill
                   sizes="80px"
                   className={styles.contentRefThumbImg}
-                  unoptimized={
-                    analise.content_cover_url.startsWith("data:") ||
-                    analise.content_cover_url.startsWith("blob:")
-                  }
+                  unoptimized={analise.content_cover_url.startsWith("data:") || analise.content_cover_url.startsWith("blob:")}
                 />
               ) : (
                 <span className={styles.contentRefThumbPlaceholder}>📦</span>
               )}
             </div>
             <div className={styles.contentRefInfo}>
-              <span className={styles.contentRefLabel}>
-                Esta análise é sobre
-              </span>
+              <span className={styles.contentRefLabel}>Esta análise é sobre</span>
               {analise.content_slug ? (
-                <Link
-                  href={getContentUrl(
-                    analise.content_type,
-                    analise.content_slug,
-                  )}
-                  className={styles.contentRefName}
-                >
+                <Link href={getContentUrl(analise.content_type, analise.content_slug)} className={styles.contentRefName}>
                   {analise.content_name}
                 </Link>
               ) : (
-                <span className={styles.contentRefName}>
-                  {analise.content_name}
-                </span>
+                <span className={styles.contentRefName}>{analise.content_name}</span>
               )}
             </div>
           </div>
@@ -175,10 +154,7 @@ export default function AnalisePage() {
         <header className={styles.articleHeader}>
           <div className={styles.headerTopRow}>
             <div className={styles.headerMain}>
-              <span className={styles.badge}>
-                {CONTENT_TYPE_LABELS[analise.content_type] ||
-                  analise.content_type}
-              </span>
+              <span className={styles.badge}>{CONTENT_TYPE_LABELS[analise.content_type] || analise.content_type}</span>
               <h1 className={styles.articleTitle}>{analise.title}</h1>
             </div>
 
@@ -202,16 +178,11 @@ export default function AnalisePage() {
                   width={36}
                   height={36}
                   className={styles.authorAvatar}
-                  unoptimized={
-                    analise.author_avatar_url.startsWith("data:") ||
-                    analise.author_avatar_url.startsWith("blob:")
-                  }
+                  unoptimized={analise.author_avatar_url.startsWith("data:") || analise.author_avatar_url.startsWith("blob:")}
                 />
               )}
               <div className={styles.authorText}>
-                <span className={styles.authorName}>
-                  Por {analise.author_username}
-                </span>
+                <span className={styles.authorName}>Por {analise.author_username}</span>
                 <span className={styles.publishDate}>
                   {new Date(analise.published_at).toLocaleDateString("pt-BR", {
                     day: "numeric",
@@ -227,17 +198,10 @@ export default function AnalisePage() {
         {/* Author actions */}
         {isAuthor && (
           <div className={styles.authorActions}>
-            <Link
-              href={`/analises/novo?edit=${analise.slug}`}
-              className={styles.btnEdit}
-            >
+            <Link href={`/analises/novo?edit=${analise.slug}`} className={styles.btnEdit}>
               ✏️ Editar análise
             </Link>
-            <button
-              type="button"
-              onClick={handleDelete}
-              className={styles.btnDelete}
-            >
+            <button type="button" onClick={handleDelete} className={styles.btnDelete}>
               🗑️ Excluir
             </button>
           </div>
@@ -253,10 +217,7 @@ export default function AnalisePage() {
               priority
               sizes="(max-width: 768px) 100vw, 860px"
               className={styles.coverHeroImg}
-              unoptimized={
-                analise.cover_url.startsWith("data:") ||
-                analise.cover_url.startsWith("blob:")
-              }
+              unoptimized={analise.cover_url.startsWith("data:") || analise.cover_url.startsWith("blob:")}
             />
           </div>
         )}
@@ -269,8 +230,7 @@ export default function AnalisePage() {
         </div>
 
         {/* Points */}
-        {(analise.positive_points?.length > 0 ||
-          analise.negative_points?.length > 0) && (
+        {(analise.positive_points?.length > 0 || analise.negative_points?.length > 0) && (
           <div className={styles.pointsGrid}>
             {analise.positive_points?.length > 0 && (
               <div className={styles.pointsBox}>
@@ -299,21 +259,11 @@ export default function AnalisePage() {
         <footer className={styles.authorFooter}>
           <div className={styles.authorFooterInner}>
             {analise.author_avatar_url && (
-              <Image
-                src={analise.author_avatar_url}
-                alt={analise.author_username}
-                width={64}
-                height={64}
-                className={styles.authorFooterAvatar}
-              />
+              <Image src={analise.author_avatar_url} alt={analise.author_username} width={64} height={64} className={styles.authorFooterAvatar} />
             )}
             <div>
-              <p className={styles.authorFooterName}>
-                {analise.author_username}
-              </p>
-              {analise.author_bio && (
-                <p className={styles.authorFooterBio}>{analise.author_bio}</p>
-              )}
+              <p className={styles.authorFooterName}>{analise.author_username}</p>
+              {analise.author_bio && <p className={styles.authorFooterBio}>{analise.author_bio}</p>}
             </div>
           </div>
         </footer>
@@ -326,9 +276,7 @@ function SectionRenderer({ section, index }) {
   if (section.type === "text") {
     return (
       <section className={styles.textSection}>
-        {section.subtitle && (
-          <h2 className={styles.sectionSubtitle}>{section.subtitle}</h2>
-        )}
+        {section.subtitle && <h2 className={styles.sectionSubtitle}>{section.subtitle}</h2>}
         <div
           className={styles.sectionContent}
           dangerouslySetInnerHTML={{ __html: section.content }}
@@ -341,15 +289,10 @@ function SectionRenderer({ section, index }) {
   if (section.type === "image") {
     return (
       <section className={styles.imageSection}>
-        {section.subtitle && (
-          <h2 className={styles.sectionSubtitle}>{section.subtitle}</h2>
-        )}
+        {section.subtitle && <h2 className={styles.sectionSubtitle}>{section.subtitle}</h2>}
         <div className={styles.sectionImageWrap}>
           <Image
-            src={
-              section.image_url ||
-              `/api/v1/uploaded-images/${section.image_id}/url`
-            }
+            src={section.image_url || `/api/v1/uploaded-images/${section.image_id}/url`}
             alt={section.subtitle || `Imagem ${index + 1}`}
             fill
             sizes="(max-width: 768px) 100vw, 800px"
@@ -363,16 +306,9 @@ function SectionRenderer({ section, index }) {
   if (section.type === "video") {
     return (
       <section className={styles.videoSection}>
-        {section.subtitle && (
-          <h2 className={styles.sectionSubtitle}>{section.subtitle}</h2>
-        )}
+        {section.subtitle && <h2 className={styles.sectionSubtitle}>{section.subtitle}</h2>}
         <div className={styles.videoWrapper}>
-          <iframe
-            src={section.embed_url}
-            title={section.subtitle || `Vídeo ${index + 1}`}
-            allowFullScreen
-            className={styles.videoIframe}
-          />
+          <iframe src={section.embed_url} title={section.subtitle || `Vídeo ${index + 1}`} allowFullScreen className={styles.videoIframe} />
         </div>
       </section>
     );

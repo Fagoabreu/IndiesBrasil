@@ -90,11 +90,7 @@ exports.up = (pgm) => {
     mechanic: { type: "varchar(60)", notNull: true },
   });
 
-  pgm.addConstraint(
-    "boardgame_mechanics",
-    "boardgame_mechanics_pkey",
-    "PRIMARY KEY (boardgame_id, mechanic)",
-  );
+  pgm.addConstraint("boardgame_mechanics", "boardgame_mechanics_pkey", "PRIMARY KEY (boardgame_id, mechanic)");
 
   /* ---------------------------------------------------------------
    * 3. boardgame_followers
@@ -119,11 +115,7 @@ exports.up = (pgm) => {
     },
   });
 
-  pgm.addConstraint(
-    "boardgame_followers",
-    "boardgame_followers_pkey",
-    "PRIMARY KEY (boardgame_id, follower_id)",
-  );
+  pgm.addConstraint("boardgame_followers", "boardgame_followers_pkey", "PRIMARY KEY (boardgame_id, follower_id)");
 };
 
 exports.down = (pgm) => {

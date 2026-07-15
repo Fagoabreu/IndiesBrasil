@@ -99,12 +99,8 @@ export default function EditarEventoPage() {
         country: "Brasil",
       },
     );
-    setStartsAt(
-      ev.is_all_day ? toDateOnly(ev.starts_at) : toDatetimeLocal(ev.starts_at),
-    );
-    setEndsAt(
-      ev.is_all_day ? toDateOnly(ev.ends_at) : toDatetimeLocal(ev.ends_at),
-    );
+    setStartsAt(ev.is_all_day ? toDateOnly(ev.starts_at) : toDatetimeLocal(ev.starts_at));
+    setEndsAt(ev.is_all_day ? toDateOnly(ev.ends_at) : toDatetimeLocal(ev.ends_at));
     setCurrentBannerUrl(ev.banner_url || null);
   }, []);
 
@@ -197,11 +193,7 @@ export default function EditarEventoPage() {
       setError("O título é obrigatório.");
       return;
     }
-    if (
-      isAllDay
-        ? new Date(endsAt) < new Date(startsAt)
-        : new Date(endsAt) <= new Date(startsAt)
-    ) {
+    if (isAllDay ? new Date(endsAt) < new Date(startsAt) : new Date(endsAt) <= new Date(startsAt)) {
       setError("A data de término deve ser posterior à data de início.");
       return;
     }
@@ -216,8 +208,7 @@ export default function EditarEventoPage() {
       is_all_day: isAllDay,
       is_online: isOnline,
       online_url: isOnline && onlineUrl.trim() ? onlineUrl.trim() : null,
-      location_name:
-        !isOnline && locationName.trim() ? locationName.trim() : null,
+      location_name: !isOnline && locationName.trim() ? locationName.trim() : null,
       location_url: !isOnline && locationUrl.trim() ? locationUrl.trim() : null,
       address: !isOnline && address.city ? address : null,
     };
@@ -271,10 +262,7 @@ export default function EditarEventoPage() {
 
   return (
     <>
-      <SeoHead
-        title="Editar Evento — Agenda Indies Brasil"
-        description="Edite as informações do evento."
-      />
+      <SeoHead title="Editar Evento — Agenda Indies Brasil" description="Edite as informações do evento." />
 
       <div className={styles.pageWrapper}>
         <Link href={`/agenda/${id}`} className={styles.backLink}>
@@ -320,41 +308,19 @@ export default function EditarEventoPage() {
           <div className={styles.field}>
             <label className={styles.label}>Imagem de Capa</label>
 
-            <input
-              ref={bannerFileInputRef}
-              type="file"
-              accept="image/*"
-              className={styles.hiddenInput}
-              onChange={handleBannerFileChange}
-            />
+            <input ref={bannerFileInputRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={handleBannerFileChange} />
 
             {currentBannerUrl && (
               <div className={styles.bannerPreviewWrap}>
-                <Image
-                  src={currentBannerUrl}
-                  alt="Capa do evento"
-                  fill
-                  className={styles.bannerImg}
-                  sizes="700px"
-                />
-                <button
-                  type="button"
-                  className={styles.removeBannerBtn}
-                  onClick={handleRemoveBanner}
-                  disabled={bannerLoading}
-                >
+                <Image src={currentBannerUrl} alt="Capa do evento" fill className={styles.bannerImg} sizes="700px" />
+                <button type="button" className={styles.removeBannerBtn} onClick={handleRemoveBanner} disabled={bannerLoading}>
                   {bannerLoading ? "..." : "Remover"}
                 </button>
               </div>
             )}
 
             <div className={styles.bannerControls}>
-              <button
-                type="button"
-                className={styles.bannerBtn}
-                onClick={() => bannerFileInputRef.current?.click()}
-                disabled={bannerLoading}
-              >
+              <button type="button" className={styles.bannerBtn} onClick={() => bannerFileInputRef.current?.click()} disabled={bannerLoading}>
                 {currentBannerUrl ? "Alterar arquivo" : "Upload de arquivo"}
               </button>
               <div className={styles.bannerInputGroup}>
@@ -366,20 +332,13 @@ export default function EditarEventoPage() {
                   placeholder="ou cole um link de imagem..."
                   disabled={bannerLoading}
                 />
-                <button
-                  type="button"
-                  className={styles.bannerBtn}
-                  onClick={handleSetBannerUrl}
-                  disabled={!bannerUrlInput.trim() || bannerLoading}
-                >
+                <button type="button" className={styles.bannerBtn} onClick={handleSetBannerUrl} disabled={!bannerUrlInput.trim() || bannerLoading}>
                   Usar link
                 </button>
               </div>
             </div>
 
-            <span className={styles.hint}>
-              Opcional — imagem exibida no topo da página do evento.
-            </span>
+            <span className={styles.hint}>Opcional — imagem exibida no topo da página do evento.</span>
           </div>
 
           {/* Tipo e Visibilidade */}
@@ -388,12 +347,7 @@ export default function EditarEventoPage() {
               <label className={styles.label} htmlFor="eventType">
                 Tipo <span className={styles.required}>*</span>
               </label>
-              <select
-                id="eventType"
-                className={styles.select}
-                value={eventType}
-                onChange={(e) => setEventType(e.target.value)}
-              >
+              <select id="eventType" className={styles.select} value={eventType} onChange={(e) => setEventType(e.target.value)}>
                 {EVENT_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>
                     {t.label}
@@ -406,12 +360,7 @@ export default function EditarEventoPage() {
               <label className={styles.label} htmlFor="visibility">
                 Visibilidade
               </label>
-              <select
-                id="visibility"
-                className={styles.select}
-                value={visibility}
-                onChange={(e) => setVisibility(e.target.value)}
-              >
+              <select id="visibility" className={styles.select} value={visibility} onChange={(e) => setVisibility(e.target.value)}>
                 {VISIBILITY_OPTIONS.map((v) => (
                   <option key={v.value} value={v.value}>
                     {v.label}
@@ -425,11 +374,7 @@ export default function EditarEventoPage() {
           <p className={styles.sectionTitle}>Data e Horário</p>
 
           <label className={styles.checkboxField}>
-            <input
-              type="checkbox"
-              checked={isAllDay}
-              onChange={(e) => setIsAllDay(e.target.checked)}
-            />
+            <input type="checkbox" checked={isAllDay} onChange={(e) => setIsAllDay(e.target.checked)} />
             <span className={styles.checkboxLabel}>Evento de dia inteiro</span>
           </label>
 
@@ -467,11 +412,7 @@ export default function EditarEventoPage() {
           <p className={styles.sectionTitle}>Local</p>
 
           <label className={styles.checkboxField}>
-            <input
-              type="checkbox"
-              checked={isOnline}
-              onChange={(e) => setIsOnline(e.target.checked)}
-            />
+            <input type="checkbox" checked={isOnline} onChange={(e) => setIsOnline(e.target.checked)} />
             <span className={styles.checkboxLabel}>Evento online</span>
           </label>
 
@@ -525,11 +466,7 @@ export default function EditarEventoPage() {
               <p className={styles.sectionTitle} style={{ marginTop: 8 }}>
                 Endereço
               </p>
-              <AddressFormFields
-                value={address}
-                onChange={(f, v) => setAddress((p) => ({ ...p, [f]: v }))}
-                disabled={submitting}
-              />
+              <AddressFormFields value={address} onChange={(f, v) => setAddress((p) => ({ ...p, [f]: v }))} disabled={submitting} />
             </>
           )}
 
@@ -537,11 +474,7 @@ export default function EditarEventoPage() {
             <Link href={`/agenda/${id}`} className={styles.cancelBtn}>
               Cancelar
             </Link>
-            <button
-              type="submit"
-              className={styles.submitBtn}
-              disabled={submitting}
-            >
+            <button type="submit" className={styles.submitBtn} disabled={submitting}>
               {submitting ? <Spinner size="small" /> : "Salvar Alterações"}
             </button>
           </div>

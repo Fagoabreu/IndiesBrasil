@@ -42,9 +42,7 @@ async function getRandomItems(table, nameField) {
         t.slug,
         t.short_description,
         ${
-          table === "books"
-            ? `COALESCE(ui_cover.secure_url, t.cover_url_external)`
-            : `COALESCE(ui_ban.secure_url, ui_cover.secure_url)`
+          table === "books" ? `COALESCE(ui_cover.secure_url, t.cover_url_external)` : `COALESCE(ui_ban.secure_url, ui_cover.secure_url)`
         } AS banner_url,
         o.name AS studio_name,
         o.slug AS studio_slug,

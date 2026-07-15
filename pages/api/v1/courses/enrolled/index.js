@@ -15,11 +15,7 @@ async function getHandler(request, response) {
 
   if (search) {
     const q = search.toLowerCase();
-    const filtered = enrolled.filter(
-      (c) =>
-        c.title?.toLowerCase().includes(q) ||
-        c.description?.toLowerCase().includes(q),
-    );
+    const filtered = enrolled.filter((c) => c.title?.toLowerCase().includes(q) || c.description?.toLowerCase().includes(q));
     return response.status(200).json(filtered);
   }
 

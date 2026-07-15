@@ -32,10 +32,7 @@ async function postHandler(request, response) {
   const buffer = Buffer.from(match[2], "base64");
   const blob = new Blob([buffer], { type: `image/${match[1]}` });
 
-  const uploadedImage = await uploadedImages.uploadImage(
-    blob,
-    `courses/${slug}`,
-  );
+  const uploadedImage = await uploadedImages.uploadImage(blob, `courses/${slug}`);
   await course.updateCoverImage(slug, requestUser.id, uploadedImage.id);
 
   return response.status(200).json({

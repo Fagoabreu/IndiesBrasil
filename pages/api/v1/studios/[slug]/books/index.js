@@ -28,8 +28,7 @@ async function postHandler(request, response) {
 
   if (!isAdmin && !isOwner) {
     throw new ForbiddenError({
-      message:
-        "Apenas administradores do estúdio podem criar livros/quadrinhos.",
+      message: "Apenas administradores do estúdio podem criar livros/quadrinhos.",
     });
   }
 

@@ -31,8 +31,7 @@ export async function POST(request, { params }) {
     if (!authorization.can(user, "create:news:comment")) {
       throw new ForbiddenError({
         message: "Você não possui permissão para comentar.",
-        action:
-          'Verifique se o seu usuário possui a feature "create:news:comment".',
+        action: 'Verifique se o seu usuário possui a feature "create:news:comment".',
       });
     }
 
@@ -41,10 +40,7 @@ export async function POST(request, { params }) {
     const content = body.content;
 
     if (!content || !content.trim()) {
-      return Response.json(
-        { error: "Conteúdo é obrigatório." },
-        { status: 400 },
-      );
+      return Response.json({ error: "Conteúdo é obrigatório." }, { status: 400 });
     }
 
     const comment = await news.createComment(id, user.id, content.trim());

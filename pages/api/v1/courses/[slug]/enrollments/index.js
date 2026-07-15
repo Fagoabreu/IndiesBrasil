@@ -60,9 +60,7 @@ async function postHandler(request, response) {
 
     return response.status(201).json({
       enrolled,
-      message: enrolled
-        ? "Inscrito no curso com sucesso."
-        : "Já estava inscrito neste curso.",
+      message: enrolled ? "Inscrito no curso com sucesso." : "Já estava inscrito neste curso.",
     });
   } catch (error) {
     if (error.name === "NotFoundError") {
@@ -103,9 +101,7 @@ async function deleteHandler(request, response) {
 
     return response.status(200).json({
       unenrolled,
-      message: unenrolled
-        ? "Desinscrito do curso com sucesso."
-        : "Você não estava inscrito neste curso.",
+      message: unenrolled ? "Desinscrito do curso com sucesso." : "Você não estava inscrito neste curso.",
     });
   } catch (error) {
     if (error.name === "NotFoundError") {

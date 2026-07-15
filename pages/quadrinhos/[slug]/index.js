@@ -99,10 +99,7 @@ export default function BookPage() {
     <>
       <Head>
         <title>{bookData.title} — Indies Brasil</title>
-        <meta
-          name="description"
-          content={bookData.short_description || bookData.title}
-        />
+        <meta name="description" content={bookData.short_description || bookData.title} />
       </Head>
 
       <div className={styles.page}>
@@ -119,14 +116,7 @@ export default function BookPage() {
             {/* Cover portrait */}
             <div className={styles.heroCoverWrap}>
               {bookData.cover_url ? (
-                <Image
-                  src={bookData.cover_url}
-                  alt={bookData.title}
-                  width={220}
-                  height={330}
-                  className={styles.heroCoverImg}
-                  unoptimized
-                />
+                <Image src={bookData.cover_url} alt={bookData.title} width={220} height={330} className={styles.heroCoverImg} unoptimized />
               ) : (
                 <div className={styles.coverPlaceholder}>
                   <span>{bookData.title[0]}</span>
@@ -137,14 +127,8 @@ export default function BookPage() {
             {/* Info panel */}
             <div className={styles.heroInfo}>
               <h1 className={styles.heroTitle}>{bookData.title}</h1>
-              {bookData.subtitle && (
-                <p className={styles.heroSubtitle}>{bookData.subtitle}</p>
-              )}
-              {bookData.short_description && (
-                <p className={styles.heroTagline}>
-                  {bookData.short_description}
-                </p>
-              )}
+              {bookData.subtitle && <p className={styles.heroSubtitle}>{bookData.subtitle}</p>}
+              {bookData.short_description && <p className={styles.heroTagline}>{bookData.short_description}</p>}
 
               <hr className={styles.heroDivider} />
 
@@ -160,9 +144,7 @@ export default function BookPage() {
                 {bookData.publisher && (
                   <div className={styles.heroMetaRow}>
                     <dt className={styles.heroMetaLabel}>Editora</dt>
-                    <dd className={styles.heroMetaValue}>
-                      {bookData.publisher}
-                    </dd>
+                    <dd className={styles.heroMetaValue}>{bookData.publisher}</dd>
                   </div>
                 )}
                 {bookData.pages && (
@@ -180,19 +162,14 @@ export default function BookPage() {
                 {bookData.language && (
                   <div className={styles.heroMetaRow}>
                     <dt className={styles.heroMetaLabel}>Idioma</dt>
-                    <dd className={styles.heroMetaValue}>
-                      {bookData.language}
-                    </dd>
+                    <dd className={styles.heroMetaValue}>{bookData.language}</dd>
                   </div>
                 )}
                 {bookData.release_date && (
                   <div className={styles.heroMetaRow}>
                     <dt className={styles.heroMetaLabel}>Lançamento</dt>
                     <dd className={styles.heroMetaValue}>
-                      {new Date(bookData.release_date).toLocaleDateString(
-                        "pt-BR",
-                        { year: "numeric", month: "long" },
-                      )}
+                      {new Date(bookData.release_date).toLocaleDateString("pt-BR", { year: "numeric", month: "long" })}
                     </dd>
                   </div>
                 )}
@@ -201,10 +178,7 @@ export default function BookPage() {
                     <dt className={styles.heroMetaLabel}>Estúdio</dt>
                     <dd className={styles.heroMetaValue}>
                       {bookData.studio_slug ? (
-                        <Link
-                          href={`/estudios/${bookData.studio_slug}`}
-                          className={styles.heroMetaLink}
-                        >
+                        <Link href={`/estudios/${bookData.studio_slug}`} className={styles.heroMetaLink}>
                           {bookData.studio_name}
                         </Link>
                       ) : (
@@ -217,49 +191,28 @@ export default function BookPage() {
 
               {/* Actions */}
               <div className={styles.heroActions}>
-                <button
-                  type="button"
-                  className={following ? styles.btnUnfollow : styles.btnFollow}
-                  onClick={handleFollow}
-                  disabled={followLoading}
-                >
+                <button type="button" className={following ? styles.btnUnfollow : styles.btnFollow} onClick={handleFollow} disabled={followLoading}>
                   {getFollowLabel(followLoading, following)}
                 </button>
 
-                <Link
-                  href={`/analises/novo?tipo=book&content_id=${bookData.id}`}
-                  className={styles.btnAnalise}
-                >
+                <Link href={`/analises/novo?tipo=book&content_id=${bookData.id}`} className={styles.btnAnalise}>
                   📝 Criar Análise
                 </Link>
 
                 {bookData.buy_url && (
-                  <a
-                    href={bookData.buy_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.btnBuy}
-                  >
+                  <a href={bookData.buy_url} target="_blank" rel="noopener noreferrer" className={styles.btnBuy}>
                     Onde comprar
                   </a>
                 )}
 
                 {bookData.website_url && (
-                  <a
-                    href={bookData.website_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.btnWebsite}
-                  >
+                  <a href={bookData.website_url} target="_blank" rel="noopener noreferrer" className={styles.btnWebsite}>
                     Site oficial
                   </a>
                 )}
 
                 {bookData.viewer?.canEdit && (
-                  <Link
-                    href={`/estudios/${bookData.studio_slug}/configuracoes`}
-                    className={styles.btnEdit}
-                  >
+                  <Link href={`/estudios/${bookData.studio_slug}/configuracoes`} className={styles.btnEdit}>
                     Editar
                   </Link>
                 )}
@@ -294,12 +247,7 @@ export default function BookPage() {
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>PDF</h2>
               <div className={styles.pdfCard}>
-                <a
-                  href={bookData.pdf_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.pdfLink}
-                >
+                <a href={bookData.pdf_url} target="_blank" rel="noopener noreferrer" className={styles.pdfLink}>
                   <span className={styles.pdfIcon}>📄</span>
                   <span className={styles.pdfLabel}>Ler / Baixar PDF</span>
                   <span className={styles.pdfArrow}>→</span>
@@ -309,35 +257,23 @@ export default function BookPage() {
           )}
 
           {/* Stores */}
-          {Array.isArray(bookData.store_pages) &&
-            bookData.store_pages.length > 0 && (
-              <section className={styles.section}>
-                <h2 className={styles.sectionTitle}>Onde comprar</h2>
-                <ul className={styles.storeList}>
-                  {bookData.store_pages.map((sp) => (
-                    <li key={sp.id} className={styles.storeItem}>
-                      <a
-                        href={sp.page_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.storeLink}
-                      >
-                        <span className={styles.storeName}>
-                          {sp.store_name || `Loja #${sp.store_type_id}`}
-                        </span>
-                        {sp.price != null && (
-                          <span className={styles.storePrice}>
-                            {Number(sp.price) === 0
-                              ? "Grátis"
-                              : `R$ ${Number(sp.price).toFixed(2)}`}
-                          </span>
-                        )}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
+          {Array.isArray(bookData.store_pages) && bookData.store_pages.length > 0 && (
+            <section className={styles.section}>
+              <h2 className={styles.sectionTitle}>Onde comprar</h2>
+              <ul className={styles.storeList}>
+                {bookData.store_pages.map((sp) => (
+                  <li key={sp.id} className={styles.storeItem}>
+                    <a href={sp.page_url} target="_blank" rel="noopener noreferrer" className={styles.storeLink}>
+                      <span className={styles.storeName}>{sp.store_name || `Loja #${sp.store_type_id}`}</span>
+                      {sp.price != null && (
+                        <span className={styles.storePrice}>{Number(sp.price) === 0 ? "Grátis" : `R$ ${Number(sp.price).toFixed(2)}`}</span>
+                      )}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
         </div>
       </div>
     </>

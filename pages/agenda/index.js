@@ -3,20 +3,14 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Spinner } from "@primer/react";
-import {
-  CalendarIcon,
-  PlusIcon,
-  LocationIcon,
-  BroadcastIcon,
-} from "@primer/octicons-react";
+import { CalendarIcon, PlusIcon, LocationIcon, BroadcastIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL } from "@/lib/seo";
 import styles from "./index.module.css";
 
 const PAGE_TITLE = "Agenda — Indies Brasil";
-const PAGE_DESCRIPTION =
-  "Eventos da comunidade indie brasileira: game jams, lançamentos, reuniões, maratonas de stream e mais.";
+const PAGE_DESCRIPTION = "Eventos da comunidade indie brasileira: game jams, lançamentos, reuniões, maratonas de stream e mais.";
 const PAGE_URL = `${SITE_URL}/agenda`;
 
 const TYPE_LABELS = {
@@ -37,34 +31,8 @@ const FILTERS = [
   { value: "general", label: "Gerais" },
 ];
 
-const PT_MONTHS = [
-  "Janeiro",
-  "Fevereiro",
-  "Março",
-  "Abril",
-  "Maio",
-  "Junho",
-  "Julho",
-  "Agosto",
-  "Setembro",
-  "Outubro",
-  "Novembro",
-  "Dezembro",
-];
-const PT_MONTHS_SHORT = [
-  "jan",
-  "fev",
-  "mar",
-  "abr",
-  "mai",
-  "jun",
-  "jul",
-  "ago",
-  "set",
-  "out",
-  "nov",
-  "dez",
-];
+const PT_MONTHS = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+const PT_MONTHS_SHORT = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 
 function formatTime(dateStr) {
   const d = new Date(dateStr);
@@ -103,12 +71,9 @@ export default function AgendaPage() {
         const from = new Date(year, month, 1).toISOString();
         const to = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
         const typeParam = filter ? `&type=${filter}` : "";
-        const res = await fetch(
-          `/api/v1/events?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}${typeParam}`,
-          {
-            credentials: "include",
-          },
-        );
+        const res = await fetch(`/api/v1/events?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}${typeParam}`, {
+          credentials: "include",
+        });
         const data = await res.json();
         if (!cancelled) setEvents(Array.isArray(data) ? data : []);
       } catch {
@@ -147,11 +112,7 @@ export default function AgendaPage() {
 
   return (
     <>
-      <SeoHead
-        title={PAGE_TITLE}
-        description={PAGE_DESCRIPTION}
-        url={PAGE_URL}
-      />
+      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} url={PAGE_URL} />
 
       <div className={styles.pageWrapper}>
         {/* Cabeçalho */}
@@ -206,11 +167,7 @@ export default function AgendaPage() {
               Nenhum evento encontrado para {PT_MONTHS[month]} de {year}.
             </p>
             {user && (
-              <Link
-                href="/agenda/criar"
-                className={styles.createBtn}
-                style={{ marginTop: 16, display: "inline-flex" }}
-              >
+              <Link href="/agenda/criar" className={styles.createBtn} style={{ marginTop: 16, display: "inline-flex" }}>
                 <PlusIcon size={14} /> Criar o primeiro evento
               </Link>
             )}
@@ -221,44 +178,24 @@ export default function AgendaPage() {
             {days.map(({ date, items }) => (
               <div key={date.toDateString()}>
                 {items.map((ev) => (
-                  <Link
-                    key={ev.instance_id}
-                    href={`/agenda/${ev.event_id}`}
-                    className={styles.eventCard}
-                  >
+                  <Link key={ev.instance_id} href={`/agenda/${ev.event_id}`} className={styles.eventCard}>
                     {/* Data */}
                     <div className={styles.dateBadge}>
                       <span className={styles.dateDay}>{date.getDate()}</span>
-                      <span className={styles.dateMonth}>
-                        {PT_MONTHS_SHORT[date.getMonth()]}
-                      </span>
+                      <span className={styles.dateMonth}>{PT_MONTHS_SHORT[date.getMonth()]}</span>
                     </div>
 
                     {/* Corpo */}
                     <div className={styles.eventBody}>
                       <div className={styles.eventTop}>
-                        <span
-                          className={`${styles.typeBadge} ${styles[ev.event_type]}`}
-                        >
-                          {TYPE_LABELS[ev.event_type] ?? ev.event_type}
-                        </span>
-                        {ev.visibility === "private" && (
-                          <span className={styles.privateBadge}>
-                            🔒 Privado
-                          </span>
-                        )}
+                        <span className={`${styles.typeBadge} ${styles[ev.event_type]}`}>{TYPE_LABELS[ev.event_type] ?? ev.event_type}</span>
+                        {ev.visibility === "private" && <span className={styles.privateBadge}>🔒 Privado</span>}
                       </div>
 
-                      <h2 className={styles.eventTitle}>
-                        {ev.override_title || ev.title}
-                      </h2>
+                      <h2 className={styles.eventTitle}>{ev.override_title || ev.title}</h2>
 
                       <div className={styles.eventMeta}>
-                        {!ev.is_all_day && (
-                          <span className={styles.metaItem}>
-                            🕐 {formatDateRange(ev.starts_at, ev.ends_at)}
-                          </span>
-                        )}
+                        {!ev.is_all_day && <span className={styles.metaItem}>🕐 {formatDateRange(ev.starts_at, ev.ends_at)}</span>}
                         {ev.is_online && (
                           <span className={styles.onlineBadge}>
                             <BroadcastIcon size={12} /> Online
@@ -269,17 +206,12 @@ export default function AgendaPage() {
                             <LocationIcon size={12} /> {ev.location_name}
                           </span>
                         )}
-                        <span className={styles.metaItem}>
-                          por @{ev.organizer_username}
-                        </span>
+                        <span className={styles.metaItem}>por @{ev.organizer_username}</span>
                       </div>
 
                       {ev.rsvp_going > 0 && (
                         <span className={styles.rsvpCount}>
-                          <span className={styles.rsvpCountGoing}>
-                            {ev.rsvp_going}
-                          </span>{" "}
-                          confirmado{ev.rsvp_going === 1 ? "" : "s"}
+                          <span className={styles.rsvpCountGoing}>{ev.rsvp_going}</span> confirmado{ev.rsvp_going === 1 ? "" : "s"}
                         </span>
                       )}
                     </div>
@@ -287,13 +219,7 @@ export default function AgendaPage() {
                     {/* Banner */}
                     {ev.banner_url && (
                       <div className={styles.eventBanner}>
-                        <Image
-                          src={ev.banner_url}
-                          alt=""
-                          fill
-                          className={styles.bannerThumb}
-                          sizes="300px"
-                        />
+                        <Image src={ev.banner_url} alt="" fill className={styles.bannerThumb} sizes="300px" />
                       </div>
                     )}
                   </Link>

@@ -37,34 +37,11 @@
 
   /* Backgrounds */
   --brand-ambient-bg:
-    radial-gradient(
-      ellipse 70% 100% at 5% 50%,
-      rgba(139, 92, 246, 0.06),
-      transparent
-    ),
-    radial-gradient(
-      ellipse 55% 80% at 95% 20%,
-      rgba(232, 121, 184, 0.04),
-      transparent
-    ),
-    var(--bgColor-default);
-  --brand-empty-bg:
-    radial-gradient(
-      ellipse 80% 60% at 50% 50%,
-      rgba(139, 92, 246, 0.03),
-      transparent
-    ),
-    var(--bgColor-default);
-  --brand-icon-bg: linear-gradient(
-    135deg,
-    rgba(139, 92, 246, 0.08),
-    rgba(232, 121, 184, 0.06)
-  );
-  --brand-active-bg: linear-gradient(
-    135deg,
-    rgba(139, 92, 246, 0.09),
-    rgba(232, 121, 184, 0.06)
-  );
+    radial-gradient(ellipse 70% 100% at 5% 50%, rgba(139, 92, 246, 0.06), transparent),
+    radial-gradient(ellipse 55% 80% at 95% 20%, rgba(232, 121, 184, 0.04), transparent), var(--bgColor-default);
+  --brand-empty-bg: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(139, 92, 246, 0.03), transparent), var(--bgColor-default);
+  --brand-icon-bg: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(232, 121, 184, 0.06));
+  --brand-active-bg: linear-gradient(135deg, rgba(139, 92, 246, 0.09), rgba(232, 121, 184, 0.06));
 
   /* Borders */
   --brand-empty-border: 1px dashed rgba(139, 92, 246, 0.22);
@@ -217,13 +194,8 @@ body {
   height: 100dvh;
   overflow: hidden;
   background:
-    radial-gradient(
-      circle at 0% 0%,
-      var(--bgColor-accent-muted),
-      transparent 28%
-    ),
-    radial-gradient(circle at 100% 100%, var(--bgColor-muted), transparent 22%),
-    var(--bgColor-inset);
+    radial-gradient(circle at 0% 0%, var(--bgColor-accent-muted), transparent 28%),
+    radial-gradient(circle at 100% 100%, var(--bgColor-muted), transparent 22%), var(--bgColor-inset);
   color: var(--fgColor-default);
   transition:
     background-color 0.25s ease,

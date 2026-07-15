@@ -17,38 +17,16 @@ async function getHandler(request, response) {
 
   const studio = await organization.findBySlug(slug);
 
-  const isFollowing = requestUser.id
-    ? await organization.isFollowing(studio.id, requestUser.id)
-    : false;
-  const isMember = requestUser.id
-    ? await organization.isMember(studio.id, requestUser.id)
-    : false;
-  const isAdmin = requestUser.id
-    ? await organization.isAdmin(studio.id, requestUser.id)
-    : false;
+  const isFollowing = requestUser.id ? await organization.isFollowing(studio.id, requestUser.id) : false;
+  const isMember = requestUser.id ? await organization.isMember(studio.id, requestUser.id) : false;
+  const isAdmin = requestUser.id ? await organization.isAdmin(studio.id, requestUser.id) : false;
   const isOwner = requestUser.id === studio.owner_id;
-  const pendingInvitation =
-    requestUser.id && !isMember
-      ? await organization.findPendingInvitationForUser(
-          studio.id,
-          requestUser.id,
-        )
-      : null;
+  const pendingInvitation = requestUser.id && !isMember ? await organization.findPendingInvitationForUser(studio.id, requestUser.id) : null;
   const members = await organization.findMembers(studio.id);
   const contacts = await organization.findContacts(studio.id);
 
   // Agrupar campos de endereço em objeto aninhado (vêm como colunas planas do JOIN)
-  const {
-    street,
-    number,
-    complement,
-    neighborhood,
-    city,
-    state,
-    zip_code,
-    country,
-    ...studioData
-  } = studio;
+  const { street, number, complement, neighborhood, city, state, zip_code, country, ...studioData } = studio;
   const address =
     city || street
       ? {
@@ -78,9 +56,7 @@ async function updateHandler(request, response) {
 
   const studio = await organization.findBySlug(slug);
 
-  const canEdit =
-    studio.owner_id === requestUser.id ||
-    (await organization.isAdmin(studio.id, requestUser.id));
+  const canEdit = studio.owner_id === requestUser.id || (await organization.isAdmin(studio.id, requestUser.id));
 
   if (!canEdit) {
     throw new ForbiddenError({
@@ -91,17 +67,7 @@ async function updateHandler(request, response) {
   const raw = await organization.update(slug, request.body);
 
   // Mesma normalização do getHandler: agrupar campos de endereço
-  const {
-    street,
-    number,
-    complement,
-    neighborhood,
-    city,
-    state,
-    zip_code,
-    country,
-    ...studioData
-  } = raw;
+  const { street, number, complement, neighborhood, city, state, zip_code, country, ...studioData } = raw;
   const address =
     city || street
       ? {
@@ -125,10 +91,7 @@ async function deleteHandler(request, response) {
 
   const studio = await organization.findBySlug(slug);
 
-  if (
-    studio.owner_id !== requestUser.id &&
-    !authorization.can(requestUser, "delete:studio")
-  ) {
+  if (studio.owner_id !== requestUser.id && !authorization.can(requestUser, "delete:studio")) {
     throw new ForbiddenError({
       message: "Apenas o responsável pelo estúdio pode excluí-lo.",
     });

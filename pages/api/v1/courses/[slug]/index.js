@@ -21,10 +21,7 @@ async function getHandler(request, response) {
 
   let viewer = null;
   if (requestUser?.id) {
-    const [userRating, progress] = await Promise.all([
-      course.getUserRating(slug, requestUser.id),
-      course.getCourseProgress(slug, requestUser.id),
-    ]);
+    const [userRating, progress] = await Promise.all([course.getUserRating(slug, requestUser.id), course.getCourseProgress(slug, requestUser.id)]);
     viewer = {
       isOwner: courseData.owner_id === requestUser.id,
       userRating: userRating?.rating || null,

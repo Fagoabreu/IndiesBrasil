@@ -1,9 +1,5 @@
 import database from "infra/database";
-import {
-  NotFoundError,
-  ValidationError,
-  ForbiddenError,
-} from "infra/errors.js";
+import { NotFoundError, ValidationError, ForbiddenError } from "infra/errors.js";
 
 /* =========================================================
  * Helpers
@@ -320,12 +316,7 @@ async function revokeMemberRole(orgId, memberId, role) {
  * Convites
  * ========================================================= */
 
-async function createInvitation(
-  orgId,
-  invitedUserId,
-  invitedBy,
-  { role = "member", message = null } = {},
-) {
+async function createInvitation(orgId, invitedUserId, invitedBy, { role = "member", message = null } = {}) {
   // Verifica se já é membro
   const alreadyMember = await isMember(orgId, invitedUserId);
   if (alreadyMember) {
@@ -365,8 +356,7 @@ async function findInvitationById(id) {
     text: `SELECT * FROM org_invitations WHERE id = $1`,
     values: [id],
   });
-  if (!result.rows[0])
-    throw new NotFoundError({ message: "Convite não encontrado." });
+  if (!result.rows[0]) throw new NotFoundError({ message: "Convite não encontrado." });
   return result.rows[0];
 }
 
@@ -425,10 +415,7 @@ async function cancelInvitation(invitationId, requestingUserId, org) {
       message: "Convite não pertence a este estúdio.",
     });
 
-  const canCancel =
-    inv.invited_by === requestingUserId ||
-    (await isAdmin(org.id, requestingUserId)) ||
-    org.owner_id === requestingUserId;
+  const canCancel = inv.invited_by === requestingUserId || (await isAdmin(org.id, requestingUserId)) || org.owner_id === requestingUserId;
   if (!canCancel)
     throw new ForbiddenError({
       message: "Sem permissão para cancelar este convite.",
@@ -466,10 +453,7 @@ async function isFollowing(orgId, userId) {
   return result.rows.length > 0;
 }
 
-async function findFollowing(
-  userId,
-  { page = 1, limit = 20, search = "" } = {},
-) {
+async function findFollowing(userId, { page = 1, limit = 20, search = "" } = {}) {
   const offset = (page - 1) * limit;
   const results = await database.query({
     text: `
@@ -509,8 +493,7 @@ async function requestOwnershipTransfer(orgId, fromUserId, toUserId) {
   const targetIsMember = await isMember(orgId, toUserId);
   if (!targetIsMember) {
     throw new ValidationError({
-      message:
-        "O destinatário precisa ser membro do estúdio antes de receber a responsabilidade.",
+      message: "O destinatário precisa ser membro do estúdio antes de receber a responsabilidade.",
     });
   }
 
@@ -541,8 +524,7 @@ async function respondToTransfer(transferId, userId, accept) {
     values: [transferId],
   });
   const transfer = result.rows[0];
-  if (!transfer)
-    throw new NotFoundError({ message: "Transferência não encontrada." });
+  if (!transfer) throw new NotFoundError({ message: "Transferência não encontrada." });
   if (transfer.to_user_id !== userId)
     throw new ForbiddenError({
       message: "Esta transferência não é para você.",
@@ -579,8 +561,7 @@ async function validateOwnerHasNoStudio(userId) {
   });
   if (result.rows.length > 0) {
     throw new ValidationError({
-      message:
-        "Você já é responsável por um estúdio. Transfira a responsabilidade antes de criar um novo.",
+      message: "Você já é responsável por um estúdio. Transfira a responsabilidade antes de criar um novo.",
     });
   }
 }
@@ -624,16 +605,7 @@ async function deleteAddress(addressId) {
 }
 
 async function updateAddress(addressId, addr) {
-  const fields = [
-    "street",
-    "number",
-    "complement",
-    "neighborhood",
-    "city",
-    "state",
-    "zip_code",
-    "country",
-  ];
+  const fields = ["street", "number", "complement", "neighborhood", "city", "state", "zip_code", "country"];
   const sets = [];
   const values = [];
   let idx = 1;
@@ -837,8 +809,7 @@ async function respondToRelationship(relationshipId, orgId, userId, action) {
     text: `SELECT * FROM org_relationships WHERE id = $1`,
     values: [relationshipId],
   });
-  if (!rel.rowCount)
-    throw new NotFoundError({ message: "Relacionamento não encontrado." });
+  if (!rel.rowCount) throw new NotFoundError({ message: "Relacionamento não encontrado." });
 
   const row = rel.rows[0];
   if (row.status !== "pending")
@@ -846,8 +817,7 @@ async function respondToRelationship(relationshipId, orgId, userId, action) {
       message: "Apenas solicitações pendentes podem ser respondidas.",
     });
 
-  const receiverOrgId =
-    row.requested_by_org_id === row.org_a_id ? row.org_b_id : row.org_a_id;
+  const receiverOrgId = row.requested_by_org_id === row.org_a_id ? row.org_b_id : row.org_a_id;
   if (receiverOrgId !== orgId) {
     throw new ForbiddenError({
       message: "Apenas o estúdio que recebeu a solicitação pode respondê-la.",
@@ -875,8 +845,7 @@ async function removeRelationship(relationshipId, orgId) {
     text: `SELECT org_a_id, org_b_id FROM org_relationships WHERE id = $1`,
     values: [relationshipId],
   });
-  if (!rel.rowCount)
-    throw new NotFoundError({ message: "Relacionamento não encontrado." });
+  if (!rel.rowCount) throw new NotFoundError({ message: "Relacionamento não encontrado." });
 
   const { org_a_id, org_b_id } = rel.rows[0];
   if (orgId !== org_a_id && orgId !== org_b_id) {

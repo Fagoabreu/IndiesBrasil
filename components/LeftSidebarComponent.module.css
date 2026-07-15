@@ -65,11 +65,7 @@
 /* ===== Item ativo — gradiente + brilho ===== */
 .sidebar :global(a[aria-current]:not([aria-current="false"])),
 .sidebar :global(button[aria-current]:not([aria-current="false"])) {
-  background: linear-gradient(
-    to right,
-    rgba(var(--brand-rgb-primary), 0.16),
-    rgba(var(--brand-rgb-primary), 0.04)
-  ) !important;
+  background: linear-gradient(to right, rgba(var(--brand-rgb-primary), 0.16), rgba(var(--brand-rgb-primary), 0.04)) !important;
   color: var(--brand-primary) !important;
   font-weight: 600 !important;
 }

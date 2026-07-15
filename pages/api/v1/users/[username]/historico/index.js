@@ -20,21 +20,13 @@ async function postHandler(request, response) {
   if (!authorization.can(userTryingToPost, "update:user", targetUser)) {
     throw new ForbiddenError({
       message: "Você não possui permissão para atualizar outro usuário.",
-      action:
-        "Verifique se você possui a feature necessária para atualizar outro usuário",
+      action: "Verifique se você possui a feature necessária para atualizar outro usuário",
     });
   }
 
   userInputValues.user_id = targetUser.id;
-  const postedHistory = await profile.saveHistorico(
-    userInputValues,
-    targetUser.id,
-  );
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToPost,
-    "read:profile_history",
-    postedHistory,
-  );
+  const postedHistory = await profile.saveHistorico(userInputValues, targetUser.id);
+  const secureOutputValues = authorization.filterOutput(userTryingToPost, "read:profile_history", postedHistory);
   return response.status(200).json(secureOutputValues);
 }
 
@@ -42,13 +34,7 @@ async function getHandler(request, response) {
   const userTryingToGet = request.context.user;
   const username = request.query.username;
   const targetUser = await user.findOneByUsernameSecured(username);
-  const profileHistoryFound = await profile.findPortfolioHistoricoByUserId(
-    targetUser.id,
-  );
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToGet,
-    "read:profile_history:all",
-    profileHistoryFound,
-  );
+  const profileHistoryFound = await profile.findPortfolioHistoricoByUserId(targetUser.id);
+  const secureOutputValues = authorization.filterOutput(userTryingToGet, "read:profile_history:all", profileHistoryFound);
   return response.status(200).json(secureOutputValues);
 }

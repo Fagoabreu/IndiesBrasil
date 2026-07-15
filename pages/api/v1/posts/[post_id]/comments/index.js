@@ -17,11 +17,7 @@ async function getHandler(request, response) {
   const userTryingToGet = request.context.user;
   const user_id = userTryingToGet.id;
   const resultPost = await comment.getCommentsByPostId(post_id, user_id);
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToGet,
-    "read:comment:all",
-    resultPost,
-  );
+  const secureOutputValues = authorization.filterOutput(userTryingToGet, "read:comment:all", resultPost);
 
   return response.status(200).json(secureOutputValues);
 }
@@ -37,11 +33,7 @@ async function postHandler(request, response) {
     author_username: request.context.user.username,
     is_current_user: true,
   };
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToPost,
-    "read:comment",
-    resultComment,
-  );
+  const secureOutputValues = authorization.filterOutput(userTryingToPost, "read:comment", resultComment);
 
   return response.status(201).json(secureOutputValues);
 }
@@ -51,9 +43,7 @@ async function deleteHandler(request, response) {
   const user_id = request.context.user.id;
   const resultPost = await comment.getCommentsByCommentId(comment_id, user_id);
   if (resultPost.author_id !== user_id) {
-    return new ForbiddenError(
-      "Você não tem permissão para deletar este comentário",
-    );
+    return new ForbiddenError("Você não tem permissão para deletar este comentário");
   }
 
   await comment.deleteById(comment_id);

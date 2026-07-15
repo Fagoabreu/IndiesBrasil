@@ -77,20 +77,12 @@ async function refreshAllStreamStatuses() {
   const youtubeOrgs = rows.filter((r) => r.youtube_channel_id);
 
   // ---- Twitch ----
-  const twitchLive = await checkTwitchChannels(
-    twitchOrgs.map((r) => r.twitch_channel),
-  );
+  const twitchLive = await checkTwitchChannels(twitchOrgs.map((r) => r.twitch_channel));
 
   for (const org of twitchOrgs) {
-    const stream = twitchLive.find(
-      (s) => s.user_login.toLowerCase() === org.twitch_channel.toLowerCase(),
-    );
+    const stream = twitchLive.find((s) => s.user_login.toLowerCase() === org.twitch_channel.toLowerCase());
 
-    const thumbnailUrl = stream
-      ? stream.thumbnail_url
-          .replace("{width}", "440")
-          .replace("{height}", "248")
-      : null;
+    const thumbnailUrl = stream ? stream.thumbnail_url.replace("{width}", "440").replace("{height}", "248") : null;
 
     await database.query({
       text: `
@@ -105,26 +97,15 @@ async function refreshAllStreamStatuses() {
           category_name        = EXCLUDED.category_name,
           checked_at           = now()
       `,
-      values: [
-        org.id,
-        !!stream,
-        stream?.viewer_count ?? null,
-        stream?.title ?? null,
-        thumbnailUrl,
-        stream?.game_name ?? null,
-      ],
+      values: [org.id, !!stream, stream?.viewer_count ?? null, stream?.title ?? null, thumbnailUrl, stream?.game_name ?? null],
     });
   }
 
   // ---- YouTube ----
-  const youtubeLive = await checkYouTubeChannels(
-    youtubeOrgs.map((r) => r.youtube_channel_id),
-  );
+  const youtubeLive = await checkYouTubeChannels(youtubeOrgs.map((r) => r.youtube_channel_id));
 
   for (const org of youtubeOrgs) {
-    const stream = youtubeLive.find(
-      (s) => s.channelId === org.youtube_channel_id,
-    );
+    const stream = youtubeLive.find((s) => s.channelId === org.youtube_channel_id);
 
     await database.query({
       text: `
@@ -139,14 +120,7 @@ async function refreshAllStreamStatuses() {
           category_name        = EXCLUDED.category_name,
           checked_at           = now()
       `,
-      values: [
-        org.id,
-        !!stream,
-        stream?.viewerCount ?? null,
-        stream?.title ?? null,
-        stream?.thumbnailUrl ?? null,
-        stream?.categoryName ?? null,
-      ],
+      values: [org.id, !!stream, stream?.viewerCount ?? null, stream?.title ?? null, stream?.thumbnailUrl ?? null, stream?.categoryName ?? null],
     });
   }
 

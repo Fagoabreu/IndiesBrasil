@@ -11,10 +11,6 @@ export default createRouter()
 async function getHandler(request, response) {
   const userTryingToGet = request.context.user;
   const summary = await serverStatus.getSummary();
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToGet,
-    "read:summary",
-    summary,
-  );
+  const secureOutputValues = authorization.filterOutput(userTryingToGet, "read:summary", summary);
   return response.status(200).json(secureOutputValues);
 }

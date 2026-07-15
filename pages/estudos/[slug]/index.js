@@ -4,15 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { Heading, Spinner, Button } from "@primer/react";
-import {
-  BookIcon,
-  StarIcon,
-  StarFillIcon,
-  CheckIcon,
-  ChevronRightIcon,
-  PencilIcon,
-  TrashIcon,
-} from "@primer/octicons-react";
+import { BookIcon, StarIcon, StarFillIcon, CheckIcon, ChevronRightIcon, PencilIcon, TrashIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL } from "@/lib/seo";
@@ -171,16 +163,13 @@ export default function CursoPage() {
   const progress = course.viewer?.progress;
   const completedCount = progress?.completedCount ?? 0;
   const totalCount = progress?.totalCount ?? course.lessons?.length ?? 0;
-  const progressPercent =
-    totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+  const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   return (
     <div className={styles.page}>
       <SeoHead
         title={`${course.title} — Indies Brasil`}
-        description={
-          course.description?.slice(0, 160) || `Curso: ${course.title}`
-        }
+        description={course.description?.slice(0, 160) || `Curso: ${course.title}`}
         canonical={`${SITE_URL}/estudos/${course.slug}`}
         openGraph={{
           title: `${course.title} — Indies Brasil`,
@@ -218,9 +207,7 @@ export default function CursoPage() {
           <Heading as="h1" className={styles.courseTitle}>
             {course.title}
           </Heading>
-          {course.description && (
-            <p className={styles.courseDesc}>{course.description}</p>
-          )}
+          {course.description && <p className={styles.courseDesc}>{course.description}</p>}
 
           <div className={styles.heroMeta}>
             <span className={styles.metaAuthor}>
@@ -236,18 +223,13 @@ export default function CursoPage() {
             <span className={styles.starsDisplay}>
               {[1, 2, 3, 4, 5].map((star) =>
                 star <= Math.round(Number(course.avg_rating)) ? (
-                  <StarFillIcon
-                    key={star}
-                    size={14}
-                    className={styles.starFilled}
-                  />
+                  <StarFillIcon key={star} size={14} className={styles.starFilled} />
                 ) : (
                   <StarIcon key={star} size={14} className={styles.starEmpty} />
                 ),
               )}
               <span className={styles.ratingText}>
-                {Number(course.avg_rating).toFixed(1)} (
-                {course.rating_count ?? 0})
+                {Number(course.avg_rating).toFixed(1)} ({course.rating_count ?? 0})
               </span>
             </span>
           </div>
@@ -266,10 +248,7 @@ export default function CursoPage() {
           {/* Owner actions */}
           {isOwner && (
             <div className={styles.ownerActions}>
-              <Link
-                href={`/estudos/${course.slug}/editar`}
-                className={styles.btnOutline}
-              >
+              <Link href={`/estudos/${course.slug}/editar`} className={styles.btnOutline}>
                 <PencilIcon size={14} /> Editar
               </Link>
               <Button variant="danger" onClick={handleDelete}>
@@ -281,16 +260,8 @@ export default function CursoPage() {
           {/* User enrollment action */}
           {user && !isOwner && (
             <div className={styles.userActions}>
-              <Button
-                variant={isEnrolled ? "danger" : "primary"}
-                onClick={handleEnroll}
-                disabled={enrollmentSubmitting}
-              >
-                {enrollmentSubmitting
-                  ? "..."
-                  : isEnrolled
-                    ? "Desinscrever"
-                    : "Inscrever"}
+              <Button variant={isEnrolled ? "danger" : "primary"} onClick={handleEnroll} disabled={enrollmentSubmitting}>
+                {enrollmentSubmitting ? "..." : isEnrolled ? "Desinscrever" : "Inscrever"}
               </Button>
             </div>
           )}
@@ -314,11 +285,7 @@ export default function CursoPage() {
                   onClick={() => handleRate(star)}
                   aria-label={`Avaliar ${star} estrela${star > 1 ? "s" : ""}`}
                 >
-                  {(hoverRating || userRating) >= star ? (
-                    <StarFillIcon size={22} className={styles.starActive} />
-                  ) : (
-                    <StarIcon size={22} />
-                  )}
+                  {(hoverRating || userRating) >= star ? <StarFillIcon size={22} className={styles.starActive} /> : <StarIcon size={22} />}
                 </button>
               ))}
             </div>
@@ -331,18 +298,8 @@ export default function CursoPage() {
             rows={3}
             maxLength={2000}
           />
-          <Button
-            variant="primary"
-            onClick={handleSubmitReview}
-            disabled={ratingSubmitting || !userRating}
-          >
-            {ratingSubmitting ? (
-              <Spinner size="small" />
-            ) : userRating && course.viewer?.userRating ? (
-              "Atualizar avaliação"
-            ) : (
-              "Enviar avaliação"
-            )}
+          <Button variant="primary" onClick={handleSubmitReview} disabled={ratingSubmitting || !userRating}>
+            {ratingSubmitting ? <Spinner size="small" /> : userRating && course.viewer?.userRating ? "Atualizar avaliação" : "Enviar avaliação"}
           </Button>
         </div>
       )}
@@ -352,24 +309,16 @@ export default function CursoPage() {
         <div className={styles.progressSection}>
           <div className={styles.progressHeader}>
             <span className={styles.progressLabel}>
-              Seu progresso: {completedCount}/{totalCount} aulas (
-              {progressPercent}%)
+              Seu progresso: {completedCount}/{totalCount} aulas ({progressPercent}%)
             </span>
-            {progress?.nextLessonOrder !== null &&
-              progress?.nextLessonOrder !== undefined && (
-                <Link
-                  href={`/estudos/${course.slug}/aulas/${progress.nextLessonOrder}`}
-                  className={styles.btnPrimary}
-                >
-                  Continuar <ChevronRightIcon size={14} />
-                </Link>
-              )}
+            {progress?.nextLessonOrder !== null && progress?.nextLessonOrder !== undefined && (
+              <Link href={`/estudos/${course.slug}/aulas/${progress.nextLessonOrder}`} className={styles.btnPrimary}>
+                Continuar <ChevronRightIcon size={14} />
+              </Link>
+            )}
           </div>
           <div className={styles.progressBar}>
-            <div
-              className={styles.progressFill}
-              style={{ width: `${progressPercent}%` }}
-            />
+            <div className={styles.progressFill} style={{ width: `${progressPercent}%` }} />
           </div>
         </div>
       )}
@@ -380,40 +329,24 @@ export default function CursoPage() {
           <Heading as="h2">Aulas</Heading>
         </div>
 
-        {course.lessons?.length === 0 && (
-          <p className={styles.noLessons}>Este curso ainda não possui aulas.</p>
-        )}
+        {course.lessons?.length === 0 && <p className={styles.noLessons}>Este curso ainda não possui aulas.</p>}
 
         <ul className={styles.lessonList}>
           {course.lessons?.map((lesson) => {
-            const isCompleted = progress?.lessons?.find(
-              (p) => p.lesson_id === lesson.id,
-            )?.completed;
+            const isCompleted = progress?.lessons?.find((p) => p.lesson_id === lesson.id)?.completed;
             return (
-              <li
-                key={lesson.id}
-                className={`${styles.lessonItem} ${isCompleted ? styles.lessonCompleted : ""}`}
-              >
-                <Link
-                  href={`/estudos/${course.slug}/aulas/${lesson.order_index}`}
-                  className={styles.lessonLink}
-                >
+              <li key={lesson.id} className={`${styles.lessonItem} ${isCompleted ? styles.lessonCompleted : ""}`}>
+                <Link href={`/estudos/${course.slug}/aulas/${lesson.order_index}`} className={styles.lessonLink}>
                   <div className={styles.lessonIcon}>
                     {isCompleted ? (
                       <CheckIcon size={16} className={styles.checkIcon} />
                     ) : (
-                      <span className={styles.lessonNum}>
-                        {lesson.order_index + 1}
-                      </span>
+                      <span className={styles.lessonNum}>{lesson.order_index + 1}</span>
                     )}
                   </div>
                   <div className={styles.lessonInfo}>
                     <span className={styles.lessonTitle}>{lesson.title}</span>
-                    {lesson.description && (
-                      <span className={styles.lessonDesc}>
-                        {lesson.description}
-                      </span>
-                    )}
+                    {lesson.description && <span className={styles.lessonDesc}>{lesson.description}</span>}
                     <span className={styles.lessonMeta}>
                       {lesson.video_url && "🎬 Vídeo "}
                       {lesson.reading_material && "📖 Leitura "}
@@ -428,19 +361,13 @@ export default function CursoPage() {
       </section>
 
       {/* Continue CTA */}
-      {user &&
-        !isOwner &&
-        progress?.nextLessonOrder !== null &&
-        progress?.nextLessonOrder !== undefined && (
-          <div className={styles.bottomCta}>
-            <Link
-              href={`/estudos/${course.slug}/aulas/${progress.nextLessonOrder}`}
-              className={styles.btnPrimary}
-            >
-              Continuar curso <ChevronRightIcon size={16} />
-            </Link>
-          </div>
-        )}
+      {user && !isOwner && progress?.nextLessonOrder !== null && progress?.nextLessonOrder !== undefined && (
+        <div className={styles.bottomCta}>
+          <Link href={`/estudos/${course.slug}/aulas/${progress.nextLessonOrder}`} className={styles.btnPrimary}>
+            Continuar curso <ChevronRightIcon size={16} />
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

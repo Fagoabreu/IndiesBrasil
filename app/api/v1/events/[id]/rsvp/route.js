@@ -22,12 +22,7 @@ export async function POST(request, { params }) {
     const { id } = await params;
     const { status, instance_id } = await request.json();
 
-    const counts = await event.upsertRsvp(
-      id,
-      user.id,
-      status,
-      instance_id ?? null,
-    );
+    const counts = await event.upsertRsvp(id, user.id, status, instance_id ?? null);
 
     return Response.json({ rsvp: status, counts }, { status: 200 });
   } catch (error) {

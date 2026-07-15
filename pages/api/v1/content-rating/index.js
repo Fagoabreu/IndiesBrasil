@@ -2,11 +2,7 @@ import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import contentRating from "models/content-rating";
 
-export default createRouter()
-  .use(controller.injectAnonymousOrUser)
-  .get(getHandler)
-  .post(postHandler)
-  .handler(controller.errorHandlers);
+export default createRouter().use(controller.injectAnonymousOrUser).get(getHandler).post(postHandler).handler(controller.errorHandlers);
 
 /**
  * GET /api/v1/content-rating?type=game|boardgame|book
@@ -19,8 +15,7 @@ async function getHandler(request, response) {
   if (!type || !["game", "boardgame", "book"].includes(type)) {
     return response.status(400).json({
       status_code: 400,
-      message:
-        'Parâmetro "type" é obrigatório. Valores: game, boardgame, book.',
+      message: 'Parâmetro "type" é obrigatório. Valores: game, boardgame, book.',
     });
   }
 
@@ -50,8 +45,7 @@ async function postHandler(request, response) {
     });
   }
 
-  const { action, type, answers, slug, rating, reasons, monetizationFlags } =
-    request.body;
+  const { action, type, answers, slug, rating, reasons, monetizationFlags } = request.body;
 
   if (!type || !["game", "boardgame", "book"].includes(type)) {
     return response.status(400).json({
@@ -61,15 +55,10 @@ async function postHandler(request, response) {
   }
 
   if (action === "calculate") {
-    if (
-      !answers ||
-      typeof answers !== "object" ||
-      Object.keys(answers).length === 0
-    ) {
+    if (!answers || typeof answers !== "object" || Object.keys(answers).length === 0) {
       return response.status(400).json({
         status_code: 400,
-        message:
-          'Campo "answers" é obrigatório com as respostas do questionário.',
+        message: 'Campo "answers" é obrigatório com as respostas do questionário.',
       });
     }
 
@@ -94,9 +83,7 @@ async function postHandler(request, response) {
 
   if (action === "save") {
     if (!slug) {
-      return response
-        .status(400)
-        .json({ status_code: 400, message: 'Campo "slug" é obrigatório.' });
+      return response.status(400).json({ status_code: 400, message: 'Campo "slug" é obrigatório.' });
     }
 
     if (!rating || !contentRating.RATING_LABELS[rating]) {
@@ -106,14 +93,7 @@ async function postHandler(request, response) {
       });
     }
 
-    const result = await contentRating.saveRating(
-      type,
-      slug,
-      rating,
-      reasons || [],
-      requestUser.id,
-      monetizationFlags,
-    );
+    const result = await contentRating.saveRating(type, slug, rating, reasons || [], requestUser.id, monetizationFlags);
 
     return response.status(200).json({
       ...result,

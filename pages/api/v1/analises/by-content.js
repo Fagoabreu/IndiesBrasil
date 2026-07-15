@@ -11,9 +11,7 @@ async function getHandler(request, response) {
   const { content_type, content_id, page = 1, limit = 10 } = request.query;
 
   if (!content_type || !content_id) {
-    return response
-      .status(400)
-      .json({ message: "content_type e content_id são obrigatórios." });
+    return response.status(400).json({ message: "content_type e content_id são obrigatórios." });
   }
 
   const reviews = await contentReview.findByContent({

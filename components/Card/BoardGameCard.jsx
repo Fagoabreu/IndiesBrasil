@@ -41,14 +41,8 @@ export default function BoardGameCard({ boardgame }) {
   const stageLabel = STAGES[boardgame.stage] ?? boardgame.stage;
   const stageClass = styles[`stage_${boardgame.stage}`];
 
-  const playerCount = formatPlayerCount(
-    boardgame.player_count_min,
-    boardgame.player_count_max,
-  );
-  const playTime = formatPlayTime(
-    boardgame.play_time_min,
-    boardgame.play_time_max,
-  );
+  const playerCount = formatPlayerCount(boardgame.player_count_min, boardgame.player_count_max);
+  const playTime = formatPlayTime(boardgame.play_time_min, boardgame.play_time_max);
 
   return (
     <Link href={`/jogos-de-mesa/${boardgame.slug}`} className={styles.card}>
@@ -66,9 +60,7 @@ export default function BoardGameCard({ boardgame }) {
             <span>{boardgame.name[0]}</span>
           </div>
         )}
-        <span className={`${styles.stageBadge} ${stageClass}`}>
-          {stageLabel}
-        </span>
+        <span className={`${styles.stageBadge} ${stageClass}`}>{stageLabel}</span>
         <span className={styles.ratingBadge}>
           <ContentRatingBadge rating={boardgame.content_rating} size="sm" />
         </span>
@@ -76,9 +68,7 @@ export default function BoardGameCard({ boardgame }) {
 
       <div className={styles.cardBody}>
         <h2 className={styles.cardName}>{boardgame.name}</h2>
-        {boardgame.short_description && (
-          <p className={styles.cardDesc}>{boardgame.short_description}</p>
-        )}
+        {boardgame.short_description && <p className={styles.cardDesc}>{boardgame.short_description}</p>}
 
         <div className={styles.cardMeta}>
           {boardgame.studio_name && (
@@ -89,23 +79,12 @@ export default function BoardGameCard({ boardgame }) {
           <span className={styles.categoryBadge}>{categoryLabel}</span>
         </div>
 
-        {(boardgame.avg_rating > 0 ||
-          playerCount ||
-          playTime ||
-          boardgame.follower_count > 0) && (
+        {(boardgame.avg_rating > 0 || playerCount || playTime || boardgame.follower_count > 0) && (
           <div className={styles.cardStats}>
-            {boardgame.avg_rating > 0 && (
-              <span className={styles.rating}>
-                ★ {Number(boardgame.avg_rating).toFixed(1)}
-              </span>
-            )}
-            {playerCount && (
-              <span className={styles.stat}>👥 {playerCount}</span>
-            )}
+            {boardgame.avg_rating > 0 && <span className={styles.rating}>★ {Number(boardgame.avg_rating).toFixed(1)}</span>}
+            {playerCount && <span className={styles.stat}>👥 {playerCount}</span>}
             {playTime && <span className={styles.stat}>⏱ {playTime}</span>}
-            {boardgame.follower_count > 0 && (
-              <span className={styles.stat}>♥ {boardgame.follower_count}</span>
-            )}
+            {boardgame.follower_count > 0 && <span className={styles.stat}>♥ {boardgame.follower_count}</span>}
           </div>
         )}
       </div>

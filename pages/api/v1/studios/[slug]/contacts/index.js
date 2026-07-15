@@ -38,10 +38,6 @@ async function createHandler(request, response) {
     });
   }
 
-  const contact = await organization.createContact(
-    studio.id,
-    contact_type_id,
-    contact_value,
-  );
+  const contact = await organization.createContact(studio.id, contact_type_id, contact_value);
   return response.status(201).json(contact);
 }

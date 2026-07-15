@@ -32,10 +32,6 @@ async function postHandler(request, response) {
     });
   }
 
-  const newBoardgame = await boardgame.create(
-    requestUser.id,
-    studio.id,
-    request.body,
-  );
+  const newBoardgame = await boardgame.create(requestUser.id, studio.id, request.body);
   return response.status(201).json(newBoardgame);
 }

@@ -14,10 +14,6 @@ async function getHandler(request, response) {
   const limit = request.query.limit ?? 5;
 
   const tagList = await tags.getSuggestByName(name, limit);
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToGet,
-    "read:tag:all",
-    tagList,
-  );
+  const secureOutputValues = authorization.filterOutput(userTryingToGet, "read:tag:all", tagList);
   return response.status(200).json(secureOutputValues);
 }

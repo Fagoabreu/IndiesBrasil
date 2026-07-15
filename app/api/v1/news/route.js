@@ -36,11 +36,7 @@ export async function GET(request) {
       }),
     );
 
-    const secureOutput = authorization.filterOutput(
-      user,
-      "read:news:all",
-      enriched,
-    );
+    const secureOutput = authorization.filterOutput(user, "read:news:all", enriched);
     return Response.json(secureOutput, { status: 200 });
   } catch (error) {
     return controller.onRouterErrorHandler(error);
@@ -68,10 +64,7 @@ export async function POST(request) {
     const file = formData.get("file");
 
     if (!title || !summary || !body) {
-      return Response.json(
-        { error: "title, summary e body são obrigatórios." },
-        { status: 400 },
-      );
+      return Response.json({ error: "title, summary e body são obrigatórios." }, { status: 400 });
     }
 
     let imgId = null;
@@ -105,11 +98,7 @@ export async function POST(request) {
       user_rating: userRating,
       user_factcheck: userFactcheck,
     };
-    const secureOutput = authorization.filterOutput(
-      user,
-      "read:news",
-      enriched,
-    );
+    const secureOutput = authorization.filterOutput(user, "read:news", enriched);
     return Response.json(secureOutput, { status: 201 });
   } catch (error) {
     return controller.onRouterErrorHandler(error);

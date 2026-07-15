@@ -3,9 +3,7 @@ import styles from "./qrgen.module.css";
 import { useState } from "react";
 import Image from "next/image";
 import { SITE_URL } from "@/lib/seo";
-import QrCodeCustomizer, {
-  DEFAULT_QR_SETTINGS,
-} from "@/components/QrCode/QrCodeCustomizer";
+import QrCodeCustomizer, { DEFAULT_QR_SETTINGS } from "@/components/QrCode/QrCodeCustomizer";
 
 const PAGE_TITLE = "Gerador de QR Code Grátis Online | Indies Brasil";
 const PAGE_DESCRIPTION =
@@ -29,24 +27,13 @@ export default function QrGen() {
 
   return (
     <main className={styles.container}>
-      <SeoHead
-        title={PAGE_TITLE}
-        description={PAGE_DESCRIPTION}
-        canonical={PAGE_URL}
-        jsonLd={JSON_LD}
-      />
+      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} jsonLd={JSON_LD} />
 
       <section className={styles.titleContainer}>
         <h1 className={styles.pageTitle}>
           Gere e customize QR Codes <span>dinâmicos</span>
         </h1>
-        <Image
-          src="/images/qr_code.png"
-          alt="detail"
-          width="120"
-          height="200"
-          className={styles.arrowDetail}
-        />
+        <Image src="/images/qr_code.png" alt="detail" width="120" height="200" className={styles.arrowDetail} />
       </section>
       <section className={styles.qrCodeContainer}>
         <QrCodeCustomizer

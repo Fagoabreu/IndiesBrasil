@@ -8,8 +8,7 @@ export default function HistoricoItem({ item }) {
       <div className={style.resumeHeader}>
         <strong>{item.cargo}</strong>
         <Text size="small" className={style.resumeDate}>
-          {DateUtils.formatMonthYear(item.init_date)} —{" "}
-          {item.end_date ? DateUtils.formatMonthYear(item.end_date) : "Atual"}
+          {DateUtils.formatMonthYear(item.init_date)} — {item.end_date ? DateUtils.formatMonthYear(item.end_date) : "Atual"}
         </Text>
       </div>
 

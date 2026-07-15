@@ -14,19 +14,8 @@ export default function StarExperienceSelector({ value, onChange }) {
     <div className={styles.container}>
       <div className={styles.stars}>
         {LEVELS.map((_, index) => (
-          <button
-            key={index}
-            type="button"
-            className={styles.starButton}
-            onClick={() => onChange?.(LEVELS[index])}
-            aria-label={LEVELS[index]}
-          >
-            <StarFillIcon
-              size={20}
-              className={
-                index <= activeIndex ? styles.starActive : styles.starInactive
-              }
-            />
+          <button key={index} type="button" className={styles.starButton} onClick={() => onChange?.(LEVELS[index])} aria-label={LEVELS[index]}>
+            <StarFillIcon size={20} className={index <= activeIndex ? styles.starActive : styles.starInactive} />
           </button>
         ))}
       </div>

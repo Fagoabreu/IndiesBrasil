@@ -52,18 +52,10 @@ describe("POST /api/v1/users", () => {
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
 
-      const userInDatabase = await user.findOneByUsername(
-        responseBody.username,
-      );
+      const userInDatabase = await user.findOneByUsername(responseBody.username);
 
-      const correctPasswordMatch = await password.compare(
-        testUser.password,
-        userInDatabase.password,
-      );
-      const incorrectPasswordMatch = await password.compare(
-        TEST_CREDENTIALS.wrongCheck,
-        userInDatabase.password,
-      );
+      const correctPasswordMatch = await password.compare(testUser.password, userInDatabase.password);
+      const incorrectPasswordMatch = await password.compare(TEST_CREDENTIALS.wrongCheck, userInDatabase.password);
       expect(correctPasswordMatch).toBe(true);
       expect(incorrectPasswordMatch).toBe(false);
     });
@@ -181,8 +173,7 @@ describe("POST /api/v1/users", () => {
       expect(responseBody).toEqual({
         name: "ForbiddenError",
         message: "Você não possui permissão para executar esta ação",
-        action:
-          'Verifique se o seu usuário possui a feature "create:user" para executar esta ação.',
+        action: 'Verifique se o seu usuário possui a feature "create:user" para executar esta ação.',
         status_code: 403,
       });
     });

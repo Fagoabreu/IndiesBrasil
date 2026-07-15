@@ -499,8 +499,7 @@ async function findUsers(userId, isfollowing) {
           u.id <> $1
         `;
     if (isfollowing != undefined) {
-      whereClause +=
-        isfollowing === true || isfollowing === "true" ? " AND " : " AND NOT ";
+      whereClause += isfollowing === true || isfollowing === "true" ? " AND " : " AND NOT ";
       whereClause += `
           EXISTS (
           SELECT 1

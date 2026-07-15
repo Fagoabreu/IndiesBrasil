@@ -15,10 +15,6 @@ async function postHandler(request, response) {
   const { liked } = request.body;
 
   const result = await post.setPostLikes(post_id, user_id, liked);
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToLike,
-    "read:like",
-    result,
-  );
+  const secureOutputValues = authorization.filterOutput(userTryingToLike, "read:like", result);
   return response.status(201).json(secureOutputValues);
 }

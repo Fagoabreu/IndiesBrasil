@@ -14,8 +14,7 @@ export async function POST(request) {
     if (!authorization.can(user, "create:post")) {
       throw new ForbiddenError({
         message: "Você não possui permissão para executar esta ação",
-        action:
-          'Verifique se o seu usuário possui a feature "create:post" para executar esta ação.',
+        action: 'Verifique se o seu usuário possui a feature "create:post" para executar esta ação.',
       });
     }
 
@@ -51,11 +50,7 @@ export async function POST(request) {
 
     const createdPost = await post.create(userInputValues);
     const resultPost = await post.getPostById(user.id, createdPost.id);
-    const secureOutputValues = await authorization.filterOutput(
-      user,
-      "read:post",
-      resultPost,
-    );
+    const secureOutputValues = await authorization.filterOutput(user, "read:post", resultPost);
 
     return Response.json(secureOutputValues, { status: 201 });
   } catch (error) {
@@ -71,8 +66,7 @@ export async function GET(request) {
     if (!authorization.can(user, "read:post")) {
       throw new ForbiddenError({
         message: "Você não possui permissão para executar esta ação",
-        action:
-          'Verifique se o seu usuário possui a feature "read:post" para executar esta ação.',
+        action: 'Verifique se o seu usuário possui a feature "read:post" para executar esta ação.',
       });
     }
 
@@ -81,11 +75,7 @@ export async function GET(request) {
     const tag = searchParams.get("tag");
 
     const posts = await post.getPosts(user.id, searchType, tag);
-    const secureOutputValues = await authorization.filterOutput(
-      user,
-      "read:post:all",
-      posts,
-    );
+    const secureOutputValues = await authorization.filterOutput(user, "read:post:all", posts);
     return Response.json(secureOutputValues, { status: 200 });
   } catch (error) {
     return controller.onRouterErrorHandler(error);

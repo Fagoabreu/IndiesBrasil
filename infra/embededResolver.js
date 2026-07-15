@@ -95,10 +95,7 @@ async function fetchLinkPreview(url) {
     const html = await res.text();
 
     const getMeta = (name) => {
-      const regex = new RegExp(
-        `<meta property="og:${name}" content="([^"]+)"`,
-        "i",
-      );
+      const regex = new RegExp(`<meta property="og:${name}" content="([^"]+)"`, "i");
 
       const match = regex.exec(html);
       return match ? match[1] : null;
@@ -130,17 +127,11 @@ async function fetchLinkPreview(url) {
 
 function resolveTwitch(url) {
   console.log("base url", process.env.NEXT_PUBLIC_BASE_URL);
-  const domain = process.env.NEXT_PUBLIC_BASE_URL
-    ? new URL(process.env.NEXT_PUBLIC_BASE_URL).hostname
-    : "localhost";
+  const domain = process.env.NEXT_PUBLIC_BASE_URL ? new URL(process.env.NEXT_PUBLIC_BASE_URL).hostname : "localhost";
 
   // Canal
   const channelMatch = url.match(/twitch\.tv\/([^/?]+)/);
-  if (
-    channelMatch &&
-    !url.includes("/videos/") &&
-    !url.includes("clips.twitch.tv")
-  ) {
+  if (channelMatch && !url.includes("/videos/") && !url.includes("clips.twitch.tv")) {
     const channel = channelMatch[1];
 
     return {

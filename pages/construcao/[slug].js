@@ -30,11 +30,7 @@ export default function EmConstrucao() {
         gap: 16,
       }}
     >
-      <SeoHead
-        title={`${label} — Em Construção`}
-        canonical={`${SITE_URL}/construcao/${slug}`}
-        noindex
-      />
+      <SeoHead title={`${label} — Em Construção`} canonical={`${SITE_URL}/construcao/${slug}`} noindex />
 
       <div style={{ color: "var(--fgColor-muted)", opacity: 0.5 }}>
         <ToolsIcon size={48} />
@@ -60,8 +56,7 @@ export default function EmConstrucao() {
           lineHeight: 1.5,
         }}
       >
-        Esta página está em construção. Em breve você poderá acessar todo o
-        conteúdo de {label.toLowerCase()} aqui. Fique de olho nas novidades!
+        Esta página está em construção. Em breve você poderá acessar todo o conteúdo de {label.toLowerCase()} aqui. Fique de olho nas novidades!
       </p>
 
       <Link

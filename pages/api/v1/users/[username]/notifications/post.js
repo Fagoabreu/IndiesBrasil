@@ -16,21 +16,13 @@ async function getHandler(request, response) {
 
   if (userTryingToGet.username !== username) {
     throw new ForbiddenError({
-      message:
-        "Você não tem permissão para acessar as notificações de outro usuário.",
-      action:
-        "Verifique se você possui a feature necessária para visualizar outro usuário",
+      message: "Você não tem permissão para acessar as notificações de outro usuário.",
+      action: "Verifique se você possui a feature necessária para visualizar outro usuário",
     });
   }
 
-  const notifications = await notification.findPostNotificationsByUserId(
-    userTryingToGet.id,
-  );
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToGet,
-    "read:post_notifications:all",
-    notifications,
-  );
+  const notifications = await notification.findPostNotificationsByUserId(userTryingToGet.id);
+  const secureOutputValues = authorization.filterOutput(userTryingToGet, "read:post_notifications:all", notifications);
   return response.status(200).json(secureOutputValues);
 }
 
@@ -41,19 +33,12 @@ async function patchHandler(request, response) {
 
   if (userTryingToGet.username !== username) {
     throw new ForbiddenError({
-      message:
-        "Você não tem permissão para acessar as notificações de outro usuário.",
-      action:
-        "Verifique se você possui a feature necessária para visualizar outro usuário",
+      message: "Você não tem permissão para acessar as notificações de outro usuário.",
+      action: "Verifique se você possui a feature necessária para visualizar outro usuário",
     });
   }
 
-  const notifications =
-    await notification.updatePostNotification(userInputValues);
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToGet,
-    "read:post_notifications",
-    notifications,
-  );
+  const notifications = await notification.updatePostNotification(userInputValues);
+  const secureOutputValues = authorization.filterOutput(userTryingToGet, "read:post_notifications", notifications);
   return response.status(200).json(secureOutputValues);
 }

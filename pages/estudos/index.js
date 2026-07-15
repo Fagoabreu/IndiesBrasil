@@ -3,12 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Heading, TextInput, Spinner } from "@primer/react";
-import {
-  BookIcon,
-  CheckIcon,
-  PlusIcon,
-  StarFillIcon,
-} from "@primer/octicons-react";
+import { BookIcon, CheckIcon, PlusIcon, StarFillIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
 import useTiltEffect from "@/hooks/useTiltEffect";
@@ -16,8 +11,7 @@ import { SITE_URL } from "@/lib/seo";
 import styles from "./index.module.css";
 
 const PAGE_TITLE = "Cursos — Indies Brasil";
-const PAGE_DESCRIPTION =
-  "Aprenda sobre desenvolvimento de jogos, arte, Unity, Godot e muito mais com cursos criados pela comunidade.";
+const PAGE_DESCRIPTION = "Aprenda sobre desenvolvimento de jogos, arte, Unity, Godot e muito mais com cursos criados pela comunidade.";
 const PAGE_URL = `${SITE_URL}/estudos`;
 
 export default function CursosPage() {
@@ -107,11 +101,7 @@ export default function CursosPage() {
               </span>
             )}
           </div>
-          <p className={styles.pageSubtitle}>
-            {showEnrolled
-              ? "Cursos em que você está inscrito."
-              : "Aprenda com a comunidade indie brasileira."}
-          </p>
+          <p className={styles.pageSubtitle}>{showEnrolled ? "Cursos em que você está inscrito." : "Aprenda com a comunidade indie brasileira."}</p>
 
           <div className={styles.searchWrapper}>
             <TextInput
@@ -126,25 +116,12 @@ export default function CursosPage() {
 
           {!showEnrolled && (
             <div className={styles.tagFilters}>
-              {[
-                "Jogo",
-                "Unity",
-                "Godot",
-                "Arte",
-                "Som",
-                "Programação",
-                "Design",
-                "Marketing",
-              ].map((t) => (
+              {["Jogo", "Unity", "Godot", "Arte", "Som", "Programação", "Design", "Marketing"].map((t) => (
                 <button
                   key={t}
                   type="button"
                   className={`${styles.tagBtn} ${tag === t.toLowerCase() ? styles.tagBtnActive : ""}`}
-                  onClick={() =>
-                    setTag((prev) =>
-                      prev === t.toLowerCase() ? "" : t.toLowerCase(),
-                    )
-                  }
+                  onClick={() => setTag((prev) => (prev === t.toLowerCase() ? "" : t.toLowerCase()))}
                 >
                   {t}
                 </button>
@@ -216,11 +193,7 @@ export default function CursosPage() {
 
           {hasMore && !showEnrolled && (
             <div className={styles.loadMore}>
-              <button
-                className={styles.btnOutline}
-                disabled={loading}
-                onClick={() => setPage((p) => p + 1)}
-              >
+              <button className={styles.btnOutline} disabled={loading} onClick={() => setPage((p) => p + 1)}>
                 {loading ? <Spinner size="small" /> : "Carregar mais"}
               </button>
             </div>
@@ -244,9 +217,7 @@ function CourseCard({ course }) {
       <Link href={`/estudos/${course.slug}`} className={styles.cardLink}>
         <div className={styles.cardCover}>
           {course.cover_url ? (
-            <div
-              style={{ position: "relative", width: "100%", height: "100%" }}
-            >
+            <div style={{ position: "relative", width: "100%", height: "100%" }}>
               <Image
                 src={course.cover_url}
                 alt=""
@@ -264,14 +235,11 @@ function CourseCard({ course }) {
         </div>
         <div className={styles.cardBody}>
           <h3 className={styles.courseName}>{course.title}</h3>
-          {course.description && (
-            <p className={styles.courseDesc}>{course.description}</p>
-          )}
+          {course.description && <p className={styles.courseDesc}>{course.description}</p>}
           <div className={styles.cardMeta}>
             <span className={styles.metaItem}>
               <BookIcon size={13} />
-              {course.lesson_count ?? 0}{" "}
-              {Number(course.lesson_count) === 1 ? "aula" : "aulas"}
+              {course.lesson_count ?? 0} {Number(course.lesson_count) === 1 ? "aula" : "aulas"}
             </span>
             {Number(course.avg_rating) > 0 && (
               <span className={styles.metaItem}>

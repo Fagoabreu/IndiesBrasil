@@ -21,17 +21,7 @@ function slugify(text) {
 
 /** Preserva horário de `ref` na data de `dateOnly`. */
 function withTime(dateOnly, ref) {
-  return new Date(
-    Date.UTC(
-      dateOnly.getUTCFullYear(),
-      dateOnly.getUTCMonth(),
-      dateOnly.getUTCDate(),
-      ref.getUTCHours(),
-      ref.getUTCMinutes(),
-      0,
-      0,
-    ),
-  );
+  return new Date(Date.UTC(dateOnly.getUTCFullYear(), dateOnly.getUTCMonth(), dateOnly.getUTCDate(), ref.getUTCHours(), ref.getUTCMinutes(), 0, 0));
 }
 
 /**
@@ -44,9 +34,7 @@ function getNthWeekdayOfMonth(year, month, dayOfWeek, week) {
     const firstDay = new Date(Date.UTC(year, month, 1));
     const diff = (dayOfWeek - firstDay.getUTCDay() + 7) % 7;
     const firstOccurrence = new Date(Date.UTC(year, month, 1 + diff));
-    const result = new Date(
-      Date.UTC(year, month, firstOccurrence.getUTCDate() + 7 * (week - 1)),
-    );
+    const result = new Date(Date.UTC(year, month, firstOccurrence.getUTCDate() + 7 * (week - 1)));
     return result.getUTCMonth() === month ? result : null; // overflow → próximo mês
   }
   if (week === -1) {
@@ -83,56 +71,24 @@ function expandDaily(rule, eventStart, until, maxCount, push) {
   let currentDate = new Date(eventStart);
   while (currentDate <= until && remaining > 0) {
     push(new Date(currentDate));
-    currentDate = new Date(
-      Date.UTC(
-        currentDate.getUTCFullYear(),
-        currentDate.getUTCMonth(),
-        currentDate.getUTCDate() + interval,
-      ),
-    );
+    currentDate = new Date(Date.UTC(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), currentDate.getUTCDate() + interval));
     remaining -= 1;
   }
 }
 
 function expandWeekly(rule, eventStart, until, maxCount, push) {
   const interval = rule.interval || 1;
-  const days =
-    rule.days_of_week?.length > 0
-      ? [...rule.days_of_week].sort((a, b) => a - b)
-      : [eventStart.getUTCDay()];
+  const days = rule.days_of_week?.length > 0 ? [...rule.days_of_week].sort((a, b) => a - b) : [eventStart.getUTCDay()];
   const startDow = eventStart.getUTCDay();
-  let weekSunday = new Date(
-    Date.UTC(
-      eventStart.getUTCFullYear(),
-      eventStart.getUTCMonth(),
-      eventStart.getUTCDate() - startDow,
-    ),
-  );
+  let weekSunday = new Date(Date.UTC(eventStart.getUTCFullYear(), eventStart.getUTCMonth(), eventStart.getUTCDate() - startDow));
   let remaining = maxCount;
   while (weekSunday <= until && remaining > 0) {
     for (const day of days) {
       if (remaining <= 0) break;
-      push(
-        withTime(
-          new Date(
-            Date.UTC(
-              weekSunday.getUTCFullYear(),
-              weekSunday.getUTCMonth(),
-              weekSunday.getUTCDate() + day,
-            ),
-          ),
-          eventStart,
-        ),
-      );
+      push(withTime(new Date(Date.UTC(weekSunday.getUTCFullYear(), weekSunday.getUTCMonth(), weekSunday.getUTCDate() + day)), eventStart));
       remaining -= 1;
     }
-    weekSunday = new Date(
-      Date.UTC(
-        weekSunday.getUTCFullYear(),
-        weekSunday.getUTCMonth(),
-        weekSunday.getUTCDate() + 7 * interval,
-      ),
-    );
+    weekSunday = new Date(Date.UTC(weekSunday.getUTCFullYear(), weekSunday.getUTCMonth(), weekSunday.getUTCDate() + 7 * interval));
   }
 }
 
@@ -144,12 +100,7 @@ function expandMonthly(rule, eventStart, until, maxCount, push) {
   while (new Date(Date.UTC(year, month, 1)) <= until && remaining > 0) {
     let d = null;
     if (rule.week_of_month != null && rule.days_of_week?.length > 0) {
-      d = getNthWeekdayOfMonth(
-        year,
-        month,
-        rule.days_of_week[0],
-        rule.week_of_month,
-      );
+      d = getNthWeekdayOfMonth(year, month, rule.days_of_week[0], rule.week_of_month);
     } else {
       const dom = rule.day_of_month ?? eventStart.getUTCDate();
       const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
@@ -169,21 +120,13 @@ function expandMonthly(rule, eventStart, until, maxCount, push) {
 
 function expandYearly(rule, eventStart, until, maxCount, push) {
   const interval = rule.interval || 1;
-  const months =
-    rule.months_of_year?.length > 0
-      ? rule.months_of_year.map((m) => m - 1)
-      : [eventStart.getUTCMonth()];
+  const months = rule.months_of_year?.length > 0 ? rule.months_of_year.map((m) => m - 1) : [eventStart.getUTCMonth()];
   let year = eventStart.getUTCFullYear();
   let remaining = maxCount;
   while (year <= until.getUTCFullYear() + 1 && remaining > 0) {
     for (const m of months) {
       if (remaining <= 0) break;
-      push(
-        withTime(
-          new Date(Date.UTC(year, m, eventStart.getUTCDate())),
-          eventStart,
-        ),
-      );
+      push(withTime(new Date(Date.UTC(year, m, eventStart.getUTCDate())), eventStart));
       remaining -= 1;
     }
     year += interval;
@@ -194,12 +137,7 @@ export function expandRecurrenceRule(rule, eventStart, eventEnd, windowEnd) {
   const ruleUntil = rule.until_date ? new Date(rule.until_date) : null;
   const until = ruleUntil && ruleUntil < windowEnd ? ruleUntil : windowEnd;
   const maxCount = rule.max_occurrences ?? 500;
-  const { push, instances } = makeInstancePusher(
-    eventStart,
-    eventEnd,
-    until,
-    maxCount,
-  );
+  const { push, instances } = makeInstancePusher(eventStart, eventEnd, until, maxCount);
 
   switch (rule.frequency) {
     case "daily":
@@ -250,13 +188,8 @@ async function createRecurrenceRule(rule) {
 async function insertInstances(eventId, instanceDates) {
   if (!instanceDates.length) return;
 
-  const placeholders = instanceDates
-    .map((_, i) => `($1, $${i * 2 + 2}, $${i * 2 + 3})`)
-    .join(", ");
-  const values = [
-    eventId,
-    ...instanceDates.flatMap((d) => [d.starts_at, d.ends_at]),
-  ];
+  const placeholders = instanceDates.map((_, i) => `($1, $${i * 2 + 2}, $${i * 2 + 3})`).join(", ");
+  const values = [eventId, ...instanceDates.flatMap((d) => [d.starts_at, d.ends_at])];
 
   await database.query({
     text: `INSERT INTO event_instances (event_id, starts_at, ends_at) VALUES ${placeholders}`,
@@ -310,12 +243,9 @@ const BASE_EVENT_QUERY = `
  * @param {string} userId - UUID do usuário criador
  */
 async function create(data, userId) {
-  if (!data.title?.trim())
-    throw new ValidationError({ message: "Título é obrigatório." });
-  if (!data.starts_at)
-    throw new ValidationError({ message: "Data de início é obrigatória." });
-  if (!data.ends_at)
-    throw new ValidationError({ message: "Data de término é obrigatória." });
+  if (!data.title?.trim()) throw new ValidationError({ message: "Título é obrigatório." });
+  if (!data.starts_at) throw new ValidationError({ message: "Data de início é obrigatória." });
+  if (!data.ends_at) throw new ValidationError({ message: "Data de término é obrigatória." });
 
   const startsAt = new Date(data.starts_at);
   const endsAt = new Date(data.ends_at);
@@ -683,8 +613,7 @@ async function upsertRsvp(eventId, userId, status, instanceId = null) {
     text: `SELECT id, visibility, status AS event_status, created_by FROM events WHERE id = $1`,
     values: [eventId],
   });
-  if (!eventResult.rowCount)
-    throw new NotFoundError({ message: "Evento não encontrado." });
+  if (!eventResult.rowCount) throw new NotFoundError({ message: "Evento não encontrado." });
 
   const event = eventResult.rows[0];
   if (event.event_status === "cancelled") {
@@ -756,8 +685,7 @@ async function upsertOrgRsvp(eventId, orgId, userId) {
     text: `SELECT id, status AS event_status FROM events WHERE id = $1`,
     values: [eventId],
   });
-  if (!eventResult.rowCount)
-    throw new NotFoundError({ message: "Evento não encontrado." });
+  if (!eventResult.rowCount) throw new NotFoundError({ message: "Evento não encontrado." });
   if (eventResult.rows[0].event_status === "cancelled") {
     throw new ValidationError({
       message: "Não é possível confirmar presença em evento cancelado.",
@@ -848,8 +776,7 @@ async function invite(eventId, targetUserId, inviterUserId) {
     text: `SELECT created_by, visibility FROM events WHERE id = $1`,
     values: [eventId],
   });
-  if (!eventResult.rowCount)
-    throw new NotFoundError({ message: "Evento não encontrado." });
+  if (!eventResult.rowCount) throw new NotFoundError({ message: "Evento não encontrado." });
 
   const event = eventResult.rows[0];
   if (event.created_by !== inviterUserId) {
@@ -938,8 +865,7 @@ async function extendInstances(eventId, windowEnd) {
     values: [eventId],
   });
 
-  if (!eventResult.rowCount)
-    throw new NotFoundError({ message: "Evento não encontrado." });
+  if (!eventResult.rowCount) throw new NotFoundError({ message: "Evento não encontrado." });
 
   const row = eventResult.rows[0];
   if (!row.is_recurring || !row.recurrence_rule_id) return;
@@ -949,9 +875,7 @@ async function extendInstances(eventId, windowEnd) {
     text: `SELECT starts_at FROM event_instances WHERE event_id = $1 ORDER BY starts_at DESC LIMIT 1`,
     values: [eventId],
   });
-  const lastStart = lastResult.rowCount
-    ? new Date(lastResult.rows[0].starts_at)
-    : new Date(row.starts_at);
+  const lastStart = lastResult.rowCount ? new Date(lastResult.rows[0].starts_at) : new Date(row.starts_at);
 
   const rule = {
     frequency: row.frequency,
@@ -968,12 +892,7 @@ async function extendInstances(eventId, windowEnd) {
   const fromDate = new Date(lastStart);
   fromDate.setUTCDate(fromDate.getUTCDate() + 1);
 
-  const newInstances = expandRecurrenceRule(
-    rule,
-    fromDate,
-    new Date(row.ends_at),
-    windowEnd,
-  );
+  const newInstances = expandRecurrenceRule(rule, fromDate, new Date(row.ends_at), windowEnd);
 
   if (newInstances.length) await insertInstances(eventId, newInstances);
 
@@ -1013,8 +932,7 @@ async function setBannerExternalUrl(id, url, userId) {
       message: "Apenas o organizador pode editar este evento.",
     });
   }
-  if (!url?.trim())
-    throw new ValidationError({ message: "URL da imagem inválida." });
+  if (!url?.trim()) throw new ValidationError({ message: "URL da imagem inválida." });
   if (ev.banner_image_id) {
     try {
       await uploadedImages.deleteImage(ev.banner_image_id);

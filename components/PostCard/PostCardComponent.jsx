@@ -26,8 +26,7 @@ function timeAgo(dateString) {
 
   for (const interval of intervals) {
     const count = Math.floor(seconds / interval.seconds);
-    if (count >= 1)
-      return `há ${count} ${interval.label}${count > 1 ? "s" : ""}`;
+    if (count >= 1) return `há ${count} ${interval.label}${count > 1 ? "s" : ""}`;
   }
   return "agora";
 }
@@ -66,18 +65,11 @@ PostCardComponent.propTypes = {
   onTagClick: PropTypes.func,
 };
 
-export default function PostCardComponent({
-  post,
-  onDelete,
-  canInteract = true,
-  onTagClick,
-}) {
+export default function PostCardComponent({ post, onDelete, canInteract = true, onTagClick }) {
   const [hasLiked, setHasLiked] = useState(post.liked_by_user || false);
   const [actionMessage, setActionMessage] = useState(null);
   const [likesCount, setLikesCount] = useState(Number(post.likes_count) || 0);
-  const [commentsCount, setCommentsCount] = useState(
-    Number(post.comments_count),
-  );
+  const [commentsCount, setCommentsCount] = useState(Number(post.comments_count));
 
   const [showCommentBox, setShowCommentBox] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -133,13 +125,10 @@ export default function PostCardComponent({
 
   const deleteComments = async (commentId) => {
     try {
-      const res = await fetch(
-        `/api/v1/posts/${post.id}/comments/${commentId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        },
-      );
+      const res = await fetch(`/api/v1/posts/${post.id}/comments/${commentId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
 
       if (!res.ok) {
         console.error("Erro ao deletar comentário");
@@ -192,13 +181,7 @@ export default function PostCardComponent({
       // LINK
       if (part.startsWith("http://") || part.startsWith("https://")) {
         return (
-          <a
-            key={`link-${i}-${part.slice(0, 30)}`}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.link}
-          >
+          <a key={`link-${i}-${part.slice(0, 30)}`} href={part} target="_blank" rel="noopener noreferrer" className={styles.link}>
             {part}
           </a>
         );
@@ -209,12 +192,7 @@ export default function PostCardComponent({
         const tag = part.slice(1).toLowerCase();
 
         return (
-          <button
-            key={`tag-${i}-${part}`}
-            type="button"
-            className={styles.tag}
-            onClick={() => onTagClick?.(tag)}
-          >
+          <button key={`tag-${i}-${part}`} type="button" className={styles.tag} onClick={() => onTagClick?.(tag)}>
             {part}
           </button>
         );
@@ -230,14 +208,8 @@ export default function PostCardComponent({
       <div className={styles.postGrid}>
         {/* COLUNA AVATAR */}
         <div className={styles.avatarCol}>
-          <Link
-            href={`/perfil/${post.author_username}`}
-            className={styles.avatarLink}
-          >
-            <Avatar
-              src={post.author_avatar_url || "/images/avatar.png"}
-              size={40}
-            />
+          <Link href={`/perfil/${post.author_username}`} className={styles.avatarLink}>
+            <Avatar src={post.author_avatar_url || "/images/avatar.png"} size={40} />
           </Link>
         </div>
         {/* COLUNA CONTEÚDO */}
@@ -245,10 +217,7 @@ export default function PostCardComponent({
           {/* HEADER */}
           <div className={styles.header}>
             <div className={styles.authorInfo}>
-              <Link
-                href={`/perfil/${post.author_username}`}
-                className={styles.authorName}
-              >
+              <Link href={`/perfil/${post.author_username}`} className={styles.authorName}>
                 <strong>{post.author_username}</strong>
               </Link>
               <span className={styles.subInfo}>
@@ -256,12 +225,7 @@ export default function PostCardComponent({
               </span>
             </div>
             {canInteract && post.is_current_user && (
-              <Button
-                variant="invisible"
-                size="small"
-                className={styles.deleteBtn}
-                onClick={() => onDelete?.(post.id)}
-              >
+              <Button variant="invisible" size="small" className={styles.deleteBtn} onClick={() => onDelete?.(post.id)}>
                 Deletar
               </Button>
             )}
@@ -269,27 +233,15 @@ export default function PostCardComponent({
 
           {/* EVENTO RELACIONADO */}
           {post.event_id && (
-            <Link
-              href={
-                post.event_slug
-                  ? `/agenda/${post.event_slug}`
-                  : `/agenda/${post.event_id}`
-              }
-              className={styles.eventBadge}
-            >
+            <Link href={post.event_slug ? `/agenda/${post.event_slug}` : `/agenda/${post.event_id}`} className={styles.eventBadge}>
               <span className={styles.eventBadgeIcon}>📅</span>
-              <span className={styles.eventBadgeLabel}>
-                {post.event_title || "Ver evento"}
-              </span>
+              <span className={styles.eventBadgeLabel}>{post.event_title || "Ver evento"}</span>
             </Link>
           )}
 
           {/* ORGANIZAÇÃO RELACIONADA */}
           {post.organization_id && post.organization_slug && (
-            <Link
-              href={`/estudios/${post.organization_slug}`}
-              className={styles.orgBadge}
-            >
+            <Link href={`/estudios/${post.organization_slug}`} className={styles.orgBadge}>
               {post.organization_logo_url ? (
                 <Image
                   src={post.organization_logo_url}
@@ -299,13 +251,9 @@ export default function PostCardComponent({
                   className={styles.orgBadgeLogo}
                 />
               ) : (
-                <span className={styles.orgBadgeInitial}>
-                  {(post.organization_name || "E")[0].toUpperCase()}
-                </span>
+                <span className={styles.orgBadgeInitial}>{(post.organization_name || "E")[0].toUpperCase()}</span>
               )}
-              <span className={styles.orgBadgeName}>
-                {post.organization_name}
-              </span>
+              <span className={styles.orgBadgeName}>{post.organization_name}</span>
             </Link>
           )}
 
@@ -313,10 +261,7 @@ export default function PostCardComponent({
           <div className={styles.text}>
             {renderRichText(shownText, { onTagClick })}
             {isLong && (
-              <button
-                className={styles.showMoreBtn}
-                onClick={() => setExpanded(!expanded)}
-              >
+              <button className={styles.showMoreBtn} onClick={() => setExpanded(!expanded)}>
                 {expanded ? "Mostrar menos" : "Mostrar mais"}
               </button>
             )}
@@ -325,14 +270,7 @@ export default function PostCardComponent({
           {/* IMAGEM */}
           {post.post_img_url && (
             <div className={styles.media}>
-              <Image
-                src={post.post_img_url}
-                alt="Imagem do post"
-                loading="lazy"
-                width={0}
-                height={0}
-                sizes="100vw"
-              />
+              <Image src={post.post_img_url} alt="Imagem do post" loading="lazy" width={0} height={0} sizes="100vw" />
             </div>
           )}
 

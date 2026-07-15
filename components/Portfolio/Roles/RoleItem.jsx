@@ -17,14 +17,7 @@ export default function RoleItem({ item }) {
 
   return (
     <div className={styles.roleItem}>
-      {item.icon_img && (
-        <IconSvg
-          src={`/images/professions/${item.icon_img}.png`}
-          alt={item.name}
-          width={20}
-          height={20}
-        />
-      )}
+      {item.icon_img && <IconSvg src={`/images/professions/${item.icon_img}.png`} alt={item.name} width={20} height={20} />}
 
       <div className={styles.roleInfo}>
         <Text weight="bold">{item.portfolio_role_name}</Text>

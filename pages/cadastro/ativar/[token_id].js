@@ -22,18 +22,12 @@ export default function ActivationPage() {
 
         if (response.ok) {
           setStatus("success");
-          setMessage(
-            data.message ||
-              "Conta ativada com sucesso! Você já pode fazer login.",
-          );
+          setMessage(data.message || "Conta ativada com sucesso! Você já pode fazer login.");
           // redireciona automaticamente após 2.5s
           setTimeout(() => router.push("/login"), 2500);
         } else {
           setStatus("error");
-          setMessage(
-            data.message ||
-              "Não foi possível ativar a conta. Token inválido ou expirado.",
-          );
+          setMessage(data.message || "Não foi possível ativar a conta. Token inválido ou expirado.");
         }
       } catch (err) {
         setStatus("error");
@@ -74,10 +68,7 @@ export default function ActivationPage() {
 
           {status !== "loading" && (
             <>
-              <Flash
-                variant={status === "success" ? "success" : "danger"}
-                sx={{ width: "100%" }}
-              >
+              <Flash variant={status === "success" ? "success" : "danger"} sx={{ width: "100%" }}>
                 {message}
               </Flash>
 

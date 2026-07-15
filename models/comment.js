@@ -56,11 +56,7 @@ async function create(commentInputValues) {
         returning
           *
         `,
-      values: [
-        commentInputValues.post_id,
-        commentInputValues.author_id,
-        commentInputValues.content,
-      ],
+      values: [commentInputValues.post_id, commentInputValues.author_id, commentInputValues.content],
     });
     return results.rows[0];
   }

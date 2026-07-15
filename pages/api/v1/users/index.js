@@ -18,11 +18,7 @@ async function postHandler(request, response) {
   const activationToken = await activation.create(newUser.id);
   await activation.sendEmailToUser(newUser, activationToken);
 
-  const secureOutputValues = authorization.filterOutput(
-    userTryingToPost,
-    "read:user",
-    newUser,
-  );
+  const secureOutputValues = authorization.filterOutput(userTryingToPost, "read:user", newUser);
   return response.status(201).json(secureOutputValues);
 }
 
@@ -33,11 +29,7 @@ async function getHandler(request, response) {
   const userId = request.context.user.id;
   const selectedUsers = await user.findUsers(userId, isfollowing);
   const secureOutputValues = selectedUsers.map((selectedUser) => {
-    return authorization.filterOutput(
-      userTryingToPost,
-      "read:user",
-      selectedUser,
-    );
+    return authorization.filterOutput(userTryingToPost, "read:user", selectedUser);
   });
   return response.status(200).json(secureOutputValues);
 }

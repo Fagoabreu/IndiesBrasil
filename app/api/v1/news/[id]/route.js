@@ -33,11 +33,7 @@ export async function GET(request, { params }) {
       user_rating: userRating,
       user_factcheck: userFactcheck,
     };
-    const secureOutput = authorization.filterOutput(
-      user,
-      "read:news",
-      enriched,
-    );
+    const secureOutput = authorization.filterOutput(user, "read:news", enriched);
     return Response.json(secureOutput, { status: 200 });
   } catch (error) {
     return controller.onRouterErrorHandler(error);
@@ -97,11 +93,7 @@ export async function PUT(request, { params }) {
       user_rating: userRating,
       user_factcheck: userFactcheck,
     };
-    const secureOutput = authorization.filterOutput(
-      user,
-      "read:news",
-      enriched,
-    );
+    const secureOutput = authorization.filterOutput(user, "read:news", enriched);
     return Response.json(secureOutput, { status: 200 });
   } catch (error) {
     return controller.onRouterErrorHandler(error);
