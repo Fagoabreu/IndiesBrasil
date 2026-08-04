@@ -73,8 +73,10 @@ export async function GET(request) {
     const { searchParams } = request.nextUrl;
     const searchType = searchParams.get("search_type");
     const tag = searchParams.get("tag");
+    const cursor = searchParams.get("cursor");
+    const limit = Number.parseInt(searchParams.get("limit") || "20", 10);
 
-    const posts = await post.getPosts(user.id, searchType, tag);
+    const posts = await post.getPosts(user.id, searchType, tag, { cursor, limit });
     const secureOutputValues = await authorization.filterOutput(user, "read:post:all", posts);
     return Response.json(secureOutputValues, { status: 200 });
   } catch (error) {

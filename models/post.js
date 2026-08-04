@@ -34,11 +34,11 @@ const camposBase = `
 const joinsBase = `
   INNER JOIN users u
     ON p.author_id = u.id
-        
+
   -- UserAvatar
   LEFT JOIN uploaded_images uui
-    ON uui.id = u.avatar_image 
-        
+    ON uui.id = u.avatar_image
+
   -- Contagem de likes
   LEFT JOIN LATERAL (
     SELECT COUNT(*) AS likes_count
@@ -92,7 +92,7 @@ const joinsBase = `
     WHERE po2.poll_id = po.id AND pv2.user_id = $1
     LIMIT 1
   ) user_poll_vote ON ($1 IS NOT NULL)
-    
+
 `;
 
 const baseSelectQuery = `
@@ -100,7 +100,7 @@ const baseSelectQuery = `
     ${camposBase}
     (pl.post_id IS NOT NULL) AS liked_by_user,
     (u.id = $1) AS is_current_user
-  FROM 
+  FROM
     posts p
     ${joinsBase}
 
@@ -108,7 +108,7 @@ const baseSelectQuery = `
     LEFT JOIN LATERAL (
         SELECT 1 AS liked, post_id
         FROM post_likes pl2
-        WHERE 
+        WHERE
           pl2.post_id = p.id
           AND pl2.user_id = $1
         LIMIT 1
@@ -132,7 +132,7 @@ SELECT
           LEFT JOIN LATERAL (
               SELECT 1 AS liked, post_id
               FROM post_likes pl2
-              WHERE 
+              WHERE
                 pl2.post_id = p.id
                 AND pl2.user_id = $1
               LIMIT 1
@@ -144,7 +144,7 @@ SELECT
           ${camposBase}
           false AS liked_by_user,
           false AS is_current_user
-        FROM 
+        FROM
           posts p
           ${joinsBase}
 `;
@@ -249,62 +249,84 @@ async function deleteCommentsByPostId(postId) {
   }
 }
 
-async function getPosts(user_id, seachType, tag) {
+async function getPosts(user_id, seachType, tag, pagination = {}) {
+  const { cursor, limit = 20 } = pagination;
+
   if (user_id && seachType === "following") {
-    const userPosts = await runSelectFollowingsQuery(user_id);
+    const userPosts = await runSelectFollowingsQuery(user_id, cursor, limit);
     return userPosts;
   }
 
   if (user_id && seachType === "tag") {
-    const userPosts = await runSelectTagQuery(user_id, tag);
+    const userPosts = await runSelectTagQuery(user_id, tag, cursor, limit);
     return userPosts;
   }
 
   if (user_id) {
-    const userPosts = await runSelectQuery(user_id);
+    const userPosts = await runSelectQuery(user_id, cursor, limit);
     return userPosts;
   }
-  const noUserPosts = await runSelectNoUserQuery(user_id);
+  const noUserPosts = await runSelectNoUserQuery(cursor, limit);
   return noUserPosts;
 
-  async function runSelectQuery(user_id) {
+  async function runSelectQuery(user_id, cursor, limit) {
+    const whereClause = cursor ? " WHERE p.created_at < $2" : "";
+    const orderAndLimit = ` ORDER BY p.created_at DESC LIMIT $${cursor ? 3 : 2}`;
+    const values = cursor ? [user_id || null, cursor, limit] : [user_id || null, limit];
+
     const results = await database.query({
-      text: baseSelectQuery + ` ORDER BY p.created_at DESC;`,
-      values: [user_id || null],
+      text: baseSelectQuery + whereClause + orderAndLimit + ";",
+      values,
     });
     return results.rows;
   }
 
-  async function runSelectFollowingsQuery(user_id) {
+  async function runSelectFollowingsQuery(user_id, cursor, limit) {
+    const whereClause = cursor ? " AND p.created_at < $2" : "";
+    const orderAndLimit = ` ORDER BY p.created_at DESC LIMIT $${cursor ? 3 : 2}`;
+    const values = cursor ? [user_id, cursor, limit] : [user_id, limit];
+
     const results = await database.query({
       text:
         baseSelectQuery +
         `
         inner join user_followers uf
           on uf.lead_user_id = u.id
-          and uf.follower_id=$1
-        ORDER BY p.created_at DESC;`,
-      values: [user_id],
+          and uf.follower_id=$1` +
+        whereClause +
+        orderAndLimit +
+        ";",
+      values,
     });
     return results.rows;
   }
 
-  async function runSelectTagQuery(user_id, tag) {
+  async function runSelectTagQuery(user_id, tag, cursor, limit) {
+    const whereClause = cursor ? " AND p.created_at < $3" : "";
+    const orderAndLimit = ` ORDER BY p.created_at DESC LIMIT $${cursor ? 4 : 3}`;
+    const values = cursor ? [user_id, tag, cursor, limit] : [user_id, tag, limit];
+
     const results = await database.query({
       text:
         baseSelectQueryByTags +
         `
-        where t.name=$2
-        ORDER BY p.created_at DESC;`,
-      values: [user_id, tag],
+        where t.name=$2` +
+        whereClause +
+        orderAndLimit +
+        ";",
+      values,
     });
     return results.rows;
   }
 
-  async function runSelectNoUserQuery() {
+  async function runSelectNoUserQuery(cursor, limit) {
+    const whereClause = cursor ? " WHERE p.created_at < $1" : "";
+    const orderAndLimit = ` ORDER BY p.created_at DESC LIMIT $${cursor ? 2 : 1}`;
+    const values = cursor ? [cursor, limit] : [limit];
+
     const results = await database.query({
-      text: baseNoUserSelectQuery + ` ORDER BY p.created_at DESC;`,
-      values: [null],
+      text: baseNoUserSelectQuery + whereClause + orderAndLimit + ";",
+      values,
     });
     return results.rows;
   }
@@ -338,8 +360,8 @@ async function deletePostByIdAndAuthorId(userId, postId) {
   async function runDeleteQuery(userId, postId) {
     const results = await database.query({
       text: `Delete from posts p
-      WHERE 
-        p.author_id=$1 
+      WHERE
+        p.author_id=$1
         and p.id=$2
       returning *
       ;`,
@@ -376,10 +398,10 @@ async function setPostLikes(postId, userId, liked) {
   const { rowCount } = await database.query({
     text: `
     select 1
-    from 
+    from
       post_likes pl
-    where 
-      pl.post_id = $1 
+    where
+      pl.post_id = $1
       and pl.user_id = $2
     `,
     values: [postId, userId],
@@ -412,7 +434,7 @@ async function setPostLikes(postId, userId, liked) {
   async function createPostLike(postId, userId) {
     await database.query({
       text: `
-      insert into 
+      insert into
       post_likes (post_id, user_id)
       values ($1, $2)
       `,
@@ -423,10 +445,10 @@ async function setPostLikes(postId, userId, liked) {
   async function deletePostLike(postId, userId) {
     await database.query({
       text: `
-      delete from 
+      delete from
         post_likes
-      where 
-        post_id=$1 
+      where
+        post_id=$1
         and user_id=$2
       `,
       values: [postId, userId],

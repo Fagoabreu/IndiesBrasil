@@ -23,10 +23,119 @@
   display: inline-block;
 }
 
-.commentText {
+.commentContent {
   opacity: 0.9;
   word-break: break-word;
   overflow-wrap: anywhere;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+/* ---- Markdown rendered inside comments ---- */
+
+.commentContent p {
+  margin: 4px 0 8px;
+}
+.commentContent p:first-child {
+  margin-top: 0;
+}
+.commentContent p:last-child {
+  margin-bottom: 0;
+}
+.commentContent strong {
+  font-weight: 700 !important;
+}
+.commentContent em {
+  font-style: italic !important;
+}
+.commentContent del,
+.commentContent s {
+  text-decoration: line-through !important;
+  opacity: 0.7;
+}
+
+.commentContent :global(.spoiler) {
+  background: var(--fgColor-default);
+  color: transparent;
+  border-radius: 4px;
+  padding: 1px 5px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s;
+}
+.commentContent :global(.spoiler):hover {
+  background: var(--fgColor-muted);
+}
+.commentContent :global(.spoiler.revealed) {
+  background: rgba(var(--brand-rgb-primary), 0.08);
+  color: inherit;
+  user-select: auto;
+}
+.commentContent :global(.spoiler.revealed) * {
+  color: inherit !important;
+}
+.commentContent :global(.spoiler) * {
+  color: transparent !important;
+  transition: color 0.15s;
+}
+
+.commentContent a {
+  color: var(--brand-primary);
+  text-decoration: none;
+}
+.commentContent a:hover {
+  text-decoration: underline;
+}
+
+.commentContent ul,
+.commentContent ol {
+  padding-left: 20px;
+  margin: 4px 0 8px;
+}
+.commentContent li {
+  margin: 2px 0;
+}
+
+.commentContent blockquote {
+  margin: 8px 0;
+  padding: 4px 12px;
+  border-left: 3px solid var(--brand-primary);
+  background: rgba(var(--brand-rgb-primary), 0.06);
+  color: var(--fgColor-muted);
+}
+
+.commentContent code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace);
+  font-size: 0.82rem;
+  background: var(--bgColor-inset);
+  border: 1px solid var(--borderColor-muted);
+}
+
+.commentContent pre {
+  margin: 8px 0;
+  padding: 12px;
+  border-radius: 6px;
+  background: var(--bgColor-inset);
+  border: 1px solid var(--borderColor-muted);
+  overflow-x: auto;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.commentContent pre code {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  border: none;
+  font-size: inherit;
+}
+
+.commentContent hr {
+  border: none;
+  border-top: 1px solid var(--borderColor-muted);
+  margin: 12px 0;
 }
 
 .deleteBtn {
