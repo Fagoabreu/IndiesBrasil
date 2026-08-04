@@ -1,5 +1,5 @@
+import React, { useEffect, useState, useCallback } from "react";
 import SeoHead from "@/components/SeoHead";
-import { useEffect, useState, useCallback } from "react";
 import { Heading } from "@primer/react";
 import { useUser } from "@/context/UserContext";
 import PostCardComponent from "@/components/PostCard/PostCardComponent";
@@ -7,6 +7,8 @@ import CreatePost from "@/components/CreatePost/CreatePost";
 
 import "./PostsPage.css";
 import PostRightBarComponent from "@/components/RightBar/PostRightBarComponent";
+import TrendingTags from "@/components/TrendingTags/TrendingTagsComponent";
+import WhoToFollow from "@/components/WhoToFollow/WhoToFollow";
 import { useRouter } from "next/router";
 import { SITE_URL } from "@/lib/seo";
 
@@ -184,25 +186,37 @@ export default function PostsPage() {
           <p className="posts-empty-description">Tente trocar o filtro ou volte mais tarde para ver novas publicacoes.</p>
         </div>
       ) : (
-        posts.map((post) => (
-          <PostCardComponent
-            key={post.id}
-            post={post}
-            onDelete={handleDeletePost}
-            canInteract={user}
-            onTagClick={(tag) => {
-              setActiveTag(tag);
-              setTab("tag");
-              router.push(
-                {
-                  pathname: router.pathname,
-                  query: { tag },
-                },
-                undefined,
-                { shallow: true },
-              );
-            }}
-          />
+        posts.map((post, index) => (
+          <React.Fragment key={post.id}>
+            <PostCardComponent
+              post={post}
+              onDelete={handleDeletePost}
+              canInteract={user}
+              onTagClick={(tag) => {
+                setActiveTag(tag);
+                setTab("tag");
+                router.push(
+                  {
+                    pathname: router.pathname,
+                    query: { tag },
+                  },
+                  undefined,
+                  { shallow: true },
+                );
+              }}
+            />
+            {/* Intercala widgets no feed — visíveis só no mobile (≤1280px) */}
+            {index === 1 && (
+              <aside className="posts-feed-widget">
+                <TrendingTags />
+              </aside>
+            )}
+            {index === 4 && (
+              <aside className="posts-feed-widget">
+                <WhoToFollow />
+              </aside>
+            )}
+          </React.Fragment>
         ))
       )}
     </div>

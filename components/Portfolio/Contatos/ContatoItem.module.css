@@ -3,3 +3,14 @@
   align-items: center;
   gap: 12px;
 }
+
+.link {
+  font-size: 0.875rem;
+  color: var(--brand-primary);
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.link:hover {
+  text-decoration: underline;
+}

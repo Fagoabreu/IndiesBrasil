@@ -33,10 +33,30 @@ export default function CreatePost({ user, onPost }) {
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    processImageFile(file);
+  };
+
+  const processImageFile = (file) => {
     setImageFile(file);
     const reader = new FileReader();
     reader.onload = () => setImagePreview(reader.result);
     reader.readAsDataURL(file);
+  };
+
+  const handlePaste = (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (const item of items) {
+      if (item.type.startsWith("image/")) {
+        e.preventDefault();
+        const blob = item.getAsFile();
+        if (blob) {
+          processImageFile(blob);
+        }
+        break;
+      }
+    }
   };
 
   const addPollOption = () => {
@@ -102,6 +122,7 @@ export default function CreatePost({ user, onPost }) {
             placeholder="No que você está pensando?"
             value={content}
             onChange={(e) => setContent(e.target.value)}
+            onPaste={handlePaste}
             disabled={isPosting}
             className={styles.textarea}
           />

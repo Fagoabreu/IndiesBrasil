@@ -116,6 +116,18 @@
   font-size: 0.95rem;
 }
 
+/* ── Widgets intercalados no feed — visíveis só no mobile ── */
+.posts-feed-widget {
+  display: none;
+}
+
+@media (max-width: 1280px) {
+  .posts-feed-widget {
+    display: block;
+    margin: 8px 0;
+  }
+}
+
 @media (max-width: 900px) {
   .posts-page {
     width: 100%;

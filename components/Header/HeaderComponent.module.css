@@ -41,7 +41,7 @@
   background: var(--bgColor-muted);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1012px) {
   .menuBtn {
     display: flex;
   }

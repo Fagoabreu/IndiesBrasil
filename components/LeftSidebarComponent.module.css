@@ -28,28 +28,15 @@
   opacity: 0.8;
 }
 
-/* ===== Cabeçalhos de seção ===== */
-.groupHeading {
-  display: flex !important;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.07em !important;
-  color: var(--fgColor-muted) !important;
-  padding: 6px 8px 4px !important;
-  user-select: none;
-  transition: color 0.15s;
-}
-
-.groupHeading:hover {
-  color: var(--brand-primary) !important;
+/* ===== Item pai com SubNav (seção) ===== */
+.sidebar :global(button[aria-expanded]) {
+  font-weight: 600 !important;
+  color: var(--fgColor-default) !important;
 }
 
 /* ===== Hover em todos os itens (translate suave) ===== */
 .sidebar :global(a:not([aria-current])),
-.sidebar :global(button:not([aria-current])) {
+.sidebar :global(button:not([aria-current]):not([aria-expanded])) {
   transition:
     background-color 0.15s ease,
     color 0.15s ease,
@@ -57,14 +44,14 @@
 }
 
 .sidebar :global(a:not([aria-current]):hover),
-.sidebar :global(button:not([aria-current]):hover) {
+.sidebar :global(button:not([aria-current]):not([aria-expanded]):hover) {
   background-color: var(--brand-hover-bg) !important;
   transform: translateX(3px) !important;
 }
 
 /* ===== Item ativo — gradiente + brilho ===== */
 .sidebar :global(a[aria-current]:not([aria-current="false"])),
-.sidebar :global(button[aria-current]:not([aria-current="false"])) {
+.sidebar :global(button[aria-current]:not([aria-current="false"]):not([aria-expanded])) {
   background: linear-gradient(to right, rgba(var(--brand-rgb-primary), 0.16), rgba(var(--brand-rgb-primary), 0.04)) !important;
   color: var(--brand-primary) !important;
   font-weight: 600 !important;
@@ -72,7 +59,7 @@
 
 /* Indicador lateral esquerdo — com brilho */
 .sidebar :global(a[aria-current]:not([aria-current="false"]))::before,
-.sidebar :global(button[aria-current]:not([aria-current="false"]))::before {
+.sidebar :global(button[aria-current]:not([aria-current="false"]):not([aria-expanded]))::before {
   background-color: var(--brand-primary) !important;
   box-shadow: 0 0 8px rgba(var(--brand-rgb-primary), 0.7) !important;
 }
