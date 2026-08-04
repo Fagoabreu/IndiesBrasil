@@ -1,6 +1,6 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Avatar, Textarea, Button, Stack, IconButton } from "@primer/react";
-import { ImageIcon, TrashIcon, PlusIcon, XIcon } from "@primer/octicons-react";
+import { ImageIcon, TrashIcon, PlusIcon, XIcon, DeviceCameraIcon } from "@primer/octicons-react";
 import Image from "next/image";
 import styles from "./CreatePost.module.css";
 import PropTypes from "prop-types";
@@ -20,6 +20,35 @@ export default function CreatePost({ user, onPost }) {
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+
+  // Webcam state
+  const [hasCamera, setHasCamera] = useState(false);
+  const [showWebcam, setShowWebcam] = useState(false);
+  const [webcamStream, setWebcamStream] = useState(null);
+  const [webcamError, setWebcamError] = useState(null);
+  const [capturing, setCapturing] = useState(false);
+
+  // Detect if device has a camera
+  useEffect(() => {
+    let cancelled = false;
+    async function checkCamera() {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        if (cancelled) return;
+        const hasVideo = devices.some((d) => d.kind === "videoinput");
+        setHasCamera(hasVideo);
+      } catch {
+        if (!cancelled) setHasCamera(false);
+      }
+    }
+    checkCamera();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Poll state
   const [showPoll, setShowPoll] = useState(false);
@@ -79,6 +108,74 @@ export default function CreatePost({ user, onPost }) {
     setPollQuestion("");
     setPollOptions(["", ""]);
   };
+
+  // ── Webcam helpers ──
+  const startWebcam = useCallback(async () => {
+    setWebcamError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      });
+      setWebcamStream(stream);
+      setShowWebcam(true);
+      // Deferred — video element mounts on next render
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
+        }
+      }, 60);
+    } catch (err) {
+      setWebcamError("Não foi possível acessar a câmera. Verifique as permissões.");
+      console.error("Webcam error:", err);
+    }
+  }, []);
+
+  const stopWebcam = useCallback(() => {
+    if (webcamStream) {
+      webcamStream.getTracks().forEach((t) => t.stop());
+      setWebcamStream(null);
+    }
+    setShowWebcam(false);
+    setWebcamError(null);
+  }, [webcamStream]);
+
+  const capturePhoto = useCallback(() => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+
+    setCapturing(true);
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          processImageFile(blob);
+        }
+        stopWebcam();
+        setCapturing(false);
+      },
+      "image/jpeg",
+      0.92,
+    );
+  }, [stopWebcam]);
+
+  const handleCameraClick = useCallback(() => {
+    // Mobile: use native camera via capture attribute (more reliable)
+    const isTouch = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
+    if (isTouch) {
+      cameraInputRef.current?.click();
+      return;
+    }
+    // Desktop: open webcam
+    startWebcam();
+  }, [startWebcam]);
 
   const handleSubmit = async () => {
     if (!content.trim() && !imageFile && !showPoll) return;
@@ -143,6 +240,23 @@ export default function CreatePost({ user, onPost }) {
             </ul>
           )}
 
+          {/* ─── Webcam capture ─── */}
+          {showWebcam && (
+            <div className={styles.webcamArea}>
+              <div className={styles.webcamVideoWrap}>
+                <video ref={videoRef} className={styles.webcamVideo} autoPlay playsInline muted />
+                <canvas ref={canvasRef} style={{ display: "none" }} />
+              </div>
+              {webcamError && <p className={styles.webcamError}>{webcamError}</p>}
+              <div className={styles.webcamActions}>
+                <Button variant="primary" onClick={capturePhoto} disabled={capturing || !webcamStream}>
+                  {capturing ? "…" : "Tirar foto"}
+                </Button>
+                <Button onClick={stopWebcam}>Cancelar</Button>
+              </div>
+            </div>
+          )}
+
           {imagePreview && (
             <div className={styles.previewBox}>
               <Image src={imagePreview} alt="Pré-visualização da imagem" width={300} height={300} unoptimized className={styles.previewImg} />
@@ -189,6 +303,20 @@ export default function CreatePost({ user, onPost }) {
             <Stack direction="horizontal" gap={1}>
               <IconButton icon={ImageIcon} aria-label="Adicionar imagem" onClick={() => fileInputRef.current.click()} />
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className={styles.fileInput} />
+
+              {hasCamera && (
+                <>
+                  <IconButton icon={DeviceCameraIcon} aria-label="Tirar foto" onClick={handleCameraClick} />
+                  <input
+                    ref={cameraInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleImageSelect}
+                    className={styles.fileInput}
+                  />
+                </>
+              )}
 
               <button
                 type="button"
