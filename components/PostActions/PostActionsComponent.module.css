@@ -33,6 +33,10 @@
   color: var(--fgColor-accent);
 }
 
+.spacer {
+  flex: 1;
+}
+
 @media (max-width: 640px) {
   .actions {
     gap: 16px;

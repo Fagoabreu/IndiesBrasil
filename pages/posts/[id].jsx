@@ -17,6 +17,13 @@ export default function PostDetailPage() {
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState(null);
 
+  // ── OG tags: sempre presentes, mesmo durante loading ──
+  // O og:image aponta para a API que gera preview com a foto real ou SVG.
+  const seoTitle = post ? `@${post.author_username} no Indies Brasil` : "Post no Indies Brasil";
+  const seoDescription = post?.content?.slice(0, 200) || "Veja este post na comunidade Indies Brasil.";
+  const seoCanonical = id ? `${SITE_URL}/posts/${id}` : SITE_URL;
+  const seoImage = id ? `${SITE_URL}/api/og/post/${id}` : undefined;
+
   useEffect(() => {
     if (!id) return;
 
@@ -49,6 +56,7 @@ export default function PostDetailPage() {
   if (loading) {
     return (
       <div className="posts-page" style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
+        <SeoHead title={seoTitle} description={seoDescription} canonical={seoCanonical} ogImage={seoImage} />
         <Spinner size="large" />
       </div>
     );
@@ -57,6 +65,12 @@ export default function PostDetailPage() {
   if (notFound) {
     return (
       <div className="posts-page">
+        <SeoHead
+          title="Post não encontrado — Indies Brasil"
+          description="Este post não foi encontrado no Indies Brasil."
+          canonical={seoCanonical}
+          ogImage={seoImage}
+        />
         <div className="posts-empty">
           <p className="posts-empty-title">Post não encontrado</p>
           <p className="posts-empty-description">
@@ -72,6 +86,7 @@ export default function PostDetailPage() {
   if (error) {
     return (
       <div className="posts-page">
+        <SeoHead title="Erro — Indies Brasil" description="Ocorreu um erro ao carregar este post." canonical={seoCanonical} ogImage={seoImage} />
         <div className="posts-empty">
           <p className="posts-empty-title">{error}</p>
           <p className="posts-empty-description">
@@ -86,11 +101,7 @@ export default function PostDetailPage() {
 
   return (
     <div className="posts-page">
-      <SeoHead
-        title={`Post de ${post.username} — Indies Brasil`}
-        description={post.content?.slice(0, 160) || "Veja este post na comunidade Indies Brasil."}
-        canonical={`${SITE_URL}/posts/${id}`}
-      />
+      <SeoHead title={seoTitle} description={seoDescription} canonical={seoCanonical} ogImage={seoImage} />
 
       <div style={{ marginBottom: 12 }}>
         <Link
