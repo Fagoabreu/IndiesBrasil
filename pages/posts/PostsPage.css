@@ -199,6 +199,30 @@
   }
 }
 
+/* ── Infinite scroll ── */
+
+.posts-sentinel {
+  height: 1px;
+  width: 100%;
+  pointer-events: none;
+}
+
+.posts-loading-more {
+  text-align: center;
+  padding: 24px 0;
+  color: var(--fgColor-muted);
+  font-size: 0.85rem;
+}
+
+.posts-end-message {
+  text-align: center;
+  padding: 32px 0;
+  color: var(--fgColor-muted);
+  font-size: 0.85rem;
+  border-top: 1px solid var(--borderColor-muted);
+  margin-top: 12px;
+}
+
 @media (max-width: 480px) {
   .posts-page {
     padding: 8px 0 20px;
