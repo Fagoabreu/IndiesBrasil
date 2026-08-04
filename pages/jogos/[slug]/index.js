@@ -57,10 +57,10 @@ export default function GamePage() {
   const [following, setFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [websitePreview, setWebsitePreview] = useState(null); // {url, data} | null
-  const displayPreview = websitePreview?.url === gameData?.website_url ? websitePreview.data : null;
+  const displayPreview = websitePreview && websitePreview.url === gameData?.website_url ? websitePreview.data : null;
   const [activeTab, setActiveTab] = useState("overview");
   const [analisesList, setAnalisesList] = useState(null); // {gameId, data} | null
-  const displayAnalisesList = analisesList?.gameId === gameData?.id ? analisesList.data : null;
+  const displayAnalisesList = analisesList && analisesList.gameId === gameData?.id ? analisesList.data : null;
   const analisesLoading = displayAnalisesList === null && !!gameData?.id;
 
   useEffect(() => {

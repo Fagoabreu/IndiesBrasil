@@ -9,6 +9,7 @@ export default function PollComponent({ postId, question, options, userVote, end
   const totalVotes = results.reduce((sum, o) => sum + o.votes_count, 0);
 
   const handleVote = async (optionId) => {
+    const previousVote = voteData;
     const formData = new FormData();
     formData.append("poll_option_id", optionId);
 
@@ -21,12 +22,21 @@ export default function PollComponent({ postId, question, options, userVote, end
     if (res.ok) {
       const data = await res.json();
       setVoteData(data.voted ? optionId : null);
-      // Recarrega resultados
-      const updated = results.map((o) => ({
-        ...o,
-        votes_count: o.id === optionId ? (data.voted ? o.votes_count + 1 : o.votes_count - 1) : o.votes_count,
-      }));
-      setResults(updated);
+
+      // Atualiza contagens localmente conforme a ação
+      setResults((prev) =>
+        prev.map((o) => {
+          if (data.voted) {
+            // Novo voto: +1 na opção clicada, -1 na anterior (se diferente)
+            if (o.id === optionId) return { ...o, votes_count: o.votes_count + 1 };
+            if (o.id === previousVote && previousVote !== optionId) return { ...o, votes_count: o.votes_count - 1 };
+            return o;
+          }
+          // Toggle off (mesma opção): apenas -1
+          if (o.id === optionId) return { ...o, votes_count: o.votes_count - 1 };
+          return o;
+        }),
+      );
     }
   };
 
@@ -38,7 +48,8 @@ export default function PollComponent({ postId, question, options, userVote, end
     if (res.ok) setEnded(true);
   };
 
-  const showResults = ended || !!voteData;
+  const lockedByEnd = ended;
+  const hasVoted = !!voteData;
 
   return (
     <div className={styles.poll}>
@@ -46,16 +57,20 @@ export default function PollComponent({ postId, question, options, userVote, end
       {results.map((opt) => {
         const pct = totalVotes > 0 ? Math.round((opt.votes_count / totalVotes) * 100) : 0;
         const isSelected = voteData === opt.id;
+        // Enquete encerrada: só mostra resultados, sem clique
+        // Enquete ativa SEM voto: mostra opções clicáveis (modo votação)
+        // Enquete ativa COM voto: mostra resultados + permite trocar de opção
+        const clickable = !lockedByEnd;
 
         return (
           <button
             key={opt.id}
             type="button"
-            className={`${styles.option} ${showResults ? styles.optionResult : ""} ${isSelected ? styles.selected : ""}`}
-            onClick={() => !showResults && handleVote(opt.id)}
-            disabled={showResults}
+            className={`${styles.option} ${hasVoted || lockedByEnd ? styles.optionResult : ""} ${isSelected ? styles.selected : ""} ${clickable && hasVoted && !isSelected ? styles.changeable : ""}`}
+            onClick={() => clickable && handleVote(opt.id)}
+            disabled={!clickable}
           >
-            {showResults ? (
+            {hasVoted || lockedByEnd ? (
               <div className={styles.resultBar}>
                 <div className={styles.resultFill} style={{ width: `${pct}%` }} />
                 <span className={styles.resultLabel}>
@@ -70,15 +85,21 @@ export default function PollComponent({ postId, question, options, userVote, end
         );
       })}
 
-      {!showResults && totalVotes > 0 && (
+      {!hasVoted && !lockedByEnd && totalVotes > 0 && (
         <p className={styles.hint}>
           {totalVotes} voto{totalVotes !== 1 ? "s" : ""}
         </p>
       )}
 
-      {showResults && (
+      {hasVoted && !lockedByEnd && (
+        <p className={styles.hint}>
+          {totalVotes} voto{totalVotes !== 1 ? "s" : ""} &middot; Clique em outra opção para mudar seu voto
+        </p>
+      )}
+
+      {lockedByEnd && (
         <p className={styles.total}>
-          {totalVotes} voto{totalVotes !== 1 ? "s" : ""}
+          {totalVotes} voto{totalVotes !== 1 ? "s" : ""} &middot; Enquete encerrada
         </p>
       )}
 
