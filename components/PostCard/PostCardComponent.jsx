@@ -6,6 +6,7 @@ import styles from "./PostCardComponent.module.css";
 import PostActionsComponent from "../PostActions/PostActionsComponent";
 import CommentPanelComponent from "../CommentPanel/CommentPanelComponent";
 import EmbedComponent from "../Embeds/EmbedComponent";
+import ShareModal from "../ShareModal/ShareModal";
 import Image from "next/image";
 import PropTypes from "prop-types";
 import PollComponent from "./PollComponent";
@@ -77,6 +78,8 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
 
   const [comments, setComments] = useState([]);
   const [commentsLoaded, setCommentsLoaded] = useState(false);
+
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const MAX_CHARS = 240;
   const isLong = post.content.length > MAX_CHARS;
@@ -299,6 +302,7 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
             onLike={handleLike}
             onToggleComments={toggleComments}
             onReply={() => setShowCommentBox(true)}
+            onShare={() => setShowShareModal(true)}
           />
 
           {/* COMENTÁRIOS */}
@@ -312,6 +316,8 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
           />
         </div>
       </div>
+
+      {showShareModal && <ShareModal postId={post.id} postContent={post.content} onClose={() => setShowShareModal(false)} />}
     </article>
   );
 }
