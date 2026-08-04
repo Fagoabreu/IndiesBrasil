@@ -2,66 +2,105 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { ArrowLeftIcon } from "@primer/octicons-react";
-import { Spinner } from "@primer/react";
 import SeoHead from "@/components/SeoHead";
 import PostCardComponent from "@/components/PostCard/PostCardComponent";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL } from "@/lib/seo";
 
-export default function PostDetailPage() {
-  const router = useRouter();
-  const { id } = router.query;
-  const { user } = useUser();
-  const [post, setPost] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
-  const [error, setError] = useState(null);
+/**
+ * getServerSideProps — busca os dados do post no servidor ANTES de enviar o HTML.
+ *
+ * Isto é essencial para o WhatsApp/Discord/redes sociais: os crawlers dessas
+ * plataformas NÃO executam JavaScript. Eles leem o HTML bruto e extraem as
+ * meta tags <og:title>, <og:description>, <og:image> diretamente.
+ *
+ * Sem SSR, o router.query.id é undefined no servidor → OG tags genéricas → sem preview.
+ * Com SSR, o id vem de context.params → fetch no servidor → OG tags corretas no HTML.
+ */
+export async function getServerSideProps(context) {
+  const { id } = context.params;
+  const protocol = context.req.headers["x-forwarded-proto"] || "http";
+  const host = context.req.headers.host;
+  const baseUrl = `${protocol}://${host}`;
 
-  // ── OG tags: sempre presentes, mesmo durante loading ──
-  // O og:image aponta para a API que gera preview com a foto real ou SVG.
+  try {
+    // Busca anônima (sem cookies de usuário) — suficiente para OG tags
+    const res = await fetch(`${baseUrl}/api/v1/posts/${id}`);
+
+    if (res.status === 404) {
+      return {
+        props: { initialPost: null, ssrNotFound: true, ssrError: false, postId: id },
+      };
+    }
+
+    if (!res.ok) {
+      return {
+        props: { initialPost: null, ssrNotFound: false, ssrError: true, postId: id },
+      };
+    }
+
+    const post = await res.json();
+    return {
+      props: {
+        initialPost: post,
+        ssrNotFound: false,
+        ssrError: false,
+        postId: id,
+      },
+    };
+  } catch {
+    return {
+      props: { initialPost: null, ssrNotFound: false, ssrError: true, postId: id },
+    };
+  }
+}
+
+export default function PostDetailPage({ initialPost, ssrNotFound, ssrError, postId }) {
+  const router = useRouter();
+  const { user } = useUser();
+
+  // Estado inicial já vem do servidor via getServerSideProps.
+  // OG tags sempre usam dados reais — o HTML já chega pronto para o WhatsApp.
+  const [post, setPost] = useState(initialPost);
+  const [notFound, setNotFound] = useState(ssrNotFound);
+
+  // ── OG tags: preenchidas com dados do SSR ──
   const seoTitle = post ? `@${post.author_username} no Indies Brasil` : "Post no Indies Brasil";
   const seoDescription = post?.content?.slice(0, 200) || "Veja este post na comunidade Indies Brasil.";
-  const seoCanonical = id ? `${SITE_URL}/posts/${id}` : SITE_URL;
-  const seoImage = id ? `${SITE_URL}/api/og/post/${id}` : undefined;
+  const seoCanonical = `${SITE_URL}/posts/${postId}`;
+  const seoImage = `${SITE_URL}/api/og/post/${postId}`;
 
+  // Client-side fetch: apenas para usuários logados obterem dados personalizados
+  // (liked_by_user, user_vote). O SSR já entregou os dados base + OG tags.
+  // Roda em background, não bloqueia a renderização.
   useEffect(() => {
-    if (!id) return;
+    if (!user || ssrNotFound || ssrError) return;
+
+    let cancelled = false;
 
     (async () => {
-      setLoading(true);
-      setNotFound(false);
-      setError(null);
       try {
-        const res = await fetch(`/api/v1/posts/${id}`, {
+        const res = await fetch(`/api/v1/posts/${postId}`, {
           credentials: "include",
         });
         if (res.status === 404) {
-          setNotFound(true);
+          if (!cancelled) setNotFound(true);
           return;
         }
-        if (!res.ok) {
-          setError("Erro ao carregar o post.");
-          return;
-        }
+        if (!res.ok) return; // silencioso: SSR já tem os dados
         const data = await res.json();
-        setPost(data);
+        if (!cancelled) setPost(data);
       } catch {
-        setError("Erro de conexão.");
-      } finally {
-        setLoading(false);
+        // Silencioso: dados do SSR continuam válidos
       }
     })();
-  }, [id]);
 
-  if (loading) {
-    return (
-      <div className="posts-page" style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
-        <SeoHead title={seoTitle} description={seoDescription} canonical={seoCanonical} ogImage={seoImage} />
-        <Spinner size="large" />
-      </div>
-    );
-  }
+    return () => {
+      cancelled = true;
+    };
+  }, [postId, user, ssrNotFound, ssrError]);
 
+  // SSR não encontrou o post → 404 imediato (sem loading, sem fetch extra)
   if (notFound) {
     return (
       <div className="posts-page">
@@ -83,12 +122,13 @@ export default function PostDetailPage() {
     );
   }
 
-  if (error) {
+  // Se SSR falhou e não temos post → erro
+  if (ssrError && !post) {
     return (
       <div className="posts-page">
         <SeoHead title="Erro — Indies Brasil" description="Ocorreu um erro ao carregar este post." canonical={seoCanonical} ogImage={seoImage} />
         <div className="posts-empty">
-          <p className="posts-empty-title">{error}</p>
+          <p className="posts-empty-title">Erro ao carregar o post.</p>
           <p className="posts-empty-description">
             <Link href="/posts" style={{ color: "var(--brand-primary)" }}>
               ← Voltar para o feed
