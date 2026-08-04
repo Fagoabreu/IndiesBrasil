@@ -33,6 +33,15 @@
   cursor: default;
 }
 
+.option.changeable {
+  cursor: pointer;
+}
+
+.option.changeable:hover {
+  border-color: var(--brand-primary);
+  background: var(--brand-hover-bg);
+}
+
 .option.selected {
   border-color: var(--brand-primary);
   box-shadow: 0 0 0 2px var(--brand-active-ring);
