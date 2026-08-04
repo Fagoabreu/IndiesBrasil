@@ -1,7 +1,7 @@
-import { Button, ButtonGroup, Textarea } from "@primer/react";
 import { useState } from "react";
 import styles from "./CommentPanelComponent.module.css";
 import CommentComponent from "../Comment/CommentComponent";
+import CommentEditor from "../CommentEditor/CommentEditor";
 import PropTypes from "prop-types";
 
 CommentPanelComponent.propTypes = {
@@ -37,20 +37,13 @@ export default function CommentPanelComponent({ comments, showCommentBox, showCo
       {/* CAIXA DE COMENTÁRIO */}
       {showCommentBox && (
         <div className={styles.commentBox}>
-          <Textarea
-            className={styles.textarea}
-            placeholder="Adicionar comentário..."
+          <CommentEditor
             value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
+            onChange={setNewComment}
+            onSubmit={handleSubmit}
+            onCancel={onCloseCommentBox}
+            placeholder="Adicionar comentário..."
           />
-          <ButtonGroup className={styles.commentActions} disabled={!newComment.trim()}>
-            <Button variant="danger" onClick={onCloseCommentBox}>
-              Cancelar
-            </Button>
-            <Button variant="primary" disabled={!newComment.trim()} onClick={handleSubmit}>
-              Comentar
-            </Button>
-          </ButtonGroup>
         </div>
       )}
 

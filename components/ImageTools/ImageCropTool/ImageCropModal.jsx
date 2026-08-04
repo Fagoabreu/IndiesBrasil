@@ -117,7 +117,7 @@ export default function ImageCropModal({ imageSrc, preset = "avatar", onConfirm,
             Zoom ({zoom.toFixed(1)}×)
             <input
               type="range"
-              min={1}
+              min={0.5}
               max={3}
               step={0.05}
               value={zoom}

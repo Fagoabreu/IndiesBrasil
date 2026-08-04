@@ -1,79 +1,51 @@
 "use client";
 import { useRef, useState } from "react";
 import { Textarea } from "@primer/react";
-import { BoldIcon, ItalicIcon, CodeIcon, LinkIcon, EyeIcon, EyeClosedIcon, PencilIcon, SmileyIcon } from "@primer/octicons-react";
+import { BoldIcon, ItalicIcon, CodeIcon, LinkIcon, EyeIcon, EyeClosedIcon, PencilIcon, SmileyIcon, TypographyIcon } from "@primer/octicons-react";
 import { markdownToHtml } from "@/utils/markdown";
 import styles from "./CommentEditor.module.css";
 
-/* =========================================================
- * Emoji set — curadoria para comunidade dev/gamedev
- * ========================================================= */
 const EMOJIS = [
   "😀",
   "😂",
   "🤣",
+  "😊",
   "😍",
-  "🤩",
+  "🥰",
   "😎",
-  "🤔",
-  "😅",
+  "🤩",
   "😢",
-  "😤",
+  "😡",
   "👍",
   "👎",
   "👏",
   "🙌",
-  "💪",
-  "🤝",
-  "🎉",
   "🔥",
+  "⭐",
   "💯",
+  "❤️",
+  "💔",
+  "🎉",
+  "✨",
+  "🤔",
+  "💡",
+  "📌",
+  "🚀",
   "✅",
   "❌",
   "⚠️",
   "ℹ️",
-  "💡",
-  "📌",
-  "🔗",
-  "💻",
-  "🖥️",
-  "⌨️",
-  "🖱️",
   "🎮",
   "🕹️",
-  "📱",
-  "🔧",
-  "⚙️",
-  "🛠️",
-  "🐛",
-  "🚀",
-  "📦",
-  "🗂️",
-  "📁",
-  "📄",
-  "🧩",
-  "🎨",
-  "🎵",
-  "🎬",
   "🎲",
-  "♟️",
-  "🎯",
-  "🏆",
-  "⭐",
-  "🌟",
-  "✨",
-  "💎",
-  "🏗️",
-  "🎪",
-  "☕",
-  "🐍",
-  "🦀",
-  "🐘",
-  "💚",
+  "📝",
+  "💬",
+  "🗨️",
 ];
 
-export default function CommentEditor({ value, onChange, onSubmit, submitting, placeholder }) {
+export default function CommentEditor({ value, onChange, onSubmit, onCancel, submitting, placeholder }) {
   const [preview, setPreview] = useState(false);
+  const [showFormatting, setShowFormatting] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
   const textareaRef = useRef(null);
 
@@ -116,6 +88,11 @@ export default function CommentEditor({ value, onChange, onSubmit, submitting, p
     }
   }
 
+  function handleInsertEmoji(emoji) {
+    insertAtCursor(emoji);
+    setShowEmoji(false);
+  }
+
   const previewHtml = markdownToHtml(value);
 
   return (
@@ -123,76 +100,71 @@ export default function CommentEditor({ value, onChange, onSubmit, submitting, p
       {/* Toolbar */}
       <div className={styles.toolbar}>
         <div className={styles.tbGroup}>
-          <button type="button" className={styles.tbBtn} onClick={() => insertAtCursor("**", "**")} title="Negrito (Ctrl+B)" aria-label="Negrito">
-            <BoldIcon size={14} />
-          </button>
-          <button type="button" className={styles.tbBtn} onClick={() => insertAtCursor("*", "*")} title="Itálico (Ctrl+I)" aria-label="Itálico">
-            <ItalicIcon size={14} />
-          </button>
-          <button type="button" className={styles.tbBtn} onClick={() => insertAtCursor("~~", "~~")} title="Tachado (~~texto~~)" aria-label="Tachado">
-            <span className={styles.tbStrike}>S</span>
-          </button>
           <button
             type="button"
-            className={styles.tbBtn}
-            onClick={() => insertAtCursor("`", "`")}
-            title="Código inline (`código`)"
-            aria-label="Código inline"
+            className={`${styles.tbBtn} ${showFormatting ? styles.tbBtnActive : ""}`}
+            onClick={() => setShowFormatting((v) => !v)}
+            title="Formatação de texto"
+            aria-label="Formatação de texto"
           >
-            <CodeIcon size={14} />
-          </button>
-          <button
-            type="button"
-            className={styles.tbBtn}
-            onClick={() => insertAtCursor("\n```\n", "\n```\n")}
-            title={"Bloco de código (```bloco```)"}
-            aria-label="Bloco de código"
-          >
-            <span className={styles.tbCodeBlock}>{"</>"}</span>
-          </button>
-          <button type="button" className={styles.tbBtn} onClick={() => insertAtCursor("[", "](url)")} title="Link ([texto](url))" aria-label="Link">
-            <LinkIcon size={14} />
-          </button>
-          <button type="button" className={styles.tbBtn} onClick={() => insertAtCursor("||", "||")} title="Spoiler (||texto||)" aria-label="Spoiler">
-            <EyeClosedIcon size={14} />
+            <TypographyIcon size={14} />
           </button>
         </div>
 
-        <div className={styles.tbGroup}>
-          {/* Emoji picker */}
-          <div className={styles.emojiWrap}>
+        {showFormatting && (
+          <div className={styles.tbGroup}>
+            <button type="button" className={styles.tbBtn} onClick={() => insertAtCursor("**", "**")} title="Negrito" aria-label="Negrito">
+              <BoldIcon size={14} />
+            </button>
+            <button type="button" className={styles.tbBtn} onClick={() => insertAtCursor("*", "*")} title="Itálico" aria-label="Itálico">
+              <ItalicIcon size={14} />
+            </button>
+            <button type="button" className={styles.tbBtn} onClick={() => insertAtCursor("~~", "~~")} title="Tachado" aria-label="Tachado">
+              <span className={styles.tbStrike}>S</span>
+            </button>
+            <button type="button" className={styles.tbBtn} onClick={() => insertAtCursor("`", "`")} title="Código inline" aria-label="Código inline">
+              <CodeIcon size={14} />
+            </button>
             <button
               type="button"
-              className={`${styles.tbBtn} ${showEmoji ? styles.tbBtnActive : ""}`}
-              onClick={() => setShowEmoji((p) => !p)}
-              title="Emoji"
-              aria-label="Emoji"
+              className={styles.tbBtn}
+              onClick={() => insertAtCursor("\n```\n", "\n```\n")}
+              title="Bloco de código"
+              aria-label="Bloco de código"
             >
-              <SmileyIcon size={14} />
+              <span className={styles.tbCodeBlock}>{"</>"}</span>
             </button>
-            {showEmoji && (
-              <div className={styles.emojiPicker}>
-                <div className={styles.emojiGrid}>
-                  {EMOJIS.map((emoji) => (
-                    <button
-                      key={emoji}
-                      type="button"
-                      className={styles.emojiBtn}
-                      onClick={() => {
-                        insertAtCursor(emoji);
-                        setShowEmoji(false);
-                      }}
-                      title={emoji}
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+            <button type="button" className={styles.tbBtn} onClick={() => insertAtCursor("[", "](url)")} title="Link" aria-label="Link">
+              <LinkIcon size={14} />
+            </button>
+            <button type="button" className={styles.tbBtn} onClick={() => insertAtCursor("||", "||")} title="Spoiler" aria-label="Spoiler">
+              <EyeClosedIcon size={14} />
+            </button>
           </div>
+        )}
 
-          {/* Preview toggle */}
+        <div className={styles.emojiWrap}>
+          <button
+            type="button"
+            className={`${styles.tbBtn} ${showEmoji ? styles.tbBtnActive : ""}`}
+            onClick={() => setShowEmoji((v) => !v)}
+            title="Emoji"
+            aria-label="Emoji"
+          >
+            <SmileyIcon size={14} />
+          </button>
+          {showEmoji && (
+            <div className={styles.emojiPicker}>
+              {EMOJIS.map((emoji) => (
+                <button key={emoji} type="button" className={styles.emojiBtn} onClick={() => handleInsertEmoji(emoji)} title={emoji}>
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className={styles.tbGroup}>
           <button
             type="button"
             className={`${styles.tbBtn} ${preview ? styles.tbBtnActive : ""}`}
@@ -234,11 +206,18 @@ export default function CommentEditor({ value, onChange, onSubmit, submitting, p
         <span className={styles.footerHint}>
           Markdown: **negrito** *itálico* ~~tachado~~ `código` ```bloco``` [link](url). Ctrl+Enter para enviar.
         </span>
-        {onSubmit && (
-          <button type="button" className={styles.footerBtn} disabled={!value.trim() || submitting} onClick={onSubmit}>
-            {submitting ? "Enviando..." : "Comentar"}
-          </button>
-        )}
+        <div className={styles.footerActions}>
+          {onCancel && (
+            <button type="button" className={styles.footerCancelBtn} onClick={onCancel} disabled={submitting}>
+              Cancelar
+            </button>
+          )}
+          {onSubmit && (
+            <button type="button" className={styles.footerBtn} disabled={!value.trim() || submitting} onClick={onSubmit}>
+              {submitting ? "Enviando..." : "Comentar"}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
