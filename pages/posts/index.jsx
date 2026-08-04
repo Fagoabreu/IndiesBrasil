@@ -208,11 +208,13 @@ export default function PostsPage() {
             {/* Intercala widgets no feed — visíveis só no mobile (≤1280px) */}
             {index === 1 && (
               <aside className="posts-feed-widget">
+                <span className="posts-feed-widget-label">Assuntos do momento</span>
                 <TrendingTags />
               </aside>
             )}
             {index === 4 && (
               <aside className="posts-feed-widget">
+                <span className="posts-feed-widget-label">Sugestões para você</span>
                 <WhoToFollow />
               </aside>
             )}
