@@ -73,53 +73,57 @@ jobs:
           cp "$GITHUB_WORKSPACE/deploy/compose.yaml" /var/www/indies/
 
       # ── Certificados SSL do Postgres ──
+      # Usa um container temporário para escrever no volume Docker.
+      # O github-runner não tem acesso a /var/lib/docker/volumes/ no host,
+      # mas o container roda como root e escreve via bind mount.
       - name: Ensure Postgres SSL certificates
         run: |
           docker volume inspect indies_postgres-certs >/dev/null 2>&1 || docker volume create indies_postgres-certs
-          CERTS_DIR="/var/lib/docker/volumes/indies_postgres-certs/_data"
-          mkdir -p "$CERTS_DIR"
+          docker run --rm -e HOME -e PATH -v indies_postgres-certs:/certs alpine:latest sh -c '
+            apk add --no-cache openssl >/dev/null 2>&1
 
-          if [ ! -f "$CERTS_DIR/root.key" ]; then
-            echo "🧾 Generating root CA"
-            openssl genrsa -out "$CERTS_DIR/root.key" 4096
-            openssl req -x509 -new -nodes \
-              -key "$CERTS_DIR/root.key" \
-              -sha256 -days 3650 \
-              -subj "/CN=Postgres Root CA" \
-              -out "$CERTS_DIR/root.crt"
-          fi
+            if [ ! -f /certs/root.key ]; then
+              echo "🧾 Generating root CA"
+              openssl genrsa -out /certs/root.key 4096
+              openssl req -x509 -new -nodes \
+                -key /certs/root.key \
+                -sha256 -days 3650 \
+                -subj "/CN=Postgres Root CA" \
+                -out /certs/root.crt
+            fi
 
-          if [ ! -f "$CERTS_DIR/server.key" ]; then
-            echo "🔑 Generating server key"
-            openssl genrsa -out "$CERTS_DIR/server.key" 4096
-          fi
+            if [ ! -f /certs/server.key ]; then
+              echo "🔑 Generating server key"
+              openssl genrsa -out /certs/server.key 4096
+            fi
 
-          if [ ! -f "$CERTS_DIR/server.csr" ]; then
-            echo "📄 Generating server CSR"
-            openssl req -new \
-              -key "$CERTS_DIR/server.key" \
-              -subj "/CN=postgres" \
-              -out "$CERTS_DIR/server.csr"
-          fi
+            if [ ! -f /certs/server.csr ]; then
+              echo "📄 Generating server CSR"
+              openssl req -new \
+                -key /certs/server.key \
+                -subj "/CN=postgres" \
+                -out /certs/server.csr
+            fi
 
-          if [ ! -f "$CERTS_DIR/server.crt" ]; then
-            echo "📜 Signing server certificate"
-            openssl x509 -req \
-              -in "$CERTS_DIR/server.csr" \
-              -CA "$CERTS_DIR/root.crt" \
-              -CAkey "$CERTS_DIR/root.key" \
-              -CAcreateserial \
-              -out "$CERTS_DIR/server.crt" \
-              -days 3650 -sha256
-          fi
+            if [ ! -f /certs/server.crt ]; then
+              echo "📜 Signing server certificate"
+              openssl x509 -req \
+                -in /certs/server.csr \
+                -CA /certs/root.crt \
+                -CAkey /certs/root.key \
+                -CAcreateserial \
+                -out /certs/server.crt \
+                -days 3650 -sha256
+            fi
 
-          echo "🔒 Fixing permissions"
-          chown -R 70:70 "$CERTS_DIR"
-          chmod 755 "$CERTS_DIR"
-          chmod 600 "$CERTS_DIR/server.key"
-          chmod 644 "$CERTS_DIR/server.crt" "$CERTS_DIR/root.crt"
+            echo "🔒 Fixing permissions"
+            chown -R 70:70 /certs
+            chmod 755 /certs
+            chmod 600 /certs/server.key
+            chmod 644 /certs/server.crt /certs/root.crt
 
-          echo "✅ Postgres SSL certificates ready"
+            echo "✅ Postgres SSL certificates ready"
+          '
 
       # ── Build & deploy ──
       - name: Build and deploy app
