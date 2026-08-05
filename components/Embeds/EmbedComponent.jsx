@@ -55,18 +55,27 @@ export default function EmbedComponent({ embeds }) {
 
         if (embed.type === "steam") {
           return (
-            <a
-              key={key}
-              href={embed.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.previewCard}
-              style={{ display: "flex", alignItems: "center", gap: 12, padding: 12 }}
-            >
-              <span style={{ fontSize: 24, flexShrink: 0 }}>🎮</span>
-              <div className={styles.previewContent} style={{ padding: 0 }}>
-                <strong>Ver na Steam</strong>
-                <p>{embed.url}</p>
+            <a key={key} href={embed.url} target="_blank" rel="noopener noreferrer" className={styles.steamCard}>
+              {embed.image && (
+                <div className={styles.steamCardImageWrap}>
+                  <Image
+                    src={embed.image}
+                    alt={embed.title || "Steam"}
+                    fill
+                    className={styles.steamCardImage}
+                    sizes="(max-width: 600px) 100vw, 600px"
+                    unoptimized
+                  />
+                </div>
+              )}
+              <div className={styles.steamCardBody}>
+                <span className={styles.steamCardTitle}>{embed.title || "Steam"}</span>
+                <span className={styles.steamCardCta}>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M8 0C3.58 0 0 3.58 0 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm3.5 12H4.5L3 9l4.5-2.5L12 9l-.5 3z" fill="currentColor" />
+                  </svg>
+                  Abrir na Steam
+                </span>
               </div>
             </a>
           );

@@ -25,7 +25,7 @@ async function resolveEmbed(url) {
   }
 
   if (isSteamStore(url)) {
-    return resolveSteam(url);
+    return await resolveSteam(url);
   }
 
   return fetchLinkPreview(url);
@@ -174,18 +174,48 @@ function resolveTwitch(url) {
   return null;
 }
 
-function resolveSteam(url) {
+async function resolveSteam(url) {
   const match = url.match(/store\.steampowered\.com\/app\/(\d+)/);
 
   if (!match) return null;
 
   const appId = match[1];
 
+  // Fetch Steam store page to extract OG metadata (title, capsule image, description)
+  let image = null;
+  let title = null;
+  let description = null;
+
+  try {
+    const res = await fetch(url, { method: "GET" });
+    const html = await res.text();
+
+    const getMeta = (name) => {
+      const regex = new RegExp(`<meta property="og:${name}" content="([^"]+)"`, "i");
+      const m = regex.exec(html);
+      return m ? m[1] : null;
+    };
+
+    title = getMeta("title");
+    image = getMeta("image");
+    description = getMeta("description");
+  } catch {
+    // Fallback: use known Steam CDN capsule image URL
+  }
+
+  // Fallback capsule image if OG parsing fails
+  if (!image) {
+    image = `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${appId}/header.jpg`;
+  }
+
   return {
     type: "steam",
     subtype: "store",
     appId,
     url,
+    image,
+    title,
+    description,
   };
 }
 
