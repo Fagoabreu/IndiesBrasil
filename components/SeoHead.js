@@ -5,9 +5,13 @@ import { SITE_NAME, SITE_LOCALE, DEFAULT_OG_IMAGE, TWITTER_HANDLE } from "@/lib/
 /**
  * Componente de SEO reutilizável para todas as páginas.
  * Injeta <title>, <meta>, Open Graph, Twitter Card e JSON-LD via next/head.
+ *
+ * @param {{ title: string, description: string, canonical: string, ogImage?: string, ogImageWidth?: number, ogImageHeight?: number, ogType?: string, jsonLd?: object, noIndex?: boolean }} props
  */
-export default function SeoHead({ title, description, canonical, ogImage, jsonLd, noIndex }) {
+export default function SeoHead({ title, description, canonical, ogImage, ogImageWidth, ogImageHeight, ogType, jsonLd, noIndex }) {
   const image = ogImage || DEFAULT_OG_IMAGE;
+  const imgWidth = ogImageWidth || 1200;
+  const imgHeight = ogImageHeight || 630;
 
   return (
     <Head>
@@ -18,13 +22,13 @@ export default function SeoHead({ title, description, canonical, ogImage, jsonLd
       <meta httpEquiv="content-language" content="pt-BR" />
 
       {/* Open Graph */}
-      <meta property="og:type" content="website" />
+      <meta property="og:type" content={ogType || "website"} />
       <meta property="og:url" content={canonical} />
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={image} />
-      <meta property="og:image:width" content="1200" />
-      <meta property="og:image:height" content="630" />
+      <meta property="og:image:width" content={String(imgWidth)} />
+      <meta property="og:image:height" content={String(imgHeight)} />
       <meta property="og:locale" content={SITE_LOCALE} />
       <meta property="og:site_name" content={SITE_NAME} />
 
@@ -46,12 +50,18 @@ SeoHead.propTypes = {
   description: PropTypes.string.isRequired,
   canonical: PropTypes.string.isRequired,
   ogImage: PropTypes.string,
+  ogImageWidth: PropTypes.number,
+  ogImageHeight: PropTypes.number,
+  ogType: PropTypes.string,
   jsonLd: PropTypes.object,
   noIndex: PropTypes.bool,
 };
 
 SeoHead.defaultProps = {
   ogImage: null,
+  ogImageWidth: 1200,
+  ogImageHeight: 630,
+  ogType: "website",
   jsonLd: null,
   noIndex: false,
 };

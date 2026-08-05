@@ -143,16 +143,7 @@ export default function StudiosPage() {
 
   return (
     <div className={styles.page}>
-      <SeoHead
-        title={PAGE_TITLE}
-        description={PAGE_DESCRIPTION}
-        canonical={PAGE_URL}
-        openGraph={{
-          title: PAGE_TITLE,
-          description: PAGE_DESCRIPTION,
-          url: PAGE_URL,
-        }}
-      />
+      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} />
 
       {/* PAGE HEADER */}
       <header className={styles.pageHeader}>
