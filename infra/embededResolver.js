@@ -1,3 +1,13 @@
+import { SITE_URL } from "@/lib/seo";
+
+/** Wraps an external image URL through our proxy so CSP doesn't block it. */
+function proxyImageUrl(imageUrl) {
+  if (!imageUrl) return null;
+  // Don't proxy already-proxied or same-origin URLs
+  if (imageUrl.startsWith("/api/") || imageUrl.startsWith(SITE_URL)) return imageUrl;
+  return `${SITE_URL}/api/v1/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+}
+
 async function getEmbededLinks(content) {
   const links = extractLinks(content);
   const embeds = [];
@@ -113,11 +123,14 @@ async function fetchLinkPreview(url) {
           })()
         : rawImage;
 
+    // Wrap external images through our proxy so CSP doesn't block them
+    const proxiedImage = proxyImageUrl(image);
+
     return {
       type: "preview",
       title: getMeta("title"),
       description: getMeta("description"),
-      image,
+      image: proxiedImage,
       url,
     };
   } catch {
@@ -213,7 +226,7 @@ async function resolveSteam(url) {
     subtype: "store",
     appId,
     url,
-    image,
+    image: proxyImageUrl(image),
     title,
     description,
   };
