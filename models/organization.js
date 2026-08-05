@@ -1,24 +1,6 @@
 import database from "infra/database";
 import { NotFoundError, ValidationError, ForbiddenError } from "infra/errors.js";
-
-/* =========================================================
- * Helpers
- * ========================================================= */
-
-/**
- * Gera um slug único a partir do nome do estúdio.
- * Usa o padrão: kebab-case + sufixo do UUID para evitar colisões.
- */
-function generateSlug(name, id) {
-  const base = name
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // remove acentos
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60);
-  return `${base}-${id.slice(0, 8)}`;
-}
+import { generateUniqueSlug } from "lib/slug";
 
 /* =========================================================
  * Leitura
@@ -105,12 +87,12 @@ async function findById(id) {
 async function create(ownerUser, data) {
   await validateOwnerHasNoStudio(ownerUser.id);
 
-  // Gera o UUID antecipadamente para poder compor o slug na mesma query
+  // Gera o UUID para o id
   const idResult = await database.query({
     text: `SELECT gen_random_uuid() AS id`,
   });
   const newId = idResult.rows[0].id;
-  const slug = generateSlug(data.name, newId);
+  const slug = await generateUniqueSlug(data.name, "organizations", "slug", null, 60);
 
   const result = await database.query({
     text: `
@@ -191,7 +173,19 @@ async function update(slug, data) {
     }
   }
 
+  let effectiveSlug = slug;
+
   if (fields.length > 0) {
+    // Se o nome mudou, regenera o slug
+    if ("name" in data) {
+      const newSlug = await generateUniqueSlug(data.name, "organizations", "slug", org.slug, 60);
+      if (newSlug !== org.slug) {
+        effectiveSlug = newSlug;
+        fields.push(`slug = $${idx++}`);
+        values.push(newSlug);
+      }
+    }
+
     values.push(org.id);
     await database.query({
       text: `UPDATE organizations SET ${fields.join(", ")} WHERE id = $${idx}`,
@@ -218,7 +212,7 @@ async function update(slug, data) {
     await deleteAddress(org.address_id);
   }
 
-  return findBySlug(slug);
+  return findBySlug(effectiveSlug);
 }
 
 /* =========================================================

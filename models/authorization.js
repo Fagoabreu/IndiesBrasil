@@ -23,6 +23,9 @@ const availableFeatures = new Set([
   "read:status",
   "read:status:all",
 
+  //ADMIN
+  "read:admin",
+
   //POST
   "create:post",
   "read:post",

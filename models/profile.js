@@ -68,7 +68,7 @@ async function findPortfolioFormacaoByUserId(user_id) {
           init_date,
           end_date,
           instituicao
-        from 
+        from
           portfolio_formacao
         where user_id=$1
           `,
@@ -124,22 +124,21 @@ async function selectFormacaoByUserAndId(user_id, formacao_id) {
 }
 
 async function updateFormacao(userInputValues) {
-  console.log("formacao update:", userInputValues);
   const updatedFormacao = await runUpdateQuery(userInputValues);
   return updatedFormacao;
 
   async function runUpdateQuery(userInputValues) {
     const results = await database.query({
       text: `
-        UPDATE 
+        UPDATE
           portfolio_formacao
-        SET 
-          nome=$3, 
+        SET
+          nome=$3,
           instituicao=$4,
-          init_date=$5, 
-          end_date=$6, 
+          init_date=$5,
+          end_date=$6,
           ordem=$7
-        WHERE 
+        WHERE
           id=$1
           and user_id=$2
         returning *
@@ -200,9 +199,9 @@ async function deleteFormacaoByUserAndId(user_id, formacao_id) {
   async function runDeleteQuery(user_id, formacao_id) {
     const results = await database.query({
       text: `
-        delete from 
+        delete from
           portfolio_formacao
-        where 
+        where
           user_id=$1
           and id = $2
         returning *
@@ -242,7 +241,6 @@ async function saveImages(userInputValues) {
     ...userInputValues,
   };
   const updatedImages = await runUpdateQuery(imagesNewValues);
-  console.log("Updated images:", updatedImages);
   return updatedImages;
 
   async function runSelectQuery(user_id) {
@@ -299,7 +297,7 @@ async function selectRoleByUserAndRole(user_id, portfolio_role_name) {
           portfolio_role_name,
           experience,
           ordem
-        from 
+        from
           portfolio_role_ref
         where
           user_id=$1
@@ -362,7 +360,7 @@ async function findRolesByUserId(user_id) {
           prr.experience,
           prr.ordem,
           pr.icon_img
-        from 
+        from
           portfolio_role_ref prr
           inner join portfolio_roles pr
           on pr.name = prr.portfolio_role_name
@@ -381,9 +379,9 @@ async function deleteRoleByUserAndRole(user_id, portfolio_role_name) {
   async function runDeleteQuery(user_id, portfolio_role_name) {
     const results = await database.query({
       text: `
-        delete from 
+        delete from
           portfolio_role_ref
-        where 
+        where
           user_id=$1
           and portfolio_role_name = $2
         returning *
@@ -413,7 +411,7 @@ async function findPortfolioHistoricoByUserId(user_id) {
           ph.cidade,
           ph.estado,
           ph.atribuicoes
-        from 
+        from
           portfolio_historico ph
         where ph.user_id=$1
           `,
@@ -471,7 +469,7 @@ async function deleteHistoricoById(historico_id) {
   async function runDeleteQuery(historico_id) {
     const results = await database.query({
       text: `
-        delete from 
+        delete from
           portfolio_historico ph
         where ph.id=$1
       `,
@@ -488,18 +486,18 @@ async function selectHistoricoById(historicoId) {
   async function runselectQuery(historicoId) {
     const results = await database.query({
       text: `
-      select 
+      select
         id,
-        user_id, 
-        ordem, 
-        company, 
-        cargo, 
-        init_date, 
-        end_date, 
-        cidade, 
-        estado, 
+        user_id,
+        ordem,
+        company,
+        cargo,
+        init_date,
+        end_date,
+        cidade,
+        estado,
         atribuicoes
-      from 
+      from
         portfolio_historico
       where id = $1
         `,
@@ -523,19 +521,19 @@ async function updateHistoricoById(userInputValues) {
   async function runUpdateQuery(userInputValues) {
     const results = await database.query({
       text: `
-      update 
+      update
         portfolio_historico
-      set 
-        user_id=$2, 
-        ordem=$3, 
-        company=$4, 
-        cargo=$5, 
-        init_date=$6, 
-        end_date=$7, 
-        cidade=$8, 
-        estado=$9, 
+      set
+        user_id=$2,
+        ordem=$3,
+        company=$4,
+        cargo=$5,
+        init_date=$6,
+        end_date=$7,
+        cidade=$8,
+        estado=$9,
         atribuicoes=$10
-      where 
+      where
         id = $1
       returning *
         `,
@@ -578,7 +576,7 @@ async function findContactsByUserId(user_id) {
           uc.contact_type_id,
           ct.icon_img,
           ct.icon_key
-        from 
+        from
           users_contacts uc
           inner join contact_type ct
           on ct.id = uc.contact_type_id
@@ -628,12 +626,12 @@ async function selectContatoById(contatoId) {
   async function runselectQuery(contatoId) {
     const results = await database.query({
       text: `
-      select 
+      select
         id,
-        user_id, 
-        contact_type_id, 
+        user_id,
+        contact_type_id,
         contact_value
-      from 
+      from
         users_contacts
       where id = $1
         `,
@@ -657,13 +655,13 @@ async function updateContatoById(userInputValues) {
   async function runUpdateQuery(userInputValues) {
     const results = await database.query({
       text: `
-      update 
+      update
         users_contacts
-      set 
-        user_id=$2, 
-        contact_type_id=$3, 
+      set
+        user_id=$2,
+        contact_type_id=$3,
         contact_value=$4
-      where 
+      where
         id = $1
       returning *
         `,
@@ -687,7 +685,7 @@ async function deleteContatoById(contact_id) {
   async function runDeleteQuery(contact_id) {
     const results = await database.query({
       text: `
-        delete from 
+        delete from
           users_contacts uc
         where uc.id=$1
         returning *
@@ -712,7 +710,7 @@ async function findPortfolioToolsByPortfolioId(user_id) {
           ptf.experience,
           pt.name,
           pt.icon_img
-        from 
+        from
           portfolio_tool_ref ptf
           inner join portfolio_tools pt
             on pt.id=ptf.portfolio_tool_id
@@ -747,7 +745,6 @@ async function saveTools(userInputValues) {
 
 async function patchTools(user_id, portfolio_tool_id, userInputValues) {
   const currentTool = await selectToolByUserAndTool(user_id, portfolio_tool_id);
-  console.log(currentTool);
   const toolWithNewValues = {
     ...currentTool,
     ...userInputValues,
@@ -767,7 +764,7 @@ async function selectToolByUserAndTool(user_id, portfolio_tool_id) {
           portfolio_tool_id,
           user_id,
           experience
-        from 
+        from
           portfolio_tool_ref
         where
           user_id=$1
@@ -793,11 +790,11 @@ async function updateToolByUserAndTool(userInputValues) {
   async function runUpdateQuery(userInputValues) {
     const results = await database.query({
       text: `
-      update 
+      update
         portfolio_tool_ref
-      set 
+      set
         experience = $3
-      where 
+      where
         user_id = $1
         and portfolio_tool_id = $2
       returning *
@@ -822,9 +819,9 @@ async function deleteToolByUserAndTool(user_id, portfolio_tool_id) {
   async function runDeleteQuery(user_id, portfolio_tool_id) {
     const results = await database.query({
       text: `
-        delete from 
+        delete from
           portfolio_tool_ref
-        where 
+        where
           user_id=$1
           and portfolio_tool_id = $2
         returning *

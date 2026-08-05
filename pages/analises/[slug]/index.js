@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import sanitizeHtml from "@/lib/sanitize";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
@@ -279,8 +280,8 @@ function SectionRenderer({ section, index }) {
         {section.subtitle && <h2 className={styles.sectionSubtitle}>{section.subtitle}</h2>}
         <div
           className={styles.sectionContent}
-          dangerouslySetInnerHTML={{ __html: section.content }}
-          // Conteúdo sanitizado pelo autor no momento da criação via textarea/editor
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml.sanitize(section.content) }}
+          // Conteúdo sanitizado server-side para prevenir XSS
         />
       </section>
     );
