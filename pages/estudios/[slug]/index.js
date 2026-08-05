@@ -79,19 +79,40 @@ function renderBanner(embedUrl, bannerUrl, studioName, styles) {
   return <div className={styles.bannerPlaceholder} />;
 }
 
-export default function StudioPage() {
+export async function getServerSideProps(context) {
+  const { slug } = context.params;
+  try {
+    const organization = (await import("@/models/organization")).default;
+    const studio = await organization.findBySlug(slug);
+    if (!studio) return { props: { initialStudio: null } };
+
+    // Normalize address (same logic as the API handler)
+    const { street, number, complement, neighborhood, city, state, zip_code, country, ...studioData } = studio;
+    const address = city || street ? { street, number, complement, neighborhood, city, state, zip_code, country } : null;
+
+    return {
+      props: {
+        initialStudio: { ...studioData, address },
+      },
+    };
+  } catch {
+    return { props: { initialStudio: null } };
+  }
+}
+
+export default function StudioPage({ initialStudio }) {
   const router = useRouter();
   const { slug } = router.query;
   const { user: authUser, loadingUser } = useUser();
 
-  const [studio, setStudio] = useState(null);
+  const [studio, setStudio] = useState(initialStudio ?? null);
   const [viewer, setViewer] = useState({
     isFollowing: false,
     isMember: false,
     isAdmin: false,
     isOwner: false,
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialStudio);
   const [statusMsg, setStatusMsg] = useState({ type: null, text: "" });
 
   // Upload crop state
@@ -401,7 +422,7 @@ export default function StudioPage() {
     }
   }
 
-  if (loading || loadingUser) {
+  if (!initialStudio && (loading || loadingUser)) {
     return (
       <div className={styles.loadingWrapper}>
         <Spinner size="large" />
