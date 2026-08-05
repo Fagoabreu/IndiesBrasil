@@ -1,12 +1,13 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import Head from "next/head";
 import Link from "next/link";
 import Image from "next/image";
 import { useUser } from "@/context/UserContext";
+import SeoHead from "@/components/SeoHead";
 import GameMediaPlayer from "@/components/GameMedia/GameMediaPlayer";
 import GameReviews from "@/components/GameReviews/GameReviews";
+import { SITE_URL } from "@/lib/seo";
 import styles from "./boardgame.module.css";
 
 const CATEGORIES = {
@@ -44,14 +45,26 @@ function getFollowLabel(loading, following) {
   return following ? "\u2713 Seguindo" : "+ Seguir";
 }
 
-export default function BoardgamePage() {
+export async function getServerSideProps(context) {
+  const { slug } = context.params;
+  try {
+    const boardgame = (await import("@/models/boardgame")).default;
+    const bgData = await boardgame.findBySlug(slug);
+    if (!bgData) return { props: { initialBgData: null } };
+    return { props: { initialBgData: bgData } };
+  } catch {
+    return { props: { initialBgData: null } };
+  }
+}
+
+export default function BoardgamePage({ initialBgData }) {
   const router = useRouter();
   const { slug } = router.query;
   const { user, loadingUser } = useUser();
 
-  const [bgData, setBgData] = useState(null);
+  const [bgData, setBgData] = useState(initialBgData ?? null);
   const [bgMedia, setBgMedia] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialBgData);
   const [following, setFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
 
@@ -99,7 +112,7 @@ export default function BoardgamePage() {
     }
   }
 
-  if (loadingUser || loading) {
+  if (!initialBgData && (loadingUser || loading)) {
     return (
       <div className={styles.loadingPage}>
         <div className={styles.spinner} />
@@ -114,12 +127,20 @@ export default function BoardgamePage() {
   const playerCount = formatPlayerCount(bgData.player_count_min, bgData.player_count_max);
   const playTime = formatPlayTime(bgData.play_time_min, bgData.play_time_max);
 
+  const coverImage = bgData.banner_url || bgData.cover_url;
+  const canonicalUrl = `${SITE_URL}/jogos-de-mesa/${slug}`;
+
   return (
     <>
-      <Head>
-        <title>{bgData.name} — Indies Brasil</title>
-        <meta name="description" content={bgData.short_description || bgData.name} />
-      </Head>
+      <SeoHead
+        title={`${bgData.name} — Indies Brasil`}
+        description={bgData.short_description || bgData.name}
+        canonical={canonicalUrl}
+        ogImage={coverImage}
+        ogImageWidth={1200}
+        ogImageHeight={630}
+        ogType="article"
+      />
 
       <div className={styles.page}>
         <div className={styles.content}>

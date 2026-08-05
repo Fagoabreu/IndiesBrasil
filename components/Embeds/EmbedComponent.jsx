@@ -55,19 +55,20 @@ export default function EmbedComponent({ embeds }) {
 
         if (embed.type === "steam") {
           return (
-            <iframe
+            <a
               key={key}
-              src={embed.embedUrl}
-              width="100%"
-              height="190"
-              frameBorder="0"
-              scrolling="no"
-              title="Steam Store Widget"
-              style={{
-                borderRadius: 8,
-                overflow: "hidden",
-              }}
-            />
+              href={embed.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.previewCard}
+              style={{ display: "flex", alignItems: "center", gap: 12, padding: 12 }}
+            >
+              <span style={{ fontSize: 24, flexShrink: 0 }}>🎮</span>
+              <div className={styles.previewContent} style={{ padding: 0 }}>
+                <strong>Ver na Steam</strong>
+                <p>{embed.url}</p>
+              </div>
+            </a>
           );
         }
 
