@@ -24,7 +24,7 @@ export default function CurriculoPage() {
   const [loading, setLoading] = useState(true);
 
   const qrSettings = useMemo(() => {
-    if (!username || globalThis.window === undefined) return { ...DEFAULT_QR_SETTINGS };
+    if (!username || typeof window === "undefined") return { ...DEFAULT_QR_SETTINGS };
     try {
       const raw = localStorage.getItem(`qr_settings_${username}`);
       if (raw) return { ...DEFAULT_QR_SETTINGS, ...JSON.parse(raw) };

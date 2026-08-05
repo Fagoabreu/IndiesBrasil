@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { Heading, TextInput, Spinner, Avatar } from "@primer/react";
 import { OrganizationIcon, PlusIcon, PeopleIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
@@ -17,11 +18,10 @@ const PAGE_URL = `${SITE_URL}/estudios`;
 export default function StudiosPage() {
   const { user } = useUser();
 
+  const router = useRouter();
+
   const [tab, setTab] = useState(() => {
-    if (typeof globalThis !== "undefined") {
-      const params = new URLSearchParams(globalThis.location.search);
-      if (params.get("member") === "me") return "member";
-    }
+    if (router.query.member === "me") return "member";
     return "all";
   });
   const [search, setSearch] = useState("");

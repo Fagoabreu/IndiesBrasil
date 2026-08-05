@@ -184,7 +184,7 @@ export default function StreamsPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState(null);
-  const [hostname] = useState(() => globalThis.location.hostname);
+  const [hostname] = useState(() => (typeof window !== "undefined" ? window.location.hostname : ""));
   const refreshTimerRef = useRef(null);
   const didInitialRefreshRef = useRef(false);
 
