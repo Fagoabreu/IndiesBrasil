@@ -23,9 +23,8 @@ jobs:
             exit 1
           }
 
-          set -a
-          . ./.env.production
-          set +a
+          CERTBOT_DOMAIN=$(sed -n 's/^CERTBOT_DOMAIN=//p' .env.production)
+          CERTBOT_EMAIL=$(sed -n 's/^CERTBOT_EMAIL=//p' .env.production)
 
           if [ -z "$CERTBOT_DOMAIN" ]; then
             echo "❌ CERTBOT_DOMAIN is empty in .env.production"
