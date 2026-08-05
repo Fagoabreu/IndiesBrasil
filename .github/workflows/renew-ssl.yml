@@ -62,13 +62,13 @@ jobs:
             --email "$CERTBOT_EMAIL" \
             -d "$CERTBOT_DOMAINS_CSV"
 
-          CERT_PATH="/var/lib/docker/volumes/indies_nginx_secrets/_data/live/$PRIMARY_DOMAIN/fullchain.pem"
-          test -f "$CERT_PATH" || {
-            echo "❌ fullchain.pem not found at $CERT_PATH"
+          NGINX_CERT="/etc/letsencrypt/live/$PRIMARY_DOMAIN/fullchain.pem"
+          docker exec nginx test -f "$NGINX_CERT" || {
+            echo "❌ fullchain.pem not found in nginx at $NGINX_CERT"
             exit 1
           }
 
-          openssl x509 -in "$CERT_PATH" -noout -subject -issuer -dates -ext subjectAltName
+          docker exec nginx openssl x509 -in "$NGINX_CERT" -noout -subject -issuer -dates -ext subjectAltName
 
           echo "Reloading nginx"
           docker exec nginx nginx -s reload
