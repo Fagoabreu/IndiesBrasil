@@ -10,7 +10,7 @@
  * matching the type of events.id.
  */
 
-export const up = (pgm) => {
+exports.up = (pgm) => {
   // Drop the stale INTEGER column (cascades to its FK constraint automatically)
   pgm.sql(`ALTER TABLE posts DROP COLUMN IF EXISTS event_id;`);
 
@@ -26,7 +26,7 @@ export const up = (pgm) => {
   `);
 };
 
-export const down = (pgm) => {
+exports.down = (pgm) => {
   pgm.sql(`DROP INDEX IF EXISTS idx_posts_event_id;`);
   pgm.sql(`ALTER TABLE posts DROP COLUMN IF EXISTS event_id;`);
   pgm.sql(`ALTER TABLE posts ADD COLUMN event_id INTEGER;`);

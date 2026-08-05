@@ -495,19 +495,42 @@ export default function StudioPage() {
   const pageTitle = `${studio.name} — Indies Brasil`;
   const pageUrl = `${SITE_URL}/estudios/${studio.slug}`;
   const embedUrl = getVideoEmbedUrl(studio.banner_video_url);
+  const studioLogoUrl = studio.logo_url?.startsWith("http") ? studio.logo_url : `${SITE_URL}${studio.logo_url || "/images/studio.jpg"}`;
+
+  // JSON-LD Organization — melhora a renderização do cartão no WhatsApp e outros rich previews.
+  const orgJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: studio.name,
+    url: pageUrl,
+    logo: studioLogoUrl,
+    image: studio.banner_url || studioLogoUrl,
+    description: studio.pitch || `Estúdio indie brasileiro: ${studio.name}`,
+    foundingDate: studio.founded_at || undefined,
+    ...(studio.address
+      ? {
+          address: {
+            "@type": "PostalAddress",
+            ...(studio.address.street ? { streetAddress: studio.address.street } : {}),
+            ...(studio.address.city ? { addressLocality: studio.address.city } : {}),
+            ...(studio.address.state ? { addressRegion: studio.address.state } : {}),
+            ...(studio.address.country ? { addressCountry: studio.address.country } : {}),
+          },
+        }
+      : {}),
+  };
 
   return (
     <>
       <SeoHead
         title={pageTitle}
-        description={studio.pitch || `Estúdio indie brasileiro: ${studio.name}`}
+        description={studio.pitch || `Conheça ${studio.name}, estúdio indie brasileiro.`}
         canonical={pageUrl}
-        openGraph={{
-          title: pageTitle,
-          description: studio.pitch || "",
-          url: pageUrl,
-          image: studio.banner_url || studio.logo_url || undefined,
-        }}
+        ogImage={studioLogoUrl}
+        ogImageWidth={512}
+        ogImageHeight={512}
+        ogType="business.business"
+        jsonLd={orgJsonLd}
       />
 
       {/* Inputs ocultos para upload */}

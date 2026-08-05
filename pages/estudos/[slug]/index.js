@@ -171,11 +171,6 @@ export default function CursoPage() {
         title={`${course.title} — Indies Brasil`}
         description={course.description?.slice(0, 160) || `Curso: ${course.title}`}
         canonical={`${SITE_URL}/estudos/${course.slug}`}
-        openGraph={{
-          title: `${course.title} — Indies Brasil`,
-          description: course.description?.slice(0, 160) || "",
-          url: `${SITE_URL}/estudos/${course.slug}`,
-        }}
       />
 
       {/* Breadcrumb */}

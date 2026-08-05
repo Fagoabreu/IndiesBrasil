@@ -1,5 +1,5 @@
 /** @type {import('node-pg-migrate').MigrationBuilder} */
-export const up = (pgm) => {
+exports.up = (pgm) => {
   pgm.addColumn("events", {
     banner_external_url: {
       type: "VARCHAR(512)",
@@ -8,6 +8,6 @@ export const up = (pgm) => {
   });
 };
 
-export const down = (pgm) => {
+exports.down = (pgm) => {
   pgm.dropColumn("events", "banner_external_url");
 };

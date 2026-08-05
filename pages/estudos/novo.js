@@ -83,7 +83,7 @@ export default function NovoCursoPage() {
 
   return (
     <div className={styles.page}>
-      <SeoHead title={PAGE_TITLE} canonical={PAGE_URL} openGraph={{ title: PAGE_TITLE, url: PAGE_URL }} />
+      <SeoHead title={PAGE_TITLE} canonical={PAGE_URL} />
 
       <Link href="/estudos" className={styles.backLink}>
         <ArrowLeftIcon size={14} /> Voltar para cursos

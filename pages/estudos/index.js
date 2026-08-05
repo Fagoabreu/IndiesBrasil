@@ -80,16 +80,7 @@ export default function CursosPage() {
 
   return (
     <div className={styles.page}>
-      <SeoHead
-        title={PAGE_TITLE}
-        description={PAGE_DESCRIPTION}
-        canonical={PAGE_URL}
-        openGraph={{
-          title: PAGE_TITLE,
-          description: PAGE_DESCRIPTION,
-          url: PAGE_URL,
-        }}
-      />
+      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} />
 
       <header className={styles.pageHeader}>
         <div className={styles.headerBlock}>
