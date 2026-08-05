@@ -10,8 +10,6 @@ export default function TrendingTags() {
   const [period, setPeriod] = useState("7d");
   const { data, error, isLoading } = useTrendingTags(period);
 
-  console.log({ data, error, isLoading });
-
   if (isLoading) {
     return <div className="trending-loading">Carregando…</div>;
   }

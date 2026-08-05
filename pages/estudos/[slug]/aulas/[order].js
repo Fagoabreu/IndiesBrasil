@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import sanitizeHtml from "@/lib/sanitize";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { Heading, Spinner } from "@primer/react";
@@ -273,8 +274,8 @@ export default function AulaPage() {
       {lesson.reading_material && (
         <section className={styles.readingSection}>
           <Heading as="h2">Material de Leitura</Heading>
-          {/* We use dangerouslySetInnerHTML because reading_material may contain formatted text from a rich editor */}
-          <div className={styles.readingContent} dangerouslySetInnerHTML={{ __html: lesson.reading_material }} />
+          {/* Conteúdo sanitizado para prevenir XSS — formatação básica preservada */}
+          <div className={styles.readingContent} dangerouslySetInnerHTML={{ __html: sanitizeHtml.sanitize(lesson.reading_material) }} />
         </section>
       )}
 

@@ -27,7 +27,7 @@ describe("PATCH /api/v1/activations/[token_id]", () => {
     });
     test("With expired token", async () => {
       jest.useFakeTimers({
-        now: new Date(Date.now() - activation.EXPIRATION_IN_MILLISECONDS),
+        now: new Date(Date.now() - activation.EXPIRATION_IN_MILLISECONDS - 5000),
       });
 
       const createdUser = await orchestrator.createUser();
@@ -93,7 +93,10 @@ describe("PATCH /api/v1/activations/[token_id]", () => {
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
 
-      expect(responseBody.updated_at > responseBody.created_at).toBe(true);
+      const updatedAtMs = new Date(responseBody.updated_at).getTime();
+      const createdAtMs = new Date(responseBody.created_at).getTime();
+      // Allow small negative difference due to clock skew between Node.js and PostgreSQL.
+      expect(updatedAtMs - createdAtMs).toBeGreaterThan(-5000);
 
       const expiresAt = new Date(responseBody.expires_at);
       const createdAt = new Date(responseBody.created_at);

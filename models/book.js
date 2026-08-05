@@ -1,5 +1,6 @@
 import database from "infra/database.js";
 import { ForbiddenError, NotFoundError, ValidationError } from "infra/errors.js";
+import { generateUniqueSlug } from "lib/slug";
 
 /* =========================================================
  * List / Search
@@ -188,9 +189,11 @@ async function update(slug, body) {
   }
 
   // Handle slug regeneration if title changed
+  let effectiveSlug = slug;
   if (body.title) {
     const newSlug = await generateSlug(body.title.trim(), slug);
     if (newSlug !== slug) {
+      effectiveSlug = newSlug;
       fields.push(`slug = $${idx++}`);
       values.push(newSlug);
     }
@@ -211,7 +214,7 @@ async function update(slug, body) {
     await updateStorePages(result.rows[0].id, body.store_pages);
   }
 
-  return findBySlug(slug);
+  return findBySlug(effectiveSlug);
 }
 
 /* =========================================================
@@ -317,25 +320,7 @@ async function canEdit(bookId, requestUser) {
  * ========================================================= */
 
 async function generateSlug(name, currentSlug = null) {
-  const base = name
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 100);
-
-  const existing = await database.query({
-    text: `SELECT slug FROM books WHERE slug LIKE $1 AND slug != $2 ORDER BY slug`,
-    values: [`${base}%`, currentSlug || ""],
-  });
-
-  const slugs = new Set(existing.rows.map((r) => r.slug));
-  if (!slugs.has(base)) return base;
-
-  let i = 2;
-  while (slugs.has(`${base}-${i}`)) i++;
-  return `${base}-${i}`;
+  return generateUniqueSlug(name, "books", "slug", currentSlug);
 }
 
 /* =========================================================

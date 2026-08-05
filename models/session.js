@@ -2,6 +2,7 @@ import database from "infra/database";
 import { UnauthorizedError } from "infra/errors";
 import crypto from "node:crypto";
 const EXPIRATION_IN_MILLISECONDS = 1000 * 60 * 60 * 24 * 30; // 30 Days
+const ABSOLUTE_MAX_SESSION_MS = 1000 * 60 * 60 * 24 * 90; // 90 Days absolute max
 
 async function findOneValidByToken(sessionToken) {
   const sessionFound = await runSelectQuery(sessionToken);
@@ -10,13 +11,14 @@ async function findOneValidByToken(sessionToken) {
   async function runSelectQuery(sessionToken) {
     const results = await database.query({
       text: `
-      select * 
-      from 
+      select *
+      from
         sessions
-      where 
+      where
         token =$1
         and expires_at > now()
-      limit 
+        and created_at > now() - interval '90 days'
+      limit
         1;`,
       values: [sessionToken],
     });
@@ -105,12 +107,26 @@ function getExpitationDate() {
   return new Date(Date.now() + EXPIRATION_IN_MILLISECONDS);
 }
 
+async function invalidateAllUserSessions(userId) {
+  await database.query({
+    text: `
+      UPDATE sessions
+      SET expires_at = NOW() - interval '1 year',
+          updated_at = NOW()
+      WHERE user_id = $1
+        AND expires_at > NOW()`,
+    values: [userId],
+  });
+}
+
 const session = {
   create,
   findOneValidByToken,
   renew,
   expireById,
+  invalidateAllUserSessions,
   EXPIRATION_IN_MILLISECONDS,
+  ABSOLUTE_MAX_SESSION_MS,
 };
 
 export default session;

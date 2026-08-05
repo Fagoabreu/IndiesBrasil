@@ -7,6 +7,7 @@ node_modules
 tests
 #arquivos de desenvolvimento
 .env
+.env*
 .env*.local
 .husky
 .gitignore

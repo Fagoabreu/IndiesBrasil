@@ -22,7 +22,6 @@ async function postHandler(request, response) {
   return response.status(201).json(secureOutputValues);
 }
 
-// TODO proteger request
 async function getHandler(request, response) {
   const userTryingToPost = request.context.user;
   const isfollowing = request.query.isfollowing;

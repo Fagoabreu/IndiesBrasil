@@ -6,6 +6,7 @@ import { faker } from "@faker-js/faker";
 import session from "models/session";
 import activation from "@/models/activation.js";
 import webserver from "@/infra/webserver";
+import rateLimit from "lib/rate-limit";
 let fakerBR = require("faker-br");
 
 const emailHttpUrl = `http://${process.env.EMAIL_HTTP_HOST}:${process.env.EMAIL_HTTP_PORT}`;
@@ -44,6 +45,7 @@ async function waitForAllServices() {
 }
 async function clearDatabase() {
   await database.query("drop schema public cascade; create schema public;");
+  rateLimit.reset();
 }
 
 async function runPendingMigrations() {

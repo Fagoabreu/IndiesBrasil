@@ -1,6 +1,7 @@
 import database from "infra/database";
 import { NotFoundError, ValidationError, ForbiddenError } from "infra/errors.js";
 import organization from "models/organization.js";
+import { generateUniqueSlug } from "lib/slug";
 
 /* =========================================================
  * Constantes
@@ -29,21 +30,6 @@ export const PLATFORMS = {
   android: "Android",
   browser: "Navegador",
 };
-
-/* =========================================================
- * Helpers
- * ========================================================= */
-
-function generateSlug(name, id) {
-  const base = name
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80);
-  return `${base}-${id.slice(0, 8)}`;
-}
 
 /* =========================================================
  * Leitura
@@ -255,7 +241,7 @@ async function create(orgId, userId, data) {
     text: `SELECT gen_random_uuid() AS id`,
   });
   const newId = idResult.rows[0].id;
-  const slug = generateSlug(data.name, newId);
+  const slug = await generateUniqueSlug(data.name, "games", "slug", null, 80);
 
   const result = await database.query({
     text: `
@@ -312,6 +298,21 @@ async function update(slug, data) {
     }
   }
 
+  if (fields.length === 0 && !Array.isArray(data.platforms) && !Array.isArray(data.store_pages)) {
+    return findBySlug(slug);
+  }
+
+  // Se o nome mudou, regenera o slug
+  let effectiveSlug = slug;
+  if (data.name) {
+    const newSlug = await generateUniqueSlug(data.name, "games", "slug", slug, 80);
+    if (newSlug !== slug) {
+      effectiveSlug = newSlug;
+      fields.push(`slug = $${idx++}`);
+      values.push(newSlug);
+    }
+  }
+
   if (fields.length > 0) {
     values.push(game.id);
     await database.query({
@@ -330,7 +331,7 @@ async function update(slug, data) {
     await updateStorePages(game.id, data.store_pages);
   }
 
-  return findBySlug(slug);
+  return findBySlug(effectiveSlug);
 }
 
 async function updatePlatforms(gameId, platforms) {

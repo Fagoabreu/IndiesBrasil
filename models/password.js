@@ -1,10 +1,14 @@
 import bcryptjs from "bcryptjs";
 
-const PEPPER = process.env.PEPPER || "";
+const PEPPER = process.env.PEPPER;
+
+if (!PEPPER && process.env.NODE_ENV === "production") {
+  throw new Error("PEPPER environment variable is required in production");
+}
 
 async function hash(password) {
   const rounds = getNumberOdRounds();
-  return await bcryptjs.hash(password + PEPPER, rounds);
+  return await bcryptjs.hash(password + (PEPPER || ""), rounds);
 }
 
 function getNumberOdRounds() {
@@ -12,7 +16,7 @@ function getNumberOdRounds() {
 }
 
 async function compare(providedPassword, storedPassword) {
-  return await bcryptjs.compare(providedPassword + PEPPER, storedPassword);
+  return await bcryptjs.compare(providedPassword + (PEPPER || ""), storedPassword);
 }
 
 const password = {

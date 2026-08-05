@@ -4,7 +4,15 @@ import user from "models/user.js";
 import authorization from "models/authorization.js";
 import { NextResponse } from "next/server";
 
-const { InternalServerError, MethodNotAllowedError, ValidationError, NotFoundError, UnauthorizedError, ForbiddenError } = require("./errors");
+const {
+  InternalServerError,
+  MethodNotAllowedError,
+  ValidationError,
+  NotFoundError,
+  UnauthorizedError,
+  ForbiddenError,
+  TooManyRequestsError,
+} = require("./errors");
 
 function onNoMatchHandler(request, response) {
   const publicErrorObject = new MethodNotAllowedError();
@@ -12,7 +20,15 @@ function onNoMatchHandler(request, response) {
 }
 
 function onErrorHandler(error, request, response) {
-  if (error instanceof ValidationError || error instanceof NotFoundError || error instanceof ForbiddenError) {
+  if (
+    error instanceof ValidationError ||
+    error instanceof NotFoundError ||
+    error instanceof ForbiddenError ||
+    error instanceof TooManyRequestsError
+  ) {
+    if (error instanceof TooManyRequestsError && error.retryAfterSeconds) {
+      response.setHeader("Retry-After", String(error.retryAfterSeconds));
+    }
     return response.status(error.statusCode).json(error);
   }
 
@@ -29,8 +45,17 @@ function onErrorHandler(error, request, response) {
 }
 
 function onRouterErrorHandler(error) {
-  if (error instanceof ValidationError || error instanceof NotFoundError || error instanceof ForbiddenError) {
-    return NextResponse.json(error, { status: error.statusCode });
+  if (
+    error instanceof ValidationError ||
+    error instanceof NotFoundError ||
+    error instanceof ForbiddenError ||
+    error instanceof TooManyRequestsError
+  ) {
+    const response = NextResponse.json(error, { status: error.statusCode });
+    if (error instanceof TooManyRequestsError && error.retryAfterSeconds) {
+      response.headers.set("Retry-After", String(error.retryAfterSeconds));
+    }
+    return response;
   }
   if (error instanceof UnauthorizedError) {
     const response = NextResponse.json(error, { status: error.statusCode });
@@ -52,6 +77,7 @@ function clearSessionCookieAppRouter(response) {
     maxAge: -1,
     secure: process.env.NODE_ENV === "production",
     httpOnly: true,
+    sameSite: "lax",
   });
   response.headers.set("Set-Cookie", setCookie);
 }
@@ -63,18 +89,20 @@ function setSessionCookie(sessionToken, response) {
     maxAge: session.EXPIRATION_IN_MILLISECONDS / 1000,
     secure: isProduction,
     httpOnly: true,
-    sameSite: isProduction ? "none" : "lax",
+    sameSite: "lax",
   });
 
   response.setHeader("Set-Cookie", setCookie);
 }
 
 function clearSessionCookie(response) {
+  const isProduction = process.env.NODE_ENV === "production";
   const setCookie = cookie.serialize("session_id", "invalid", {
     path: "/",
     maxAge: -1,
-    secure: process.env.NODE_ENV === "production",
+    secure: isProduction,
     httpOnly: true,
+    sameSite: "lax",
   });
   response.setHeader("Set-Cookie", setCookie);
 }

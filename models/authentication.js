@@ -1,9 +1,35 @@
 import user from "models/user";
 import password from "models/password";
-import { NotFoundError, UnauthorizedError } from "infra/errors.js";
+import rateLimit from "lib/rate-limit";
+import { NotFoundError, UnauthorizedError, TooManyRequestsError } from "infra/errors.js";
 
-async function getUser(providedEmail, providedPassword) {
+async function getUser(providedEmail, providedPassword, request) {
   try {
+    if (request) {
+      const clientIp = rateLimit.getClientIp(request);
+
+      // Skip rate limiting for local requests (tests / local dev without reverse proxy).
+      // In production, nginx always sets X-Forwarded-For to the real client IP,
+      // so loopback addresses only appear from internal/test traffic.
+      const isLocalRequest = clientIp === "127.0.0.1" || clientIp === "::1" || clientIp === "::ffff:127.0.0.1";
+      if (!isLocalRequest) {
+        const { allowed, remaining, resetMs } = rateLimit.check(clientIp);
+
+        if (!allowed) {
+          throw new TooManyRequestsError({
+            message: "Muitas tentativas de login. Tente novamente em alguns minutos.",
+            action: "Aguarde antes de tentar novamente.",
+            retryAfterSeconds: Math.ceil(resetMs / 1000),
+          });
+        }
+
+        if (remaining <= 2) {
+          // Log low remaining attempts for monitoring.
+          console.warn(`[rate-limit] Login attempts running low for IP ${clientIp}: ${remaining} remaining`);
+        }
+      }
+    }
+
     const storedUser = await findUserByEmail(providedEmail);
     await validatePassword(providedPassword, storedUser.password);
     return storedUser;

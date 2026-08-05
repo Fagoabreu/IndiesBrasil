@@ -1,5 +1,6 @@
 import database from "infra/database.js";
 import { ForbiddenError, NotFoundError, ValidationError } from "infra/errors.js";
+import { generateUniqueSlug } from "lib/slug";
 
 /* =========================================================
  * List / Search
@@ -175,25 +176,7 @@ async function isFollowing(boardgameId, userId) {
  * ========================================================= */
 
 async function generateSlug(name) {
-  const base = name
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 100);
-
-  const existing = await database.query({
-    text: `SELECT slug FROM boardgames WHERE slug LIKE $1 ORDER BY slug`,
-    values: [`${base}%`],
-  });
-
-  const slugs = new Set(existing.rows.map((r) => r.slug));
-  if (!slugs.has(base)) return base;
-
-  let i = 2;
-  while (slugs.has(`${base}-${i}`)) i++;
-  return `${base}-${i}`;
+  return generateUniqueSlug(name, "boardgames");
 }
 
 async function saveCover(slug, imageId) {
@@ -453,6 +436,17 @@ async function update(slug, data) {
     }
   }
 
+  // Se o nome mudou, regenera o slug
+  let effectiveSlug = slug;
+  if (data.name) {
+    const newSlug = await generateSlug(data.name.trim());
+    if (newSlug !== slug) {
+      effectiveSlug = newSlug;
+      fields.push(`slug = $${idx++}`);
+      values.push(newSlug);
+    }
+  }
+
   if (fields.length > 0) {
     values.push(boardgameId);
     await database.query({
@@ -474,7 +468,7 @@ async function update(slug, data) {
     }
   }
 
-  return findBySlug(slug);
+  return findBySlug(effectiveSlug);
 }
 
 async function canEdit(boardgameId, user) {

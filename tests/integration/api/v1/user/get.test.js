@@ -190,13 +190,14 @@ describe("GET /api/v1/user", () => {
         value: "invalid",
         maxAge: -1,
         path: "/",
+        sameSite: "Lax",
         httpOnly: true,
       });
     });
 
     test("With expired session", async () => {
       jest.useFakeTimers({
-        now: new Date(Date.now() - session.EXPIRATION_IN_MILLISECONDS),
+        now: new Date(Date.now() - session.EXPIRATION_IN_MILLISECONDS - 5000),
       });
 
       const createdUser = await orchestrator.createUser({
@@ -233,6 +234,7 @@ describe("GET /api/v1/user", () => {
         value: "invalid",
         maxAge: -1,
         path: "/",
+        sameSite: "Lax",
         httpOnly: true,
       });
     });
