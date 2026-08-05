@@ -1,11 +1,11 @@
-import { SITE_URL } from "@/lib/seo";
-
-/** Wraps an external image URL through our proxy so CSP doesn't block it. */
+/** Wraps an external image URL through our proxy so CSP doesn't block it.
+ *  Uses a relative path so it always resolves to the document's origin (works
+ *  across all domains the app is served from — jogos.social.br, indiesbrasil.com.br, etc.). */
 function proxyImageUrl(imageUrl) {
   if (!imageUrl) return null;
-  // Don't proxy already-proxied or same-origin URLs
-  if (imageUrl.startsWith("/api/") || imageUrl.startsWith(SITE_URL)) return imageUrl;
-  return `${SITE_URL}/api/v1/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+  // Don't proxy already-proxied or same-origin relative URLs
+  if (imageUrl.startsWith("/api/")) return imageUrl;
+  return `/api/v1/image-proxy?url=${encodeURIComponent(imageUrl)}`;
 }
 
 async function getEmbededLinks(content) {
