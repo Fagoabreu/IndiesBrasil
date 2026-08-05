@@ -4,7 +4,7 @@ on: pull_request
 
 jobs:
   jest:
-    name: Test Ubuntu
+    name: Integration Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
