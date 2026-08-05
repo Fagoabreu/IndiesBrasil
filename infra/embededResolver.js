@@ -185,7 +185,6 @@ function resolveSteam(url) {
     type: "steam",
     subtype: "store",
     appId,
-    embedUrl: `https://store.steampowered.com/widget/${appId}/`,
     url,
   };
 }

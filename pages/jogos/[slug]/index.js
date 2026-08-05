@@ -1,12 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import Head from "next/head";
 import Link from "next/link";
 import Image from "next/image";
 import { useUser } from "@/context/UserContext";
+import SeoHead from "@/components/SeoHead";
 import GameMediaPlayer from "@/components/GameMedia/GameMediaPlayer";
 import GameReviews from "@/components/GameReviews/GameReviews";
+import { SITE_URL } from "@/lib/seo";
 import styles from "./game.module.css";
 
 const STAGES = {
@@ -47,13 +48,25 @@ const PLATFORM_LABELS = {
   browser: "Navegador",
 };
 
-export default function GamePage() {
+export async function getServerSideProps(context) {
+  const { slug } = context.params;
+  try {
+    const game = (await import("@/models/game")).default;
+    const gameData = await game.findBySlug(slug);
+    if (!gameData) return { props: { initialGame: null } };
+    return { props: { initialGame: gameData } };
+  } catch {
+    return { props: { initialGame: null } };
+  }
+}
+
+export default function GamePage({ initialGame }) {
   const router = useRouter();
   const { slug } = router.query;
   const { user, loadingUser } = useUser();
 
-  const [gameData, setGameData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [gameData, setGameData] = useState(initialGame ?? null);
+  const [loading, setLoading] = useState(!initialGame);
   const [following, setFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [websitePreview, setWebsitePreview] = useState(null); // {url, data} | null
@@ -141,7 +154,7 @@ export default function GamePage() {
     }
   }
 
-  if (loadingUser || loading) {
+  if (!initialGame && (loadingUser || loading)) {
     return (
       <div className={styles.loadingPage}>
         <div className={styles.spinner} />
@@ -153,12 +166,20 @@ export default function GamePage() {
 
   const { viewer } = gameData;
 
+  const coverImage = gameData.banner_url || gameData.cover_url;
+  const canonicalUrl = `${SITE_URL}/jogos/${slug}`;
+
   return (
     <>
-      <Head>
-        <title>{gameData.name} — Indies Brasil</title>
-        <meta name="description" content={gameData.short_description || gameData.name} />
-      </Head>
+      <SeoHead
+        title={`${gameData.name} — Indies Brasil`}
+        description={gameData.short_description || gameData.name}
+        canonical={canonicalUrl}
+        ogImage={coverImage}
+        ogImageWidth={1200}
+        ogImageHeight={630}
+        ogType="article"
+      />
 
       <div className={styles.page}>
         <div className={styles.content}>
@@ -334,15 +355,9 @@ export default function GamePage() {
                                 )}
                               </div>
                               {steamAppId ? (
-                                <iframe
-                                  src={`https://store.steampowered.com/widget/${steamAppId}/`}
-                                  width="100%"
-                                  height="190"
-                                  frameBorder="0"
-                                  scrolling="no"
-                                  title={`${sp.store_name} Widget`}
-                                  className={styles.storeSteamWidget}
-                                />
+                                <a href={sp.page_url} target="_blank" rel="noopener noreferrer" className={styles.storeSimpleLink}>
+                                  Ver na Steam ↗
+                                </a>
                               ) : (
                                 <a href={sp.page_url} target="_blank" rel="noopener noreferrer" className={styles.storeSimpleLink}>
                                   Visitar loja ↗

@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import Head from "next/head";
 import Link from "next/link";
 import Image from "next/image";
 import { useUser } from "@/context/UserContext";
+import SeoHead from "@/components/SeoHead";
 import GameReviews from "@/components/GameReviews/GameReviews";
+import { SITE_URL } from "@/lib/seo";
 import styles from "./book.module.css";
 
 const BOOK_TYPES = {
@@ -32,13 +33,25 @@ function getFollowLabel(loading, following) {
   return following ? "✓ Seguindo" : "+ Seguir";
 }
 
-export default function BookPage() {
+export async function getServerSideProps(context) {
+  const { slug } = context.params;
+  try {
+    const book = (await import("@/models/book")).default;
+    const bookData = await book.findBySlug(slug);
+    if (!bookData) return { props: { initialBook: null } };
+    return { props: { initialBook: bookData } };
+  } catch {
+    return { props: { initialBook: null } };
+  }
+}
+
+export default function BookPage({ initialBook }) {
   const router = useRouter();
   const { slug } = router.query;
   const { user, loadingUser } = useUser();
 
-  const [bookData, setBookData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [bookData, setBookData] = useState(initialBook ?? null);
+  const [loading, setLoading] = useState(!initialBook);
   const [following, setFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
 
@@ -82,7 +95,7 @@ export default function BookPage() {
     }
   }
 
-  if (loadingUser || loading) {
+  if (!initialBook && (loadingUser || loading)) {
     return (
       <div className={styles.loadingPage}>
         <div className={styles.spinner} />
@@ -95,12 +108,20 @@ export default function BookPage() {
   const typeLabel = BOOK_TYPES[bookData.book_type] ?? bookData.book_type;
   const stageLabel = STAGES[bookData.stage] ?? bookData.stage;
 
+  const coverImage = bookData.cover_url;
+  const canonicalUrl = `${SITE_URL}/quadrinhos/${slug}`;
+
   return (
     <>
-      <Head>
-        <title>{bookData.title} — Indies Brasil</title>
-        <meta name="description" content={bookData.short_description || bookData.title} />
-      </Head>
+      <SeoHead
+        title={`${bookData.title} — Indies Brasil`}
+        description={bookData.short_description || bookData.title}
+        canonical={canonicalUrl}
+        ogImage={coverImage}
+        ogImageWidth={1200}
+        ogImageHeight={630}
+        ogType="article"
+      />
 
       <div className={styles.page}>
         <div className={styles.content}>
