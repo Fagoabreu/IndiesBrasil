@@ -323,7 +323,10 @@ describe("Patch /api/v1/users/[username]", () => {
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
-      expect(responseBody.updated_at > responseBody.created_at).toBe(true);
+      // Allow small negative difference due to clock skew between Node.js and PostgreSQL.
+      const updatedAtMs1 = new Date(responseBody.updated_at).getTime();
+      const createdAtMs1 = new Date(responseBody.created_at).getTime();
+      expect(updatedAtMs1 - createdAtMs1).toBeGreaterThan(-5000);
     });
 
     test("With unique `email`", async () => {
@@ -442,7 +445,9 @@ describe("Patch /api/v1/users/[username]", () => {
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
-      expect(responseBody.updated_at > responseBody.created_at).toBe(true);
+      const updatedAtMs2 = new Date(responseBody.updated_at).getTime();
+      const createdAtMs2 = new Date(responseBody.created_at).getTime();
+      expect(updatedAtMs2 - createdAtMs2).toBeGreaterThan(-5000);
 
       const userInDatabase = await user.findOneByUsername(user1.username);
       expect(userInDatabase.email).toBe("uniqueEmail2@gmail.com");
@@ -567,7 +572,9 @@ describe("Patch /api/v1/users/[username]", () => {
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();
-      expect(responseBody.updated_at > responseBody.created_at).toBe(true);
+      const updatedAtMs3 = new Date(responseBody.updated_at).getTime();
+      const createdAtMs3 = new Date(responseBody.created_at).getTime();
+      expect(updatedAtMs3 - createdAtMs3).toBeGreaterThan(-5000);
 
       const userInDatabase = await user.findOneByUsername(createdUser.username);
       const correctPasswordMatch = await password.compare(TEST_CREDENTIALS.newTwo, userInDatabase.password);

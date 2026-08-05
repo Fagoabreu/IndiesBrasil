@@ -1,14 +1,21 @@
 import bcryptjs from "bcryptjs";
 
-const PEPPER = process.env.PEPPER;
-
-if (!PEPPER && process.env.NODE_ENV === "production") {
-  throw new Error("PEPPER environment variable is required in production");
+/**
+ * Returns the PEPPER secret. Throws only when actually invoked at runtime
+ * (not at module import time), avoiding build-time failures in CI/Docker
+ * where PEPPER is injected via secrets only at runtime.
+ */
+function getPepper() {
+  const pepper = process.env.PEPPER;
+  if (!pepper && process.env.NODE_ENV === "production") {
+    throw new Error("PEPPER environment variable is required in production");
+  }
+  return pepper || "";
 }
 
 async function hash(password) {
   const rounds = getNumberOdRounds();
-  return await bcryptjs.hash(password + (PEPPER || ""), rounds);
+  return await bcryptjs.hash(password + getPepper(), rounds);
 }
 
 function getNumberOdRounds() {
@@ -16,7 +23,7 @@ function getNumberOdRounds() {
 }
 
 async function compare(providedPassword, storedPassword) {
-  return await bcryptjs.compare(providedPassword + (PEPPER || ""), storedPassword);
+  return await bcryptjs.compare(providedPassword + getPepper(), storedPassword);
 }
 
 const password = {
