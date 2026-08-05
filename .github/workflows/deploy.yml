@@ -6,7 +6,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     environment: production
 
     steps:
@@ -32,26 +32,19 @@ jobs:
             exit 1
           fi
 
-      # 1️⃣ Build da imagem
-      - name: Build image
+      # ── .env.production ──
+      - name: Generate .env.production
         run: |
-          docker build -t indies-app:latest .
-
-      # 2️⃣ Exportar imagem
-      - name: Export image
-        run: docker save indies-app:latest | gzip > indies-app.tar.gz
-
-      # 3️⃣ Gerar .env.production (APP)
-      - name: Generate app env
-        run: |
+          mkdir -p /var/www/indies
           {
-
+            echo "# Gerado pelo GitHub Actions em $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             echo "NODE_ENV=production"
             echo "CERTBOT_ENV=production"
             echo "CERTBOT_DOMAIN=${{ vars.CERTBOT_DOMAIN }}"
             echo "CERTBOT_EMAIL=${{ vars.CERTBOT_EMAIL }}"
             echo "NEXT_PUBLIC_SITE_NAME=${{ vars.NEXT_PUBLIC_SITE_NAME }}"
             echo "NEXT_PUBLIC_BASE_URL=${{ vars.NEXT_PUBLIC_BASE_URL }}"
+            echo "NEXT_PUBLIC_SITE_URL=${{ vars.NEXT_PUBLIC_SITE_URL }}"
             echo "PEPPER=${{ secrets.PEPPER }}"
             echo "POSTGRES_HOST=${{ vars.POSTGRES_HOST }}"
             echo "POSTGRES_PORT=${{ vars.POSTGRES_PORT }}"
@@ -70,137 +63,103 @@ jobs:
             echo "TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }}"
             echo "TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }}"
             echo "YOUTUBE_API_KEY=${{ secrets.YOUTUBE_API_KEY }}"
-          } > .env.production
+          } > /var/www/indies/.env.production
 
-      # 4️⃣ Configurar SSH
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_KEY }}
-
-      # Pretara pastas
-      - name: Prepare directories on server
+      # ── Arquivos de deploy ──
+      - name: Prepare deploy directory
         run: |
-          ssh -T -o StrictHostKeyChecking=no ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} \
-            "mkdir -p /var/www/indies/nginx /var/www/indies/certs"
+          mkdir -p /var/www/indies/nginx /var/www/indies/certs
+          cp "$GITHUB_WORKSPACE/deploy/nginx/"* /var/www/indies/nginx/
+          cp "$GITHUB_WORKSPACE/deploy/compose.yaml" /var/www/indies/
 
-      #Enviar arquivos
-      - name: Upload app artifacts
+      # ── Certificados SSL do Postgres ──
+      - name: Ensure Postgres SSL certificates
         run: |
-          rsync -az --checksum \
-            --exclude='certs/' \
-            -e "ssh -o StrictHostKeyChecking=no" \
-            indies-app.tar.gz \
-            .env.production \
-            deploy/compose.yaml \
-            ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }}:/var/www/indies/
-            
-          rsync -az --checksum \
-            -e "ssh -o StrictHostKeyChecking=no" \
-            deploy/nginx/ \
-            ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }}:/var/www/indies/nginx
+          docker volume inspect indies_postgres-certs >/dev/null 2>&1 || docker volume create indies_postgres-certs
+          CERTS_DIR="/var/lib/docker/volumes/indies_postgres-certs/_data"
+          mkdir -p "$CERTS_DIR"
 
-      # 5️⃣ Deploy remoto
-      - name: Deploy app
+          if [ ! -f "$CERTS_DIR/root.key" ]; then
+            echo "🧾 Generating root CA"
+            openssl genrsa -out "$CERTS_DIR/root.key" 4096
+            openssl req -x509 -new -nodes \
+              -key "$CERTS_DIR/root.key" \
+              -sha256 -days 3650 \
+              -subj "/CN=Postgres Root CA" \
+              -out "$CERTS_DIR/root.crt"
+          fi
+
+          if [ ! -f "$CERTS_DIR/server.key" ]; then
+            echo "🔑 Generating server key"
+            openssl genrsa -out "$CERTS_DIR/server.key" 4096
+          fi
+
+          if [ ! -f "$CERTS_DIR/server.csr" ]; then
+            echo "📄 Generating server CSR"
+            openssl req -new \
+              -key "$CERTS_DIR/server.key" \
+              -subj "/CN=postgres" \
+              -out "$CERTS_DIR/server.csr"
+          fi
+
+          if [ ! -f "$CERTS_DIR/server.crt" ]; then
+            echo "📜 Signing server certificate"
+            openssl x509 -req \
+              -in "$CERTS_DIR/server.csr" \
+              -CA "$CERTS_DIR/root.crt" \
+              -CAkey "$CERTS_DIR/root.key" \
+              -CAcreateserial \
+              -out "$CERTS_DIR/server.crt" \
+              -days 3650 -sha256
+          fi
+
+          echo "🔒 Fixing permissions"
+          chown -R 70:70 "$CERTS_DIR"
+          chmod 755 "$CERTS_DIR"
+          chmod 600 "$CERTS_DIR/server.key"
+          chmod 644 "$CERTS_DIR/server.crt" "$CERTS_DIR/root.crt"
+
+          echo "✅ Postgres SSL certificates ready"
+
+      # ── Build & deploy ──
+      - name: Build and deploy app
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} << 'EOF'
-            set -e
-            cd /var/www/indies
+          cd "$GITHUB_WORKSPACE"
+          echo "🐳 Building Docker image..."
+          docker build -t indies-app:latest .
 
-            echo "🔍 Checking .env.production"
-            test -f .env.production || {
-              echo "❌ .env.production NOT FOUND"
-              exit 1
-            }
+          cd /var/www/indies
 
-            echo "📦 Ensuring indies_postgres-certs volume exists"
-            docker volume inspect indies_postgres-certs >/dev/null 2>&1 || docker volume create indies_postgres-certs
-            CERTS_DIR="/var/lib/docker/volumes/indies_postgres-certs/_data"
-            echo "📁 CERTS_DIR=$CERTS_DIR"
+          echo "🔍 Checking .env.production"
+          test -f .env.production || { echo "❌ .env.production NOT FOUND"; exit 1; }
 
-            mkdir -p "$CERTS_DIR"
+          echo "🔍 Checking nginx config files"
+          test -f nginx/indies.http.conf || { echo "❌ indies.http.conf NOT FOUND"; exit 1; }
+          test -f nginx/indies.https.conf || { echo "❌ indies.https.conf NOT FOUND"; exit 1; }
 
-            if [ ! -f "$CERTS_DIR/root.key" ]; then
-              echo "🧾 Generating root CA"
-              openssl genrsa -out "$CERTS_DIR/root.key" 4096
-              openssl req -x509 -new -nodes \
-                -key "$CERTS_DIR/root.key" \
-                -sha256 -days 3650 \
-                -subj "/CN=Postgres Root CA" \
-                -out "$CERTS_DIR/root.crt"
-            fi
+          echo "🚀 Starting containers..."
+          docker compose -f compose.yaml up -d --no-deps indies-app
 
-            if [ ! -f "$CERTS_DIR/server.key" ]; then
-              echo "🔑 Generating server key"
-              openssl genrsa -out "$CERTS_DIR/server.key" 4096
-            fi
+      # ── Reload nginx ──
+      - name: Reload nginx
+        run: |
+          if docker ps -a --format '{{.Names}}' | grep -q '^nginx$'; then
+            echo "⏳ Waiting for nginx to be running..."
 
-            if [ ! -f "$CERTS_DIR/server.csr" ]; then
-              echo "📄 Generating server CSR"
-              openssl req -new \
-                -key "$CERTS_DIR/server.key" \
-                -subj "/CN=postgres" \
-                -out "$CERTS_DIR/server.csr"
-            fi
+            for i in $(seq 1 15); do
+              STATUS=$(docker inspect -f '{{.State.Status}}' nginx 2>/dev/null || true)
 
-            if [ ! -f "$CERTS_DIR/server.crt" ]; then
-              echo "📜 Signing server certificate"
-              openssl x509 -req \
-                -in "$CERTS_DIR/server.csr" \
-                -CA "$CERTS_DIR/root.crt" \
-                -CAkey "$CERTS_DIR/root.key" \
-                -CAcreateserial \
-                -out "$CERTS_DIR/server.crt" \
-                -days 3650 -sha256
-            fi
+              if [ "$STATUS" = "running" ]; then
+                docker exec nginx nginx -s reload
+                echo "✅ nginx reloaded"
+                exit 0
+              fi
 
-            echo "🔒 Fixing permissions"
-            chown -R 70:70 "$CERTS_DIR"
-            chmod 755 "$CERTS_DIR"
-            chmod 600 "$CERTS_DIR/server.key"
-            chmod 644 "$CERTS_DIR/server.crt" "$CERTS_DIR/root.crt"
+              echo "⏳ nginx status: $STATUS (retry $i/15)"
+              sleep 2
+            done
 
-            echo "✅ Postgres SSL certificates ready"
-
-            echo "🔍 Checking nginx config files"
-            test -f nginx/indies.http.conf || {
-              echo "❌ indies.http.conf NOT FOUND"
-              exit 1
-            }
-
-            test -f nginx/indies.https.conf || {
-              echo "❌ indies.https.conf NOT FOUND"
-              exit 1
-            }
-
-            docker load < indies-app.tar.gz
-            docker compose -f compose.yaml up -d --no-deps indies-app
-
-            echo "🔄 Reloading nginx"
-            if docker ps -a --format '{{.Names}}' | grep -q '^nginx$'; then
-              echo "⏳ Waiting for nginx to be running..."
-
-              for i in {1..15}; do
-                STATUS=$(docker inspect -f '{{.State.Status}}' nginx 2>/dev/null || true)
-
-                if [ "$STATUS" = "running" ]; then
-                  docker exec nginx nginx -s reload
-                  echo "✅ nginx reloaded"
-                  break
-                fi
-
-                echo "⏳ nginx status: $STATUS (retry $i)"
-                sleep 2
-              done
-            else
-              echo "ℹ️ nginx container not found, skipping reload"
-            fi
-          EOF
-
-      # Run Migrations
-      #- name: Run database migrations
-      #  run: |
-      #    ssh -o StrictHostKeyChecking=no ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} <<EOF
-      #    cd /var/www/indies
-      #    docker exec indies-app npx node-pg-migrate -m infra/migrations up
-      #    EOF
+            echo "⚠️ nginx did not reach running state"
+          else
+            echo "ℹ️ nginx container not found, skipping reload"
+          fi
