@@ -138,7 +138,7 @@ export default function CurriculoPage() {
                     : undefined
                 }
               />
-              <span className={styles.cvQrLabel}>indiesbrasil.com.br</span>
+              <span className={styles.cvQrLabel}>jogos.social.br</span>
             </div>
           </div>
         </header>

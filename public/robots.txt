@@ -3,4 +3,4 @@ Allow: /
 Disallow: /api/
 Disallow: /admin/
 
-Sitemap: https://indiesbrasil.com.br/sitemap.xml
+Sitemap: https://jogos.social.br/sitemap.xml
