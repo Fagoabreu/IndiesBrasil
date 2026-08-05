@@ -14,10 +14,6 @@ jobs:
     environment: production
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      # 🚀 Apply infra
       - name: Apply infra
         run: |
           set -e
@@ -51,14 +47,52 @@ jobs:
             exit 1
           fi
 
-          CERTS_DIR="/var/lib/docker/volumes/indies_postgres-certs/_data"
+          docker volume inspect indies_postgres-certs >/dev/null 2>&1 || docker volume create indies_postgres-certs
+          docker run --rm -e HOME -e PATH -v indies_postgres-certs:/certs alpine:latest sh -c '
+            apk add --no-cache openssl >/dev/null 2>&1
 
-          echo "🔍 Checking Postgres certificates"
-          test -f "$CERTS_DIR/server.crt" || {
-            echo "❌ server.crt NOT FOUND in $CERTS_DIR"
-            ls -l "$CERTS_DIR" || true
-            exit 1
-          }
+            if [ ! -f /certs/root.key ]; then
+              echo "🧾 Generating root CA"
+              openssl genrsa -out /certs/root.key 4096
+              openssl req -x509 -new -nodes \
+                -key /certs/root.key \
+                -sha256 -days 3650 \
+                -subj "/CN=Postgres Root CA" \
+                -out /certs/root.crt
+            fi
+
+            if [ ! -f /certs/server.key ]; then
+              echo "🔑 Generating server key"
+              openssl genrsa -out /certs/server.key 4096
+            fi
+
+            if [ ! -f /certs/server.csr ]; then
+              echo "📄 Generating server CSR"
+              openssl req -new \
+                -key /certs/server.key \
+                -subj "/CN=postgres" \
+                -out /certs/server.csr
+            fi
+
+            if [ ! -f /certs/server.crt ]; then
+              echo "📜 Signing server certificate"
+              openssl x509 -req \
+                -in /certs/server.csr \
+                -CA /certs/root.crt \
+                -CAkey /certs/root.key \
+                -CAcreateserial \
+                -out /certs/server.crt \
+                -days 3650 -sha256
+            fi
+
+            echo "🔒 Fixing permissions"
+            chown -R 70:70 /certs
+            chmod 755 /certs
+            chmod 600 /certs/server.key
+            chmod 644 /certs/server.crt /certs/root.crt
+
+            echo "✅ Postgres SSL certificates ready"
+          '
 
           LE_LIVE_DIR="/var/lib/docker/volumes/indies_nginx_secrets/_data/live/$PRIMARY_DOMAIN"
           mkdir -p "$LE_LIVE_DIR"

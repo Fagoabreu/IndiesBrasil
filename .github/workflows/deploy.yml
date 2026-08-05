@@ -13,28 +13,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate required production vars
-        run: |
-          set -e
-          missing=0
-
-          if [ -z "${{ vars.CERTBOT_DOMAIN }}" ]; then
-            echo "::error::Missing repository/environment variable CERTBOT_DOMAIN"
-            missing=1
-          fi
-
-          if [ -z "${{ vars.CERTBOT_EMAIL }}" ]; then
-            echo "::error::Missing repository/environment variable CERTBOT_EMAIL"
-            missing=1
-          fi
-
-          if [ "$missing" -ne 0 ]; then
-            exit 1
-          fi
-
       # ── .env.production ──
       - name: Generate .env.production
         run: |
+          set -e
+
+          if [ -z "${{ vars.CERTBOT_DOMAIN }}" ]; then
+            echo "::error::CERTBOT_DOMAIN is not set in repository variables"
+            exit 1
+          fi
+          if [ -z "${{ vars.CERTBOT_EMAIL }}" ]; then
+            echo "::error::CERTBOT_EMAIL is not set in repository variables"
+            exit 1
+          fi
+
           mkdir -p /var/www/indies
           {
             echo "# Gerado pelo GitHub Actions em $(date -u +%Y-%m-%dT%H:%M:%SZ)"
