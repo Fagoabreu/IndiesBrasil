@@ -6,7 +6,7 @@ import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
 import GameMediaPlayer from "@/components/GameMedia/GameMediaPlayer";
 import GameReviews from "@/components/GameReviews/GameReviews";
-import { SITE_URL } from "@/lib/seo";
+
 import styles from "./game.module.css";
 
 const STAGES = {
@@ -49,17 +49,18 @@ const PLATFORM_LABELS = {
 
 export async function getServerSideProps(context) {
   const { slug } = context.params;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://jogos.social.br";
   try {
     const game = (await import("@/models/game")).default;
     const gameData = await game.findBySlug(slug);
-    if (!gameData) return { props: { initialGame: null } };
-    return { props: { initialGame: gameData } };
+    if (!gameData) return { props: { initialGame: null, siteUrl } };
+    return { props: { initialGame: gameData, siteUrl } };
   } catch {
-    return { props: { initialGame: null } };
+    return { props: { initialGame: null, siteUrl } };
   }
 }
 
-export default function GamePage({ initialGame }) {
+export default function GamePage({ initialGame, siteUrl }) {
   const router = useRouter();
   const { slug } = router.query;
   const { user, loadingUser } = useUser();
@@ -166,7 +167,7 @@ export default function GamePage({ initialGame }) {
   const { viewer } = gameData;
 
   const coverImage = gameData.banner_url || gameData.cover_url;
-  const canonicalUrl = `${SITE_URL}/jogos/${slug}`;
+  const canonicalUrl = `${siteUrl}/jogos/${slug}`;
 
   return (
     <>

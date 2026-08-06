@@ -1,6 +1,5 @@
 /** Wraps an external image URL through our proxy so CSP doesn't block it.
- *  Uses a relative path so it always resolves to the document's origin (works
- *  across all domains the app is served from — jogos.social.br, indiesbrasil.com.br, etc.). */
+ *  Uses a relative path so it always resolves to the document's origin. */
 function proxyImageUrl(imageUrl) {
   if (!imageUrl) return null;
   // Don't proxy already-proxied or same-origin relative URLs

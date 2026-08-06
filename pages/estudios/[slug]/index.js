@@ -46,7 +46,7 @@ function getVideoEmbedUrl(url) {
 function getLiveEmbedSrc(streamData) {
   if (!streamData?.is_live) return null;
   if (streamData.active_platform === "twitch" && streamData.twitch_channel) {
-    const hostname = typeof window !== "undefined" ? window.location.hostname : "indiesbrasil.com";
+    const hostname = typeof window !== "undefined" ? window.location.hostname : process.env.NEXT_PUBLIC_BASE_URL || "jogos.social.br";
     return `https://player.twitch.tv/?channel=${streamData.twitch_channel}&parent=${hostname}&muted=1`;
   }
   if (streamData.active_platform === "youtube" && streamData.youtube_channel_id) {

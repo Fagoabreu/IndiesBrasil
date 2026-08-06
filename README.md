@@ -305,23 +305,23 @@ Vá para o GitHub: **Settings → Secrets and variables → Actions**.
 
 #### Variáveis de ambiente (`Variables`)
 
-| Nome                      | Valor                                    | Exemplo                                       |
-| ------------------------- | ---------------------------------------- | --------------------------------------------- |
-| `CERTBOT_DOMAIN`          | Seus domínios (separados por vírgula)    | `indiesbrasil.com.br,www.indiesbrasil.com.br` |
-| `CERTBOT_EMAIL`           | Email para notificações do Let's Encrypt | `seu@email.com`                               |
-| `NEXT_PUBLIC_SITE_NAME`   | Nome do site                             | `Indies Brasil`                               |
-| `NEXT_PUBLIC_BASE_URL`    | Domínio principal                        | `indiesbrasil.com.br`                         |
-| `NEXT_PUBLIC_SITE_URL`    | URL completa                             | `https://indiesbrasil.com.br`                 |
-| `POSTGRES_HOST`           | Host do banco                            | `postgres`                                    |
-| `POSTGRES_PORT`           | Porta do banco                           | `5432`                                        |
-| `POSTGRES_DB`             | Nome do banco                            | `indies_prod`                                 |
-| `POSTGRES_USER`           | Usuário do banco                         | `indies_user`                                 |
-| `POSTGRES_CA_PATH`        | Caminho do certificado CA                | `/etc/ssl/postgres/root.crt`                  |
-| `EMAIL_SMTP_HOST`         | Servidor SMTP                            | `smtp.seuprovedor.com`                        |
-| `EMAIL_SMTP_PORT`         | Porta SMTP                               | `587`                                         |
-| `EMAIL_SMTP_USER`         | Usuário SMTP                             | `seu@email.com`                               |
-| `CLOUDINARY_CLOUD_NAME`   | Cloudinary cloud name                    | `seu-cloud`                                   |
-| `FILE_UPLOAD_BASE_FOLDER` | Pasta de uploads                         | `/tmp/indies-uploads`                         |
+| Nome                      | Valor                                    | Exemplo                               |
+| ------------------------- | ---------------------------------------- | ------------------------------------- |
+| `CERTBOT_DOMAIN`          | Seus domínios (separados por vírgula)    | `jogos.social.br,www.jogos.social.br` |
+| `CERTBOT_EMAIL`           | Email para notificações do Let's Encrypt | `seu@email.com`                       |
+| `NEXT_PUBLIC_SITE_NAME`   | Nome do site                             | `Indies Brasil`                       |
+| `NEXT_PUBLIC_BASE_URL`    | Domínio principal                        | `jogos.social.br`                     |
+| `NEXT_PUBLIC_SITE_URL`    | URL completa                             | `https://jogos.social.br`             |
+| `POSTGRES_HOST`           | Host do banco                            | `postgres`                            |
+| `POSTGRES_PORT`           | Porta do banco                           | `5432`                                |
+| `POSTGRES_DB`             | Nome do banco                            | `indies_prod`                         |
+| `POSTGRES_USER`           | Usuário do banco                         | `indies_user`                         |
+| `POSTGRES_CA_PATH`        | Caminho do certificado CA                | `/etc/ssl/postgres/root.crt`          |
+| `EMAIL_SMTP_HOST`         | Servidor SMTP                            | `smtp.seuprovedor.com`                |
+| `EMAIL_SMTP_PORT`         | Porta SMTP                               | `587`                                 |
+| `EMAIL_SMTP_USER`         | Usuário SMTP                             | `seu@email.com`                       |
+| `CLOUDINARY_CLOUD_NAME`   | Cloudinary cloud name                    | `seu-cloud`                           |
+| `FILE_UPLOAD_BASE_FOLDER` | Pasta de uploads                         | `/tmp/indies-uploads`                 |
 
 #### Segredos (`Secrets`)
 

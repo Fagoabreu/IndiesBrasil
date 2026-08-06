@@ -6,7 +6,7 @@ import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
 import GameMediaPlayer from "@/components/GameMedia/GameMediaPlayer";
 import GameReviews from "@/components/GameReviews/GameReviews";
-import { SITE_URL } from "@/lib/seo";
+
 import styles from "./boardgame.module.css";
 
 const CATEGORIES = {
@@ -46,17 +46,18 @@ function getFollowLabel(loading, following) {
 
 export async function getServerSideProps(context) {
   const { slug } = context.params;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://jogos.social.br";
   try {
     const boardgame = (await import("@/models/boardgame")).default;
     const bgData = await boardgame.findBySlug(slug);
-    if (!bgData) return { props: { initialBgData: null } };
-    return { props: { initialBgData: bgData } };
+    if (!bgData) return { props: { initialBgData: null, siteUrl } };
+    return { props: { initialBgData: bgData, siteUrl } };
   } catch {
-    return { props: { initialBgData: null } };
+    return { props: { initialBgData: null, siteUrl } };
   }
 }
 
-export default function BoardgamePage({ initialBgData }) {
+export default function BoardgamePage({ initialBgData, siteUrl }) {
   const router = useRouter();
   const { slug } = router.query;
   const { user, loadingUser } = useUser();
@@ -127,7 +128,7 @@ export default function BoardgamePage({ initialBgData }) {
   const playTime = formatPlayTime(bgData.play_time_min, bgData.play_time_max);
 
   const coverImage = bgData.banner_url || bgData.cover_url;
-  const canonicalUrl = `${SITE_URL}/jogos-de-mesa/${slug}`;
+  const canonicalUrl = `${siteUrl}/jogos-de-mesa/${slug}`;
 
   return (
     <>

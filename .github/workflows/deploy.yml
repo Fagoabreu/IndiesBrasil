@@ -134,7 +134,7 @@ jobs:
           test -f nginx/indies.https.conf || { echo "❌ indies.https.conf NOT FOUND"; exit 1; }
 
           echo "🚀 Starting containers..."
-          docker compose -f compose.yaml up -d --no-deps indies-app
+          docker compose -f compose.yaml up -d --no-deps --force-recreate indies-app
 
       # ── Reload nginx ──
       - name: Reload nginx
