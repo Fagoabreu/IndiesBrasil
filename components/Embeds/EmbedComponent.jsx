@@ -3,6 +3,22 @@ import styles from "./EmbedComponent.module.css";
 import InstagramEmbed from "./InstagramEmbed";
 import PropTypes from "prop-types";
 
+/** Normalize old absolute proxy URLs to relative — avoids CSP violations when
+ *  the site is served from a different domain than the one baked into legacy embeds. */
+function normalizeImageSrc(src) {
+  if (!src) return src;
+  // Already relative — nothing to do
+  if (src.startsWith("/")) return src;
+  try {
+    const u = new URL(src);
+    // /api/v1/image-proxy paths are always relative-safe
+    if (u.pathname.startsWith("/api/")) return u.pathname + u.search;
+  } catch {
+    // Malformed URL — leave as-is
+  }
+  return src;
+}
+
 EmbedComponent.propTypes = {
   embeds: PropTypes.arrayOf(
     PropTypes.shape({
@@ -59,7 +75,7 @@ export default function EmbedComponent({ embeds }) {
               {embed.image && (
                 <div className={styles.steamCardImageWrap}>
                   <Image
-                    src={embed.image}
+                    src={normalizeImageSrc(embed.image)}
                     alt={embed.title || "Steam"}
                     fill
                     className={styles.steamCardImage}
@@ -87,7 +103,7 @@ export default function EmbedComponent({ embeds }) {
               {embed.image && (
                 <div className={styles.previewImageWrapper}>
                   <Image
-                    src={embed.image}
+                    src={normalizeImageSrc(embed.image)}
                     alt={embed.title || "Preview do link"}
                     fill
                     className={styles.previewImage}
