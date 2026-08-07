@@ -613,6 +613,8 @@
 
 .storeSteamWidget {
   display: block;
+  width: 100%;
+  height: 190px;
   border: none;
   border-top: 1px solid var(--borderColor-muted);
 }

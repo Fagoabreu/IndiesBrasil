@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
+import ContentRatingBadge from "@/components/ContentRatingBadge";
 import GameMediaPlayer from "@/components/GameMedia/GameMediaPlayer";
 import GameReviews from "@/components/GameReviews/GameReviews";
 
@@ -258,6 +259,14 @@ export default function GamePage({ initialGame, siteUrl }) {
                     <span className={styles.heroDetailValue}>{gameData.genre}</span>
                   </div>
                 )}
+                {gameData.content_rating && (
+                  <div className={styles.heroDetailRow}>
+                    <span className={styles.heroDetailLabel}>Classificação</span>
+                    <span className={styles.heroDetailValue}>
+                      <ContentRatingBadge rating={gameData.content_rating} size="sm" />
+                    </span>
+                  </div>
+                )}
                 {gameData.engine && (
                   <div className={styles.heroDetailRow}>
                     <span className={styles.heroDetailLabel}>Engine</span>
@@ -355,9 +364,13 @@ export default function GamePage({ initialGame, siteUrl }) {
                                 )}
                               </div>
                               {steamAppId ? (
-                                <a href={sp.page_url} target="_blank" rel="noopener noreferrer" className={styles.storeSimpleLink}>
-                                  Ver na Steam ↗
-                                </a>
+                                <iframe
+                                  src={`https://store.steampowered.com/widget/${steamAppId}/`}
+                                  className={styles.storeSteamWidget}
+                                  title={`${sp.store_name} widget`}
+                                  sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
+                                  loading="lazy"
+                                />
                               ) : (
                                 <a href={sp.page_url} target="_blank" rel="noopener noreferrer" className={styles.storeSimpleLink}>
                                   Visitar loja ↗
