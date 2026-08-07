@@ -18,6 +18,7 @@ export default function SeoHead({ title, description, canonical, ogImage, ogImag
       <title>{title}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={canonical} />
+      <link rel="icon" href="/images/logo.png" />
       <meta name="robots" content={noIndex ? "noindex, nofollow" : "index, follow"} />
       <meta httpEquiv="content-language" content="pt-BR" />
 
