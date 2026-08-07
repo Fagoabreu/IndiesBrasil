@@ -66,6 +66,7 @@ export default function CriarEventoPage() {
   const [onlineUrl, setOnlineUrl] = useState("");
   const [locationName, setLocationName] = useState("");
   const [locationUrl, setLocationUrl] = useState("");
+  const [ticketUrl, setTicketUrl] = useState("");
   const [address, setAddress] = useState({
     street: "",
     number: "",
@@ -147,6 +148,7 @@ export default function CriarEventoPage() {
       online_url: isOnline && onlineUrl.trim() ? onlineUrl.trim() : null,
       location_name: !isOnline && locationName.trim() ? locationName.trim() : null,
       location_url: !isOnline && locationUrl.trim() ? locationUrl.trim() : null,
+      ticket_url: ticketUrl.trim() || null,
       address: !isOnline && address.city ? address : undefined,
       is_recurring: isRecurring,
       banner_external_url: bannerMode === "url" && bannerExternalUrl.trim() ? bannerExternalUrl.trim() : undefined,
@@ -440,6 +442,24 @@ export default function CriarEventoPage() {
               <AddressFormFields value={address} onChange={handleAddressChange} />
             </>
           )}
+
+          <hr className={styles.divider} />
+
+          {/* Link para ingressos */}
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="ticketUrl">
+              Link para ingressos
+            </label>
+            <input
+              id="ticketUrl"
+              type="url"
+              className={styles.input}
+              value={ticketUrl}
+              onChange={(e) => setTicketUrl(e.target.value)}
+              placeholder="https://..."
+            />
+            <span className={styles.hint}>Opcional — link externo para compra de ingressos (Sympla, Eventbrite, etc.)</span>
+          </div>
 
           <hr className={styles.divider} />
           <p className={styles.sectionTitle}>Recorrência</p>

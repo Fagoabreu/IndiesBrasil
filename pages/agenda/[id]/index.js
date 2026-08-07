@@ -438,6 +438,22 @@ export default function EventDetailPage() {
                   </div>
                 </div>
               )}
+
+              {ev.ticket_url && (
+                <div className={styles.infoRow}>
+                  <div style={{ width: "100%" }}>
+                    <a
+                      href={ev.ticket_url}
+                      className={styles.infoLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontWeight: 600, fontSize: "0.95rem" }}
+                    >
+                      🎟️ Comprar ingresso ↗
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className={styles.infoCard}>
