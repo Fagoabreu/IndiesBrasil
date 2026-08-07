@@ -192,32 +192,26 @@ async function resolveSteam(url) {
   if (!match) return null;
 
   const appId = match[1];
+  const capsuleImage = `https://cdn.cloudflare.steamstatic.com/steam/apps/${appId}/header.jpg`;
 
-  // Fetch Steam store page to extract OG metadata (title, capsule image, description)
-  let image = null;
   let title = null;
   let description = null;
 
+  // Use the Steam Store API (JSON) — far more reliable than scraping HTML
   try {
-    const res = await fetch(url, { method: "GET" });
-    const html = await res.text();
+    const apiUrl = `https://store.steampowered.com/api/appdetails?appids=${appId}`;
+    const res = await fetch(apiUrl, {
+      headers: { "User-Agent": "IndiesBrasil/1.0" },
+    });
+    const json = await res.json();
+    const data = json?.[appId]?.data;
 
-    const getMeta = (name) => {
-      const regex = new RegExp(`<meta property="og:${name}" content="([^"]+)"`, "i");
-      const m = regex.exec(html);
-      return m ? m[1] : null;
-    };
-
-    title = getMeta("title");
-    image = getMeta("image");
-    description = getMeta("description");
+    if (data) {
+      title = data.name || null;
+      description = data.short_description || null;
+    }
   } catch {
-    // Fallback: use known Steam CDN capsule image URL
-  }
-
-  // Fallback capsule image if OG parsing fails
-  if (!image) {
-    image = `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${appId}/header.jpg`;
+    // Fallback: image URL is predictable regardless of API failure
   }
 
   return {
@@ -225,7 +219,7 @@ async function resolveSteam(url) {
     subtype: "store",
     appId,
     url,
-    image: proxyImageUrl(image),
+    image: capsuleImage,
     title,
     description,
   };

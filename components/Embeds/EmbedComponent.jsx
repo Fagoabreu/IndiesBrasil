@@ -70,30 +70,26 @@ export default function EmbedComponent({ embeds }) {
         }
 
         if (embed.type === "steam") {
-          return (
-            <a key={key} href={embed.url} target="_blank" rel="noopener noreferrer" className={styles.steamCard}>
-              {embed.image && (
-                <div className={styles.steamCardImageWrap}>
-                  <Image
-                    src={normalizeImageSrc(embed.image)}
-                    alt={embed.title || "Steam"}
-                    fill
-                    className={styles.steamCardImage}
-                    sizes="(max-width: 600px) 100vw, 600px"
-                    unoptimized
-                  />
+          const widgetUrl = embed.appId ? `https://store.steampowered.com/widget/${embed.appId}/` : null;
+          if (!widgetUrl) {
+            return (
+              <a key={key} href={embed.url} target="_blank" rel="noopener noreferrer" className={styles.steamCard}>
+                <div className={styles.steamCardBody}>
+                  <span className={styles.steamCardTitle}>{embed.title || "Steam"}</span>
+                  <span className={styles.steamCardCta}>Abrir na Steam</span>
                 </div>
-              )}
-              <div className={styles.steamCardBody}>
-                <span className={styles.steamCardTitle}>{embed.title || "Steam"}</span>
-                <span className={styles.steamCardCta}>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                    <path d="M8 0C3.58 0 0 3.58 0 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8zm3.5 12H4.5L3 9l4.5-2.5L12 9l-.5 3z" fill="currentColor" />
-                  </svg>
-                  Abrir na Steam
-                </span>
-              </div>
-            </a>
+              </a>
+            );
+          }
+          return (
+            <iframe
+              key={key}
+              src={widgetUrl}
+              className={styles.steamWidget}
+              title={embed.title || "Steam"}
+              sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
+              loading="lazy"
+            />
           );
         }
 
