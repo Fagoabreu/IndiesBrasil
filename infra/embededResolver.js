@@ -14,7 +14,10 @@ async function getEmbededLinks(content) {
   if (links.length > 0) {
     for (const link of links) {
       const embedData = await resolveEmbed(link);
-      embeds.push(embedData);
+      // Server-side fetch may fail due to anti-bot protection.
+      // Store a minimal placeholder so the card always renders — even
+      // without metadata, the client will show the domain as title.
+      embeds.push(embedData || { type: "preview", url: link });
     }
   }
   return embeds;
@@ -100,38 +103,85 @@ function resolveInstagram(url) {
 
 async function fetchLinkPreview(url) {
   try {
-    const res = await fetch(url, { method: "GET" });
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+      },
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (!res.ok) return null;
+
     const html = await res.text();
 
+    // ── OG meta extractor (handles reversed attr order + single/double quotes) ──
     const getMeta = (name) => {
-      const regex = new RegExp(`<meta property="og:${name}" content="([^"]+)"`, "i");
-
-      const match = regex.exec(html);
-      return match ? match[1] : null;
+      let m;
+      m = new RegExp(`<meta[^>]+property=["']og:${name}["'][^>]+content=["']([^"']+)["']`, "i").exec(html);
+      if (m) return decodeEntities(m[1]);
+      m = new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:${name}["']`, "i").exec(html);
+      if (m) return decodeEntities(m[1]);
+      m = new RegExp(`<meta[^>]+name=["']og:${name}["'][^>]+content=["']([^"']+)["']`, "i").exec(html);
+      if (m) return decodeEntities(m[1]);
+      m = new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+name=["']og:${name}["']`, "i").exec(html);
+      if (m) return decodeEntities(m[1]);
+      return null;
     };
 
-    const rawImage = getMeta("image");
-    const image =
-      rawImage && !rawImage.startsWith("http")
-        ? (() => {
-            try {
-              return new URL(rawImage, url).href;
-            } catch {
-              return rawImage;
-            }
-          })()
-        : rawImage;
+    function decodeEntities(s) {
+      return s
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&#x27;/g, "'");
+    }
 
-    // Wrap external images through our proxy so CSP doesn't block them
+    function makeAbsolute(raw) {
+      if (!raw) return null;
+      if (raw.startsWith("http")) return raw;
+      try {
+        return new URL(raw, url).href;
+      } catch {
+        return raw;
+      }
+    }
+
+    // ── Title: og:title → <title> tag ──
+    const title =
+      getMeta("title") ||
+      (() => {
+        const m = /<title[^>]*>([^<]+)<\/title>/i.exec(html);
+        return m ? decodeEntities(m[1].trim()) : null;
+      })();
+
+    // ── Description: og:description → meta[name=description] ──
+    const description =
+      getMeta("description") ||
+      (() => {
+        const m = /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i.exec(html);
+        return m ? decodeEntities(m[1]) : null;
+      })();
+
+    // ── Image: og:image → twitter:image ──
+    const image = (() => {
+      const og = getMeta("image");
+      if (og) return makeAbsolute(og);
+      let m = /<meta[^>]+(?:name|property)=["']twitter:image["'][^>]+content=["']([^"']+)["']/i.exec(html);
+      if (!m) m = /<meta[^>]+content=["']([^"']+)["'][^>]+(?:name|property)=["']twitter:image["']/i.exec(html);
+      return m ? makeAbsolute(m[1]) : null;
+    })();
+
     const proxiedImage = proxyImageUrl(image);
 
-    return {
-      type: "preview",
-      title: getMeta("title"),
-      description: getMeta("description"),
-      image: proxiedImage,
-      url,
-    };
+    // At least one field must be present — otherwise stick to the minimal card
+    if (!title && !description && !image) return null;
+
+    return { type: "preview", title, description, image: proxiedImage, url };
   } catch {
     return null;
   }
