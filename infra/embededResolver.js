@@ -100,35 +100,98 @@ function resolveInstagram(url) {
 
 async function fetchLinkPreview(url) {
   try {
-    const res = await fetch(url, { method: "GET" });
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; IndiesBrasil/1.0; +https://jogos.social.br)",
+      },
+      signal: AbortSignal.timeout(8000),
+    });
+
+    // Bot-protection / non-OK — bail out early
+    if (!res.ok) return null;
+
     const html = await res.text();
 
+    // Flexible meta tag extractor — handles:
+    //   property="og:title" OR name="og:title"
+    //   attribute order reversed (content before property/name)
+    //   single or double quotes
     const getMeta = (name) => {
-      const regex = new RegExp(`<meta property="og:${name}" content="([^"]+)"`, "i");
-
-      const match = regex.exec(html);
-      return match ? match[1] : null;
+      // Try property="og:xxx" with double quotes
+      let m = new RegExp(`<meta[^>]+property=["']og:${name}["'][^>]+content=["']([^"']+)["']`, "i").exec(html);
+      if (m) return decodeHTMLEntities(m[1]);
+      // Try reversed order: content first
+      m = new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:${name}["']`, "i").exec(html);
+      if (m) return decodeHTMLEntities(m[1]);
+      // Try name="og:xxx" (some sites use this)
+      m = new RegExp(`<meta[^>]+name=["']og:${name}["'][^>]+content=["']([^"']+)["']`, "i").exec(html);
+      if (m) return decodeHTMLEntities(m[1]);
+      m = new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+name=["']og:${name}["']`, "i").exec(html);
+      if (m) return decodeHTMLEntities(m[1]);
+      return null;
     };
 
-    const rawImage = getMeta("image");
-    const image =
-      rawImage && !rawImage.startsWith("http")
-        ? (() => {
-            try {
-              return new URL(rawImage, url).href;
-            } catch {
-              return rawImage;
-            }
-          })()
-        : rawImage;
+    // Simple HTML entity decoder for common entities
+    function decodeHTMLEntities(str) {
+      return str
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&#x27;/g, "'");
+    }
+
+    // Extract <title> tag as fallback
+    const getTitleTag = () => {
+      const m = /<title[^>]*>([^<]+)<\/title>/i.exec(html);
+      return m ? decodeHTMLEntities(m[1].trim()) : null;
+    };
+
+    // Extract meta description (non-og) as fallback
+    const getMetaDescription = () => {
+      const m = /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i.exec(html);
+      return m ? decodeHTMLEntities(m[1]) : null;
+    };
+
+    // Extract image: og:image -> twitter:image -> first <img>
+    const getImageUrl = () => {
+      // og:image
+      let raw = getMeta("image");
+      if (raw) return makeAbsolute(raw, url);
+      // twitter:image
+      let m = /<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i.exec(html);
+      if (!m) m = /<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image["']/i.exec(html);
+      if (!m) m = /<meta[^>]+property=["']twitter:image["'][^>]+content=["']([^"']+)["']/i.exec(html);
+      if (m?.[1]) return makeAbsolute(m[1], url);
+      return null;
+    };
+
+    function makeAbsolute(raw, baseUrl) {
+      if (!raw) return null;
+      if (raw.startsWith("http")) return raw;
+      try {
+        return new URL(raw, baseUrl).href;
+      } catch {
+        return raw;
+      }
+    }
+
+    const title = getMeta("title") || getTitleTag();
+    const description = getMeta("description") || getMetaDescription();
+    const image = getImageUrl();
 
     // Wrap external images through our proxy so CSP doesn't block them
     const proxiedImage = proxyImageUrl(image);
 
+    // If we couldn't extract anything useful, don't render an empty card
+    if (!title && !description && !image) return null;
+
     return {
       type: "preview",
-      title: getMeta("title"),
-      description: getMeta("description"),
+      title,
+      description,
       image: proxiedImage,
       url,
     };
