@@ -94,6 +94,15 @@ export default function EmbedComponent({ embeds }) {
         }
 
         if (embed.type === "preview") {
+          // Extract a human-readable domain for fallback title
+          const domain = (() => {
+            try {
+              return new URL(embed.url).hostname.replace(/^www\./, "");
+            } catch {
+              return embed.url;
+            }
+          })();
+
           return (
             <a key={key} href={embed.url} target="_blank" rel="noopener noreferrer" className={styles.previewCard}>
               {embed.image && (
@@ -110,8 +119,8 @@ export default function EmbedComponent({ embeds }) {
               )}
 
               <div className={styles.previewContent}>
-                <strong>{embed.title}</strong>
-                <p>{embed.description}</p>
+                <strong>{embed.title || domain}</strong>
+                {embed.description && <p>{embed.description}</p>}
               </div>
             </a>
           );

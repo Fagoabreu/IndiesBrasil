@@ -14,7 +14,9 @@ async function getEmbededLinks(content) {
   if (links.length > 0) {
     for (const link of links) {
       const embedData = await resolveEmbed(link);
-      embeds.push(embedData);
+      // Server-side resolution failed — store a minimal placeholder so the
+      // client can render a basic link card instead of showing nothing.
+      embeds.push(embedData || { type: "preview", url: link });
     }
   }
   return embeds;
