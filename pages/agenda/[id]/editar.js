@@ -57,6 +57,7 @@ export default function EditarEventoPage() {
   const [onlineUrl, setOnlineUrl] = useState("");
   const [locationName, setLocationName] = useState("");
   const [locationUrl, setLocationUrl] = useState("");
+  const [ticketUrl, setTicketUrl] = useState("");
   const [address, setAddress] = useState({
     street: "",
     number: "",
@@ -87,6 +88,7 @@ export default function EditarEventoPage() {
     setOnlineUrl(ev.online_url || "");
     setLocationName(ev.location_name || "");
     setLocationUrl(ev.location_url || "");
+    setTicketUrl(ev.ticket_url || "");
     setAddress(
       ev.address || {
         street: "",
@@ -210,6 +212,7 @@ export default function EditarEventoPage() {
       online_url: isOnline && onlineUrl.trim() ? onlineUrl.trim() : null,
       location_name: !isOnline && locationName.trim() ? locationName.trim() : null,
       location_url: !isOnline && locationUrl.trim() ? locationUrl.trim() : null,
+      ticket_url: ticketUrl.trim() || null,
       address: !isOnline && address.city ? address : null,
     };
 
@@ -469,6 +472,24 @@ export default function EditarEventoPage() {
               <AddressFormFields value={address} onChange={(f, v) => setAddress((p) => ({ ...p, [f]: v }))} disabled={submitting} />
             </>
           )}
+
+          <hr className={styles.divider} />
+
+          {/* Link para ingressos */}
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="ticketUrl">
+              Link para ingressos
+            </label>
+            <input
+              id="ticketUrl"
+              type="url"
+              className={styles.input}
+              value={ticketUrl}
+              onChange={(e) => setTicketUrl(e.target.value)}
+              placeholder="https://..."
+            />
+            <span className={styles.hint}>Opcional — link externo para compra de ingressos (Sympla, Eventbrite, etc.)</span>
+          </div>
 
           <div className={styles.actions}>
             <Link href={`/agenda/${id}`} className={styles.cancelBtn}>

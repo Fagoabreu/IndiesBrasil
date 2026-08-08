@@ -138,7 +138,7 @@ export default function CurriculoPage() {
                     : undefined
                 }
               />
-              <span className={styles.cvQrLabel}>jogos.social.br</span>
+              <span className={styles.cvQrLabel}>{new URL(SITE_URL).hostname}</span>
             </div>
           </div>
         </header>

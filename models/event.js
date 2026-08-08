@@ -284,8 +284,8 @@ async function create(data, userId) {
         title, slug, description, event_type, visibility, status,
         created_by, location_name, location_url, is_online, online_url,
         starts_at, ends_at, is_all_day, is_recurring, recurrence_rule_id, banner_image_id, banner_external_url,
-        address_id
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+        address_id, ticket_url
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
       RETURNING *
     `,
     values: [
@@ -308,6 +308,7 @@ async function create(data, userId) {
       data.banner_image_id || null,
       data.banner_external_url || null,
       addressId,
+      data.ticket_url || null,
     ],
   });
 
@@ -540,6 +541,7 @@ async function update(id, data, userId) {
     "online_url",
     "is_all_day",
     "banner_image_id",
+    "ticket_url",
   ];
   const sets = [];
   const values = [];

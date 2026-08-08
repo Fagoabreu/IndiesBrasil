@@ -7,7 +7,7 @@ function getOrigin() {
     return `https://${process.env.VERCEL_URL}`;
   }
 
-  return "https://jogos.social.br";
+  return process.env.NEXT_PUBLIC_SITE_URL || "https://jogos.social.br";
 }
 
 const webserver = {
