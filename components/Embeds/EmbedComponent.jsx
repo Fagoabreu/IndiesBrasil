@@ -94,22 +94,13 @@ export default function EmbedComponent({ embeds }) {
         }
 
         if (embed.type === "preview") {
-          // Use domain as fallback title when metadata is missing
-          const domain = (() => {
-            try {
-              return new URL(embed.url).hostname.replace(/^www\./, "");
-            } catch {
-              return embed.url;
-            }
-          })();
-
           return (
             <a key={key} href={embed.url} target="_blank" rel="noopener noreferrer" className={styles.previewCard}>
               {embed.image && (
                 <div className={styles.previewImageWrapper}>
                   <Image
                     src={normalizeImageSrc(embed.image)}
-                    alt={embed.title || domain}
+                    alt={embed.title || "Preview do link"}
                     fill
                     className={styles.previewImage}
                     sizes="(max-width: 400px) 100vw, 600px"
@@ -119,8 +110,8 @@ export default function EmbedComponent({ embeds }) {
               )}
 
               <div className={styles.previewContent}>
-                <strong>{embed.title || domain}</strong>
-                {embed.description && <p>{embed.description}</p>}
+                <strong>{embed.title}</strong>
+                <p>{embed.description}</p>
               </div>
             </a>
           );
