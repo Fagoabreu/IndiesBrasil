@@ -200,6 +200,7 @@ export default function ConfiguracoesPage() {
   const [newBookStage, setNewBookStage] = useState("concept");
   const [creatingBook, setCreatingBook] = useState(false);
   const [bookMsg, setBookMsg] = useState({ type: null, text: "" });
+  const [deletingBookSlug, setDeletingBookSlug] = useState(null);
 
   // Edição de publicação
   const [editingBookSlug, setEditingBookSlug] = useState(null);
@@ -580,6 +581,36 @@ export default function ConfiguracoesPage() {
       setBookMsg({ type: "error", text: "Erro inesperado. Tente novamente." });
     } finally {
       setCreatingBook(false);
+    }
+  }
+
+  async function handleDeleteBook(bookSlug, bookTitle) {
+    if (
+      !confirm(
+        `Tem certeza que deseja excluir "${bookTitle}"?\n\nEsta ação removerá o livro/quadrinho, todas as imagens associadas (capa e PDF) e não poderá ser desfeita.`,
+      )
+    ) {
+      return;
+    }
+    setDeletingBookSlug(bookSlug);
+    setBookMsg({ type: null, text: "" });
+    try {
+      const res = await fetch(`/api/v1/books/${bookSlug}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Erro ao excluir publicação.");
+      }
+      setEditingBookSlug(null);
+      setEditBookForm(null);
+      setBookMsg({ type: "success", text: `"${bookTitle}" excluído com sucesso.` });
+      fetchBooks();
+    } catch (err) {
+      setBookMsg({ type: "error", text: err.message });
+    } finally {
+      setDeletingBookSlug(null);
     }
   }
 
@@ -2638,6 +2669,14 @@ export default function ConfiguracoesPage() {
                         }
                       >
                         Classificar
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.btnDeleteBook}
+                        onClick={() => handleDeleteBook(bk.slug, bk.title)}
+                        disabled={deletingBookSlug === bk.slug}
+                      >
+                        {deletingBookSlug === bk.slug ? "Excluindo…" : "Excluir"}
                       </button>
                     </div>
 

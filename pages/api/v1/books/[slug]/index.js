@@ -7,6 +7,7 @@ export default createRouter()
   .use(controller.injectAnonymousOrUser)
   .get(controller.canRequest("read:book"), getHandler)
   .patch(controller.canRequest("update:book"), patchHandler)
+  .delete(controller.canRequest("delete:book"), deleteHandler)
   .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
@@ -43,4 +44,21 @@ async function patchHandler(request, response) {
 
   const updated = await book.update(slug, request.body);
   return response.status(200).json(updated);
+}
+
+async function deleteHandler(request, response) {
+  const requestUser = request.context.user;
+  const { slug } = request.query;
+
+  const bookData = await book.findBySlug(slug);
+  const canEditBook = await book.canEdit(bookData.id, requestUser);
+
+  if (!canEditBook) {
+    throw new ForbiddenError({
+      message: "Você não tem permissão para excluir este livro/quadrinho.",
+    });
+  }
+
+  await book.deleteBook(slug);
+  return response.status(204).end();
 }
