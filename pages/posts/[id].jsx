@@ -19,13 +19,12 @@ import { SITE_URL } from "@/lib/seo";
  */
 export async function getServerSideProps(context) {
   const { id } = context.params;
-  const protocol = context.req.headers["x-forwarded-proto"] || "http";
-  const host = context.req.headers.host;
-  const baseUrl = `${protocol}://${host}`;
 
   try {
-    // Busca anônima (sem cookies de usuário) — suficiente para OG tags
-    const res = await fetch(`${baseUrl}/api/v1/posts/${id}`);
+    // Fetch interno ao próprio servidor Next.js (localhost:3000).
+    // NÃO usar a URL pública — de dentro do container Docker a requisição
+    // externa pode falhar (hairpin NAT, DNS, firewall).
+    const res = await fetch(`http://localhost:3000/api/v1/posts/${id}`);
 
     if (res.status === 404) {
       return {
