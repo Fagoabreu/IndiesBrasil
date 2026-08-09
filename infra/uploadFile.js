@@ -33,6 +33,36 @@ export async function postFile(file, folder) {
   };
 }
 
+export async function postRawFile(file, folder) {
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+
+  // resource_type "image" é necessário para que o Cloudinary
+  // reconheça o PDF como documento multi-página e suporte
+  // transformações pg_N (conversão de página para imagem).
+  const result = await new Promise((resolve, reject) => {
+    cloudinary.uploader
+      .upload_stream({ folder, resource_type: "image" }, (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      })
+      .end(buffer);
+  });
+  return {
+    id: result.asset_id,
+    publicId: result.public_id,
+    displayName: result.display_name,
+    filename: result.original_filename,
+    width: result.width,
+    height: result.height,
+    format: result.format,
+    tags: result.tags,
+    type: "image",
+    url: result.secure_url,
+    created_at: result.created_at,
+  };
+}
+
 export async function destroyFile(publicId) {
   if (!publicId) {
     throw new Error("public_id não informado para exclusão");
@@ -50,9 +80,28 @@ export async function destroyFile(publicId) {
   return result;
 }
 
+export async function destroyRawFile(publicId) {
+  if (!publicId) {
+    throw new Error("public_id não informado para exclusão");
+  }
+
+  const result = await cloudinary.uploader.destroy(publicId, {
+    resource_type: "image",
+    invalidate: true,
+  });
+
+  if (result.result !== "ok" && result.result !== "not found") {
+    throw new Error(`Erro ao remover arquivo: ${result.result}`);
+  }
+
+  return result;
+}
+
 const uploadFile = {
   postFile,
+  postRawFile,
   destroyFile,
+  destroyRawFile,
 };
 
 export default uploadFile;

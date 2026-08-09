@@ -391,6 +391,49 @@
   display: flex;
 }
 
+.pdfActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pdfReadBtn,
+.pdfDownloadBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 10px;
+  background: var(--bgColor-muted);
+  color: var(--fgColor-default);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    box-shadow 0.15s;
+}
+
+.pdfReadBtn {
+  background: var(--brand-primary, #6e57e0);
+  border-color: var(--brand-primary, #6e57e0);
+  color: #fff;
+}
+
+.pdfReadBtn:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+.pdfDownloadBtn:hover {
+  border-color: var(--brand-primary);
+  background: rgba(var(--brand-rgb-primary, 110, 87, 224), 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
 .pdfLink {
   display: flex;
   align-items: center;

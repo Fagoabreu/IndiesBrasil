@@ -76,6 +76,7 @@ async function findBySlug(slug) {
             SELECT
         b.*,
         COALESCE(ui.secure_url, b.cover_url_external) AS cover_url,
+        COALESCE(ui_pdf.secure_url, b.pdf_url) AS pdf_file_url,
         o.name               AS studio_name,
         o.slug               AS studio_slug,
         o.pitch              AS studio_pitch,
@@ -86,13 +87,14 @@ async function findBySlug(slug) {
         COUNT(DISTINCT br.id)          AS review_count
       FROM books b
       LEFT JOIN uploaded_images ui      ON ui.id = b.cover_image_id
+      LEFT JOIN uploaded_images ui_pdf  ON ui_pdf.id = b.pdf_image_id
       LEFT JOIN organizations o         ON o.id = b.owner_org_id
       LEFT JOIN uploaded_images ui_logo ON ui_logo.id = o.img
       LEFT JOIN users u                 ON u.id = b.owner_id
       LEFT JOIN book_followers bf       ON bf.book_id = b.id
       LEFT JOIN book_reviews br         ON br.book_id = b.id
       WHERE b.slug = $1
-      GROUP BY b.id, ui.secure_url, o.name, o.slug, o.pitch, ui_logo.secure_url, u.username
+      GROUP BY b.id, ui.secure_url, ui_pdf.secure_url, o.name, o.slug, o.pitch, ui_logo.secure_url, u.username
     `,
     values: [slug],
   });
@@ -116,15 +118,17 @@ async function findByOrg(orgId) {
         b.book_type, b.stage, b.release_date, b.created_at,
         b.isbn, b.publisher, b.edition, b.website_url, b.buy_url, b.pdf_url, b.content_rating,
         COALESCE(ui.secure_url, b.cover_url_external) AS cover_url,
+        COALESCE(ui_pdf.secure_url, b.pdf_url) AS pdf_file_url,
         COUNT(DISTINCT bf.follower_id) AS follower_count,
         ROUND(AVG(br.rating), 1)       AS avg_rating,
         COUNT(DISTINCT br.id)          AS review_count
       FROM books b
       LEFT JOIN uploaded_images ui  ON ui.id = b.cover_image_id
+      LEFT JOIN uploaded_images ui_pdf ON ui_pdf.id = b.pdf_image_id
       LEFT JOIN book_followers bf   ON bf.book_id = b.id
       LEFT JOIN book_reviews br     ON br.book_id = b.id
       WHERE b.owner_org_id = $1
-      GROUP BY b.id, ui.secure_url
+      GROUP BY b.id, ui.secure_url, ui_pdf.secure_url
       ORDER BY b.created_at DESC
     `,
     values: [orgId],
@@ -225,6 +229,24 @@ async function saveCover(slug, imageId) {
   await database.query({
     text: `UPDATE books SET cover_image_id = $1, updated_at = now() WHERE slug = $2`,
     values: [imageId, slug],
+  });
+}
+
+/* =========================================================
+ * PDF (uploaded)
+ * ========================================================= */
+
+async function savePdf(slug, imageId) {
+  await database.query({
+    text: `UPDATE books SET pdf_image_id = $1, updated_at = now() WHERE slug = $2`,
+    values: [imageId, slug],
+  });
+}
+
+async function clearPdf(slug) {
+  await database.query({
+    text: `UPDATE books SET pdf_image_id = NULL, updated_at = now() WHERE slug = $1`,
+    values: [slug],
   });
 }
 
@@ -444,6 +466,8 @@ const book = {
   create,
   update,
   saveCover,
+  savePdf,
+  clearPdf,
   findStoreTypes,
   followBook,
   unfollowBook,

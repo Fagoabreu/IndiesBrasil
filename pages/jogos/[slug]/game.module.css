@@ -82,6 +82,7 @@
   }
   .sidebar {
     order: -1;
+    position: static;
   }
 }
 

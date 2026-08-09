@@ -89,9 +89,13 @@ export async function getServerSideProps(context) {
     const { street, number, complement, neighborhood, city, state, zip_code, country, ...studioData } = studio;
     const address = city || street ? { street, number, complement, neighborhood, city, state, zip_code, country } : null;
 
+    // Serialize Date objects to ISO strings — node-pg returns TIMESTAMP
+    // columns as Date objects, which Next.js cannot serialize in props.
+    const serialized = JSON.parse(JSON.stringify(studioData));
+
     return {
       props: {
-        initialStudio: { ...studioData, address },
+        initialStudio: { ...serialized, address },
       },
     };
   } catch {
