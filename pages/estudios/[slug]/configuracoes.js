@@ -215,6 +215,11 @@ export default function ConfiguracoesPage() {
   const [uploadingBookImg, setUploadingBookImg] = useState(false);
   const bookImgInputRef = useRef(null);
 
+  // Upload de PDF do livro
+  const [uploadingBookPdf, setUploadingBookPdf] = useState(false);
+  const bookPdfInputRef = useRef(null);
+  const [pendingBookPdfSlug, setPendingBookPdfSlug] = useState(null);
+
   // Streaming
   const [twitchChannel, setTwitchChannel] = useState("");
   const [youtubeChannelId, setYoutubeChannelId] = useState("");
@@ -619,6 +624,7 @@ export default function ConfiguracoesPage() {
         buy_url: data.buy_url || "",
         cover_url_external: data.cover_url_external || "",
         pdf_url: data.pdf_url || "",
+        pdf_file_url: data.pdf_file_url || "",
         store_pages:
           data.store_pages?.map((sp) => ({
             store_type_id: sp.store_type_id,
@@ -721,6 +727,49 @@ export default function ConfiguracoesPage() {
       });
     } finally {
       setUploadingBookImg(false);
+    }
+  }
+
+  /** ─── Upload de PDF da publicação ─── */
+
+  function openBookPdfPicker(bookSlug) {
+    setPendingBookPdfSlug(bookSlug);
+    bookPdfInputRef.current?.click();
+  }
+
+  function handleBookPdfSelected(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    handleBookPdfUpload(pendingBookPdfSlug, file);
+  }
+
+  async function handleBookPdfUpload(bookSlug, file) {
+    setUploadingBookPdf(true);
+    setEditBookMsg({ type: null, text: "" });
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`/api/v1/books/${bookSlug}/pdf`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Falha no upload do PDF.");
+      setEditBookMsg({
+        type: "success",
+        text: "PDF enviado com sucesso.",
+      });
+      // Atualiza o formulário para exibir o novo PDF
+      setEditBookForm((f) => (f ? { ...f, pdf_file_url: data.url } : f));
+    } catch (err) {
+      setEditBookMsg({
+        type: "error",
+        text: err.message || "Erro ao enviar o PDF.",
+      });
+    } finally {
+      setUploadingBookPdf(false);
     }
   }
 
@@ -2904,22 +2953,55 @@ export default function ConfiguracoesPage() {
                             )}
 
                             {activeBookTab === "pdf" && (
-                              <label className={styles.fieldLabel}>
-                                <span>URL do PDF</span>
-                                <input
-                                  type="url"
-                                  className={styles.input}
-                                  placeholder="https://seupdf.com/meu-livro.pdf"
-                                  value={editBookForm.pdf_url}
-                                  onChange={(e) =>
-                                    setEditBookForm((f) => ({
-                                      ...f,
-                                      pdf_url: e.target.value,
-                                    }))
-                                  }
-                                  maxLength={512}
-                                />
-                              </label>
+                              <div className={styles.panel}>
+                                <p className={styles.fieldHint}>Faça upload do PDF do livro/quadrinho. O arquivo será enviado para nossa CDN.</p>
+
+                                {editBookForm.pdf_file_url && (
+                                  <div style={{ marginBottom: "12px" }}>
+                                    <span className={styles.fieldLabel}>PDF atual:</span>{" "}
+                                    <a href={editBookForm.pdf_file_url} target="_blank" rel="noopener noreferrer" className={styles.fieldLink}>
+                                      📄 Abrir PDF ↗
+                                    </a>
+                                  </div>
+                                )}
+
+                                {!editBookForm.pdf_file_url && editBookForm.pdf_url && (
+                                  <div style={{ marginBottom: "12px" }}>
+                                    <span className={styles.fieldLabel}>URL externa do PDF:</span>{" "}
+                                    <a href={editBookForm.pdf_url} target="_blank" rel="noopener noreferrer" className={styles.fieldLink}>
+                                      📄 Abrir PDF ↗
+                                    </a>
+                                  </div>
+                                )}
+
+                                <button
+                                  type="button"
+                                  className={styles.btnOutlineSmall}
+                                  onClick={() => openBookPdfPicker(editingBookSlug)}
+                                  disabled={uploadingBookPdf}
+                                >
+                                  {uploadingBookPdf ? <Spinner size="small" /> : editBookForm.pdf_file_url ? "Substituir PDF" : "Enviar PDF"}
+                                </button>
+
+                                {!editBookForm.pdf_file_url && (
+                                  <label className={styles.fieldLabel} style={{ marginTop: "16px" }}>
+                                    <span>Ou informe uma URL externa do PDF</span>
+                                    <input
+                                      type="url"
+                                      className={styles.input}
+                                      placeholder="https://exemplo.com/meu-livro.pdf"
+                                      value={editBookForm.pdf_url}
+                                      onChange={(e) =>
+                                        setEditBookForm((f) => ({
+                                          ...f,
+                                          pdf_url: e.target.value,
+                                        }))
+                                      }
+                                      maxLength={512}
+                                    />
+                                  </label>
+                                )}
+                              </div>
                             )}
 
                             {activeBookTab === "stores" && (
@@ -3130,6 +3212,9 @@ export default function ConfiguracoesPage() {
       {bookImgCropSrc && (
         <ImageCropModal imageSrc={bookImgCropSrc} preset="bookCover" onConfirm={handleBookCropConfirm} onClose={() => setBookImgCropSrc(null)} />
       )}
+
+      {/* Upload de PDF de publicação */}
+      <input ref={bookPdfInputRef} type="file" accept=".pdf" style={{ display: "none" }} onChange={handleBookPdfSelected} />
 
       {/* Modal de classificação indicativa */}
       {ratingModal && <ContentRatingModal type={ratingModal.type} itemName={ratingModal.name} onClose={handleRatingClose} />}

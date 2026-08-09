@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
 import GameReviews from "@/components/GameReviews/GameReviews";
+import BookViewer from "@/components/BookViewer/BookViewer";
 
 import styles from "./book.module.css";
 
@@ -40,7 +41,11 @@ export async function getServerSideProps(context) {
     const book = (await import("@/models/book")).default;
     const bookData = await book.findBySlug(slug);
     if (!bookData) return { props: { initialBook: null, siteUrl } };
-    return { props: { initialBook: bookData, siteUrl } };
+
+    // node-pg retorna TIMESTAMP como Date — Next.js não serializa.
+    const serialized = JSON.parse(JSON.stringify(bookData));
+
+    return { props: { initialBook: serialized, siteUrl } };
   } catch {
     return { props: { initialBook: null, siteUrl } };
   }
@@ -55,6 +60,7 @@ export default function BookPage({ initialBook, siteUrl }) {
   const [loading, setLoading] = useState(!initialBook);
   const [following, setFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [showPdfViewer, setShowPdfViewer] = useState(false);
 
   const fetchBook = useCallback(async () => {
     if (!slug) return;
@@ -265,15 +271,20 @@ export default function BookPage({ initialBook, siteUrl }) {
           />
 
           {/* PDF */}
-          {bookData.pdf_url && (
+          {(bookData.pdf_file_url || bookData.pdf_url) && (
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>PDF</h2>
               <div className={styles.pdfCard}>
-                <a href={bookData.pdf_url} target="_blank" rel="noopener noreferrer" className={styles.pdfLink}>
-                  <span className={styles.pdfIcon}>📄</span>
-                  <span className={styles.pdfLabel}>Ler / Baixar PDF</span>
-                  <span className={styles.pdfArrow}>→</span>
-                </a>
+                <div className={styles.pdfActions}>
+                  <button type="button" className={styles.pdfReadBtn} onClick={() => setShowPdfViewer(true)}>
+                    <span className={styles.pdfIcon}>📖</span>
+                    <span className={styles.pdfLabel}>Ler PDF</span>
+                  </button>
+                  <a href={`/api/v1/books/${slug}/pdf?download=1`} className={styles.pdfDownloadBtn}>
+                    <span className={styles.pdfIcon}>⬇️</span>
+                    <span className={styles.pdfLabel}>Baixar PDF</span>
+                  </a>
+                </div>
               </div>
             </section>
           )}
@@ -298,6 +309,11 @@ export default function BookPage({ initialBook, siteUrl }) {
           )}
         </div>
       </div>
+
+      {/* Visualizador de PDF */}
+      {showPdfViewer && (
+        <BookViewer pdfUrl={bookData.pdf_file_url || bookData.pdf_url} title={bookData.title} onClose={() => setShowPdfViewer(false)} />
+      )}
     </>
   );
 }

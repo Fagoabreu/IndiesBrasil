@@ -55,7 +55,11 @@ export async function getServerSideProps(context) {
     const game = (await import("@/models/game")).default;
     const gameData = await game.findBySlug(slug);
     if (!gameData) return { props: { initialGame: null, siteUrl } };
-    return { props: { initialGame: gameData, siteUrl } };
+
+    // node-pg retorna TIMESTAMP como Date — Next.js não serializa.
+    const serialized = JSON.parse(JSON.stringify(gameData));
+
+    return { props: { initialGame: serialized, siteUrl } };
   } catch {
     return { props: { initialGame: null, siteUrl } };
   }

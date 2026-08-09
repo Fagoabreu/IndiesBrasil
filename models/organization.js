@@ -109,7 +109,7 @@ async function create(ownerUser, data) {
       data.history || null,
       data.pitch || null,
       data.cnpj || null,
-      data.founded_at || null,
+      data.founded_at || new Date().toISOString(),
       data.website || null,
       data.features || null,
     ],
