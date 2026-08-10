@@ -146,13 +146,10 @@ export default function BookViewer({ pdfUrl, title, onClose }) {
         setRawError(null);
 
         const pdfjsLib = await import("pdfjs-dist");
-        const pdfjsVersion = pdfjsLib.version || "6.2.108";
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsVersion}/build/pdf.worker.min.mjs`;
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "/scripts/pdf.worker.min.mjs";
 
         const pdf = await pdfjsLib.getDocument({
           url: pdfUrl,
-          cMapUrl: `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsVersion}/cmaps/`,
-          cMapPacked: true,
         }).promise;
 
         if (cancelled) return;
