@@ -1,4 +1,5 @@
 node_modules
+public/scripts/pdf.worker.min.mjs
 .next
 dist
 coverage
