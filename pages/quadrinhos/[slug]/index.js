@@ -260,16 +260,6 @@ export default function BookPage({ initialBook, siteUrl }) {
             </section>
           )}
 
-          {/* Avaliações */}
-          <GameReviews
-            reviewsApiUrl={`/api/v1/books/${slug}/reviews`}
-            avgRating={bookData.avg_rating}
-            reviewCount={Number(bookData.review_count ?? 0)}
-            userReview={bookData.viewer?.userReview ?? null}
-            user={user}
-            onReviewChange={fetchBook}
-          />
-
           {/* PDF */}
           {(bookData.pdf_file_url || bookData.pdf_url) && (
             <section className={styles.section}>
@@ -307,6 +297,15 @@ export default function BookPage({ initialBook, siteUrl }) {
               </ul>
             </section>
           )}
+          {/* Avaliações */}
+          <GameReviews
+            reviewsApiUrl={`/api/v1/books/${slug}/reviews`}
+            avgRating={bookData.avg_rating}
+            reviewCount={Number(bookData.review_count ?? 0)}
+            userReview={bookData.viewer?.userReview ?? null}
+            user={user}
+            onReviewChange={fetchBook}
+          />
         </div>
       </div>
 

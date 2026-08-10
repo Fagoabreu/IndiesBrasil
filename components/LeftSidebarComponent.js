@@ -149,38 +149,41 @@ export default function LeftSidebarComponent({ onNavigate }) {
         <NavList.Divider />
 
         {user?.features.includes("read:admin") && (
-          <NavList.Item href="#" defaultOpen>
-            <NavList.LeadingVisual>
-              <GearIcon />
-            </NavList.LeadingVisual>
-            Admin
-            <NavList.SubNav>
-              <NavList.Item as={Link} href="/admin/contact-types" onClick={onNavigate}>
-                <NavList.LeadingVisual>
-                  <PersonIcon />
-                </NavList.LeadingVisual>
-                Cadastro Contatos
-              </NavList.Item>
-              <NavList.Item as={Link} href="/admin/tools" onClick={onNavigate}>
-                <NavList.LeadingVisual>
-                  <GearIcon />
-                </NavList.LeadingVisual>
-                Cadastro Ferramentas
-              </NavList.Item>
-              <NavList.Item as={Link} href="/admin/professions" onClick={onNavigate}>
-                <NavList.LeadingVisual>
-                  <TagIcon />
-                </NavList.LeadingVisual>
-                Cadastro Profissões
-              </NavList.Item>
-              <NavList.Item as={Link} href="/status" onClick={onNavigate}>
-                <NavList.LeadingVisual>
-                  <PulseIcon />
-                </NavList.LeadingVisual>
-                Server Status
-              </NavList.Item>
-            </NavList.SubNav>
-          </NavList.Item>
+          <>
+            <NavList.Item href="#" defaultOpen>
+              <NavList.LeadingVisual>
+                <GearIcon />
+              </NavList.LeadingVisual>
+              Admin
+              <NavList.SubNav>
+                <NavList.Item as={Link} href="/admin/contact-types" onClick={onNavigate}>
+                  <NavList.LeadingVisual>
+                    <PersonIcon />
+                  </NavList.LeadingVisual>
+                  Cadastro Contatos
+                </NavList.Item>
+                <NavList.Item as={Link} href="/admin/tools" onClick={onNavigate}>
+                  <NavList.LeadingVisual>
+                    <GearIcon />
+                  </NavList.LeadingVisual>
+                  Cadastro Ferramentas
+                </NavList.Item>
+                <NavList.Item as={Link} href="/admin/professions" onClick={onNavigate}>
+                  <NavList.LeadingVisual>
+                    <TagIcon />
+                  </NavList.LeadingVisual>
+                  Cadastro Profissões
+                </NavList.Item>
+                <NavList.Item as={Link} href="/status" onClick={onNavigate}>
+                  <NavList.LeadingVisual>
+                    <PulseIcon />
+                  </NavList.LeadingVisual>
+                  Server Status
+                </NavList.Item>
+              </NavList.SubNav>
+            </NavList.Item>
+            <NavList.Divider />
+          </>
         )}
 
         <NavList.Item href="#" defaultOpen>
