@@ -148,8 +148,13 @@ export default function BookViewer({ pdfUrl, title, onClose }) {
         const pdfjsLib = await import("pdfjs-dist");
         pdfjsLib.GlobalWorkerOptions.workerSrc = "/scripts/pdf.worker.min.mjs";
 
+        // Proxy via API route para evitar bloqueio de CSP em produção.
+        // O pdfjs-dist faz fetch() do PDF, e o CSP connect-src só permite
+        // 'self' e api.cloudinary.com — não res.cloudinary.com (raw uploads).
+        const proxyUrl = pdfUrl.includes("res.cloudinary.com") ? `/api/v1/pdf-proxy?url=${encodeURIComponent(pdfUrl)}` : pdfUrl;
+
         const pdf = await pdfjsLib.getDocument({
-          url: pdfUrl,
+          url: proxyUrl,
         }).promise;
 
         if (cancelled) return;
