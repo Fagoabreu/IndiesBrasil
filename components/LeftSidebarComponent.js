@@ -26,6 +26,7 @@ import {
   PulseIcon,
   RocketIcon,
   StackIcon,
+  FileIcon,
 } from "@primer/octicons-react";
 import { useUser } from "@/context/UserContext";
 import styles from "./LeftSidebarComponent.module.css";
@@ -211,6 +212,12 @@ export default function LeftSidebarComponent({ onNavigate }) {
                 <FileCodeIcon />
               </NavList.LeadingVisual>
               Visualizador HTML
+            </NavList.Item>
+            <NavList.Item as={Link} href="/ferramentas/imagens-para-pdf" onClick={onNavigate}>
+              <NavList.LeadingVisual>
+                <FileIcon />
+              </NavList.LeadingVisual>
+              Imagens para PDF
             </NavList.Item>
           </NavList.SubNav>
         </NavList.Item>

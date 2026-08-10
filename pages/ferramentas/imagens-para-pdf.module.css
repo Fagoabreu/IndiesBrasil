@@ -1,0 +1,568 @@
+/* ==========================================
+   IMAGENS PARA PDF — Tool page
+   Tokens: var(--brand-*) from css/styles.css
+========================================== */
+
+.container {
+  padding: 24px 28px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+/* ---- Page header ---- */
+.pageHeader {
+  background: var(--brand-ambient-bg);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 16px;
+  padding: 20px 20px 20px 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.pageHeader::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--brand-gradient-v);
+}
+
+.pageTitle {
+  font-size: clamp(1.3rem, 2.5vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--fgColor-default);
+}
+
+.pageTitle span {
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.pageSubtitle {
+  margin-top: 4px;
+  font-size: 0.9rem;
+  color: var(--fgColor-muted);
+  line-height: 1.5;
+}
+
+/* ---- Drop zone ---- */
+.dropZone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 44px 24px;
+  border: 2px dashed rgba(var(--brand-rgb-primary), 0.22);
+  border-radius: 16px;
+  background: var(--brand-empty-bg);
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease;
+  text-align: center;
+}
+
+.dropZone:hover,
+.dropZone:focus-visible {
+  border-color: var(--brand-hover-border);
+  background: rgba(var(--brand-rgb-primary), 0.03);
+}
+
+.dropZoneActive {
+  border-color: var(--brand-primary);
+  background: rgba(var(--brand-rgb-primary), 0.06);
+}
+
+.fileInput {
+  display: none;
+}
+
+.dropZoneIcon {
+  color: var(--fgColor-muted);
+  opacity: 0.7;
+}
+
+.dropZoneTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+}
+
+.dropZoneTitle span {
+  color: var(--brand-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.dropZoneHint {
+  font-size: 0.82rem;
+  color: var(--fgColor-muted);
+}
+
+/* ---- Error banner ---- */
+.errorBanner {
+  padding: 12px 16px;
+  background: rgba(var(--brand-rgb-secondary), 0.08);
+  border: 1px solid rgba(var(--brand-rgb-secondary), 0.25);
+  border-radius: 10px;
+  color: var(--fgColor-danger);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+/* ---- Preview section ---- */
+.previewSection {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.previewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.previewTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+}
+
+.btnClear {
+  background: none;
+  border: 1px solid var(--borderColor-muted);
+  color: var(--fgColor-muted);
+  padding: 5px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.btnClear:hover {
+  border-color: var(--fgColor-danger);
+  color: var(--fgColor-danger);
+}
+
+.btnClear:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---- Preview grid ---- */
+.previewGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.previewCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--bgColor-default);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.18s ease;
+}
+
+.previewCard:hover {
+  border-color: var(--brand-hover-border);
+}
+
+.previewNumber {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.previewRemove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
+}
+
+.previewRemove:hover {
+  background: var(--fgColor-danger);
+}
+
+.previewRemove:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.previewImageWrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  background: var(--bgColor-muted);
+}
+
+.previewImage {
+  object-fit: cover;
+}
+
+.previewName {
+  padding: 8px 10px;
+  font-size: 0.75rem;
+  color: var(--fgColor-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-top: 1px solid var(--borderColor-muted);
+}
+
+/* ---- Actions ---- */
+.actions {
+  display: flex;
+  justify-content: center;
+}
+
+.btnGenerate {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 40px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--brand-gradient);
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: var(--brand-btn-shadow);
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.15s ease,
+    opacity 0.2s ease;
+  letter-spacing: -0.01em;
+}
+
+.btnGenerate:hover {
+  box-shadow: var(--brand-btn-shadow-hover);
+  transform: translateY(-1px);
+}
+
+.btnGenerate:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ---- Spinner ---- */
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- Responsive ---- */
+@media screen and (max-width: 640px) {
+  .container {
+    padding: 16px 16px 36px;
+    gap: 18px;
+  }
+
+  .dropZone {
+    padding: 32px 16px;
+  }
+
+  .previewGrid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 8px;
+  }
+
+  .btnGenerate {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .controls {
+    padding: 14px;
+    gap: 14px;
+  }
+
+  .sliderPresets {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .presetBtn {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+  }
+
+  .dimOptions {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .dimBtn {
+    font-size: 0.72rem;
+    padding: 5px 10px;
+  }
+}
+
+/* ==========================================
+   NEW: Tabs, Quality controls, PDF compress
+========================================== */
+
+/* ---- Tabs ---- */
+.tabs {
+  display: flex;
+  gap: 0;
+  background: var(--bgColor-muted);
+  border-radius: 12px;
+  padding: 3px;
+}
+
+.tab {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+  cursor: pointer;
+  border-radius: 10px;
+  transition: all 0.18s ease;
+}
+
+.tab:hover {
+  color: var(--fgColor-default);
+}
+
+.tabActive {
+  background: var(--bgColor-default);
+  color: var(--fgColor-default);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* ---- Quality controls ---- */
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 18px 20px;
+  background: var(--brand-ambient-bg);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 14px;
+}
+
+.controlGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.controlLabel {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+}
+
+/* ---- Slider ---- */
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sliderExtreme {
+  font-size: 0.7rem;
+  color: var(--fgColor-muted);
+  white-space: nowrap;
+}
+
+.slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--brand-primary);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--brand-primary);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
+/* ---- Slider presets ---- */
+.sliderPresets {
+  display: flex;
+  gap: 6px;
+}
+
+.presetBtn {
+  background: var(--bgColor-muted);
+  border: 1px solid var(--borderColor-muted);
+  color: var(--fgColor-muted);
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.presetBtn:hover {
+  border-color: var(--brand-hover-border);
+  color: var(--fgColor-default);
+}
+
+.presetBtnActive {
+  background: rgba(var(--brand-rgb-primary), 0.12);
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+  font-weight: 600;
+}
+
+/* ---- Dimension options ---- */
+.dimOptions {
+  display: flex;
+  gap: 6px;
+}
+
+.dimBtn {
+  background: var(--bgColor-muted);
+  border: 1px solid var(--borderColor-muted);
+  color: var(--fgColor-muted);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dimBtn:hover {
+  border-color: var(--brand-hover-border);
+  color: var(--fgColor-default);
+}
+
+.dimBtnActive {
+  background: rgba(var(--brand-rgb-primary), 0.12);
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+  font-weight: 600;
+}
+
+/* ---- Estimate ---- */
+.estimate {
+  font-size: 0.82rem;
+  color: var(--fgColor-muted);
+  padding: 10px 14px;
+  background: var(--bgColor-muted);
+  border-radius: 10px;
+  text-align: center;
+}
+
+.estimate strong {
+  color: var(--fgColor-default);
+}
+
+/* ---- PDF info card ---- */
+.pdfInfo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  background: var(--brand-ambient-bg);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 14px;
+}
+
+.pdfInfoIcon {
+  color: var(--brand-primary);
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.pdfInfoDetails {
+  flex: 1;
+  min-width: 0;
+}
+
+.pdfInfoName {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pdfInfoMeta {
+  font-size: 0.8rem;
+  color: var(--fgColor-muted);
+  margin-top: 2px;
+}

@@ -776,6 +776,16 @@ export default function ConfiguracoesPage() {
   }
 
   async function handleBookPdfUpload(bookSlug, file) {
+    // Validacao client-side: limite de 50 MB
+    const MAX_PDF_SIZE = 50 * 1024 * 1024;
+    if (file.size > MAX_PDF_SIZE) {
+      setEditBookMsg({
+        type: "error",
+        text: `O arquivo excede o limite de 50 MB. O PDF enviado tem ${(file.size / (1024 * 1024)).toFixed(1)} MB.`,
+      });
+      return;
+    }
+
     setUploadingBookPdf(true);
     setEditBookMsg({ type: null, text: "" });
     try {
@@ -2993,7 +3003,9 @@ export default function ConfiguracoesPage() {
 
                             {activeBookTab === "pdf" && (
                               <div className={styles.panel}>
-                                <p className={styles.fieldHint}>Faça upload do PDF do livro/quadrinho. O arquivo será enviado para nossa CDN.</p>
+                                <p className={styles.fieldHint}>
+                                  Faça upload do PDF do livro/quadrinho (ate 50 MB). O arquivo sera enviado para nossa CDN.
+                                </p>
 
                                 {editBookForm.pdf_file_url && (
                                   <div style={{ marginBottom: "12px" }}>
@@ -3019,7 +3031,11 @@ export default function ConfiguracoesPage() {
                                   onClick={() => openBookPdfPicker(editingBookSlug)}
                                   disabled={uploadingBookPdf}
                                 >
-                                  {uploadingBookPdf ? <Spinner size="small" /> : editBookForm.pdf_file_url ? "Substituir PDF" : "Enviar PDF"}
+                                  {(() => {
+                                    if (uploadingBookPdf) return <Spinner size="small" />;
+                                    if (editBookForm.pdf_file_url) return "Substituir PDF";
+                                    return "Enviar PDF";
+                                  })()}
                                 </button>
 
                                 {!editBookForm.pdf_file_url && (

@@ -482,21 +482,25 @@ async function deleteBook(slug) {
 
   const { id: bookId, cover_image_id, pdf_image_id } = bookResult.rows[0];
 
-  // Busca public_id das imagens para deletar do Cloudinary
+  // Busca public_id e resource_type das imagens para deletar do Cloudinary
   const imageIds = [cover_image_id, pdf_image_id].filter(Boolean);
   let imageRecords = [];
   if (imageIds.length > 0) {
     const imgResult = await database.query({
-      text: `SELECT id, public_id FROM uploaded_images WHERE id = ANY($1)`,
+      text: `SELECT id, public_id, resource_type FROM uploaded_images WHERE id = ANY($1)`,
       values: [imageIds],
     });
     imageRecords = imgResult.rows;
   }
 
-  // Deleta imagens do Cloudinary
+  // Deleta imagens do Cloudinary (respeita resource_type)
   for (const img of imageRecords) {
     try {
-      await uploadFile.destroyFile(img.public_id);
+      if (img.resource_type === "raw") {
+        await uploadFile.destroyPdfFile(img.public_id);
+      } else {
+        await uploadFile.destroyFile(img.public_id);
+      }
     } catch {
       // Ignora falha de deleção no Cloudinary (arquivo pode já não existir)
     }

@@ -98,7 +98,19 @@ export async function POST(request, context) {
     }
 
     const folder = `books/${bookData.id}/pdf`;
-    const pdfData = await uploadedImages.uploadPdf(file, folder);
+
+    // Valida tamanho antes de tentar upload (Cloudinary raw = 100 MB)
+    const MAX_PDF_SIZE = 50 * 1024 * 1024; // 50 MB
+    if (file.size > MAX_PDF_SIZE) {
+      return Response.json(
+        {
+          message: `O arquivo excede o limite de 50 MB. O PDF enviado tem ${(file.size / (1024 * 1024)).toFixed(1)} MB.`,
+        },
+        { status: 413 },
+      );
+    }
+
+    const pdfData = await uploadedImages.uploadPdfRaw(file, folder);
 
     await book.savePdf(slug, pdfData.id);
 
