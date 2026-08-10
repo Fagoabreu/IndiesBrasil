@@ -1,6 +1,7 @@
 import database from "infra/database.js";
 import { ForbiddenError, NotFoundError, ValidationError } from "infra/errors.js";
 import { generateUniqueSlug } from "lib/slug";
+import uploadFile from "@/infra/uploadFile.js";
 
 /* =========================================================
  * List / Search
@@ -458,6 +459,73 @@ async function getUserReview(bookId, userId) {
   return result.rows[0] || null;
 }
 
+/* =========================================================
+ * Delete
+ * ========================================================= */
+
+async function deleteBook(slug) {
+  // Busca o livro e suas imagens associadas
+  const bookResult = await database.query({
+    text: `
+      SELECT id, cover_image_id, pdf_image_id
+      FROM books
+      WHERE slug = $1
+    `,
+    values: [slug],
+  });
+
+  if (!bookResult.rowCount) {
+    throw new NotFoundError({
+      message: "Livro/quadrinho não encontrado.",
+    });
+  }
+
+  const { id: bookId, cover_image_id, pdf_image_id } = bookResult.rows[0];
+
+  // Busca public_id e resource_type das imagens para deletar do Cloudinary
+  const imageIds = [cover_image_id, pdf_image_id].filter(Boolean);
+  let imageRecords = [];
+  if (imageIds.length > 0) {
+    const imgResult = await database.query({
+      text: `SELECT id, public_id, resource_type FROM uploaded_images WHERE id = ANY($1)`,
+      values: [imageIds],
+    });
+    imageRecords = imgResult.rows;
+  }
+
+  // Deleta imagens do Cloudinary (respeita resource_type)
+  for (const img of imageRecords) {
+    try {
+      if (img.resource_type === "raw") {
+        await uploadFile.destroyPdfFile(img.public_id);
+      } else {
+        await uploadFile.destroyFile(img.public_id);
+      }
+    } catch {
+      // Ignora falha de deleção no Cloudinary (arquivo pode já não existir)
+    }
+  }
+
+  // Deleta registros de uploaded_images
+  for (const imgId of imageIds) {
+    await database.query({
+      text: `DELETE FROM uploaded_images WHERE id = $1`,
+      values: [imgId],
+    });
+  }
+
+  // Deleta dados relacionados
+  await database.query({ text: `DELETE FROM book_store_page WHERE book_id = $1`, values: [bookId] });
+  await database.query({ text: `DELETE FROM book_followers WHERE book_id = $1`, values: [bookId] });
+  await database.query({ text: `DELETE FROM book_reviews WHERE book_id = $1`, values: [bookId] });
+
+  // Deleta o livro
+  await database.query({
+    text: `DELETE FROM books WHERE id = $1`,
+    values: [bookId],
+  });
+}
+
 const book = {
   findAll,
   findFollowedBy,
@@ -477,6 +545,7 @@ const book = {
   updateReview,
   getReviews,
   getUserReview,
+  deleteBook,
 };
 
 export default book;

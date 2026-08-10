@@ -395,6 +395,29 @@
   color: var(--fgColor-attention, #bf8700);
 }
 
+.btnDeleteBook {
+  padding: 4px 12px;
+  border-radius: 5px;
+  border: 1px solid var(--borderColor-default);
+  background: transparent;
+  color: var(--fgColor-muted);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.btnDeleteBook:hover:not(:disabled) {
+  border-color: var(--fgColor-danger, #cf222e);
+  color: var(--fgColor-danger, #cf222e);
+}
+
+.btnDeleteBook:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Game edit panel */
 .gameEditPanel {
   border-top: 1px solid var(--borderColor-muted);

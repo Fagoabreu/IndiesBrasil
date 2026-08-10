@@ -1,73 +1,156 @@
-/* Overlay escuro por trás do visualizador */
+/* ========================================
+   BOOK VIEWER
+   Visualizador de PDF com identidade visual
+   alinhada ao design system do Indies Brasil.
+======================================== */
+
+/* ─── Overlay com ambient glow ─── */
 .overlay {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: rgba(0, 0, 0, 0.85);
+  background: radial-gradient(ellipse 50% 60% at 50% 50%, rgba(139, 92, 246, 0.06), transparent), rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 20px;
+  animation: overlayIn 0.2s ease-out;
 }
 
-/* Container principal do visualizador */
+@keyframes overlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ─── Container principal ─── */
 .viewer {
   position: relative;
   width: 100%;
-  max-width: 1200px;
-  height: 90vh;
-  background: var(--bgColor-default, #1c1c1c);
-  border-radius: 12px;
+  max-width: 1300px;
+  height: 92vh;
+  background: var(--bgColor-default);
+  border-radius: 16px;
+  border: 1px solid var(--borderColor-default);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 0 0 1px rgba(139, 92, 246, 0.08),
+    0 12px 48px rgba(0, 0, 0, 0.4),
+    0 0 60px rgba(139, 92, 246, 0.06);
+  animation: viewerIn 0.25s ease-out;
+}
+
+@keyframes viewerIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ─── Brand accent bar (topo) ─── */
+.viewer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #8b5cf6 0%, #e879b8 100%);
+  z-index: 3;
+  pointer-events: none;
 }
 
 /* ─── Header ─── */
 .header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--borderColor-default, #333);
+  gap: 14px;
+  padding: 16px 24px;
+  background: var(--brand-ambient-bg);
+  border-bottom: 1px solid var(--borderColor-default);
   flex-shrink: 0;
+  position: relative;
+}
+
+.header::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, #8b5cf6 0%, #e879b8 100%);
+}
+
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.titleIcon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  line-height: 1;
 }
 
 .title {
   font-size: 1rem;
-  font-weight: 600;
-  color: var(--fgColor-default, #e0e0e0);
+  font-weight: 700;
+  color: var(--fgColor-default);
   margin: 0;
-  flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.3;
 }
 
 .pageIndicator {
-  font-size: 0.8rem;
-  color: var(--fgColor-muted, #888);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--fgColor-muted);
   white-space: nowrap;
+  padding: 4px 12px;
+  background: rgba(139, 92, 246, 0.06);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 20px;
 }
 
 .closeBtn {
   background: none;
-  border: none;
-  color: var(--fgColor-muted, #888);
-  font-size: 1.4rem;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-  line-height: 1;
+  color: var(--fgColor-muted);
+  font-size: 1.1rem;
+  flex-shrink: 0;
   transition:
     background 0.15s,
-    color 0.15s;
+    color 0.15s,
+    border-color 0.15s;
 }
 
 .closeBtn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--fgColor-default, #e0e0e0);
+  background: rgba(139, 92, 246, 0.08);
+  color: #e879b8;
+  border-color: rgba(139, 92, 246, 0.25);
 }
 
 /* ─── Área do livro ─── */
@@ -76,70 +159,106 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
+  padding: 12px;
   gap: 0;
   min-height: 0;
   position: relative;
+  background: radial-gradient(ellipse 60% 80% at 50% 50%, rgba(139, 92, 246, 0.03), transparent);
 }
 
-/* Mensagens */
-.loadingMsg,
-.errorMsg {
-  color: var(--fgColor-muted, #888);
-  font-size: 1rem;
+/* ─── Loading ─── */
+.loadingMsg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: var(--fgColor-muted);
+  font-size: 0.9rem;
   text-align: center;
-  padding: 40px;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--borderColor-default);
+  border-top-color: #8b5cf6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .errorMsg {
   color: #f87171;
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 32px;
+  max-width: 340px;
+  line-height: 1.5;
+  background: rgba(248, 113, 113, 0.06);
+  border: 1px solid rgba(248, 113, 113, 0.15);
+  border-radius: 12px;
 }
 
 /* ─── Botões de navegação ─── */
 .navBtn {
   flex-shrink: 0;
-  width: 44px;
-  height: 80px;
-  border: none;
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--fgColor-default, #ccc);
-  font-size: 2rem;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--borderColor-default);
+  background: var(--bgColor-default);
+  color: var(--fgColor-muted);
+  font-size: 1.6rem;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   transition:
     background 0.2s,
-    color 0.2s;
+    color 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s,
+    transform 0.15s;
   z-index: 2;
   user-select: none;
+  line-height: 1;
 }
 
 .navBtn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.12);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(232, 121, 184, 0.08));
   color: #fff;
+  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
+  transform: scale(1.06);
+}
+
+.navBtn:active:not(:disabled) {
+  transform: scale(0.95);
 }
 
 .navBtn:disabled {
-  opacity: 0.25;
+  opacity: 0.2;
   cursor: default;
 }
 
 .navLeft {
-  margin-right: 4px;
+  margin-right: 8px;
 }
 
 .navRight {
-  margin-left: 4px;
+  margin-left: 8px;
 }
 
-/* ─── Container do spread com efeito 3D ─── */
+/* ─── Container do spread ─── */
 .spreadContainer {
   flex: 1;
   height: 100%;
   cursor: pointer;
-  perspective: 1500px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -152,14 +271,14 @@
   height: 100%;
   width: 100%;
   gap: 0;
-  transform-style: preserve-3d;
-  transition: transform 0.1s ease;
-  background: #2a2a2a;
-  border-radius: 4px;
+  background: var(--bgColor-inset, #1a1a1a);
+  border-radius: 8px;
   box-shadow:
-    4px 0 8px rgba(0, 0, 0, 0.3),
-    -4px 0 8px rgba(0, 0, 0, 0.3);
+    inset 0 0 40px rgba(0, 0, 0, 0.15),
+    2px 4px 24px rgba(0, 0, 0, 0.25),
+    8px 0 20px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  transition: transform 0.1s ease;
 }
 
 /* ─── Animação de folhear ─── */
@@ -168,39 +287,39 @@
 }
 
 .spreadContainer.flipForward .spreadInner {
-  animation: flipForward 0.5s ease-in-out;
+  animation: flipForward 0.4s ease-in-out;
 }
 
 .spreadContainer.flipBackward .spreadInner {
-  animation: flipBackward 0.5s ease-in-out;
+  animation: flipBackward 0.4s ease-in-out;
 }
 
 @keyframes flipForward {
   0% {
-    transform: rotateY(0deg);
+    transform: perspective(1200px) rotateY(0deg);
     opacity: 1;
   }
-  40% {
-    transform: rotateY(-25deg);
-    opacity: 0.9;
+  35% {
+    transform: perspective(1200px) rotateY(-12deg);
+    opacity: 0.85;
   }
   100% {
-    transform: rotateY(0deg);
+    transform: perspective(1200px) rotateY(0deg);
     opacity: 1;
   }
 }
 
 @keyframes flipBackward {
   0% {
-    transform: rotateY(0deg);
+    transform: perspective(1200px) rotateY(0deg);
     opacity: 1;
   }
-  40% {
-    transform: rotateY(25deg);
-    opacity: 0.9;
+  35% {
+    transform: perspective(1200px) rotateY(12deg);
+    opacity: 0.85;
   }
   100% {
-    transform: rotateY(0deg);
+    transform: perspective(1200px) rotateY(0deg);
     opacity: 1;
   }
 }
@@ -216,17 +335,17 @@
   overflow: hidden;
   background: #fff;
   min-width: 0;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
 }
 
 .pageLeft {
-  border-right: 1px solid #ddd;
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .pageRight {
-  border-left: 1px solid #ddd;
+  border-left: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-/* Quando só tem 1 página (capa), centraliza */
 .pageSingle {
   border-right: none;
 }
@@ -240,50 +359,174 @@
 
 .pageLabel {
   position: absolute;
-  bottom: 4px;
+  bottom: 6px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 0.65rem;
-  color: #999;
-  background: rgba(255, 255, 255, 0.85);
-  padding: 1px 8px;
-  border-radius: 3px;
+  font-size: 0.62rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.45);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2px 10px;
+  border-radius: 10px;
   pointer-events: none;
+  letter-spacing: 0.02em;
 }
 
 /* ─── Footer ─── */
 .footer {
-  padding: 8px 20px;
-  border-top: 1px solid var(--borderColor-default, #333);
-  text-align: center;
-  font-size: 0.75rem;
-  color: var(--fgColor-muted, #666);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 10px 24px;
+  border-top: 1px solid var(--borderColor-default);
+  background: var(--brand-ambient-bg);
+  font-size: 0.72rem;
+  color: var(--fgColor-muted);
   flex-shrink: 0;
+}
+
+.footerHint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.7;
+}
+
+.footerDot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(139, 92, 246, 0.4);
+}
+
+/* ─── Modo raw PDF (pdfjs-dist canvas) ─── */
+.rawSpreadContainer {
+  cursor: pointer;
+}
+
+.rawSpreadContainer .spreadInner {
+  background: #3d3d3d;
+}
+
+.rawCanvasContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  gap: 0;
+}
+
+.rawPageWrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.rawPageWrapper:first-child {
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.rawPageSingle {
+  border-right: none !important;
+}
+
+.rawPageCanvas {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* ─── Responsivo: tablet ─── */
+@media (max-width: 1024px) {
+  .viewer {
+    max-width: 100%;
+  }
+
+  .navBtn {
+    width: 40px;
+    height: 40px;
+    font-size: 1.3rem;
+  }
 }
 
 /* ─── Responsivo: mobile ─── */
 @media (max-width: 768px) {
-  .viewer {
-    height: 95vh;
-    max-width: 100%;
-    border-radius: 0;
+  .overlay {
+    padding: 0;
   }
 
-  .navBtn {
-    width: 32px;
-    height: 48px;
-    font-size: 1.5rem;
+  .viewer {
+    height: 100vh;
+    height: 100dvh;
+    max-width: 100%;
+    border-radius: 0;
+    border: none;
+  }
+
+  .viewer::before {
+    display: none;
   }
 
   .header {
-    padding: 8px 12px;
+    padding: 10px 16px;
+  }
+
+  .header::before {
+    display: none;
   }
 
   .title {
-    font-size: 0.85rem;
+    font-size: 0.88rem;
+  }
+
+  .titleIcon {
+    font-size: 1.1rem;
+  }
+
+  .pageIndicator {
+    font-size: 0.72rem;
+    padding: 3px 10px;
+  }
+
+  .bookArea {
+    padding: 4px;
+  }
+
+  .navBtn {
+    width: 36px;
+    height: 36px;
+    font-size: 1.2rem;
+    border-radius: 50%;
+  }
+
+  .navLeft {
+    margin-right: 2px;
+  }
+
+  .navRight {
+    margin-left: 2px;
   }
 
   .spreadInner {
-    border-radius: 0;
+    border-radius: 4px;
+  }
+
+  .footer {
+    padding: 8px 12px;
+    font-size: 0.68rem;
+    gap: 10px;
+  }
+
+  .pageLabel {
+    font-size: 0.58rem;
+    padding: 1px 6px;
   }
 }
