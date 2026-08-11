@@ -535,6 +535,8 @@ async function update(id, data, userId) {
     "event_type",
     "visibility",
     "status",
+    "starts_at",
+    "ends_at",
     "location_name",
     "location_url",
     "is_online",
