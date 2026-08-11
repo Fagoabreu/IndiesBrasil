@@ -320,9 +320,11 @@ async function getPosts(user_id, seachType, tag, pagination = {}) {
   }
 
   async function runSelectNoUserQuery(cursor, limit) {
-    const whereClause = cursor ? " WHERE p.created_at < $1" : "";
-    const orderAndLimit = ` ORDER BY p.created_at DESC LIMIT $${cursor ? 2 : 1}`;
-    const values = cursor ? [cursor, limit] : [limit];
+    const whereClause = cursor ? " WHERE p.created_at < $2" : "";
+    const orderAndLimit = ` ORDER BY p.created_at DESC LIMIT $${cursor ? 3 : 2}`;
+    const values = [null];
+    if (cursor) values.push(cursor);
+    values.push(limit);
 
     const results = await database.query({
       text: baseNoUserSelectQuery + whereClause + orderAndLimit + ";",
