@@ -99,11 +99,11 @@ export default function AgendaPage() {
     } else setMonth((m) => m + 1);
   }
 
-  // Agrupa eventos por dia
+  // Agrupa eventos por dia (UTC — evita off-by-one em timezones negativos)
   const grouped = (events || []).reduce((acc, ev) => {
     const d = new Date(ev.starts_at);
-    const key = d.toDateString();
-    if (!acc[key]) acc[key] = { date: d, items: [] };
+    const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+    if (!acc[key]) acc[key] = { date: d, day: d.getUTCDate(), month: d.getUTCMonth(), items: [] };
     acc[key].items.push(ev);
     return acc;
   }, {});
@@ -175,14 +175,14 @@ export default function AgendaPage() {
         )}
         {!loading && days.length > 0 && (
           <div className={styles.eventList}>
-            {days.map(({ date, items }) => (
-              <div key={date.toDateString()}>
+            {days.map(({ date, day, month: evtMonth, items }) => (
+              <div key={date.toISOString()}>
                 {items.map((ev) => (
                   <Link key={ev.instance_id} href={`/agenda/${ev.event_id}`} className={styles.eventCard}>
                     {/* Data */}
                     <div className={styles.dateBadge}>
-                      <span className={styles.dateDay}>{date.getDate()}</span>
-                      <span className={styles.dateMonth}>{PT_MONTHS_SHORT[date.getMonth()]}</span>
+                      <span className={styles.dateDay}>{day}</span>
+                      <span className={styles.dateMonth}>{PT_MONTHS_SHORT[evtMonth]}</span>
                     </div>
 
                     {/* Corpo */}
