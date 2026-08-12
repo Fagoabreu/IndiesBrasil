@@ -6,6 +6,7 @@ import { parse } from "cookie";
 import { ThemeProvider, BaseStyles } from "@primer/react";
 import { UserProvider } from "@/context/UserContext";
 import Layout from "@/components/Layout";
+import { useRouter } from "next/router";
 import "@primer/primitives/dist/css/functional/themes/light.css";
 import "@primer/primitives/dist/css/functional/themes/dark.css";
 
@@ -17,6 +18,7 @@ function readThemeFromCookie(cookieHeader) {
 }
 
 export default function MyApp({ Component, pageProps, colorMode }) {
+  const router = useRouter();
   const RightSidebar = Component.RightSidebar || null;
   const noLayout = Component.noLayout || false;
 
@@ -28,10 +30,14 @@ export default function MyApp({ Component, pageProps, colorMode }) {
       <BaseStyles>
         <UserProvider>
           {noLayout ? (
-            <Component {...pageProps} />
+            <div key={router.asPath} className="page-transition">
+              <Component {...pageProps} />
+            </div>
           ) : (
             <Layout RightSidebar={RightSidebar}>
-              <Component {...pageProps} />
+              <div key={router.asPath} className="page-transition">
+                <Component {...pageProps} />
+              </div>
             </Layout>
           )}
         </UserProvider>

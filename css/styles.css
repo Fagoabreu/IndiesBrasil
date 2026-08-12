@@ -6,6 +6,32 @@
 }
 
 /* ========================================
+   PAGE TRANSITION (client-side navigation)
+   Como o Pages Router faz SPA (troca apenas
+   o Component sem reload), View Transitions
+   API (::view-transition / @view-transition)
+   não funcionam — elas dependem de navegação
+   cross-document. Em vez disso, usamos uma
+   animação CSS disparada no remount do
+   componente com key={router.asPath}.
+======================================== */
+
+.page-transition {
+  animation: page-fade-slide-up 0.25s ease-out both;
+}
+
+@keyframes page-fade-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
    BRAND TOKENS
    Usados em toda a aplicação para manter
    a identidade visual gaming consistente.
