@@ -1,3 +1,5 @@
+import { isSafeUrl } from "lib/ssrf-guard";
+
 /** Wraps an external image URL through our proxy so CSP doesn't block it.
  *  Uses a relative path so it always resolves to the document's origin. */
 function proxyImageUrl(imageUrl) {
@@ -101,6 +103,12 @@ function resolveInstagram(url) {
 }
 
 async function fetchLinkPreview(url) {
+  // Bloqueia SSRF: nunca fazer fetch de IPs internos/loopback/metadata
+  // a partir de links arbitrários extraídos de conteúdo de post.
+  if (!(await isSafeUrl(url))) {
+    return null;
+  }
+
   try {
     // Browser-mimicking headers reduce anti-bot 429 responses (Cloudflare, etc.)
     const res = await fetch(url, {

@@ -1,5 +1,6 @@
 import { createRouter } from "next-connect";
 import controller from "infra/controller";
+import { isSafeUrl } from "lib/ssrf-guard";
 
 export const config = {
   api: {
@@ -28,9 +29,9 @@ async function getHandler(request, response) {
     return response.status(400).json({ error: "Missing url parameter" });
   }
 
-  // Only allow HTTP(S) URLs
-  if (!/^https?:\/\//i.test(url)) {
-    return response.status(400).json({ error: "Invalid URL scheme" });
+  // Bloqueia SSRF: exige HTTP(S) público (sem loopback/privado/link-local)
+  if (!(await isSafeUrl(url))) {
+    return response.status(400).json({ error: "Invalid URL" });
   }
 
   try {

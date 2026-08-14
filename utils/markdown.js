@@ -40,8 +40,12 @@ export function markdownToHtml(text) {
   // 6. Tachado (~~...~~)
   html = html.replace(/~~([^~\n]+)~~/g, "<del>$1</del>");
 
-  // 7. Links [texto](url)
-  html = html.replace(/\[([^\]]+)\]\((\S+?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  // 7. Links [texto](url) — valida o scheme para bloquear XSS (javascript:, data:, vbscript:)
+  html = html.replace(/\[([^\]]+)\]\((\S+?)\)/g, (_match, text, url) => {
+    const safeUrl = sanitizeUrl(url);
+    if (!safeUrl) return text;
+    return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+  });
 
   // 8. Parágrafos (separados por \n\n+)
   html = html
@@ -64,6 +68,26 @@ export function markdownToHtml(text) {
  */
 function escapeHtml(str) {
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/**
+ * Valida o scheme de uma URL de link markdown.
+ * Permite http(s), protocol-relative (//) e caminhos relativos/âncoras.
+ * Bloqueia javascript:, data:, vbscript: e qualquer outro scheme.
+ * @param {string} url
+ * @returns {string|null} URL segura ou null se insegura.
+ */
+function sanitizeUrl(url) {
+  const trimmed = url.trim();
+
+  // http(s):// ou protocol-relative //
+  if (/^(https?:)?\/\//i.test(trimmed)) return trimmed;
+
+  // Qualquer outro scheme (javascript:, data:, vbscript:, file:, ...)
+  if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) return null;
+
+  // Caminho relativo (/foo), âncora (#foo), etc.
+  return trimmed;
 }
 
 export function escapeHtmlString(str) {
