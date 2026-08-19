@@ -85,6 +85,52 @@
   border-top: 1px solid var(--borderColor-muted);
 }
 
+/* ─── Progresso do envio ─── */
+.progressWrap {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.progressTrack {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bgColor-muted);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--brand-gradient-h);
+  transition: width 0.2s ease;
+}
+
+.progressFillIndeterminate {
+  height: 100%;
+  width: 40%;
+  border-radius: 999px;
+  background: var(--brand-gradient-h);
+  animation: progressSweep 1.1s ease-in-out infinite;
+}
+
+.progressLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fgColor-muted);
+}
+
+@keyframes progressSweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+
 .fileInput {
   display: none;
 }

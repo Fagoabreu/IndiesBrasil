@@ -10,6 +10,7 @@ import { SITE_URL } from "@/lib/seo";
 import CreatePost from "@/components/CreatePost/CreatePost";
 import AddressDisplay from "@/components/Address/AddressDisplay";
 import styles from "./index.module.css";
+import { uploadWithProgress } from "@/utils/uploadWithProgress";
 
 const TYPE_LABELS = {
   general: "Geral",
@@ -144,7 +145,7 @@ export default function EventDetailPage() {
     return `${styles.rsvpBtn} ${styles.active} ${styles[status]}`;
   }
 
-  async function handleAddPost(content, file = null, existingFormData = null) {
+  async function handleAddPost(content, file = null, existingFormData = null, onProgress = null) {
     try {
       const formData = existingFormData || new FormData();
       if (!existingFormData) {
@@ -152,20 +153,14 @@ export default function EventDetailPage() {
         if (file) formData.append("file", file);
       }
       formData.append("event_id", id);
-      const res = await fetch("/api/v1/posts", {
-        method: "POST",
-        credentials: "include",
+      const created = await uploadWithProgress("/api/v1/posts", {
         body: formData,
+        onProgress,
       });
-      if (!res.ok) {
-        const err = await res.json();
-        console.error("Erro ao criar post:", err);
-        return;
-      }
-      const created = await res.json();
       setPosts((prev) => [created, ...prev]);
     } catch (err) {
       console.error("Erro ao criar post:", err);
+      throw err;
     }
   }
 
