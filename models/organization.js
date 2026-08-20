@@ -1,6 +1,7 @@
 import database from "infra/database";
 import { NotFoundError, ValidationError, ForbiddenError } from "infra/errors.js";
 import { generateUniqueSlug } from "lib/slug";
+import moderation from "./moderation.js";
 
 /* =========================================================
  * Leitura
@@ -27,6 +28,14 @@ async function findAll({ page = 1, limit = 20, search = "" } = {}) {
       LEFT JOIN org_followers of2 ON of2.org_id = o.id
       LEFT JOIN org_members om    ON om.org_id   = o.id AND om.status = 'active'
       WHERE ($3 = '' OR o.name ILIKE '%' || $3 || '%' OR o.pitch ILIKE '%' || $3 || '%')
+        AND NOT EXISTS (
+          SELECT 1
+          FROM moderation_actions ma
+          WHERE ma.revoked_at IS NULL
+            AND (ma.expires_at IS NULL OR ma.expires_at > now())
+            AND ma.target_type = 'studio'
+            AND ma.target_id = o.id::text
+        )
       GROUP BY o.id, ui_logo.secure_url, ui_ban.secure_url, u.username, u.avatar_image
       ORDER BY o.created_at DESC
       LIMIT $1 OFFSET $2
@@ -66,7 +75,12 @@ async function findBySlug(slug) {
   if (!results.rows[0]) {
     throw new NotFoundError({ message: `Estúdio "${slug}" não encontrado.` });
   }
-  return results.rows[0];
+
+  const studio = results.rows[0];
+  if (await moderation.isBlocked("studio", studio.id)) {
+    throw new NotFoundError({ message: `Estúdio "${slug}" não encontrado.` });
+  }
+  return studio;
 }
 
 async function findById(id) {

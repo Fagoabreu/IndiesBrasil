@@ -16,11 +16,11 @@ async function findOneValidById(tokenId) {
   async function runSelectQuery(tokenId) {
     const results = await database.query({
       text: `
-        SELECT 
+        SELECT
           *
-        FROM 
+        FROM
           user_activation_tokens
-        WHERE 
+        WHERE
           id = $1
           and expires_at > NOW()
           and used_at IS NULL
@@ -47,14 +47,14 @@ async function markTokenAsUsed(tokenId) {
     const results = await database.query({
       text: `
         update user_activation_tokens
-        set 
+        set
           used_at = timezone('utc', NOW()),
           updated_at = timezone('utc', NOW())
-        WHERE 
+        WHERE
           id = $1
           and expires_at > NOW()
           and used_at IS NULL
-        RETURNING 
+        RETURNING
           *
         `,
       values: [tokenId],
@@ -83,9 +83,9 @@ async function create(userId) {
       text: `
         INSERT INTO
           user_activation_tokens (user_id, expires_at, created_at)
-        VALUES 
+        VALUES
           ($1, $2, $3)
-        RETURNING 
+        RETURNING
           *
       `,
       values: [userId, expiresAt, createdDate],
@@ -190,6 +190,8 @@ async function activateUserByUserId(userId) {
     "create:news:rating",
     "create:news:factcheck",
     "create:news:comment",
+    //report permissions
+    "create:report",
     //content-review (analises)
     "read:content_review",
     "read:content_review:all",

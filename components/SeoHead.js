@@ -3,6 +3,21 @@ import PropTypes from "prop-types";
 import { SITE_NAME, SITE_LOCALE, DEFAULT_OG_IMAGE, TWITTER_HANDLE } from "@/lib/seo";
 
 /**
+ * Serializa JSON-LD com escape de `<`, `>`, `&` e separadores de linha
+ * Unicode (U+2028/U+2029). Sem isso, conteúdo de usuário (ex.: nome ou
+ * descrição de um estúdio) contendo `</script>` quebraria o bloco de script
+ * e permitiria injeção de JavaScript. Os escapes são válidos em strings JSON.
+ */
+function toSafeJsonLd(jsonLd) {
+  return JSON.stringify(jsonLd)
+    .replaceAll("<", String.raw`\u003c`)
+    .replaceAll(">", String.raw`\u003e`)
+    .replaceAll("&", String.raw`\u0026`)
+    .replaceAll("\u2028", String.raw`\u2028`)
+    .replaceAll("\u2029", String.raw`\u2029`);
+}
+
+/**
  * Componente de SEO reutilizável para todas as páginas.
  * Injeta <title>, <meta>, Open Graph, Twitter Card e JSON-LD via next/head.
  *
@@ -40,8 +55,8 @@ export default function SeoHead({ title, description, canonical, ogImage, ogImag
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
 
-      {/* JSON-LD estruturado (opcional) */}
-      {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />}
+      {/* JSON-LD estruturado (opcional) — serializado com escape anti-XSS */}
+      {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: toSafeJsonLd(jsonLd) }} />}
     </Head>
   );
 }

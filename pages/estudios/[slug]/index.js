@@ -21,6 +21,7 @@ import PostCardComponent from "@/components/PostCard/PostCardComponent";
 import ImageCropModal from "@/components/ImageTools/ImageCropTool/ImageCropModal";
 import { SITE_URL } from "@/lib/seo";
 import styles from "./studio.module.css";
+import { uploadWithProgress } from "@/utils/uploadWithProgress";
 
 function formatDateBR(dateStr) {
   if (!dateStr) return "";
@@ -299,17 +300,16 @@ export default function StudioPage({ initialStudio }) {
     }
   }
 
-  const handleAddPost = async (content, file = null) => {
-    const formData = new FormData();
-    formData.append("content", content);
-    if (file) formData.append("file", file);
-    const res = await fetch(`/api/v1/studios/${slug}/posts`, {
-      method: "POST",
-      credentials: "include",
+  const handleAddPost = async (content, file = null, existingFormData = null, onProgress = null) => {
+    const formData = existingFormData || new FormData();
+    if (!existingFormData) {
+      formData.append("content", content);
+      if (file) formData.append("file", file);
+    }
+    const created = await uploadWithProgress(`/api/v1/studios/${slug}/posts`, {
       body: formData,
+      onProgress,
     });
-    if (!res.ok) throw new Error("Erro ao criar post.");
-    const created = await res.json();
     setStudioPosts((prev) => [created, ...(prev || [])]);
   };
 

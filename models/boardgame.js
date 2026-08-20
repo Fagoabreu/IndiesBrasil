@@ -1,6 +1,7 @@
 import database from "infra/database.js";
 import { ForbiddenError, NotFoundError, ValidationError } from "infra/errors.js";
 import { generateUniqueSlug } from "lib/slug";
+import moderation from "./moderation.js";
 
 /* =========================================================
  * List / Search
@@ -36,6 +37,16 @@ async function findAll({ page = 1, limit = 20, search = "", category = "", stage
       WHERE ($3 = '' OR bg.name ILIKE '%' || $3 || '%' OR bg.short_description ILIKE '%' || $3 || '%')
         AND ($4 = '' OR bg.category = $4)
         AND ($5 = '' OR bg.stage = $5)
+        AND NOT EXISTS (
+          SELECT 1
+          FROM moderation_actions ma
+          WHERE ma.revoked_at IS NULL
+            AND (ma.expires_at IS NULL OR ma.expires_at > now())
+            AND (
+              (ma.target_type = 'boardgame' AND ma.target_id = bg.id::text)
+              OR (ma.target_type = 'studio' AND ma.target_id = bg.owner_org_id::text)
+            )
+        )
       GROUP BY bg.id, ui_cover.secure_url, ui_ban.secure_url,
                o.name, o.slug, ui_logo.secure_url
       ORDER BY bg.created_at DESC
@@ -117,7 +128,15 @@ async function findBySlug(slug) {
       message: `Jogo de mesa "${slug}" não encontrado.`,
     });
   }
-  return result.rows[0];
+
+  const boardgame = result.rows[0];
+  const studioBlocked = boardgame.owner_org_id ? await moderation.isBlocked("studio", boardgame.owner_org_id) : false;
+  if ((await moderation.isBlocked("boardgame", boardgame.id)) || studioBlocked) {
+    throw new NotFoundError({
+      message: `Jogo de mesa "${slug}" não encontrado.`,
+    });
+  }
+  return boardgame;
 }
 
 async function findByOrg(orgId) {

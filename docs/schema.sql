@@ -156,18 +156,39 @@ CREATE TABLE user_activation_tokens (
     CONSTRAINT user_activation_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+CREATE TABLE reports (
+    id              UUID            NOT NULL,
+    reporter_id     UUID            NOT NULL,
+    target_type     VARCHAR(20)     NOT NULL,
+    target_id       VARCHAR(64)     NOT NULL,
+    reason          VARCHAR(50)     NOT NULL,
+    justification   TEXT            NULL,
+    status          VARCHAR(20)     DEFAULT 'pending' NOT NULL,
+    created_at      TIMESTAMP       DEFAULT NOW() NOT NULL,
+    resolved_at     TIMESTAMP       NULL,
+    resolved_by     UUID            NULL,
+    resolution_note TEXT            NULL,
+    CONSTRAINT reports_pkey PRIMARY KEY (id),
+    CONSTRAINT reports_reporter_id_fkey FOREIGN KEY (reporter_id) REFERENCES users(id),
+    CONSTRAINT reports_resolved_by_fkey FOREIGN KEY (resolved_by) REFERENCES users(id)
+);
+
 CREATE TABLE moderation_actions (
-    id           SERIAL      NOT NULL,
-    target_user  UUID        NOT NULL,
-    performed_by UUID        NOT NULL,
-    action_type  VARCHAR(20) NOT NULL,
-    reason       TEXT        NULL,
-    created_at   TIMESTAMP   DEFAULT NOW() NOT NULL,
-    expires_at   TIMESTAMP   NOT NULL,
-    is_active    BOOLEAN     DEFAULT true NOT NULL,
+    id            UUID            NOT NULL,
+    target_type   VARCHAR(20)     NOT NULL,
+    target_id     VARCHAR(64)     NOT NULL,
+    action        VARCHAR(20)     DEFAULT 'block' NOT NULL,
+    reason        VARCHAR(50)     NOT NULL,
+    justification TEXT            NULL,
+    moderator_id  UUID            NOT NULL,
+    expires_at    TIMESTAMP       NULL,
+    revoked_at    TIMESTAMP       NULL,
+    revoked_by    UUID            NULL,
+    created_at    TIMESTAMP       DEFAULT NOW() NOT NULL,
+    updated_at    TIMESTAMP       DEFAULT NOW() NOT NULL,
     CONSTRAINT moderation_actions_pkey PRIMARY KEY (id),
-    CONSTRAINT moderation_actions_performed_by_fkey FOREIGN KEY (performed_by) REFERENCES users(id),
-    CONSTRAINT moderation_actions_target_user_fkey FOREIGN KEY (target_user) REFERENCES users(id)
+    CONSTRAINT moderation_actions_moderator_id_fkey FOREIGN KEY (moderator_id) REFERENCES users(id),
+    CONSTRAINT moderation_actions_revoked_by_fkey FOREIGN KEY (revoked_by) REFERENCES users(id)
 );
 
 CREATE TABLE organizations (

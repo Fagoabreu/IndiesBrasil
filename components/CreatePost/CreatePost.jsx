@@ -5,6 +5,7 @@ import Image from "next/image";
 import styles from "./CreatePost.module.css";
 import PropTypes from "prop-types";
 import { useTagSuggest } from "@/context/dataHooks/UseTagSuggest";
+import { compressImage } from "@/utils/imageCompression";
 
 CreatePost.propTypes = {
   user: PropTypes.shape({
@@ -17,6 +18,8 @@ CreatePost.propTypes = {
 export default function CreatePost({ user, onPost }) {
   const [content, setContent] = useState("");
   const [isPosting, setIsPosting] = useState(false);
+  const [uploadPhase, setUploadPhase] = useState(null); // "compressing" | "uploading"
+  const [progress, setProgress] = useState(null); // 0..100 enquanto envia
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const fileInputRef = useRef(null);
@@ -181,12 +184,21 @@ export default function CreatePost({ user, onPost }) {
     if (!content.trim() && !imageFile && !showPoll) return;
 
     setIsPosting(true);
+    setUploadPhase("compressing");
+    setProgress(null);
+
     try {
+      // Comprime a imagem antes do envio — fotos de celular chegam a vários MB.
+      let fileToUpload = imageFile;
+      if (imageFile) {
+        fileToUpload = await compressImage(imageFile);
+      }
+
       const formData = new FormData();
       formData.append("content", content);
 
-      if (imageFile) {
-        formData.append("file", imageFile);
+      if (fileToUpload) {
+        formData.append("file", fileToUpload);
       }
 
       if (showPoll && pollQuestion.trim()) {
@@ -195,7 +207,9 @@ export default function CreatePost({ user, onPost }) {
         formData.append("poll_options", JSON.stringify(validOptions));
       }
 
-      await onPost(content, imageFile, formData);
+      setUploadPhase("uploading");
+      await onPost(content, fileToUpload, formData, setProgress);
+
       setContent("");
       setImagePreview(null);
       setImageFile(null);
@@ -204,8 +218,25 @@ export default function CreatePost({ user, onPost }) {
       console.error("Erro ao criar post:", err);
     } finally {
       setIsPosting(false);
+      setUploadPhase(null);
+      setProgress(null);
     }
   };
+
+  let buttonLabel = "Postar";
+  let progressText = null;
+  if (isPosting) {
+    if (uploadPhase === "compressing") {
+      buttonLabel = "Comprimindo…";
+      progressText = "Otimizando imagem…";
+    } else if (progress != null) {
+      buttonLabel = `Enviando ${progress}%`;
+      progressText = `Enviando… ${progress}%`;
+    } else {
+      buttonLabel = "Postando...";
+      progressText = "Enviando…";
+    }
+  }
 
   return (
     <div className={styles.container}>
@@ -299,6 +330,19 @@ export default function CreatePost({ user, onPost }) {
             </div>
           )}
 
+          {/* ─── Progresso do envio ─── */}
+          {isPosting && (
+            <div className={styles.progressWrap} role="status" aria-live="polite">
+              <div className={styles.progressTrack}>
+                <div
+                  className={uploadPhase === "compressing" ? styles.progressFillIndeterminate : styles.progressFill}
+                  style={uploadPhase === "uploading" && progress != null ? { width: `${progress}%` } : undefined}
+                />
+              </div>
+              <span className={styles.progressLabel}>{progressText}</span>
+            </div>
+          )}
+
           <div className={styles.actionBar}>
             <Stack direction="horizontal" gap={1}>
               <IconButton icon={ImageIcon} aria-label="Adicionar imagem" onClick={() => fileInputRef.current.click()} />
@@ -329,7 +373,7 @@ export default function CreatePost({ user, onPost }) {
             </Stack>
 
             <Button variant="primary" disabled={(!content.trim() && !imagePreview && !showPoll) || isPosting} onClick={handleSubmit}>
-              {isPosting ? "Postando..." : "Postar"}
+              {buttonLabel}
             </Button>
           </div>
         </div>

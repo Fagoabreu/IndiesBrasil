@@ -12,6 +12,7 @@ import WhoToFollow from "@/components/WhoToFollow/WhoToFollow";
 import { useRouter } from "next/router";
 import { SITE_URL } from "@/lib/seo";
 import useInView from "@/hooks/useInView";
+import { uploadWithProgress } from "@/utils/uploadWithProgress";
 
 const PAGE_TITLE = "Feed da Comunidade Indie | Indies Brasil";
 const PAGE_DESCRIPTION =
@@ -141,7 +142,7 @@ export default function PostsPage() {
   }, [isSentinelVisible, hasMore, loadingPosts]);
 
   // POST /api/v1/posts
-  const handleAddPost = async (content, file = null, existingFormData = null) => {
+  const handleAddPost = async (content, file = null, existingFormData = null, onProgress = null) => {
     try {
       const formData = existingFormData || new FormData();
       // Se não veio formData pré-preenchido (com poll), monta manualmente
@@ -150,15 +151,10 @@ export default function PostsPage() {
         if (file) formData.append("file", file);
       }
 
-      const response = await fetch("/api/v1/posts", {
-        method: "POST",
-        credentials: "include",
+      const createdPost = await uploadWithProgress("/api/v1/posts", {
         body: formData,
+        onProgress,
       });
-
-      if (!response.ok) return;
-
-      const createdPost = await response.json();
 
       // Só injeta no feed se estiver na aba "Todos"
       if (tab === "all") {
@@ -166,6 +162,7 @@ export default function PostsPage() {
       }
     } catch (error) {
       console.error("Erro ao criar post:", error);
+      throw error;
     }
   };
 

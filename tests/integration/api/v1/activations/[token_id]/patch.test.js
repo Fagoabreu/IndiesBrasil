@@ -182,6 +182,7 @@ describe("PATCH /api/v1/activations/[token_id]", () => {
         "create:news:rating",
         "create:news:factcheck",
         "create:news:comment",
+        "create:report",
         "read:content_review",
         "read:content_review:all",
         "create:content_review",
