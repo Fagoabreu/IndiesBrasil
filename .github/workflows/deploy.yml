@@ -3,6 +3,7 @@ name: Deploy Indies Brasil
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -118,11 +119,14 @@ jobs:
           '
 
       # ── Build & deploy ──
-      - name: Build and deploy app
+      - name: Build app
         run: |
           cd "$GITHUB_WORKSPACE"
           echo "🐳 Building Docker image..."
           docker build -t indies-app:latest .
+          # O estágio `deps` mantém o node-pg-migrate instalado e é reutilizado
+          # no passo de migrations, garantindo a mesma versão do package-lock.
+          docker build --target deps -t indies-migrate:latest .
 
           cd /var/www/indies
 
@@ -133,6 +137,37 @@ jobs:
           test -f nginx/indies.http.conf || { echo "❌ indies.http.conf NOT FOUND"; exit 1; }
           test -f nginx/indies.https.conf || { echo "❌ indies.https.conf NOT FOUND"; exit 1; }
 
+      # ── Migrations do banco ──
+      # Aplica as migrations pendentes ANTES de subir a nova versão do app,
+      # garantindo que o código novo nunca rode contra um schema desatualizado.
+      - name: Run database migrations
+        run: |
+          cd "$GITHUB_WORKSPACE"
+
+          echo "⏳ Waiting for Postgres..."
+          for i in $(seq 1 30); do
+            if docker exec postgres pg_isready -U "${{ vars.POSTGRES_USER }}" -d "${{ vars.POSTGRES_DB }}" >/dev/null 2>&1; then
+              echo "✅ Postgres is ready"
+              break
+            fi
+            if [ "$i" = "30" ]; then
+              echo "❌ Postgres did not become ready in time"
+              exit 1
+            fi
+            sleep 2
+          done
+
+          echo "🛠️ Running pending database migrations..."
+          docker run --rm \
+            --network indies_private \
+            -e DATABASE_URL="postgres://${{ vars.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@${{ vars.POSTGRES_HOST }}:${{ vars.POSTGRES_PORT }}/${{ vars.POSTGRES_DB }}?sslmode=no-verify" \
+            indies-migrate:latest \
+            npx node-pg-migrate -m infra/migrations up
+
+      # ── Start app ──
+      - name: Start app
+        run: |
+          cd /var/www/indies
           echo "🚀 Starting containers..."
           docker compose -f compose.yaml up -d --no-deps --force-recreate indies-app
 
