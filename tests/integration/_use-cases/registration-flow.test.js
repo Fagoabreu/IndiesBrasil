@@ -147,6 +147,7 @@ describe("Use case: Registration Flow (all successful)", () => {
       "create:news:rating",
       "create:news:factcheck",
       "create:news:comment",
+      "create:report",
       "read:content_review",
       "read:content_review:all",
       "create:content_review",

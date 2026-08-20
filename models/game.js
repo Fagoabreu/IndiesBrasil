@@ -2,6 +2,7 @@ import database from "infra/database";
 import { NotFoundError, ValidationError, ForbiddenError } from "infra/errors.js";
 import organization from "models/organization.js";
 import { generateUniqueSlug } from "lib/slug";
+import moderation from "./moderation.js";
 
 /* =========================================================
  * Constantes
@@ -63,6 +64,16 @@ async function findAll({ page = 1, limit = 20, search = "", genre = "", stage = 
       WHERE ($3 = '' OR g.name ILIKE '%' || $3 || '%' OR g.short_description ILIKE '%' || $3 || '%')
         AND ($4 = '' OR g.genre = $4)
         AND ($5 = '' OR g.stage = $5)
+        AND NOT EXISTS (
+          SELECT 1
+          FROM moderation_actions ma
+          WHERE ma.revoked_at IS NULL
+            AND (ma.expires_at IS NULL OR ma.expires_at > now())
+            AND (
+              (ma.target_type = 'game' AND ma.target_id = g.id::text)
+              OR (ma.target_type = 'studio' AND ma.target_id = g.owner_org_id::text)
+            )
+        )
       GROUP BY g.id, ui_cover.secure_url, ui_ban.secure_url,
                o.name, o.slug, ui_logo.secure_url
       ORDER BY g.created_at DESC
@@ -108,6 +119,11 @@ async function findBySlug(slug) {
   }
 
   const game = result.rows[0];
+
+  const studioBlocked = game.owner_org_id ? await moderation.isBlocked("studio", game.owner_org_id) : false;
+  if ((await moderation.isBlocked("game", game.id)) || studioBlocked) {
+    throw new NotFoundError({ message: `Jogo "${slug}" não encontrado.` });
+  }
 
   // Carregar dados relacionados em paralelo
   const [platforms, media, team, storePages, tags] = await Promise.all([

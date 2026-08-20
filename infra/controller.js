@@ -2,6 +2,7 @@ import * as cookie from "cookie";
 import session from "models/session.js";
 import user from "models/user.js";
 import authorization from "models/authorization.js";
+import moderation from "models/moderation.js";
 import { NextResponse } from "next/server";
 
 const {
@@ -152,6 +153,15 @@ function injectAnonymousUser(request) {
 async function injectAuthenticatedUser(request, sessionToken) {
   const sessionObject = await session.findOneValidByToken(sessionToken);
   const userObject = await user.findOneById(sessionObject.user_id);
+
+  // Usuários bloqueados são tratados como anônimos: perdem todas as
+  // permissões e todo o conteúdo some dos feeds (suspensão centralizada).
+  const isBlocked = await moderation.isBlocked("user", userObject.id);
+  if (isBlocked) {
+    injectAnonymousUser(request);
+    return;
+  }
+
   request.context = {
     ...request.context,
     user: userObject,

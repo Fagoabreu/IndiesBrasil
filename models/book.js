@@ -2,6 +2,7 @@ import database from "infra/database.js";
 import { ForbiddenError, NotFoundError, ValidationError } from "infra/errors.js";
 import { generateUniqueSlug } from "lib/slug";
 import uploadFile from "@/infra/uploadFile.js";
+import moderation from "./moderation.js";
 
 /* =========================================================
  * List / Search
@@ -32,6 +33,16 @@ async function findAll({ page = 1, limit = 20, search = "", book_type = "", stag
       WHERE ($3 = '' OR b.title ILIKE '%' || $3 || '%' OR b.short_description ILIKE '%' || $3 || '%')
         AND ($4 = '' OR b.book_type = $4)
         AND ($5 = '' OR b.stage = $5)
+        AND NOT EXISTS (
+          SELECT 1
+          FROM moderation_actions ma
+          WHERE ma.revoked_at IS NULL
+            AND (ma.expires_at IS NULL OR ma.expires_at > now())
+            AND (
+              (ma.target_type = 'book' AND ma.target_id = b.id::text)
+              OR (ma.target_type = 'studio' AND ma.target_id = b.owner_org_id::text)
+            )
+        )
       GROUP BY b.id, ui.secure_url, o.name, o.slug, ui_logo.secure_url
       ORDER BY b.created_at DESC
       LIMIT $1 OFFSET $2
@@ -107,6 +118,14 @@ async function findBySlug(slug) {
   }
 
   const bookData = result.rows[0];
+
+  const studioBlocked = bookData.owner_org_id ? await moderation.isBlocked("studio", bookData.owner_org_id) : false;
+  if ((await moderation.isBlocked("book", bookData.id)) || studioBlocked) {
+    throw new NotFoundError({
+      message: `Livro/quadrinho "${slug}" não encontrado.`,
+    });
+  }
+
   const storePages = await findStorePages(bookData.id);
   return { ...bookData, store_pages: storePages };
 }

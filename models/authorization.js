@@ -166,6 +166,9 @@ const availableFeatures = new Set([
   "create:news:factcheck",
   "create:news:comment",
 
+  //report (denúncias)
+  "create:report",
+
   //content-review (analises)
   "read:content_review",
   "read:content_review:all",

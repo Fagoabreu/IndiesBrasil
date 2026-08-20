@@ -149,6 +149,23 @@ SELECT
           ${joinsBase}
 `;
 
+// Filtro de moderação — esconde posts bloqueados, posts de autores bloqueados
+// e posts de estúdios bloqueados. Sem parâmetros, portanto não altera a
+// numeração ($1, $2, ...) dos demais filtros.
+const moderationFilter = `
+  AND NOT EXISTS (
+    SELECT 1
+    FROM moderation_actions ma
+    WHERE ma.revoked_at IS NULL
+      AND (ma.expires_at IS NULL OR ma.expires_at > now())
+      AND (
+        (ma.target_type = 'post' AND ma.target_id = p.id::text)
+        OR (ma.target_type = 'user' AND ma.target_id = p.author_id::text)
+        OR (ma.target_type = 'studio' AND ma.target_id = p.organization_id::text)
+      )
+  )
+`;
+
 async function create(postInputValues) {
   const newPost = await runInsertQuery(postInputValues);
   if (postInputValues.tags) {
@@ -270,7 +287,7 @@ async function getPosts(user_id, seachType, tag, pagination = {}) {
   return noUserPosts;
 
   async function runSelectQuery(user_id, cursor, limit) {
-    const whereClause = cursor ? " WHERE p.created_at < $2" : "";
+    const whereClause = cursor ? ` WHERE p.created_at < $2${moderationFilter}` : ` WHERE 1=1${moderationFilter}`;
     const orderAndLimit = ` ORDER BY p.created_at DESC LIMIT $${cursor ? 3 : 2}`;
     const values = cursor ? [user_id || null, cursor, limit] : [user_id || null, limit];
 
@@ -282,7 +299,7 @@ async function getPosts(user_id, seachType, tag, pagination = {}) {
   }
 
   async function runSelectFollowingsQuery(user_id, cursor, limit) {
-    const whereClause = cursor ? " AND p.created_at < $2" : "";
+    const whereClause = (cursor ? " AND p.created_at < $2" : "") + moderationFilter;
     const orderAndLimit = ` ORDER BY p.created_at DESC LIMIT $${cursor ? 3 : 2}`;
     const values = cursor ? [user_id, cursor, limit] : [user_id, limit];
 
@@ -302,7 +319,7 @@ async function getPosts(user_id, seachType, tag, pagination = {}) {
   }
 
   async function runSelectTagQuery(user_id, tag, cursor, limit) {
-    const whereClause = cursor ? " AND p.created_at < $3" : "";
+    const whereClause = (cursor ? " AND p.created_at < $3" : "") + moderationFilter;
     const orderAndLimit = ` ORDER BY p.created_at DESC LIMIT $${cursor ? 4 : 3}`;
     const values = cursor ? [user_id, tag, cursor, limit] : [user_id, tag, limit];
 
@@ -320,7 +337,7 @@ async function getPosts(user_id, seachType, tag, pagination = {}) {
   }
 
   async function runSelectNoUserQuery(cursor, limit) {
-    const whereClause = cursor ? " WHERE p.created_at < $2" : "";
+    const whereClause = cursor ? ` WHERE p.created_at < $2${moderationFilter}` : ` WHERE 1=1${moderationFilter}`;
     const orderAndLimit = ` ORDER BY p.created_at DESC LIMIT $${cursor ? 3 : 2}`;
     const values = [null];
     if (cursor) values.push(cursor);
@@ -340,7 +357,7 @@ async function getPostById(user_id, postId) {
 
   async function runSelectQuery(user_id, postId) {
     const results = await database.query({
-      text: baseSelectQuery + ` WHERE p.id=$2;`,
+      text: baseSelectQuery + ` WHERE p.id=$2${moderationFilter};`,
       values: [user_id || null, postId],
     });
 
@@ -461,13 +478,13 @@ async function setPostLikes(postId, userId, liked) {
 async function getPostsByOrgId(viewerUserId, orgId) {
   if (viewerUserId) {
     const results = await database.query({
-      text: baseSelectQuery + ` WHERE p.organization_id = $2 ORDER BY p.created_at DESC`,
+      text: baseSelectQuery + ` WHERE p.organization_id = $2${moderationFilter} ORDER BY p.created_at DESC`,
       values: [viewerUserId, orgId],
     });
     return results.rows;
   }
   const results = await database.query({
-    text: baseNoUserSelectQuery + ` WHERE p.organization_id = $2 ORDER BY p.created_at DESC`,
+    text: baseNoUserSelectQuery + ` WHERE p.organization_id = $2${moderationFilter} ORDER BY p.created_at DESC`,
     values: [null, orgId],
   });
   return results.rows;
@@ -476,13 +493,13 @@ async function getPostsByOrgId(viewerUserId, orgId) {
 async function getPostsByUsername(viewerUserId, authorUsername) {
   if (viewerUserId) {
     const results = await database.query({
-      text: baseSelectQuery + ` WHERE u.username = $2 ORDER BY p.created_at DESC`,
+      text: baseSelectQuery + ` WHERE u.username = $2${moderationFilter} ORDER BY p.created_at DESC`,
       values: [viewerUserId, authorUsername],
     });
     return results.rows;
   }
   const results = await database.query({
-    text: baseNoUserSelectQuery + ` WHERE u.username = $2 ORDER BY p.created_at DESC`,
+    text: baseNoUserSelectQuery + ` WHERE u.username = $2${moderationFilter} ORDER BY p.created_at DESC`,
     values: [null, authorUsername],
   });
   return results.rows;

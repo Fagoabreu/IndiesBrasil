@@ -1,7 +1,8 @@
 import user from "models/user";
 import password from "models/password";
 import rateLimit from "lib/rate-limit";
-import { NotFoundError, UnauthorizedError, TooManyRequestsError } from "infra/errors.js";
+import moderation from "models/moderation.js";
+import { NotFoundError, UnauthorizedError, TooManyRequestsError, ForbiddenError } from "infra/errors.js";
 
 async function getUser(providedEmail, providedPassword, request) {
   try {
@@ -32,6 +33,14 @@ async function getUser(providedEmail, providedPassword, request) {
 
     const storedUser = await findUserByEmail(providedEmail);
     await validatePassword(providedPassword, storedUser.password);
+
+    if (await moderation.isBlocked("user", storedUser.id)) {
+      throw new ForbiddenError({
+        message: "Sua conta está temporariamente suspensa.",
+        action: "Entre em contato com o suporte para mais informações.",
+      });
+    }
+
     return storedUser;
   } catch (error) {
     if (error instanceof UnauthorizedError) {
