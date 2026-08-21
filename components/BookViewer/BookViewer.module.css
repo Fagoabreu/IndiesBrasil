@@ -4,17 +4,16 @@
    alinhada ao design system do Indies Brasil.
 ======================================== */
 
-/* ─── Overlay com ambient glow ─── */
+/* ─── Overlay ─── */
 .overlay {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: radial-gradient(ellipse 50% 60% at 50% 50%, rgba(139, 92, 246, 0.06), transparent), rgba(0, 0, 0, 0.78);
+  background: rgba(0, 0, 0, 0.82);
   backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
   animation: overlayIn 0.2s ease-out;
 }
 
@@ -31,18 +30,11 @@
 .viewer {
   position: relative;
   width: 100%;
-  max-width: 1300px;
-  height: 92vh;
+  height: 100%;
   background: var(--bgColor-default);
-  border-radius: 16px;
-  border: 1px solid var(--borderColor-default);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow:
-    0 0 0 1px rgba(139, 92, 246, 0.08),
-    0 12px 48px rgba(0, 0, 0, 0.4),
-    0 0 60px rgba(139, 92, 246, 0.06);
   animation: viewerIn 0.25s ease-out;
 }
 
@@ -57,39 +49,15 @@
   }
 }
 
-/* ─── Brand accent bar (topo) ─── */
-.viewer::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #8b5cf6 0%, #e879b8 100%);
-  z-index: 3;
-  pointer-events: none;
-}
-
 /* ─── Header ─── */
 .header {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 16px 24px;
+  gap: 12px;
+  padding: 10px 16px;
   background: var(--brand-ambient-bg);
   border-bottom: 1px solid var(--borderColor-default);
   flex-shrink: 0;
-  position: relative;
-}
-
-.header::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: linear-gradient(180deg, #8b5cf6 0%, #e879b8 100%);
 }
 
 .titleGroup {
@@ -156,14 +124,12 @@
 /* ─── Área do livro ─── */
 .bookArea {
   flex: 1;
+  min-height: 0;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px;
-  gap: 0;
-  min-height: 0;
-  position: relative;
-  background: radial-gradient(ellipse 60% 80% at 50% 50%, rgba(139, 92, 246, 0.03), transparent);
+  background: var(--bgColor-inset, #16161a);
 }
 
 /* ─── Loading ─── */
@@ -206,7 +172,9 @@
 
 /* ─── Botões de navegação ─── */
 .navBtn {
-  flex-shrink: 0;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
   width: 48px;
   height: 48px;
   border: 1px solid var(--borderColor-default);
@@ -224,7 +192,7 @@
     border-color 0.2s,
     box-shadow 0.2s,
     transform 0.15s;
-  z-index: 2;
+  z-index: 3;
   user-select: none;
   line-height: 1;
 }
@@ -234,11 +202,11 @@
   color: #fff;
   border-color: rgba(139, 92, 246, 0.3);
   box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
-  transform: scale(1.06);
+  transform: translateY(-50%) scale(1.06);
 }
 
 .navBtn:active:not(:disabled) {
-  transform: scale(0.95);
+  transform: translateY(-50%) scale(0.95);
 }
 
 .navBtn:disabled {
@@ -247,125 +215,60 @@
 }
 
 .navLeft {
-  margin-right: 8px;
+  left: 12px;
 }
 
 .navRight {
-  margin-left: 8px;
+  right: 12px;
 }
 
-/* ─── Container do spread ─── */
-.spreadContainer {
-  flex: 1;
-  height: 100%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.spreadInner {
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
-  height: 100%;
+/* ─── Slider horizontal (deslizar para o lado) ─── */
+.slider {
   width: 100%;
-  gap: 0;
-  background: var(--bgColor-inset, #1a1a1a);
-  border-radius: 8px;
-  box-shadow:
-    inset 0 0 40px rgba(0, 0, 0, 0.15),
-    2px 4px 24px rgba(0, 0, 0, 0.25),
-    8px 0 20px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  transition: transform 0.1s ease;
-}
-
-/* ─── Animação de folhear ─── */
-.spreadContainer.flipping .spreadInner {
-  transition: none;
-}
-
-.spreadContainer.flipForward .spreadInner {
-  animation: flipForward 0.4s ease-in-out;
-}
-
-.spreadContainer.flipBackward .spreadInner {
-  animation: flipBackward 0.4s ease-in-out;
-}
-
-@keyframes flipForward {
-  0% {
-    transform: perspective(1200px) rotateY(0deg);
-    opacity: 1;
-  }
-  35% {
-    transform: perspective(1200px) rotateY(-12deg);
-    opacity: 0.85;
-  }
-  100% {
-    transform: perspective(1200px) rotateY(0deg);
-    opacity: 1;
-  }
-}
-
-@keyframes flipBackward {
-  0% {
-    transform: perspective(1200px) rotateY(0deg);
-    opacity: 1;
-  }
-  35% {
-    transform: perspective(1200px) rotateY(12deg);
-    opacity: 0.85;
-  }
-  100% {
-    transform: perspective(1200px) rotateY(0deg);
-    opacity: 1;
-  }
-}
-
-/* ─── Páginas individuais ─── */
-.page {
-  flex: 1;
+  height: 100%;
   display: flex;
-  flex-direction: column;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  cursor: grab;
+  background: var(--bgColor-inset, #16161a);
+  scrollbar-width: none;
+}
+
+.slider::-webkit-scrollbar {
+  display: none;
+}
+
+.slider:active {
+  cursor: grabbing;
+}
+
+/* ─── Página individual ─── */
+.slide {
+  flex: 0 0 100%;
+  height: 100%;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  position: relative;
+  display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
   overflow: hidden;
-  background: #fff;
-  min-width: 0;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
 }
 
-.pageLeft {
-  border-right: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.pageRight {
-  border-left: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.pageSingle {
-  border-right: none;
-}
-
-.pageImg {
-  max-width: 100%;
-  max-height: 100%;
+.slideImg {
   object-fit: contain;
-  display: block;
 }
 
 .pageLabel {
   position: absolute;
-  bottom: 6px;
+  bottom: 8px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 0.62rem;
   font-weight: 500;
-  color: rgba(0, 0, 0, 0.45);
-  background: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.5);
   padding: 2px 10px;
   border-radius: 10px;
   pointer-events: none;
@@ -401,40 +304,8 @@
 }
 
 /* ─── Modo raw PDF (pdfjs-dist canvas) ─── */
-.rawSpreadContainer {
+.rawSlide {
   cursor: pointer;
-}
-
-.rawSpreadContainer .spreadInner {
-  background: #3d3d3d;
-}
-
-.rawCanvasContainer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  gap: 0;
-}
-
-.rawPageWrapper {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  overflow: hidden;
-  background: #fff;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
-}
-
-.rawPageWrapper:first-child {
-  border-right: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.rawPageSingle {
-  border-right: none !important;
 }
 
 .rawPageCanvas {
@@ -446,10 +317,6 @@
 
 /* ─── Responsivo: tablet ─── */
 @media (max-width: 1024px) {
-  .viewer {
-    max-width: 100%;
-  }
-
   .navBtn {
     width: 40px;
     height: 40px;
@@ -459,30 +326,6 @@
 
 /* ─── Responsivo: mobile ─── */
 @media (max-width: 768px) {
-  .overlay {
-    padding: 0;
-  }
-
-  .viewer {
-    height: 100vh;
-    height: 100dvh;
-    max-width: 100%;
-    border-radius: 0;
-    border: none;
-  }
-
-  .viewer::before {
-    display: none;
-  }
-
-  .header {
-    padding: 10px 16px;
-  }
-
-  .header::before {
-    display: none;
-  }
-
   .title {
     font-size: 0.88rem;
   }
@@ -496,10 +339,6 @@
     padding: 3px 10px;
   }
 
-  .bookArea {
-    padding: 4px;
-  }
-
   .navBtn {
     width: 36px;
     height: 36px;
@@ -508,15 +347,11 @@
   }
 
   .navLeft {
-    margin-right: 2px;
+    left: 8px;
   }
 
   .navRight {
-    margin-left: 2px;
-  }
-
-  .spreadInner {
-    border-radius: 4px;
+    right: 8px;
   }
 
   .footer {

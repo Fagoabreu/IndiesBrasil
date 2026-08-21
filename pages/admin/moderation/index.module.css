@@ -1,0 +1,95 @@
+.center {
+  display: flex;
+  justify-content: center;
+  padding: 32px;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 16px;
+  text-align: center;
+  border: 1px dashed var(--borderColor-default);
+  border-radius: 6px;
+  color: var(--fgColor-muted);
+}
+
+.emptyTitle {
+  margin: 0;
+  font-weight: 600;
+  color: var(--fgColor-default);
+}
+
+.emptyDescription {
+  margin: 0;
+  font-size: 13px;
+}
+
+.card {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 6px;
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+  max-width: 560px;
+}
+
+.sectionTitle {
+  margin-top: 24px;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 6px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th,
+.table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--borderColor-muted);
+  vertical-align: top;
+}
+
+.table thead th {
+  background: var(--bgColor-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.targetType {
+  display: block;
+  font-weight: 600;
+}
+
+.mono {
+  display: block;
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--fgColor-muted);
+  word-break: break-all;
+}
+
+.justification {
+  max-width: 320px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
