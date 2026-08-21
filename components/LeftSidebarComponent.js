@@ -27,6 +27,8 @@ import {
   RocketIcon,
   StackIcon,
   FileIcon,
+  ReportIcon,
+  ShieldIcon,
 } from "@primer/octicons-react";
 import { useUser } from "@/context/UserContext";
 import styles from "./LeftSidebarComponent.module.css";
@@ -173,6 +175,18 @@ export default function LeftSidebarComponent({ onNavigate }) {
                     <TagIcon />
                   </NavList.LeadingVisual>
                   Cadastro Profissões
+                </NavList.Item>
+                <NavList.Item as={Link} href="/admin/reports" onClick={onNavigate}>
+                  <NavList.LeadingVisual>
+                    <ReportIcon />
+                  </NavList.LeadingVisual>
+                  Denúncias
+                </NavList.Item>
+                <NavList.Item as={Link} href="/admin/moderation" onClick={onNavigate}>
+                  <NavList.LeadingVisual>
+                    <ShieldIcon />
+                  </NavList.LeadingVisual>
+                  Moderação
                 </NavList.Item>
                 <NavList.Item as={Link} href="/status" onClick={onNavigate}>
                   <NavList.LeadingVisual>

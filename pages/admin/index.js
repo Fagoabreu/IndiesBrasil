@@ -5,6 +5,12 @@ export default function AdminPage() {
     <section>
       <ul>
         <li>
+          <Link href="/admin/reports">Denúncias</Link>
+        </li>
+        <li>
+          <Link href="/admin/moderation">Moderação</Link>
+        </li>
+        <li>
           <Link href="/admin/contact-types">Contact Types</Link>
         </li>
         <li>

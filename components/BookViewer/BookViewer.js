@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import styles from "./BookViewer.module.css";
 
@@ -55,7 +55,7 @@ function probePageImage(url, signal) {
 
 /**
  * BookViewer — suporta dois modos:
- * - PDF image (Cloudinary): spread view com pg_N, cada página é uma <Image>
+ * - PDF image (Cloudinary): uma página por <Image> (pg_N), deslizando para o lado
  * - PDF raw: renderiza páginas via pdfjs-dist em canvas (resolve problema de
  *   Content-Disposition: attachment do Cloudinary que forçava download)
  */
@@ -73,32 +73,18 @@ export default function BookViewer({ pdfUrl, title, onClose }) {
   const [rawError, setRawError] = useState(null);
 
   // ── Compartilhado ──
-  const [currentSpread, setCurrentSpread] = useState(0);
-  const [flipping, setFlipping] = useState(false);
-  const [flipDir, setFlipDir] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const pdfDocRef = useRef(null);
-  const canvasContainerRef = useRef(null);
-  const spreadContainerRef = useRef(null);
+  const sliderRef = useRef(null);
+  const dragRef = useRef({ down: false, startX: 0, startScroll: 0, moved: false });
+  const renderedPagesRef = useRef(new Set());
 
   const effectiveNumPages = imageMode ? numPages : rawNumPages;
   const effectiveLoading = imageMode ? imageLoading : rawLoading;
   const effectiveError = imageMode ? imageError : rawError;
 
-  const spreads = useMemo(() => {
-    const result = [];
-    const n = effectiveNumPages;
-    if (n > 0) {
-      result.push([1, null]);
-      for (let i = 2; i <= n; i += 2) {
-        result.push([i, i + 1 <= n ? i + 1 : null]);
-      }
-    }
-    return result;
-  }, [effectiveNumPages]);
-
-  const totalSpreads = spreads.length;
-  const hasPrev = currentSpread > 0;
-  const hasNext = currentSpread < totalSpreads - 1;
+  const hasPrev = currentPage > 1;
+  const hasNext = currentPage < effectiveNumPages;
 
   // ── Modo image: descobre número de páginas ──
   useEffect(() => {
@@ -176,89 +162,103 @@ export default function BookViewer({ pdfUrl, title, onClose }) {
     };
   }, [pdfUrl, imageMode]);
 
-  // ── Modo raw: renderiza páginas da spread atual nos canvas ──
+  // ── Modo raw: renderiza cada página sob demanda (lazy) no slide ──
   useEffect(() => {
-    if (imageMode || !pdfDocRef.current || spreads.length === 0) return;
+    if (imageMode || !pdfDocRef.current || rawNumPages === 0) return;
 
-    const spread = spreads[currentSpread];
-    if (!spread) return;
+    const slider = sliderRef.current;
+    if (!slider) return;
 
-    const pages = spread.filter(Boolean);
-    let cancelled = false;
+    const rendered = renderedPagesRef.current;
 
-    async function renderSpread() {
-      const container = canvasContainerRef.current;
-      if (!container) return;
+    async function renderPage(pageNum, container) {
+      if (rendered.has(pageNum)) return;
+      rendered.add(pageNum);
 
-      // Limpa canvas anteriores
-      container.innerHTML = "";
+      try {
+        const page = await pdfDocRef.current.getPage(pageNum);
+        const baseViewport = page.getViewport({ scale: 1 });
 
-      for (const pageNum of pages) {
-        if (cancelled) return;
+        const containerWidth = container.clientWidth;
+        const containerHeight = container.clientHeight;
+        const scale = Math.min(containerWidth / baseViewport.width, containerHeight / baseViewport.height);
 
-        try {
-          const page = await pdfDocRef.current.getPage(pageNum);
-          const viewport = page.getViewport({ scale: 1 });
+        const canvas = document.createElement("canvas");
+        canvas.className = styles.rawPageCanvas;
+        const dpr = window.devicePixelRatio || 1;
+        const viewport = page.getViewport({ scale: scale * dpr });
 
-          // Calcula escala para caber no container mantendo proporção
-          const containerWidth = container.clientWidth / pages.length;
-          const containerHeight = container.clientHeight;
-          const scale = Math.min(containerWidth / viewport.width, containerHeight / viewport.height);
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        canvas.style.width = `${viewport.width / dpr}px`;
+        canvas.style.height = `${viewport.height / dpr}px`;
 
-          const canvas = document.createElement("canvas");
-          canvas.className = styles.rawPageCanvas;
-          const scaledViewport = page.getViewport({ scale: scale * (window.devicePixelRatio || 1) });
+        container.innerHTML = "";
+        container.appendChild(canvas);
 
-          canvas.width = scaledViewport.width;
-          canvas.height = scaledViewport.height;
-          canvas.style.width = `${scaledViewport.width / (window.devicePixelRatio || 1)}px`;
-          canvas.style.height = `${scaledViewport.height / (window.devicePixelRatio || 1)}px`;
-
-          const wrapper = document.createElement("div");
-          wrapper.className = styles.rawPageWrapper;
-
-          if (pages.length === 1) {
-            wrapper.classList.add(styles.rawPageSingle);
-          }
-
-          wrapper.appendChild(canvas);
-          container.appendChild(wrapper);
-
-          await page.render({
-            canvasContext: canvas.getContext("2d"),
-            viewport: scaledViewport,
-          }).promise;
-        } catch (err) {
-          console.error(`Erro ao renderizar página ${pageNum}:`, err);
-        }
+        await page.render({
+          canvasContext: canvas.getContext("2d"),
+          viewport,
+        }).promise;
+      } catch (err) {
+        rendered.delete(pageNum);
+        console.error(`Erro ao renderizar página ${pageNum}:`, err);
       }
     }
 
-    renderSpread();
-    return () => {
-      cancelled = true;
-    };
-  }, [imageMode, spreads, currentSpread]);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            renderPage(Number.parseInt(entry.target.dataset.page, 10), entry.target);
+          }
+        }
+      },
+      { root: slider, rootMargin: "100% 0px" },
+    );
 
-  const goToSpread = useCallback((idx, dir) => {
-    setFlipDir(dir);
-    setFlipping(true);
-    setTimeout(() => {
-      setCurrentSpread(idx);
-      setFlipping(false);
-      setFlipDir(null);
-    }, 500);
-  }, []);
+    const slides = slider.querySelectorAll(`.${styles.rawSlide}`);
+    for (const slide of slides) {
+      observer.observe(slide);
+    }
+
+    return () => observer.disconnect();
+  }, [imageMode, rawNumPages]);
+
+  const scrollToPage = useCallback(
+    (page) => {
+      const slider = sliderRef.current;
+      if (!slider) return;
+      const target = Math.min(Math.max(page, 1), effectiveNumPages || 1);
+      slider.scrollTo({ left: (target - 1) * slider.clientWidth, behavior: "smooth" });
+      setCurrentPage(target);
+    },
+    [effectiveNumPages],
+  );
 
   const goNext = useCallback(() => {
-    if (flipping || !hasNext) return;
-    goToSpread(currentSpread + 1, "forward");
-  }, [flipping, hasNext, currentSpread, goToSpread]);
+    if (!hasNext) return;
+    scrollToPage(currentPage + 1);
+  }, [hasNext, currentPage, scrollToPage]);
 
   const goPrev = useCallback(() => {
-    if (flipping || !hasPrev) return;
-    goToSpread(currentSpread - 1, "backward");
-  }, [flipping, hasPrev, currentSpread, goToSpread]);
+    if (!hasPrev) return;
+    scrollToPage(currentPage - 1);
+  }, [hasPrev, currentPage, scrollToPage]);
+
+  // Mantém o indicador de página sincronizado com o scroll
+  useEffect(() => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+
+    function onScroll() {
+      const page = Math.round(slider.scrollLeft / slider.clientWidth) + 1;
+      setCurrentPage((prev) => (prev === page ? prev : page));
+    }
+
+    slider.addEventListener("scroll", onScroll, { passive: true });
+    return () => slider.removeEventListener("scroll", onScroll);
+  }, [effectiveNumPages]);
 
   const onCloseStable = useCallback(() => {
     onClose();
@@ -275,24 +275,45 @@ export default function BookViewer({ pdfUrl, title, onClose }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [goNext, goPrev, onCloseStable]);
 
-  function handlePageClick(e) {
-    const rect = spreadContainerRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const x = e.clientX - rect.left;
-    if (x < rect.width / 2) goPrev();
-    else goNext();
-  }
+  // Arrastar para navegar (mouse) + clique nas laterais
+  const onPointerDown = useCallback((e) => {
+    if (e.pointerType !== "mouse") return;
+    const slider = sliderRef.current;
+    if (!slider) return;
+    dragRef.current = { down: true, startX: e.clientX, startScroll: slider.scrollLeft, moved: false };
+    slider.setPointerCapture(e.pointerId);
+  }, []);
 
-  const spread = spreads[currentSpread] || [null, null];
+  const onPointerMove = useCallback((e) => {
+    const drag = dragRef.current;
+    if (!drag.down) return;
+    const slider = sliderRef.current;
+    if (!slider) return;
+    const dx = e.clientX - drag.startX;
+    if (Math.abs(dx) > 4) drag.moved = true;
+    slider.scrollLeft = drag.startScroll - dx;
+  }, []);
 
-  let pageIndicator;
-  if (spread[0] && spread[1]) {
-    pageIndicator = `Páginas ${spread[0]}–${spread[1]} de ${effectiveNumPages}`;
-  } else if (spread[0]) {
-    pageIndicator = `Página ${spread[0]} de ${effectiveNumPages}`;
-  } else {
-    pageIndicator = "";
-  }
+  const onPointerUp = useCallback(
+    (e) => {
+      const drag = dragRef.current;
+      if (!drag.down) return;
+      drag.down = false;
+
+      const slider = sliderRef.current;
+      if (!slider) return;
+
+      if (!drag.moved) {
+        const rect = slider.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        if (x < rect.width / 3) goPrev();
+        else if (x > (rect.width * 2) / 3) goNext();
+      }
+    },
+    [goPrev, goNext],
+  );
+
+  const pageIndicator = effectiveNumPages > 0 ? `Página ${currentPage} de ${effectiveNumPages}` : "";
 
   return (
     <div
@@ -326,74 +347,54 @@ export default function BookViewer({ pdfUrl, title, onClose }) {
           )}
           {effectiveError && <div className={styles.errorMsg}>{effectiveError}</div>}
 
-          {!effectiveLoading && !effectiveError && (
+          {!effectiveLoading && !effectiveError && effectiveNumPages > 0 && (
             <>
+              <div
+                ref={sliderRef}
+                className={styles.slider}
+                onPointerDown={onPointerDown}
+                onPointerMove={onPointerMove}
+                onPointerUp={onPointerUp}
+                onPointerCancel={() => {
+                  dragRef.current.down = false;
+                }}
+              >
+                {Array.from({ length: effectiveNumPages }, (_, i) => {
+                  const page = i + 1;
+                  if (imageMode) {
+                    return (
+                      <div key={page} className={styles.slide}>
+                        <Image
+                          src={pageImageUrl(pdfUrl, page)}
+                          alt={`Página ${page}`}
+                          fill
+                          unoptimized
+                          priority={page === 1}
+                          className={styles.slideImg}
+                        />
+                        <span className={styles.pageLabel}>Página {page}</span>
+                      </div>
+                    );
+                  }
+                  return <div key={page} className={`${styles.slide} ${styles.rawSlide}`} data-page={page} />;
+                })}
+              </div>
+
               <button
                 type="button"
                 className={`${styles.navBtn} ${styles.navLeft}`}
                 onClick={goPrev}
-                disabled={!hasPrev || flipping}
+                disabled={!hasPrev}
                 aria-label="Página anterior"
               >
                 ‹
               </button>
 
-              {/* ──── Modo image (pg_N) ──── */}
-              {imageMode && (
-                <div
-                  ref={spreadContainerRef}
-                  className={`${styles.spreadContainer} ${flipping ? styles.flipping : ""} ${flipDir === "forward" ? styles.flipForward : ""} ${flipDir === "backward" ? styles.flipBackward : ""}`}
-                  onClick={handlePageClick}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "ArrowRight") goNext();
-                    else if (e.key === "ArrowLeft") goPrev();
-                  }}
-                >
-                  <div className={styles.spreadInner}>
-                    <div className={`${styles.page} ${styles.pageLeft} ${!spread[1] ? styles.pageSingle : ""}`}>
-                      {spread[0] && (
-                        <Image src={pageImageUrl(pdfUrl, spread[0])} alt={`Página ${spread[0]}`} fill unoptimized className={styles.pageImg} />
-                      )}
-                      {spread[0] && <span className={styles.pageLabel}>Página {spread[0]}</span>}
-                    </div>
-                    {spread[1] && (
-                      <div className={`${styles.page} ${styles.pageRight}`}>
-                        <Image src={pageImageUrl(pdfUrl, spread[1])} alt={`Página ${spread[1]}`} fill unoptimized className={styles.pageImg} />
-                        <span className={styles.pageLabel}>Página {spread[1]}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* ──── Modo raw (pdfjs-dist canvas) ──── */}
-              {!imageMode && (
-                <div
-                  ref={(node) => {
-                    spreadContainerRef.current = node;
-                  }}
-                  className={`${styles.spreadContainer} ${styles.rawSpreadContainer} ${flipping ? styles.flipping : ""} ${flipDir === "forward" ? styles.flipForward : ""} ${flipDir === "backward" ? styles.flipBackward : ""}`}
-                  onClick={handlePageClick}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "ArrowRight") goNext();
-                    else if (e.key === "ArrowLeft") goPrev();
-                  }}
-                >
-                  <div className={styles.spreadInner}>
-                    <div ref={canvasContainerRef} className={styles.rawCanvasContainer} />
-                  </div>
-                </div>
-              )}
-
               <button
                 type="button"
                 className={`${styles.navBtn} ${styles.navRight}`}
                 onClick={goNext}
-                disabled={!hasNext || flipping}
+                disabled={!hasNext}
                 aria-label="Próxima página"
               >
                 ›
@@ -403,7 +404,7 @@ export default function BookViewer({ pdfUrl, title, onClose }) {
         </div>
 
         <div className={styles.footer}>
-          <span className={styles.footerHint}>🖱️ Clique nas laterais</span>
+          <span className={styles.footerHint}>� Arraste ou clique nas laterais</span>
           <span className={styles.footerDot} />
           <span className={styles.footerHint}>← → Teclado</span>
           <span className={styles.footerDot} />
