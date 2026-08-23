@@ -8,6 +8,8 @@ import Image from "next/image";
 import { useUser } from "@/context/UserContext";
 import FollowButton from "@/components/FollowButton";
 import PostCardComponent from "@/components/PostCard/PostCardComponent";
+import ReputationBadge from "@/components/ReputationBadge/ReputationBadge";
+import ReputationPanel from "@/components/ReputationPanel/ReputationPanel";
 
 import ListableSectionPanel from "@/components/Panels/ListableSectionPanel/ListableSectionPanel";
 import HistoricoItem from "@/components/Portfolio/Historico/HistoricoItem";
@@ -240,6 +242,10 @@ export default function Perfil() {
                 seguidores · <strong>{perfilUser.user.posts_count ?? 0}</strong> postagens
               </Text>
 
+              <div className={style.reputationRow}>
+                <ReputationBadge value={perfilUser.user.reputation ?? 0} showLevel />
+              </div>
+
               {!isOwnProfile && authUser && (
                 <div className={style.profileHeaderActions}>
                   <FollowButton username={username} isFollowing={perfilUser.user.is_following ?? false} />
@@ -330,6 +336,9 @@ export default function Perfil() {
 
               {/* COLUNA LATERAL */}
               <aside className={style.resumeSidebar}>
+                {/* Reputação (apenas para o próprio perfil) */}
+                {isOwnProfile && <ReputationPanel username={username} />}
+
                 {/* Contato */}
                 <ListableSectionPanel
                   title="Contatos"

@@ -105,6 +105,14 @@
   overflow: hidden;
 }
 
+/* ── Reputação ── */
+.reputationRow {
+  margin: 8px 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* ── Email ── */
 .emailBox {
   background-color: var(--bgColor-subtle);

@@ -16,7 +16,7 @@ async function create(userInputValues) {
   async function runInsertQuery(userInputValues) {
     const results = await database.query({
       text: `
-      Insert into 
+      Insert into
         users (
           username,
           email,
@@ -26,7 +26,7 @@ async function create(userInputValues) {
           features,
           resumo,
           visibility,
-          bio) 
+          bio)
       values
         ($1,$2,$3,$4,$5,$6,$7,$8,$9)
       returning
@@ -83,12 +83,13 @@ async function findOneById(id) {
   async function runSelectQuery(id) {
     const results = await database.query({
       text: `
-        select 
+        select
           id,
           username,
           email,
           cpf,
           features,
+          reputation,
           resumo,
           bio,
           visibility,
@@ -96,9 +97,9 @@ async function findOneById(id) {
           avatar_image,
           created_at,
           updated_at
-        from 
-          users u 
-        where 
+        from
+          users u
+        where
           id = $1
         limit
           1`,
@@ -133,6 +134,7 @@ async function findOneByUsername(username) {
           u.cpf,
           u.password,
           u.features,
+          u.reputation,
           u.resumo,
           u.bio,
           u.visibility,
@@ -140,7 +142,7 @@ async function findOneByUsername(username) {
           COALESCE(f.followers_count, 0) AS followers_count,
           COALESCE(f2.following_count,0) as following_count,
           COALESCE(p.posts_count,0) as posts_count
-        from 
+        from
           users u
           -- Seguidores do usuário
           LEFT JOIN (
@@ -169,7 +171,7 @@ async function findOneByUsername(username) {
           -- busca imagens
           left join uploaded_images ui on ui.id = u.avatar_image
           left join uploaded_images ub on ub.id = u.background_image
-        where 
+        where
           LOWER(u.username) = LOWER($1)
         limit
           1`,
@@ -202,6 +204,7 @@ function secureUserInterface(selectedUser) {
     following_count: selectedUser.following_count,
     posts_count: selectedUser.posts_count,
     features: selectedUser.features,
+    reputation: selectedUser.reputation,
     resumo: selectedUser.resumo,
     bio: selectedUser.bio,
     visibility: selectedUser.visibility,
@@ -222,11 +225,11 @@ async function findOneByEmail(email) {
   async function runSelectQuery(email) {
     const results = await database.query({
       text: `
-        select 
-          * 
-        from 
-          users u 
-        where 
+        select
+          *
+        from
+          users u
+        where
           LOWER(u.email) = LOWER($1)
         limit
           1`,
@@ -256,8 +259,8 @@ function validateBirthDate(birthDate) {
 async function validateUniqueEmail(email) {
   const results = await database.query({
     text: `
-      select email 
-      from users u 
+      select email
+      from users u
       where LOWER(u.email) = LOWER($1)`,
     values: [email],
   });
@@ -272,8 +275,8 @@ async function validateUniqueEmail(email) {
 async function validateUniqueUsename(username) {
   const results = await database.query({
     text: `
-      select username 
-      from users u 
+      select username
+      from users u
       where LOWER(u.username) = LOWER($1)`,
     values: [username],
   });
@@ -288,8 +291,8 @@ async function validateUniqueUsename(username) {
 async function validateUniqueCPF(cpf) {
   const results = await database.query({
     text: `
-      select cpf 
-      from users u 
+      select cpf
+      from users u
       where u.cpf = $1`,
     values: [cpf],
   });
@@ -318,9 +321,9 @@ async function setFeatures(userId, features) {
       set
         features = $2,
         updated_at = timezone('utc',now())
-      where 
+      where
         id = $1
-      returning 
+      returning
         *
       `,
       values: [userId, features],
@@ -341,9 +344,9 @@ async function addFeatures(userId, features) {
       set
         features = array_cat(features,$2),
         updated_at = timezone('utc',now())
-      where 
+      where
         id = $1
-      returning 
+      returning
         *
       `,
       values: [userId, features],
@@ -379,7 +382,7 @@ async function runUpdatedQuery(userWithNewValues) {
         bio = $7,
         visibility= $8,
         updated_at = timezone('utc',now())
-      where 
+      where
         id = $1
       returning
         *
@@ -417,6 +420,7 @@ async function findUsers(userId, isfollowing) {
       SELECT
         u.id,
         u.username,
+        u.reputation,
         ui.secure_url as avatar_image,
         u.resumo,
         u.bio,
@@ -442,9 +446,9 @@ async function findUsers(userId, isfollowing) {
           GROUP BY author_id
         ) p ON p.author_id = u.id
         --busca imagens
-        left join uploaded_images ui 
+        left join uploaded_images ui
           on ui.id = u.avatar_image
-        left join uploaded_images ub 
+        left join uploaded_images ub
           on ub.id = u.background_image
       ORDER BY RANDOM()
       LIMIT 10;
@@ -458,6 +462,7 @@ async function findUsers(userId, isfollowing) {
       SELECT
         u.id,
         u.username,
+        u.reputation,
         ui.secure_url as avatar_image,
         u.resumo,
         u.bio,
@@ -488,14 +493,14 @@ async function findUsers(userId, isfollowing) {
           ON uf.lead_user_id = u.id
           AND uf.follower_id = $1
         --busca imagens
-        left join uploaded_images ui 
+        left join uploaded_images ui
           on ui.id = u.avatar_image
-        left join uploaded_images ub 
+        left join uploaded_images ub
           on ub.id = u.background_image
     `;
 
     let whereClause = `
-        WHERE 
+        WHERE
           u.id <> $1
         `;
     if (isfollowing != undefined) {
@@ -510,9 +515,9 @@ async function findUsers(userId, isfollowing) {
       `;
     }
     let endQuery = `
-        ORDER BY 
+        ORDER BY
           RANDOM()
-        LIMIT 
+        LIMIT
           10;`;
     const queryText = baseQuery + whereClause + endQuery;
     const values = [userId];

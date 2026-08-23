@@ -1,6 +1,7 @@
 import database from "infra/database.js";
 import { NotFoundError, ValidationError } from "infra/errors.js";
 import sanitizeHtml from "lib/sanitize.js";
+import reputation from "./reputation";
 import { REPORT_REASONS, REPORT_STATUSES, REPORT_TARGET_TYPES, targetExists } from "./moderation.js";
 
 const MAX_JUSTIFICATION_LENGTH = 2000;
@@ -156,29 +157,45 @@ async function resolve({ id, moderatorId, status, resolutionNote }) {
 
   const sanitizedNote = sanitizeJustification(resolutionNote);
 
-  const results = await database.query({
-    text: `
-      UPDATE reports
-      SET
-        status = $2,
-        resolved_at = now(),
-        resolved_by = $3,
-        resolution_note = $4
-      WHERE id = $1
-        AND status = 'pending'
-      RETURNING *
-    `,
-    values: [id, status, moderatorId, sanitizedNote],
-  });
-
-  if (results.rowCount === 0) {
-    throw new NotFoundError({
-      message: "A denúncia informada não foi encontrada ou já foi analisada.",
-      action: "Verifique o identificador da denúncia.",
+  // Resolução + ajuste de reputação do denunciante de forma atômica:
+  // ou a denúncia é resolvida E o denunciante é pontuado, ou nada acontece.
+  return database.transaction(async (client) => {
+    const results = await client.query({
+      text: `
+        UPDATE reports
+        SET
+          status = $2,
+          resolved_at = now(),
+          resolved_by = $3,
+          resolution_note = $4
+        WHERE id = $1
+          AND status = 'pending'
+        RETURNING *
+      `,
+      values: [id, status, moderatorId, sanitizedNote],
     });
-  }
 
-  return results.rows[0];
+    if (results.rowCount === 0) {
+      throw new NotFoundError({
+        message: "A denúncia informada não foi encontrada ou já foi analisada.",
+        action: "Verifique o identificador da denúncia.",
+      });
+    }
+
+    const report = results.rows[0];
+
+    // Denúncia validada (+pontos) ou falsa (−pontos). A idempotência do
+    // award garante que, mesmo com retries, a pontuação aconteça uma única vez.
+    const action = status === "resolved" ? "report_resolved" : "report_dismissed";
+    await reputation.award({
+      userId: report.reporter_id,
+      action,
+      referenceId: report.id,
+      client,
+    });
+
+    return report;
+  });
 }
 
 async function isPostAuthoredBy(postId, userId) {

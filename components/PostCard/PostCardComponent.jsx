@@ -7,6 +7,7 @@ import PostActionsComponent from "../PostActions/PostActionsComponent";
 import CommentPanelComponent from "../CommentPanel/CommentPanelComponent";
 import EmbedComponent from "../Embeds/EmbedComponent";
 import ShareModal from "../ShareModal/ShareModal";
+import ReportModal from "../ReportModal/ReportModal";
 import Image from "next/image";
 import PropTypes from "prop-types";
 import PollComponent from "./PollComponent";
@@ -81,6 +82,10 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
 
   const [showShareModal, setShowShareModal] = useState(false);
 
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportError, setReportError] = useState(null);
+
   const MAX_CHARS = 240;
   const isLong = post.content.length > MAX_CHARS;
   const shownText = expanded ? post.content : post.content.slice(0, MAX_CHARS);
@@ -145,6 +150,39 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
       setCommentsCount((prev) => prev - 1);
     } catch (error) {
       console.error("Erro ao deletar comentário:", error);
+    }
+  };
+
+  const handleReport = async (reason, justification) => {
+    setReportSubmitting(true);
+    setReportError(null);
+
+    try {
+      const res = await fetch("/api/v1/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          target_type: "post",
+          target_id: post.id,
+          reason,
+          justification: justification || null,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setReportError(data.message || "Não foi possível enviar a denúncia.");
+        return;
+      }
+
+      setShowReportModal(false);
+      setActionMessage("Denúncia enviada. Obrigado por ajudar a manter a comunidade segura.");
+    } catch {
+      setReportError("Não foi possível enviar a denúncia.");
+    } finally {
+      setReportSubmitting(false);
     }
   };
 
@@ -303,6 +341,7 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
             onToggleComments={toggleComments}
             onReply={() => setShowCommentBox(true)}
             onShare={() => setShowShareModal(true)}
+            onReport={canInteract && !post.is_current_user ? () => setShowReportModal(true) : undefined}
           />
 
           {/* COMENTÁRIOS */}
@@ -318,6 +357,10 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
       </div>
 
       {showShareModal && <ShareModal postId={post.id} postContent={post.content} onClose={() => setShowShareModal(false)} />}
+
+      {showReportModal && (
+        <ReportModal onClose={() => setShowReportModal(false)} onSubmit={handleReport} submitting={reportSubmitting} error={reportError} />
+      )}
     </article>
   );
 }

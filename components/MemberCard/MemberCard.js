@@ -4,6 +4,7 @@ import { Avatar, Link } from "@primer/react";
 import styles from "./MemberCard.module.css";
 import PropTypes from "prop-types";
 import useTiltEffect from "@/hooks/useTiltEffect";
+import ReputationBadge from "@/components/ReputationBadge/ReputationBadge";
 
 MemberCard.propTypes = {
   user: PropTypes.shape({
@@ -16,6 +17,7 @@ MemberCard.propTypes = {
     email: PropTypes.string,
     github: PropTypes.string,
     linkedin: PropTypes.string,
+    reputation: PropTypes.number,
   }).isRequired,
 };
 
@@ -48,6 +50,11 @@ export default function MemberCard({ user }) {
 
       {/* Cargo / subtítulo */}
       {user.role && <p className={styles.role}>{user.role}</p>}
+
+      {/* Reputação */}
+      <div className={styles.reputationRow}>
+        <ReputationBadge value={user.reputation ?? 0} showLevel />
+      </div>
 
       {/* Bio */}
       {user.bio && <p className={styles.bio}>{user.bio}</p>}
