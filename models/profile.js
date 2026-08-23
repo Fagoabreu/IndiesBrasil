@@ -1,6 +1,7 @@
 import database from "infra/database";
 import user from "./user";
 import { NotFoundError } from "@/infra/errors";
+import reputation from "./reputation";
 
 async function canReadProfile(currentUser, readerUser) {
   if (currentUser.id === readerUser.id) {
@@ -168,7 +169,9 @@ async function saveFormacao(userInputValues) {
   if (userInputValues.id) {
     return;
   }
-  return await runInsertQuery(userInputValues);
+  const result = await runInsertQuery(userInputValues);
+  await awardProfileSection(userInputValues.user_id, "formacao");
+  return result;
 
   async function runInsertQuery(userInputValues) {
     const results = await database.query({
@@ -217,7 +220,9 @@ async function saveRoles(userInputValues) {
   if (userInputValues.id) {
     return;
   }
-  return await runInsertQuery(userInputValues);
+  const result = await runInsertQuery(userInputValues);
+  await awardProfileSection(userInputValues.user_id, "especializacao");
+  return result;
 
   async function runInsertQuery(userInputValues) {
     const results = await database.query({
@@ -425,7 +430,9 @@ async function saveHistorico(userInputValues) {
   if (userInputValues.id) {
     return;
   }
-  return await runInsertQuery(userInputValues);
+  const result = await runInsertQuery(userInputValues);
+  await awardProfileSection(userInputValues.user_id, "historico");
+  return result;
 
   async function runInsertQuery(userInputValues) {
     const results = await database.query({
@@ -592,7 +599,9 @@ async function saveContato(userInputValues) {
   if (userInputValues.id) {
     return;
   }
-  return await runInsertQuery(userInputValues);
+  const result = await runInsertQuery(userInputValues);
+  await awardProfileSection(userInputValues.user_id, "contato");
+  return result;
 
   async function runInsertQuery(userInputValues) {
     const results = await database.query({
@@ -726,7 +735,9 @@ async function saveTools(userInputValues) {
   if (userInputValues.id) {
     return;
   }
-  return await runInsertQuery(userInputValues);
+  const result = await runInsertQuery(userInputValues);
+  await awardProfileSection(userInputValues.user_id, "ferramenta");
+  return result;
 
   async function runInsertQuery(userInputValues) {
     const results = await database.query({
@@ -829,6 +840,18 @@ async function deleteToolByUserAndTool(user_id, portfolio_tool_id) {
       values: [user_id, portfolio_tool_id],
     });
     return results.rows;
+  }
+}
+
+async function awardProfileSection(userId, section) {
+  try {
+    await reputation.award({
+      userId,
+      action: "profile_completed",
+      referenceId: section,
+    });
+  } catch (error) {
+    console.error(`Falha ao pontuar seção de perfil ${section}`, error);
   }
 }
 

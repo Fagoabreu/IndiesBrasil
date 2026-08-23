@@ -2,6 +2,7 @@ import { NotFoundError, ValidationError } from "@/infra/errors";
 import database from "infra/database";
 import notification from "./notification";
 import poll from "./poll";
+import reputation from "./reputation";
 
 const camposBase = `
   p.id,
@@ -183,6 +184,17 @@ async function create(postInputValues) {
       text: "UPDATE posts SET poll_id = $1 WHERE id = $2",
       values: [newPoll.id, newPost.id],
     });
+  }
+
+  // Pontuação de reputação (best-effort: não bloqueia a postagem).
+  try {
+    await reputation.award({
+      userId: newPost.author_id,
+      action: "post_created",
+      referenceId: newPost.id,
+    });
+  } catch (error) {
+    console.error("Falha ao pontuar criação de post", error);
   }
 
   return newPost;
@@ -438,6 +450,16 @@ async function setPostLikes(postId, userId, liked) {
       post_id: postId,
       type: "post_liked",
     });
+    // Pontuação de reputação (best-effort: não bloqueia a curtida).
+    try {
+      await reputation.award({
+        userId,
+        action: "post_liked",
+        referenceId: postId,
+      });
+    } catch (error) {
+      console.error("Falha ao pontuar curtida", error);
+    }
     return { liked: true, action: "created" };
   }
 

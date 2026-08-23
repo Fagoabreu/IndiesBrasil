@@ -2,6 +2,7 @@ import database from "infra/database.js";
 import { ForbiddenError, NotFoundError, ValidationError } from "infra/errors.js";
 import { generateUniqueSlug } from "lib/slug";
 import moderation from "./moderation.js";
+import reputation from "./reputation";
 
 /* =========================================================
  * List / Search
@@ -413,6 +414,17 @@ async function create(ownerId, ownerOrgId, data) {
     await database.query({
       text: `INSERT INTO boardgame_mechanics (boardgame_id, mechanic) VALUES ${values} ON CONFLICT DO NOTHING`,
     });
+  }
+
+  // Pontuação de reputação (best-effort: não bloqueia a publicação).
+  try {
+    await reputation.award({
+      userId: ownerId,
+      action: "boardgame_created",
+      referenceId: boardgame.id,
+    });
+  } catch (error) {
+    console.error("Falha ao pontuar criação de jogo de mesa", error);
   }
 
   return boardgame;

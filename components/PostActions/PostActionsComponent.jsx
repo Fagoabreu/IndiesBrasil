@@ -1,5 +1,5 @@
 import { IconButton, Button } from "@primer/react";
-import { HeartIcon, HeartFillIcon, CommentDiscussionIcon, ShareAndroidIcon } from "@primer/octicons-react";
+import { HeartIcon, HeartFillIcon, CommentDiscussionIcon, ShareAndroidIcon, ReportIcon } from "@primer/octicons-react";
 import styles from "./PostActionsComponent.module.css";
 import PropTypes from "prop-types";
 
@@ -12,6 +12,7 @@ PostActionsComponent.propTypes = {
   onToggleComments: PropTypes.func.isRequired,
   onReply: PropTypes.func.isRequired,
   onShare: PropTypes.func,
+  onReport: PropTypes.func,
   actionMessage: PropTypes.string,
 };
 
@@ -24,6 +25,7 @@ export default function PostActionsComponent({
   onToggleComments,
   onReply,
   onShare,
+  onReport,
   actionMessage,
 }) {
   const LikeIcon = hasLiked ? HeartFillIcon : HeartIcon;
@@ -56,6 +58,9 @@ export default function PostActionsComponent({
 
       {/* COMPARTILHAR */}
       <IconButton icon={ShareAndroidIcon} aria-label="Compartilhar" className={styles.iconBtn} onClick={onShare} />
+
+      {/* DENUNCIAR */}
+      {onReport && <IconButton icon={ReportIcon} aria-label="Denunciar" className={styles.iconBtn} onClick={onReport} />}
 
       {/* Message */}
       {actionMessage && <p>{actionMessage}</p>}

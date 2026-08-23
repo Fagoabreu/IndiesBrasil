@@ -33,9 +33,34 @@ async function getNewClient() {
   return client;
 }
 
+/**
+ * Executa `callback` dentro de uma transação com um cliente dedicado.
+ *
+ * O callback recebe o cliente e pode executar múltiplas queries de forma
+ * atômica. Erros lançados dentro do callback fazem ROLLBACK e são
+ * propagados como o erro original (sem envolver em ServiceError), para que
+ * controllers consigam tratar erros de domínio (ValidationError,
+ * NotFoundError, ...) corretamente.
+ */
+async function transaction(callback) {
+  const client = await getNewClient();
+  try {
+    await client.query("BEGIN");
+    const result = await callback(client);
+    await client.query("COMMIT");
+    return result;
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw error;
+  } finally {
+    await client.end();
+  }
+}
+
 const database = {
   query,
   getNewClient,
+  transaction,
 };
 
 export default database;

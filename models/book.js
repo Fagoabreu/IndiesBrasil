@@ -3,6 +3,7 @@ import { ForbiddenError, NotFoundError, ValidationError } from "infra/errors.js"
 import { generateUniqueSlug } from "lib/slug";
 import uploadFile from "@/infra/uploadFile.js";
 import moderation from "./moderation.js";
+import reputation from "./reputation";
 
 /* =========================================================
  * List / Search
@@ -174,7 +175,21 @@ async function create(userId, orgId, { title, book_type = "book", stage = "conce
     `,
     values: [slug, title.trim(), book_type, stage, userId, orgId],
   });
-  return result.rows[0];
+
+  const book = result.rows[0];
+
+  // Pontuação de reputação (best-effort: não bloqueia a publicação do livro).
+  try {
+    await reputation.award({
+      userId,
+      action: "book_created",
+      referenceId: book.id,
+    });
+  } catch (error) {
+    console.error("Falha ao pontuar criação de livro", error);
+  }
+
+  return book;
 }
 
 async function update(slug, body) {

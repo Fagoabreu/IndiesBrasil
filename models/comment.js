@@ -1,5 +1,6 @@
 import database from "infra/database.js";
 import notification from "./notification";
+import reputation from "./reputation";
 
 const baseSelectQuery = `
 SELECT
@@ -10,7 +11,7 @@ SELECT
   u.username AS author_username,
   uui.secure_url AS author_avatar_image,
   (c.author_id = $2) AS is_current_user
-FROM 
+FROM
   comments c
   INNER JOIN users u
     ON u.id = c.author_id
@@ -38,6 +39,17 @@ async function create(commentInputValues) {
         type: "post_commented",
       });
     }
+  }
+
+  // Pontuação de reputação (best-effort: não bloqueia o comentário).
+  try {
+    await reputation.award({
+      userId: commentInputValues.author_id,
+      action: "comment_created",
+      referenceId: postComment.id,
+    });
+  } catch (error) {
+    console.error("Falha ao pontuar criação de comentário", error);
   }
 
   return postComment;
@@ -105,7 +117,7 @@ async function deleteById(comment_id) {
 
   async function runDeleteQuery(comment_id) {
     await database.query({
-      text: `Delete from comments 
+      text: `Delete from comments
         WHERE
         id = $1
       `,

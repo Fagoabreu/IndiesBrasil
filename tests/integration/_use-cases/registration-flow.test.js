@@ -41,6 +41,7 @@ describe("Use case: Registration Flow (all successful)", () => {
       avatar_image: null,
       background_image: null,
       bio: null,
+      reputation: 0,
       resumo: null,
       visibility: "public",
     });

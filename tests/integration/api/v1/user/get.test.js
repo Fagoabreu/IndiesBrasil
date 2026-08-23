@@ -46,6 +46,7 @@ describe("GET /api/v1/user", () => {
       expect(responseBody).toEqual({
         id: createdUser.id,
         username: "UserWithValidSession",
+        reputation: 0,
         cpf: activatedUser.cpf,
         email: activatedUser.email,
         created_at: createdUser.created_at.toISOString(),
@@ -263,6 +264,7 @@ describe("GET /api/v1/user", () => {
       expect(responseBody).toEqual({
         id: createdUser.id,
         username: "UserWithHalfwayExpiredSession",
+        reputation: 0,
         email: createdUser.email,
         created_at: createdUser.created_at.toISOString(),
         updated_at: updatedUser.updated_at.toISOString(),

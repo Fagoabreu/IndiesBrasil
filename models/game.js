@@ -3,6 +3,7 @@ import { NotFoundError, ValidationError, ForbiddenError } from "infra/errors.js"
 import organization from "models/organization.js";
 import { generateUniqueSlug } from "lib/slug";
 import moderation from "./moderation.js";
+import reputation from "./reputation";
 
 /* =========================================================
  * Constantes
@@ -284,7 +285,20 @@ async function create(orgId, userId, data) {
     ],
   });
 
-  return result.rows[0];
+  const game = result.rows[0];
+
+  // Pontuação de reputação (best-effort: não bloqueia a publicação do jogo).
+  try {
+    await reputation.award({
+      userId,
+      action: "game_created",
+      referenceId: game.id,
+    });
+  } catch (error) {
+    console.error("Falha ao pontuar criação de jogo", error);
+  }
+
+  return game;
 }
 
 /* =========================================================

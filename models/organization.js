@@ -2,6 +2,7 @@ import database from "infra/database";
 import { NotFoundError, ValidationError, ForbiddenError } from "infra/errors.js";
 import { generateUniqueSlug } from "lib/slug";
 import moderation from "./moderation.js";
+import reputation from "./reputation";
 
 /* =========================================================
  * Leitura
@@ -152,6 +153,17 @@ async function create(ownerUser, data) {
     text: `INSERT INTO org_roles (org_id, member_id, role, granted_by) VALUES ($1, $2, 'admin', $2)`,
     values: [org.id, ownerUser.id],
   });
+
+  // Pontuação de reputação (best-effort: não bloqueia a criação do estúdio).
+  try {
+    await reputation.award({
+      userId: ownerUser.id,
+      action: "studio_created",
+      referenceId: org.id,
+    });
+  } catch (error) {
+    console.error("Falha ao pontuar criação de estúdio", error);
+  }
 
   return org;
 }

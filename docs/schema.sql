@@ -121,6 +121,7 @@ CREATE TABLE users (
     visibility          VARCHAR(20)     DEFAULT 'public' NOT NULL,
     background_image    VARCHAR(256)    NULL,
     birth_date          DATE            NULL,
+    reputation          INTEGER         DEFAULT 0 NOT NULL,
     CONSTRAINT users_cpf_key UNIQUE (cpf),
     CONSTRAINT users_email_key UNIQUE (email),
     CONSTRAINT users_pkey PRIMARY KEY (id),
@@ -189,6 +190,17 @@ CREATE TABLE moderation_actions (
     CONSTRAINT moderation_actions_pkey PRIMARY KEY (id),
     CONSTRAINT moderation_actions_moderator_id_fkey FOREIGN KEY (moderator_id) REFERENCES users(id),
     CONSTRAINT moderation_actions_revoked_by_fkey FOREIGN KEY (revoked_by) REFERENCES users(id)
+);
+
+CREATE TABLE reputation_events (
+    id              UUID            NOT NULL,
+    user_id         UUID            NOT NULL,
+    action          VARCHAR(40)     NOT NULL,
+    points          INTEGER         NOT NULL,
+    reference_id    VARCHAR(64)     NOT NULL,
+    created_at      TIMESTAMP       DEFAULT NOW() NOT NULL,
+    CONSTRAINT reputation_events_pkey PRIMARY KEY (id),
+    CONSTRAINT reputation_events_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 CREATE TABLE organizations (
