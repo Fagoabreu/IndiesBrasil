@@ -1,0 +1,138 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px 0;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  background: var(--brand-gradient-h);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.subtitle {
+  color: var(--fgColor-muted);
+  font-size: 14px;
+  max-width: 640px;
+}
+
+.myOrders {
+  margin-top: 8px;
+}
+
+.searchRow {
+  max-width: 480px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 12px;
+  background: var(--bgColor-default);
+  text-decoration: none;
+  color: var(--fgColor-default);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.card:hover {
+  border-color: var(--brand-hover-border);
+  box-shadow: var(--brand-card-glow);
+  transform: translateY(-2px);
+}
+
+.cardImage {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: var(--bgColor-muted);
+}
+
+.cardImage img {
+  object-fit: cover;
+}
+
+.cardImagePlaceholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px 14px;
+}
+
+.typeBadge {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--brand-icon-bg);
+  color: var(--fgColor-muted);
+}
+
+.cardTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.cardOrg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--fgColor-muted);
+}
+
+.cardOrg img {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.price {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--brand-primary);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 0;
+  color: var(--fgColor-muted);
+}
+
+.loadMore {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}

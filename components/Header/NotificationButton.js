@@ -12,6 +12,14 @@ const CLIENT_NOTIF_DEFS = {
     title: "Convite de estúdio",
     message: "%userId te convidou para o estúdio %studio_name.",
   },
+  store_order_received: {
+    title: "Novo pedido na loja",
+    message: "%userId fez um novo pedido na sua loja.",
+  },
+  store_order_updated: {
+    title: "Pedido atualizado",
+    message: "O status de um pedido foi atualizado na loja %orgSlug.",
+  },
 };
 
 function resolveTitle(n) {

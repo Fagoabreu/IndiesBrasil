@@ -192,6 +192,14 @@ async function activateUserByUserId(userId) {
     "create:news:comment",
     //report permissions
     "create:report",
+    //store (loja)
+    "read:store",
+    "create:store:product",
+    "update:store:product",
+    "delete:store:product",
+    "create:store:order",
+    "read:store:order",
+    "update:store:order",
     //content-review (analises)
     "read:content_review",
     "read:content_review:all",
