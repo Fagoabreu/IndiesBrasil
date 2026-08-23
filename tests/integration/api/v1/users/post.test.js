@@ -45,6 +45,7 @@ describe("POST /api/v1/users", () => {
         avatar_image: null,
         background_image: null,
         bio: null,
+        reputation: 0,
         resumo: null,
         visibility: "public",
       });
