@@ -1,6 +1,7 @@
 import database from "infra/database";
 import { NotFoundError, ValidationError, ForbiddenError } from "infra/errors.js";
 import { generateUniqueSlug } from "lib/slug";
+import { isValidCnpj } from "lib/cnpj";
 import moderation from "./moderation.js";
 import reputation from "./reputation";
 
@@ -93,6 +94,41 @@ async function findById(id) {
     throw new NotFoundError({ message: "Estúdio não encontrado." });
   }
   return results.rows[0];
+}
+
+/**
+ * Verifica se um estúdio está apto a vender na loja.
+ *
+ * Critérios (dados verificados):
+ *  1. CNPJ válido (dígitos verificadores);
+ *  2. Endereço completo (rua, cidade, estado e CEP);
+ *  3. Ao menos um contato cadastrado.
+ *
+ * @param {object} org Estúdio retornado por findBySlug/findById.
+ * @returns {Promise<boolean>}
+ */
+async function isStoreEligible(org) {
+  if (!org?.id) return false;
+
+  // 1. CNPJ válido.
+  if (!org.cnpj || !isValidCnpj(org.cnpj)) return false;
+
+  // 2. Endereço completo.
+  if (!org.address_id) return false;
+  const addressResult = await database.query({
+    text: `SELECT street, city, state, zip_code FROM addresses WHERE id = $1`,
+    values: [org.address_id],
+  });
+  const address = addressResult.rows[0];
+  if (!address || !address.street || !address.city || !address.state || !address.zip_code) {
+    return false;
+  }
+
+  // 3. Ao menos um contato.
+  const contacts = await findContacts(org.id);
+  if (contacts.length === 0) return false;
+
+  return true;
 }
 
 /* =========================================================
@@ -893,6 +929,7 @@ const organization = {
   isMember,
   isAdmin,
   isOwner,
+  isStoreEligible,
   removeMember,
   setMemberRole,
   revokeMemberRole,

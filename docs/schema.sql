@@ -624,3 +624,53 @@ CREATE TABLE org_ownership_transfers (
 CREATE UNIQUE INDEX org_transfers_pending_unique_idx
     ON org_ownership_transfers (org_id)
     WHERE status = 'pending';
+
+-- ======================================================
+-- Loja (store) — migration 1787500000001
+-- ======================================================
+
+ALTER TYPE notification_type ADD VALUE IF NOT EXISTS 'store_order_received';
+ALTER TYPE notification_type ADD VALUE IF NOT EXISTS 'store_order_updated';
+
+CREATE TABLE store_products (
+    id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID            NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    slug            VARCHAR(255)    NOT NULL,
+    name            VARCHAR(255)    NOT NULL,
+    description     TEXT,
+    type            VARCHAR(20)     NOT NULL,
+    price           NUMERIC(10, 2)  NOT NULL,
+    image_id        VARCHAR(256)    REFERENCES uploaded_images(id) ON DELETE SET NULL,
+    status          VARCHAR(20)     NOT NULL DEFAULT 'active',
+    delivery_notes  TEXT,
+    created_at      TIMESTAMPTZ     NOT NULL DEFAULT (timezone('utc', now())),
+    updated_at      TIMESTAMPTZ     NOT NULL DEFAULT (timezone('utc', now()))
+);
+
+CREATE UNIQUE INDEX store_products_slug_unique_idx ON store_products (slug);
+
+CREATE TABLE store_orders (
+    id                    UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_id            UUID            REFERENCES store_products(id) ON DELETE SET NULL,
+    organization_id       UUID            NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    buyer_id              UUID            REFERENCES users(id) ON DELETE SET NULL,
+    status                VARCHAR(20)     NOT NULL DEFAULT 'pending',
+    quantity              INTEGER         NOT NULL DEFAULT 1,
+    address_id            UUID            REFERENCES addresses(id) ON DELETE SET NULL,
+    price_snapshot        NUMERIC(10, 2),
+    delivery_cost         NUMERIC(10, 2),
+    delivery_deadline_days INTEGER,
+    total                 NUMERIC(10, 2),
+    buyer_note            TEXT,
+    created_at            TIMESTAMPTZ     NOT NULL DEFAULT (timezone('utc', now())),
+    updated_at            TIMESTAMPTZ     NOT NULL DEFAULT (timezone('utc', now()))
+);
+
+CREATE TABLE store_order_events (
+    id          UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id    UUID            NOT NULL REFERENCES store_orders(id) ON DELETE CASCADE,
+    status      VARCHAR(20)     NOT NULL,
+    note        TEXT,
+    created_by  UUID            REFERENCES users(id) ON DELETE SET NULL,
+    created_at  TIMESTAMPTZ     NOT NULL DEFAULT (timezone('utc', now()))
+);

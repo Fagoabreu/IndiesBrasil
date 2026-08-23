@@ -1,0 +1,168 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px 0;
+}
+
+.centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+}
+
+.breadcrumb {
+  font-size: 14px;
+  color: var(--fgColor-muted);
+}
+
+.breadcrumb a {
+  color: var(--fgColor-muted);
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  color: var(--brand-primary);
+  text-decoration: underline;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 560px) 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--bgColor-muted);
+  border: 1px solid var(--borderColor-default);
+}
+
+.media img {
+  object-fit: cover;
+}
+
+.mediaPlaceholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 80px;
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.badges {
+  display: flex;
+  gap: 8px;
+}
+
+.typeBadge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--brand-icon-bg);
+  color: var(--fgColor-muted);
+}
+
+.name {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.studio {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  color: var(--fgColor-muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.studio:hover {
+  color: var(--brand-primary);
+}
+
+.studio img {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.price {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--brand-primary);
+}
+
+.description {
+  color: var(--fgColor-default);
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.deliveryNotes {
+  font-size: 14px;
+  color: var(--fgColor-muted);
+  background: var(--brand-hover-bg);
+  border: 1px solid var(--brand-icon-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.manageLink {
+  margin-bottom: 4px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.addressFields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.addressGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.successActions {
+  margin-top: 12px;
+}
+
+.disclaimer {
+  font-size: 12px;
+  color: var(--fgColor-muted);
+}
+
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}

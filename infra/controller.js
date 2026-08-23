@@ -142,6 +142,7 @@ function injectAnonymousUser(request) {
       "read:course:lesson",
       "read:course:rating",
       "read:course:comment",
+      "read:store",
     ],
   };
   request.context = {
