@@ -74,7 +74,7 @@ function formatDateBR(dateStr) {
 
 function formatCNPJ(raw) {
   if (!raw) return "";
-  const d = raw.replace(/\D/g, "");
+  const d = raw.toUpperCase().replace(/[^A-Z0-9]/g, "");
   if (d.length !== 14) return raw;
   return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
 }
