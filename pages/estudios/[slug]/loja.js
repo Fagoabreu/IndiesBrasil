@@ -18,11 +18,16 @@ export async function getServerSideProps(context) {
     const eligible = await organization.isStoreEligible(studio);
     const products = await store.findProductsByOrg(studio.id);
 
+    // Serialize Date objects to ISO strings — node-pg returns TIMESTAMP
+    // columns as Date objects, which Next.js cannot serialize in props.
+    const serializedStudio = JSON.parse(JSON.stringify(studio));
+    const serializedProducts = JSON.parse(JSON.stringify(products));
+
     return {
       props: {
-        initialStudio: structuredClone(studio),
+        initialStudio: serializedStudio,
         initialEligible: eligible,
-        initialProducts: structuredClone(products),
+        initialProducts: serializedProducts,
       },
     };
   } catch {
@@ -88,7 +93,9 @@ export default function StudioStorePage({ initialStudio, initialEligible, initia
     return (
       <div className={styles.page}>
         <SeoHead title="Estúdio não encontrado — Indies Brasil" description="Estúdio não encontrado." canonical={`${SITE_URL}/estudios`} noIndex />
-        <Banner variant="danger">Estúdio não encontrado.</Banner>
+        <Banner variant="critical" title="Estúdio não encontrado">
+          Estúdio não encontrado.
+        </Banner>
       </div>
     );
   }
@@ -128,7 +135,7 @@ export default function StudioStorePage({ initialStudio, initialEligible, initia
       </div>
 
       {!initialEligible && (
-        <Banner variant="warning">
+        <Banner variant="warning" title="Estúdio não apto para vender na loja">
           Este estúdio ainda não está apto a vender na loja. Para liberar a vitrine, é necessário ter CNPJ válido, endereço completo e ao menos um
           contato cadastrados e validados nas configurações do estúdio.
         </Banner>
@@ -267,7 +274,11 @@ function ProductForm({ studioId, onSaved, disabled }) {
 
       {open && (
         <form onSubmit={submit} className={styles.form}>
-          {error ? <Banner variant="danger">{error}</Banner> : null}
+          {error ? (
+            <Banner variant="critical" title="Não foi possível salvar o produto">
+              {error}
+            </Banner>
+          ) : null}
           <FormControl required>
             <FormControl.Label>Nome do produto</FormControl.Label>
             <TextInput value={form.name} onChange={(e) => update("name", e.target.value)} disabled={busy} />
