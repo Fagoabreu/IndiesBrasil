@@ -31,7 +31,7 @@ async function postHandler(request, response) {
 }
 
 async function getHandler(request, response) {
-  const userTryingToGet = request.context.use;
+  const userTryingToGet = request.context.user;
   const username = request.query.username;
   const targetUser = await user.findOneByUsernameSecured(username);
   const newFound = await profile.findContactsByUserId(targetUser.id);

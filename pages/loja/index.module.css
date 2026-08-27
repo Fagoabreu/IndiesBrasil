@@ -36,8 +36,8 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 20px;
 }
 
 .card {
@@ -58,12 +58,12 @@
 .card:hover {
   border-color: var(--brand-hover-border);
   box-shadow: var(--brand-card-glow);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
 }
 
 .cardImage {
   position: relative;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 1 / 1;
   background: var(--bgColor-muted);
 }
 
@@ -77,38 +77,48 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40px;
+  font-size: 56px;
 }
 
 .cardBody {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px 14px 14px;
+  gap: 4px;
+  padding: 12px 14px 16px;
 }
 
 .typeBadge {
-  align-self: flex-start;
+  position: absolute;
+  top: 10px;
+  left: 10px;
   font-size: 11px;
   font-weight: 600;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 999px;
-  background: var(--brand-icon-bg);
+  background: var(--bgColor-default);
+  border: 1px solid var(--borderColor-default);
   color: var(--fgColor-muted);
 }
 
 .cardTitle {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 500;
   margin: 0;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 40px;
 }
 
 .cardOrg {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--fgColor-muted);
+  margin-top: 6px;
 }
 
 .cardOrg img {
@@ -117,8 +127,14 @@
 }
 
 .price {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 700;
+  color: var(--fgColor-default);
+  margin-top: 6px;
+}
+
+.installment {
+  font-size: 12px;
   color: var(--brand-primary);
 }
 

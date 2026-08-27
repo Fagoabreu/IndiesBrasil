@@ -112,5 +112,5 @@ async function remove(id) {
   });
 }
 
-const addressModel = { create, update, remove };
+const addressModel = { create, update, remove, validate, normalizeZip };
 export default addressModel;

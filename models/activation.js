@@ -200,6 +200,11 @@ async function activateUserByUserId(userId) {
     "create:store:order",
     "read:store:order",
     "update:store:order",
+    //address (caderno de endereços)
+    "create:address",
+    "read:address",
+    "update:address",
+    "delete:address",
     //content-review (analises)
     "read:content_review",
     "read:content_review:all",

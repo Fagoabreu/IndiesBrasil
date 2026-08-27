@@ -1,5 +1,5 @@
 import controller from "@/infra/controller.js";
-import { ForbiddenError } from "@/infra/errors";
+import { ForbiddenError, NotFoundError } from "@/infra/errors";
 import comment from "@/models/comment.js";
 
 import { createRouter } from "next-connect";
@@ -13,10 +13,17 @@ async function deleteHandler(request, response) {
   const comment_id = request.query.comment_id;
   const user_id = request.context.user.id;
   const selectedComment = await comment.getCommentsByCommentId(comment_id, user_id);
-  if (selectedComment.is_current_user === false) {
-    return new ForbiddenError("Você não tem permissão para deletar este comentário");
+  if (!selectedComment) {
+    throw new NotFoundError({
+      message: "O comentário informado não foi encontrado no sistema.",
+      action: "Verifique se o comentário ainda existe.",
+    });
   }
-  console.log("Permission granted to delete comment:", comment_id);
+  if (selectedComment.is_current_user === false) {
+    throw new ForbiddenError({
+      message: "Você não tem permissão para deletar este comentário",
+    });
+  }
   await comment.deleteById(comment_id);
   return response.status(204).end();
 }

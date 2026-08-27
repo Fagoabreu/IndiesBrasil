@@ -1,5 +1,4 @@
 import controller from "@/infra/controller.js";
-import { ForbiddenError } from "@/infra/errors";
 import authorization from "@/models/authorization";
 import comment from "@/models/comment.js";
 
@@ -9,7 +8,6 @@ export default createRouter()
   .use(controller.injectAnonymousOrUser)
   .get(controller.canRequest("read:post"), getHandler)
   .post(controller.canRequest("create:post"), postHandler)
-  .delete(controller.canRequest("create:post"), deleteHandler)
   .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
@@ -36,16 +34,4 @@ async function postHandler(request, response) {
   const secureOutputValues = authorization.filterOutput(userTryingToPost, "read:comment", resultComment);
 
   return response.status(201).json(secureOutputValues);
-}
-
-async function deleteHandler(request, response) {
-  const comment_id = request.query.comment_id;
-  const user_id = request.context.user.id;
-  const resultPost = await comment.getCommentsByCommentId(comment_id, user_id);
-  if (resultPost.author_id !== user_id) {
-    return new ForbiddenError("Você não tem permissão para deletar este comentário");
-  }
-
-  await comment.deleteById(comment_id);
-  return response.status(204).end({ action: "removed" });
 }
