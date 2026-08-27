@@ -59,13 +59,21 @@ export async function generateImage({
   const croppedCanvas = document.createElement("canvas");
   const croppedCtx = croppedCanvas.getContext("2d");
 
-  croppedCanvas.width = crop.width;
-  croppedCanvas.height = crop.height;
+  // Limita a maior dimensão da imagem gerada. As imagens são exibidas em
+  // cards/capas pequenos, então 1600px é mais que suficiente (8x retina) e
+  // evita que o PNG base64 estoure o limite do bodyParser das API routes.
+  const MAX_DIMENSION = 1600;
+  const downscale = Math.min(1, MAX_DIMENSION / Math.max(crop.width, crop.height));
+  const outputWidth = Math.max(1, Math.round(crop.width * downscale));
+  const outputHeight = Math.max(1, Math.round(crop.height * downscale));
+
+  croppedCanvas.width = outputWidth;
+  croppedCanvas.height = outputHeight;
 
   croppedCtx.save();
 
   if (shape > 0) {
-    const radius = (Math.min(crop.width, crop.height) / 2) * (shape / 100);
+    const radius = (Math.min(outputWidth, outputHeight) / 2) * (shape / 100);
 
     croppedCtx.beginPath();
     croppedCtx.moveTo(radius, 0);
@@ -80,7 +88,7 @@ export async function generateImage({
     croppedCtx.closePath();
     croppedCtx.clip();
   }
-  croppedCtx.drawImage(canvas, crop.x, crop.y, crop.width, crop.height, 0, 0, crop.width, crop.height);
+  croppedCtx.drawImage(canvas, crop.x, crop.y, crop.width, crop.height, 0, 0, outputWidth, outputHeight);
 
   croppedCtx.restore();
 

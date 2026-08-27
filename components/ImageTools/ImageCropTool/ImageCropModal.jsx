@@ -22,6 +22,8 @@ const PRESETS = {
   gameCapsule: { aspect: 460 / 215, shape: 0, label: "Imagem do Card" },
   // Capa de livro/quadrinho — proporção retrato 2:3
   bookCover: { aspect: 2 / 3, shape: 0, label: "Capa de Livro" },
+  // Imagem de produto da loja — proporção do card (16:10)
+  product: { aspect: 16 / 10, shape: 0, label: "Imagem do produto" },
 };
 
 export default function ImageCropModal({ imageSrc, preset = "avatar", onConfirm, onClose }) {
@@ -165,7 +167,18 @@ export default function ImageCropModal({ imageSrc, preset = "avatar", onConfirm,
 
 ImageCropModal.propTypes = {
   imageSrc: PropTypes.string.isRequired,
-  preset: PropTypes.oneOf(["avatar", "cover", "banner", "thumbnail", "squareLogo", "headerBanner", "profileBanner", "gameCapsule", "bookCover"]),
+  preset: PropTypes.oneOf([
+    "avatar",
+    "cover",
+    "banner",
+    "thumbnail",
+    "squareLogo",
+    "headerBanner",
+    "profileBanner",
+    "gameCapsule",
+    "bookCover",
+    "product",
+  ]),
   onConfirm: PropTypes.func.isRequired,
   onClose: PropTypes.func.isRequired,
 };

@@ -4,6 +4,7 @@ import { generateUniqueSlug } from "lib/slug";
 import { PRODUCT_TYPES, PRODUCT_STATUSES, ORDER_STATUSES, BUYER_CANCELLABLE_STATUSES, STORE_SALES_ENABLED } from "lib/store-constants";
 import organization from "./organization.js";
 import user from "./user.js";
+import uploadedImages from "./uploadedImages.js";
 import notification from "./notification.js";
 import email from "infra/email";
 import storeOrderReceivedEmailTemplate from "lib/email/templates/storeOrderReceivedEmail";
@@ -108,6 +109,52 @@ async function findProductsByOrg(orgId) {
   return results.rows;
 }
 
+async function findProductImages(productId) {
+  const results = await database.query({
+    text: `
+      SELECT
+        spi.id, spi.product_id, spi.image_id, spi.display_order,
+        ui.secure_url, ui.width, ui.height, ui.format
+      FROM store_product_images spi
+      LEFT JOIN uploaded_images ui ON ui.id = spi.image_id
+      WHERE spi.product_id = $1
+      ORDER BY spi.display_order, spi.id
+    `,
+    values: [productId],
+  });
+  return results.rows;
+}
+
+/**
+ * Faz upload (na ordem) de uma lista de entradas de imagem. Cada entrada pode
+ * ser um data URL (string) ou um `{ id }` de imagem já enviada ao Cloudinary.
+ * Devolve a lista ordenada de `uploaded_images.id`.
+ */
+async function uploadProductImages(entries, orgId) {
+  const ids = [];
+  for (const entry of entries) {
+    if (typeof entry === "string") {
+      const uploaded = await uploadedImages.uploadDataUrlImage(entry, `store/products/${orgId}`);
+      ids.push(uploaded.id);
+    } else if (entry && typeof entry === "object" && entry.id) {
+      ids.push(entry.id);
+    }
+  }
+  return ids;
+}
+
+async function insertProductImages(client, productId, imageIds) {
+  for (let i = 0; i < imageIds.length; i += 1) {
+    await client.query({
+      text: `
+        INSERT INTO store_product_images (product_id, image_id, display_order)
+        VALUES ($1, $2, $3)
+      `,
+      values: [productId, imageIds[i], i],
+    });
+  }
+}
+
 async function createProduct(orgId, userId, data) {
   const org = await organization.findById(orgId);
   await assertCanManageProducts(org, userId);
@@ -118,7 +165,7 @@ async function createProduct(orgId, userId, data) {
     });
   }
 
-  const { name, description = "", type = "physical", price, imageId = null, deliveryNotes = "" } = data;
+  const { name, description = "", type = "physical", price, images = [], image = null, imageId = null, deliveryNotes = "" } = data;
 
   if (!name || name.trim().length < 3) {
     throw new ValidationError({ message: "O nome do produto deve ter pelo menos 3 caracteres." });
@@ -133,17 +180,34 @@ async function createProduct(orgId, userId, data) {
 
   const slug = await generateUniqueSlug(name.trim(), "store_products", "slug", null, 100);
 
-  const result = await database.query({
-    text: `
-      INSERT INTO store_products
-        (organization_id, slug, name, description, type, price, image_id, delivery_notes)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING *
-    `,
-    values: [orgId, slug, name.trim(), description || null, type, Number(priceNumber.toFixed(2)), imageId || null, deliveryNotes?.trim() || null],
+  // As imagens (data URLs) só são enviadas ao Cloudinary junto com o produto,
+  // evitando imagens órfãs quando o cadastro é cancelado. A primeira é a capa.
+  let entries = images;
+  if (entries.length === 0) {
+    if (image) {
+      entries = [image];
+    } else if (imageId) {
+      entries = [{ id: imageId }];
+    }
+  }
+  const imageIds = await uploadProductImages(entries, orgId);
+  const finalImageId = imageIds[0] ?? null;
+
+  const product = await database.transaction(async (client) => {
+    const result = await client.query({
+      text: `
+        INSERT INTO store_products
+          (organization_id, slug, name, description, type, price, image_id, delivery_notes)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING *
+      `,
+      values: [orgId, slug, name.trim(), description || null, type, Number(priceNumber.toFixed(2)), finalImageId, deliveryNotes?.trim() || null],
+    });
+    await insertProductImages(client, result.rows[0].id, imageIds);
+    return result.rows[0];
   });
 
-  return findProductBySlug(result.rows[0].slug);
+  return findProductBySlug(product.slug);
 }
 
 async function updateProduct(slug, userId, data) {
@@ -151,7 +215,7 @@ async function updateProduct(slug, userId, data) {
   const org = await organization.findById(product.organization_id);
   await assertCanManageProducts(org, userId);
 
-  const { name, description, type, price, imageId, deliveryNotes, status } = data;
+  const { name, description, type, price, images, image, imageId, removeImage, deliveryNotes, status } = data;
 
   if (type !== undefined && !PRODUCT_TYPES.includes(type)) {
     throw new ValidationError({ message: "Tipo de produto inválido. Use 'physical' ou 'digital'." });
@@ -174,35 +238,100 @@ async function updateProduct(slug, userId, data) {
     newSlug = await generateUniqueSlug(name.trim(), "store_products", "slug", product.slug, 100);
   }
 
-  await database.query({
-    text: `
-      UPDATE store_products
-      SET
-        name           = COALESCE($1, name),
-        slug           = $2,
-        description    = COALESCE($3, description),
-        type           = COALESCE($4, type),
-        price          = COALESCE($5, price),
-        image_id       = COALESCE($6, image_id),
-        delivery_notes = COALESCE($7, delivery_notes),
-        status         = COALESCE($8, status),
-        updated_at     = now()
-      WHERE id = $9
-    `,
-    values: [
-      name?.trim() || null,
-      newSlug,
-      description !== undefined ? description : null,
-      type || null,
-      priceNumber,
-      imageId || null,
-      deliveryNotes !== undefined ? deliveryNotes : null,
-      status || null,
-      product.id,
-    ],
+  const currentGallery = await findProductImages(product.id);
+  const nextImageIds = await resolveProductImages({
+    images,
+    image,
+    imageId,
+    removeImage,
+    orgId: org.id,
+    currentImageId: product.image_id,
+    currentGalleryIds: currentGallery.map((img) => img.image_id),
+  });
+  const nextCoverId = nextImageIds === undefined ? product.image_id : (nextImageIds[0] ?? null);
+
+  await database.transaction(async (client) => {
+    await client.query({
+      text: `
+        UPDATE store_products
+        SET
+          name           = COALESCE($1, name),
+          slug           = $2,
+          description    = COALESCE($3, description),
+          type           = COALESCE($4, type),
+          price          = COALESCE($5, price),
+          image_id       = $6,
+          delivery_notes = COALESCE($7, delivery_notes),
+          status         = COALESCE($8, status),
+          updated_at     = now()
+        WHERE id = $9
+      `,
+      values: [
+        name?.trim() || null,
+        newSlug,
+        description !== undefined ? description : null,
+        type || null,
+        priceNumber,
+        nextCoverId,
+        deliveryNotes !== undefined ? deliveryNotes : null,
+        status || null,
+        product.id,
+      ],
+    });
+
+    if (nextImageIds !== undefined) {
+      await client.query({ text: `DELETE FROM store_product_images WHERE product_id = $1`, values: [product.id] });
+      await insertProductImages(client, product.id, nextImageIds);
+    }
   });
 
   return findProductBySlug(newSlug);
+}
+
+/**
+ * Resolve a lista ordenada de imagens de um produto na atualização.
+ * Aceita `images` (array de data URLs e/ou `{ id }` existentes) ou os campos
+ * legados `image`/`imageId`/`removeImage`. Retorna `undefined` quando a imagem
+ * não muda. Apaga do Cloudinary as imagens antigas que saíram da lista.
+ */
+async function resolveProductImages({ images, image, imageId, removeImage, orgId, currentImageId, currentGalleryIds }) {
+  if (Array.isArray(images)) {
+    const nextImageIds = await uploadProductImages(images, orgId);
+    await deleteOrphanProductImages(currentImageId, currentGalleryIds, nextImageIds);
+    return nextImageIds;
+  }
+
+  if (removeImage) {
+    await deleteOrphanProductImages(currentImageId, currentGalleryIds, []);
+    return [];
+  }
+
+  if (image) {
+    const uploaded = await uploadedImages.uploadDataUrlImage(image, `store/products/${orgId}`);
+    await deleteOrphanProductImages(currentImageId, currentGalleryIds, [uploaded.id]);
+    return [uploaded.id];
+  }
+
+  if (imageId) {
+    await deleteOrphanProductImages(currentImageId, currentGalleryIds, [imageId]);
+    return [imageId];
+  }
+
+  return undefined;
+}
+
+async function deleteOrphanProductImages(currentImageId, currentGalleryIds, nextImageIds) {
+  const previousIds = new Set([currentImageId, ...(currentGalleryIds || [])].filter(Boolean));
+  const nextSet = new Set(nextImageIds);
+  for (const oldId of previousIds) {
+    if (!nextSet.has(oldId)) {
+      try {
+        await uploadedImages.deleteImage(oldId);
+      } catch {
+        // best-effort: prossegue mesmo se falhar a remoção da imagem antiga
+      }
+    }
+  }
 }
 
 async function deleteProduct(slug, userId) {
@@ -210,10 +339,23 @@ async function deleteProduct(slug, userId) {
   const org = await organization.findById(product.organization_id);
   await assertCanManageProducts(org, userId);
 
+  // Coleta todos os ids de imagem (capa + galeria) antes de apagar o produto.
+  const gallery = await findProductImages(product.id);
+  const imageIds = new Set([product.image_id, ...gallery.map((img) => img.image_id)].filter(Boolean));
+
   await database.query({
     text: `DELETE FROM store_products WHERE id = $1`,
     values: [product.id],
   });
+
+  // Apaga as imagens do Cloudinary para não deixar órfãs.
+  for (const imageId of imageIds) {
+    try {
+      await uploadedImages.deleteImage(imageId);
+    } catch {
+      // best-effort: prossegue mesmo se falhar a remoção da imagem
+    }
+  }
 }
 
 async function assertCanManageProducts(org, userId) {
@@ -573,6 +715,7 @@ const store = {
   findProductBySlug,
   findProductById,
   findProductsByOrg,
+  findProductImages,
   createProduct,
   updateProduct,
   deleteProduct,

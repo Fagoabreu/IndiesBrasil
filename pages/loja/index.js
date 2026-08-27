@@ -78,19 +78,20 @@ export default function StorePage() {
             <Link key={product.id} href={`/loja/${product.slug}`} className={styles.card}>
               <div className={styles.cardImage}>
                 {product.image_url ? (
-                  <Image src={product.image_url} alt={product.name} fill sizes="(max-width: 640px) 100vw, 320px" unoptimized />
+                  <Image src={product.image_url} alt={product.name} fill sizes="(max-width: 640px) 50vw, 300px" unoptimized />
                 ) : (
                   <div className={styles.cardImagePlaceholder}>🎁</div>
                 )}
+                <span className={styles.typeBadge}>{PRODUCT_TYPE_LABELS[product.type] || product.type}</span>
               </div>
               <div className={styles.cardBody}>
-                <span className={styles.typeBadge}>{PRODUCT_TYPE_LABELS[product.type] || product.type}</span>
                 <h3 className={styles.cardTitle}>{product.name}</h3>
+                <span className={styles.price}>{formatBRL(product.price)}</span>
+                <span className={styles.installment}>em até 1x sem juros</span>
                 <div className={styles.cardOrg}>
-                  {product.org_logo_url ? <Image src={product.org_logo_url} alt={product.org_name} width={20} height={20} unoptimized /> : null}
+                  {product.org_logo_url ? <Image src={product.org_logo_url} alt={product.org_name} width={18} height={18} unoptimized /> : null}
                   <span>{product.org_name}</span>
                 </div>
-                <span className={styles.price}>{formatBRL(product.price)}</span>
               </div>
             </Link>
           ))}

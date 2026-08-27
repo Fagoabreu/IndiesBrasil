@@ -1,13 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import Image from "next/image";
 import { Banner, Button, FormControl, Heading, Select, Spinner, TextInput, Textarea } from "@primer/react";
 import SeoHead from "@/components/SeoHead";
+import ImageCropModal from "@/components/ImageTools/ImageCropTool/ImageCropModal";
 import { formatBRL } from "@/lib/currency";
 import { ORDER_STATUS_LABELS, ORDER_STATUSES, PRODUCT_TYPE_LABELS, PRODUCT_TYPES } from "@/lib/store-constants";
 import { SITE_URL } from "@/lib/seo";
 import styles from "./loja.module.css";
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.readAsDataURL(file);
+  });
+}
 
 export async function getServerSideProps(context) {
   const { slug } = context.params;
@@ -43,6 +52,7 @@ export default function StudioStorePage({ initialStudio, initialEligible, initia
   const [products, setProducts] = useState(initialProducts || []);
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
+  const [editingProduct, setEditingProduct] = useState(null);
 
   useEffect(() => {
     if (!slug) return;
@@ -68,6 +78,14 @@ export default function StudioStorePage({ initialStudio, initialEligible, initia
     });
     const data = await res.json();
     setProducts(Array.isArray(data) ? data : []);
+  }
+
+  async function handleEdit(product) {
+    const res = await fetch(`/api/v1/store/products/${encodeURIComponent(product.slug)}`, {
+      credentials: "include",
+    });
+    const data = await res.json().catch(() => product);
+    setEditingProduct(res.ok ? data : product);
   }
 
   useEffect(() => {
@@ -141,7 +159,19 @@ export default function StudioStorePage({ initialStudio, initialEligible, initia
         </Banner>
       )}
 
-      {canManage && <ProductForm studioId={initialStudio.id} onSaved={reloadProducts} disabled={!initialEligible} />}
+      {canManage && (
+        <ProductForm
+          key={editingProduct ? editingProduct.slug : "new"}
+          studioId={initialStudio.id}
+          editingProduct={editingProduct}
+          onSaved={() => {
+            setEditingProduct(null);
+            reloadProducts();
+          }}
+          onCancelEdit={() => setEditingProduct(null)}
+          disabled={!initialEligible}
+        />
+      )}
 
       <section className={styles.section}>
         <Heading as="h2" className={styles.sectionTitle}>
@@ -152,7 +182,7 @@ export default function StudioStorePage({ initialStudio, initialEligible, initia
         ) : (
           <div className={styles.grid}>
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} canManage={canManage} onChanged={reloadProducts} />
+              <ProductCard key={product.id} product={product} canManage={canManage} onEdit={handleEdit} onChanged={reloadProducts} />
             ))}
           </div>
         )}
@@ -170,7 +200,7 @@ export default function StudioStorePage({ initialStudio, initialEligible, initia
   );
 }
 
-function ProductCard({ product, canManage, onChanged }) {
+function ProductCard({ product, canManage, onChanged, onEdit }) {
   const [busy, setBusy] = useState(false);
 
   async function remove() {
@@ -208,6 +238,9 @@ function ProductCard({ product, canManage, onChanged }) {
             <Link href={`/loja/${product.slug}`} className={styles.viewLink}>
               Ver
             </Link>
+            <Button size="small" onClick={() => onEdit(product)} disabled={busy}>
+              Editar
+            </Button>
             <Button size="small" variant="danger" onClick={remove} disabled={busy}>
               {busy ? "..." : "Excluir"}
             </Button>
@@ -218,58 +251,168 @@ function ProductCard({ product, canManage, onChanged }) {
   );
 }
 
-function ProductForm({ studioId, onSaved, disabled }) {
-  const [open, setOpen] = useState(false);
+function ProductForm({ studioId, editingProduct, onSaved, onCancelEdit, disabled }) {
+  // Remontado via `key` quando o produto em edição muda, então os valores
+  // iniciais refletem `editingProduct` sem precisar de useEffect.
+  const [open, setOpen] = useState(Boolean(editingProduct));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [form, setForm] = useState({ name: "", type: "physical", price: "", description: "", deliveryNotes: "" });
+  const [form, setForm] = useState({
+    name: editingProduct?.name || "",
+    type: editingProduct?.type || "physical",
+    price: editingProduct?.price != null ? String(editingProduct.price) : "",
+    description: editingProduct?.description || "",
+    deliveryNotes: editingProduct?.delivery_notes || "",
+  });
+  // As imagens recortadas ficam apenas em memória (data URL) e são enviadas
+  // junto com o produto no momento de salvar — assim nada vai ao Cloudinary
+  // antes da confirmação e não sobra imagem órfã. A primeira imagem é a capa.
+  const [images, setImages] = useState(() => {
+    if (editingProduct?.images?.length) {
+      return editingProduct.images.map((img) => ({ id: img.image_id, preview: img.secure_url }));
+    }
+    if (editingProduct?.image_url) {
+      return [{ id: editingProduct.image_id, preview: editingProduct.image_url }];
+    }
+    return [];
+  });
+  const [cropQueue, setCropQueue] = useState([]);
+  const [cropSrc, setCropSrc] = useState(null);
+  const fileInputRef = useRef(null);
 
   function update(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function handleCancelEdit() {
+    setOpen(false);
+    setForm({ name: "", type: "physical", price: "", description: "", deliveryNotes: "" });
+    setImages([]);
+    setCropQueue([]);
+    setCropSrc(null);
+    onCancelEdit();
+  }
+
+  function openImagePicker() {
+    fileInputRef.current?.click();
+  }
+
+  function handleImageFileChange(event) {
+    const files = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (files.length === 0) return;
+
+    // Lê todos os arquivos e os enfileira para recorte sequencial.
+    Promise.all(files.map(readFileAsDataUrl)).then((dataUrls) => {
+      setCropQueue(dataUrls);
+      setCropSrc(dataUrls[0] || null);
+    });
+  }
+
+  async function handleImageCropConfirm(blob) {
+    if (blob) {
+      const dataUrl = await readFileAsDataUrl(blob);
+      setImages((prev) => [...prev, { dataUrl, preview: dataUrl }]);
+    }
+    advanceCropQueue();
+  }
+
+  function handleCropClose() {
+    advanceCropQueue();
+  }
+
+  function advanceCropQueue() {
+    setCropSrc(null);
+    const rest = cropQueue.slice(1);
+    setCropQueue(rest);
+    if (rest.length > 0) {
+      setCropSrc(rest[0]);
+    }
+  }
+
+  function removeImageAt(index) {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function moveImage(index, delta) {
+    setImages((prev) => {
+      const target = index + delta;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = prev.slice();
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
   }
 
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
     setError("");
+
+    const payload = {
+      name: form.name,
+      type: form.type,
+      price: form.price,
+      description: form.description || undefined,
+      deliveryNotes: form.deliveryNotes || undefined,
+    };
+
+    payload.images = images.map((img) => (img.id ? { id: img.id } : img.dataUrl));
+
     try {
-      const res = await fetch("/api/v1/store/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          organizationId: studioId,
-          name: form.name,
-          type: form.type,
-          price: form.price,
-          description: form.description || undefined,
-          deliveryNotes: form.deliveryNotes || undefined,
-        }),
-      });
+      const res = editingProduct
+        ? await fetch(`/api/v1/store/products/${encodeURIComponent(editingProduct.slug)}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(payload),
+          })
+        : await fetch("/api/v1/store/products", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ organizationId: studioId, ...payload }),
+          });
+
       if (res.ok) {
         setForm({ name: "", type: "physical", price: "", description: "", deliveryNotes: "" });
+        setImages([]);
+        setCropQueue([]);
+        setCropSrc(null);
         setOpen(false);
         await onSaved();
       } else {
         const data = await res.json().catch(() => ({}));
-        setError(data.message || "Não foi possível criar o produto.");
+        setError(data.message || "Não foi possível salvar o produto.");
       }
     } catch {
-      setError("Não foi possível criar o produto.");
+      setError("Não foi possível salvar o produto.");
     } finally {
       setBusy(false);
     }
   }
 
+  let submitLabel = "Salvar produto";
+  if (editingProduct) submitLabel = "Salvar alterações";
+  if (busy) submitLabel = "Salvando...";
+
+  const imageButtonLabel = images.length > 0 ? "Adicionar imagem" : "Enviar imagens";
+
   return (
     <section className={styles.section}>
       <div className={styles.formHeader}>
         <Heading as="h2" className={styles.sectionTitle}>
-          Cadastrar produto
+          {editingProduct ? "Editar produto" : "Cadastrar produto"}
         </Heading>
-        <Button onClick={() => setOpen((v) => !v)} disabled={disabled}>
-          {open ? "Fechar" : "Novo produto"}
-        </Button>
+        {editingProduct ? (
+          <Button onClick={handleCancelEdit} disabled={busy}>
+            Cancelar
+          </Button>
+        ) : (
+          <Button onClick={() => setOpen((v) => !v)} disabled={disabled}>
+            {open ? "Fechar" : "Novo produto"}
+          </Button>
+        )}
       </div>
 
       {open && (
@@ -312,11 +455,64 @@ function ProductForm({ studioId, onSaved, disabled }) {
               disabled={busy}
             />
           </FormControl>
+          <FormControl>
+            <FormControl.Label>Imagens do produto</FormControl.Label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className={styles.hiddenInput}
+              onChange={handleImageFileChange}
+              aria-label="Enviar imagens do produto"
+            />
+            <div className={styles.imageField}>
+              <div className={styles.thumbGrid}>
+                {images.length === 0 ? (
+                  <div className={styles.imagePreview}>
+                    <div className={styles.imagePlaceholder}>🎁</div>
+                  </div>
+                ) : (
+                  images.map((img, index) => (
+                    <div key={img.id || img.preview} className={styles.imageThumb}>
+                      <div className={styles.imagePreview}>
+                        <Image src={img.preview} alt={`Imagem ${index + 1}`} fill sizes="160px" unoptimized />
+                        {index === 0 && <span className={styles.coverBadge}>Capa</span>}
+                      </div>
+                      <div className={styles.thumbActions}>
+                        <button type="button" onClick={() => moveImage(index, -1)} disabled={busy || index === 0} aria-label="Mover para a esquerda">
+                          ←
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveImage(index, 1)}
+                          disabled={busy || index === images.length - 1}
+                          aria-label="Mover para a direita"
+                        >
+                          →
+                        </button>
+                        <button type="button" onClick={() => removeImageAt(index)} disabled={busy} aria-label="Remover imagem">
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className={styles.imageActions}>
+                <Button type="button" size="small" onClick={openImagePicker} disabled={busy}>
+                  {imageButtonLabel}
+                </Button>
+              </div>
+            </div>
+          </FormControl>
           <Button type="submit" variant="primary" disabled={busy}>
-            {busy ? "Salvando..." : "Salvar produto"}
+            {submitLabel}
           </Button>
         </form>
       )}
+
+      {cropSrc && <ImageCropModal imageSrc={cropSrc} preset="product" onConfirm={handleImageCropConfirm} onClose={handleCropClose} />}
     </section>
   );
 }

@@ -4,7 +4,7 @@ import stream from "models/stream";
 
 export default createRouter()
   .use(controller.injectAnonymousOrUser)
-  .post(controller.canRequest("read:studio"), postHandler)
+  .post(controller.canRequest("read:admin"), postHandler)
   .handler(controller.errorHandlers);
 
 async function postHandler(request, response) {

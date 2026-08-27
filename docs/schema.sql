@@ -649,6 +649,29 @@ CREATE TABLE store_products (
 
 CREATE UNIQUE INDEX store_products_slug_unique_idx ON store_products (slug);
 
+CREATE TABLE store_product_images (
+    id             SERIAL         PRIMARY KEY,
+    product_id     UUID           NOT NULL REFERENCES store_products(id) ON DELETE CASCADE,
+    image_id       VARCHAR(256)   NOT NULL REFERENCES uploaded_images(id) ON DELETE CASCADE,
+    display_order  INTEGER        NOT NULL DEFAULT 0,
+    created_at     TIMESTAMPTZ    NOT NULL DEFAULT (timezone('utc', now()))
+);
+
+CREATE INDEX store_product_images_product_id_idx ON store_product_images (product_id);
+CREATE INDEX store_product_images_image_id_idx ON store_product_images (image_id);
+
+CREATE TABLE user_addresses (
+    id            UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id       UUID            NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    address_id    UUID            NOT NULL REFERENCES addresses(id) ON DELETE CASCADE,
+    label         VARCHAR(50),
+    is_default    BOOLEAN         NOT NULL DEFAULT false,
+    created_at    TIMESTAMPTZ     NOT NULL DEFAULT (timezone('utc', now())),
+    CONSTRAINT user_addresses_user_address_unique UNIQUE (user_id, address_id)
+);
+
+CREATE INDEX user_addresses_user_id_idx ON user_addresses (user_id);
+
 CREATE TABLE store_orders (
     id                    UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
     product_id            UUID            REFERENCES store_products(id) ON DELETE SET NULL,

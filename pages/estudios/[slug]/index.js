@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import Image from "next/image";
 import { Avatar, Spinner } from "@primer/react";
-import { OrganizationIcon, PeopleIcon, DownloadIcon, GearIcon, PencilIcon, VideoIcon, BroadcastIcon } from "@primer/octicons-react";
+import { OrganizationIcon, PeopleIcon, DownloadIcon, GearIcon, PencilIcon, VideoIcon, BroadcastIcon, PackageIcon } from "@primer/octicons-react";
 
 import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
@@ -657,6 +657,11 @@ export default function StudioPage({ initialStudio }) {
                 <Link href={`/estudios/${slug}/press-kit`} className={styles.btnOutline} target="_blank" rel="noopener noreferrer">
                   <DownloadIcon size={14} /> Press Kit
                 </Link>
+                {canEdit && (
+                  <Link href={`/estudios/${slug}/loja`} className={styles.btnOutline}>
+                    <PackageIcon size={14} /> Loja
+                  </Link>
+                )}
                 {canEdit && (
                   <Link href={`/estudios/${slug}/configuracoes`} className={styles.btnOutline}>
                     <GearIcon size={14} /> Editar

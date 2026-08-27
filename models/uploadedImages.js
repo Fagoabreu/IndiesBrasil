@@ -1,5 +1,6 @@
 import uploadFile from "@/infra/uploadFile.js";
 import database from "infra/database.js";
+import { ValidationError } from "infra/errors.js";
 
 function buildUploadFolder(subfolder) {
   const env = process.env.NODE_ENV === "production" ? "PROD" : "DEV";
@@ -10,6 +11,29 @@ async function uploadImage(file, subfolder) {
   if (!file) return null;
   const uploadedResult = await uploadFile.postFile(file, buildUploadFolder(subfolder));
   return await saveImage(uploadedResult);
+}
+
+const DATA_URL_REGEX = /^data:image\/(\w+);base64,(.+)$/;
+
+/**
+ * Decodifica um data URL base64 e envia a imagem ao Cloudinary.
+ * Centraliza a conversão (data URL -> Blob -> upload) usada em vários
+ * fluxos de upload por JSON (análises, cursos, loja).
+ */
+async function uploadDataUrlImage(dataUrl, subfolder) {
+  if (!dataUrl || typeof dataUrl !== "string") {
+    throw new ValidationError({ message: "A imagem é obrigatória (data URL base64)." });
+  }
+
+  const match = DATA_URL_REGEX.exec(dataUrl);
+  if (!match) {
+    throw new ValidationError({ message: "Formato de imagem inválido. Envie um data URL base64." });
+  }
+
+  const buffer = Buffer.from(match[2], "base64");
+  const blob = new Blob([buffer], { type: `image/${match[1]}` });
+
+  return await uploadImage(blob, subfolder);
 }
 
 async function saveImage(uploadedResult) {
@@ -52,7 +76,13 @@ async function saveImage(uploadedResult) {
 }
 
 async function deleteImage(id) {
-  await uploadFile.destroyFile(id);
+  // `uploaded_images.id` é o `asset_id` do Cloudinary, mas `destroyFile`
+  // espera o `public_id`. Busca o registro para excluir o arquivo correto.
+  const existing = await findById(id);
+  if (existing?.public_id) {
+    await uploadFile.destroyFile(existing.public_id);
+  }
+
   const results = await database.query({
     text: `
       delete from uploaded_images
@@ -92,6 +122,7 @@ async function findById(id) {
 
 const uploadedImages = {
   uploadImage,
+  uploadDataUrlImage,
   uploadPdf,
   uploadPdfRaw,
   deleteImage,

@@ -5,6 +5,16 @@ import store from "models/store";
 import organization from "models/organization";
 import { ForbiddenError, ValidationError } from "infra/errors";
 
+// Imagens de produto são enviadas como data URL base64 no corpo do JSON;
+// o limite padrão do bodyParser (1mb) não comporta PNGs recortados.
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "20mb",
+    },
+  },
+};
+
 export default createRouter()
   .use(controller.injectAnonymousOrUser)
   .get(controller.canRequest("read:store"), listHandler)

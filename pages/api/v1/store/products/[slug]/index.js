@@ -5,6 +5,16 @@ import store from "models/store";
 import organization from "models/organization";
 import { ForbiddenError } from "infra/errors";
 
+// Imagens de produto são enviadas como data URL base64 no corpo do JSON;
+// o limite padrão do bodyParser (1mb) não comporta PNGs recortados.
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "20mb",
+    },
+  },
+};
+
 export default createRouter()
   .use(controller.injectAnonymousOrUser)
   .get(controller.canRequest("read:store"), getHandler)
@@ -18,6 +28,12 @@ async function getHandler(request, response) {
 
   const product = await store.findProductBySlug(slug);
 
+  const gallery = await store.findProductImages(product.id);
+  let images = gallery;
+  if (images.length === 0 && product.image_url) {
+    images = [{ image_id: product.image_id, secure_url: product.image_url }];
+  }
+
   let viewer = null;
   if (requestUser?.id) {
     const org = await organization.findById(product.organization_id);
@@ -26,7 +42,7 @@ async function getHandler(request, response) {
     viewer = { canManage: isOwner || isAdmin };
   }
 
-  return response.status(200).json({ ...product, viewer });
+  return response.status(200).json({ ...product, viewer, images });
 }
 
 async function patchHandler(request, response) {

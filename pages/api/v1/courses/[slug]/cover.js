@@ -4,6 +4,16 @@ import course from "models/course";
 import uploadedImages from "models/uploadedImages";
 import { ValidationError } from "infra/errors";
 
+// A capa é enviada como data URL base64 no corpo do JSON; o limite padrão
+// do bodyParser (1mb) não comporta PNGs recortados.
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "10mb",
+    },
+  },
+};
+
 export default createRouter()
   .use(controller.injectAnonymousOrUser)
   .post(controller.canRequest("update:course"), postHandler)
@@ -21,18 +31,7 @@ async function postHandler(request, response) {
     });
   }
 
-  // Decodifica o data URL base64
-  const match = image.match(/^data:image\/(\w+);base64,(.+)$/);
-  if (!match) {
-    throw new ValidationError({
-      message: "Formato de imagem inválido. Envie um data URL base64.",
-    });
-  }
-
-  const buffer = Buffer.from(match[2], "base64");
-  const blob = new Blob([buffer], { type: `image/${match[1]}` });
-
-  const uploadedImage = await uploadedImages.uploadImage(blob, `courses/${slug}`);
+  const uploadedImage = await uploadedImages.uploadDataUrlImage(image, `courses/${slug}`);
   await course.updateCoverImage(slug, requestUser.id, uploadedImage.id);
 
   return response.status(200).json({
