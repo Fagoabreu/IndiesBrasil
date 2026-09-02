@@ -7,6 +7,7 @@ async function createUserNotification(userInputValues) {
 
   async function runInsertQuery(userInputValues) {
     const orgSlug = userInputValues.org_slug ?? "";
+    const meetingCode = userInputValues.meeting_code ?? "";
     const results = await database.query({
       text: `
       INSERT INTO user_notifications (
@@ -14,13 +15,14 @@ async function createUserNotification(userInputValues) {
         type,
         source_user_id,
         org_slug,
+        meeting_code,
         is_read,
         created_at
       )
-      VALUES ($1,$2,$3,$4,false,NOW())
-      ON CONFLICT (user_id, type, source_user_id, org_slug) DO NOTHING
+      VALUES ($1,$2,$3,$4,$5,false,NOW())
+      ON CONFLICT (user_id, type, source_user_id, org_slug, meeting_code) DO NOTHING
       RETURNING *`,
-      values: [userInputValues.user_id, userInputValues.type, userInputValues.source_user_id, orgSlug],
+      values: [userInputValues.user_id, userInputValues.type, userInputValues.source_user_id, orgSlug, meetingCode],
     });
     return results.rows[0] ?? null;
   }
@@ -77,17 +79,19 @@ async function updateUserNotification(userInputValues) {
 
   async function runUpdateQuery(userInputValues) {
     const orgSlug = userInputValues.org_slug ?? "";
+    const meetingCode = userInputValues.meeting_code ?? "";
     const results = await database.query({
       text: `
       UPDATE user_notifications
-      SET is_read = $5
+      SET is_read = $6
       WHERE
         user_id = $1
         AND type = $2
         AND source_user_id = $3
         AND org_slug = $4
+        AND meeting_code = $5
       RETURNING *`,
-      values: [userInputValues.user_id, userInputValues.type, userInputValues.source_user_id, orgSlug, userInputValues.is_read],
+      values: [userInputValues.user_id, userInputValues.type, userInputValues.source_user_id, orgSlug, meetingCode, userInputValues.is_read],
     });
     return results.rows[0];
   }
@@ -126,6 +130,7 @@ async function findUserNotificationsByKey(userInputValues) {
   return notificationFound;
 
   async function runSelectQuery(userInputValues) {
+    const meetingCode = userInputValues.meeting_code ?? "";
     const results = await database.query({
       text: `
       Select *
@@ -133,8 +138,9 @@ async function findUserNotificationsByKey(userInputValues) {
       where user_id = $1
         AND type = $2
         AND source_user_id = $3
+        AND meeting_code = $4
     `,
-      values: [userInputValues.user_id, userInputValues.type, userInputValues.source_user_id],
+      values: [userInputValues.user_id, userInputValues.type, userInputValues.source_user_id, meetingCode],
     });
 
     if (results.rowCount === 0) {
@@ -180,11 +186,13 @@ async function findUserNotificationsByUserId(userId) {
     const results = await database.query({
       text: `
         SELECT un.*, nm.title, nm.message, u.username AS source_username,
-          s.name AS studio_name
+          s.name AS studio_name,
+          mt.title AS meeting_title, mt.starts_at AS meeting_starts_at
         FROM user_notifications un
         LEFT JOIN notification_messages nm ON nm.type = un.type
         LEFT JOIN users u ON u.id = un.source_user_id
         LEFT JOIN organizations s ON s.slug = un.org_slug
+        LEFT JOIN meetings mt ON mt.code = un.meeting_code
         WHERE un.user_id = $1
         ORDER BY un.created_at DESC
       `,

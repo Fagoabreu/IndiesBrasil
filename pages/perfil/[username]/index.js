@@ -38,6 +38,10 @@ const CLIENT_NOTIF_DEFS = {
     title: "Convite de estúdio",
     message: "%userId te convidou para o estúdio %studio_name.",
   },
+  meeting_scheduled: {
+    title: "Nova reunião",
+    message: "%userId marcou a reunião “%meeting_title” no estúdio %studio_name.",
+  },
 };
 
 function notificationTitle(n) {
@@ -51,7 +55,8 @@ function notificationMessage(n) {
     .replace("%userId", n.source_username || "alguém")
     .replace("%postId", n.post_id ? String(n.post_id).slice(0, 8) : "um post")
     .replace("%orgSlug", n.org_slug || "estúdio")
-    .replace("%studio_name", n.studio_name || n.org_slug || "estúdio");
+    .replace("%studio_name", n.studio_name || n.org_slug || "estúdio")
+    .replace("%meeting_title", n.meeting_title || "reunião");
 }
 
 /* =====================
@@ -411,14 +416,22 @@ function NotificationList({ userNotifs, postNotifs }) {
       router.push(`/posts/${n.post_id}`);
     } else if (n.type === "studio_invitation" && n.org_slug) {
       router.push(`/estudios/${n.org_slug}`);
+    } else if (n.type === "meeting_scheduled" && n.meeting_code) {
+      router.push(`/reuniao/${n.meeting_code}`);
     }
   }
 
   return (
     <div className={style.notifList}>
       {all.map((n) => {
-        const nid = `${n.user_id}_${n.type}_${n.source_user_id}${n.post_id != null ? `_${n.post_id}` : ""}`;
-        const isClickable = n.type === "post_liked" || n.type === "post_commented" || (n.type === "studio_invitation" && n.org_slug);
+        let nid = `${n.user_id}_${n.type}_${n.source_user_id}_${n.org_slug || ""}`;
+        if (n.meeting_code) nid += `_${n.meeting_code}`;
+        if (n.post_id != null) nid += `_${n.post_id}`;
+        const isClickable =
+          n.type === "post_liked" ||
+          n.type === "post_commented" ||
+          (n.type === "studio_invitation" && n.org_slug) ||
+          (n.type === "meeting_scheduled" && n.meeting_code);
         return (
           <div
             key={nid}

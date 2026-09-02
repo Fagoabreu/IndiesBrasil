@@ -12,6 +12,10 @@ const CLIENT_NOTIF_DEFS = {
     title: "Convite de estúdio",
     message: "%userId te convidou para o estúdio %studio_name.",
   },
+  meeting_scheduled: {
+    title: "Nova reunião",
+    message: "%userId marcou a reunião “%meeting_title” no estúdio %studio_name.",
+  },
   store_order_received: {
     title: "Novo pedido na loja",
     message: "%userId fez um novo pedido na sua loja.",
@@ -33,7 +37,15 @@ function resolveMessage(n) {
     .replace("%userId", n.source_username || "alguém")
     .replace("%postId", n.post_id ? String(n.post_id).slice(0, 8) : "um post")
     .replace("%orgSlug", n.org_slug || "estúdio")
-    .replace("%studio_name", n.studio_name || n.org_slug || "estúdio");
+    .replace("%studio_name", n.studio_name || n.org_slug || "estúdio")
+    .replace("%meeting_title", n.meeting_title || "reunião");
+}
+
+function notifKey(n) {
+  let key = `${n.user_id}_${n.type}_${n.source_user_id}_${n.org_slug || ""}`;
+  if (n.meeting_code) key += `_${n.meeting_code}`;
+  if (n.post_id != null) key += `_${n.post_id}`;
+  return key;
 }
 
 async function loadNotifications(username) {
@@ -60,6 +72,7 @@ async function markNotificationRead(username, n) {
     source_user_id: n.source_user_id,
     is_read: true,
     org_slug: n.org_slug || "",
+    meeting_code: n.meeting_code || "",
     ...(isPost && { post_id: n.post_id }),
   };
   await fetch(url, {
@@ -108,17 +121,13 @@ export default function NotificationButton() {
         ),
       );
     } else {
-      setUserNotifs((prev) =>
-        prev.map((u) =>
-          u.user_id === n.user_id && u.type === n.type && u.source_user_id === n.source_user_id && u.org_slug === n.org_slug
-            ? { ...u, is_read: true }
-            : u,
-        ),
-      );
+      setUserNotifs((prev) => prev.map((u) => (notifKey(u) === notifKey(n) ? { ...u, is_read: true } : u)));
     }
     markNotificationRead(user.username, n);
     if (n.type === "studio_invitation" && n.org_slug) {
       router.push(`/estudios/${n.org_slug}`);
+    } else if (n.type === "meeting_scheduled" && n.meeting_code) {
+      router.push(`/reuniao/${n.meeting_code}`);
     } else if (n.type === "post_liked" || n.type === "post_commented") {
       router.push(`/posts/${n.post_id}`);
     }
@@ -140,11 +149,7 @@ export default function NotificationButton() {
               <ActionList.Item disabled>Nenhuma notificação</ActionList.Item>
             ) : (
               all.map((n) => (
-                <ActionList.Item
-                  key={`${n.user_id}_${n.type}_${n.source_user_id}${n.post_id != null ? `_${n.post_id}` : ""}`}
-                  className={!n.is_read ? styles.unreadItem : undefined}
-                  onSelect={() => handleMarkRead(n)}
-                >
+                <ActionList.Item key={notifKey(n)} className={!n.is_read ? styles.unreadItem : undefined} onSelect={() => handleMarkRead(n)}>
                   <span className={styles.notifRow}>
                     <span className={styles.notifTitle}>{resolveTitle(n)}</span>
                     <span className={styles.notifDate}>

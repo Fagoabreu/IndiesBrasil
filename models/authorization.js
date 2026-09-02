@@ -103,6 +103,12 @@ const availableFeatures = new Set([
   "read:studio:follow",
   "create:studio:follow",
 
+  //meeting (reuniões de estúdio)
+  "read:meeting",
+  "create:meeting",
+  "update:meeting",
+  "delete:meeting",
+
   //game
   "read:game",
   "read:game:all",

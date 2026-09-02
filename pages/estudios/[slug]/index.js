@@ -657,6 +657,11 @@ export default function StudioPage({ initialStudio }) {
                 <Link href={`/estudios/${slug}/press-kit`} className={styles.btnOutline} target="_blank" rel="noopener noreferrer">
                   <DownloadIcon size={14} /> Press Kit
                 </Link>
+                {(viewer.isMember || viewer.isAdmin || viewer.isOwner) && (
+                  <Link href={`/estudios/${slug}/reunioes`} className={styles.btnOutline}>
+                    <VideoIcon size={14} /> Reuniões
+                  </Link>
+                )}
                 {canEdit && (
                   <Link href={`/estudios/${slug}/loja`} className={styles.btnOutline}>
                     <PackageIcon size={14} /> Loja

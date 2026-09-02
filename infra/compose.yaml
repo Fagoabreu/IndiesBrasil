@@ -12,3 +12,32 @@ services:
     ports:
       - "1025:1025"
       - "1080:1080"
+  livekit:
+    # SFU de reuniões por vídeo (dev). A config é gerada a partir do
+    # .env.development ($$ escapa da interpolação do Compose e é
+    # expandida pelo shell dentro do container).
+    container_name: "livekit-dev"
+    image: "livekit/livekit-server"
+    env_file:
+      - ../.env.development
+    ports:
+      - "7880:7880" # WebSocket (browser conecta aqui)
+      - "7881:7881" # Transporte TCP de mídia
+    command:
+      - "/bin/sh"
+      - "-c"
+      - |
+        cat > /etc/livekit.yaml <<EOF
+        port: 7880
+        rtc:
+          tcp_port: 7881
+          use_external_ip: false
+          port_range_start: 50000
+          port_range_end: 60000
+        keys:
+          $${LIVEKIT_API_KEY}: "$${LIVEKIT_API_SECRET}"
+        room:
+          empty_timeout: 600
+          max_participants: 50
+        EOF
+        exec livekit-server --config /etc/livekit.yaml

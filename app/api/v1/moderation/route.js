@@ -1,6 +1,8 @@
 import controller from "@/infra/controller";
 import authorization from "@/models/authorization";
 import moderation from "@/models/moderation";
+import meeting from "@/models/meeting";
+import livekit from "@/lib/livekit";
 import { ForbiddenError, ValidationError } from "@/infra/errors";
 
 /**
@@ -40,6 +42,18 @@ export async function POST(request) {
       moderatorId: user.id,
       expiresAt: expires_at,
     });
+
+    // Bloqueio de reunião: encerra a reunião e derruba a sala LiveKit.
+    // Falha aqui NÃO deve impedir a resposta — o bloqueio já foi gravado.
+    if (target_type === "meeting") {
+      try {
+        const meetingFound = await meeting.findById(target_id);
+        await meeting.endByModeration(meetingFound.code);
+        await livekit.closeMeetingRoom(meetingFound.code);
+      } catch (roomError) {
+        console.error("[moderation] Falha ao encerrar reunião bloqueada:", roomError);
+      }
+    }
 
     return Response.json(block, { status: 201 });
   } catch (error) {

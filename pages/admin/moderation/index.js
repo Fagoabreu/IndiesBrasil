@@ -12,9 +12,10 @@ const TARGET_LABELS = {
   game: "Jogo",
   boardgame: "Jogo de Mesa",
   book: "Livro/Quadrinho",
+  meeting: "Reunião",
 };
 
-const TARGET_TYPES = ["post", "user", "studio", "game", "boardgame", "book"];
+const TARGET_TYPES = ["post", "user", "studio", "game", "boardgame", "book", "meeting"];
 
 const REASONS = [
   "violacao_termos",

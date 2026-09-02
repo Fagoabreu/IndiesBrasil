@@ -75,6 +75,17 @@ async function create({ reporterId, targetType, targetId, reason, justification 
     }
   }
 
+  // Evita que host/owner denunciem a própria reunião (anti-abuso).
+  if (targetType === "meeting") {
+    const isOwnMeeting = await isMeetingManagedBy(targetId, reporterId);
+    if (isOwnMeeting) {
+      throw new ValidationError({
+        message: "Você não pode denunciar uma reunião da qual é responsável.",
+        action: "Denúncias são destinadas a conteúdo de terceiros.",
+      });
+    }
+  }
+
   const sanitizedJustification = sanitizeJustification(justification);
 
   let result;
@@ -130,10 +141,19 @@ async function findAll({ status, targetType, limit = 50 } = {}) {
         r.resolved_by,
         r.resolution_note,
         reporter.username AS reporter_username,
-        resolver.username AS resolver_username
+        resolver.username AS resolver_username,
+        -- Decoração do alvo (reunião): código, título e estúdio responsável.
+        rm.code AS meeting_code,
+        rm.title AS meeting_title,
+        rm.status AS meeting_status,
+        ro.slug AS meeting_org_slug,
+        ro.name AS meeting_org_name
       FROM reports r
       JOIN users reporter ON reporter.id = r.reporter_id
       LEFT JOIN users resolver ON resolver.id = r.resolved_by
+      LEFT JOIN meetings rm
+        ON r.target_type = 'meeting' AND rm.id::text = r.target_id
+      LEFT JOIN organizations ro ON ro.id = rm.org_id
       WHERE ($1::text IS NULL OR r.status = $1)
         AND ($2::text IS NULL OR r.target_type = $2)
       ORDER BY
@@ -202,6 +222,26 @@ async function isPostAuthoredBy(postId, userId) {
   const results = await database.query({
     text: `SELECT 1 FROM posts WHERE id::text = $1 AND author_id = $2 LIMIT 1`,
     values: [String(postId), userId],
+  });
+  return results.rowCount > 0;
+}
+
+/**
+ * True se o usuário é criador (host) da reunião OU owner do estúdio
+ * ao qual a reunião pertence — nesses casos ele é responsável pelo
+ * conteúdo e não pode denunciá-la.
+ */
+async function isMeetingManagedBy(meetingId, userId) {
+  const results = await database.query({
+    text: `
+      SELECT 1
+      FROM meetings m
+      LEFT JOIN organizations o ON o.id = m.org_id
+      WHERE m.id::text = $1
+        AND (m.created_by = $2 OR o.owner_id = $2)
+      LIMIT 1
+    `,
+    values: [String(meetingId), userId],
   });
   return results.rowCount > 0;
 }

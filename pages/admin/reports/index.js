@@ -11,6 +11,7 @@ const TARGET_LABELS = {
   game: "Jogo",
   boardgame: "Jogo de Mesa",
   book: "Livro/Quadrinho",
+  meeting: "Reunião",
 };
 
 const REASON_LABELS = {
@@ -179,6 +180,12 @@ export default function ReportsAdminPage() {
                 <td>{report.reporter_username}</td>
                 <td>
                   <span className={styles.targetType}>{TARGET_LABELS[report.target_type] || report.target_type}</span>
+                  {report.target_type === "meeting" && report.meeting_title ? (
+                    <span className={styles.targetName}>
+                      {report.meeting_title}
+                      {report.meeting_org_name ? ` · ${report.meeting_org_name}` : ""}
+                    </span>
+                  ) : null}
                   <span className={styles.mono}>{report.target_id}</span>
                 </td>
                 <td>{REASON_LABELS[report.reason] || report.reason}</td>

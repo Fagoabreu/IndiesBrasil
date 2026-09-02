@@ -60,6 +60,40 @@ services:
       - public
       - private
 
+  livekit:
+    # SFU de reuniões por vídeo. Config gerada do .env.production
+    # ($$ escapa do Compose; o shell do container expande as variáveis).
+    # Em produção, aponte LIVEKIT_URL para um host com TLS (ex.:
+    # wss://livekit.jogos.social.br) e faça o proxy do domínio no nginx.
+    image: livekit/livekit-server
+    container_name: livekit
+    restart: always
+    env_file:
+      - .env.production
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+    networks:
+      - private
+    command:
+      - "/bin/sh"
+      - "-c"
+      - |
+        cat > /etc/livekit.yaml <<EOF
+        port: 7880
+        rtc:
+          tcp_port: 7881
+          use_external_ip: false
+          port_range_start: 50000
+          port_range_end: 60000
+        keys:
+          $${LIVEKIT_API_KEY}: "$${LIVEKIT_API_SECRET}"
+        room:
+          empty_timeout: 600
+          max_participants: 50
+        EOF
+        exec livekit-server --config /etc/livekit.yaml
+
   certbot:
     image: certbot/certbot
     container_name: certbot

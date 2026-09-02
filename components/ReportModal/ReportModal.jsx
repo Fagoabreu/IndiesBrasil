@@ -23,9 +23,10 @@ ReportModal.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   submitting: PropTypes.bool,
   error: PropTypes.string,
+  title: PropTypes.string,
 };
 
-export default function ReportModal({ onClose, onSubmit, submitting, error }) {
+export default function ReportModal({ onClose, onSubmit, submitting, error, title = "Denunciar post" }) {
   const [reason, setReason] = useState("");
   const [justification, setJustification] = useState("");
 
@@ -33,7 +34,7 @@ export default function ReportModal({ onClose, onSubmit, submitting, error }) {
 
   return (
     <Dialog
-      title="Denunciar post"
+      title={title}
       onClose={onClose}
       footerButtons={[
         {
