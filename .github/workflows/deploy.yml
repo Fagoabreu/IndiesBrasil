@@ -172,7 +172,10 @@ jobs:
         run: |
           cd /var/www/indies
           echo "🚀 Starting containers..."
-          docker compose -f compose.yaml up -d --no-deps --force-recreate indies-app
+          # Recreate livekit junto: deploy/compose.yaml gera a config do SFU e,
+          # sem isto, o container ficaria com config antiga/defeituosa até um
+          # deploy-infra manual. nginx resolve o upstream "livekit" no reload.
+          docker compose -f compose.yaml up -d --no-deps --force-recreate indies-app livekit
 
       # ── Certificado bootstrap do nginx ──
       # O deploy copia deploy/nginx/* (inclui livekit.conf), que referencia
@@ -212,6 +215,22 @@ jobs:
               STATUS=$(docker inspect -f '{{.State.Status}}' nginx 2>/dev/null || true)
 
               if [ "$STATUS" = "running" ]; then
+                # livekit.conf referencia upstream http://livekit:7880; o reload
+                # falha com "host not found in upstream" se o container ainda
+                # não estiver na rede docker (DNS interno).
+                echo "⏳ Waiting for upstream 'livekit' to resolve..."
+                for j in $(seq 1 30); do
+                  if docker exec nginx getent hosts livekit >/dev/null 2>&1; then
+                    echo "✅ upstream livekit resolvable"
+                    break
+                  fi
+                  if [ "$j" = "30" ]; then
+                    echo "❌ upstream livekit did not resolve in time"
+                    exit 1
+                  fi
+                  sleep 2
+                done
+
                 docker exec nginx nginx -s reload
                 echo "✅ nginx reloaded"
                 exit 0

@@ -93,7 +93,9 @@ services:
           # (não o IP interno 172.x do container) para os clientes WebRTC.
           use_external_ip: true
           stun_servers:
-            - stun:stun.l.google.com:19302
+            # Formato host:port sem scheme (v1.13.6 rejeita "stun:" prefixado
+            # com "too many colons in address" e o container entra em crash loop).
+            - stun.l.google.com:19302
           port_range_start: 50000
           port_range_end: 60000
         keys:
