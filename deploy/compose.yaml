@@ -52,6 +52,12 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    extra_hosts:
+      # IP do host visto da rede docker (Docker >= 20.10, "host-gateway").
+      # O livekit roda em network_mode: host (fora da rede bridge do compose),
+      # então "livekit:7880" não resolve no DNS interno — o livekit.conf usa
+      # host.docker.internal:7880 para alcançar o SFU no próprio host.
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./nginx:/etc/nginx/conf.d
       - nginx_secrets:/etc/letsencrypt
@@ -67,19 +73,20 @@ services:
     # o command viraria argumento do binário (erro "flag -c not defined").
     # Sobrescrevemos o entrypoint para o shell gerar a config e exec do binário
     # em /livekit-server (fora do PATH).
-    # Em produção, aponte LIVEKIT_URL para um host com TLS (ex.:
-    # wss://livekit.jogos.social.br) e faça o proxy do domínio no nginx.
+    #
+    # network_mode: host — modo recomendado pelo LiveKit para SFU. Antes o
+    # compose publicava as portas 7880/7881/50000-60000 (10001 UDP) via
+    # docker-proxy no bridge; isso travava o `docker compose up` e containers de
+    # crash loop seguravam as portas entre deploys. Em host network o livekit
+    # faz bind direto em 0.0.0.0 no host e o nginx o alcança via
+    # host.docker.internal:7880 (extra_hosts host-gateway no serviço nginx;
+    # ver deploy/nginx/livekit.conf).
     image: livekit/livekit-server
     container_name: livekit
     restart: always
+    network_mode: host
     env_file:
       - .env.production
-    ports:
-      - "7880:7880"
-      - "7881:7881"
-      - "50000-60000:50000-60000/udp" # ICE/DTLS-SRTP (mídia)
-    networks:
-      - private
     entrypoint:
       - "/bin/sh"
       - "-c"
@@ -89,8 +96,8 @@ services:
         port: 7880
         rtc:
           tcp_port: 7881
-          # IP público do host + portas publicadas: anunciar o IP externo
-          # (não o IP interno 172.x do container) para os clientes WebRTC.
+          # Bind direto no host (network_mode: host); o IP público é descoberto
+          # via STUN e anunciado aos clientes WebRTC.
           use_external_ip: true
           stun_servers:
             # Formato host:port sem scheme (v1.13.6 rejeita "stun:" prefixado

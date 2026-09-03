@@ -141,28 +141,11 @@ jobs:
             exit 1
           fi
 
-          echo "🚀 Deploying infra"
+          # nginx/postgres sobem primeiro; o livekit é iniciado por último, após
+          # o TLS ser renovado — um problema no SFU não deve bloquear cert/nginx.
+          echo "🚀 Deploying infra (postgres + nginx)"
           docker compose pull postgres nginx certbot livekit
-
-          # livekit publica 10001 portas UDP; se o container anterior ficou
-          # preso em "Starting" ou em restart loop (restart: always), ele segura
-          # as portas e o up pode travar. Remove apenas se não estiver rodando.
-          if ! docker ps --filter name=livekit --format '{{.Names}}' | grep -q '^livekit$'; then
-            echo "♻️ livekit não está rodando; removendo container anterior..."
-            docker compose rm -sf livekit 2>&1 || true
-          fi
-
-          docker compose up -d postgres nginx livekit
-
-          # LiveKit sai rápido se a config não subiu; captura o log para diagnóstico.
-          echo "🔎 Verificando livekit"
-          sleep 3
-          docker compose ps livekit --format "{{.Name}} {{.State}} {{.Status}}"
-          if ! docker compose ps livekit --status running | grep -q "livekit"; then
-            echo "❌ Container livekit não está rodando. Últimos logs:"
-            docker logs --tail 30 livekit 2>&1 || true
-            exit 1
-          fi
+          docker compose up -d postgres nginx
 
           echo "📜 Requesting or renewing public TLS certificate"
           echo "ℹ️ Certbot cert-name: $PRIMARY_DOMAIN"
@@ -190,3 +173,40 @@ jobs:
 
           echo "🔄 Reloading nginx with the latest certificates"
           docker exec nginx nginx -s reload
+
+          # ── livekit por último ──
+          # Com network_mode: host (deploy/compose.yaml) o bind é direto nas
+          # portas do host — sem docker-proxy/bridge e sem risco de `up` travar
+          # publicando as 10001 portas UDP. Mesmo assim, remove o container
+          # anterior de forma INcondicional: um crash loop (restart: always)
+          # aparece no `docker ps` e a remoção condicional antiga era pulada.
+          echo "🚀 Starting livekit"
+          docker compose rm -sf livekit 2>&1 || true
+          docker compose up -d livekit
+
+          # Config inválida derruba o livekit em segundos; espera bounded e
+          # detecta crash loop via RestartCount antes de declarar sucesso.
+          echo "🔎 Aguardando livekit ficar running..."
+          LIVEKIT_OK=0
+          for i in $(seq 1 20); do
+            STATE=$(docker inspect -f '{{.State.Status}}' livekit 2>/dev/null || echo absent)
+            if [ "$STATE" = "running" ]; then
+              LIVEKIT_OK=1
+              break
+            fi
+            sleep 1
+          done
+
+          # Janela para um crash por config inválida aparecer no RestartCount.
+          sleep 3
+          docker compose ps livekit --format "{{.Name}} {{.State}} {{.Status}}"
+
+          STATE=$(docker inspect -f '{{.State.Status}}' livekit 2>/dev/null || echo absent)
+          RESTARTS=$(docker inspect -f '{{.RestartCount}}' livekit 2>/dev/null || echo 99)
+          if [ "$LIVEKIT_OK" = "1" ] && [ "$STATE" = "running" ] && [ "$RESTARTS" -lt 2 ]; then
+            echo "✅ livekit rodando (state=$STATE restarts=$RESTARTS)"
+          else
+            echo "❌ livekit não estabilizou (state=$STATE restarts=$RESTARTS). Últimos logs:"
+            docker logs --tail 50 livekit 2>&1 || true
+            exit 1
+          fi
