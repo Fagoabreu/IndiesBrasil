@@ -17,6 +17,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_SHARP_PATH="/app/node_modules/sharp"
 
+# curl é usado pelo healthcheck do compose (docker exec curl -f localhost:3000)
+RUN apk add --no-cache curl
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 

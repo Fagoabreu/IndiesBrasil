@@ -13,9 +13,12 @@ services:
       - "1025:1025"
       - "1080:1080"
   livekit:
-    # SFU de reuniões por vídeo (dev). A config é gerada a partir do
-    # .env.development ($$ escapa da interpolação do Compose e é
-    # expandida pelo shell dentro do container).
+    # SFU de reuniões por vídeo (dev). A imagem livekit/livekit-server tem
+    # ENTRYPOINT [/livekit-server], então o `command` do Compose viraria
+    # argumento do binário (erro "flag -c not defined"). Sobrescrevemos o
+    # entrypoint para o shell gerar a config a partir do .env.development
+    # ($$ escapa da interpolação do Compose e é expandida pelo shell dentro
+    # do container). O binário fica em /livekit-server (fora do PATH).
     container_name: "livekit-dev"
     image: "livekit/livekit-server"
     env_file:
@@ -23,9 +26,10 @@ services:
     ports:
       - "7880:7880" # WebSocket (browser conecta aqui)
       - "7881:7881" # Transporte TCP de mídia
-    command:
+    entrypoint:
       - "/bin/sh"
       - "-c"
+    command:
       - |
         cat > /etc/livekit.yaml <<EOF
         port: 7880
@@ -40,4 +44,4 @@ services:
           empty_timeout: 600
           max_participants: 50
         EOF
-        exec livekit-server --config /etc/livekit.yaml
+        exec /livekit-server --config /etc/livekit.yaml

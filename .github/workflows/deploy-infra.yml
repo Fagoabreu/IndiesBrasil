@@ -120,8 +120,8 @@ jobs:
             '
 
           echo "🚀 Deploying infra"
-          docker compose pull postgres nginx certbot
-          docker compose up -d postgres nginx
+          docker compose pull postgres nginx certbot livekit
+          docker compose up -d postgres nginx livekit
 
           echo "📜 Requesting or renewing public TLS certificate"
           echo "ℹ️ Certbot cert-name: $PRIMARY_DOMAIN"

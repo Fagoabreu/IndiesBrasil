@@ -56,6 +56,9 @@ jobs:
             echo "TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }}"
             echo "TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }}"
             echo "YOUTUBE_API_KEY=${{ secrets.YOUTUBE_API_KEY }}"
+            echo "LIVEKIT_URL=${{ vars.LIVEKIT_URL }}"
+            echo "LIVEKIT_API_KEY=${{ secrets.LIVEKIT_API_KEY }}"
+            echo "LIVEKIT_API_SECRET=${{ secrets.LIVEKIT_API_SECRET }}"
           } > /var/www/indies/.env.production
 
       # ── Arquivos de deploy ──
@@ -170,6 +173,34 @@ jobs:
           cd /var/www/indies
           echo "🚀 Starting containers..."
           docker compose -f compose.yaml up -d --no-deps --force-recreate indies-app
+
+      # ── Certificado bootstrap do nginx ──
+      # O deploy copia deploy/nginx/* (inclui livekit.conf), que referencia
+      # /etc/letsencrypt/live/<domínio-primário>. Se o certificado ainda não
+      # existir (antes do primeiro deploy-infra), o reload falharia. Garante
+      # um self-signed; o workflow manual deploy-infra troca pelo real.
+      - name: Ensure nginx bootstrap certificate
+        run: |
+          set -e
+          cd /var/www/indies
+          CERTBOT_DOMAIN=$(sed -n 's/^CERTBOT_DOMAIN=//p' .env.production)
+          [ -n "$CERTBOT_DOMAIN" ] || { echo "❌ CERTBOT_DOMAIN empty in .env.production"; exit 1; }
+          PRIMARY_DOMAIN="${CERTBOT_DOMAIN%%,*}"
+          docker volume inspect indies_nginx_secrets >/dev/null 2>&1 || docker volume create indies_nginx_secrets
+          docker run --rm \
+            -e DOMAIN="$PRIMARY_DOMAIN" \
+            -v indies_nginx_secrets:/secrets \
+            alpine:latest sh -c '
+              mkdir -p /secrets/live/$DOMAIN
+              if [ ! -f /secrets/live/$DOMAIN/fullchain.pem ] || [ ! -f /secrets/live/$DOMAIN/privkey.pem ]; then
+                apk add --no-cache openssl >/dev/null 2>&1
+                openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
+                  -keyout /secrets/live/$DOMAIN/privkey.pem \
+                  -out /secrets/live/$DOMAIN/fullchain.pem \
+                  -subj "/CN=$DOMAIN"
+              fi
+            '
+          echo "✅ nginx bootstrap certificate ensured for $PRIMARY_DOMAIN"
 
       # ── Reload nginx ──
       - name: Reload nginx

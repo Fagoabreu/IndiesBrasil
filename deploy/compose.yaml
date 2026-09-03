@@ -63,6 +63,10 @@ services:
   livekit:
     # SFU de reuniões por vídeo. Config gerada do .env.production
     # ($$ escapa do Compose; o shell do container expande as variáveis).
+    # A imagem livekit/livekit-server tem ENTRYPOINT [/livekit-server], então
+    # o command viraria argumento do binário (erro "flag -c not defined").
+    # Sobrescrevemos o entrypoint para o shell gerar a config e exec do binário
+    # em /livekit-server (fora do PATH).
     # Em produção, aponte LIVEKIT_URL para um host com TLS (ex.:
     # wss://livekit.jogos.social.br) e faça o proxy do domínio no nginx.
     image: livekit/livekit-server
@@ -73,17 +77,23 @@ services:
     ports:
       - "7880:7880"
       - "7881:7881"
+      - "50000-60000:50000-60000/udp" # ICE/DTLS-SRTP (mídia)
     networks:
       - private
-    command:
+    entrypoint:
       - "/bin/sh"
       - "-c"
+    command:
       - |
         cat > /etc/livekit.yaml <<EOF
         port: 7880
         rtc:
           tcp_port: 7881
-          use_external_ip: false
+          # IP público do host + portas publicadas: anunciar o IP externo
+          # (não o IP interno 172.x do container) para os clientes WebRTC.
+          use_external_ip: true
+          stun_servers:
+            - stun:stun.l.google.com:19302
           port_range_start: 50000
           port_range_end: 60000
         keys:
@@ -92,7 +102,7 @@ services:
           empty_timeout: 600
           max_participants: 50
         EOF
-        exec livekit-server --config /etc/livekit.yaml
+        exec /livekit-server --config /etc/livekit.yaml
 
   certbot:
     image: certbot/certbot
