@@ -168,14 +168,15 @@ jobs:
             npx node-pg-migrate -m infra/migrations up
 
       # ── Start app ──
+      # Livekit, nginx, postgres e certbot são infra e são gerenciados
+      # exclusivamente pelo workflow manual deploy-infra.yml. Recriar o SFU a
+      # cada push é arriscado (publica 10001 portas UDP) e acopla o deploy do
+      # app à saúde da infra. Aqui recriamos apenas o app.
       - name: Start app
         run: |
           cd /var/www/indies
-          echo "🚀 Starting containers..."
-          # Recreate livekit junto: deploy/compose.yaml gera a config do SFU e,
-          # sem isto, o container ficaria com config antiga/defeituosa até um
-          # deploy-infra manual. nginx resolve o upstream "livekit" no reload.
-          docker compose -f compose.yaml up -d --no-deps --force-recreate indies-app livekit
+          echo "🚀 Starting app..."
+          docker compose -f compose.yaml up -d --no-deps --force-recreate indies-app
 
       # ── Certificado bootstrap do nginx ──
       # O deploy copia deploy/nginx/* (inclui livekit.conf), que referencia
@@ -217,22 +218,27 @@ jobs:
               if [ "$STATUS" = "running" ]; then
                 # livekit.conf referencia upstream http://livekit:7880; o reload
                 # falha com "host not found in upstream" se o container ainda
-                # não estiver na rede docker (DNS interno).
+                # não estiver na rede docker (DNS interno). livekit é infra
+                # (deploy-infra): se estiver fora, não bloqueia o deploy do app
+                # — mantém a config atual do nginx já carregada em memória.
                 echo "⏳ Waiting for upstream 'livekit' to resolve..."
+                LIVEKIT_RESOLVES=0
                 for j in $(seq 1 30); do
                   if docker exec nginx getent hosts livekit >/dev/null 2>&1; then
+                    LIVEKIT_RESOLVES=1
                     echo "✅ upstream livekit resolvable"
                     break
-                  fi
-                  if [ "$j" = "30" ]; then
-                    echo "❌ upstream livekit did not resolve in time"
-                    exit 1
                   fi
                   sleep 2
                 done
 
-                docker exec nginx nginx -s reload
-                echo "✅ nginx reloaded"
+                if [ "$LIVEKIT_RESOLVES" = "1" ]; then
+                  docker exec nginx nginx -s reload
+                  echo "✅ nginx reloaded"
+                else
+                  echo "⚠️ upstream 'livekit' não resolveu (infra offline)."
+                  echo "   Reload adiado — rode o deploy-infra para religar o livekit."
+                fi
                 exit 0
               fi
 

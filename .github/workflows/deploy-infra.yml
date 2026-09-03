@@ -17,10 +17,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Copy nginx config
+      - name: Copy deploy files
         run: |
           mkdir -p /var/www/indies/nginx
           cp "$GITHUB_WORKSPACE/deploy/nginx/"* /var/www/indies/nginx/
+          # Infra roda com o compose.yaml do repositório — não depender de um
+          # push do app para atualizar a definição do livekit/nginx/postgres.
+          cp "$GITHUB_WORKSPACE/deploy/compose.yaml" /var/www/indies/
           echo "📋 Nginx config files copied:"
           ls -la /var/www/indies/nginx/
 
@@ -140,6 +143,15 @@ jobs:
 
           echo "🚀 Deploying infra"
           docker compose pull postgres nginx certbot livekit
+
+          # livekit publica 10001 portas UDP; se o container anterior ficou
+          # preso em "Starting" ou em restart loop (restart: always), ele segura
+          # as portas e o up pode travar. Remove apenas se não estiver rodando.
+          if ! docker ps --filter name=livekit --format '{{.Names}}' | grep -q '^livekit$'; then
+            echo "♻️ livekit não está rodando; removendo container anterior..."
+            docker compose rm -sf livekit 2>&1 || true
+          fi
+
           docker compose up -d postgres nginx livekit
 
           # LiveKit sai rápido se a config não subiu; captura o log para diagnóstico.
