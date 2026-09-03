@@ -119,9 +119,38 @@ jobs:
               fi
             '
 
+          # ── LIVEKIT precisa existir ANTES do up ──
+          # Sem as chaves o heredoc do serviço livekit gera YAML inválido
+          # ("keys:\n  : \"\"") e o container morre na largada com erro opaco.
+          # As vars só chegam ao servidor via deploy.yml (push), que escreve
+          # .env.production a partir de vars/secrets do GitHub.
+          LIVEKIT_KEY=$(sed -n 's/^LIVEKIT_API_KEY=//p' .env.production)
+          LIVEKIT_SECRET=$(sed -n 's/^LIVEKIT_API_SECRET=//p' .env.production)
+          if [ -z "$LIVEKIT_KEY" ] || [ -z "$LIVEKIT_SECRET" ]; then
+            echo "❌ LIVEKIT_API_KEY / LIVEKIT_API_SECRET ausentes no .env.production"
+            echo "   As linhas do deploy.yml estão vazias porque as secrets ainda"
+            echo "   não existem no GitHub (Settings → Environments → production)."
+            echo "   Adicione as secrets e rode o deploy.yml (push) para gerar o .env."
+            exit 1
+          fi
+          if [ "${#LIVEKIT_KEY}" -lt 32 ] || [ "${#LIVEKIT_SECRET}" -lt 32 ]; then
+            echo "❌ LIVEKIT_API_KEY / LIVEKIT_API_SECRET precisam de >= 32 caracteres"
+            exit 1
+          fi
+
           echo "🚀 Deploying infra"
           docker compose pull postgres nginx certbot livekit
           docker compose up -d postgres nginx livekit
+
+          # LiveKit sai rápido se a config não subiu; captura o log para diagnóstico.
+          echo "🔎 Verificando livekit"
+          sleep 3
+          docker compose ps livekit --format "{{.Name}} {{.State}} {{.Status}}"
+          if ! docker compose ps livekit --status running | grep -q "livekit"; then
+            echo "❌ Container livekit não está rodando. Últimos logs:"
+            docker logs --tail 30 livekit 2>&1 || true
+            exit 1
+          fi
 
           echo "📜 Requesting or renewing public TLS certificate"
           echo "ℹ️ Certbot cert-name: $PRIMARY_DOMAIN"
