@@ -136,6 +136,9 @@ async function listByOrgId(orgId, opts = {}) {
     }
     values.push(status);
     clauses.push(`m.status = $${values.length}`);
+  } else {
+    // Agenda padrão não exibe reuniões canceladas.
+    clauses.push("m.status <> 'cancelled'");
   }
 
   if (!includePast) {
@@ -255,13 +258,182 @@ async function assertCanManage(meeting, userId) {
   });
 }
 
+/**
+ * Busca uma reunião garantindo que pertença ao estúdio informado.
+ * Usada pelas rotas escopadas por /studios/[slug]/meetings.
+ * @param {string} id
+ * @param {string} orgId
+ */
+async function findByIdAndOrg(id, orgId) {
+  const found = await findById(id);
+  if (found.org_id !== orgId) {
+    throw new NotFoundError({
+      message: "Reunião não encontrada neste estúdio.",
+    });
+  }
+  return found;
+}
+
+/** Remove colunas internas (hash do código) antes de expor na API. */
+function serializeMeeting(row) {
+  if (!row) return row;
+  const publicMeeting = { ...row };
+  delete publicMeeting.guest_code_hash;
+  return publicMeeting;
+}
+
+/* ================================================================
+ * CÓDIGO DE CONVIDADO (acesso externo temporário)
+ *
+ * Código curto gerado pelo organizador para convidados externos.
+ * O texto puro é exibido UMA única vez; o banco guarda apenas o hash
+ * SHA-256 (guest_code_hash) + expiração (guest_code_expires_at).
+ * Expira no término da reunião (ou antes, via expires_at).
+ * ================================================================ */
+
+const GUEST_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sem 0/O/1/I
+const GUEST_CODE_LENGTH = 8;
+
+function generateGuestCode() {
+  let code = "";
+  for (let index = 0; index < GUEST_CODE_LENGTH; index += 1) {
+    code += GUEST_CODE_ALPHABET[crypto.randomInt(GUEST_CODE_ALPHABET.length)];
+  }
+  return code;
+}
+
+function hashGuestCode(code) {
+  return crypto.createHash("sha256").update(code).digest("hex");
+}
+
+function hashesMatch(expectedHash, providedHash) {
+  const expected = Buffer.from(expectedHash, "utf8");
+  const provided = Buffer.from(providedHash, "utf8");
+  if (expected.length !== provided.length) return false;
+  return crypto.timingSafeEqual(expected, provided);
+}
+
+/**
+ * Gera (ou regera) o código de convidado de uma reunião.
+ * Apenas o criador, admin ou dono do estúdio (assertCanManage).
+ * @param {string} meetingId
+ * @param {string} userId
+ * @param {{ expires_at?: string }} [options]
+ */
+async function createGuestCode(meetingId, userId, options = {}) {
+  const found = await findById(meetingId);
+  await assertCanManage(found, userId);
+
+  if (found.status === "cancelled") {
+    throw new ValidationError({
+      message: "Não é possível gerar código para uma reunião cancelada.",
+    });
+  }
+
+  const endsAt = new Date(found.ends_at);
+  if (endsAt.getTime() <= Date.now()) {
+    throw new ValidationError({
+      message: "A reunião já terminou; não é possível gerar um código de convidado.",
+    });
+  }
+
+  let expiresAt = parseDate(options.expires_at, "expiração do código");
+  if (!expiresAt || expiresAt.getTime() > endsAt.getTime()) {
+    expiresAt = endsAt;
+  }
+  if (expiresAt.getTime() <= Date.now()) {
+    throw new ValidationError({
+      message: "A expiração do código deve ser uma data futura.",
+    });
+  }
+
+  const guestCode = generateGuestCode();
+
+  await database.query({
+    text: `
+      UPDATE meetings
+      SET guest_code_hash = $2, guest_code_expires_at = $3, updated_at = NOW()
+      WHERE id = $1
+    `,
+    values: [meetingId, hashGuestCode(guestCode), expiresAt],
+  });
+
+  return {
+    id: found.id,
+    guest_code: guestCode,
+    guest_code_expires_at: expiresAt.toISOString(),
+  };
+}
+
+/**
+ * Revoga o código ativo de convidado (invalida convites pendentes).
+ * Apenas o criador, admin ou dono do estúdio.
+ * @param {string} meetingId
+ * @param {string} userId
+ */
+async function revokeGuestCode(meetingId, userId) {
+  const found = await findById(meetingId);
+  await assertCanManage(found, userId);
+
+  await database.query({
+    text: `
+      UPDATE meetings
+      SET guest_code_hash = NULL, guest_code_expires_at = NULL, updated_at = NOW()
+      WHERE id = $1
+    `,
+    values: [meetingId],
+  });
+}
+
+/**
+ * Valida o código de convidado de uma reunião (acesso externo).
+ * Lança erros com statusCode adequado para código inválido/expirado.
+ * @param {string} meetingId
+ * @param {string} code
+ */
+async function validateGuestCode(meetingId, code) {
+  const found = await findById(meetingId);
+
+  if (found.status === "cancelled") {
+    throw new ValidationError({ message: "Esta reunião foi cancelada." });
+  }
+  if (found.status === "ended") {
+    throw new ValidationError({ message: "Esta reunião já foi encerrada." });
+  }
+
+  if (!found.guest_code_hash) {
+    throw new ForbiddenError({
+      message: "Esta reunião não possui um código de convidado ativo.",
+    });
+  }
+
+  const normalizedCode = String(code ?? "")
+    .trim()
+    .toUpperCase();
+  if (!hashesMatch(found.guest_code_hash, hashGuestCode(normalizedCode))) {
+    throw new ForbiddenError({ message: "Código de convidado inválido." });
+  }
+
+  const expiresAt = found.guest_code_expires_at ? new Date(found.guest_code_expires_at) : null;
+  if (!expiresAt || expiresAt.getTime() <= Date.now()) {
+    throw new ForbiddenError({ message: "O código de convidado expirou." });
+  }
+
+  return serializeMeeting(found);
+}
+
 const meeting = {
   create,
   findById,
+  findByIdAndOrg,
   findByRoomId,
   listByOrgId,
   update,
   cancel,
+  createGuestCode,
+  revokeGuestCode,
+  validateGuestCode,
+  serializeMeeting,
 };
 
 export default meeting;
