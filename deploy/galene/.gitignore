@@ -1,0 +1,4 @@
+# Segredos e dados locais da POC — nunca versionar.
+data/.secret
+data/cert.pem
+data/key.pem
