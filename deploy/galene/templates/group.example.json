@@ -1,0 +1,11 @@
+{
+  "comment": "Grupo Galene — auth por token JWT HS256. Em producao este arquivo e gerado pela plataforma (lib/galene.js, GALENE_GROUPS_DIR) e recarregado via hot-reload.",
+  "allow-anonymous": false,
+  "authKeys": [
+    {
+      "kty": "oct",
+      "alg": "HS256",
+      "k": "<SECRET_BASE64URL_32BYTES>"
+    }
+  ]
+}

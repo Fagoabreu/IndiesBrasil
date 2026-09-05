@@ -35,6 +35,9 @@ services:
     volumes:
       - uploads-data:/app/public/uploads
       - postgres-certs:/etc/ssl/postgres
+      # Volume compartilhado com o Galene (uid 1001 nos dois containers):
+      # o app provisiona groups/<room>.json e o Galene faz hot-reload.
+      - galene-groups:/app/groups
     depends_on:
       - postgres
     networks:
@@ -45,6 +48,28 @@ services:
       timeout: 5s
       retries: 5
 
+  galene:
+    image: indies-galene:galene-1.1
+    container_name: galene
+    restart: always
+    # Host networking é OBRIGATÓRIO: o TURN embutido (-turn :1194) enumera
+    # endereços IPv4 públicos do host (publicAddresses) e morre em rede bridge
+    # com "no public addresses"; a mídia SFU também é relayada pelo servidor.
+    network_mode: host
+    # Sem TLS aqui: o nginx termina SSL em meet.jogos.social.br e faz proxy
+    # para http://host.docker.internal:8000 (websocket com Upgrade).
+    command:
+      - "-http"
+      - ":8000"
+      - "-insecure"
+      - "-turn"
+      - ":1194"
+      - "-udp-range"
+      - "40000-40100"
+    volumes:
+      - galene-data:/app/data
+      - galene-groups:/app/groups
+
   nginx:
     image: nginx:1.29
     container_name: nginx
@@ -52,6 +77,10 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    extra_hosts:
+      # Permite o vhost meet.jogos.social.br alcançar o Galene (network_mode:
+      # host) via gateway do Docker host.
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./nginx:/etc/nginx/conf.d
       - nginx_secrets:/etc/letsencrypt
@@ -83,3 +112,5 @@ volumes:
   uploads-data:
   nginx_secrets:
   certbot-webroot:
+  galene-data:
+  galene-groups:

@@ -1,4 +1,4 @@
-﻿-- IndiesDB -- DDL compativel com drawdb.app
+-- IndiesDB -- DDL compativel com drawdb.app
 -- Data: 2026-05-16
 --
 -- Compatibilidade drawdb.app aplicada:
@@ -697,3 +697,32 @@ CREATE TABLE store_order_events (
     created_by  UUID            REFERENCES users(id) ON DELETE SET NULL,
     created_at  TIMESTAMPTZ     NOT NULL DEFAULT (timezone('utc', now()))
 );
+-- ======================================================
+-- Reuniões / Webconferência (Galene) — migration 1788514821338
+-- ======================================================
+
+CREATE TABLE meetings (
+    id                    UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id                UUID            NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    created_by            UUID            NOT NULL REFERENCES users(id),
+    title                 VARCHAR(255)    NOT NULL,
+    description           TEXT,
+    room_id               VARCHAR(64)     NOT NULL,
+    starts_at             TIMESTAMPTZ     NOT NULL,
+    ends_at               TIMESTAMPTZ     NOT NULL,
+    status                VARCHAR(20)     NOT NULL DEFAULT 'scheduled',
+    guest_code_hash       VARCHAR(64),
+    guest_code_expires_at TIMESTAMPTZ,
+    max_participants      INTEGER,
+    created_at            TIMESTAMPTZ     NOT NULL DEFAULT (timezone('utc', now())),
+    updated_at            TIMESTAMPTZ     NOT NULL DEFAULT (timezone('utc', now())),
+    CONSTRAINT meetings_pkey PRIMARY KEY (id),
+    CONSTRAINT meetings_room_id_unique UNIQUE (room_id),
+    CONSTRAINT meetings_org_id_fkey FOREIGN KEY (org_id) REFERENCES organizations(id) ON DELETE CASCADE,
+    CONSTRAINT meetings_created_by_fkey FOREIGN KEY (created_by) REFERENCES users(id),
+    CONSTRAINT meetings_status_check CHECK (status IN ('scheduled', 'live', 'ended', 'cancelled')),
+    CONSTRAINT meetings_time_range_check CHECK (ends_at > starts_at)
+);
+
+CREATE INDEX meetings_org_id_starts_at_idx ON meetings (org_id, starts_at);
+CREATE INDEX meetings_created_by_idx ON meetings (created_by);

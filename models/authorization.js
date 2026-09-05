@@ -184,6 +184,13 @@ const availableFeatures = new Set([
   "update:address",
   "delete:address",
 
+  //meeting (webconferência)
+  "read:meeting",
+  "read:meeting:all",
+  "create:meeting",
+  "update:meeting",
+  "delete:meeting",
+
   //content-review (analises)
   "read:content_review",
   "read:content_review:all",

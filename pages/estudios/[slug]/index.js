@@ -662,6 +662,11 @@ export default function StudioPage({ initialStudio }) {
                     <PackageIcon size={14} /> Loja
                   </Link>
                 )}
+                {canPost && (
+                  <Link href={`/estudios/${slug}/reunioes`} className={styles.btnOutline}>
+                    <VideoIcon size={14} /> Reuniões
+                  </Link>
+                )}
                 {canEdit && (
                   <Link href={`/estudios/${slug}/configuracoes`} className={styles.btnOutline}>
                     <GearIcon size={14} /> Editar

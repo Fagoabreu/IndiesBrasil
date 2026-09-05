@@ -27,6 +27,14 @@ jobs:
             echo "::error::CERTBOT_EMAIL is not set in repository variables"
             exit 1
           fi
+          if [ -z "${{ vars.MEET_URL }}" ]; then
+            echo "::error::MEET_URL is not set in repository variables"
+            exit 1
+          fi
+          if [ -z "${{ secrets.GALENE_AUTH_SECRET }}" ]; then
+            echo "::error::GALENE_AUTH_SECRET is not set in repository secrets"
+            exit 1
+          fi
 
           mkdir -p /var/www/indies
           {
@@ -56,6 +64,10 @@ jobs:
             echo "TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }}"
             echo "TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }}"
             echo "YOUTUBE_API_KEY=${{ secrets.YOUTUBE_API_KEY }}"
+            echo "MEET_URL=${{ vars.MEET_URL }}"
+            echo "GALENE_AUTH_SECRET=${{ secrets.GALENE_AUTH_SECRET }}"
+            # Diretório dos grupos dentro do container (volume galene-groups).
+            echo "GALENE_GROUPS_DIR=/app/groups"
           } > /var/www/indies/.env.production
 
       # ── Arquivos de deploy ──
@@ -118,6 +130,19 @@ jobs:
             echo "✅ Postgres SSL certificates ready"
           '
 
+      # ── Volumes compartilhados do Galene ──
+      # `indies-app` (uid nextjs 1001) e `galene` (uid galene 1001) montam o
+      # mesmo volume galene-groups. Volumes nomeados vazios nascem como root,
+      # então forçamos dono 1001:1001 (mesmo padrão do postgres-certs acima).
+      - name: Ensure Galene volumes ownership
+        run: |
+          docker volume inspect indies_galene-groups >/dev/null 2>&1 || docker volume create indies_galene-groups
+          docker volume inspect indies_galene-data >/dev/null 2>&1 || docker volume create indies_galene-data
+          docker run --rm -e HOME -e PATH \
+            -v indies_galene-groups:/groups \
+            -v indies_galene-data:/data \
+            alpine:latest sh -c 'chown -R 1001:1001 /groups /data && echo "✅ Galene volumes ready (uid 1001)"'
+
       # ── Build & deploy ──
       - name: Build app
         run: |
@@ -127,6 +152,11 @@ jobs:
           # O estágio `deps` mantém o node-pg-migrate instalado e é reutilizado
           # no passo de migrations, garantindo a mesma versão do package-lock.
           docker build --target deps -t indies-migrate:latest .
+
+          # Galene: imagem a partir do Dockerfile versionado (tag fixa do
+          # upstream galene-1.1 — sem imagem oficial publicada).
+          echo "🐳 Building Galene image..."
+          docker build -t indies-galene:galene-1.1 "$GITHUB_WORKSPACE/deploy/galene"
 
           cd /var/www/indies
 
@@ -169,7 +199,11 @@ jobs:
         run: |
           cd /var/www/indies
           echo "🚀 Starting containers..."
-          docker compose -f compose.yaml up -d --no-deps --force-recreate indies-app
+          # nginx entra no up sem --force-recreate: só é recriado quando a
+          # definição do compose muda (ex.: extra_hosts do host-gateway); nas
+          # demais execuções recebe reload no passo seguinte.
+          docker compose -f compose.yaml up -d --no-deps --force-recreate indies-app galene
+          docker compose -f compose.yaml up -d --no-deps nginx
 
       # ── Reload nginx ──
       - name: Reload nginx
