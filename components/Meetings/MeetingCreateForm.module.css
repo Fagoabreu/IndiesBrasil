@@ -1,0 +1,125 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--bgColor-default);
+  border: 1px solid var(--borderColor-default);
+  border-radius: 12px;
+  padding: 18px;
+}
+
+.formTitle {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--fgColor-default);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fgColor-default);
+}
+
+.required {
+  color: var(--brand-secondary);
+  margin-left: 2px;
+}
+
+.input,
+.textarea {
+  background: var(--bgColor-inset);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 6px;
+  color: var(--fgColor-default);
+  font-size: 14px;
+  padding: 8px 12px;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb-primary), 0.15);
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.submitBtn {
+  background: var(--brand-gradient-h);
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 9px 22px;
+  transition:
+    opacity 0.15s,
+    box-shadow 0.15s;
+  box-shadow: var(--brand-btn-shadow);
+}
+
+.submitBtn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.submitBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cancelBtn {
+  background: transparent;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 6px;
+  color: var(--fgColor-muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 9px 18px;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.cancelBtn:hover {
+  background: var(--bgColor-muted);
+  color: var(--fgColor-default);
+  border-color: var(--borderColor-default);
+}
+
+.error {
+  background: rgba(220, 50, 50, 0.08);
+  border: 1px solid rgba(220, 50, 50, 0.3);
+  border-radius: 6px;
+  color: #e05555;
+  font-size: 13px;
+  padding: 8px 12px;
+}
