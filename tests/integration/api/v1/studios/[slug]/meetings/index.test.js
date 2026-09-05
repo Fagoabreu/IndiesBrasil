@@ -318,4 +318,117 @@ describe("GET/POST/DELETE /api/v1/studios/[slug]/meetings", () => {
     const body = await response.json();
     expect(body.status).toBe("cancelled");
   });
+
+  test("Member can join an ongoing meeting and receives a Galene URL", async () => {
+    const now = Date.now();
+    const createResponse = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings`, {
+      method: "POST",
+      headers: { ...authHeaders(ownerToken), "content-type": "application/json" },
+      body: JSON.stringify(
+        meetingPayload({
+          title: "Reunião em andamento",
+          starts_at: new Date(now - 30 * 60 * 1000).toISOString(),
+          ends_at: new Date(now + 30 * 60 * 1000).toISOString(),
+        }),
+      ),
+    });
+    expect(createResponse.status).toBe(201);
+    const created = await createResponse.json();
+
+    const response = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings/${created.id}/join`, {
+      method: "POST",
+      headers: { ...authHeaders(memberToken), "content-type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    expect(response.status).toBe(200);
+
+    const body = await response.json();
+    expect(typeof body.joinUrl).toBe("string");
+    expect(body.joinUrl.startsWith(`http://localhost:8000/group/${created.room_id}/?username=`)).toBe(true);
+
+    const token = new URL(body.joinUrl).searchParams.get("token");
+    expect(token).toBeTruthy();
+    const [, payloadB64] = token.split(".");
+    const payload = JSON.parse(Buffer.from(payloadB64, "base64url").toString("utf8"));
+    expect(payload.aud).toBe(`http://localhost:8000/group/${created.room_id}/`);
+    expect(payload.sub).toBe("MembroReuniao");
+    expect(payload.permissions).toContain("caption");
+
+    expect(new Date(body.expires_at).getTime()).toBeLessThanOrEqual(new Date(created.ends_at).getTime());
+  });
+
+  test("Member cannot join a meeting that has not started yet", async () => {
+    const response = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings/${ownerMeetingId}/join`, {
+      method: "POST",
+      headers: { ...authHeaders(memberToken), "content-type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    expect(response.status).toBe(400);
+  });
+
+  test("Non-member cannot join a meeting", async () => {
+    const createResponse = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings`, {
+      method: "POST",
+      headers: { ...authHeaders(ownerToken), "content-type": "application/json" },
+      body: JSON.stringify(
+        meetingPayload({
+          title: "Reunião privada",
+          starts_at: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+          ends_at: new Date(Date.now() + 50 * 60 * 1000).toISOString(),
+        }),
+      ),
+    });
+    const created = await createResponse.json();
+
+    const response = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings/${created.id}/join`, {
+      method: "POST",
+      headers: { ...authHeaders(outsiderToken), "content-type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    expect(response.status).toBe(403);
+  });
+
+  test("Guest joining an ongoing meeting gets a restricted Galene URL", async () => {
+    const createResponse = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings`, {
+      method: "POST",
+      headers: { ...authHeaders(ownerToken), "content-type": "application/json" },
+      body: JSON.stringify(
+        meetingPayload({
+          title: "Reunião aberta a convidados",
+          starts_at: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+          ends_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        }),
+      ),
+    });
+    expect(createResponse.status).toBe(201);
+    const created = await createResponse.json();
+
+    const codeResponse = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings/${created.id}/guest-code`, {
+      method: "POST",
+      headers: { ...authHeaders(ownerToken), "content-type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    expect(codeResponse.status).toBe(201);
+    const codeBody = await codeResponse.json();
+
+    const response = await fetch(`${webserver.origin}/api/v1/meetings/${created.id}/guest`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ code: codeBody.guest_code, name: "Visitante Externo" }),
+    });
+    expect(response.status).toBe(200);
+
+    const body = await response.json();
+    expect(body.meeting.id).toBe(created.id);
+    expect(body.meeting.room_id).toBeUndefined();
+    expect(typeof body.joinUrl).toBe("string");
+    expect(body.joinUrl.startsWith(`http://localhost:8000/group/${created.room_id}/?username=`)).toBe(true);
+
+    const token = new URL(body.joinUrl).searchParams.get("token");
+    const [, payloadB64] = token.split(".");
+    const payload = JSON.parse(Buffer.from(payloadB64, "base64url").toString("utf8"));
+    expect(payload.sub).toBe("Visitante Externo");
+    expect(payload.permissions).toEqual(["present", "message"]);
+    expect(new Date(body.expires_at).getTime()).toBeLessThanOrEqual(new Date(codeBody.guest_code_expires_at).getTime());
+  });
 });

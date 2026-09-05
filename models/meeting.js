@@ -274,6 +274,35 @@ async function findByIdAndOrg(id, orgId) {
   return found;
 }
 
+/**
+ * Valida se a reunião está aberta para entrada de participantes agora.
+ * Regras: não pode estar cancelada/encerrada e o horário atual precisa
+ * estar dentro da janela [starts_at, ends_at).
+ * @param {{ status: string, starts_at: string|Date, ends_at: string|Date }} meeting
+ */
+function assertCanJoin(meeting) {
+  if (!meeting) {
+    throw new NotFoundError({ message: "Reunião não encontrada." });
+  }
+  if (meeting.status === "cancelled") {
+    throw new ValidationError({ message: "Esta reunião foi cancelada." });
+  }
+  if (meeting.status === "ended") {
+    throw new ValidationError({ message: "Esta reunião já foi encerrada." });
+  }
+
+  const now = Date.now();
+  const startsAt = new Date(meeting.starts_at).getTime();
+  const endsAt = new Date(meeting.ends_at).getTime();
+
+  if (now < startsAt) {
+    throw new ValidationError({ message: "A reunião ainda não começou." });
+  }
+  if (now >= endsAt) {
+    throw new ValidationError({ message: "A reunião já foi encerrada." });
+  }
+}
+
 /** Remove colunas internas (hash do código) antes de expor na API. */
 function serializeMeeting(row) {
   if (!row) return row;
@@ -430,6 +459,7 @@ const meeting = {
   listByOrgId,
   update,
   cancel,
+  assertCanJoin,
   createGuestCode,
   revokeGuestCode,
   validateGuestCode,
