@@ -77,6 +77,9 @@ O workflow `deploy.yml` já cuida de:
   `GALENE_GROUPS_DIR=/app/groups`;
 - garantir dono `1001:1001` dos volumes `indies_galene-groups` e
   `indies_galene-data`;
+- gravar `data/config.json` com `"proxyURL"` (base https derivada de
+  `MEET_URL`) — sem isso o Galene anuncia `ws://` e o WebSocket falha em
+  página https (veja "Solução de problemas");
 - build da imagem `indies-galene:galene-1.1` a partir de `deploy/galene`;
 - `up --force-recreate indies-app galene` e `up nginx` (recriação do nginx só
   quando o compose muda — ex.: `extra_hosts`).
@@ -105,9 +108,10 @@ docker compose -f compose.yaml up -d --force-recreate galene
 
 ## Solução de problemas
 
-| Sintoma                             | Causa provável                             | Ação                                                                              |
-| ----------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------------- |
-| Sala não entra / TURN morre         | Firewall fechado ou rede errada            | Conferir ufw (1194 + 40000-40100/udp) e que `galene` está em `network_mode: host` |
-| Certificado inválido no navegador   | SAN `meet` ainda não emitido               | Atualizar `CERTBOT_DOMAIN` e rodar `deploy-infra` (ou renovação)                  |
-| 502 no `meet.jogos.social.br`       | nginx não recriado com `extra_hosts`       | `docker compose up -d --no-deps nginx`                                            |
-| JWT rejeitado (`invalid signature`) | `GALENE_AUTH_SECRET` diverge da `authKeys` | Regenerar grupos com a secret correta (hot-reload)                                |
+| Sintoma                                                 | Causa provável                             | Ação                                                                                             |
+| ------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| Sala não entra / TURN morre                             | Firewall fechado ou rede errada            | Conferir ufw (1194 + 40000-40100/udp) e que `galene` está em `network_mode: host`                |
+| Certificado inválido no navegador                       | SAN `meet` ainda não emitido               | Atualizar `CERTBOT_DOMAIN` e rodar `deploy-infra` (ou renovação)                                 |
+| 502 no `meet.jogos.social.br`                           | nginx não recriado com `extra_hosts`       | `docker compose up -d --no-deps nginx`                                                           |
+| JWT rejeitado (`invalid signature`)                     | `GALENE_AUTH_SECRET` diverge da `authKeys` | Regenerar grupos com a secret correta (hot-reload)                                               |
+| Cliente tenta `ws://` (Mixed Content / "Not Connected") | `data/config.json` sem `proxyURL`          | Gravar `"proxyURL": "https://meet.jogos.social.br"` (deploy ou manual) e `docker restart galene` |

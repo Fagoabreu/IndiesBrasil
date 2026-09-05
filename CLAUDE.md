@@ -36,6 +36,13 @@
 - `infra/**/*.js` excluido do lint.
 - Commits: Conventional Commits (`feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`).
 
+## Git (revisao obrigatoria)
+
+- **NUNCA** fazer `merge` nem `push` automaticamente, sem ordem explicita do usuario.
+- Ao concluir uma tarefa, parar e apresentar o resumo das alteracoes (arquivos + diff) para revisao.
+- Aguardar o usuario revisar e autorizar explicitamente antes de qualquer `push`/`merge`.
+- Nao usar comandos `git checkout`, `git merge`, `git push` ou abrir PR/merge em remoto como parte da execucao; apenas quando solicitado.
+
 ## API Routes (Pages Router)
 
 - next-connect: `createRouter()` + `controller.injectAnonymousOrUser` + `controller.canRequest(feature)`.

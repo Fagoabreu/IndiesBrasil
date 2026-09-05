@@ -46,7 +46,11 @@ HS256 de acesso (ver `lib/galene.js`). O container `indies-app` compartilha o
 mesmo volume `galene-groups` com o `galene` (ambos uid **1001**).
 
 O deploy garante dono `1001:1001` nos volumes `indies_galene-groups` e
-`indies_galene-data` antes do primeiro start.
+`indies_galene-data` antes do primeiro start, e grava `data/config.json` com
+`"proxyURL"` derivado de `MEET_URL` (ex.: `https://meet.jogos.social.br`). Como
+o nginx termina o TLS e repassa HTTP, o Galene precisa dessa base para anunciar
+endpoint `wss://` no status da sala (`baseURL()` usa `r.TLS`, sempre nil no
+upstream). Modelo de referência: `templates/config.example.json`.
 
 ## Manutenção manual no VPS
 
