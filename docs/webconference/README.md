@@ -49,11 +49,13 @@ Estas etapas são manuais e **obrigatórias** antes do primeiro deploy da Fase 5
 
 4. **GitHub — Secret `GALENE_AUTH_SECRET`** (32 bytes, base64url — igual à
    `authKeys` dos grupos):
+
    ```sh
    openssl rand -base64 32 | tr '+/' '-_' | tr -d '=\n'
    ```
 
 5. **Firewall do VPS** (ufw), além de 80/443:
+
    ```sh
    sudo ufw allow 1194/tcp
    sudo ufw allow 1194/udp
@@ -103,9 +105,9 @@ docker compose -f compose.yaml up -d --force-recreate galene
 
 ## Solução de problemas
 
-| Sintoma | Causa provável | Ação |
-| --- | --- | --- |
-| Sala não entra / TURN morre | Firewall fechado ou rede errada | Conferir ufw (1194 + 40000-40100/udp) e que `galene` está em `network_mode: host` |
-| Certificado inválido no navegador | SAN `meet` ainda não emitido | Atualizar `CERTBOT_DOMAIN` e rodar `deploy-infra` (ou renovação) |
-| 502 no `meet.jogos.social.br` | nginx não recriado com `extra_hosts` | `docker compose up -d --no-deps nginx` |
-| JWT rejeitado (`invalid signature`) | `GALENE_AUTH_SECRET` diverge da `authKeys` | Regenerar grupos com a secret correta (hot-reload) |
+| Sintoma                             | Causa provável                             | Ação                                                                              |
+| ----------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------------- |
+| Sala não entra / TURN morre         | Firewall fechado ou rede errada            | Conferir ufw (1194 + 40000-40100/udp) e que `galene` está em `network_mode: host` |
+| Certificado inválido no navegador   | SAN `meet` ainda não emitido               | Atualizar `CERTBOT_DOMAIN` e rodar `deploy-infra` (ou renovação)                  |
+| 502 no `meet.jogos.social.br`       | nginx não recriado com `extra_hosts`       | `docker compose up -d --no-deps nginx`                                            |
+| JWT rejeitado (`invalid signature`) | `GALENE_AUTH_SECRET` diverge da `authKeys` | Regenerar grupos com a secret correta (hot-reload)                                |
