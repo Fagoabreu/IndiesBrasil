@@ -16,9 +16,14 @@ ARG GALENE_TAG=galene-1.1
 
 WORKDIR /src
 
+# Patches locais sobre a tag fixada: copiados antes do clone e aplicados com
+# `git apply` (falham o build se não casarem — ver patches/README.md).
+COPY patches /patches
+
 # Módulos Go são baixados do proxy oficial; clone raso na tag fixada.
 RUN apk add --no-cache git ca-certificates \
     && git clone --depth 1 --branch "${GALENE_TAG}" https://github.com/jech/galene.git . \
+    && git apply /patches/*.patch \
     && CGO_ENABLED=0 go build -ldflags="-s -w" -o galene .
 
 # ── runtime ──────────────────────────────────────────────────────────────────

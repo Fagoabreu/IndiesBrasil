@@ -80,7 +80,8 @@ O workflow `deploy.yml` já cuida de:
 - gravar `data/config.json` com `"proxyURL"` (base https derivada de
   `MEET_URL`) — sem isso o Galene anuncia `ws://` e o WebSocket falha em
   página https (veja "Solução de problemas");
-- build da imagem `indies-galene:galene-1.1` a partir de `deploy/galene`;
+- build da imagem `indies-galene:galene-1.1` a partir de `deploy/galene`
+  (inclui os patches de `deploy/galene/patches/` aplicados no build);
 - `up --force-recreate indies-app galene` e `up nginx` (recriação do nginx só
   quando o compose muda — ex.: `extra_hosts`).
 
@@ -108,10 +109,12 @@ docker compose -f compose.yaml up -d --force-recreate galene
 
 ## Solução de problemas
 
-| Sintoma                                                 | Causa provável                             | Ação                                                                                             |
-| ------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| Sala não entra / TURN morre                             | Firewall fechado ou rede errada            | Conferir ufw (1194 + 40000-40100/udp) e que `galene` está em `network_mode: host`                |
-| Certificado inválido no navegador                       | SAN `meet` ainda não emitido               | Atualizar `CERTBOT_DOMAIN` e rodar `deploy-infra` (ou renovação)                                 |
-| 502 no `meet.jogos.social.br`                           | nginx não recriado com `extra_hosts`       | `docker compose up -d --no-deps nginx`                                                           |
-| JWT rejeitado (`invalid signature`)                     | `GALENE_AUTH_SECRET` diverge da `authKeys` | Regenerar grupos com a secret correta (hot-reload)                                               |
-| Cliente tenta `ws://` (Mixed Content / "Not Connected") | `data/config.json` sem `proxyURL`          | Gravar `"proxyURL": "https://meet.jogos.social.br"` (deploy ou manual) e `docker restart galene` |
+| Sintoma                                                 | Causa provável                                                        | Ação                                                                                                        |
+| ------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Sala não entra / TURN morre                             | Firewall fechado ou rede errada                                       | Conferir ufw (1194 + 40000-40100/udp) e que `galene` está em `network_mode: host`                           |
+| Certificado inválido no navegador                       | SAN `meet` ainda não emitido                                          | Atualizar `CERTBOT_DOMAIN` e rodar `deploy-infra` (ou renovação)                                            |
+| 502 no `meet.jogos.social.br`                           | nginx não recriado com `extra_hosts`                                  | `docker compose up -d --no-deps nginx`                                                                      |
+| JWT rejeitado (`invalid signature`)                     | `GALENE_AUTH_SECRET` diverge da `authKeys`                            | Regenerar grupos com a secret correta (hot-reload)                                                          |
+| Cliente tenta `ws://` (Mixed Content / "Not Connected") | `data/config.json` sem `proxyURL`                                     | Gravar `"proxyURL": "https://meet.jogos.social.br"` (deploy ou manual) e `docker restart galene`            |
+| Refresh na sala pede login (usuário/senha)              | Galene remove o `?token=` da URL após o join                          | Usar imagem com o patch `0001-keep-join-token-on-reload` (sessionStorage) — exige `--force-recreate galene` |
+| Sem áudio no navegador MI (Xiaomi)                      | Autoplay/permissão de microfone restritas; navegador Chromium próprio | Liberar autoplay e microfone nas configurações do MI; como fallback testar em Chrome/Edge/desktop           |

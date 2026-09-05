@@ -1,0 +1,49 @@
+diff --git a/static/galene.js b/static/galene.js
+index bf0f875..ab97508 100644
+--- a/static/galene.js
++++ b/static/galene.js
+@@ -2809,6 +2809,10 @@ async function gotJoined(kind, group, perms, status, data, error, message) {
+             setVisibility('passwordform', false);
+         } else {
+             token = null;
++            try {
++                window.sessionStorage.removeItem('joinToken');
++            } catch(e) {
++            }
+             displayError('The server said: ' + message);
+         }
+         closeSafariStream();
+@@ -4480,6 +4484,17 @@ async function start() {
+         getSelectElement('simulcastselect').value = 'off';
+
+     let parms = new URLSearchParams(window.location.search);
++    if(parms.has('token')) {
++        // Guarde o token de acesso para sobreviver a um refresh da pagina.
++        // O Galene remove o token da URL apos o join (replaceState abaixo) e,
++        // sem essa copia, recarregar a pagina cai na tela de login, impedindo
++        // reentrada com o link/codigo da reuniao.
++        try {
++            window.sessionStorage.setItem('joinToken', parms.get('token'));
++        } catch(e) {
++            console.warn("Couldn't store join token:", e);
++        }
++    }
+     if(window.location.search)
+         window.history.replaceState(null, '', window.location.pathname);
+     setTitle(groupStatus.displayName || capitalise(group));
+@@ -4490,6 +4505,15 @@ async function start() {
+
+     if(parms.has('token'))
+         token = parms.get('token');
++    else {
++        // Refresh da pagina: o token nao esta mais na URL (foi removido no
++        // primeiro acesso); recupera do sessionStorage.
++        try {
++            token = window.sessionStorage.getItem('joinToken');
++        } catch(e) {
++            console.warn("Couldn't retrieve join token:", e);
++        }
++    }
+
+     if(token) {
+         await serverConnect();
