@@ -10,6 +10,8 @@ sem modo P2P, e **sem IA** (MediaPipe/background blur não é compilado).
   release oficial `jech/galene` (tag fixa `galene-1.1`). O GitHub Actions
   (`deploy.yml`) executa o build durante o deploy. Não existe imagem oficial
   no Docker Hub — apenas de terceiros, então o build é do código-fonte.
+- `patches/` — patches aplicados via `git apply` sobre a tag fixada **antes**
+  do build (falham o build se não casarem). Ver `patches/README.md`.
 - `groups/.gitkeep` — os arquivos `groups/<room>.json` são provisionados em
   runtime pela plataforma (`lib/galene.js`, `GALENE_GROUPS_DIR`) e vivem no
   volume `galene-groups`, não no repositório.
