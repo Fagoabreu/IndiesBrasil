@@ -134,14 +134,27 @@ jobs:
       # `indies-app` (uid nextjs 1001) e `galene` (uid galene 1001) montam o
       # mesmo volume galene-groups. Volumes nomeados vazios nascem como root,
       # então forçamos dono 1001:1001 (mesmo padrão do postgres-certs acima).
+      # Também gravamos data/config.json com proxyURL (base https derivada de
+      # MEET_URL): sem isso o Galene vê o request http do nginx (r.TLS nil) e
+      # anuncia endpoint ws://, quebrando o WebSocket em página https.
       - name: Ensure Galene volumes ownership
         run: |
           docker volume inspect indies_galene-groups >/dev/null 2>&1 || docker volume create indies_galene-groups
           docker volume inspect indies_galene-data >/dev/null 2>&1 || docker volume create indies_galene-data
+          PROXY_URL=$(printf '%s' "${{ vars.MEET_URL }}" | sed 's|^wss://|https://|; s|/$||')
           docker run --rm -e HOME -e PATH \
+            -e PROXY_URL="$PROXY_URL" \
             -v indies_galene-groups:/groups \
             -v indies_galene-data:/data \
-            alpine:latest sh -c 'chown -R 1001:1001 /groups /data && echo "✅ Galene volumes ready (uid 1001)"'
+            alpine:latest sh -c '
+              chown -R 1001:1001 /groups /data
+              if [ ! -f /data/config.json ]; then
+                printf "{\n  \"proxyURL\": \"%s\"\n}\n" "$PROXY_URL" > /data/config.json
+              fi
+              chown 1001:1001 /data/config.json
+              echo "✅ Galene volumes ready (uid 1001)"
+              cat /data/config.json
+            '
 
       # ── Build & deploy ──
       - name: Build app

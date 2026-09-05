@@ -2,3 +2,5 @@
 data/.secret
 data/cert.pem
 data/key.pem
+# Salas provisionadas em runtime por testes locais (GALENE_GROUPS_DIR default).
+groups/*.json
