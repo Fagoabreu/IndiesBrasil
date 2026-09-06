@@ -29,7 +29,7 @@ export async function POST(request, { params }) {
 
     const found = await meeting.validateGuestCode(meetingId, data.code);
 
-    await galene.ensureRoomProvisioned(found.room_id);
+    await galene.ensureRoomProvisioned(found.room_id, found.org_name);
     const access = await galene.createJoinTokenAndUrl({
       roomId: found.room_id,
       username: data.name,

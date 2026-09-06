@@ -12,6 +12,10 @@ sem modo P2P, e **sem IA** (MediaPipe/background blur não é compilado).
   no Docker Hub — apenas de terceiros, então o build é do código-fonte.
 - `patches/` — patches aplicados via `git apply` sobre a tag fixada **antes**
   do build (falham o build se não casarem). Ver `patches/README.md`.
+- `static/indies.css` — skin "MSN Messenger" do cliente: carregada depois do
+  `galene.css` (patch `0003`) e copiada pelo Dockerfile para `/src/static`.
+  Altera apenas aparência (molduras, gradientes, grade de vídeo); mantém a
+  paleta roxa da marca e não remove funcionalidade.
 - `groups/.gitkeep` — os arquivos `groups/<room>.json` são provisionados em
   runtime pela plataforma (`lib/galene.js`, `GALENE_GROUPS_DIR`) e vivem no
   volume `galene-groups`, não no repositório.

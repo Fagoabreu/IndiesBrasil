@@ -1,0 +1,339 @@
+/* ==========================================================================
+   indies.css - Tema "MSN Messenger" para o cliente Galene (IndiesBrasil).
+   --------------------------------------------------------------------------
+   Carregado apos o galene.css via patch 0003-load-indies-theme.patch.
+   Mantem a paleta original do Galene (roxo #610a86 / #4d076b) e apenas
+   altera: molduras e barras estilo Messenger, lista de contatos, bolhas de
+   conversa e o alinhamento da grade de cameras/screenshare.
+
+   Nenhuma funcionalidade e removida; arquivo de overlay (skin).
+   ========================================================================== */
+
+/* Fonte classica estilo Messenger */
+body,
+.app,
+.topnav,
+.users-header,
+#left-sidebar,
+#users,
+#chat,
+#box,
+.reply,
+.message,
+.btn,
+.form-control,
+.form-reply,
+.login-box,
+input,
+textarea {
+  font-family: Tahoma, "Segoe UI", Verdana, Arial, sans-serif;
+}
+
+/* ==========================  Barra superior  =============================
+   Vira a "barra de titulo" da janela do MSN, com gradiente vertical
+   derivado do roxo da marca e relevo 3D. */
+.nav-fixed .topnav,
+.topnav.navbar {
+  background: linear-gradient(180deg, #a92ad1 0%, #7a0fa0 42%, #4d076b 100%) !important;
+  border-bottom: 1px solid #330144 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.topnav #header {
+  display: flex;
+  align-items: center;
+  height: 3.5rem;
+}
+
+.topnav .header-title {
+  color: #ffffff;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.topnav .collapse {
+  color: #f1e6f7;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+}
+
+.topnav .collapse:hover {
+  color: #ffffff;
+}
+
+.nav-menu .nav-link,
+.nav-menu .nav-button {
+  color: #f1e6f7;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.nav-menu .nav-link:hover,
+.nav-menu .nav-button:hover {
+  color: #ffffff;
+}
+
+.nav-menu .nav-link label {
+  color: #ffffff;
+}
+
+/* ========================  Painel esquerdo (users)  ======================
+   Estilo "lista de contatos" do MSN: fundo branco, linhas com divisor
+   suave e hover azulado. */
+#left-sidebar {
+  background: #f4f4f7;
+  border-right: 1px solid #c8ccd2;
+}
+
+#left-sidebar .users-header {
+  background: linear-gradient(180deg, #8a1db8 0%, #5f0b86 55%, #3c0753 100%);
+  border-bottom: 1px solid #2a0240;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+}
+
+.galene-header {
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  letter-spacing: 0.02em;
+}
+
+#users {
+  background-color: #ffffff;
+  border: 1px solid #e2e6ea;
+  border-top: 0;
+}
+
+#users > div {
+  color: #24292e;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: pre;
+}
+
+#users > div:hover {
+  background-color: #eef3fa;
+}
+
+#users > div::before {
+  color: #41b537;
+  text-shadow: 0 0 2px rgba(65, 181, 55, 0.35);
+}
+
+#users > div.user-status-raisehand::before {
+  color: #d29922;
+}
+
+/* ===========================  Painel de chat  ============================
+   Conversa estilo Messenger: bolhas brancas quadradas com nome em roxo. */
+.coln-left {
+  background-color: #ffffff;
+}
+
+#chat {
+  background-color: #f6f7f9;
+  border-right: 4px solid #e0e2e6;
+  box-shadow: inset 0 0 0 1px #ffffff;
+}
+
+#box {
+  padding: 10px 12px;
+}
+
+.message {
+  background: #ffffff;
+  border: 1px solid #e0e3e8;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(43, 43, 43, 0.09);
+}
+
+.message-header {
+  font-style: normal;
+  font-weight: 700;
+  font-size: 12px;
+  color: #610a86;
+  padding-left: 4px;
+}
+
+.message-time {
+  font-weight: 400;
+  font-style: normal;
+  color: #9aa0a6;
+}
+
+.message-content {
+  padding-left: 4px;
+}
+
+.message-sender {
+  background: #e8f0fd;
+  border-color: #cfdef6;
+}
+
+.message-sender .message-header {
+  color: #3a4f7d;
+}
+
+.message-private {
+  background: #fff7e6;
+  border-color: #efe0ae;
+}
+
+.message-system {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  font-size: 10px;
+  color: #8b9096;
+}
+
+.message-system .message-header {
+  color: #8b9096;
+}
+
+.message a {
+  color: #7a0fa0;
+}
+
+/* Barra inferior de digitacao: relevo claro estilo MSN */
+.reply {
+  background: linear-gradient(180deg, #fbfbfc 0%, #e7e9ee 100%);
+  border-top: 1px solid #ccd1d9;
+}
+
+.reply #input {
+  background-color: #ffffff;
+  border: 1px solid #c6ccd6;
+  border-radius: 3px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.07);
+  color: #1f2328;
+  font-size: 0.95rem;
+  height: 30px;
+}
+
+/* =============================  Botões  ==================================
+   Bevel cinza/azulado classico do Windows (MSN). Botoes de acao verde
+   (present/audience) continuam verdes para nao confundir. */
+.btn-default,
+.btn-blue {
+  background: linear-gradient(180deg, #ffffff 0%, #eef1f5 48%, #dfe4ea 100%);
+  border: 1px solid #a7b0bb;
+  border-radius: 3px;
+  color: #1f2328;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.btn-default:hover,
+.btn-blue:hover {
+  background: linear-gradient(180deg, #ffffff 0%, #e0e7f0 100%);
+  border-color: #8e99a7;
+  color: #1f2328;
+}
+
+.btn-success {
+  background: linear-gradient(180deg, #e2f2c9 0%, #c8e6a1 100%);
+  border: 1px solid #a5c87b;
+  border-radius: 3px;
+  color: #2c4a12;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.btn-success:hover {
+  background: linear-gradient(180deg, #eef7dc 0%, #d2ecb0 100%);
+  color: #2c4a12;
+}
+
+.btn-cancel {
+  background: linear-gradient(180deg, #fcecec 0%, #f0d2d2 100%);
+  border: 1px solid #d39b9b;
+  border-radius: 3px;
+  color: #6d1a1a;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.btn-cancel:hover {
+  background: linear-gradient(180deg, #fef4f4 0%, #f5dcdc 100%);
+  color: #6d1a1a;
+}
+
+/* ============================  Tela de login  =========================== */
+.login-box {
+  background: linear-gradient(180deg, #ffffff 0%, #f0f2f6 100%);
+  border: 1px solid #c6ccd4;
+  border-radius: 6px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+.login-box h2 {
+  color: #610a86;
+  font-weight: 700;
+  text-shadow: none;
+}
+
+/* =========================  Grade de video / tiles  =====================
+   Alinhamento: cameras e telas compartilhadas ganham espacamento uniforme,
+   centro vertical quando sobra espaco e quadros padronizados.
+   Obs.: as colunas da grade sao definidas inline pelo JS (resizePeers);
+   aqui ajustamos apenas o que o JS nao controla. */
+.video-container {
+  background-color: #000000;
+}
+
+#peers {
+  row-gap: 10px;
+  column-gap: 12px;
+  align-content: center;
+  justify-content: center;
+}
+
+.peer {
+  background: #000000;
+  border: 2px solid #242424;
+  border-radius: 3px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 2px 6px rgba(0, 0, 0, 0.55);
+}
+
+.peer-active {
+  border-color: #610a86;
+  box-shadow:
+    0 0 12px rgba(97, 10, 134, 0.8),
+    inset 0 0 0 1px rgba(97, 10, 134, 0.35);
+}
+
+/* Tela compartilhada (patch 0004): moldura lilas para diferenciar da cam. */
+.peer-screenshare {
+  border-color: #6a1e8a;
+}
+
+.media {
+  display: block;
+  background-color: #000000;
+}
+
+.label {
+  padding: 14px 6px 2px;
+  font-size: 12px;
+  line-height: 26px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0) 72%);
+}
+
+/* =====================  Feedback visual / status  ======================= */
+.vc-overlay {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.45) 45%, rgba(0, 0, 0, 0.7) 100%);
+}
+
+/* ============================  Responsivo  ============================== */
+@media (max-width: 1024px) {
+  #peers {
+    row-gap: 6px;
+    column-gap: 6px;
+  }
+}

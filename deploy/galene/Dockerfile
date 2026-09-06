@@ -26,6 +26,9 @@ RUN apk add --no-cache git ca-certificates \
     && git apply /patches/*.patch \
     && CGO_ENABLED=0 go build -ldflags="-s -w" -o galene .
 
+# Tema local (indies.css) sobrepõe o CSS do Galene após clone + patches.
+COPY static ./static
+
 # ── runtime ──────────────────────────────────────────────────────────────────
 FROM alpine:3.20
 
