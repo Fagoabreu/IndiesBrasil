@@ -1,0 +1,13 @@
+diff --git a/static/galene.js b/static/galene.js
+index bf0f875..631e6a5 100644
+--- a/static/galene.js
++++ b/static/galene.js
+@@ -2067,6 +2067,8 @@ async function setMedia(c, mirror, video) {
+         div = document.createElement('div');
+         div.id = 'peer-' + c.localId;
+         div.classList.add('peer');
++        if(c.label === 'screenshare')
++            div.classList.add('peer-screenshare');
+         let peersdiv = document.getElementById('peers');
+         peersdiv.appendChild(div);
+     }

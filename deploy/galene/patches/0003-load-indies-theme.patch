@@ -1,0 +1,12 @@
+diff --git a/static/galene.html b/static/galene.html
+index d7d44f1..7bba05a 100644
+--- a/static/galene.html
++++ b/static/galene.html
+@@ -7,6 +7,7 @@
+     <meta http-equiv="ScreenOrientation" content="autoRotate:disabled">
+     <link rel="stylesheet" type="text/css" href="/common.css"/>
+     <link rel="stylesheet" type="text/css" href="/galene.css"/>
++    <link rel="stylesheet" type="text/css" href="/indies.css"/>
+     <link rel="author" href="https://www.irif.fr/~jch/"/>
+     <link rel="stylesheet" type="text/css" href="/third-party/fontawesome/css/fontawesome.min.css"/>
+     <link rel="stylesheet" type="text/css" href="/third-party/fontawesome/css/solid.min.css"/>

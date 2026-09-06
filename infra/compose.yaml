@@ -12,3 +12,35 @@ services:
     ports:
       - "1025:1025"
       - "1080:1080"
+  # Webconferência (Galene 1.1). Mesma imagem do deploy (`deploy/galene/`),
+  # compilada localmente na primeira subida com `services:up`. O app (npm run
+  # dev, no host) usa MEET_URL padrão ws://localhost:8000 e grava os grupos em
+  # deploy/galene/groups — por isso o bind-mount abaixo: o Galene faz
+  # hot-reload do arquivo e o JWT emitido é validado na hora.
+  #
+  # Diferenças propositais para dev:
+  #  - portas publicadas (8000) em vez de network_mode: host — Docker Desktop
+  #    (Windows/macOS) não suporta host networking;
+  #  - TURN desligado (`-turn ""`) — sem rede restrita no dev local o TURN só
+  #    causaria erro de "no public addresses" dentro do container.
+  galene:
+    container_name: "galene-dev"
+    image: "indies-galene:galene-1.1"
+    build:
+      context: ../deploy/galene
+    command:
+      - "-http"
+      - ":8000"
+      - "-insecure"
+      - "-turn"
+      - ""
+      - "-groups"
+      - "/app/groups"
+      - "-data"
+      - "/app/data"
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mesmo diretório usado pelo lib/galene.js em dev (GALENE_GROUPS_DIR
+      # padrão): deploy/galene/groups, relativo à raiz do repo.
+      - ../deploy/galene/groups:/app/groups

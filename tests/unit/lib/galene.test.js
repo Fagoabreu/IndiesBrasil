@@ -51,6 +51,37 @@ describe("lib/galene.js", () => {
       expect(group.authKeys).toHaveLength(1);
       expect(group.authKeys[0]).toMatchObject({ kty: "oct", alg: "HS256" });
       expect(group.authKeys[0].k).toBe(galene.getAuthSecret().encoded);
+      expect(group.displayName).toBeUndefined();
+    });
+
+    test("grava displayName do estúdio quando informado", async () => {
+      process.env.GALENE_GROUPS_DIR = groupsDir;
+      process.env.MEET_URL = "wss://meet.example.com";
+
+      const roomId = "studioroom001";
+      const written = await galene.ensureRoomProvisioned(roomId, "Estúdio Aurora Games");
+
+      expect(written).toBe(true);
+
+      const filePath = path.join(groupsDir, `${roomId}.json`);
+      const group = JSON.parse(await readFile(filePath, "utf8"));
+
+      expect(group.displayName).toBe("Estúdio Aurora Games");
+    });
+
+    test("sanitiza displayName: remove controles e limita a 80 caracteres", async () => {
+      process.env.GALENE_GROUPS_DIR = groupsDir;
+      process.env.MEET_URL = "wss://meet.example.com";
+
+      const roomId = "studioevo002";
+      await galene.ensureRoomProvisioned(roomId, "Bad\u0000Name\n");
+      const group1 = JSON.parse(await readFile(path.join(groupsDir, `${roomId}.json`), "utf8"));
+      expect(group1.displayName).toBe("BadName");
+
+      const roomId2 = "studiolong003";
+      await galene.ensureRoomProvisioned(roomId2, "X".repeat(90));
+      const group2 = JSON.parse(await readFile(path.join(groupsDir, `${roomId2}.json`), "utf8"));
+      expect(group2.displayName).toHaveLength(80);
     });
 
     test("é idempotente: não reescreve quando o conteúdo é igual", async () => {

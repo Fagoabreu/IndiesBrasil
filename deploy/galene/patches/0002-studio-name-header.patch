@@ -1,0 +1,14 @@
+diff --git a/static/galene.js b/static/galene.js
+index bf0f875..66e4518 100644
+--- a/static/galene.js
++++ b/static/galene.js
+@@ -2758,6 +2758,9 @@ function setTitle(title) {
+     function set(title) {
+         document.title = title;
+         document.getElementById('title').textContent = title;
++        let header = document.querySelector('.galene-header');
++        if(header)
++            header.textContent = title;
+     }
+     if(title)
+         set(title);
