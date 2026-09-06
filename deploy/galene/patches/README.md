@@ -5,6 +5,15 @@ O `Dockerfile` clona o upstream na tag `galene-1.1` e aplica os arquivos
 não casar com o código da tag, o build falha de propósito (nada de imagem
 silenciosamente diferente do esperado).
 
+Patches aplicados hoje (nesta ordem — o glob `*.patch` do Dockerfile):
+
+| Patch                                  | Efeito                                                                   |
+| -------------------------------------- | ------------------------------------------------------------------------ |
+| `0001-keep-join-token-on-reload.patch` | Mantém o `?token=` no refresh (sessionStorage)                           |
+| `0002-studio-name-header.patch`        | Nome do estúdio (`displayName` do grupo) no cabeçalho do painel esquerdo |
+| `0003-load-indies-theme.patch`         | Carrega a skin local `/indies.css` (overlay após o `galene.css`)         |
+| `0004-mark-screenshare-peer.patch`     | Classe `peer-screenshare` no tile de compartilhamento de tela            |
+
 ## 0001-keep-join-token-on-reload.patch
 
 **Problema:** ao entrar na sala com `?token=...`, o Galene remove o token da URL

@@ -97,18 +97,20 @@ npm run dev
 
 Este comando faz três coisas automaticamente:
 
-1. **Sobe os serviços** (PostgreSQL na porta `5432` e Mailcatcher na porta `1080`) usando Docker
+1. **Sobe os serviços** (PostgreSQL na porta `5432`, Mailcatcher nas portas
+   `1025`/`1080` e o Galene da webconferência na porta `8000`) usando Docker
 2. **Aguarda o banco de dados** ficar pronto para receber conexões
 3. **Executa as migrações** (cria as tabelas no banco de dados)
 4. **Inicia o Next.js** em modo desenvolvimento
 
 ### 5. Acesse a aplicação
 
-| Serviço                  | Endereço                  |
-| ------------------------ | ------------------------- |
-| **Frontend**             | http://localhost:3000     |
-| **API**                  | http://localhost:3000/api |
-| **Emails (Mailcatcher)** | http://localhost:1080     |
+| Serviço                     | Endereço                  |
+| --------------------------- | ------------------------- |
+| **Frontend**                | http://localhost:3000     |
+| **API**                     | http://localhost:3000/api |
+| **Emails (Mailcatcher)**    | http://localhost:1080     |
+| **Webconferência (Galene)** | http://localhost:8000     |
 
 Se tudo deu certo, você verá a página inicial do Indies Brasil no navegador.
 
@@ -133,7 +135,7 @@ IndiesBrasil/
 │   └── api/             # Rotas da API REST
 ├── models/              # Lógica de negócio (acesso a dados)
 ├── infra/               # Infraestrutura
-│   ├── compose.yaml     # Docker Compose de desenvolvimento
+│   ├── compose.yaml     # Docker Compose de desenvolvimento (banco, email, Galene)
 │   ├── database.js      # Conexão com PostgreSQL
 │   ├── migrations/      # Migrações do banco de dados
 │   └── scripts/         # Scripts utilitários
@@ -141,6 +143,7 @@ IndiesBrasil/
 ├── lib/                 # Utilitários compartilhados
 ├── deploy/              # Arquivos de deploy em produção
 │   ├── compose.yaml     # Docker Compose de produção
+│   ├── galene/          # Imagem Galene (Dockerfile, patches, skin indies.css)
 │   └── nginx/           # Configurações do Nginx
 ├── .github/workflows/   # GitHub Actions (CI/CD)
 ├── tests/               # Testes automatizados (Jest)
@@ -153,16 +156,17 @@ IndiesBrasil/
 
 ## Comandos de desenvolvimento
 
-| Comando                                       | O que faz                                 |
-| --------------------------------------------- | ----------------------------------------- |
-| `npm run dev`                                 | Sobe tudo (banco, email, app) em modo dev |
-| `npm test`                                    | Roda os testes automatizados              |
-| `npm run lint`                                | Verifica o código com ESLint              |
-| `npm run lint:prettier:fix`                   | Formata o código automaticamente          |
-| `npm run migrations:create nome_da_migration` | Cria uma nova migration do banco          |
-| `npm run services:stop`                       | Para os containers Docker                 |
-| `npm run services:down`                       | Remove os containers Docker               |
-| `npm run build`                               | Gera o build de produção                  |
+| Comando                                       | O que faz                                                    |
+| --------------------------------------------- | ------------------------------------------------------------ |
+| `npm run dev`                                 | Sobe tudo (banco, email, Galene, app) em modo dev            |
+| `npm run services:up`                         | Sobe os containers de desenvolvimento (banco, email, Galene) |
+| `npm test`                                    | Roda os testes automatizados                                 |
+| `npm run lint`                                | Verifica o código com ESLint                                 |
+| `npm run lint:prettier:fix`                   | Formata o código automaticamente                             |
+| `npm run migrations:create nome_da_migration` | Cria uma nova migration do banco                             |
+| `npm run services:stop`                       | Para os containers Docker                                    |
+| `npm run services:down`                       | Remove os containers Docker                                  |
+| `npm run build`                               | Gera o build de produção                                     |
 
 ---
 
@@ -305,36 +309,38 @@ Vá para o GitHub: **Settings → Secrets and variables → Actions**.
 
 #### Variáveis de ambiente (`Variables`)
 
-| Nome                      | Valor                                    | Exemplo                               |
-| ------------------------- | ---------------------------------------- | ------------------------------------- |
-| `CERTBOT_DOMAIN`          | Seus domínios (separados por vírgula)    | `jogos.social.br,www.jogos.social.br` |
-| `CERTBOT_EMAIL`           | Email para notificações do Let's Encrypt | `seu@email.com`                       |
-| `NEXT_PUBLIC_SITE_NAME`   | Nome do site                             | `Indies Brasil`                       |
-| `NEXT_PUBLIC_BASE_URL`    | Domínio principal                        | `jogos.social.br`                     |
-| `NEXT_PUBLIC_SITE_URL`    | URL completa                             | `https://jogos.social.br`             |
-| `POSTGRES_HOST`           | Host do banco                            | `postgres`                            |
-| `POSTGRES_PORT`           | Porta do banco                           | `5432`                                |
-| `POSTGRES_DB`             | Nome do banco                            | `indies_prod`                         |
-| `POSTGRES_USER`           | Usuário do banco                         | `indies_user`                         |
-| `POSTGRES_CA_PATH`        | Caminho do certificado CA                | `/etc/ssl/postgres/root.crt`          |
-| `EMAIL_SMTP_HOST`         | Servidor SMTP                            | `smtp.seuprovedor.com`                |
-| `EMAIL_SMTP_PORT`         | Porta SMTP                               | `587`                                 |
-| `EMAIL_SMTP_USER`         | Usuário SMTP                             | `seu@email.com`                       |
-| `CLOUDINARY_CLOUD_NAME`   | Cloudinary cloud name                    | `seu-cloud`                           |
-| `FILE_UPLOAD_BASE_FOLDER` | Pasta de uploads                         | `/tmp/indies-uploads`                 |
+| Nome                      | Valor                                    | Exemplo                                                    |
+| ------------------------- | ---------------------------------------- | ---------------------------------------------------------- |
+| `CERTBOT_DOMAIN`          | Seus domínios (separados por vírgula)    | `jogos.social.br,meet.jogos.social.br,www.jogos.social.br` |
+| `CERTBOT_EMAIL`           | Email para notificações do Let's Encrypt | `seu@email.com`                                            |
+| `NEXT_PUBLIC_SITE_NAME`   | Nome do site                             | `Indies Brasil`                                            |
+| `NEXT_PUBLIC_BASE_URL`    | Domínio principal                        | `jogos.social.br`                                          |
+| `NEXT_PUBLIC_SITE_URL`    | URL completa                             | `https://jogos.social.br`                                  |
+| `POSTGRES_HOST`           | Host do banco                            | `postgres`                                                 |
+| `POSTGRES_PORT`           | Porta do banco                           | `5432`                                                     |
+| `POSTGRES_DB`             | Nome do banco                            | `indies_prod`                                              |
+| `POSTGRES_USER`           | Usuário do banco                         | `indies_user`                                              |
+| `POSTGRES_CA_PATH`        | Caminho do certificado CA                | `/etc/ssl/postgres/root.crt`                               |
+| `EMAIL_SMTP_HOST`         | Servidor SMTP                            | `smtp.seuprovedor.com`                                     |
+| `EMAIL_SMTP_PORT`         | Porta SMTP                               | `587`                                                      |
+| `EMAIL_SMTP_USER`         | Usuário SMTP                             | `seu@email.com`                                            |
+| `CLOUDINARY_CLOUD_NAME`   | Cloudinary cloud name                    | `seu-cloud`                                                |
+| `FILE_UPLOAD_BASE_FOLDER` | Pasta de uploads                         | `/tmp/indies-uploads`                                      |
+| `MEET_URL`                | Base pública do Galene (produção)        | `wss://meet.jogos.social.br`                               |
 
 #### Segredos (`Secrets`)
 
-| Nome                    | Descrição                          |
-| ----------------------- | ---------------------------------- |
-| `PEPPER`                | String secreta para hash de senhas |
-| `POSTGRES_PASSWORD`     | Senha do banco de dados            |
-| `EMAIL_SMTP_PASSWORD`   | Senha do servidor SMTP             |
-| `CLOUDINARY_API_KEY`    | Chave da API do Cloudinary         |
-| `CLOUDINARY_API_SECRET` | Segredo da API do Cloudinary       |
-| `TWITCH_CLIENT_ID`      | Client ID da API da Twitch         |
-| `TWITCH_CLIENT_SECRET`  | Client Secret da API da Twitch     |
-| `YOUTUBE_API_KEY`       | Chave da API do YouTube            |
+| Nome                    | Descrição                                |
+| ----------------------- | ---------------------------------------- |
+| `PEPPER`                | String secreta para hash de senhas       |
+| `POSTGRES_PASSWORD`     | Senha do banco de dados                  |
+| `EMAIL_SMTP_PASSWORD`   | Senha do servidor SMTP                   |
+| `CLOUDINARY_API_KEY`    | Chave da API do Cloudinary               |
+| `CLOUDINARY_API_SECRET` | Segredo da API do Cloudinary             |
+| `TWITCH_CLIENT_ID`      | Client ID da API da Twitch               |
+| `TWITCH_CLIENT_SECRET`  | Client Secret da API da Twitch           |
+| `YOUTUBE_API_KEY`       | Chave da API do YouTube                  |
+| `GALENE_AUTH_SECRET`    | Chave HS256 (assinatura dos JWTs Galene) |
 
 ### Parte 4: Primeiro deploy
 
@@ -372,7 +378,7 @@ Para verificar os containers que estão rodando no servidor:
 docker ps
 ```
 
-Você deve ver 4 containers: `postgres`, `indies-app`, `nginx` e `certbot`.
+Você deve ver 5 containers: `postgres`, `indies-app`, `galene`, `nginx` e `certbot`.
 
 ---
 
@@ -418,6 +424,11 @@ EMAIL_SMTP_PASSWORD=
 ```
 
 > 💡 No desenvolvimento local, `EMAIL_SMTP_USER` e `EMAIL_SMTP_PASSWORD` podem ficar vazios porque o Mailcatcher não exige autenticação.
+>
+> 🖥️ **Webconferência:** o Galene é provisionado pelo próprio `infra/compose.yaml`
+> (porta `8000`) e não exige variáveis extras em dev — `lib/galene.js` usa
+> `MEET_URL=ws://localhost:8000` e uma chave de desenvolvimento fixa. Para
+> apontar para outro servidor, defina `MEET_URL` e `GALENE_AUTH_SECRET`.
 
 ### `.env.production` (produção — gerado automaticamente pelo CI)
 
@@ -433,6 +444,7 @@ Este arquivo é gerado pelo GitHub Actions no momento do deploy usando os valore
 - **Docker** + Docker Compose
 - **Nginx** (proxy reverso)
 - **Certbot** (certificados SSL via Let's Encrypt)
+- **Galene** (SFU de webconferência, sem IA no servidor)
 - **Cloudinary** (upload de imagens)
 - **GitHub Actions** (CI/CD com runner auto-hospedado)
 

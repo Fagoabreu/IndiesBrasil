@@ -1,8 +1,10 @@
-# deploy/galene — Webconferência (Galene 1.1) em produção
+# deploy/galene — Webconferência (Galene 1.1)
 
-Artefato do serviço `galene` declarado em `deploy/compose.yaml`. O Galene é um
-SFU (Selective Forwarding Unit): **toda** a mídia WebRTC passa pelo servidor,
-sem modo P2P, e **sem IA** (MediaPipe/background blur não é compilado).
+Artefato do serviço `galene` declarado em `deploy/compose.yaml` (produção) e
+em `infra/compose.yaml` (desenvolvimento — a imagem é construída deste mesmo
+contexto). O Galene é um SFU (Selective Forwarding Unit): **toda** a mídia
+WebRTC passa pelo servidor, sem modo P2P, e **sem IA** (MediaPipe/background
+blur não é compilado).
 
 ## Papel deste diretório
 
@@ -10,8 +12,11 @@ sem modo P2P, e **sem IA** (MediaPipe/background blur não é compilado).
   release oficial `jech/galene` (tag fixa `galene-1.1`). O GitHub Actions
   (`deploy.yml`) executa o build durante o deploy. Não existe imagem oficial
   no Docker Hub — apenas de terceiros, então o build é do código-fonte.
-- `patches/` — patches aplicados via `git apply` sobre a tag fixada **antes**
-  do build (falham o build se não casarem). Ver `patches/README.md`.
+- `patches/` — 4 patches aplicados via `git apply` sobre a tag fixada **antes**
+  do build (falham o build se não casarem): `0001` mantém o token no refresh,
+  `0002` exibe o nome do estúdio no cabeçalho (usa o `displayName` do grupo),
+  `0003` carrega o CSS local e `0004` marca os tiles de screenshare. Ver
+  `patches/README.md`.
 - `static/indies.css` — skin "MSN Messenger" do cliente: carregada depois do
   `galene.css` (patch `0003`) e copiada pelo Dockerfile para `/src/static`.
   Altera apenas aparência (molduras, gradientes, grade de vídeo); mantém a
@@ -48,8 +53,10 @@ O serviço no compose usa **`network_mode: host`** (obrigatório):
 
 Cada sala é um arquivo `groups/<room>.json` com `authKeys` (hot-reload — não é
 preciso reiniciar o servidor). A plataforma grava esse arquivo e emite o JWT
-HS256 de acesso (ver `lib/galene.js`). O container `indies-app` compartilha o
-mesmo volume `galene-groups` com o `galene` (ambos uid **1001**).
+HS256 de acesso (ver `lib/galene.js`). Além da `authKeys`, a plataforma grava
+`displayName` com o nome do estúdio — o cliente Galene mostra esse nome na
+barra superior e no painel de usuários (patch `0002`). O container `indies-app`
+compartilha o mesmo volume `galene-groups` com o `galene` (ambos uid **1001**).
 
 O deploy garante dono `1001:1001` nos volumes `indies_galene-groups` e
 `indies_galene-data` antes do primeiro start, e grava `data/config.json` com
@@ -57,6 +64,33 @@ O deploy garante dono `1001:1001` nos volumes `indies_galene-groups` e
 o nginx termina o TLS e repassa HTTP, o Galene precisa dessa base para anunciar
 endpoint `wss://` no status da sala (`baseURL()` usa `r.TLS`, sempre nil no
 upstream). Modelo de referência: `templates/config.example.json`.
+
+## Desenvolvimento local
+
+O serviço `galene` do `infra/compose.yaml` usa **este diretório como contexto
+de build** (`build.context: ../deploy/galene`) e publica o cliente em
+`http://localhost:8000`. O primeiro `npm run dev` compila a imagem localmente
+(`indies-galene:galene-1.1`) junto com o banco e o Mailcatcher.
+
+Diferenças propositais para o dev (ver `infra/compose.yaml`):
+
+- porta `8000` **publicada** em vez de `network_mode: host` — o Docker Desktop
+  (Windows/macOS) não suporta host networking;
+- TURN desligado (`-turn ""`) — sem rede restrita local o TURN só geraria erro
+  de "no public addresses" dentro do container;
+- os grupos são um bind-mount de `deploy/galene/groups`, o mesmo diretório que
+  o app usa em dev (`GALENE_GROUPS_DIR` padrão de `lib/galene.js`): o Galene
+  faz hot-reload do `groups/<room>.json` provisionado pela plataforma;
+- `data/` não é montado (com `-insecure` o `config.json`/`proxyURL` é
+  opcional).
+
+Depois de alterar `patches/*.patch` ou `static/indies.css`, **reconstrua** a
+imagem — o compose só recompila quando ela não existe:
+
+```sh
+docker compose -f infra/compose.yaml build galene
+docker compose -f infra/compose.yaml up -d --force-recreate galene
+```
 
 ## Manutenção manual no VPS
 
