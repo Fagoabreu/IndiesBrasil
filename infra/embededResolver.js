@@ -183,11 +183,28 @@ async function fetchLinkPreview(url) {
       return m ? makeAbsolute(m[1]) : null;
     })();
 
+    // Nome do site (og:site_name) — usado como rótulo no card de preview.
+    const site_name = getMeta("site_name");
+
+    // Favicon/ícone do site (rel=icon / apple-touch-icon) — exibido no card.
+    const icon = (() => {
+      const linkTags = html.match(/<link\b[^>]*>/gi) || [];
+      for (const tag of linkTags) {
+        if (!/rel\s*=\s*["'](?:shortcut\s+)?(?:icon|apple-touch-icon)["']/i.test(tag)) continue;
+        const m = /\bhref\s*=\s*["']([^"']+)["']/i.exec(tag);
+        if (m) {
+          const href = decodeEntities(m[1]);
+          return proxyImageUrl(makeAbsolute(href));
+        }
+      }
+      return null;
+    })();
+
     const proxiedImage = proxyImageUrl(image);
 
     if (!title && !description && !image) return null;
 
-    return { type: "preview", title, description, image: proxiedImage, url };
+    return { type: "preview", title, description, image: proxiedImage, site_name, icon, url };
   } catch {
     return null;
   }

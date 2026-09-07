@@ -28,6 +28,8 @@ EmbedComponent.propTypes = {
       embedUrl: PropTypes.string,
       url: PropTypes.string,
       image: PropTypes.string,
+      icon: PropTypes.string,
+      site_name: PropTypes.string,
       title: PropTypes.string,
       description: PropTypes.string,
     }),
@@ -102,6 +104,15 @@ export default function EmbedComponent({ embeds }) {
             }
           })();
 
+          // Detecta links de press kit (ex.: /presskit) para exibir o selo de imprensa.
+          const isPressKit = (() => {
+            try {
+              return /\/presskit(?:\/|$)/.test(new URL(embed.url).pathname);
+            } catch {
+              return false;
+            }
+          })();
+
           return (
             <a key={key} href={embed.url} target="_blank" rel="noopener noreferrer" className={styles.previewCard}>
               {embed.image && (
@@ -118,8 +129,23 @@ export default function EmbedComponent({ embeds }) {
               )}
 
               <div className={styles.previewContent}>
-                <strong>{embed.title || domain}</strong>
-                {embed.description && <p>{embed.description}</p>}
+                <div className={styles.previewSiteRow}>
+                  {embed.icon ? (
+                    <span className={styles.previewIconWrap}>
+                      <Image src={normalizeImageSrc(embed.icon)} alt="" width={16} height={16} className={styles.previewIcon} unoptimized />
+                    </span>
+                  ) : (
+                    <span className={styles.previewIconFallback}>{(domain.charAt(0) || "w").toUpperCase()}</span>
+                  )}
+                  <span className={styles.previewSiteName}>{embed.site_name || domain}</span>
+                  {isPressKit && (
+                    <span className={styles.previewBadge}>
+                      <span aria-hidden="true">📰</span> Press Kit
+                    </span>
+                  )}
+                </div>
+                <strong className={styles.previewTitle}>{embed.title || domain}</strong>
+                {embed.description && <p className={styles.previewDesc}>{embed.description}</p>}
               </div>
             </a>
           );
