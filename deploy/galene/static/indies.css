@@ -276,10 +276,17 @@ textarea {
 }
 
 /* =========================  Grade de video / tiles  =====================
-   Alinhamento: cameras e telas compartilhadas ganham espacamento uniforme,
-   centro vertical quando sobra espaco e quadros padronizados.
-   Obs.: as colunas da grade sao definidas inline pelo JS (resizePeers);
-   aqui ajustamos apenas o que o JS nao controla. */
+   Alinhamento estilo Teams/Zoom/Discord:
+
+   1. Sem compartilhamento de tela: grade igualitaria (colunas inline via
+      resizePeers), cada tile de camera com frame e cantos arredondados;
+   2. Com compartilhamento de tela (#peers.has-screenshare, patch 0005):
+      a(s) tela(s) ficam no topo com destaque — uma tela ocupa a linha
+      inteira (palco); varias telas dividem o topo em grade — e as
+      cameras descem para uma faixa de miniaturas abaixo.
+
+   O JS le --thumb-w/--thumb-h via getComputedStyle para calcular o palco;
+   o CSS usa as mesmas variaveis para dimensionar as miniaturas. */
 .video-container {
   background-color: #000000;
 }
@@ -289,31 +296,40 @@ textarea {
   column-gap: 12px;
   align-content: center;
   justify-content: center;
+
+  /* Miniaturas de camera no modo palco + faixa (lidas pelo JS) */
+  --thumb-w: 300px;
+  --thumb-h: 170px;
 }
 
+/* Tile: frame + cantos arredondados (cameras e telas) */
 .peer {
+  position: relative;
   background: #000000;
-  border: 2px solid #242424;
-  border-radius: 3px;
+  border: 2px solid #4a4f57;
+  border-radius: 14px;
+  overflow: hidden;
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.03),
-    0 2px 6px rgba(0, 0, 0, 0.55);
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 2px 10px rgba(0, 0, 0, 0.6);
 }
 
-.peer-active {
+/* Quem esta com microfone ativo (fala): borda na cor da marca */
+.peer.peer-active {
   border-color: #610a86;
   box-shadow:
-    0 0 12px rgba(97, 10, 134, 0.8),
+    0 0 0 1px rgba(97, 10, 134, 0.5),
+    0 0 14px rgba(97, 10, 134, 0.8),
     inset 0 0 0 1px rgba(97, 10, 134, 0.35);
 }
 
-/* Tela compartilhada (patch 0004): moldura lilas para diferenciar da cam. */
-.peer-screenshare {
-  border-color: #6a1e8a;
+.peer:not(.peer-active):hover {
+  border-color: #8a8f99;
 }
 
 .media {
   display: block;
+  width: 100%;
   background-color: #000000;
 }
 
@@ -323,6 +339,96 @@ textarea {
   line-height: 26px;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
   background: linear-gradient(0deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0) 72%);
+}
+
+/* ----------  Modo palco + faixa (so com compartilhamento de tela)  ------
+   #peers vira flex-wrap; o palco e o primeiro item (order -1) e as
+   cameras fluem em miniaturas nas linhas seguintes, centralizadas. */
+#peers.has-screenshare {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  justify-content: center;
+}
+
+#peers.has-screenshare .peer {
+  margin: 0;
+  box-sizing: border-box;
+}
+
+/* Palco: linha inteira no topo, com destaque (moldura lilas + glow) */
+#peers.has-screenshare .peer-screenshare {
+  order: -1;
+  flex: 1 1 100%;
+  min-height: 120px;
+  border-color: #6a1e8a;
+  box-shadow:
+    0 0 0 1px rgba(97, 10, 134, 0.55),
+    0 0 22px rgba(97, 10, 134, 0.55);
+}
+
+/* Apresentador falando ao mesmo tempo: anel ativo sobre o palco */
+#peers.has-screenshare .peer-screenshare.peer-active {
+  border-color: #a140cc;
+  box-shadow:
+    0 0 0 2px rgba(97, 10, 134, 0.9),
+    0 0 26px rgba(97, 10, 134, 0.85),
+    0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+/* Selo "Apresentando" no canto do palco (nao bloqueia clique) */
+#peers.has-screenshare .peer-screenshare::before {
+  content: "Apresentando";
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  z-index: 4;
+  padding: 3px 10px;
+  background: rgba(97, 10, 134, 0.85);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+/* Varias telas sendo compartilhadas (classe has-many-screens marcada no
+   resizePeersScreenshare): os tiles de tela dividem o topo em grade e o
+   JS dimensiona cada um inline.  Aqui so removemos o que era exclusivo
+   do palco unico: o min-height fixo e o selo "Apresentando" repetido. */
+#peers.has-screenshare.has-many-screens .peer-screenshare {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+#peers.has-screenshare.has-many-screens .peer-screenshare::before {
+  content: none;
+}
+
+/* Miniaturas de camera da faixa inferior */
+#peers.has-screenshare .peer:not(.peer-screenshare) {
+  flex: 0 0 var(--thumb-w);
+  width: var(--thumb-w);
+  height: var(--thumb-h);
+}
+
+/* No modo palco a midia preenche o tile; a camera corta (cover) para
+   uniformizar a faixa, o palco exibe a tela inteira (contain).  As regras
+   base do galene.css (.media max-height/padding-bottom) nao valem aqui. */
+#peers.has-screenshare .media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  padding-bottom: 0;
+  object-fit: cover;
+}
+
+#peers.has-screenshare .peer-screenshare .media {
+  object-fit: contain;
 }
 
 /* =====================  Feedback visual / status  ======================= */
@@ -335,5 +441,11 @@ textarea {
   #peers {
     row-gap: 6px;
     column-gap: 6px;
+    --thumb-w: 160px;
+    --thumb-h: 100px;
+  }
+
+  #peers.has-screenshare .peer-screenshare {
+    min-height: 96px;
   }
 }

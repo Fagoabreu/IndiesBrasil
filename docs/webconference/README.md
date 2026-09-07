@@ -1,18 +1,23 @@
-# Webconferência — Galene 1.1 (produção)
+# Webconferência — Galene 1.1
 
 Runbook operacional da integração da webconferência de estúdio com o
 [Galene](https://galene.org/) (SFU em Go, sem IA no servidor).
 
 Índice do código:
 
-- `lib/galene.js` — provisiona `groups/<room>.json` + emite JWT HS256 + monta a
-  URL de entrada (`getAuthSecret`, `getMeetOrigin`, `ensureRoomProvisioned`,
+- `lib/galene.js` — provisiona `groups/<room>.json` (inclui `displayName` do
+  estúdio, título exibido no topo da sala) + emite JWT HS256 + monta a URL de
+  entrada (`getAuthSecret`, `getMeetOrigin`, `ensureRoomProvisioned`,
   `createJoinTokenAndUrl`).
 - `models/meeting.js` + `pages/api/v1/meetings/*` — agendamento, código
   expirante por reunião e convite de externos.
 - `pages/reunioes/[meetingId]/index.js` — fluxo do convidado (código → nova
   aba com o cliente Galene).
-- `deploy/compose.yaml` — serviço `galene` (`network_mode: host`).
+- `deploy/compose.yaml` — serviço `galene` em produção (`network_mode: host`).
+- `infra/compose.yaml` — serviço `galene` no dev local (build a partir de
+  `deploy/galene`, porta `8000` publicada, TURN desligado).
+- `deploy/galene/patches/` + `deploy/galene/static/indies.css` — patches
+  `0001`–`0005` e skin do cliente aplicados no build da imagem.
 - `deploy/nginx/meet.https.conf` — vhost TLS `meet.jogos.social.br` →
   proxy para o Galene.
 - `deploy/galene/` — Dockerfile (tag `galene-1.1`) e docs da imagem.
@@ -33,6 +38,30 @@ Runbook operacional da integração da webconferência de estúdio com o
   do host e a mídia SFU é relayada pelo servidor.
 - Porta `:8000` **não** é liberada no firewall — só nginx (443) chega nela.
 - `indies-app` e `galene` compartilham o volume `galene-groups` (uid 1001).
+
+## Desenvolvimento local
+
+O compose de dev (`infra/compose.yaml`) ganhou o serviço `galene`, então
+`npm run dev` sobe o servidor junto com o banco e o Mailcatcher:
+
+```sh
+npm run dev            # compila a imagem na 1ª vez e sobe tudo
+# ou, só o servidor Galene:
+docker compose -f infra/compose.yaml up -d galene
+```
+
+- Cliente (escolha de sala): `http://localhost:8000`.
+- Sem variáveis extras: `lib/galene.js` usa `MEET_URL=ws://localhost:8000` e a
+  chave de desenvolvimento fixa quando as envs não existem.
+- O grupo provisionado pelo app cai em `deploy/galene/groups/<room>.json`
+  (bind-mount) e o Galene faz hot-reload.
+- Diferenças para produção: porta `8000` publicada (sem `network_mode: host`),
+  `-turn ""` e sem `data/config.json` (com `-insecure` a `proxyURL` é
+  opcional). Ao alterar `deploy/galene/{patches,static}`, reconstrua a imagem:
+  ```sh
+  docker compose -f infra/compose.yaml build galene
+  docker compose -f infra/compose.yaml up -d --force-recreate galene
+  ```
 
 ## Setup único (manual) — pendências fora do repositório
 
@@ -81,7 +110,8 @@ O workflow `deploy.yml` já cuida de:
   `MEET_URL`) — sem isso o Galene anuncia `ws://` e o WebSocket falha em
   página https (veja "Solução de problemas");
 - build da imagem `indies-galene:galene-1.1` a partir de `deploy/galene`
-  (inclui os patches de `deploy/galene/patches/` aplicados no build);
+  (aplica os patches `0001`–`0005` de `deploy/galene/patches/` e copia a skin
+  `static/indies.css` para o container);
 - `up --force-recreate indies-app galene` e `up nginx` (recriação do nginx só
   quando o compose muda — ex.: `extra_hosts`).
 
@@ -107,14 +137,54 @@ cd /var/www/indies
 docker compose -f compose.yaml up -d --force-recreate galene
 ```
 
+## Customização do cliente (patches + skin)
+
+Toda alteração cosmética do cliente é feita por **patches sobre a tag fixa** +
+um CSS de overlay local (`static/indies.css`), aplicados no build da imagem —
+nada é editado à mão dentro do container:
+
+| Patch / arquivo                        | Efeito                                                                                                                                                                                                                                   |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0001-keep-join-token-on-reload.patch` | Mantém o `?token=` (sessionStorage) ao dar refresh — evita o "softlock" de login                                                                                                                                                         |
+| `0002-studio-name-header.patch`        | Exibe o `displayName` do grupo (nome do estúdio) também no painel esquerdo (não só no `#title`)                                                                                                                                          |
+| `0003-load-indies-theme.patch`         | Injeta `<link href="/indies.css">` após o `galene.css` no `head`                                                                                                                                                                         |
+| `0004-mark-screenshare-peer.patch`     | Adiciona a classe `peer-screenshare` ao tile de compartilhamento de tela                                                                                                                                                                 |
+| `0005-stage-layout-screenshare.patch`  | Com screenshare ativo, as telas ficam no topo com destaque (uma = palco em linha inteira; várias = grade) e as câmeras viram faixa de miniaturas (padrão Teams/Zoom/Discord)                                                             |
+| `static/indies.css`                    | Skin "MSN Messenger": paleta roxa da marca; molduras/bevel, lista de contatos, grade igualitária arredondada e modo palco+faixa (`#peers.has-screenshare`, com variáveis `--thumb-w`/`--thumb-h` para calibrar o tamanho das miniaturas) |
+
+O `displayName` é gravado no grupo no provisionamento
+(`lib/galene.js` → `ensureRoomProvisioned(roomId, displayName)`), alimentando
+o patch `0002`. Detalhes de cada patch em `deploy/galene/patches/README.md`.
+
+### Modo palco + faixa (compartilhamento de tela)
+
+O patch `0005` detecta os tiles `.peer-screenshare` no `resizePeers` e marca o
+container com `has-screenshare`; o `indies.css` então troca a grade igualitária
+por um layout flex: as telas compartilhadas ocupam o topo — uma tela vira
+"palco" em linha inteira (destaque roxo + selo "Apresentando"); várias telas
+dividem o topo em grade — e as câmeras descem como miniaturas centralizadas,
+sempre visíveis na parte de baixo.
+
+Para calibrar o tamanho das miniaturas e a altura do palco, ajuste em
+`deploy/galene/static/indies.css` as variáveis `--thumb-w`/`--thumb-h` do
+`#peers` (a faixa mobile fica no `@media (max-width:1024px)`). O `resizePeersScreenshare`
+lê essas variáveis via `getComputedStyle` a cada redimensionamento, então não
+há nada a mexer no JS.
+
+Como `indies.css` é servido com cache, após alterar a skin faça **hard refresh
+(Ctrl+F5)** na sala — e, para validar as mudanças, use a aba de
+desenvolvedor em "Network" para confirmar que `/indies.css` veio atualizado.
+
 ## Solução de problemas
 
-| Sintoma                                                 | Causa provável                                                        | Ação                                                                                                        |
-| ------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Sala não entra / TURN morre                             | Firewall fechado ou rede errada                                       | Conferir ufw (1194 + 40000-40100/udp) e que `galene` está em `network_mode: host`                           |
-| Certificado inválido no navegador                       | SAN `meet` ainda não emitido                                          | Atualizar `CERTBOT_DOMAIN` e rodar `deploy-infra` (ou renovação)                                            |
-| 502 no `meet.jogos.social.br`                           | nginx não recriado com `extra_hosts`                                  | `docker compose up -d --no-deps nginx`                                                                      |
-| JWT rejeitado (`invalid signature`)                     | `GALENE_AUTH_SECRET` diverge da `authKeys`                            | Regenerar grupos com a secret correta (hot-reload)                                                          |
-| Cliente tenta `ws://` (Mixed Content / "Not Connected") | `data/config.json` sem `proxyURL`                                     | Gravar `"proxyURL": "https://meet.jogos.social.br"` (deploy ou manual) e `docker restart galene`            |
-| Refresh na sala pede login (usuário/senha)              | Galene remove o `?token=` da URL após o join                          | Usar imagem com o patch `0001-keep-join-token-on-reload` (sessionStorage) — exige `--force-recreate galene` |
-| Sem áudio no navegador MI (Xiaomi)                      | Autoplay/permissão de microfone restritas; navegador Chromium próprio | Liberar autoplay e microfone nas configurações do MI; como fallback testar em Chrome/Edge/desktop           |
+| Sintoma                                                 | Causa provável                                                        | Ação                                                                                              |
+| ------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Sala não entra / TURN morre                             | Firewall fechado ou rede errada                                       | Conferir ufw (1194 + 40000-40100/udp) e que `galene` está em `network_mode: host`                 |
+| Certificado inválido no navegador                       | SAN `meet` ainda não emitido                                          | Atualizar `CERTBOT_DOMAIN` e rodar `deploy-infra` (ou renovação)                                  |
+| 502 no `meet.jogos.social.br`                           | nginx não recriado com `extra_hosts`                                  | `docker compose up -d --no-deps nginx`                                                            |
+| JWT rejeitado (`invalid signature`)                     | `GALENE_AUTH_SECRET` diverge da `authKeys`                            | Regenerar grupos com a secret correta (hot-reload)                                                |
+| Cliente tenta `ws://` (Mixed Content / "Not Connected") | `data/config.json` sem `proxyURL`                                     | Gravar `"proxyURL": "https://meet.jogos.social.br"` (deploy ou manual) e `docker restart galene`  |
+| Refresh na sala pede login (usuário/senha)              | Galene remove o `?token=` da URL após o join                          | Usar imagem com os patches `0001`–`0005` (sessionStorage) — exige `--force-recreate galene`       |
+| Topo esquerdo mostra "Galène" em vez do estúdio         | Grupo sem `displayName` ou imagem sem o patch `0002`                  | Provisionar com `displayName` (nome do estúdio) e usar imagem com os patches `0001`–`0005`        |
+| Tema MSN/grade não aparece no navegador                 | Cache do CSS ou imagem sem a skin                                     | Hard refresh (Ctrl+F5) e confirmar `/indies.css` (patch `0003`) + `static/indies.css` na imagem   |
+| Sem áudio no navegador MI (Xiaomi)                      | Autoplay/permissão de microfone restritas; navegador Chromium próprio | Liberar autoplay e microfone nas configurações do MI; como fallback testar em Chrome/Edge/desktop |

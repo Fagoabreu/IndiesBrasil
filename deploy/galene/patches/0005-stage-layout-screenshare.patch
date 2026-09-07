@@ -1,0 +1,142 @@
+diff --git a/static/galene.js b/static/galene.js
+index 5b48d41..c6651de 100644
+--- a/static/galene.js
++++ b/static/galene.js
+@@ -2403,10 +2403,32 @@ function resizePeers() {
+     // Window resize can call this method too early
+     if (!serverConnection)
+         return;
++    let peers = document.getElementById('peers');
++
++    // Com compartilhamento de tela (patch 0004): as telas ficam no topo
++    // com destaque.  Uma tela vira palco em linha inteira; varias telas
++    // dividem o topo em grade.  As cameras ficam em miniaturas abaixo
++    // (padrao Teams/Zoom/Discord).  Sem screenshare, grade igualitaria.
++    let screenPeers = [];
++    for(let i = 0; i < peers.children.length; i++) {
++        let elt = peers.children[i];
++        if(!(elt instanceof HTMLElement) ||
++           elt.classList.contains('peer-hidden'))
++            continue;
++        if(elt.classList.contains('peer-screenshare'))
++            screenPeers.push(elt);
++    }
++    if(screenPeers.length > 0) {
++        peers.classList.add('has-screenshare');
++        resizePeersScreenshare(peers, screenPeers);
++        return;
++    }
++    peers.classList.remove('has-screenshare');
++    peers.classList.remove('has-many-screens');
++
+     let count =
+         Object.keys(serverConnection.up).length +
+         Object.keys(serverConnection.down).length;
+-    let peers = document.getElementById('peers');
+     let columns = Math.ceil(Math.sqrt(count));
+     if (!count)
+         // No video, nothing to resize.
+@@ -2437,6 +2459,103 @@ function resizePeers() {
+     }
+ }
+ 
++/**
++ * Layout "palco + faixa" quando alguem compartilha a tela.  No CSS o
++ * #peers.has-screenshare vira flex-wrap: tiles de screenshare ficam no
++ * topo (order -1) e as cameras formam miniaturas nas linhas seguintes.
++ * Uma tela ocupa a linha inteira do palco; varias telas dividem essa
++ * area em uma grade (colunas x linhas), para a faixa de cameras nao ser
++ * empurrada para fora da area visivel.  Aqui calculamos as dimensoes de
++ * telas e faixa para preencherem o container sem estourar.
++ *
++ * @param {HTMLElement} peers
++ * @param {Array<HTMLElement>} screenPeers
++ */
++function resizePeersScreenshare(peers, screenPeers) {
++    let container = document.getElementById('video-container');
++    let cs = window.getComputedStyle(peers);
++    let rowGap = parseFloat(cs.rowGap);
++    if(Number.isNaN(rowGap))
++        rowGap = 10;
++    let colGap = parseFloat(cs.columnGap);
++    if(Number.isNaN(colGap))
++        colGap = 12;
++    let padX = (parseFloat(cs.paddingLeft) || 0) +
++               (parseFloat(cs.paddingRight) || 0);
++    let padY = (parseFloat(cs.paddingTop) || 0) +
++               (parseFloat(cs.paddingBottom) || 0);
++    let thumbW = parseFloat(cs.getPropertyValue('--thumb-w'));
++    if(Number.isNaN(thumbW) || thumbW <= 0)
++        thumbW = 240;
++    let thumbH = parseFloat(cs.getPropertyValue('--thumb-h'));
++    if(Number.isNaN(thumbH) || thumbH <= 0)
++        thumbH = 140;
++
++    // Somente cameras visiveis contam para a faixa.
++    let cams = [];
++    for(let i = 0; i < peers.children.length; i++) {
++        let elt = peers.children[i];
++        if(!(elt instanceof HTMLElement) ||
++           elt.classList.contains('peer-screenshare') ||
++           elt.classList.contains('peer-hidden'))
++            continue;
++        cams.push(elt);
++    }
++    let camCount = cams.length;
++    let contentW = Math.max(container.offsetWidth - padX, 1);
++    let perRow =
++        Math.max(1, Math.floor((contentW + colGap) / (thumbW + colGap)));
++    let camRows = camCount === 0 ? 0 : Math.ceil(camCount / perRow);
++
++    // Altura livre para as telas: espaco total menos padding menos as
++    // linhas de miniaturas (incluindo o gap entre telas e faixa).
++    let stripH = camRows * (thumbH + rowGap);
++    let stageH = container.offsetHeight - padY - stripH;
++    if(stageH < 120)
++        stageH = 120;
++
++    let nScreens = screenPeers.length;
++    if(nScreens === 1) {
++        // Palco unico: linha inteira ocupando toda a altura livre.
++        peers.classList.remove('has-many-screens');
++        for(let i = 0; i < nScreens; i++) {
++            let elt = screenPeers[i];
++            elt.style['flex'] = '';
++            elt.style['width'] = '';
++            elt.style['height'] = stageH + 'px';
++            let media = elt.querySelector('.media');
++            if(media instanceof HTMLMediaElement)
++                media.style['max-height'] = '';
++        }
++    } else {
++        // Varias telas: dividem a area livre em grade; o CSS
++        // (#peers.has-many-screens) zera o min-height e esconde o selo.
++        peers.classList.add('has-many-screens');
++        let cols = nScreens <= 3 ? nScreens : Math.ceil(Math.sqrt(nScreens));
++        let rows = Math.ceil(nScreens / cols);
++        let screenW = Math.floor((contentW - (cols - 1) * colGap) / cols);
++        let screenH = Math.floor((stageH - (rows - 1) * rowGap) / rows);
++        for(let i = 0; i < nScreens; i++) {
++            let elt = screenPeers[i];
++            elt.style['flex'] = '0 0 ' + screenW + 'px';
++            elt.style['width'] = screenW + 'px';
++            elt.style['height'] = screenH + 'px';
++            let media = elt.querySelector('.media');
++            if(media instanceof HTMLMediaElement)
++                media.style['max-height'] = '';
++        }
++    }
++
++    // Remove o max-height de grade igualitaria deixado em chamadas
++    // anteriores; no modo palco o CSS controla a altura (height: 100%).
++    let media_list = peers.querySelectorAll('.media');
++    for(let i = 0; i < media_list.length; i++) {
++        let media = media_list[i];
++        if(media instanceof HTMLMediaElement)
++            media.style['max-height'] = '';
++    }
++}
++
+ /**
+  * Lexicographic order, with case differences secondary.
+  * @param{string} a
