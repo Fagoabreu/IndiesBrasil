@@ -4,8 +4,77 @@ Portal da comunidade de desenvolvedores indie brasileiros. Plataforma web com fe
 
 ---
 
+## Funcionalidades
+
+### Contas e perfis
+
+- Criação de conta com e-mail, **ativação por token** e recuperação de senha; sessão segura por cookie.
+- **Perfil público** por `@username` com foto, capa e biografia.
+- **Currículo do membro**: formações, histórico profissional (com reordenação), profissões, ferramentas/softwares dominados e contatos (Discord, e-mail, redes sociais etc.).
+- **Caderno de endereços** (endereços salvos) para agilizar pedidos na loja.
+- **Seguir membros** e receber **notificações** de atividade.
+- **Sistema de reputação**: pontos por ações positivas (criar posts, comentar, publicar obras, denúncias validadas), com limites diários — sinal de confiança e atividade, não gamificação.
+
+### Comunidade / Social
+
+- **Home** com vitrine de conteúdo em destaque, tags em alta e sugestões de quem seguir.
+- **Posts** com texto e imagens, incorporação de conteúdo externo (YouTube, Vimeo, Twitch, Steam, Instagram etc.), **enquetes**, curtidas, comentários, compartilhamento por link, **embed público do post** e denúncia.
+- **Diretório de membros** com busca e filtros.
+
+### Estúdios e obras
+
+- **Página de estúdio** completa: logo/capa, pitch, membros com funções, contatos, press kit, obras, loja, streams e reuniões.
+- Convites de participação no estúdio e **follow** de estúdios.
+- **Relacionamentos entre estúdios** (parceiro, distribuidora, publicadora, incubadora, investidora etc.).
+- Catálogos de **Jogos Digitais**, **Jogos de Mesa** e **Livros & Quadrinhos** com ficha completa, galeria de imagens, follow e reviews.
+- **Autoclassificação indicativa** por questionário (ClassInd/ECA Digital — jogos) e sugestões para jogos de mesa, livros e quadrinhos, com selos de **monetização** (Lei Felca).
+- **Leitor de livros e quadrinhos digitais** em PDF no navegador.
+
+### Artigos e educação
+
+- **Notícias** do cenário indie com comentários e verificação (fact-check).
+- **Análises e reviews** de conteúdo em páginas dedicadas.
+- **Cursos**: módulos e aulas em vídeo, inscrição, progresso, comentários por aula e avaliação.
+
+### Agenda e eventos
+
+- **Calendário de eventos** com filtro por tipo; criação/edição com banner; confirmação de presença (**RSVP**), convites e posts vinculados ao evento.
+
+### Webconferência (Galene)
+
+- **Reuniões agendadas** por estúdio com sala própria; participação de membros ou **convidados por código**; câmeras e **compartilhamento de tela** com layout em palco + faixa de miniaturas (várias telas dividem o topo em grade).
+
+### Loja
+
+- **Produtos digitais e físicos** por estúdio, com preço, galeria e prazo de entrega.
+- **Pedidos** com quantidade, nota do comprador e endereço de entrega (salvo ou novo); acompanhamento de status e cancelamento.
+- **E-mails automáticos** para comprador e estúdio (pedido recebido / status atualizado).
+
+### Streams ao vivo
+
+- Agrega **canais Twitch e YouTube** dos estúdios com status ao vivo/offline, título, audiência e miniatura.
+
+### Ferramentas
+
+- **Gerador de QR Code**, **recorte de imagem** (crop), **visualizador/formatador XML e JSON**, **visualizador de HTML** e **conversão de imagens para PDF**.
+
+### Administração e moderação
+
+- Cadastros base: **tipos de contato**, **ferramentas** e **profissões**.
+- **Fila de denúncias** com resolução (impacta a reputação) e **moderação** de conteúdo.
+- **Página de status do servidor** (banco, API etc.).
+
+### Plataforma
+
+- **SEO**: meta tags, Open Graph/Twitter Cards, `sitemap.xml` e `robots.txt`.
+- **Tema claro/escuro** por cookie.
+- **Proxies de imagem e PDF** com proteção contra SSRF, **preview de links** e uploads via **Cloudinary**.
+
+---
+
 ## Sumário
 
+- [Funcionalidades](#funcionalidades)
 - [Pré-requisitos](#pré-requisitos)
 - [Rodando localmente](#rodando-localmente)
 - [Estrutura do projeto](#estrutura-do-projeto)
