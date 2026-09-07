@@ -1,4 +1,23 @@
+/* Root da landing — ocupa a página inteira e pinta o fundo com as
+   variáveis de tema. Páginas `noLayout` não passam pelo Layout (que aplica
+   o fundo via .layout-body), e o <body> fica fora do ThemeProvider do Primer
+   — sem isso o fundo da página permanece branco no tema escuro. */
+.root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: var(--fgColor-default);
+  background:
+    radial-gradient(circle at 0% 0%, var(--bgColor-accent-muted), transparent 28%),
+    radial-gradient(circle at 100% 100%, var(--bgColor-muted), transparent 22%), var(--bgColor-inset);
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
 .page {
+  flex: 1;
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1rem 5rem;
