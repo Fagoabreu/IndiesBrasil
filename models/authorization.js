@@ -191,6 +191,10 @@ const availableFeatures = new Set([
   "update:meeting",
   "delete:meeting",
 
+  //testimonial (depoimentos)
+  "create:testimonial",
+  "read:testimonial",
+
   //content-review (analises)
   "read:content_review",
   "read:content_review:all",

@@ -209,6 +209,9 @@ async function activateUserByUserId(userId) {
     "read:meeting",
     "create:meeting",
     "update:meeting",
+    //testimonial (depoimentos)
+    "create:testimonial",
+    "read:testimonial",
     //content-review (analises)
     "read:content_review",
     "read:content_review:all",

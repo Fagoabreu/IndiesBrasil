@@ -53,7 +53,6 @@ export default function LeftSidebarComponent({ onNavigate }) {
               </NavList.LeadingVisual>
               Home
             </NavList.Item>
-
             <NavList.Item as={Link} href="/posts" aria-current={router.pathname.startsWith("/posts")} onClick={onNavigate}>
               <NavList.LeadingVisual>
                 <CommentDiscussionIcon />
@@ -112,12 +111,6 @@ export default function LeftSidebarComponent({ onNavigate }) {
                 <BookIcon />
               </NavList.LeadingVisual>
               Livros e Quadrinhos
-            </NavList.Item>
-            <NavList.Item as={Link} href="/loja" aria-current={router.pathname.startsWith("/loja")} onClick={onNavigate}>
-              <NavList.LeadingVisual>
-                <GiftIcon />
-              </NavList.LeadingVisual>
-              Loja
             </NavList.Item>
             <NavList.Item as={Link} href="/streams" aria-current={router.pathname.startsWith("/streams")} onClick={onNavigate}>
               <NavList.LeadingVisual>
@@ -253,6 +246,12 @@ export default function LeftSidebarComponent({ onNavigate }) {
           </NavList.LeadingVisual>
           Em Construção
           <NavList.SubNav>
+            <NavList.Item as={Link} href="/loja" aria-current={router.pathname.startsWith("/loja")} onClick={onNavigate}>
+              <NavList.LeadingVisual>
+                <GiftIcon />
+              </NavList.LeadingVisual>
+              Loja
+            </NavList.Item>
             <NavList.Item as={Link} href="/construcao/ajuda" aria-current={router.pathname.startsWith("/construcao/ajuda")} onClick={onNavigate}>
               <NavList.LeadingVisual>
                 <BroadcastIcon />

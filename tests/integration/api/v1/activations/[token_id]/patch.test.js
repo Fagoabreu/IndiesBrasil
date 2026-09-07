@@ -197,6 +197,8 @@ describe("PATCH /api/v1/activations/[token_id]", () => {
         "read:meeting",
         "create:meeting",
         "update:meeting",
+        "create:testimonial",
+        "read:testimonial",
         "read:content_review",
         "read:content_review:all",
         "create:content_review",
