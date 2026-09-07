@@ -54,6 +54,32 @@ describe("lib/galene.js", () => {
       expect(group.displayName).toBeUndefined();
     });
 
+    test("grava authKeys k em base64url SEM padding (RawURLEncoding do Galene)", async () => {
+      process.env.GALENE_GROUPS_DIR = groupsDir;
+      // Entrada com padding: o Galene decodifica `k` com base64url sem padding
+      // (Go base64.RawURLEncoding) e rejeita "=" (token unverifiable). A chave
+      // precisa ter exatamente 32 bytes (HS256 do Galene).
+      const rawKey = Buffer.from("0123456789abcdef0123456789abcdef", "utf8"); // 32 bytes
+      const padded = rawKey.toString("base64");
+      const unpadded = rawKey.toString("base64url");
+      expect(padded).toMatch(/=$/);
+      process.env.GALENE_AUTH_SECRET = padded;
+      try {
+        const roomId = "paddedsecret001";
+        await galene.ensureRoomProvisioned(roomId);
+
+        const group = JSON.parse(await readFile(path.join(groupsDir, `${roomId}.json`), "utf8"));
+        const k = group.authKeys[0].k;
+
+        expect(k).toBe(unpadded);
+        expect(k).toMatch(/^[A-Za-z0-9_-]+$/);
+        expect(k).not.toMatch(/=/);
+        expect(galene.getAuthSecret().encoded).toBe(k);
+      } finally {
+        delete process.env.GALENE_AUTH_SECRET;
+      }
+    });
+
     test("grava displayName do estúdio quando informado", async () => {
       process.env.GALENE_GROUPS_DIR = groupsDir;
       process.env.MEET_URL = "wss://meet.example.com";
@@ -197,13 +223,36 @@ describe("lib/galene.js", () => {
       }
     });
 
-    test("usa fallback determinístico fora de produção", () => {
+    test("usa fallback determinístico de 32 bytes fora de produção", () => {
       process.env.NODE_ENV = "test";
       delete process.env.GALENE_AUTH_SECRET;
 
       const { keyBytes, encoded } = galene.getAuthSecret();
-      expect(keyBytes.length).toBeGreaterThanOrEqual(32);
-      expect(encoded).toBeTruthy();
+      expect(keyBytes).toHaveLength(32);
+      expect(Buffer.from(encoded, "base64url")).toHaveLength(32);
+    });
+
+    test("rejeita chave com menos de 32 bytes (HS256 exige exatamente 32)", () => {
+      process.env.NODE_ENV = "test";
+      process.env.GALENE_AUTH_SECRET = "q4NU-U5Nx5I5FkttMVMVIg"; // 16 bytes
+
+      try {
+        expect(() => galene.getAuthSecret()).toThrow(/exatamente 32 bytes/);
+      } finally {
+        delete process.env.GALENE_AUTH_SECRET;
+      }
+    });
+
+    test("rejeita chave com mais de 32 bytes (HS256 exige exatamente 32)", () => {
+      process.env.NODE_ENV = "test";
+      // 38 bytes: era o antigo fallback de desenvolvimento.
+      process.env.GALENE_AUTH_SECRET = "aW5kaWVzYnJhbC1kZXYtZ2FsZW5lLXNlY3JldC0zMi1ieXRlcyE";
+
+      try {
+        expect(() => galene.getAuthSecret()).toThrow(/exatamente 32 bytes/);
+      } finally {
+        delete process.env.GALENE_AUTH_SECRET;
+      }
     });
   });
 });

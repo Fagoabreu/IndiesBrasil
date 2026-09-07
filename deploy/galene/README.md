@@ -12,15 +12,16 @@ blur não é compilado).
   release oficial `jech/galene` (tag fixa `galene-1.1`). O GitHub Actions
   (`deploy.yml`) executa o build durante o deploy. Não existe imagem oficial
   no Docker Hub — apenas de terceiros, então o build é do código-fonte.
-- `patches/` — 4 patches aplicados via `git apply` sobre a tag fixada **antes**
+- `patches/` — 5 patches aplicados via `git apply` sobre a tag fixada **antes**
   do build (falham o build se não casarem): `0001` mantém o token no refresh,
   `0002` exibe o nome do estúdio no cabeçalho (usa o `displayName` do grupo),
-  `0003` carrega o CSS local e `0004` marca os tiles de screenshare. Ver
+  `0003` carrega o CSS local, `0004` marca os tiles de screenshare e `0005`
+  transforma o compartilhamento em "palco" + faixa de miniaturas. Ver
   `patches/README.md`.
 - `static/indies.css` — skin "MSN Messenger" do cliente: carregada depois do
   `galene.css` (patch `0003`) e copiada pelo Dockerfile para `/src/static`.
-  Altera apenas aparência (molduras, gradientes, grade de vídeo); mantém a
-  paleta roxa da marca e não remove funcionalidade.
+  Altera apenas aparência (molduras, gradientes, grade de vídeo, modo
+  palco+faixa); mantém a paleta roxa da marca e não remove funcionalidade.
 - `groups/.gitkeep` — os arquivos `groups/<room>.json` são provisionados em
   runtime pela plataforma (`lib/galene.js`, `GALENE_GROUPS_DIR`) e vivem no
   volume `galene-groups`, não no repositório.
