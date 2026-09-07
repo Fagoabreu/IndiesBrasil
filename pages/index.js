@@ -177,7 +177,7 @@ function Home() {
   }, []);
 
   return (
-    <>
+    <div className={styles.root}>
       <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} jsonLd={JSON_LD} />
 
       {/* ════════════════════════════════════
@@ -605,7 +605,7 @@ function Home() {
           </span>
         </div>
       </footer>
-    </>
+    </div>
   );
 }
 
