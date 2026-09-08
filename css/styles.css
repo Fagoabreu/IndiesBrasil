@@ -201,6 +201,16 @@
   --syntax-attr: #0a3069; /* Primer dark blue */
 }
 
+html {
+  /* Clipping horizontal no nível do viewport. Overflow-x no <body> é
+     propagado ao viewport na teoria, mas engines mobile (ex.: iOS Safari)
+     não aplicam — e o glow do hero da landing (inset negativo) estende o
+     documento além da tela, expondo o canvas branco do <html> numa faixa
+     à direita. Com o clipping aqui, a largura do documento nunca passa
+     da viewport. */
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   padding: 0;

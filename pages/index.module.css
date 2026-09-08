@@ -6,6 +6,12 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  /* `clip` (não `hidden`) evita que overflow de filhos — ex.: o glow do
+     .hero::before com inset negativo — estenda o documento além da viewport
+     e exponha o fundo branco do <html> numa faixa à direita no mobile.
+     `clip` não cria scroll container, então o header `position: sticky`
+     continua funcionando. */
+  overflow-x: clip;
   color: var(--fgColor-default);
   background:
     radial-gradient(circle at 0% 0%, var(--bgColor-accent-muted), transparent 28%),
