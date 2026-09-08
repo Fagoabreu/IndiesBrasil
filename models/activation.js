@@ -206,9 +206,11 @@ async function activateUserByUserId(userId) {
     "update:address",
     "delete:address",
     //meeting (webconferência)
+    "read:meeting:all",
     "read:meeting",
     "create:meeting",
     "update:meeting",
+    "delete:meeting",
     //testimonial (depoimentos)
     "create:testimonial",
     "read:testimonial",
