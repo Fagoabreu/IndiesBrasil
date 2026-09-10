@@ -298,9 +298,105 @@ async function resolveSteam(url) {
   };
 }
 
+/* ---------------------------------------------------------------
+ * Widget da itch.io
+ *
+ * O widget oficial é um iframe (https://itch.io/embed/<id>), mas o id numérico
+ * não existe na URL da loja (ex.: estudio.itch.io/meujogo) — ele só é exposto
+ * pela página /embed do próprio jogo. A resolução acontece aqui e é memorizada
+ * em memória para não repetir a requisição externa a cada visita da página.
+ * --------------------------------------------------------------- */
+
+const ITCH_WIDGET_HIT_TTL_MS = 24 * 60 * 60 * 1000; // 24h quando resolve
+const ITCH_WIDGET_MISS_TTL_MS = 10 * 60 * 1000; // 10min quando falha
+const ITCH_WIDGET_CACHE_LIMIT = 200;
+
+const itchWidgetCache = new Map();
+
+function isItchHost(hostname) {
+  return hostname === "itch.io" || hostname.endsWith(".itch.io");
+}
+
+function makeItchWidget(id) {
+  return { id, embedUrl: `https://itch.io/embed/${id}` };
+}
+
+/** Memoriza o resultado (inclusive falhas) para não repetir a busca. */
+function rememberItchWidget(cacheKey, widget) {
+  if (itchWidgetCache.size >= ITCH_WIDGET_CACHE_LIMIT) {
+    // Descarta a entrada mais antiga (ordem de inserção do Map).
+    const oldestKey = itchWidgetCache.keys().next().value;
+    itchWidgetCache.delete(oldestKey);
+  }
+
+  itchWidgetCache.set(cacheKey, {
+    widget,
+    expiresAt: Date.now() + (widget ? ITCH_WIDGET_HIT_TTL_MS : ITCH_WIDGET_MISS_TTL_MS),
+  });
+}
+
+async function fetchItchWidget(storeBaseUrl) {
+  try {
+    // A página /embed responde um JSON cujo base_url aponta para o widget.
+    const res = await fetch(`${storeBaseUrl}/embed`, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        Accept: "application/json, text/html;q=0.9, */*;q=0.8",
+        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+      },
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (!res.ok) return null;
+
+    // O JSON escapa as barras (https:\/\/itch.io\/embed\/123) — normaliza antes.
+    const body = (await res.text()).replaceAll("\\/", "/");
+    const match = /itch\.io\/embed\/(\d+)/.exec(body);
+
+    return match ? makeItchWidget(match[1]) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Resolve o widget da itch.io a partir da URL da loja do jogo.
+ * Retorna { id, embedUrl } ou null quando não for uma página de jogo da
+ * itch.io ou quando o id numérico não puder ser determinado.
+ */
+async function resolveItchWidget(storeUrl) {
+  if (typeof storeUrl !== "string" || storeUrl.trim() === "") return null;
+
+  let parsed;
+  try {
+    parsed = new URL(storeUrl);
+  } catch {
+    return null;
+  }
+
+  if (!isItchHost(parsed.hostname)) return null;
+
+  // A URL já é a do próprio widget (https://itch.io/embed/<id>).
+  const directMatch = /^\/embed\/(\d+)/.exec(parsed.pathname);
+  if (directMatch) return makeItchWidget(directMatch[1]);
+
+  const pathname = parsed.pathname.endsWith("/") ? parsed.pathname.slice(0, -1) : parsed.pathname;
+  const storeBaseUrl = `${parsed.origin}${pathname}`;
+  const cached = itchWidgetCache.get(storeBaseUrl);
+  if (cached && cached.expiresAt > Date.now()) return cached.widget;
+
+  // Defesa em profundidade — o host já está restrito à itch.io acima.
+  const safe = await isSafeUrl(storeBaseUrl).catch(() => false);
+  const widget = safe ? await fetchItchWidget(storeBaseUrl) : null;
+
+  rememberItchWidget(storeBaseUrl, widget);
+  return widget;
+}
+
 const embededResolver = {
   getEmbededLinks,
   fetchLinkPreview,
+  resolveItchWidget,
 };
 
 export default embededResolver;

@@ -274,13 +274,13 @@ export default function PostsPage() {
                 }}
               />
               {/* Intercala widgets no feed — visíveis só no mobile (≤1280px) */}
-              {index === 1 && (
+              {index === 0 && (
                 <aside className="posts-feed-widget">
                   <span className="posts-feed-widget-label">Assuntos do momento</span>
                   <TrendingTags />
                 </aside>
               )}
-              {index === 3 && (
+              {index === 2 && (
                 <aside className="posts-feed-widget">
                   <span className="posts-feed-widget-label">Sugestões para você</span>
                   <WhoToFollow />
