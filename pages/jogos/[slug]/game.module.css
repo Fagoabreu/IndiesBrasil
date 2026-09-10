@@ -590,6 +590,12 @@
   padding: 12px 14px;
 }
 
+.storeHeaderRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .storeName {
   color: var(--fgColor-default);
   font-size: 0.875rem;
@@ -620,6 +626,14 @@
   display: block;
   width: 100%;
   height: 190px;
+  border: none;
+  border-top: 1px solid var(--borderColor-muted);
+}
+
+.storeItchWidget {
+  display: block;
+  width: 100%;
+  height: 167px;
   border: none;
   border-top: 1px solid var(--borderColor-muted);
 }

@@ -7,6 +7,7 @@ import SeoHead from "@/components/SeoHead";
 import ContentRatingBadge from "@/components/ContentRatingBadge";
 import GameMediaPlayer from "@/components/GameMedia/GameMediaPlayer";
 import GameReviews from "@/components/GameReviews/GameReviews";
+import IconSvg from "@/components/IconSvg/IconSvg";
 
 import styles from "./game.module.css";
 
@@ -48,6 +49,36 @@ const PLATFORM_LABELS = {
   browser: "Navegador",
 };
 
+// Logotipos das lojas — mesmo padrão dos contatos
+// (`contact_type.icon_img` -> /public/images/contacts/<slug>.svg).
+const STORE_LOGO_SLUGS = {
+  steam: "steam",
+  "itch.io": "itchdotio",
+};
+
+function getStoreLogoSrc(storeName) {
+  if (!storeName) return null;
+  const slug = STORE_LOGO_SLUGS[String(storeName).trim().toLowerCase()];
+  return slug ? `/images/contacts/${slug}.svg` : null;
+}
+
+/** URL da página do jogo na itch.io, quando houver (metadados da loja). */
+function getItchStoreUrl(storePages) {
+  if (!Array.isArray(storePages)) return null;
+
+  const page = storePages.find((sp) => {
+    if (!sp?.page_url) return false;
+    try {
+      const { hostname } = new URL(sp.page_url);
+      return hostname === "itch.io" || hostname.endsWith(".itch.io");
+    } catch {
+      return false;
+    }
+  });
+
+  return page?.page_url ?? null;
+}
+
 export async function getServerSideProps(context) {
   const { slug } = context.params;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://jogos.social.br";
@@ -76,6 +107,12 @@ export default function GamePage({ initialGame, siteUrl }) {
   const [followLoading, setFollowLoading] = useState(false);
   const [websitePreview, setWebsitePreview] = useState(null); // {url, data} | null
   const displayPreview = websitePreview && websitePreview.url === gameData?.website_url ? websitePreview.data : null;
+
+  // Widget da itch.io: a URL da loja não inclui o id numérico do widget, então
+  // ele é resolvido no servidor (/api/v1/itch-widget) a partir dos metadados.
+  const [itchWidget, setItchWidget] = useState(null); // {storeUrl, embedUrl} | null
+  const itchStoreUrl = getItchStoreUrl(gameData?.store_pages);
+  const displayItchEmbedUrl = itchWidget && itchWidget.storeUrl === itchStoreUrl ? itchWidget.embedUrl : null;
   const [activeTab, setActiveTab] = useState("overview");
   const [analisesList, setAnalisesList] = useState(null); // {gameId, data} | null
   const displayAnalisesList = analisesList && analisesList.gameId === gameData?.id ? analisesList.data : null;
@@ -123,6 +160,23 @@ export default function GamePage({ initialGame, siteUrl }) {
       cancelled = true;
     };
   }, [gameData?.website_url]);
+
+  useEffect(() => {
+    if (!itchStoreUrl) return;
+    const url = itchStoreUrl;
+    let cancelled = false;
+    fetch(`/api/v1/itch-widget?url=${encodeURIComponent(url)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!cancelled) setItchWidget({ storeUrl: url, embedUrl: data?.embedUrl ?? null });
+      })
+      .catch(() => {
+        if (!cancelled) setItchWidget({ storeUrl: url, embedUrl: null });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [itchStoreUrl]);
 
   useEffect(() => {
     if (!gameData?.id) return;
@@ -357,29 +411,46 @@ export default function GamePage({ initialGame, siteUrl }) {
                         {gameData.store_pages.map((sp) => {
                           const steamMatch = sp.page_url?.match(/store\.steampowered\.com\/app\/(\d+)/);
                           const steamAppId = steamMatch ? steamMatch[1] : null;
+                          const storeLogoSrc = getStoreLogoSrc(sp.store_name);
+                          const itchEmbedUrl = Boolean(itchStoreUrl) && sp.page_url === itchStoreUrl ? displayItchEmbedUrl : null;
+                          const widgetTitle = `${sp.store_name} widget`;
+
+                          let storeEmbed;
+                          if (steamAppId) {
+                            storeEmbed = (
+                              <iframe
+                                src={`https://store.steampowered.com/widget/${steamAppId}/`}
+                                className={styles.storeSteamWidget}
+                                title={widgetTitle}
+                                sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
+                                loading="lazy"
+                              />
+                            );
+                          } else if (itchEmbedUrl) {
+                            storeEmbed = <iframe src={itchEmbedUrl} className={styles.storeItchWidget} title={widgetTitle} loading="lazy" />;
+                          } else {
+                            storeEmbed = (
+                              <a href={sp.page_url} target="_blank" rel="noopener noreferrer" className={styles.storeSimpleLink}>
+                                Visitar loja ↗
+                              </a>
+                            );
+                          }
+
                           return (
                             <div key={sp.id} className={styles.storeCard}>
                               <div className={styles.storeCardHeader}>
-                                <span className={styles.storeName}>{sp.store_name}</span>
+                                <div className={styles.storeHeaderRow}>
+                                  {/* Logo decorativo: o nome da loja já aparece ao lado. */}
+                                  {storeLogoSrc && <IconSvg src={storeLogoSrc} alt="" />}
+                                  <span className={styles.storeName}>{sp.store_name}</span>
+                                </div>
                                 {sp.price != null && (
                                   <span className={`${styles.storePrice} ${Number(sp.price) === 0 ? styles.storePriceFree : ""}`}>
                                     {Number(sp.price) === 0 ? "Grátis" : `R$ ${Number(sp.price).toFixed(2)}`}
                                   </span>
                                 )}
                               </div>
-                              {steamAppId ? (
-                                <iframe
-                                  src={`https://store.steampowered.com/widget/${steamAppId}/`}
-                                  className={styles.storeSteamWidget}
-                                  title={`${sp.store_name} widget`}
-                                  sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
-                                  loading="lazy"
-                                />
-                              ) : (
-                                <a href={sp.page_url} target="_blank" rel="noopener noreferrer" className={styles.storeSimpleLink}>
-                                  Visitar loja ↗
-                                </a>
-                              )}
+                              {storeEmbed}
                             </div>
                           );
                         })}
