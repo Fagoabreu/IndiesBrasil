@@ -64,7 +64,7 @@ export default function PressKitPage() {
   }
 
   return (
-    <>
+    <div className={styles.root}>
       <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={`${SITE_URL}/presskit`} />
 
       {/* Barra de ação — oculta no print */}
@@ -151,7 +151,7 @@ export default function PressKitPage() {
           <span>{SITE_URL.replace(/^https?:\/\//, "")}</span>
         </footer>
       </main>
-    </>
+    </div>
   );
 }
 
