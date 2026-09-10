@@ -2,6 +2,23 @@
  * Press Kit da Indies Brasil — página standalone (noLayout)
  * ========================================================= */
 
+/* Páginas `noLayout` não passam pelo Layout (que aplica o fundo via
+   .layout-body), e o <body> fica fora do ThemeProvider do Primer — sem
+   um container com o fundo temático a página permanece branca no tema
+   escuro. */
+.root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: var(--fgColor-default);
+  background:
+    radial-gradient(circle at 0% 0%, var(--bgColor-accent-muted), transparent 28%),
+    radial-gradient(circle at 100% 100%, var(--bgColor-muted), transparent 22%), var(--bgColor-inset);
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
 .printBar {
   position: sticky;
   top: 0;
@@ -230,6 +247,10 @@
 @media print {
   .printBar {
     display: none;
+  }
+
+  .root {
+    background: #fff !important;
   }
 
   .page {
