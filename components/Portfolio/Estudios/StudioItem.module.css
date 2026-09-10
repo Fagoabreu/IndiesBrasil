@@ -1,0 +1,29 @@
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.item:hover {
+  background: var(--brand-hover-bg);
+}
+
+.logo {
+  flex-shrink: 0;
+  border-radius: 6px;
+}
+
+.name {
+  color: var(--fgColor-default);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item:hover .name {
+  color: var(--brand-primary);
+}

@@ -1,5 +1,6 @@
 import database from "infra/database";
 import user from "./user";
+import organization from "./organization";
 import { NotFoundError } from "@/infra/errors";
 import reputation from "./reputation";
 
@@ -34,6 +35,7 @@ async function findByUsername(username, readerUser) {
       tools: [],
       contacts: [],
       roles: [],
+      studios: [],
     };
   }
   const profile_history = await findPortfolioHistoricoByUserId(currentUser.id);
@@ -41,6 +43,7 @@ async function findByUsername(username, readerUser) {
   const profile_tools = await findPortfolioToolsByPortfolioId(currentUser.id);
   const profile_contacts = await findContactsByUserId(currentUser.id);
   const profile_roles = await findRolesByUserId(currentUser.id);
+  const profile_studios = await organization.findByMember(currentUser.id);
   const is_following = await user.isFollowingUser(readerUser.id, currentUser.id);
 
   return {
@@ -50,6 +53,7 @@ async function findByUsername(username, readerUser) {
     tools: profile_tools,
     contacts: profile_contacts,
     roles: profile_roles,
+    studios: profile_studios,
   };
 }
 

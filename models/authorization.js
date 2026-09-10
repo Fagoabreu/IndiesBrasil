@@ -622,6 +622,18 @@ function getProfileResource(resource) {
     roles: resource.roles.map((roleItem) => {
       return getProfileRoleResource(roleItem);
     }),
+    studios: resource.studios.map((studioItem) => {
+      return getProfileStudioResource(studioItem);
+    }),
+  };
+}
+
+function getProfileStudioResource(resource) {
+  return {
+    id: resource.id,
+    slug: resource.slug,
+    name: resource.name,
+    logo_url: resource.logo_url,
   };
 }
 

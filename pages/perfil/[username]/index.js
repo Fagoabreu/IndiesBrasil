@@ -19,6 +19,7 @@ import FormacaoItem from "@/components/Portfolio/Formacao/FormacaoItem";
 import ContatoItem from "@/components/Portfolio/Contatos/ContatoItem";
 import FerramentaItem from "@/components/Portfolio/Ferramentas/FerramentaItem";
 import RoleItem from "@/components/Portfolio/Roles/RoleItem";
+import StudioItem from "@/components/Portfolio/Estudios/StudioItem";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
 import ProfileImageUploader from "@/components/Portfolio/ProfileImageUploader";
 import ProfileQrCode from "@/components/Portfolio/ProfileQrCode";
@@ -338,6 +339,15 @@ export default function Perfil() {
               <aside className={style.resumeSidebar}>
                 {/* Reputação (apenas para o próprio perfil) */}
                 {isOwnProfile && <ReputationPanel username={username} />}
+
+                {/* Estúdios dos quais participa */}
+                <ListableSectionPanel
+                  title="Estúdios"
+                  items={perfilUser.studios}
+                  emptyText="Não participa de nenhum estúdio."
+                  renderItem={(item) => <StudioItem item={item} />}
+                  variant="small"
+                />
 
                 {/* Contato */}
                 <ListableSectionPanel
