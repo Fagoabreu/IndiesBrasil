@@ -408,60 +408,60 @@ async function runUpdatedQuery(userWithNewValues) {
   return results.rows[0];
 }
 
-async function findUsers(userId, isfollowing) {
-  if (userId !== undefined) {
-    return await runUserSelectQuery(userId, isfollowing);
-  }
-  return await runNoUserSelectQuery();
+const DEFAULT_MEMBERS_LIMIT = 20;
+const MAX_MEMBERS_LIMIT = 50;
+const MAX_MEMBERS_SEARCH_LENGTH = 64;
 
-  async function runNoUserSelectQuery() {
-    const results = await database.query({
-      text: `
+// O cursor é keyset (created_at + id) para a paginação ser estável mesmo
+// quando novos membros entram — ORDER BY RANDOM() (comportamento antigo)
+// não permite paginar sem repetir/pular registros.
+function encodeMembersCursor(row) {
+  return `${row.created_at_cursor}|${row.id}`;
+}
+
+function decodeMembersCursor(cursor) {
+  if (typeof cursor !== "string") {
+    return null;
+  }
+
+  const separatorIndex = cursor.lastIndexOf("|");
+  if (separatorIndex < 1) {
+    return null;
+  }
+
+  const createdAt = cursor.slice(0, separatorIndex);
+  const id = cursor.slice(separatorIndex + 1);
+  if (!createdAt || !id) {
+    return null;
+  }
+
+  return { createdAt, id };
+}
+
+function normalizeMembersLimit(limit) {
+  const parsed = Number.parseInt(limit, 10);
+  if (Number.isNaN(parsed)) {
+    return DEFAULT_MEMBERS_LIMIT;
+  }
+  return Math.min(Math.max(parsed, 1), MAX_MEMBERS_LIMIT);
+}
+
+// Lista membros com busca e paginação por cursor.
+// Retorna { items, total, hasMore, nextCursor }.
+async function findUsers(options = {}) {
+  const { userId, isfollowing, q } = options;
+  const limit = normalizeMembersLimit(options.limit);
+  const cursor = decodeMembersCursor(options.cursor);
+  const search = typeof q === "string" ? q.trim().slice(0, MAX_MEMBERS_SEARCH_LENGTH) : "";
+
+  // `u.created_at::text` preserva os microssegundos — o driver `pg`
+  // converte timestamptz para Date e perderia precisão no cursor.
+  const baseQuery = `
       SELECT
         u.id,
         u.username,
-        u.reputation,
-        ui.secure_url as avatar_image,
-        u.resumo,
-        u.bio,
-        u.visibility,
-        ub.secure_url as background_image,
-        COALESCE(f.followers_count, 0) AS followers_count,
-        COALESCE(p.posts_count, 0) AS posts_count
-      FROM users u
-        -- Seguidores do usuário
-        LEFT JOIN (
-          SELECT
-            lead_user_id,
-            COUNT(*) AS followers_count
-          FROM user_followers
-          GROUP BY lead_user_id
-        ) f ON f.lead_user_id = u.id
-        -- Posts do Usuario
-        LEFT JOIN (
-          SELECT
-            author_id,
-            COUNT(*) AS posts_count
-          FROM posts
-          GROUP BY author_id
-        ) p ON p.author_id = u.id
-        --busca imagens
-        left join uploaded_images ui
-          on ui.id = u.avatar_image
-        left join uploaded_images ub
-          on ub.id = u.background_image
-      ORDER BY RANDOM()
-      LIMIT 10;
-      `,
-    });
-    return results.rows;
-  }
-
-  async function runUserSelectQuery(userId, isfollowing) {
-    let baseQuery = `
-      SELECT
-        u.id,
-        u.username,
+        u.created_at,
+        u.created_at::text AS created_at_cursor,
         u.reputation,
         ui.secure_url as avatar_image,
         u.resumo,
@@ -491,7 +491,7 @@ async function findUsers(userId, isfollowing) {
         -- Verifica se o usuário atual segue esse usuário
         LEFT JOIN user_followers uf
           ON uf.lead_user_id = u.id
-          AND uf.follower_id = $1
+          AND uf.follower_id = $1::uuid
         --busca imagens
         left join uploaded_images ui
           on ui.id = u.avatar_image
@@ -499,34 +499,71 @@ async function findUsers(userId, isfollowing) {
           on ub.id = u.background_image
     `;
 
-    let whereClause = `
-        WHERE
-          u.id <> $1
-        `;
-    if (isfollowing != undefined) {
-      whereClause += isfollowing === true || isfollowing === "true" ? " AND " : " AND NOT ";
-      whereClause += `
-          EXISTS (
+  // $1 ($1::uuid IS NULL) cobre o caso anônimo, em que o usuário não tem id.
+  const conditions = ["($1::uuid IS NULL OR u.id <> $1::uuid)"];
+  const whereValues = [userId ?? null];
+
+  if (isfollowing !== undefined) {
+    const shouldFollow = isfollowing === true || isfollowing === "true";
+    conditions.push(`${shouldFollow ? "" : "NOT "}EXISTS (
           SELECT 1
           FROM user_followers uf2
           WHERE uf2.lead_user_id = u.id
-          AND uf2.follower_id = $1
-        )
-      `;
-    }
-    let endQuery = `
-        ORDER BY
-          RANDOM()
-        LIMIT
-          10;`;
-    const queryText = baseQuery + whereClause + endQuery;
-    const values = [userId];
-    const results = await database.query({
-      text: queryText,
-      values,
-    });
-    return results.rows;
+          AND uf2.follower_id = $1::uuid
+        )`);
   }
+
+  if (search) {
+    whereValues.push(search);
+    // strpos em vez de LIKE: o termo é literal, sem semântica de % e _.
+    conditions.push(`(
+          strpos(lower(u.username), lower($${whereValues.length})) > 0
+          OR strpos(lower(COALESCE(u.resumo, '')), lower($${whereValues.length})) > 0
+        )`);
+  }
+
+  const dataValues = [...whereValues];
+  let cursorCondition = "";
+  if (cursor) {
+    dataValues.push(cursor.createdAt, cursor.id);
+    cursorCondition = `
+        AND (u.created_at, u.id) < ($${dataValues.length - 1}::timestamptz, $${dataValues.length}::uuid)`;
+  }
+  // Busca uma linha extra para saber se há próxima página sem heurística.
+  dataValues.push(limit + 1);
+
+  const totalResults = await database.query({
+    text: `
+      SELECT
+        COUNT(*)::int AS total
+      FROM users u
+      WHERE
+        ${conditions.join("\n        AND ")}`,
+    values: whereValues,
+  });
+
+  const results = await database.query({
+    text: `
+      ${baseQuery}
+      WHERE
+        ${conditions.join("\n        AND ")}${cursorCondition}
+      ORDER BY
+        u.created_at DESC,
+        u.id DESC
+      LIMIT $${dataValues.length}`,
+    values: dataValues,
+  });
+
+  const hasMore = results.rows.length > limit;
+  const items = hasMore ? results.rows.slice(0, limit) : results.rows;
+  const nextCursor = hasMore && items.length > 0 ? encodeMembersCursor(items[items.length - 1]) : null;
+
+  return {
+    items,
+    total: totalResults.rows[0]?.total ?? 0,
+    hasMore,
+    nextCursor,
+  };
 }
 
 async function addFollow(followerId, leaderId) {

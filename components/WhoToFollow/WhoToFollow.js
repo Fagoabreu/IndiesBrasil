@@ -4,6 +4,9 @@ import { useUser } from "@/context/UserContext";
 import UserCardComponent from "../UserCard/UserCardComponent";
 import styles from "./WhotoFollow.module.css";
 
+// Listagem aleatória trazia até 10 sugestões; mantém o mesmo teto do painel.
+const MAX_SUGGESTIONS = 10;
+
 export default function WhoToFollow() {
   const { user } = useUser();
   const [users, setUsers] = useState([]);
@@ -11,16 +14,18 @@ export default function WhoToFollow() {
   useEffect(() => {
     async function loadUsers() {
       try {
-        const res = await fetch("/api/v1/users?isfollowing=false", {
+        const res = await fetch(`/api/v1/users?isfollowing=false&limit=${MAX_SUGGESTIONS}`, {
           credentials: "include",
         });
 
         const data = await res.json();
         if (res.ok) {
+          // `/api/v1/users` responde um envelope de paginação ({ items, ... })
+          const list = data?.items || [];
           setUsers(
-            (data || []).map((u) => ({
+            list.map((u) => ({
               ...u,
-              isFollowing: u.isFollowing ?? false,
+              isFollowing: u.is_following ?? false,
               followers_count: u.followers_count ?? 0,
             })),
           );

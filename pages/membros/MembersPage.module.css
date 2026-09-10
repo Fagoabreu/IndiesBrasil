@@ -142,6 +142,27 @@
   font-size: 0.95rem;
 }
 
+/* Sentinel do infinite scroll — 1px invisível observado pelo IntersectionObserver */
+.sentinel {
+  height: 1px;
+  width: 100%;
+  pointer-events: none;
+}
+
+.loadingMore {
+  text-align: center;
+  padding: 24px 0;
+  color: var(--fgColor-muted);
+  font-size: 0.85rem;
+}
+
+.endMessage {
+  text-align: center;
+  padding: 32px 0;
+  color: var(--fgColor-muted);
+  border-top: 1px solid var(--borderColor-muted);
+}
+
 @media (max-width: 900px) {
   .page {
     width: 100%;
