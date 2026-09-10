@@ -24,11 +24,25 @@ async function postHandler(request, response) {
 
 async function getHandler(request, response) {
   const userTryingToPost = request.context.user;
-  const isfollowing = request.query.isfollowing;
+  const { isfollowing, cursor, q, limit } = request.query;
   const userId = request.context.user.id;
-  const selectedUsers = await user.findUsers(userId, isfollowing);
-  const secureOutputValues = selectedUsers.map((selectedUser) => {
+
+  const { items, total, hasMore, nextCursor } = await user.findUsers({
+    userId,
+    isfollowing,
+    cursor,
+    q,
+    limit,
+  });
+
+  const secureOutputValues = items.map((selectedUser) => {
     return authorization.filterOutput(userTryingToPost, "read:user", selectedUser);
   });
-  return response.status(200).json(secureOutputValues);
+
+  return response.status(200).json({
+    items: secureOutputValues,
+    total,
+    has_more: hasMore,
+    next_cursor: nextCursor,
+  });
 }

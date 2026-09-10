@@ -280,7 +280,7 @@ export default function PostsPage() {
                   <TrendingTags />
                 </aside>
               )}
-              {index === 4 && (
+              {index === 3 && (
                 <aside className="posts-feed-widget">
                   <span className="posts-feed-widget-label">Sugestões para você</span>
                   <WhoToFollow />
