@@ -421,6 +421,8 @@ function NotificationList({ userNotifs, postNotifs }) {
       router.push(`/posts/${n.post_id}`);
     } else if (n.type === "studio_invitation" && n.org_slug) {
       router.push(`/estudios/${n.org_slug}`);
+    } else if (n.type === "new_follower" && n.source_username) {
+      router.push(`/perfil/${n.source_username}`);
     }
   }
 
@@ -428,7 +430,11 @@ function NotificationList({ userNotifs, postNotifs }) {
     <div className={style.notifList}>
       {all.map((n) => {
         const nid = `${n.user_id}_${n.type}_${n.source_user_id}${n.post_id != null ? `_${n.post_id}` : ""}`;
-        const isClickable = n.type === "post_liked" || n.type === "post_commented" || (n.type === "studio_invitation" && n.org_slug);
+        const isClickable =
+          n.type === "post_liked" ||
+          n.type === "post_commented" ||
+          (n.type === "studio_invitation" && n.org_slug) ||
+          (n.type === "new_follower" && n.source_username);
         return (
           <div
             key={nid}

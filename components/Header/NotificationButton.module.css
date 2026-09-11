@@ -60,3 +60,16 @@
   margin-top: 2px;
   white-space: normal;
 }
+
+.orgChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.orgChipName {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+}

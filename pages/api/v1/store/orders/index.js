@@ -19,9 +19,10 @@ async function listHandler(request, response) {
     const studio = await organization.findBySlug(org);
     const isOwner = await organization.isOwner(studio, requestUser.id);
     const isAdmin = await organization.isAdmin(studio.id, requestUser.id);
-    if (!isOwner && !isAdmin) {
+    const isMember = await organization.isMember(studio.id, requestUser.id);
+    if (!isOwner && !isAdmin && !isMember) {
       throw new ForbiddenError({
-        message: "Apenas o dono ou administradores do estúdio podem ver os pedidos.",
+        message: "Apenas membros do estúdio podem ver os pedidos.",
       });
     }
 

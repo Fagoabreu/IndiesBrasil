@@ -3,6 +3,7 @@ import { NotFoundError, ValidationError, ForbiddenError } from "infra/errors.js"
 import organization from "models/organization.js";
 import { generateUniqueSlug } from "lib/slug";
 import moderation from "./moderation.js";
+import notification from "./notification";
 import reputation from "./reputation";
 
 /* =========================================================
@@ -533,7 +534,28 @@ async function createReview(gameId, userId, { rating, content = null }) {
     `,
     values: [gameId, userId, rating, content?.trim() || null],
   });
+
+  await notifyOrgReview(gameId, userId);
+
   return result.rows[0];
+
+  async function notifyOrgReview(gameId, userId) {
+    const game = await database.query({
+      text: `SELECT owner_org_id, name, slug FROM games WHERE id = $1`,
+      values: [gameId],
+    });
+    const gameRow = game.rows[0];
+    if (!gameRow?.owner_org_id) return;
+
+    await notification.createOrgNotification({
+      org_id: gameRow.owner_org_id,
+      type: "org_game_reviewed",
+      source_user_id: userId,
+      resource_type: "game",
+      resource_id: gameRow.slug,
+      subject_title: gameRow.name,
+    });
+  }
 }
 
 async function updateReview(reviewId, userId, { rating, content }) {

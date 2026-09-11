@@ -195,6 +195,149 @@ async function findUserNotificationsByUserId(userId) {
   }
 }
 
+/* =========================================================
+ * Notificações do estúdio (feed compartilhado entre membros)
+ * ========================================================= */
+
+async function createOrgNotification({ org_id, type, source_user_id, resource_type, resource_id, subject_title, recipient_role = "member" }) {
+  const results = await database.query({
+    text: `
+      INSERT INTO org_notifications (
+        org_id,
+        type,
+        source_user_id,
+        resource_type,
+        resource_id,
+        subject_title,
+        recipient_role
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING *
+    `,
+    values: [org_id, type, source_user_id, resource_type, resource_id, subject_title, recipient_role],
+  });
+
+  return results.rows[0];
+}
+
+async function findOrgNotificationsByUserId(userId) {
+  const results = await database.query({
+    text: `
+      SELECT
+        onr.id,
+        onr.org_id,
+        onr.type,
+        onr.source_user_id,
+        onr.resource_type,
+        onr.resource_id,
+        onr.subject_title,
+        onr.created_at,
+        org.name AS org_name,
+        org.slug AS org_slug,
+        org_logo.secure_url AS org_logo_url,
+        u.username AS source_username,
+        (reads.user_id IS NOT NULL) AS is_read
+      FROM org_notifications onr
+      JOIN organizations org
+        ON org.id = onr.org_id
+      LEFT JOIN uploaded_images org_logo
+        ON org_logo.id = org.img
+      JOIN users u
+        ON u.id = onr.source_user_id
+      LEFT JOIN org_notification_reads reads
+        ON reads.notification_id = onr.id AND reads.user_id = $1
+      WHERE onr.source_user_id <> $1
+        AND EXISTS (
+          SELECT 1
+          FROM org_members om
+          WHERE om.org_id = onr.org_id
+            AND om.member_id = $1
+            AND om.status = 'active'
+        )
+        AND (
+          onr.recipient_role = 'member'
+          OR (
+            onr.recipient_role = 'admin'
+            AND (
+              org.owner_id = $1
+              OR EXISTS (
+                SELECT 1 FROM org_roles r
+                WHERE r.org_id = onr.org_id AND r.member_id = $1 AND r.role = 'admin'
+              )
+            )
+          )
+          OR (
+            onr.recipient_role = 'owner'
+            AND org.owner_id = $1
+          )
+        )
+      ORDER BY onr.created_at DESC
+    `,
+    values: [userId],
+  });
+
+  return results.rows;
+}
+
+async function findOrgNotificationsByOrgId(orgId, userId) {
+  const results = await database.query({
+    text: `
+      SELECT
+        onr.id,
+        onr.org_id,
+        onr.type,
+        onr.source_user_id,
+        onr.resource_type,
+        onr.resource_id,
+        onr.subject_title,
+        onr.created_at,
+        org.name AS org_name,
+        org.slug AS org_slug,
+        org_logo.secure_url AS org_logo_url,
+        u.username AS source_username,
+        (reads.user_id IS NOT NULL) AS is_read
+      FROM org_notifications onr
+      JOIN organizations org
+        ON org.id = onr.org_id
+      LEFT JOIN uploaded_images org_logo
+        ON org_logo.id = org.img
+      JOIN users u
+        ON u.id = onr.source_user_id
+      LEFT JOIN org_notification_reads reads
+        ON reads.notification_id = onr.id AND reads.user_id = $2
+      WHERE onr.org_id = $1
+        AND onr.source_user_id <> $2
+      ORDER BY onr.created_at DESC
+    `,
+    values: [orgId, userId],
+  });
+
+  return results.rows;
+}
+
+async function markOrgNotificationRead(notificationId, userId) {
+  const results = await database.query({
+    text: `
+      INSERT INTO org_notification_reads (notification_id, user_id)
+      SELECT $1, $2
+      WHERE EXISTS (
+        SELECT 1
+        FROM org_notifications onr
+        JOIN org_members om
+          ON om.org_id = onr.org_id
+         AND om.member_id = $2
+         AND om.status = 'active'
+        WHERE onr.id = $1
+      )
+      ON CONFLICT (notification_id, user_id) DO NOTHING
+      RETURNING *
+    `,
+    values: [notificationId, userId],
+  });
+
+  return results.rows[0] ?? null;
+}
+
 const notification = {
   createPostNotification,
   updatePostNotification,
@@ -205,6 +348,11 @@ const notification = {
   updateUserNotification,
   findUserNotificationsByKey,
   findUserNotificationsByUserId,
+
+  createOrgNotification,
+  findOrgNotificationsByUserId,
+  findOrgNotificationsByOrgId,
+  markOrgNotificationRead,
 };
 
 export default notification;

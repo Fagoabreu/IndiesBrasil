@@ -79,6 +79,8 @@ const availableFeatures = new Set([
   "read:user_notifications:all",
   "read:post_notifications",
   "read:post_notifications:all",
+  "read:org_notifications",
+  "read:org_notifications:all",
 
   //event / calendar
   "read:event",
@@ -474,6 +476,16 @@ function filterOutput(user, feature, resource) {
     });
   }
 
+  if (feature === "read:org_notifications") {
+    return getOrgNotificationsResource(resource);
+  }
+
+  if (feature === "read:org_notifications:all") {
+    return resource.map((resourceItem) => {
+      return getOrgNotificationsResource(resourceItem);
+    });
+  }
+
   if (feature === "read:news") {
     return getNewsResource(resource);
   }
@@ -748,6 +760,24 @@ function getPostNotificationsResource(resource) {
     created_at: resource.created_at,
     title: resource.title,
     message: resource.message,
+  };
+}
+
+function getOrgNotificationsResource(resource) {
+  return {
+    id: resource.id,
+    org_id: resource.org_id,
+    type: resource.type,
+    source_user_id: resource.source_user_id,
+    resource_type: resource.resource_type,
+    resource_id: resource.resource_id,
+    subject_title: resource.subject_title,
+    is_read: resource.is_read,
+    created_at: resource.created_at,
+    org_name: resource.org_name,
+    org_slug: resource.org_slug,
+    org_logo_url: resource.org_logo_url,
+    source_username: resource.source_username,
   };
 }
 
