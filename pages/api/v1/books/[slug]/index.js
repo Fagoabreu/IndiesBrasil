@@ -19,12 +19,19 @@ async function getHandler(request, response) {
   const canEditBook = await book.canEdit(bookData.id, requestUser);
   const userReview = requestUser?.id ? await book.getUserReview(bookData.id, requestUser.id) : null;
 
+  const likesCount = await book.getLikesCount(bookData.id);
+  const commentsCount = await book.getCommentsCount(bookData.id);
+  const likedByUser = requestUser?.id ? await book.isLiked(bookData.id, requestUser.id) : false;
+
   return response.status(200).json({
     ...bookData,
     viewer: {
       isFollowing: isFollowingBook,
       canEdit: canEditBook,
       userReview,
+      likesCount,
+      commentsCount,
+      likedByUser,
     },
   });
 }

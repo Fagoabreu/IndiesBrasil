@@ -115,6 +115,8 @@ const availableFeatures = new Set([
   "read:game:follow",
   "create:game:review",
   "update:game:review",
+  "create:game:like",
+  "create:game:comment",
 
   //boardgame
   "read:boardgame",
@@ -126,6 +128,8 @@ const availableFeatures = new Set([
   "read:boardgame:follow",
   "create:boardgame:review",
   "update:boardgame:review",
+  "create:boardgame:like",
+  "create:boardgame:comment",
 
   //book
   "read:book",
@@ -135,6 +139,8 @@ const availableFeatures = new Set([
   "delete:book",
   "create:book:follow",
   "read:book:follow",
+  "create:book:like",
+  "create:book:comment",
   "create:book:review",
   "update:book:review",
 
@@ -570,6 +576,9 @@ function getCommentResource(resource) {
   return {
     id: resource.id,
     post_id: resource.post_id,
+    game_id: resource.game_id,
+    boardgame_id: resource.boardgame_id,
+    book_id: resource.book_id,
     created_at: resource.created_at,
     content: resource.content,
     author_username: resource.author_username,

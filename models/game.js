@@ -630,6 +630,153 @@ async function getUserReview(gameId, userId) {
 }
 
 /* =========================================================
+ * Curtidas
+ * ========================================================= */
+
+async function setLikes(gameId, userId, liked) {
+  const game = await findById(gameId);
+
+  const { rowCount } = await database.query({
+    text: `SELECT 1 FROM game_likes WHERE game_id = $1 AND user_id = $2`,
+    values: [gameId, userId],
+  });
+
+  const alreadyLiked = rowCount > 0;
+  const shouldLike = liked === undefined ? !alreadyLiked : liked;
+
+  if (shouldLike && !alreadyLiked) {
+    await database.query({
+      text: `INSERT INTO game_likes (game_id, user_id) VALUES ($1, $2)`,
+      values: [gameId, userId],
+    });
+
+    if (game.owner_org_id) {
+      await notification.createOrgNotification({
+        org_id: game.owner_org_id,
+        type: "org_game_liked",
+        source_user_id: userId,
+        resource_type: "game",
+        resource_id: game.slug,
+        subject_title: game.name,
+      });
+    }
+
+    return { liked: true, action: "created" };
+  }
+
+  if (!shouldLike && alreadyLiked) {
+    await database.query({
+      text: `DELETE FROM game_likes WHERE game_id = $1 AND user_id = $2`,
+      values: [gameId, userId],
+    });
+    return { liked: false, action: "removed" };
+  }
+
+  return { liked: alreadyLiked, action: "noop" };
+}
+
+async function isLiked(gameId, userId) {
+  if (!userId) return false;
+  const result = await database.query({
+    text: `SELECT 1 FROM game_likes WHERE game_id = $1 AND user_id = $2`,
+    values: [gameId, userId],
+  });
+  return result.rowCount > 0;
+}
+
+async function getLikesCount(gameId) {
+  const result = await database.query({
+    text: `SELECT COUNT(*)::int AS count FROM game_likes WHERE game_id = $1`,
+    values: [gameId],
+  });
+  return result.rows[0].count;
+}
+
+/* =========================================================
+ * Comentários
+ * ========================================================= */
+
+async function createComment(gameId, userId, content) {
+  const game = await findById(gameId);
+
+  const result = await database.query({
+    text: `INSERT INTO game_comments (game_id, author_id, content) VALUES ($1, $2, $3) RETURNING *`,
+    values: [gameId, userId, content],
+  });
+
+  if (game.owner_org_id) {
+    await notification.createOrgNotification({
+      org_id: game.owner_org_id,
+      type: "org_game_commented",
+      source_user_id: userId,
+      resource_type: "game",
+      resource_id: game.slug,
+      subject_title: game.name,
+    });
+  }
+
+  return result.rows[0];
+}
+
+async function getComments(gameId, userId) {
+  const result = await database.query({
+    text: `
+      SELECT
+        c.id,
+        c.game_id,
+        c.created_at,
+        c.content,
+        u.username AS author_username,
+        uui.secure_url AS author_avatar_image,
+        (c.author_id = $2) AS is_current_user
+      FROM game_comments c
+      INNER JOIN users u ON u.id = c.author_id
+      LEFT JOIN uploaded_images uui ON uui.id = u.avatar_image
+      WHERE c.game_id = $1
+      ORDER BY c.created_at DESC
+    `,
+    values: [gameId, userId || null],
+  });
+  return result.rows;
+}
+
+async function getCommentById(commentId, userId) {
+  const result = await database.query({
+    text: `
+      SELECT
+        c.id,
+        c.game_id,
+        c.created_at,
+        c.content,
+        u.username AS author_username,
+        uui.secure_url AS author_avatar_image,
+        (c.author_id = $2) AS is_current_user
+      FROM game_comments c
+      INNER JOIN users u ON u.id = c.author_id
+      LEFT JOIN uploaded_images uui ON uui.id = u.avatar_image
+      WHERE c.id = $1
+    `,
+    values: [commentId, userId || null],
+  });
+  return result.rows[0];
+}
+
+async function deleteComment(commentId) {
+  await database.query({
+    text: `DELETE FROM game_comments WHERE id = $1`,
+    values: [commentId],
+  });
+}
+
+async function getCommentsCount(gameId) {
+  const result = await database.query({
+    text: `SELECT COUNT(*)::int AS count FROM game_comments WHERE game_id = $1`,
+    values: [gameId],
+  });
+  return result.rows[0].count;
+}
+
+/* =========================================================
  * Permissões
  * ========================================================= */
 
@@ -679,6 +826,14 @@ const game = {
   updateReview,
   getReviews,
   getUserReview,
+  setLikes,
+  isLiked,
+  getLikesCount,
+  createComment,
+  getComments,
+  getCommentById,
+  deleteComment,
+  getCommentsCount,
   canEdit,
   deleteGame,
 };

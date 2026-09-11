@@ -6,6 +6,7 @@ import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
 import GameMediaPlayer from "@/components/GameMedia/GameMediaPlayer";
 import GameReviews from "@/components/GameReviews/GameReviews";
+import ContentEngagement from "@/components/ContentEngagement/ContentEngagement";
 
 import styles from "./boardgame.module.css";
 
@@ -245,6 +246,15 @@ export default function BoardgamePage({ initialBgData, siteUrl }) {
                 userReview={bgData.viewer?.userReview ?? null}
                 user={user}
                 onReviewChange={fetchBoardgame}
+              />
+
+              <ContentEngagement
+                key={bgData.viewer ? "viewer-ready" : "viewer-pending"}
+                apiBase={`/api/v1/boardgames/${slug}`}
+                initialLikesCount={bgData.viewer?.likesCount ?? 0}
+                initialCommentsCount={bgData.viewer?.commentsCount ?? 0}
+                initialLiked={bgData.viewer?.likedByUser ?? false}
+                user={user}
               />
             </main>
 

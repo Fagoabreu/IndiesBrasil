@@ -1,0 +1,49 @@
+.engagement {
+  margin-top: 24px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--borderColor-muted, var(--borderColor-default));
+  border-bottom: 1px solid var(--borderColor-muted, var(--borderColor-default));
+}
+
+.actionItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.iconBtn {
+  color: var(--fgColor-muted);
+}
+
+.iconBtn:hover {
+  color: var(--fgColor-default);
+}
+
+.liked {
+  color: var(--brand-primary);
+}
+
+.counter {
+  font-size: 12px;
+  color: var(--fgColor-muted);
+  min-width: 16px;
+}
+
+.replyBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--fgColor-muted);
+  padding: 4px 8px;
+}
+
+.replyBtn:hover {
+  color: var(--brand-primary);
+}

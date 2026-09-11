@@ -1649,3 +1649,73 @@ CREATE TABLE users_contacts (
     CONSTRAINT users_contacts_user_id_fkey          FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+-- =====================================================================================
+-- CURTIDAS E COMENTARIOS (JOGOS, JOGOS DE MESA E LIVROS)
+-- =====================================================================================
+
+CREATE TABLE game_likes (
+    game_id     UUID NOT NULL,
+    user_id     UUID NOT NULL,
+    created_at  TIMESTAMPTZ DEFAULT now() NOT NULL,
+    CONSTRAINT game_likes_pkey          PRIMARY KEY (game_id, user_id),
+    CONSTRAINT game_likes_game_id_fkey  FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE,
+    CONSTRAINT game_likes_user_id_fkey  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE INDEX game_likes_user_idx ON game_likes (user_id, game_id);
+
+CREATE TABLE game_comments (
+    id          SERIAL NOT NULL,
+    game_id     UUID NOT NULL,
+    author_id   UUID NOT NULL,
+    content     TEXT NOT NULL,
+    created_at  TIMESTAMPTZ DEFAULT now() NOT NULL,
+    CONSTRAINT game_comments_pkey           PRIMARY KEY (id),
+    CONSTRAINT game_comments_game_id_fkey   FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE,
+    CONSTRAINT game_comments_author_id_fkey FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE INDEX game_comments_game_idx ON game_comments (game_id, created_at DESC);
+
+CREATE TABLE boardgame_likes (
+    boardgame_id  UUID NOT NULL,
+    user_id       UUID NOT NULL,
+    created_at    TIMESTAMPTZ DEFAULT now() NOT NULL,
+    CONSTRAINT boardgame_likes_pkey                PRIMARY KEY (boardgame_id, user_id),
+    CONSTRAINT boardgame_likes_boardgame_id_fkey   FOREIGN KEY (boardgame_id) REFERENCES boardgames(id) ON DELETE CASCADE,
+    CONSTRAINT boardgame_likes_user_id_fkey        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE INDEX boardgame_likes_user_idx ON boardgame_likes (user_id, boardgame_id);
+
+CREATE TABLE boardgame_comments (
+    id            SERIAL NOT NULL,
+    boardgame_id  UUID NOT NULL,
+    author_id     UUID NOT NULL,
+    content       TEXT NOT NULL,
+    created_at    TIMESTAMPTZ DEFAULT now() NOT NULL,
+    CONSTRAINT boardgame_comments_pkey                 PRIMARY KEY (id),
+    CONSTRAINT boardgame_comments_boardgame_id_fkey    FOREIGN KEY (boardgame_id) REFERENCES boardgames(id) ON DELETE CASCADE,
+    CONSTRAINT boardgame_comments_author_id_fkey       FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE INDEX boardgame_comments_boardgame_idx ON boardgame_comments (boardgame_id, created_at DESC);
+
+CREATE TABLE book_likes (
+    book_id     UUID NOT NULL,
+    user_id     UUID NOT NULL,
+    created_at  TIMESTAMPTZ DEFAULT now() NOT NULL,
+    CONSTRAINT book_likes_pkey          PRIMARY KEY (book_id, user_id),
+    CONSTRAINT book_likes_book_id_fkey  FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
+    CONSTRAINT book_likes_user_id_fkey  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE INDEX book_likes_user_idx ON book_likes (user_id, book_id);
+
+CREATE TABLE book_comments (
+    id          SERIAL NOT NULL,
+    book_id     UUID NOT NULL,
+    author_id   UUID NOT NULL,
+    content     TEXT NOT NULL,
+    created_at  TIMESTAMPTZ DEFAULT now() NOT NULL,
+    CONSTRAINT book_comments_pkey           PRIMARY KEY (id),
+    CONSTRAINT book_comments_book_id_fkey   FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
+    CONSTRAINT book_comments_author_id_fkey FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE INDEX book_comments_book_idx ON book_comments (book_id, created_at DESC);
+
