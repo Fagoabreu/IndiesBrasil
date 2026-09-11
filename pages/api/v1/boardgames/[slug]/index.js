@@ -18,12 +18,19 @@ async function getHandler(request, response) {
   const canEditBoardgame = await boardgame.canEdit(boardgameData.id, requestUser);
   const userReview = requestUser.id ? await boardgame.getUserReview(boardgameData.id, requestUser.id) : null;
 
+  const likesCount = await boardgame.getLikesCount(boardgameData.id);
+  const commentsCount = await boardgame.getCommentsCount(boardgameData.id);
+  const likedByUser = requestUser.id ? await boardgame.isLiked(boardgameData.id, requestUser.id) : false;
+
   return response.status(200).json({
     ...boardgameData,
     viewer: {
       isFollowing: isFollowingBoardgame,
       canEdit: canEditBoardgame,
       userReview,
+      likesCount,
+      commentsCount,
+      likedByUser,
     },
   });
 }

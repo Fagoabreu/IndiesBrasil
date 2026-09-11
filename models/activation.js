@@ -214,6 +214,13 @@ async function activateUserByUserId(userId) {
     //testimonial (depoimentos)
     "create:testimonial",
     "read:testimonial",
+    //game/boardgame/book likes & comments (interações)
+    "create:game:like",
+    "create:game:comment",
+    "create:boardgame:like",
+    "create:boardgame:comment",
+    "create:book:like",
+    "create:book:comment",
     //content-review (analises)
     "read:content_review",
     "read:content_review:all",

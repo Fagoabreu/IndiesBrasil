@@ -7,6 +7,7 @@ import SeoHead from "@/components/SeoHead";
 import ContentRatingBadge from "@/components/ContentRatingBadge";
 import GameMediaPlayer from "@/components/GameMedia/GameMediaPlayer";
 import GameReviews from "@/components/GameReviews/GameReviews";
+import ContentEngagement from "@/components/ContentEngagement/ContentEngagement";
 import IconSvg from "@/components/IconSvg/IconSvg";
 
 import styles from "./game.module.css";
@@ -475,6 +476,15 @@ export default function GamePage({ initialGame, siteUrl }) {
                         setFollowing(data.viewer?.isFollowing ?? false);
                       }
                     }}
+                  />
+
+                  <ContentEngagement
+                    key={viewer ? "viewer-ready" : "viewer-pending"}
+                    apiBase={`/api/v1/games/${slug}`}
+                    initialLikesCount={viewer?.likesCount ?? 0}
+                    initialCommentsCount={viewer?.commentsCount ?? 0}
+                    initialLiked={viewer?.likedByUser ?? false}
+                    user={user}
                   />
                 </>
               )}

@@ -373,6 +373,163 @@ async function getUserReview(boardgameId, userId) {
 }
 
 /* =========================================================
+ * Curtidas
+ * ========================================================= */
+
+async function setLikes(boardgameId, userId, liked) {
+  const boardgame = await database.query({
+    text: `SELECT owner_org_id, name, slug FROM boardgames WHERE id = $1`,
+    values: [boardgameId],
+  });
+  if (!boardgame.rows[0]) throw new NotFoundError({ message: "Jogo de mesa não encontrado." });
+  const boardgameRow = boardgame.rows[0];
+
+  const { rowCount } = await database.query({
+    text: `SELECT 1 FROM boardgame_likes WHERE boardgame_id = $1 AND user_id = $2`,
+    values: [boardgameId, userId],
+  });
+
+  const alreadyLiked = rowCount > 0;
+  const shouldLike = liked === undefined ? !alreadyLiked : liked;
+
+  if (shouldLike && !alreadyLiked) {
+    await database.query({
+      text: `INSERT INTO boardgame_likes (boardgame_id, user_id) VALUES ($1, $2)`,
+      values: [boardgameId, userId],
+    });
+
+    if (boardgameRow.owner_org_id) {
+      await notification.createOrgNotification({
+        org_id: boardgameRow.owner_org_id,
+        type: "org_boardgame_liked",
+        source_user_id: userId,
+        resource_type: "boardgame",
+        resource_id: boardgameRow.slug,
+        subject_title: boardgameRow.name,
+      });
+    }
+
+    return { liked: true, action: "created" };
+  }
+
+  if (!shouldLike && alreadyLiked) {
+    await database.query({
+      text: `DELETE FROM boardgame_likes WHERE boardgame_id = $1 AND user_id = $2`,
+      values: [boardgameId, userId],
+    });
+    return { liked: false, action: "removed" };
+  }
+
+  return { liked: alreadyLiked, action: "noop" };
+}
+
+async function isLiked(boardgameId, userId) {
+  if (!userId) return false;
+  const result = await database.query({
+    text: `SELECT 1 FROM boardgame_likes WHERE boardgame_id = $1 AND user_id = $2`,
+    values: [boardgameId, userId],
+  });
+  return result.rowCount > 0;
+}
+
+async function getLikesCount(boardgameId) {
+  const result = await database.query({
+    text: `SELECT COUNT(*)::int AS count FROM boardgame_likes WHERE boardgame_id = $1`,
+    values: [boardgameId],
+  });
+  return result.rows[0].count;
+}
+
+/* =========================================================
+ * Comentários
+ * ========================================================= */
+
+async function createComment(boardgameId, userId, content) {
+  const boardgame = await database.query({
+    text: `SELECT owner_org_id, name, slug FROM boardgames WHERE id = $1`,
+    values: [boardgameId],
+  });
+  if (!boardgame.rows[0]) throw new NotFoundError({ message: "Jogo de mesa não encontrado." });
+  const boardgameRow = boardgame.rows[0];
+
+  const result = await database.query({
+    text: `INSERT INTO boardgame_comments (boardgame_id, author_id, content) VALUES ($1, $2, $3) RETURNING *`,
+    values: [boardgameId, userId, content],
+  });
+
+  if (boardgameRow.owner_org_id) {
+    await notification.createOrgNotification({
+      org_id: boardgameRow.owner_org_id,
+      type: "org_boardgame_commented",
+      source_user_id: userId,
+      resource_type: "boardgame",
+      resource_id: boardgameRow.slug,
+      subject_title: boardgameRow.name,
+    });
+  }
+
+  return result.rows[0];
+}
+
+async function getComments(boardgameId, userId) {
+  const result = await database.query({
+    text: `
+      SELECT
+        c.id,
+        c.boardgame_id,
+        c.created_at,
+        c.content,
+        u.username AS author_username,
+        uui.secure_url AS author_avatar_image,
+        (c.author_id = $2) AS is_current_user
+      FROM boardgame_comments c
+      INNER JOIN users u ON u.id = c.author_id
+      LEFT JOIN uploaded_images uui ON uui.id = u.avatar_image
+      WHERE c.boardgame_id = $1
+      ORDER BY c.created_at DESC
+    `,
+    values: [boardgameId, userId || null],
+  });
+  return result.rows;
+}
+
+async function getCommentById(commentId, userId) {
+  const result = await database.query({
+    text: `
+      SELECT
+        c.id,
+        c.boardgame_id,
+        c.created_at,
+        c.content,
+        u.username AS author_username,
+        uui.secure_url AS author_avatar_image,
+        (c.author_id = $2) AS is_current_user
+      FROM boardgame_comments c
+      INNER JOIN users u ON u.id = c.author_id
+      LEFT JOIN uploaded_images uui ON uui.id = u.avatar_image
+      WHERE c.id = $1
+    `,
+    values: [commentId, userId || null],
+  });
+  return result.rows[0];
+}
+
+async function deleteComment(commentId) {
+  await database.query({
+    text: `DELETE FROM boardgame_comments WHERE id = $1`,
+    values: [commentId],
+  });
+}
+
+async function getCommentsCount(boardgameId) {
+  const result = await database.query({
+    text: `SELECT COUNT(*)::int AS count FROM boardgame_comments WHERE boardgame_id = $1`,
+    values: [boardgameId],
+  });
+  return result.rows[0].count;
+}
+
+/* =========================================================
  * Create / Update
  * ========================================================= */
 
@@ -565,4 +722,12 @@ export default {
   updateReview,
   getReviews,
   getUserReview,
+  setLikes,
+  isLiked,
+  getLikesCount,
+  createComment,
+  getComments,
+  getCommentById,
+  deleteComment,
+  getCommentsCount,
 };

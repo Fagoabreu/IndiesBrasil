@@ -516,6 +516,163 @@ async function getUserReview(bookId, userId) {
 }
 
 /* =========================================================
+ * Curtidas
+ * ========================================================= */
+
+async function setLikes(bookId, userId, liked) {
+  const book = await database.query({
+    text: `SELECT owner_org_id, title, slug FROM books WHERE id = $1`,
+    values: [bookId],
+  });
+  if (!book.rows[0]) throw new NotFoundError({ message: "Livro/quadrinho não encontrado." });
+  const bookRow = book.rows[0];
+
+  const { rowCount } = await database.query({
+    text: `SELECT 1 FROM book_likes WHERE book_id = $1 AND user_id = $2`,
+    values: [bookId, userId],
+  });
+
+  const alreadyLiked = rowCount > 0;
+  const shouldLike = liked === undefined ? !alreadyLiked : liked;
+
+  if (shouldLike && !alreadyLiked) {
+    await database.query({
+      text: `INSERT INTO book_likes (book_id, user_id) VALUES ($1, $2)`,
+      values: [bookId, userId],
+    });
+
+    if (bookRow.owner_org_id) {
+      await notification.createOrgNotification({
+        org_id: bookRow.owner_org_id,
+        type: "org_book_liked",
+        source_user_id: userId,
+        resource_type: "book",
+        resource_id: bookRow.slug,
+        subject_title: bookRow.title,
+      });
+    }
+
+    return { liked: true, action: "created" };
+  }
+
+  if (!shouldLike && alreadyLiked) {
+    await database.query({
+      text: `DELETE FROM book_likes WHERE book_id = $1 AND user_id = $2`,
+      values: [bookId, userId],
+    });
+    return { liked: false, action: "removed" };
+  }
+
+  return { liked: alreadyLiked, action: "noop" };
+}
+
+async function isLiked(bookId, userId) {
+  if (!userId) return false;
+  const result = await database.query({
+    text: `SELECT 1 FROM book_likes WHERE book_id = $1 AND user_id = $2`,
+    values: [bookId, userId],
+  });
+  return result.rowCount > 0;
+}
+
+async function getLikesCount(bookId) {
+  const result = await database.query({
+    text: `SELECT COUNT(*)::int AS count FROM book_likes WHERE book_id = $1`,
+    values: [bookId],
+  });
+  return result.rows[0].count;
+}
+
+/* =========================================================
+ * Comentários
+ * ========================================================= */
+
+async function createComment(bookId, userId, content) {
+  const book = await database.query({
+    text: `SELECT owner_org_id, title, slug FROM books WHERE id = $1`,
+    values: [bookId],
+  });
+  if (!book.rows[0]) throw new NotFoundError({ message: "Livro/quadrinho não encontrado." });
+  const bookRow = book.rows[0];
+
+  const result = await database.query({
+    text: `INSERT INTO book_comments (book_id, author_id, content) VALUES ($1, $2, $3) RETURNING *`,
+    values: [bookId, userId, content],
+  });
+
+  if (bookRow.owner_org_id) {
+    await notification.createOrgNotification({
+      org_id: bookRow.owner_org_id,
+      type: "org_book_commented",
+      source_user_id: userId,
+      resource_type: "book",
+      resource_id: bookRow.slug,
+      subject_title: bookRow.title,
+    });
+  }
+
+  return result.rows[0];
+}
+
+async function getComments(bookId, userId) {
+  const result = await database.query({
+    text: `
+      SELECT
+        c.id,
+        c.book_id,
+        c.created_at,
+        c.content,
+        u.username AS author_username,
+        uui.secure_url AS author_avatar_image,
+        (c.author_id = $2) AS is_current_user
+      FROM book_comments c
+      INNER JOIN users u ON u.id = c.author_id
+      LEFT JOIN uploaded_images uui ON uui.id = u.avatar_image
+      WHERE c.book_id = $1
+      ORDER BY c.created_at DESC
+    `,
+    values: [bookId, userId || null],
+  });
+  return result.rows;
+}
+
+async function getCommentById(commentId, userId) {
+  const result = await database.query({
+    text: `
+      SELECT
+        c.id,
+        c.book_id,
+        c.created_at,
+        c.content,
+        u.username AS author_username,
+        uui.secure_url AS author_avatar_image,
+        (c.author_id = $2) AS is_current_user
+      FROM book_comments c
+      INNER JOIN users u ON u.id = c.author_id
+      LEFT JOIN uploaded_images uui ON uui.id = u.avatar_image
+      WHERE c.id = $1
+    `,
+    values: [commentId, userId || null],
+  });
+  return result.rows[0];
+}
+
+async function deleteComment(commentId) {
+  await database.query({
+    text: `DELETE FROM book_comments WHERE id = $1`,
+    values: [commentId],
+  });
+}
+
+async function getCommentsCount(bookId) {
+  const result = await database.query({
+    text: `SELECT COUNT(*)::int AS count FROM book_comments WHERE book_id = $1`,
+    values: [bookId],
+  });
+  return result.rows[0].count;
+}
+
+/* =========================================================
  * Delete
  * ========================================================= */
 
@@ -601,6 +758,14 @@ const book = {
   updateReview,
   getReviews,
   getUserReview,
+  setLikes,
+  isLiked,
+  getLikesCount,
+  createComment,
+  getComments,
+  getCommentById,
+  deleteComment,
+  getCommentsCount,
   deleteBook,
 };
 

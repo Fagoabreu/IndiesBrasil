@@ -6,6 +6,7 @@ import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
 import GameReviews from "@/components/GameReviews/GameReviews";
 import BookViewer from "@/components/BookViewer/BookViewer";
+import ContentEngagement from "@/components/ContentEngagement/ContentEngagement";
 
 import styles from "./book.module.css";
 
@@ -305,6 +306,15 @@ export default function BookPage({ initialBook, siteUrl }) {
             userReview={bookData.viewer?.userReview ?? null}
             user={user}
             onReviewChange={fetchBook}
+          />
+
+          <ContentEngagement
+            key={bookData.viewer ? "viewer-ready" : "viewer-pending"}
+            apiBase={`/api/v1/books/${slug}`}
+            initialLikesCount={bookData.viewer?.likesCount ?? 0}
+            initialCommentsCount={bookData.viewer?.commentsCount ?? 0}
+            initialLiked={bookData.viewer?.likedByUser ?? false}
+            user={user}
           />
         </div>
       </div>
