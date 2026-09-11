@@ -22,16 +22,28 @@ FROM
 async function create(commentInputValues) {
   const postComment = await runInsertQuery(commentInputValues);
 
-  // Busca o dono do post para notificá-lo do comentário
+  // Busca o dono/organização do post para notificar o comentário
   const postResult = await database.query({
-    text: `SELECT author_id FROM posts WHERE id = $1`,
+    text: `SELECT author_id, organization_id, content FROM posts WHERE id = $1`,
     values: [commentInputValues.post_id],
   });
 
   if (postResult.rowCount > 0) {
-    const postAuthorId = postResult.rows[0].author_id;
-    // Só cria notificação se quem comentou não for o próprio dono do post
-    if (postAuthorId !== commentInputValues.author_id) {
+    const { author_id: postAuthorId, organization_id: organizationId, content } = postResult.rows[0];
+
+    // Post de estúdio: notifica o feed compartilhado (todos os membros,
+    // exceto o autor do comentário — filtrado no momento da leitura).
+    if (organizationId) {
+      await notification.createOrgNotification({
+        org_id: organizationId,
+        type: "org_post_commented",
+        source_user_id: commentInputValues.author_id,
+        resource_type: "post",
+        resource_id: String(commentInputValues.post_id),
+        subject_title: (content || "").slice(0, 80),
+      });
+    } else if (postAuthorId !== commentInputValues.author_id) {
+      // Post pessoal: notifica apenas o dono, e só se não for ele mesmo.
       await notification.createPostNotification({
         user_id: postAuthorId,
         source_user_id: commentInputValues.author_id,

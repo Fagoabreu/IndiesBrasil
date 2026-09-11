@@ -3,6 +3,7 @@ import { ForbiddenError, NotFoundError, ValidationError } from "infra/errors.js"
 import { generateUniqueSlug } from "lib/slug";
 import uploadFile from "@/infra/uploadFile.js";
 import moderation from "./moderation.js";
+import notification from "./notification";
 import reputation from "./reputation";
 
 /* =========================================================
@@ -411,7 +412,28 @@ async function createReview(bookId, userId, { rating, content = null }) {
     `,
     values: [bookId, userId, rating, content],
   });
+
+  await notifyOrgReview(bookId, userId);
+
   return result.rows[0];
+
+  async function notifyOrgReview(bookId, userId) {
+    const book = await database.query({
+      text: `SELECT owner_org_id, title, slug FROM books WHERE id = $1`,
+      values: [bookId],
+    });
+    const bookRow = book.rows[0];
+    if (!bookRow?.owner_org_id) return;
+
+    await notification.createOrgNotification({
+      org_id: bookRow.owner_org_id,
+      type: "org_book_reviewed",
+      source_user_id: userId,
+      resource_type: "book",
+      resource_id: bookRow.slug,
+      subject_title: bookRow.title,
+    });
+  }
 }
 
 async function updateReview(reviewId, userId, { rating, content }) {

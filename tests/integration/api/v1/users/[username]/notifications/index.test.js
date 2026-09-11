@@ -60,6 +60,27 @@ describe("GET/PATCH /api/v1/users/[username]/notifications", () => {
     expect(await response.json()).toEqual([]);
   });
 
+  test("new_follower notification exposes the follower username and updated message", async () => {
+    await notification.createUserNotification({
+      user_id: owner.id,
+      type: "new_follower",
+      source_user_id: other.id,
+    });
+
+    const response = await fetch(`${webserver.origin}/api/v1/users/${owner.username}/notifications`, {
+      headers: authHeaders(ownerToken),
+    });
+    expect(response.status).toBe(200);
+
+    const body = await response.json();
+    const followerNotif = body.find((n) => n.type === "new_follower");
+    expect(followerNotif).toMatchObject({
+      type: "new_follower",
+      source_username: other.username,
+      message: "@%userId começou a te seguir.",
+    });
+  });
+
   test("Owner can mark a notification as read", async () => {
     await notification.createUserNotification({
       user_id: owner.id,

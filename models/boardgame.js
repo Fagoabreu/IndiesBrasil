@@ -2,6 +2,7 @@ import database from "infra/database.js";
 import { ForbiddenError, NotFoundError, ValidationError } from "infra/errors.js";
 import { generateUniqueSlug } from "lib/slug";
 import moderation from "./moderation.js";
+import notification from "./notification";
 import reputation from "./reputation";
 
 /* =========================================================
@@ -278,7 +279,28 @@ async function createReview(boardgameId, userId, { rating, content = null }) {
     `,
     values: [boardgameId, userId, rating, content?.trim() || null],
   });
+
+  await notifyOrgReview(boardgameId, userId);
+
   return result.rows[0];
+
+  async function notifyOrgReview(boardgameId, userId) {
+    const boardgame = await database.query({
+      text: `SELECT owner_org_id, name, slug FROM boardgames WHERE id = $1`,
+      values: [boardgameId],
+    });
+    const boardgameRow = boardgame.rows[0];
+    if (!boardgameRow?.owner_org_id) return;
+
+    await notification.createOrgNotification({
+      org_id: boardgameRow.owner_org_id,
+      type: "org_boardgame_reviewed",
+      source_user_id: userId,
+      resource_type: "boardgame",
+      resource_id: boardgameRow.slug,
+      subject_title: boardgameRow.name,
+    });
+  }
 }
 
 async function updateReview(reviewId, userId, { rating, content }) {

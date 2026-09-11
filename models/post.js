@@ -444,12 +444,23 @@ async function setPostLikes(postId, userId, liked) {
   // Liked
   if (shouldLike && !alreadyLiked) {
     await createPostLike(postId, userId);
-    await notification.createPostNotification({
-      user_id: post.author_id,
-      source_user_id: userId,
-      post_id: postId,
-      type: "post_liked",
-    });
+    if (post.organization_id) {
+      await notification.createOrgNotification({
+        org_id: post.organization_id,
+        type: "org_post_liked",
+        source_user_id: userId,
+        resource_type: "post",
+        resource_id: String(postId),
+        subject_title: (post.content || "").slice(0, 80),
+      });
+    } else {
+      await notification.createPostNotification({
+        user_id: post.author_id,
+        source_user_id: userId,
+        post_id: postId,
+        type: "post_liked",
+      });
+    }
     // Pontuação de reputação (best-effort: não bloqueia a curtida).
     try {
       await reputation.award({

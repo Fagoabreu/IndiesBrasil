@@ -638,11 +638,13 @@ async function notifyOrderReceived(order, product) {
   const owner = await user.findOneById(org.owner_id);
   const buyer = await user.findOneById(order.buyer_id);
 
-  await notification.createUserNotification({
-    user_id: org.owner_id,
-    type: "store_order_received",
+  await notification.createOrgNotification({
+    org_id: org.id,
+    type: "org_order_received",
     source_user_id: order.buyer_id,
-    org_slug: org.slug,
+    resource_type: "order",
+    resource_id: order.id,
+    subject_title: product.name,
   });
 
   const { html, text } = storeOrderReceivedEmailTemplate({
@@ -676,11 +678,13 @@ async function notifyOrderUpdated(order, newStatus, note, actorUserId) {
   if (isBuyer) {
     // Notifica o estúdio sobre o cancelamento do comprador.
     const owner = await user.findOneById(org.owner_id);
-    await notification.createUserNotification({
-      user_id: org.owner_id,
-      type: "store_order_updated",
+    await notification.createOrgNotification({
+      org_id: org.id,
+      type: "org_order_updated",
       source_user_id: actorUserId,
-      org_slug: org.slug,
+      resource_type: "order",
+      resource_id: order.id,
+      subject_title: order.product_name,
     });
     await email.send({
       from: EMAIL_FROM,

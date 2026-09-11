@@ -20,6 +20,7 @@ import CreatePost from "@/components/CreatePost/CreatePost";
 import PostCardComponent from "@/components/PostCard/PostCardComponent";
 import ImageCropModal from "@/components/ImageTools/ImageCropTool/ImageCropModal";
 import { SITE_URL } from "@/lib/seo";
+import { resolveOrgNotificationTitle, resolveOrgNotificationMessage, resolveOrgNotificationHref } from "@/lib/notifications";
 import styles from "./studio.module.css";
 import { uploadWithProgress } from "@/utils/uploadWithProgress";
 
@@ -144,6 +145,10 @@ export default function StudioPage({ initialStudio }) {
   // Posts
   const [studioPosts, setStudioPosts] = useState(null);
   const loadingPosts = studioPosts === null;
+
+  // Notificações do estúdio (apenas membros)
+  const [studioNotifs, setStudioNotifs] = useState(null);
+  const loadingNotifs = studioNotifs === null;
 
   // Relacionamentos
   const [relationships, setRelationships] = useState({
@@ -284,6 +289,41 @@ export default function StudioPage({ initialStudio }) {
       cancelled = true;
     };
   }, [slug, activeTab]);
+
+  useEffect(() => {
+    if (!slug || activeTab !== "notificacoes") return;
+    const isMember = viewer.isMember || viewer.isAdmin || viewer.isOwner;
+    if (!isMember) return;
+    let cancelled = false;
+    fetch(`/api/v1/studios/${slug}/notifications`, { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (!cancelled) setStudioNotifs(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (!cancelled) setStudioNotifs([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [slug, activeTab, viewer.isMember, viewer.isAdmin, viewer.isOwner]);
+
+  async function handleMarkStudioNotifRead(n) {
+    if (n.is_read) {
+      const href = resolveOrgNotificationHref(n);
+      if (href) router.push(href);
+      return;
+    }
+    await fetch(`/api/v1/studios/${slug}/notifications`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ notification_id: n.id }),
+    });
+    setStudioNotifs((prev) => prev.map((o) => (o.id === n.id ? { ...o, is_read: true } : o)));
+    const href = resolveOrgNotificationHref(n);
+    if (href) router.push(href);
+  }
 
   async function fetchRelationships() {
     if (!slug) return;
@@ -662,6 +702,11 @@ export default function StudioPage({ initialStudio }) {
                     <PackageIcon size={14} /> Loja
                   </Link>
                 )}
+                {(viewer.isMember || viewer.isAdmin || viewer.isOwner) && (
+                  <Link href={`/estudios/${slug}/pedidos`} className={styles.btnOutline}>
+                    <PackageIcon size={14} /> Pedidos
+                  </Link>
+                )}
                 {canPost && (
                   <Link href={`/estudios/${slug}/reunioes`} className={styles.btnOutline}>
                     <VideoIcon size={14} /> Reuniões
@@ -689,6 +734,14 @@ export default function StudioPage({ initialStudio }) {
           <button className={`${styles.tabBtn} ${activeTab === "postagens" ? styles.tabBtnActive : ""}`} onClick={() => setActiveTab("postagens")}>
             Postagens
           </button>
+          {(viewer.isMember || viewer.isAdmin || viewer.isOwner) && (
+            <button
+              className={`${styles.tabBtn} ${activeTab === "notificacoes" ? styles.tabBtnActive : ""}`}
+              onClick={() => setActiveTab("notificacoes")}
+            >
+              Notificações
+            </button>
+          )}
         </div>
 
         {/* ABA: POSTAGENS */}
@@ -707,6 +760,41 @@ export default function StudioPage({ initialStudio }) {
                   <PostCardComponent key={p.id} post={p} canInteract={!!authUser?.id} onDelete={handleDeletePost} />
                 ))}
               </div>
+            )}
+          </div>
+        )}
+
+        {/* ABA: NOTIFICAÇÕES */}
+        {activeTab === "notificacoes" && (viewer.isMember || viewer.isAdmin || viewer.isOwner) && (
+          <div className={styles.notifTab}>
+            {loadingNotifs ? (
+              <div className={styles.postsLoading}>
+                <Spinner size="medium" />
+              </div>
+            ) : (studioNotifs || []).length === 0 ? (
+              <p className={styles.emptyHint}>Nenhuma notificação ainda.</p>
+            ) : (
+              <ul className={styles.notifList}>
+                {(studioNotifs || []).map((n) => (
+                  <li key={n.id} className={`${styles.notifItem} ${!n.is_read ? styles.notifUnread : ""}`}>
+                    <button className={styles.notifBtn} onClick={() => handleMarkStudioNotifRead(n)}>
+                      <span className={styles.notifBody}>
+                        <span className={styles.notifTitleRow}>
+                          <span className={styles.notifTitle}>{resolveOrgNotificationTitle(n)}</span>
+                          {!n.is_read && <span className={styles.notifDot} aria-hidden="true" />}
+                        </span>
+                        <span className={styles.notifText}>{resolveOrgNotificationMessage(n)}</span>
+                      </span>
+                      <span className={styles.notifWhen}>
+                        {new Intl.DateTimeFormat("pt-BR", {
+                          day: "2-digit",
+                          month: "2-digit",
+                        }).format(new Date(n.created_at))}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
         )}
