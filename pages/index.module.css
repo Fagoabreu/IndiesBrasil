@@ -198,6 +198,42 @@
   z-index: 1;
 }
 
+/* Aviso de acesso livre — precisa ler como informação neutra, não como
+   alerta: por isso usa linha lateral da marca em vez de fundo colorido
+   ou ícone de advertência. */
+.freeNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--borderColor-muted);
+  border-left: 3px solid var(--brand-primary);
+  background: var(--bgColor-default);
+}
+
+.freeNoticeIcon {
+  font-size: 22px;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.freeNoticeTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--fgColor-default);
+  margin: 0 0 4px;
+}
+
+.freeNoticeText {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--fgColor-muted);
+  margin: 0;
+  max-width: 620px;
+}
+
 .metrics {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -229,7 +265,9 @@
   font-size: 0.95rem;
   line-height: 1.65;
   max-width: 540px;
-  margin-bottom: 2rem;
+  /* Sem margem: .sectionHeader já define o respiro até o grid. Manter as duas
+     somava 3.75rem de vão e deixava as seções visualmente soltas. */
+  margin-bottom: 0;
 }
 
 /* ========================================
@@ -293,7 +331,7 @@
   font-size: 15px;
   font-weight: 700;
   color: var(--fgColor-default);
-  margin-bottom: 6px;
+  margin: 0 0 6px;
 }
 
 .featureDesc {
@@ -347,10 +385,8 @@
     gap: 1.5rem;
   }
 
-  .heroPromo {
-    order: -1;
-  }
-
+  /* Sem `order: -1`: a arte promocional aparecia antes do headline e a
+     proposta de valor virava a segunda coisa lida. */
   .promoCard {
     max-width: 100%;
   }
@@ -524,8 +560,8 @@
   background: var(--brand-gradient-h);
   -webkit-background-clip: text;
   background-clip: text;
+  color: var(--brand-primary);
   -webkit-text-fill-color: transparent;
-  color: transparent;
 }
 
 .heroTypeWriter {
@@ -601,8 +637,8 @@
   margin-bottom: 4.5rem;
   padding: 3rem 1.5rem;
   border-radius: 20px;
-  background: var(--brand-active-bg);
-  border: 1px solid var(--brand-icon-border);
+  background: var(--bgColor-default);
+  border: 1px solid var(--borderColor-muted);
 }
 
 .sectionAlt .sectionHeader {
@@ -903,6 +939,16 @@
     display: none;
   }
 
+  /* O hambúrguer substitui as âncoras escondidas e o painel só abre
+     neste breakpoint — daí `.navMobileOpen` viver aqui dentro. */
+  .navToggle {
+    display: flex;
+  }
+
+  .navMobileOpen {
+    display: block;
+  }
+
   .audienceGrid,
   .stepsGrid {
     grid-template-columns: 1fr;
@@ -933,7 +979,7 @@
   }
 
   .footerColumns {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
 
   .studioActions {
@@ -945,5 +991,152 @@
     justify-content: center;
     width: 100%;
     text-align: center;
+  }
+}
+
+/* ========================================
+   ACESSIBILIDADE
+======================================== */
+/* Visível apenas para leitores de tela — usado nos títulos que existem
+   só para manter a hierarquia de headings coerente. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skipLink {
+  position: absolute;
+  top: -100px;
+  left: 1rem;
+  z-index: 100;
+  padding: 10px 18px;
+  border-radius: 0 0 8px 8px;
+  background: var(--brand-gradient);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+
+.skipLink:focus {
+  top: 0;
+}
+
+/* Link/botão focado precisa ser visível — o outline padrão é removido
+   em alguns navegadores para elementos estilizados. */
+.navLink:focus-visible,
+.navLogin:focus-visible,
+.navCta:focus-visible,
+.navMobileLink:focus-visible,
+.ctaPrimary:focus-visible,
+.ctaSecondary:focus-visible,
+.footerLink:focus-visible,
+.navToggle:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+/* ========================================
+   MENU MOBILE
+======================================== */
+.navToggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 38px;
+  height: 38px;
+  padding: 9px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.navToggle:hover {
+  background: var(--brand-hover-bg);
+  border-color: var(--brand-hover-border);
+}
+
+.navToggleBar {
+  display: block;
+  width: 100%;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--fgColor-default);
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.navToggleBarOpen:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.navToggleBarOpen:nth-child(2) {
+  opacity: 0;
+}
+
+.navToggleBarOpen:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+.navMobile {
+  display: none;
+  border-top: 1px solid var(--borderColor-muted);
+  background: var(--bgColor-inset);
+}
+
+.navMobileLinks {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 1rem 1rem;
+}
+
+.navMobileLink {
+  padding: 12px 4px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--fgColor-default);
+  text-decoration: none;
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+.navMobileLink:last-child {
+  border-bottom: none;
+}
+
+.navMobileLink:hover {
+  color: var(--brand-primary);
+}
+
+/* ========================================
+   MOVIMENTO REDUZIDO (escopo da landing)
+======================================== */
+@media (prefers-reduced-motion: reduce) {
+  /* Sem o override, o conteúdo ficaria invisível para quem desliga
+     animações: .reveal parte de opacity 0 e só aparece na transição. */
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .promoCard:hover,
+  .audienceCard:hover,
+  .featureCard:hover,
+  .navCta:hover,
+  .ctaPrimary:hover,
+  .skipLink {
+    transform: none;
+    transition: none;
   }
 }

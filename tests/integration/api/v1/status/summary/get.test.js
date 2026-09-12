@@ -24,6 +24,8 @@ describe("GET /api/v1/status/summary", () => {
     expect(body).toHaveProperty("previous_events");
     expect(body).toHaveProperty("organizations");
     expect(body).toHaveProperty("new_organizations");
+    expect(body).toHaveProperty("games");
+    expect(body).toHaveProperty("new_games");
   });
 
   test("Summary counts activated users", async () => {

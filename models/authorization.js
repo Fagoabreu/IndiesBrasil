@@ -366,6 +366,8 @@ function filterOutput(user, feature, resource) {
       previous_events: resource.previous_events,
       organizations: resource.organizations,
       new_organizations: resource.new_organizations,
+      games: resource.games,
+      new_games: resource.new_games,
     };
   }
 
