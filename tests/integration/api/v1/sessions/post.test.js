@@ -111,12 +111,15 @@ describe("Post /api/v1/sessions", () => {
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         id: responseBody.id,
-        token: responseBody.token,
         user_id: createdUser.id,
         expires_at: responseBody.expires_at,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
+
+      // O token de sessão NÃO é exposto no corpo: com isso ele fica acessível
+      // apenas via cookie httpOnly, fora do alcance de JavaScript.
+      expect(responseBody).not.toHaveProperty("token");
 
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
@@ -135,9 +138,11 @@ describe("Post /api/v1/sessions", () => {
         map: true,
       });
 
+      // O token continua trafegando pelo cookie httpOnly.
+      expect(parsedSetCookie.session_id.value).toMatch(/^[0-9a-f]{96}$/);
       expect(parsedSetCookie.session_id).toEqual({
         name: "session_id",
-        value: responseBody.token,
+        value: parsedSetCookie.session_id.value,
         maxAge: session.EXPIRATION_IN_MILLISECONDS / 1000,
         path: "/",
         httpOnly: true,

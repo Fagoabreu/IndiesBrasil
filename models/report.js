@@ -33,12 +33,16 @@ function sanitizeJustification(justification) {
     return null;
   }
 
-  const sanitized = sanitizeHtml.sanitize(String(justification)).trim();
+  // Trunca ANTES de sanitizar: cortar depois do sanitize podia partir uma tag
+  // ao meio (ex.: `<a href="https://exemplo.com/` sem fechamento), gravando
+  // markup inválido. Assim o sanitizador sempre enxerga a string final.
+  const truncated = String(justification).slice(0, MAX_JUSTIFICATION_LENGTH);
+  const sanitized = sanitizeHtml.sanitize(truncated).trim();
   if (!sanitized) {
     return null;
   }
 
-  return sanitized.slice(0, MAX_JUSTIFICATION_LENGTH);
+  return sanitized;
 }
 
 /* =========================================================

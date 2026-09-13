@@ -3,11 +3,12 @@ import activation from "@/models/activation";
 
 import { createRouter } from "next-connect";
 import controller from "@/infra/controller";
+import rateLimit from "lib/rate-limit.js";
 import { NotFoundError } from "@/infra/errors";
 
 export default createRouter()
   .use(controller.injectAnonymousOrUser)
-  .post(controller.canRequest("create:session"), postHandler)
+  .post(controller.rateLimitBy({ limiter: rateLimit.limiters.reset }), controller.canRequest("create:session"), postHandler)
   .handler(controller.errorHandlers);
 
 async function postHandler(request, response) {

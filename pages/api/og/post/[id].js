@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     const post = await apiRes.json();
 
     // Post com imagem → redireciona para ela (melhor preview possível)
-    if (post.post_img_url) {
+    if (isSafeRedirectTarget(post.post_img_url)) {
       res.setHeader("Cache-Control", "public, max-age=86400, s-maxage=86400");
       res.statusCode = 302;
       res.setHeader("Location", post.post_img_url);
@@ -38,6 +38,10 @@ export default async function handler(req, res) {
     const svg = renderSvg(post);
 
     res.setHeader("Content-Type", "image/svg+xml");
+    // SVG é documento executável: servir sem nosniff/CSP permitiria que um
+    // SVG com <script> rodasse na nossa origem se aberto diretamente.
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; sandbox");
     res.setHeader("Cache-Control", "public, max-age=3600, s-maxage=3600");
     return res.status(200).send(svg);
   } catch {
@@ -47,6 +51,33 @@ export default async function handler(req, res) {
 
 // ── SVG renderer ──────────────────────────────────────────────
 
+/**
+ * Só redireciona para HTTPS em hosts conhecidos. Hoje `post_img_url` vem de
+ * `uploaded_images.secure_url` (Cloudinary, gerado no servidor), mas validar
+ * antes do `Location` evita que uma origem futura transforme este endpoint
+ * em open redirect.
+ * @param {unknown} value
+ * @returns {boolean}
+ */
+function isSafeRedirectTarget(value) {
+  if (typeof value !== "string" || value.length === 0) {
+    return false;
+  }
+
+  let parsed;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return false;
+  }
+
+  if (parsed.protocol !== "https:") {
+    return false;
+  }
+
+  const host = parsed.hostname.toLowerCase();
+  return host === "res.cloudinary.com" || host.endsWith(".cloudinary.com");
+}
 function renderSvg(post) {
   const username = esc(String(post.author_username || "indiesbrasil"));
   const avatar = esc(String(post.author_avatar_url || ""));

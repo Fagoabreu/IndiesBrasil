@@ -29,7 +29,6 @@ describe("GET /api/v1/users/[username]", () => {
         username: "MesmoCase",
         created_at: response2Body.created_at,
         updated_at: response2Body.updated_at,
-        features: ["read:activation_token"],
         avatar_image: null,
         followers_count: "0",
         following_count: "0",
@@ -40,6 +39,9 @@ describe("GET /api/v1/users/[username]", () => {
         background_image: null,
         bio: response2Body.bio,
       });
+      // `features` identifica o nível de permissão (ex.: quem é admin) e não
+      // é exposto a terceiros — só ao próprio usuário ou a um admin.
+      expect(response2Body).not.toHaveProperty("features");
       expect(uuidVersion(response2Body.id)).toBe(4);
       expect(Date.parse(response2Body.created_at)).not.toBeNaN();
       expect(Date.parse(response2Body.updated_at)).not.toBeNaN();
@@ -66,13 +68,13 @@ describe("GET /api/v1/users/[username]", () => {
         followers_count: "0",
         following_count: "0",
         posts_count: "0",
-        features: ["read:activation_token"],
         reputation: 0,
         resumo: response2Body.resumo,
         visibility: "public",
         background_image: null,
         bio: response2Body.bio,
       });
+      expect(response2Body).not.toHaveProperty("features");
       expect(uuidVersion(response2Body.id)).toBe(4);
       expect(Date.parse(response2Body.created_at)).not.toBeNaN();
       expect(Date.parse(response2Body.updated_at)).not.toBeNaN();

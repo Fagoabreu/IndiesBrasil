@@ -1,3 +1,4 @@
+import setCookieParser from "set-cookie-parser";
 import webserver from "infra/webserver.js";
 import activation from "models/activation.js";
 import user from "models/user.js";
@@ -15,6 +16,7 @@ describe("Use case: Registration Flow (all successful)", () => {
   let createUserResponseBody;
   let activationTokenId;
   let createSessionResponseBody;
+  let sessionCookie;
 
   test("Create user account", async () => {
     const createUserResponse = await fetch(`${webserver.origin}/api/v1/users`, {
@@ -37,7 +39,6 @@ describe("Use case: Registration Flow (all successful)", () => {
       username: "RegistrationFlow",
       created_at: createUserResponseBody.created_at,
       updated_at: createUserResponseBody.updated_at,
-      features: ["read:activation_token"],
       avatar_image: null,
       background_image: null,
       bio: null,
@@ -45,6 +46,9 @@ describe("Use case: Registration Flow (all successful)", () => {
       resumo: null,
       visibility: "public",
     });
+    // O requester é anônimo (não é o próprio recurso), então a lista de
+    // permissões não é exposta na resposta de cadastro.
+    expect(createUserResponseBody).not.toHaveProperty("features");
   });
 
   test("Receive activation email", async () => {
@@ -196,12 +200,16 @@ describe("Use case: Registration Flow (all successful)", () => {
 
     createSessionResponseBody = await createSessionResponse.json();
     expect(createSessionResponseBody.user_id).toBe(createUserResponseBody.id);
+    // O token de sessão só trafega pelo cookie httpOnly, nunca no corpo.
+    expect(createSessionResponseBody).not.toHaveProperty("token");
+
+    sessionCookie = setCookieParser(createSessionResponse, { map: true }).session_id.value;
   });
 
   test("Get user information", async () => {
     const userResponse = await fetch(`${webserver.origin}/api/v1/user`, {
       headers: {
-        cookie: `session_id=${createSessionResponseBody.token}`,
+        cookie: `session_id=${sessionCookie}`,
       },
     });
     expect(userResponse.status).toBe(200);

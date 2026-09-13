@@ -233,7 +233,10 @@ function filterOutput(user, feature, resource) {
   validateFeature(feature);
   validateResource(resource);
   if (feature === "read:user") {
-    return getUserResource(resource);
+    // `features` revela o nível de permissão do usuário (ex.: quem é admin).
+    // Só o próprio usuário — ou um admin — enxerga essa lista.
+    const isSelf = user.id === resource.id;
+    return getUserResource(resource, isSelf || can(user, "read:admin"));
   }
 
   if (feature === "read:user:self") {
@@ -262,7 +265,6 @@ function filterOutput(user, feature, resource) {
     if (user.id === resource.user_id)
       return {
         id: resource.id,
-        token: resource.token,
         user_id: resource.user_id,
         created_at: resource.created_at,
         updated_at: resource.updated_at,

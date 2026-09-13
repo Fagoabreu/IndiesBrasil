@@ -69,12 +69,15 @@ describe("Delete /api/v1/sessions", () => {
       const responseBody = await response.json();
       expect(responseBody).toEqual({
         id: sessionObject.id,
-        token: sessionObject.token,
         user_id: sessionObject.user_id,
         expires_at: responseBody.expires_at,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
       });
+
+      // O token de sessão não é exposto no corpo (apenas via cookie httpOnly).
+      expect(responseBody).not.toHaveProperty("token");
+
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.expires_at)).not.toBeNaN();
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();

@@ -14,12 +14,23 @@ function getPepper() {
 }
 
 async function hash(password) {
-  const rounds = getNumberOdRounds();
+  const rounds = getNumberOfRounds();
   return await bcryptjs.hash(password + getPepper(), rounds);
 }
 
-function getNumberOdRounds() {
-  return process.env.NODE_ENV === "production" ? 14 : 1;
+/**
+ * Custo do bcrypt. Só o ambiente de TESTE usa 1 round (velocidade da suíte);
+ * qualquer outro — inclusive dev e staging/homolog — usa o custo real. Antes
+ * a condição era `NODE_ENV === "production" ? 14 : 1`, o que deixava qualquer
+ * ambiente com NODE_ENV diferente de "production" com hash trivial.
+ * PASSWORD_HASH_ROUNDS permite reduzir o custo localmente, de forma explícita.
+ */
+function getNumberOfRounds() {
+  const override = Number.parseInt(process.env.PASSWORD_HASH_ROUNDS ?? "", 10);
+  if (!Number.isNaN(override) && override > 0) {
+    return override;
+  }
+  return process.env.NODE_ENV === "test" ? 1 : 14;
 }
 
 async function compare(providedPassword, storedPassword) {

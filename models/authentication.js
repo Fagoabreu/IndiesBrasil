@@ -4,16 +4,20 @@ import rateLimit from "lib/rate-limit";
 import moderation from "models/moderation.js";
 import { NotFoundError, UnauthorizedError, TooManyRequestsError, ForbiddenError } from "infra/errors.js";
 
+// Hash bcrypt descartável (custo 14, igual ao de produção), usado apenas para
+// gastar o mesmo tempo de CPU quando o e-mail não existe. Não corresponde a
+// nenhuma senha real — nenhum login consegue validar contra ele.
+const DUMMY_PASSWORD_HASH = "$2b$14$.ZJPco6PSKDcz4tSSV8T6ex6g/ysctUTbVf9EdYDseYSI1JUa0MDO";
+
 async function getUser(providedEmail, providedPassword, request) {
   try {
     if (request) {
       const clientIp = rateLimit.getClientIp(request);
 
-      // Skip rate limiting for local requests (tests / local dev without reverse proxy).
-      // In production, nginx always sets X-Forwarded-For to the real client IP,
-      // so loopback addresses only appear from internal/test traffic.
-      const isLocalRequest = clientIp === "127.0.0.1" || clientIp === "::1" || clientIp === "::ffff:127.0.0.1";
-      if (!isLocalRequest) {
+      // Tráfego interno/teste não é limitado. Em produção o nginx sempre
+      // define X-Forwarded-For com o IP real, então loopback só aparece de
+      // tráfego interno.
+      if (!rateLimit.isLocalRequest(clientIp)) {
         const { allowed, remaining, resetMs } = rateLimit.check(clientIp);
 
         if (!allowed) {
@@ -58,6 +62,11 @@ async function getUser(providedEmail, providedPassword, request) {
       storedUser = await user.findOneByEmail(providedEmail);
     } catch (error) {
       if (error instanceof NotFoundError) {
+        // Executa um bcrypt de descarte antes de falhar: sem isso, e-mail
+        // inexistente responde rápido (sem hash) e e-mail existente responde
+        // lento (14 rounds), permitindo enumerar contas válidas pelo tempo
+        // de resposta — mesmo com a mensagem genérica.
+        await password.compare(providedPassword, DUMMY_PASSWORD_HASH);
         throw new UnauthorizedError({
           message: "Senha não confere.",
           action: "Verifique se este dado está correto",

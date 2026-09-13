@@ -41,7 +41,6 @@ describe("POST /api/v1/users", () => {
         username: testUser.username,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
-        features: ["read:activation_token"],
         avatar_image: null,
         background_image: null,
         bio: null,
@@ -49,6 +48,9 @@ describe("POST /api/v1/users", () => {
         resumo: null,
         visibility: "public",
       });
+      // O requester é anônimo (não é o próprio recurso), então a lista de
+      // permissões não é exposta na resposta de cadastro.
+      expect(responseBody).not.toHaveProperty("features");
       expect(uuidVersion(responseBody.id)).toBe(4);
       expect(Date.parse(responseBody.created_at)).not.toBeNaN();
       expect(Date.parse(responseBody.updated_at)).not.toBeNaN();

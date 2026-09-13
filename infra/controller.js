@@ -3,6 +3,7 @@ import session from "models/session.js";
 import user from "models/user.js";
 import authorization from "models/authorization.js";
 import moderation from "models/moderation.js";
+import rateLimit from "lib/rate-limit.js";
 import { NextResponse } from "next/server";
 
 const {
@@ -184,6 +185,37 @@ function canRequest(feature) {
   };
 }
 
+/**
+ * Middleware de rate limit. Usa o limiter informado, chaveado pelo IP do
+ * cliente (ou por uma função `keyBy` quando o IP sozinho é grosseiro demais,
+ * ex.: criação de conta — evita que um atacante queime a cota de todo um NAT).
+ *
+ * @param {{ limiter: object, keyBy?: (request: object) => string }} options
+ */
+function rateLimitBy({ limiter, keyBy }) {
+  return function rateLimitMiddleware(request, response, next) {
+    const clientIp = rateLimit.getClientIp(request);
+
+    // Tráfego interno/teste não é limitado — mesmo critério do login.
+    if (rateLimit.isLocalRequest(clientIp)) {
+      return next();
+    }
+
+    const key = keyBy ? keyBy(request) : clientIp;
+    const { allowed, resetMs } = limiter.check(key);
+
+    if (!allowed) {
+      throw new TooManyRequestsError({
+        message: "Muitas requisições. Tente novamente mais tarde.",
+        action: "Aguarde alguns minutos antes de tentar novamente.",
+        retryAfterSeconds: Math.ceil(resetMs / 1000),
+      });
+    }
+
+    return next();
+  };
+}
+
 export async function injectApiUser(request) {
   const cookieHeader = request.headers.get("cookie");
   if (!cookieHeader) {
@@ -211,6 +243,7 @@ const controller = {
   clearSessionCookie,
   injectAnonymousOrUser,
   canRequest,
+  rateLimitBy,
   injectAuthenticatedUser,
   injectApiUser,
   onErrorHandler,
