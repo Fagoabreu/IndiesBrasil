@@ -78,6 +78,7 @@ describe("models/authorization.js", () => {
 
     test("with valid `user`, known `feature` and `resource`", () => {
       const createdUser = {
+        id: 2,
         features: ["read:user"],
       };
 
@@ -94,13 +95,53 @@ describe("models/authorization.js", () => {
 
       const result = authorization.filterOutput(createdUser, "read:user", resource);
 
+      // `features` revela o nível de permissão; não é exposto quando o
+      // requester é terceiro sem `read:admin`.
       expect(result).toEqual({
+        id: 1,
+        username: "resource",
+        created_at: "2026-01-01T00:00:00.000Z",
+        updated_at: "2026-01-01T00:00:00.000Z",
+      });
+      expect(result).not.toHaveProperty("features");
+    });
+
+    test("with `user` requesting their own resource, `features` is included", () => {
+      const createdUser = {
+        id: 1,
+        features: ["read:user"],
+      };
+
+      const resource = {
+        id: 1,
+        username: "resource",
+        features: ["read:user", "read:admin"],
+        created_at: "2026-01-01T00:00:00.000Z",
+        updated_at: "2026-01-01T00:00:00.000Z",
+      };
+
+      const result = authorization.filterOutput(createdUser, "read:user", resource);
+
+      expect(result.features).toEqual(["read:user", "read:admin"]);
+    });
+
+    test("with admin `user` requesting a third-party resource, `features` is included", () => {
+      const createdUser = {
+        id: 2,
+        features: ["read:user", "read:admin"],
+      };
+
+      const resource = {
         id: 1,
         username: "resource",
         features: ["read:user"],
         created_at: "2026-01-01T00:00:00.000Z",
         updated_at: "2026-01-01T00:00:00.000Z",
-      });
+      };
+
+      const result = authorization.filterOutput(createdUser, "read:user", resource);
+
+      expect(result.features).toEqual(["read:user"]);
     });
   });
 });

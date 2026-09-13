@@ -3,10 +3,11 @@ import controller from "infra/controller.js";
 import user from "models/user.js";
 import activation from "models/activation.js";
 import authorization from "@/models/authorization";
+import rateLimit from "lib/rate-limit.js";
 
 export default createRouter()
   .use(controller.injectAnonymousOrUser)
-  .post(controller.canRequest("create:user"), postHandler)
+  .post(controller.rateLimitBy({ limiter: rateLimit.limiters.register }), controller.canRequest("create:user"), postHandler)
   .get(controller.canRequest("read:user"), getHandler)
   .handler(controller.errorHandlers);
 

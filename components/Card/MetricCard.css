@@ -51,14 +51,14 @@
   margin-top: 2px;
 }
 
-/* VALOR PRINCIPAL */
+/* VALOR PRINCIPAL
+   Cor sólida da marca em vez de gradiente com text-fill transparente:
+   o número da métrica precisa de contraste garantido e não pode
+   desaparecer em modo de alto contraste. */
 .metric-value {
   font-size: 30px;
   font-weight: 700;
-  background: var(--brand-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--brand-primary);
   margin: 10px 0 4px;
   line-height: 1;
 }

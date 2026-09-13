@@ -482,3 +482,18 @@ body {
     display: none !important;
   }
 }
+
+/* ===== MOVIMENTO REDUZIDO =====
+   Respeita a preferência do sistema operacional. Sem isso, reveal-on-scroll,
+   hovers com transform e cursores piscando continuam animando para usuários
+   com sensibilidade vestibular — e a diretriz WCAG 2.3.3 não é atendida. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

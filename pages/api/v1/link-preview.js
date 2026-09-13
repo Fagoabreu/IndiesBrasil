@@ -1,8 +1,12 @@
 import { createRouter } from "next-connect";
 import controller from "infra/controller";
+import rateLimit from "lib/rate-limit.js";
 import embededResolver from "infra/embededResolver";
 
-export default createRouter().use(controller.injectAnonymousOrUser).get(getHandler).handler(controller.errorHandlers);
+export default createRouter()
+  .use(controller.injectAnonymousOrUser)
+  .get(controller.rateLimitBy({ limiter: rateLimit.limiters.proxy }), getHandler)
+  .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
   const { url } = request.query;

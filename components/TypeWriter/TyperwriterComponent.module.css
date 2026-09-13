@@ -18,3 +18,12 @@
     border-color: transparent;
   }
 }
+
+/* Variante para prefers-reduced-motion: mantém o gradiente da marca, mas sem
+   cursor piscando nem digitação. */
+.staticText {
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

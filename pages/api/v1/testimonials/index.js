@@ -1,11 +1,12 @@
 import { createRouter } from "next-connect";
 import controller from "infra/controller";
+import rateLimit from "lib/rate-limit.js";
 import testimonial from "models/testimonial";
 
 export default createRouter()
   .use(controller.injectAnonymousOrUser)
   .get(controller.canRequest("read:testimonial"), getHandler)
-  .post(controller.canRequest("create:testimonial"), postHandler)
+  .post(controller.rateLimitBy({ limiter: rateLimit.limiters.write }), controller.canRequest("create:testimonial"), postHandler)
   .handler(controller.errorHandlers);
 
 /**

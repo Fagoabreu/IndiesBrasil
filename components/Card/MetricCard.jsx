@@ -5,7 +5,7 @@ export default function MetricCard({ title, period, value, previousLabel, previo
   return (
     <div className="metric-card">
       <div className="metric-header">
-        <Heading as="h4" className="metric-title">
+        <Heading as="h3" className="metric-title">
           {title}
         </Heading>
 

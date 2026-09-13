@@ -28,7 +28,7 @@ async function getHandler(request, response) {
     const backgroundImage = await uploadedImages.findById(userFound.background_image);
     userFound.background_image = backgroundImage?.secure_url;
   }
-  response.setHeader("Cache-Control", "no-store,no-cache-max-age=0,must-revalidate");
+  response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
 
   const secureOutputValues = authorization.filterOutput(userTryingToGet, "read:user:self", userFound);
 

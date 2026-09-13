@@ -49,7 +49,16 @@ async function getSummary() {
             SELECT COUNT(*)
             FROM organizations
             WHERE created_at >= NOW() - INTERVAL '30 days'
-          ) AS new_organizations
+          ) AS new_organizations,
+          (
+            SELECT COUNT(*)
+            FROM games
+          ) AS games,
+          (
+            SELECT COUNT(*)
+            FROM games
+            WHERE created_at >= NOW() - INTERVAL '30 days'
+          ) AS new_games
           ;
 
       `,

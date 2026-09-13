@@ -44,7 +44,6 @@ describe("Patch /api/v1/users/[username]", () => {
 
       expect(response.status).toBe(403);
       const responseBody = await response.json();
-      console.log("DEBUG features:", JSON.stringify(responseBody.features));
       expect(responseBody).toEqual({
         action: 'Verifique se o seu usuário possui a feature "update:user" para executar esta ação.',
         message: "Você não possui permissão para executar esta ação",
@@ -693,13 +692,15 @@ describe("Patch /api/v1/users/[username]", () => {
         avatar_image: responseBody.avatar_image,
         created_at: responseBody.created_at,
         updated_at: responseBody.updated_at,
-        features: ["read:activation_token"],
         reputation: 0,
         resumo: responseBody.resumo,
         visibility: responseBody.visibility,
         background_image: responseBody.background_image,
         bio: responseBody.bio,
       });
+      // O privilegiado tem `update:user:others`, mas NÃO é o dono do recurso
+      // nem admin — então a lista de permissões do alvo não é exposta.
+      expect(responseBody).not.toHaveProperty("features");
     });
   });
 });

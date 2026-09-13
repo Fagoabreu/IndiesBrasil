@@ -25,6 +25,15 @@ export default function useInView(options = {}) {
   useEffect(() => {
     if (!node) return;
 
+    // Sem IntersectionObserver não há como detectar visibilidade; expõe o
+    // conteúdo para não deixá-lo permanentemente oculto (as classes de reveal
+    // partem de `opacity: 0`). setState fica em callback assíncrono porque
+    // chamá-lo direto no corpo do efeito dispara renders em cascata.
+    if (typeof IntersectionObserver === "undefined") {
+      const timeoutId = setTimeout(() => setIsVisible(true), 0);
+      return () => clearTimeout(timeoutId);
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         setIsVisible(entry.isIntersecting);
