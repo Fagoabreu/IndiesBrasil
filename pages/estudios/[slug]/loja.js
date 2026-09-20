@@ -1,22 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import Image from "next/image";
 import { Banner, Button, FormControl, Heading, Select, Spinner, TextInput, Textarea } from "@primer/react";
 import SeoHead from "@/components/SeoHead";
-import ImageCropModal from "@/components/ImageTools/ImageCropTool/ImageCropModal";
+import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 import { formatBRL } from "@/lib/currency";
 import { ORDER_STATUS_LABELS, ORDER_STATUSES, PRODUCT_TYPE_LABELS, PRODUCT_TYPES } from "@/lib/store-constants";
 import { SITE_URL } from "@/lib/seo";
 import styles from "./loja.module.css";
-
-function readFileAsDataUrl(file) {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.readAsDataURL(file);
-  });
-}
 
 export async function getServerSideProps(context) {
   const { slug } = context.params;
@@ -276,9 +268,6 @@ function ProductForm({ studioId, editingProduct, onSaved, onCancelEdit, disabled
     }
     return [];
   });
-  const [cropQueue, setCropQueue] = useState([]);
-  const [cropSrc, setCropSrc] = useState(null);
-  const fileInputRef = useRef(null);
 
   function update(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -288,46 +277,12 @@ function ProductForm({ studioId, editingProduct, onSaved, onCancelEdit, disabled
     setOpen(false);
     setForm({ name: "", type: "physical", price: "", description: "", deliveryNotes: "" });
     setImages([]);
-    setCropQueue([]);
-    setCropSrc(null);
     onCancelEdit();
   }
 
-  function openImagePicker() {
-    fileInputRef.current?.click();
-  }
-
-  function handleImageFileChange(event) {
-    const files = Array.from(event.target.files || []);
-    event.target.value = "";
-    if (files.length === 0) return;
-
-    // Lê todos os arquivos e os enfileira para recorte sequencial.
-    Promise.all(files.map(readFileAsDataUrl)).then((dataUrls) => {
-      setCropQueue(dataUrls);
-      setCropSrc(dataUrls[0] || null);
-    });
-  }
-
-  async function handleImageCropConfirm(blob) {
-    if (blob) {
-      const dataUrl = await readFileAsDataUrl(blob);
-      setImages((prev) => [...prev, { dataUrl, preview: dataUrl }]);
-    }
-    advanceCropQueue();
-  }
-
-  function handleCropClose() {
-    advanceCropQueue();
-  }
-
-  function advanceCropQueue() {
-    setCropSrc(null);
-    const rest = cropQueue.slice(1);
-    setCropQueue(rest);
-    if (rest.length > 0) {
-      setCropSrc(rest[0]);
-    }
+  /** Cada arquivo passa pelo recorte do ImageUploader, um de cada vez. */
+  function addCroppedImage({ dataUrl }) {
+    setImages((prev) => [...prev, { dataUrl, preview: dataUrl }]);
   }
 
   function removeImageAt(index) {
@@ -377,8 +332,6 @@ function ProductForm({ studioId, editingProduct, onSaved, onCancelEdit, disabled
       if (res.ok) {
         setForm({ name: "", type: "physical", price: "", description: "", deliveryNotes: "" });
         setImages([]);
-        setCropQueue([]);
-        setCropSrc(null);
         setOpen(false);
         await onSaved();
       } else {
@@ -397,7 +350,6 @@ function ProductForm({ studioId, editingProduct, onSaved, onCancelEdit, disabled
   if (busy) submitLabel = "Salvando...";
 
   const imageButtonLabel = images.length > 0 ? "Adicionar imagem" : "Enviar imagens";
-
   return (
     <section className={styles.section}>
       <div className={styles.formHeader}>
@@ -457,15 +409,6 @@ function ProductForm({ studioId, editingProduct, onSaved, onCancelEdit, disabled
           </FormControl>
           <FormControl>
             <FormControl.Label>Imagens do produto</FormControl.Label>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              className={styles.hiddenInput}
-              onChange={handleImageFileChange}
-              aria-label="Enviar imagens do produto"
-            />
             <div className={styles.imageField}>
               <div className={styles.thumbGrid}>
                 {images.length === 0 ? (
@@ -500,9 +443,13 @@ function ProductForm({ studioId, editingProduct, onSaved, onCancelEdit, disabled
                 )}
               </div>
               <div className={styles.imageActions}>
-                <Button type="button" size="small" onClick={openImagePicker} disabled={busy}>
-                  {imageButtonLabel}
-                </Button>
+                <ImageUploader preset="product" multiple label="Imagens do produto" onCropped={addCroppedImage} disabled={busy}>
+                  {({ open, disabled }) => (
+                    <Button type="button" size="small" onClick={open} disabled={disabled}>
+                      {imageButtonLabel}
+                    </Button>
+                  )}
+                </ImageUploader>
               </div>
             </div>
           </FormControl>
@@ -511,8 +458,6 @@ function ProductForm({ studioId, editingProduct, onSaved, onCancelEdit, disabled
           </Button>
         </form>
       )}
-
-      {cropSrc && <ImageCropModal imageSrc={cropSrc} preset="product" onConfirm={handleImageCropConfirm} onClose={handleCropClose} />}
     </section>
   );
 }

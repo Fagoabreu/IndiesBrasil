@@ -363,7 +363,8 @@
 .heroCoverWrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 460 / 215;
+  /* 16:9 — a proporção do preset `mediaCover`. */
+  aspect-ratio: 16 / 9;
   border-radius: 2px;
   overflow: hidden;
   background: var(--bgColor-inset);

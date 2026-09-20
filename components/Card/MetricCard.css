@@ -11,6 +11,18 @@
     box-shadow 0.2s ease;
 }
 
+/* Card navegável: <a> herda a aparência do card e não leva decoração de link. */
+.metric-card-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.metric-card-link:focus-visible {
+  outline: 2px solid var(--fgColor-accent);
+  outline-offset: 2px;
+}
+
 .metric-card::after {
   content: "";
   position: absolute;
@@ -55,12 +67,50 @@
    Cor sólida da marca em vez de gradiente com text-fill transparente:
    o número da métrica precisa de contraste garantido e não pode
    desaparecer em modo de alto contraste. */
+.metric-value-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 10px 0 4px;
+}
+
 .metric-value {
   font-size: 30px;
   font-weight: 700;
   color: var(--brand-primary);
-  margin: 10px 0 4px;
   line-height: 1;
+}
+
+/* Seta de navegação — só existe quando o card tem destino. Cresce no hover
+   para reforçar que o card todo é clicável. */
+.metric-arrow {
+  font-size: 18px;
+  line-height: 1;
+  color: var(--brand-primary);
+  opacity: 0.5;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.metric-card-link:hover .metric-arrow,
+.metric-card-link:focus-visible .metric-arrow {
+  opacity: 1;
+  transform: translateX(3px);
+}
+
+/* Texto que existe apenas para leitores de tela. */
+.metric-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* COMPARAÇÃO */

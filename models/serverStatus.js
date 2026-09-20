@@ -58,7 +58,42 @@ async function getSummary() {
             SELECT COUNT(*)
             FROM games
             WHERE created_at >= NOW() - INTERVAL '30 days'
-          ) AS new_games
+          ) AS new_games,
+          (
+            SELECT COUNT(*)
+            FROM boardgames
+          ) AS boardgames,
+          (
+            SELECT COUNT(*)
+            FROM boardgames
+            WHERE created_at >= NOW() - INTERVAL '30 days'
+          ) AS new_boardgames,
+          (
+            SELECT COUNT(*)
+            FROM books
+          ) AS books,
+          (
+            SELECT COUNT(*)
+            FROM books
+            WHERE created_at >= NOW() - INTERVAL '30 days'
+          ) AS new_books,
+          -- Estúdios com transmissão ao vivo agora. org_stream_status é um
+          -- cache alimentado pelo refresh de /api/v1/streams/refresh, então o
+          -- número reflete a última verificação (pode estar defasado se
+          -- ninguém abriu a página de streams recentemente). DISTINCT porque
+          -- o mesmo estúdio pode estar ao vivo na Twitch e no YouTube.
+          (
+            SELECT COUNT(DISTINCT org_id)
+            FROM org_stream_status
+            WHERE is_live = true
+          ) AS live_streams,
+          -- Total de estúdios com canal cadastrado (sempre exato, independe
+          -- do cache de status acima).
+          (
+            SELECT COUNT(*)
+            FROM organizations
+            WHERE twitch_channel IS NOT NULL OR youtube_channel_id IS NOT NULL
+          ) AS streaming_studios
           ;
 
       `,

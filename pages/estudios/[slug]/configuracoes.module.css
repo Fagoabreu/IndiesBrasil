@@ -609,7 +609,8 @@
 .gameImgPreviewWrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 460 / 215;
+  /* 16:9 — a proporção do preset `mediaCover` e dos cards de obra. */
+  aspect-ratio: 16 / 9;
   border-radius: 4px;
   overflow: hidden;
   background: var(--bgColor-default);

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import Image from "next/image";
@@ -18,7 +18,7 @@ import BoardGameCard from "@/components/Card/BoardGameCard";
 import BookCard from "@/components/Card/BookCard";
 import CreatePost from "@/components/CreatePost/CreatePost";
 import PostCardComponent from "@/components/PostCard/PostCardComponent";
-import ImageCropModal from "@/components/ImageTools/ImageCropTool/ImageCropModal";
+import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 import { SITE_URL } from "@/lib/seo";
 import { resolveOrgNotificationTitle, resolveOrgNotificationMessage, resolveOrgNotificationHref } from "@/lib/notifications";
 import styles from "./studio.module.css";
@@ -119,13 +119,6 @@ export default function StudioPage({ initialStudio }) {
   });
   const [loading, setLoading] = useState(!initialStudio);
   const [statusMsg, setStatusMsg] = useState({ type: null, text: "" });
-
-  // Upload crop state
-  const [cropSrc, setCropSrc] = useState(null);
-  const [cropPreset, setCropPreset] = useState("avatar");
-  const [pendingImgType, setPendingImgType] = useState(null);
-  const logoInputRef = useRef(null);
-  const bannerInputRef = useRef(null);
 
   // Games
   const [studioGames, setStudioGames] = useState([]);
@@ -402,29 +395,12 @@ export default function StudioPage({ initialStudio }) {
     }
   }
 
-  // ── Upload helpers ────────────────────────────────────────────────────
-  function openFilePicker(imgType, preset) {
-    setPendingImgType(imgType);
-    setCropPreset(preset);
-    if (imgType === "logo") logoInputRef.current?.click();
-    else bannerInputRef.current?.click();
-  }
-
-  function handleFileSelected(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = "";
-    const reader = new FileReader();
-    reader.onload = () => setCropSrc(reader.result);
-    reader.readAsDataURL(file);
-  }
-
-  async function handleCropConfirm(blob) {
-    setCropSrc(null);
-    if (!pendingImgType) return;
+  // ── Upload de imagem ─────────────────────────────────────────────────
+  // O recorte fica com o ImageUploader; aqui só subimos o blob resultante.
+  async function uploadStudioImage(blob, imgType) {
     const formData = new FormData();
     formData.append("file", blob);
-    formData.append("imgType", pendingImgType);
+    formData.append("imgType", imgType);
     try {
       const res = await fetch(`/api/v1/studios/${slug}/images`, {
         method: "POST",
@@ -597,11 +573,7 @@ export default function StudioPage({ initialStudio }) {
         jsonLd={orgJsonLd}
       />
 
-      {/* Inputs ocultos para upload */}
-      <input ref={logoInputRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={handleFileSelected} />
-      <input ref={bannerInputRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={handleFileSelected} />
-
-      {cropSrc && <ImageCropModal imageSrc={cropSrc} preset={cropPreset} onConfirm={handleCropConfirm} onClose={() => setCropSrc(null)} />}
+      {/* Inputs ocultos e recorte ficam a cargo do ImageUploader. */}
 
       <div className={styles.pageWrapper}>
         {statusMsg.text && <StatusMessageComponent type={statusMsg.type} message={statusMsg.text} />}
@@ -649,9 +621,13 @@ export default function StudioPage({ initialStudio }) {
                   </div>
                 ) : (
                   <>
-                    <button className={styles.bannerBtn} onClick={() => openFilePicker("banner", "headerBanner")}>
-                      <PencilIcon size={12} /> Imagem
-                    </button>
+                    <ImageUploader preset="studioBanner" onCropped={({ blob }) => uploadStudioImage(blob, "banner")}>
+                      {({ open, disabled }) => (
+                        <button className={styles.bannerBtn} onClick={open} disabled={disabled}>
+                          <PencilIcon size={12} /> Imagem
+                        </button>
+                      )}
+                    </ImageUploader>
                     <button className={styles.bannerBtn} onClick={startEditVideoUrl}>
                       <VideoIcon size={12} /> Vídeo
                     </button>
@@ -664,12 +640,16 @@ export default function StudioPage({ initialStudio }) {
           {/* LOGO */}
           <div className={styles.logoWrapper}>
             {canEdit ? (
-              <button onClick={() => openFilePicker("logo", "squareLogo")} className={styles.logoBtn} title="Alterar logo">
-                <Avatar src={studio.logo_url || "/images/studio.jpg"} size={72} alt={studio.name} className={styles.studioLogo} />
-                <span className={styles.logoBtnOverlay}>
-                  <PencilIcon size={12} />
-                </span>
-              </button>
+              <ImageUploader preset="studioLogo" onCropped={({ blob }) => uploadStudioImage(blob, "logo")}>
+                {({ open, disabled }) => (
+                  <button onClick={open} className={styles.logoBtn} title="Alterar logo" disabled={disabled}>
+                    <Avatar src={studio.logo_url || "/images/studio.jpg"} size={72} alt={studio.name} className={styles.studioLogo} />
+                    <span className={styles.logoBtnOverlay}>
+                      <PencilIcon size={12} />
+                    </span>
+                  </button>
+                )}
+              </ImageUploader>
             ) : (
               <Avatar src={studio.logo_url || "/images/studio.jpg"} size={72} alt={studio.name} className={styles.studioLogo} />
             )}

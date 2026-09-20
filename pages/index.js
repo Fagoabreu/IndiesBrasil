@@ -7,7 +7,7 @@ import VerticalCardComponent from "@/components/Card/VerticalCardComponent";
 import MetricCard from "@/components/Card/MetricCard";
 import HighlightCard from "@/components/HighlightCard/HighlightCard";
 import TestimonialsSection from "@/components/Landing/TestimonialsSection";
-import { MilestoneIcon, OrganizationIcon, PeopleIcon, StarIcon, VideoIcon } from "@primer/octicons-react";
+import { MilestoneIcon, OrganizationIcon, PeopleIcon, StarIcon, VideoIcon, TableIcon, BookIcon, BroadcastIcon } from "@primer/octicons-react";
 import { useEffect, useState } from "react";
 import TyperwriterComponent from "@/components/TypeWriter/TyperwriterComponent";
 import { useUser } from "@/context/UserContext";
@@ -128,6 +128,8 @@ const NAV_LINKS = [
 // Descritor das métricas: cada `field` é lido do /api/v1/status/summary.
 // Sem isso, cada card repetia `summary ? summary.x : "..."` no JSX — dez
 // expressões condicionais que estouravam a complexidade cognitiva de Home.
+// `href` leva à listagem correspondente: o número só ganha utilidade quando
+// dá para ver quem/o quê está sendo contado.
 const METRICS = [
   {
     title: "Usuários",
@@ -136,6 +138,7 @@ const METRICS = [
     previousLabel: "Últimos 30 dias",
     previousField: "new_user_accounts",
     icon: <PeopleIcon />,
+    href: "/membros",
   },
   {
     title: "Posts",
@@ -144,6 +147,7 @@ const METRICS = [
     previousLabel: "Período Anterior",
     previousField: "previous_posts",
     icon: <StarIcon />,
+    href: "/posts",
   },
   {
     title: "Eventos",
@@ -152,6 +156,7 @@ const METRICS = [
     previousLabel: "Período Anterior",
     previousField: "previous_events",
     icon: <MilestoneIcon />,
+    href: "/agenda",
   },
   {
     title: "Estúdios",
@@ -160,6 +165,7 @@ const METRICS = [
     previousLabel: "Novos nos últimos 30 dias",
     previousField: "new_organizations",
     icon: <OrganizationIcon />,
+    href: "/estudios",
   },
   {
     title: "Jogos",
@@ -168,6 +174,36 @@ const METRICS = [
     previousLabel: "Novos nos últimos 30 dias",
     previousField: "new_games",
     icon: <VideoIcon />,
+    href: "/jogos",
+  },
+  {
+    title: "Jogos de mesa",
+    period: "Total",
+    field: "boardgames",
+    previousLabel: "Novos nos últimos 30 dias",
+    previousField: "new_boardgames",
+    icon: <TableIcon />,
+    href: "/jogos-de-mesa",
+  },
+  {
+    title: "Livros e quadrinhos",
+    period: "Total",
+    field: "books",
+    previousLabel: "Novos nos últimos 30 dias",
+    previousField: "new_books",
+    icon: <BookIcon />,
+    href: "/quadrinhos",
+  },
+  {
+    // `live_streams` vem do cache de status alimentado pelo refresh da página
+    // de streams, então é um retrato da última verificação — daí o "Agora".
+    title: "Lives",
+    period: "Ao vivo agora",
+    field: "live_streams",
+    previousLabel: "Estúdios com canal",
+    previousField: "streaming_studios",
+    icon: <BroadcastIcon />,
+    href: "/streams",
   },
 ];
 
@@ -437,6 +473,7 @@ function Home() {
                 previousLabel={metric.previousLabel}
                 previousValue={getMetricValue(summary, metric.previousField)}
                 icon={metric.icon}
+                href={metric.href}
               />
             ))}
           </div>
@@ -578,24 +615,24 @@ function Home() {
             cards={[
               {
                 content: "Instagram Imagem",
-                image_src: "/images/instagram_image.png",
+                image_src: "/images/posts/instagram_image.png",
               },
               {
                 content: "Instagram Vídeo",
-                image_src: "/images/instagram_video.png",
+                image_src: "/images/posts/instagram_video.png",
               },
               { content: "Steam Widget", image_src: "/images/steam_widget.png" },
               {
                 content: "Canal Twitch",
-                image_src: "/images/twitch_channel.png",
+                image_src: "/images/posts/twitch_channel.png",
               },
               {
                 content: "YouTube Shorts",
-                image_src: "/images/youtube_shorts.png",
+                image_src: "/images/posts/youtube_shorts.png",
               },
               {
                 content: "YouTube Vídeo",
-                image_src: "/images/youtube_video.png",
+                image_src: "/images/posts/youtube_video.png",
               },
             ]}
           />
@@ -611,7 +648,20 @@ function Home() {
             <p className={styles.sectionSub}>Tags para identificar o assunto ou uma trending do post.</p>
           </header>
           <VerticalCardComponent
-            image="/images/sistematags.png"
+            image="/images/posts/sistematags.png"
+            alt="ranqueamento Tags"
+            title="Tags"
+            description="Ranqueamento e localização de posts através de tags que auxiliam a classificação do assunto, podendo iniciar uma trend ou uma conversa."
+          />
+        </SectionReveal>
+        <SectionReveal className={styles.section}>
+          <header className={styles.sectionHeader}>
+            <p className={styles.sectionLabel}>Votação</p>
+            <h2 className={styles.sectionTitle}>Sistema de Pesquisa</h2>
+            <p className={styles.sectionSub}>Votação dos usuários para ranquear e destacar pesquisas.</p>
+          </header>
+          <VerticalCardComponent
+            image="/images/posts/questionario.png"
             alt="ranqueamento Tags"
             title="Tags"
             description="Ranqueamento e localização de posts através de tags que auxiliam a classificação do assunto, podendo iniciar uma trend ou uma conversa."

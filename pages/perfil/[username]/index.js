@@ -21,7 +21,7 @@ import FerramentaItem from "@/components/Portfolio/Ferramentas/FerramentaItem";
 import RoleItem from "@/components/Portfolio/Roles/RoleItem";
 import StudioItem from "@/components/Portfolio/Estudios/StudioItem";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
-import ProfileImageUploader from "@/components/Portfolio/ProfileImageUploader";
+import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 import ProfileQrCode from "@/components/Portfolio/ProfileQrCode";
 
 /* =====================
@@ -105,6 +105,27 @@ export default function Perfil() {
     const data = await fetchJSON(`/api/v1/users/${username}/profile`);
     setPerfilUser(data);
   }, [username]);
+
+  /** Sobe o blob recortado e recarrega o perfil — a rota aceita avatar e capa
+   *  pelo mesmo endpoint, distinguidos por `imgType`. */
+  async function uploadProfileImage(blob, imgType) {
+    const formData = new FormData();
+    formData.append("file", blob);
+    formData.append("imgType", imgType);
+
+    const res = await fetch(`/api/v1/users/${username}/avatar`, {
+      method: "POST",
+      credentials: "include",
+      body: formData,
+    });
+
+    if (!res.ok) {
+      setErrorMessage(await res.json().catch(() => null));
+      return;
+    }
+
+    await reloadProfile();
+  }
 
   useEffect(() => {
     if (!username) return;
@@ -213,7 +234,12 @@ export default function Perfil() {
             />
             {isOwnProfile && (
               <div className={style.coverUploader}>
-                <ProfileImageUploader endpoint={`/api/v1/users/${username}/avatar`} onUploaded={reloadProfile} label="Alterar capa" type="cover" />
+                <ImageUploader
+                  preset="profileBanner"
+                  variant="button"
+                  label="Alterar capa"
+                  onCropped={({ blob }) => uploadProfileImage(blob, "background_image")}
+                />
               </div>
             )}
           </div>
@@ -221,13 +247,7 @@ export default function Perfil() {
             <Avatar size={128} src={perfilUser.user.avatar_image || "/images/avatar.png"} className={style.profileAvatar} />
             {isOwnProfile && (
               <div className={style.avatarUploader}>
-                <ProfileImageUploader
-                  endpoint={`/api/v1/users/${username}/avatar`}
-                  onUploaded={reloadProfile}
-                  label="Alterar avatar"
-                  type="avatar"
-                  withCrop
-                />
+                <ImageUploader preset="avatar" label="Alterar avatar" onCropped={({ blob }) => uploadProfileImage(blob, "avatar_image")} />
               </div>
             )}
           </div>

@@ -10,7 +10,7 @@ import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
 import AddressFormFields from "@/components/Address/AddressFormFields";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
-import ImageCropModal from "@/components/ImageTools/ImageCropTool/ImageCropModal";
+import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 import ContentRatingModal from "@/components/ContentRatingModal";
 import styles from "./configuracoes.module.css";
 
@@ -210,12 +210,6 @@ export default function ConfiguracoesPage() {
   const [editBookMsg, setEditBookMsg] = useState({ type: null, text: "" });
   const [activeBookTab, setActiveBookTab] = useState("info");
 
-  // Upload de capa do livro
-  const [bookImgCropSrc, setBookImgCropSrc] = useState(null);
-  const [pendingBookImgSlug, setPendingBookImgSlug] = useState(null);
-  const [uploadingBookImg, setUploadingBookImg] = useState(false);
-  const bookImgInputRef = useRef(null);
-
   // Upload de PDF do livro
   const [uploadingBookPdf, setUploadingBookPdf] = useState(false);
   const bookPdfInputRef = useRef(null);
@@ -243,11 +237,6 @@ export default function ConfiguracoesPage() {
   const [bgAddingVideo, setBgAddingVideo] = useState(false);
   const [bgRemovingVideoId, setBgRemovingVideoId] = useState(null);
   const [bgVideoMsg, setBgVideoMsg] = useState({ type: null, text: "" });
-  // Upload de imagem do jogo de mesa
-  const [bgImgCropSrc, setBgImgCropSrc] = useState(null);
-  const [pendingBgImgSlug, setPendingBgImgSlug] = useState(null);
-  const [uploadingBgImg, setUploadingBgImg] = useState(false);
-  const bgImgInputRef = useRef(null);
 
   // Edição de jogo
   const [editingGameSlug, setEditingGameSlug] = useState(null);
@@ -263,12 +252,6 @@ export default function ConfiguracoesPage() {
   const [addingVideo, setAddingVideo] = useState(false);
   const [removingVideoId, setRemovingVideoId] = useState(null);
   const [videoMsg, setVideoMsg] = useState({ type: null, text: "" });
-
-  // Upload de imagem do jogo
-  const [gameImgCropSrc, setGameImgCropSrc] = useState(null);
-  const [pendingGameImgSlug, setPendingGameImgSlug] = useState(null);
-  const [uploadingGameImg, setUploadingGameImg] = useState(false);
-  const gameImgInputRef = useRef(null);
 
   // Classificação indicativa
   const [ratingModal, setRatingModal] = useState(null);
@@ -722,29 +705,13 @@ export default function ConfiguracoesPage() {
     }
   }
 
-  function openBookImgPicker(bookSlug) {
-    setPendingBookImgSlug(bookSlug);
-    bookImgInputRef.current?.click();
-  }
-
-  function handleBookFileSelected(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = "";
-    const reader = new FileReader();
-    reader.onload = () => setBookImgCropSrc(reader.result);
-    reader.readAsDataURL(file);
-  }
-
-  async function handleBookCropConfirm(blob) {
-    setBookImgCropSrc(null);
-    if (!pendingBookImgSlug) return;
-    setUploadingBookImg(true);
+  /** Sobe a capa recortada do livro. O recorte e o modal ficam no ImageUploader. */
+  async function uploadBookCover(bookSlug, blob) {
     try {
       const formData = new FormData();
       formData.append("file", blob);
       formData.append("imgType", "cover");
-      const res = await fetch(`/api/v1/books/${pendingBookImgSlug}/images`, {
+      const res = await fetch(`/api/v1/books/${bookSlug}/images`, {
         method: "POST",
         body: formData,
         credentials: "include",
@@ -756,8 +723,6 @@ export default function ConfiguracoesPage() {
         type: "error",
         text: "Erro ao enviar capa da publicação.",
       });
-    } finally {
-      setUploadingBookImg(false);
     }
   }
 
@@ -1007,29 +972,13 @@ export default function ConfiguracoesPage() {
     }
   }
 
-  function openGameImgPicker(gameSlug) {
-    setPendingGameImgSlug(gameSlug);
-    gameImgInputRef.current?.click();
-  }
-
-  function handleGameFileSelected(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = "";
-    const reader = new FileReader();
-    reader.onload = () => setGameImgCropSrc(reader.result);
-    reader.readAsDataURL(file);
-  }
-
-  async function handleGameCropConfirm(blob) {
-    setGameImgCropSrc(null);
-    if (!pendingGameImgSlug) return;
-    setUploadingGameImg(true);
+  /** Sobe a capa recortada do jogo. O recorte e o modal ficam no ImageUploader. */
+  async function uploadGameCover(gameSlug, blob) {
     try {
       const formData = new FormData();
       formData.append("file", blob);
       formData.append("imgType", "banner");
-      const res = await fetch(`/api/v1/games/${pendingGameImgSlug}/images`, {
+      const res = await fetch(`/api/v1/games/${gameSlug}/images`, {
         method: "POST",
         body: formData,
         credentials: "include",
@@ -1038,8 +987,6 @@ export default function ConfiguracoesPage() {
       fetchGames();
     } catch {
       setEditGameMsg({ type: "error", text: "Erro ao enviar imagem do jogo." });
-    } finally {
-      setUploadingGameImg(false);
     }
   }
 
@@ -1089,29 +1036,13 @@ export default function ConfiguracoesPage() {
     }
   }
 
-  function openBgImgPicker(bgSlug) {
-    setPendingBgImgSlug(bgSlug);
-    bgImgInputRef.current?.click();
-  }
-
-  function handleBgFileSelected(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = "";
-    const reader = new FileReader();
-    reader.onload = () => setBgImgCropSrc(reader.result);
-    reader.readAsDataURL(file);
-  }
-
-  async function handleBgCropConfirm(blob) {
-    setBgImgCropSrc(null);
-    if (!pendingBgImgSlug) return;
-    setUploadingBgImg(true);
+  /** Sobe a capa recortada do jogo de mesa. O recorte fica no ImageUploader. */
+  async function uploadBoardgameCover(bgSlug, blob) {
     try {
       const formData = new FormData();
       formData.append("file", blob);
       formData.append("imgType", "banner");
-      const res = await fetch(`/api/v1/boardgames/${pendingBgImgSlug}/images`, {
+      const res = await fetch(`/api/v1/boardgames/${bgSlug}/images`, {
         method: "POST",
         body: formData,
         credentials: "include",
@@ -1123,8 +1054,6 @@ export default function ConfiguracoesPage() {
         type: "error",
         text: "Erro ao enviar imagem do jogo de mesa.",
       });
-    } finally {
-      setUploadingBgImg(false);
     }
   }
 
@@ -1955,9 +1884,9 @@ export default function ConfiguracoesPage() {
 
                             {activeGameTab === "media" && (
                               <>
-                                {/* Imagem do card */}
+                                {/* Capa do jogo — 16:9, igual ao card que a exibe */}
                                 <div className={styles.gameImgUpload}>
-                                  <span className={styles.gameImgLabel}>Imagem do card (460 × 215)</span>
+                                  <span className={styles.gameImgLabel}>Capa do jogo (16:9)</span>
                                   <div className={styles.gameImgPreviewWrap}>
                                     {games.find((g) => g.slug === editingGameSlug)?.banner_url ? (
                                       <Image
@@ -1971,14 +1900,13 @@ export default function ConfiguracoesPage() {
                                       <div className={styles.gameImgPlaceholder}>Sem imagem</div>
                                     )}
                                   </div>
-                                  <button
-                                    type="button"
-                                    className={styles.btnOutlineSmall}
-                                    onClick={() => openGameImgPicker(editingGameSlug)}
-                                    disabled={uploadingGameImg}
-                                  >
-                                    {uploadingGameImg ? <Spinner size="small" /> : "Enviar imagem"}
-                                  </button>
+                                  <ImageUploader preset="mediaCover" onCropped={({ blob }) => uploadGameCover(editingGameSlug, blob)}>
+                                    {({ open, disabled, busy }) => (
+                                      <button type="button" className={styles.btnOutlineSmall} onClick={open} disabled={disabled}>
+                                        {busy ? <Spinner size="small" /> : "Enviar imagem"}
+                                      </button>
+                                    )}
+                                  </ImageUploader>
                                 </div>
                                 {/* Trailer */}
                                 <label className={styles.fieldLabel}>
@@ -2515,9 +2443,9 @@ export default function ConfiguracoesPage() {
                                   {bgVideoMsg.text && <StatusMessageComponent type={bgVideoMsg.type} message={bgVideoMsg.text} />}
                                 </fieldset>
 
-                                {/* Imagem do card */}
+                                {/* Capa do jogo de mesa — 16:9, igual ao card que a exibe */}
                                 <div className={styles.gameImgUpload}>
-                                  <span className={styles.gameImgLabel}>Imagem do card (460 × 215)</span>
+                                  <span className={styles.gameImgLabel}>Capa do jogo de mesa (16:9)</span>
                                   <div className={styles.gameImgPreviewWrap}>
                                     {boardgames.find((b) => b.slug === editingBoardgameSlug)?.banner_url ? (
                                       <Image
@@ -2531,14 +2459,13 @@ export default function ConfiguracoesPage() {
                                       <div className={styles.gameImgPlaceholder}>Sem imagem</div>
                                     )}
                                   </div>
-                                  <button
-                                    type="button"
-                                    className={styles.btnOutlineSmall}
-                                    onClick={() => openBgImgPicker(editingBoardgameSlug)}
-                                    disabled={uploadingBgImg}
-                                  >
-                                    {uploadingBgImg ? <Spinner size="small" /> : "Enviar imagem"}
-                                  </button>
+                                  <ImageUploader preset="mediaCover" onCropped={({ blob }) => uploadBoardgameCover(editingBoardgameSlug, blob)}>
+                                    {({ open, disabled, busy }) => (
+                                      <button type="button" className={styles.btnOutlineSmall} onClick={open} disabled={disabled}>
+                                        {busy ? <Spinner size="small" /> : "Enviar imagem"}
+                                      </button>
+                                    )}
+                                  </ImageUploader>
                                 </div>
                               </>
                             )}
@@ -2990,14 +2917,13 @@ export default function ConfiguracoesPage() {
                                   }
                                   maxLength={512}
                                 />
-                                <button
-                                  type="button"
-                                  className={styles.btnOutlineSmall}
-                                  onClick={() => openBookImgPicker(editingBookSlug)}
-                                  disabled={uploadingBookImg}
-                                >
-                                  {uploadingBookImg ? <Spinner size="small" /> : "Enviar imagem"}
-                                </button>
+                                <ImageUploader preset="bookCover" onCropped={({ blob }) => uploadBookCover(editingBookSlug, blob)}>
+                                  {({ open, disabled, busy }) => (
+                                    <button type="button" className={styles.btnOutlineSmall} onClick={open} disabled={disabled}>
+                                      {busy ? <Spinner size="small" /> : "Enviar imagem"}
+                                    </button>
+                                  )}
+                                </ImageUploader>
                               </div>
                             )}
 
@@ -3249,24 +3175,6 @@ export default function ConfiguracoesPage() {
           </>
         )}
       </div>
-
-      {/* Upload de imagem do jogo */}
-      <input ref={gameImgInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleGameFileSelected} />
-      {gameImgCropSrc && (
-        <ImageCropModal imageSrc={gameImgCropSrc} preset="gameCapsule" onConfirm={handleGameCropConfirm} onClose={() => setGameImgCropSrc(null)} />
-      )}
-
-      {/* Upload de imagem do jogo de mesa */}
-      <input ref={bgImgInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleBgFileSelected} />
-      {bgImgCropSrc && (
-        <ImageCropModal imageSrc={bgImgCropSrc} preset="gameCapsule" onConfirm={handleBgCropConfirm} onClose={() => setBgImgCropSrc(null)} />
-      )}
-
-      {/* Upload de capa de publicação */}
-      <input ref={bookImgInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleBookFileSelected} />
-      {bookImgCropSrc && (
-        <ImageCropModal imageSrc={bookImgCropSrc} preset="bookCover" onConfirm={handleBookCropConfirm} onClose={() => setBookImgCropSrc(null)} />
-      )}
 
       {/* Upload de PDF de publicação */}
       <input ref={bookPdfInputRef} type="file" accept=".pdf" style={{ display: "none" }} onChange={handleBookPdfSelected} />

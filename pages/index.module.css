@@ -234,9 +234,11 @@
   max-width: 620px;
 }
 
+/* 8 métricas: divisor exato de 4 colunas fecha duas linhas cheias. O
+   `auto-fit` anterior gerava 6 colunas apertadas e uma segunda linha órfã. */
 .metrics {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -406,6 +408,10 @@
 
   .heroBadge {
     align-self: center;
+  }
+
+  .metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

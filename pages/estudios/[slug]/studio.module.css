@@ -252,10 +252,6 @@
   opacity: 1;
 }
 
-.hiddenInput {
-  display: none;
-}
-
 .studioLogo {
   border-radius: 10px;
   background: var(--bgColor-default);

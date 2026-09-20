@@ -1,14 +1,55 @@
 .embed {
+  width: 100%;
   border-radius: 6px;
   overflow: hidden;
   border: 1px solid var(--borderColor-default);
   background-color: var(--bgColor-muted);
-  display: flex;
-  justify-content: center;
+  /* Bloco (e não flex) para o blockquote/iframe injetado pelo embed.js do
+     Instagram medir a largura real do card em vez de encolher para 0. */
+  display: block;
 }
 
 .embed iframe {
   display: block;
+  /* O embed.js do Instagram injeta min-width: 326px inline no iframe. Em
+     cards estreitos (mobile) isso estoura o container e as laterais do
+     conteúdo ficam cortadas — !important é necessário para vencer o estilo
+     inline do script de terceiros. */
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+/* ── Vídeos (YouTube / Twitch) ──
+   Container 16:9 obrigatório: o player do YouTube desenha o poster com
+   background-size: cover, então qualquer container mais alto que 16:9 (era
+   o caso do height="400" fixo no mobile) corta as laterais do vídeo. */
+.videoEmbed {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: var(--bgColor-muted);
+}
+
+.videoEmbed iframe {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* Shorts (vídeo vertical 9:16) — limita a largura para não virar um bloco
+   gigante no desktop. Declarado depois de .videoEmbed para vencer no cascade. */
+.videoShort {
+  width: min(100%, 320px);
+  aspect-ratio: 9 / 16;
+  margin-inline: auto;
 }
 
 .previewCard {
@@ -25,12 +66,18 @@
 .previewImageWrapper {
   position: relative;
   width: 100%;
-  height: 400px; /* ✅ limite máximo */
+  /* Proporção OG padrão (1200x630). Antes era height: 400px fixo, o que no
+     mobile deixava o box quase quadrado e o object-fit: cover cortava as
+     laterais da imagem, deixando o conteúdo do preview ilegível. */
+  aspect-ratio: 1200 / 630;
   overflow: hidden;
+  background-color: var(--bgColor-inset);
 }
 
 .previewImage {
-  object-fit: cover; /* mantém proporção */
+  /* contain: nunca corta a imagem do preview — as sobras assumem a cor de
+     fundo do box. */
+  object-fit: contain;
 }
 
 .previewContent {

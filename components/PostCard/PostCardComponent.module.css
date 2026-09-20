@@ -129,20 +129,23 @@
   opacity: 0.75;
 }
 
-/* MÍDIA */
+/* MÍDIA
+   Moldura 4:3, a mesma do preset `post` em lib/image-presets.js — quem envia
+   enquadra exatamente o que aparece aqui. Imagens antigas, enviadas antes do
+   recorte existir, são centradas e cortadas para preencher a moldura. */
 .media {
   margin-top: 4px;
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid var(--borderColor-muted);
   background-color: var(--bgColor-muted);
+  aspect-ratio: 4 / 3;
 }
 
 .media img {
   width: 100%;
-  height: auto; /* 🔑 deixa a imagem definir a altura */
-  max-height: 400px; /* 🔒 limita sem cortar */
-  object-fit: contain; /* ✅ NÃO corta */
+  height: 100%;
+  object-fit: cover;
   display: block;
 }
 
@@ -309,9 +312,5 @@
   .text {
     font-size: 13px;
     line-height: 1.45;
-  }
-
-  .media img {
-    max-height: 280px;
   }
 }

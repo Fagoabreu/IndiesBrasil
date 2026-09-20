@@ -6,28 +6,12 @@ import Image from "next/image";
 
 import styles from "./ImageCropModal.module.css";
 import { generateImage } from "@/utils/ImageUtils";
+import { getImagePreset, DEFAULT_PRESET, IMAGE_PRESET_NAMES } from "@/lib/image-presets";
 
-const PRESETS = {
-  avatar: { aspect: 1, shape: 100, label: "Avatar" },
-  cover: { aspect: 3, shape: 0, label: "Capa" },
-  banner: { aspect: 16 / 9, shape: 0, label: "Banner" },
-  thumbnail: { aspect: 1, shape: 0, label: "Thumbnail" },
-  // Logo de organização: quadrado com cantos arredondados (não circular)
-  squareLogo: { aspect: 1, shape: 0, label: "Logo" },
-  // Banner do cabeçalho de página (max-width 1000px, padding 32px → 968px / 150px altura)
-  headerBanner: { aspect: 968 / 150, shape: 0, label: "Banner de cabeçalho" },
-  // Capa do perfil de membro (PageLayout.Content width=medium → 768px - profileCard padding 16px = 752px / 150px altura)
-  profileBanner: { aspect: 752 / 150, shape: 0, label: "Capa do perfil" },
-  // Imagem de card de jogo — proporção Steam header capsule (460 × 215)
-  gameCapsule: { aspect: 460 / 215, shape: 0, label: "Imagem do Card" },
-  // Capa de livro/quadrinho — proporção retrato 2:3
-  bookCover: { aspect: 2 / 3, shape: 0, label: "Capa de Livro" },
-  // Imagem de produto da loja — proporção do card (16:10)
-  product: { aspect: 16 / 10, shape: 0, label: "Imagem do produto" },
-};
-
-export default function ImageCropModal({ imageSrc, preset = "avatar", onConfirm, onClose }) {
-  const { aspect: initialAspect, shape: initialShape } = PRESETS[preset] ?? PRESETS.avatar;
+export default function ImageCropModal({ imageSrc, preset = DEFAULT_PRESET, onConfirm, onClose }) {
+  // O catálogo é a única fonte de verdade do formato: quem recorta e quem
+  // renderiza leem a mesma proporção (`lib/image-presets.js`).
+  const { aspect, shape, format, quality, outputWidth } = getImagePreset(preset);
   const returnFocusRef = useRef(null);
 
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -50,14 +34,16 @@ export default function ImageCropModal({ imageSrc, preset = "avatar", onConfirm,
         imageSrc,
         crop: croppedAreaPixels,
         rotation,
-        shape: initialShape,
-        format: "image/png",
+        shape,
+        format,
+        quality,
+        outputWidth,
       });
       setPreview(result.url);
     }, 150);
 
     return () => clearTimeout(timer);
-  }, [imageSrc, croppedAreaPixels, rotation, initialShape]);
+  }, [imageSrc, croppedAreaPixels, rotation, shape, format, quality, outputWidth]);
 
   async function handleConfirm() {
     if (!croppedAreaPixels) return;
@@ -67,8 +53,10 @@ export default function ImageCropModal({ imageSrc, preset = "avatar", onConfirm,
       imageSrc,
       crop: croppedAreaPixels,
       rotation,
-      shape: initialShape,
-      format: "image/png",
+      shape,
+      format,
+      quality,
+      outputWidth,
     });
 
     setLoading(false);
@@ -104,8 +92,8 @@ export default function ImageCropModal({ imageSrc, preset = "avatar", onConfirm,
             crop={crop}
             zoom={zoom}
             rotation={rotation}
-            aspect={initialAspect}
-            cropShape={initialShape === 100 ? "round" : "rect"}
+            aspect={aspect}
+            cropShape={shape === 100 ? "round" : "rect"}
             onCropChange={setCrop}
             onZoomChange={setZoom}
             onRotationChange={setRotation}
@@ -146,17 +134,17 @@ export default function ImageCropModal({ imageSrc, preset = "avatar", onConfirm,
         {preview && (
           <div className={styles.previewRow}>
             <span className={styles.previewLabel}>Pré-visualização</span>
-            {initialShape === 100 ? (
+            {shape === 100 ? (
               <Avatar src={preview} size={80} />
             ) : (
-              <Image
-                src={preview}
-                alt="pré-visualização"
-                unoptimized
-                width={200}
-                height={Math.round(200 / initialAspect)}
-                className={styles.previewImage}
-              />
+              // O frame carrega a proporção do preset e a imagem o preenche:
+              // antes a altura vinha calculada a partir de uma largura fixa e
+              // acabava esbarrando em `max-width`/`max-height`, então o
+              // preview saía numa proporção diferente da do arquivo gerado
+              // (com a imagem recortada dentro dele).
+              <span className={styles.previewFrame} style={{ "--preview-aspect": aspect }}>
+                <Image src={preview} alt="Pré-visualização do recorte" fill unoptimized sizes="160px" className={styles.previewImage} />
+              </span>
             )}
           </div>
         )}
@@ -167,18 +155,7 @@ export default function ImageCropModal({ imageSrc, preset = "avatar", onConfirm,
 
 ImageCropModal.propTypes = {
   imageSrc: PropTypes.string.isRequired,
-  preset: PropTypes.oneOf([
-    "avatar",
-    "cover",
-    "banner",
-    "thumbnail",
-    "squareLogo",
-    "headerBanner",
-    "profileBanner",
-    "gameCapsule",
-    "bookCover",
-    "product",
-  ]),
+  preset: PropTypes.oneOf(IMAGE_PRESET_NAMES),
   onConfirm: PropTypes.func.isRequired,
   onClose: PropTypes.func.isRequired,
 };

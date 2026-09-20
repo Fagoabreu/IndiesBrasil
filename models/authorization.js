@@ -370,6 +370,12 @@ function filterOutput(user, feature, resource) {
       new_organizations: resource.new_organizations,
       games: resource.games,
       new_games: resource.new_games,
+      boardgames: resource.boardgames,
+      new_boardgames: resource.new_boardgames,
+      books: resource.books,
+      new_books: resource.new_books,
+      live_streams: resource.live_streams,
+      streaming_studios: resource.streaming_studios,
     };
   }
 

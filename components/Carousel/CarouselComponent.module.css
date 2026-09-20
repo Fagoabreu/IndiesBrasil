@@ -1,40 +1,33 @@
 .wrapper {
   width: 100%;
-  padding: 1rem 0;
 }
 
-/* ── Linha (dock) ── */
-.row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: var(--hover-height, 400px);
-  padding: 0.5rem 0;
+/* ── Dock ──
+   Grade de 3 colunas: as 6 capturas ficam grandes e legíveis, e todas as
+   linhas ficam alinhadas. A versão anterior distribuía as 6 barras numa
+   única linha (≈180px cada) para caber o efeito de ampliação no hover; além
+   de deixar tudo minúsculo, a ampliação não tinha para onde crescer e a
+   linha estourava a largura disponível. O carrossel de arrastar continua
+   existindo, mas só onde faz sentido (ver `(hover: none)` no fim). */
+.dock {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
   transition:
     filter 0.3s ease,
     opacity 0.3s ease;
 }
 
-.rowDimmed {
-  filter: blur(var(--blur, 2px));
+.dockDimmed {
+  filter: blur(2px);
   opacity: 0.35;
   pointer-events: none;
 }
 
-.dock {
+/* ── Card ── */
+.card {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  gap: var(--gap, 16px);
-}
-
-/* ── Barra ── */
-.bar {
-  position: relative;
-  flex-shrink: 0;
-  width: var(--collapsed-width, 100px);
-  height: var(--collapsed-height, 340px);
+  flex-direction: column;
   padding: 0;
   margin: 0;
   border: 1px solid var(--borderColor-muted);
@@ -44,92 +37,90 @@
   cursor: pointer;
   font: inherit;
   color: inherit;
+  text-align: left;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-  will-change: width, height;
   transition:
-    box-shadow 0.3s ease,
-    border-color 0.3s ease;
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
-.bar:hover {
-  border-color: var(--brand-primary);
-  box-shadow: 0 14px 34px rgba(var(--brand-rgb-primary), 0.28);
+.card:hover {
+  transform: translateY(-3px);
+  border-color: var(--brand-hover-border);
+  box-shadow: 0 12px 30px rgba(var(--brand-rgb-primary), 0.18);
 }
 
-.bar:focus-visible {
+.card:focus-visible {
   outline: 2px solid var(--brand-primary);
   outline-offset: 3px;
 }
 
-.barImageWrap {
-  position: absolute;
-  inset: 0;
-  padding: 8px;
-  background: var(--bgColor-muted);
+/* Palco da captura.
+   As imagens são telas do próprio app em tema escuro e o canvas delas é
+   #010409 em todas. O palco usa exatamente essa cor para que a sobra do
+   `object-fit: contain` desapareça — as capturas têm proporções bem
+   diferentes entre si (1,15 a 2,67), então sem isso o letterbox apareceria
+   como barras claras em volta. Não dá para usar `--bgColor-inset`: no tema
+   claro ela é cinza claro e as barras voltariam a aparecer. */
+.stage {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: #010409;
 }
 
-.barImage {
+.stageImage {
   object-fit: contain;
 }
 
-.barLabel {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 0.4rem 0.35rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-  line-height: 1.2;
-  text-align: center;
-  color: #fff; /* texto sobre scrim escuro */
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  line-clamp: 2;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-/* ── Overlay (expansão) ── */
-.overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
+/* Legenda fora da imagem: sobre a captura ela competia com o conteúdo e
+   dependia de scrim para ter contraste. */
+.caption {
   display: flex;
+  flex: 1 1 auto;
   align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(6px);
-  animation: overlayFade 0.2s ease;
+  padding: 10px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--fgColor-default);
+  border-top: 1px solid var(--borderColor-muted);
 }
 
-.expanded {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  width: var(--open-size, 600px);
-  max-width: min(var(--open-size, 600px), calc(100vw - 2rem));
+/* ── Lightbox ──
+   <dialog> nativo: o card abre com showModal(), que já garante fundo inerte,
+   foco preso dentro, Escape e empilhamento no top layer. Por isso não há
+   mais overlay/backdrop em div nem z-index. */
+.dialog {
+  width: var(--open-size, 720px);
+  max-width: min(var(--open-size, 720px), calc(100vw - 2rem));
   max-height: calc(100vh - 2rem);
-  background: var(--bgColor-default);
+  padding: 0;
+  margin: auto;
   border: 1px solid var(--borderColor-muted);
   border-radius: 16px;
   overflow-x: hidden;
   overflow-y: auto;
+  background: var(--bgColor-default);
+  color: var(--fgColor-default);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
   animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.backdrop {
-  position: absolute;
-  inset: 0;
-  border: none;
-  padding: 0;
-  background: transparent;
-  cursor: default;
+/* flex só com o dialog aberto: o `display: flex` solto venceria o
+   `display: none` que o navegador aplica ao <dialog> fechado. */
+.dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: overlayFade 0.2s ease;
 }
 
 .expandedImageWrap {
@@ -223,33 +214,41 @@
   }
 }
 
-/* ── Touch (sem hover) ── */
+/* ── Duas colunas ──
+   Janela estreita em aparelho com mouse (ou tablet em modo paisagem): em 3
+   colunas as capturas voltariam a ficar pequenas. */
+@media (max-width: 900px) {
+  .dock {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ── Touch (sem hover) ──
+   Em telas de toque uma grade de 3 colunas deixaria cada captura minúscula
+   (e a de 1 coluna viraria uma rolagem vertical enorme), então aqui o
+   componente continua sendo um carrossel de arrastar. */
 @media (hover: none) {
-  .row {
-    justify-content: flex-start;
-    min-height: 240px;
+  .dock {
+    display: flex;
+    gap: 12px;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
   }
 
-  .row::-webkit-scrollbar {
+  .dock::-webkit-scrollbar {
     display: none;
   }
 
-  .dock {
-    width: auto;
-    justify-content: flex-start;
-  }
-
-  .bar {
-    width: 72vw;
-    max-width: 300px;
-    height: 220px;
+  .card {
+    flex: 0 0 auto;
+    width: 76vw;
+    max-width: 340px;
     scroll-snap-align: center;
   }
 
-  .rowDimmed {
+  .dockDimmed {
     filter: none;
     opacity: 1;
     pointer-events: auto;

@@ -52,10 +52,22 @@
   white-space: nowrap;
 }
 
-.previewImage {
-  max-height: 80px;
-  max-width: 160px;
+/* Frame com a proporção exata do preset: é o que garante que o preview mostre
+   o mesmo enquadramento do arquivo gerado. */
+.previewFrame {
+  position: relative;
+  display: block;
+  width: 160px;
+  max-width: 100%;
+  aspect-ratio: var(--preview-aspect, 1);
   border: 1px solid var(--borderColor-default);
   border-radius: 6px;
+  overflow: hidden;
+  background: var(--bgColor-inset);
+  flex-shrink: 0;
+}
+
+/* A proporção do frame já é a do recorte, então `cover` aqui não corta nada. */
+.previewImage {
   object-fit: cover;
 }
