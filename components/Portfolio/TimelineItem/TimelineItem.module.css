@@ -1,0 +1,58 @@
+/* ===== ITEM DE CURRÍCULO (histórico / formação) =====
+   Substitui HistoricoItem.module.css e FormacaoItem.module.css, que eram
+   praticamente o mesmo arquivo. */
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Título à esquerda, período à direita. `align-items: baseline` mantém os dois
+   na mesma linha de base; `flex-wrap` joga o período para baixo quando o
+   título é longo, em vez de espremer os dois. */
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 12px;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+  overflow-wrap: anywhere;
+}
+
+.period {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--fgColor-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--fgColor-muted);
+}
+
+.entries {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--fgColor-muted);
+}
+
+/* Marcador na cor da marca, alinhado ao texto */
+.entries li::marker {
+  color: var(--brand-primary);
+}
+
+.entries li + li {
+  margin-top: 2px;
+}

@@ -1,0 +1,28 @@
+/* ===== ITEM DE COMPETÊNCIA (ferramenta / especialização) =====
+   Substitui FerramentaItem.module.css e RoleItem.module.css, que só diferiam
+   no `gap` (12px contra 8px). */
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+  overflow-wrap: anywhere;
+}
+
+.level {
+  font-size: 0.78rem;
+  color: var(--fgColor-muted);
+}

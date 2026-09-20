@@ -5,9 +5,8 @@ import { ArrowLeftIcon } from "@primer/octicons-react";
 
 import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
+import { EXPERIENCE_LEVELS } from "@/lib/experience-levels";
 import styles from "./configuracoes.module.css";
-
-const EXPERIENCE_LEVELS = ["Estudante", "Junior", "Pleno", "Senior", "Especialista"];
 
 async function fetchJSON(url, options = {}) {
   const res = await fetch(url, { credentials: "include", ...options });

@@ -41,6 +41,18 @@
   list-style: none;
 }
 
+/* Estado vazio estilizado. Antes era um `<Text>` com a classe global
+   `profile-muted`, que não existia em CSS nenhum — saía sem estilo. */
+.panelEmpty {
+  margin: 0;
+  padding: 12px 14px;
+  border: var(--brand-empty-border);
+  border-radius: 10px;
+  background: var(--brand-empty-bg);
+  font-size: 0.85rem;
+  color: var(--fgColor-muted);
+}
+
 .panelItemActionLine {
   display: flex;
   justify-content: flex-end;

@@ -6,15 +6,8 @@ import { QRCodeSVG } from "qrcode.react";
 import styles from "./curriculo.module.css";
 import DateUtils from "@/utils/DateUtils";
 import { SITE_URL } from "@/lib/seo";
+import { experienceLabel } from "@/lib/experience-levels";
 import { DEFAULT_QR_SETTINGS } from "@/components/QrCode/QrCodeCustomizer";
-
-const EXPERIENCE_LABELS = {
-  estudante: "Estudante",
-  junior: "Junior",
-  pleno: "Pleno",
-  senior: "Sênior",
-  especialista: "Especialista",
-};
 
 export default function CurriculoPage() {
   const router = useRouter();
@@ -228,9 +221,7 @@ export default function CurriculoPage() {
                   {roles.map((r) => (
                     <li key={r.portfolio_role_name} className={styles.cvSideItem}>
                       <span className={styles.cvSideItemName}>{r.portfolio_role_name}</span>
-                      {r.experience && (
-                        <span className={styles.cvSideItemLevel}>{EXPERIENCE_LABELS[r.experience?.toLowerCase()] || r.experience}</span>
-                      )}
+                      {r.experience && <span className={styles.cvSideItemLevel}>{experienceLabel(r.experience) ?? r.experience}</span>}
                     </li>
                   ))}
                 </ul>
@@ -245,9 +236,7 @@ export default function CurriculoPage() {
                   {tools.map((t) => (
                     <li key={t.portfolio_tool_id || t.name} className={styles.cvSideItem}>
                       <span className={styles.cvSideItemName}>{t.name}</span>
-                      {t.experience && (
-                        <span className={styles.cvSideItemLevel}>{EXPERIENCE_LABELS[t.experience?.toLowerCase()] || t.experience}</span>
-                      )}
+                      {t.experience && <span className={styles.cvSideItemLevel}>{experienceLabel(t.experience) ?? t.experience}</span>}
                     </li>
                   ))}
                 </ul>
