@@ -6,6 +6,7 @@ import styles from "./CreatePost.module.css";
 import PropTypes from "prop-types";
 import { useTagSuggest } from "@/context/dataHooks/UseTagSuggest";
 import { compressImage } from "@/utils/imageCompression";
+import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 
 CreatePost.propTypes = {
   user: PropTypes.shape({
@@ -22,7 +23,10 @@ export default function CreatePost({ user, onPost }) {
   const [progress, setProgress] = useState(null); // 0..100 enquanto envia
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
-  const fileInputRef = useRef(null);
+  // O recorte (input, modal, fila) fica no ImageUploader; aqui só guardamos o
+  // resultado. Os caminhos que não passam por um input de arquivo (webcam,
+  // câmera do celular, colar da área de transferência) chamam `openCrop`.
+  const uploaderRef = useRef(null);
   const cameraInputRef = useRef(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -62,18 +66,25 @@ export default function CreatePost({ user, onPost }) {
   const query = match ? match[1] : null;
   const { data: suggestions } = useTagSuggest(query);
 
-  const handleImageSelect = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    processImageFile(file);
-  };
+  /** Recorte pronto do ImageUploader (preset `post`, 4:3 igual ao card). */
+  const handleCropped = useCallback(({ blob, dataUrl }) => {
+    setImageFile(blob);
+    setImagePreview(dataUrl);
+  }, []);
 
-  const processImageFile = (file) => {
-    setImageFile(file);
-    const reader = new FileReader();
-    reader.onload = () => setImagePreview(reader.result);
-    reader.readAsDataURL(file);
-  };
+  /** Manda uma imagem que nasceu fora do input para o mesmo recorte. */
+  const openCrop = useCallback((source) => {
+    uploaderRef.current?.openWith(source);
+  }, []);
+
+  const handleCameraSelect = useCallback(
+    (event) => {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (file) openCrop(file);
+    },
+    [openCrop],
+  );
 
   const handlePaste = (e) => {
     const items = e.clipboardData?.items;
@@ -84,7 +95,7 @@ export default function CreatePost({ user, onPost }) {
         e.preventDefault();
         const blob = item.getAsFile();
         if (blob) {
-          processImageFile(blob);
+          openCrop(blob);
         }
         break;
       }
@@ -159,7 +170,7 @@ export default function CreatePost({ user, onPost }) {
     canvas.toBlob(
       (blob) => {
         if (blob) {
-          processImageFile(blob);
+          openCrop(blob);
         }
         stopWebcam();
         setCapturing(false);
@@ -167,7 +178,7 @@ export default function CreatePost({ user, onPost }) {
       "image/jpeg",
       0.92,
     );
-  }, [stopWebcam]);
+  }, [stopWebcam, openCrop]);
 
   const handleCameraClick = useCallback(() => {
     // Mobile: use native camera via capture attribute (more reliable)
@@ -240,6 +251,8 @@ export default function CreatePost({ user, onPost }) {
 
   return (
     <div className={styles.container}>
+      <ImageUploader ref={uploaderRef} preset="post" variant="none" onCropped={handleCropped} />
+
       <Stack direction="horizontal" gap={2} align="flex-start">
         <div className={styles.avatarRing}>
           <Avatar src={user.avatar_image || "/images/avatar.png"} size={40} />
@@ -290,9 +303,19 @@ export default function CreatePost({ user, onPost }) {
 
           {imagePreview && (
             <div className={styles.previewBox}>
-              <Image src={imagePreview} alt="Pré-visualização da imagem" width={300} height={300} unoptimized className={styles.previewImg} />
+              <Image src={imagePreview} alt="Pré-visualização da imagem" fill unoptimized sizes="320px" className={styles.previewImg} />
 
-              <IconButton icon={TrashIcon} aria-label="Remover imagem" className={styles.removeImageBtn} onClick={() => setImagePreview(null)} />
+              <IconButton
+                icon={TrashIcon}
+                aria-label="Remover imagem"
+                className={styles.removeImageBtn}
+                onClick={() => {
+                  // Limpa o arquivo também: antes só o preview saía de tela e a
+                  // imagem ia no envio mesmo assim.
+                  setImagePreview(null);
+                  setImageFile(null);
+                }}
+              />
             </div>
           )}
 
@@ -345,18 +368,19 @@ export default function CreatePost({ user, onPost }) {
 
           <div className={styles.actionBar}>
             <Stack direction="horizontal" gap={1}>
-              <IconButton icon={ImageIcon} aria-label="Adicionar imagem" onClick={() => fileInputRef.current.click()} />
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className={styles.fileInput} />
+              <IconButton icon={ImageIcon} aria-label="Adicionar imagem" onClick={() => uploaderRef.current?.open()} />
 
               {hasCamera && (
                 <>
                   <IconButton icon={DeviceCameraIcon} aria-label="Tirar foto" onClick={handleCameraClick} />
+                  {/* Input local porque precisa do atributo `capture` para abrir
+                      a câmera no mobile; o arquivo cai no recorte do ImageUploader. */}
                   <input
                     ref={cameraInputRef}
                     type="file"
                     accept="image/*"
                     capture="environment"
-                    onChange={handleImageSelect}
+                    onChange={handleCameraSelect}
                     className={styles.fileInput}
                   />
                 </>

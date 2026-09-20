@@ -5,18 +5,22 @@ import PropTypes from "prop-types";
 import { SITE_URL } from "@/lib/seo";
 import styles from "./ShareModal.module.css";
 
-ShareModal.propTypes = {
-  postId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-  postContent: PropTypes.string,
-  onClose: PropTypes.func.isRequired,
-};
-
-export default function ShareModal({ postId, postContent, onClose }) {
+/**
+ * Modal de compartilhamento de link (post, perfil, etc.).
+ *
+ * Recebe `path` — o caminho relativo — em vez da URL absoluta: assim o domínio
+ * fica resolvido num só lugar (`SITE_URL`), sem cada chamador montar a URL
+ * completa por conta própria.
+ *
+ * O texto sugerido (`text`) também vem do chamador, porque o que faz sentido
+ * compartilhar muda conforme o conteúdo ("confira este post" x "veja o perfil").
+ */
+export default function ShareModal({ path, text, title = "Compartilhar", hint, onClose }) {
   const [copied, setCopied] = useState(false);
 
-  const shareUrl = `${SITE_URL}/posts/${postId}`;
-  const shareText = postContent?.slice(0, 200) || "Confira este post no Indies Brasil!";
-  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText + "\n\n" + shareUrl)}`;
+  const shareUrl = `${SITE_URL}${path}`;
+  const shareText = text || "Confira no Indies Brasil!";
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent([shareText, shareUrl].join("\n\n"))}`;
 
   const handleCopy = async () => {
     try {
@@ -30,12 +34,12 @@ export default function ShareModal({ postId, postContent, onClose }) {
 
   return (
     <Dialog
-      title="Compartilhar post"
+      title={title}
       onClose={onClose}
       footerButtons={[]}
       renderBody={() => (
         <div className={styles.body}>
-          <p className={styles.hint}>Copie o link e cole no WhatsApp, Discord ou Instagram. A miniatura do post será exibida automaticamente.</p>
+          <p className={styles.hint}>{hint || "Copie o link e cole no WhatsApp, Discord ou Instagram. A miniatura será exibida automaticamente."}</p>
 
           {/* Link copiável */}
           <div className={styles.inputRow}>
@@ -56,3 +60,13 @@ export default function ShareModal({ postId, postContent, onClose }) {
     />
   );
 }
+
+ShareModal.propTypes = {
+  /** Caminho relativo, ex.: "/perfil/nomedousuario". */
+  path: PropTypes.string.isRequired,
+  /** Texto sugerido que acompanha o link. */
+  text: PropTypes.string,
+  title: PropTypes.string,
+  hint: PropTypes.string,
+  onClose: PropTypes.func.isRequired,
+};

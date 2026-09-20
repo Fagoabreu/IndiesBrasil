@@ -9,7 +9,7 @@ import { ArrowLeftIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
-import ImageCropModal from "@/components/ImageTools/ImageCropTool/ImageCropModal";
+import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 import styles from "./editar.module.css";
 
 const SUGGESTED_TAGS = ["Jogo", "Unity", "Godot", "Arte", "Som", "Programação", "Design", "Marketing"];
@@ -62,8 +62,7 @@ export default function EditarCursoPage() {
 
   // Upload de capa
   const [uploadingCover, setUploadingCover] = useState(false);
-  const [coverCropSrc, setCoverCropSrc] = useState(null);
-  const coverInputRef = useRef(null);
+  const coverUploaderRef = useRef(null);
 
   useEffect(() => {
     if (!slug) return;
@@ -168,31 +167,15 @@ export default function EditarCursoPage() {
     }
   }
 
-  function handleCoverFileSelected(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = "";
-    const reader = new FileReader();
-    reader.onload = () => setCoverCropSrc(reader.result);
-    reader.readAsDataURL(file);
-  }
-
-  async function handleCoverCropConfirm(blob) {
-    setCoverCropSrc(null);
-    if (!blob) return;
+  /** Recebe o recorte do ImageUploader (preset 16:9, igual ao render do card). */
+  async function handleCoverCropped({ dataUrl }) {
     setUploadingCover(true);
     try {
-      const reader = new FileReader();
-      const base64 = await new Promise((resolve) => {
-        reader.onload = () => resolve(reader.result);
-        reader.readAsDataURL(blob);
-      });
-
       const res = await fetch(`/api/v1/courses/${slug}/cover`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ image: base64 }),
+        body: JSON.stringify({ image: dataUrl }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -717,10 +700,8 @@ export default function EditarCursoPage() {
                   </div>
                 )}
 
-                <input ref={coverInputRef} type="file" accept="image/*" className={styles.hiddenFileInput} onChange={handleCoverFileSelected} />
-
                 <div className={styles.coverActions}>
-                  <button type="button" className={styles.btnCoverUpload} onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}>
+                  <button type="button" className={styles.btnCoverUpload} onClick={() => coverUploaderRef.current?.open()} disabled={uploadingCover}>
                     {uploadingCover ? <Spinner size="small" /> : coverUrl ? "Alterar capa" : "Adicionar capa"}
                   </button>
                   {coverUrl && (
@@ -729,11 +710,11 @@ export default function EditarCursoPage() {
                     </button>
                   )}
                 </div>
-              </section>
 
-              {coverCropSrc && (
-                <ImageCropModal imageSrc={coverCropSrc} preset="cover" onConfirm={handleCoverCropConfirm} onClose={() => setCoverCropSrc(null)} />
-              )}
+                {/* O recorte fica a cargo do ImageUploader; o botão acima o
+                    dispara pelo ref. */}
+                <ImageUploader ref={coverUploaderRef} preset="landscapeCover" variant="none" onCropped={handleCoverCropped} />
+              </section>
 
               {/* Informações básicas */}
               <section className={styles.section}>

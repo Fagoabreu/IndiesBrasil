@@ -90,6 +90,24 @@
 .fileInput {
   font-size: 0.8rem;
   color: var(--fgColor-muted);
+  /* Era um <label> envolvendo o input; virou botão para o ImageUploader
+     disparar o seletor, então os padrões de botão precisam ser anulados. */
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fileInput:hover:not(:disabled) {
+  color: var(--brand-primary);
+}
+
+.fileInput:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .actions {
@@ -182,7 +200,9 @@
 
 .previewImage {
   width: 100%;
-  max-height: 200px;
+  /* Mesma proporção do preset `newsCover` e do NewsCard. */
+  aspect-ratio: 16 / 9;
+  height: auto;
   object-fit: cover;
   border-radius: 8px;
   border: 1px solid var(--borderColor-muted);

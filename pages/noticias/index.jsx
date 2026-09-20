@@ -5,6 +5,7 @@ import { PlusIcon, XIcon, ImageIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
 import NewsCard from "@/components/NewsCard/NewsCard";
+import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 import { SITE_URL } from "@/lib/seo";
 import styles from "./NewsPage.module.css";
 
@@ -47,14 +48,11 @@ export default function NewsPage() {
     if (!loadingUser) fetchNews();
   }, [fetchNews, loadingUser]);
 
-  const handleFileChange = (e) => {
-    const f = e.target.files?.[0];
-    if (f) {
-      setFile(f);
-      setPreview(URL.createObjectURL(f));
-    }
+  /** Recebe o recorte do ImageUploader (16:9, igual ao card de notícia). */
+  const handleFileChange = ({ blob, dataUrl }) => {
+    setFile(blob);
+    setPreview(dataUrl);
   };
-
   const handleSubmit = async () => {
     if (!title.trim() || !summary.trim() || !body.trim()) return;
     setSaving(true);
@@ -165,13 +163,16 @@ export default function NewsPage() {
               </div>
 
               <div>
-                <label className={styles.fileInput}>
-                  <ImageIcon size={14} /> Imagem de capa (opcional)
-                  <input type="file" accept="image/*" onChange={handleFileChange} hidden />
-                </label>
+                <ImageUploader preset="newsCover" onCropped={handleFileChange}>
+                  {({ open, disabled }) => (
+                    <button type="button" className={styles.fileInput} onClick={open} disabled={disabled}>
+                      <ImageIcon size={14} /> Imagem de capa (opcional)
+                    </button>
+                  )}
+                </ImageUploader>
                 {preview && (
                   <div className={styles.imagePreviewArea}>
-                    <Image src={preview} alt="Preview" className={styles.previewImage} width={300} height={200} unoptimized />
+                    <Image src={preview} alt="Preview" className={styles.previewImage} width={320} height={180} unoptimized />
                     <button
                       className={styles.removeImage}
                       onClick={() => {

@@ -356,7 +356,15 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
         </div>
       </div>
 
-      {showShareModal && <ShareModal postId={post.id} postContent={post.content} onClose={() => setShowShareModal(false)} />}
+      {showShareModal && (
+        <ShareModal
+          path={`/posts/${post.id}`}
+          text={post.content?.slice(0, 200)}
+          title="Compartilhar post"
+          hint="Copie o link e cole no WhatsApp, Discord ou Instagram. A miniatura do post será exibida automaticamente."
+          onClose={() => setShowShareModal(false)}
+        />
+      )}
 
       {showReportModal && (
         <ReportModal onClose={() => setShowReportModal(false)} onSubmit={handleReport} submitting={reportSubmitting} error={reportError} />

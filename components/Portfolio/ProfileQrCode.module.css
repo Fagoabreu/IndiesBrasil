@@ -10,7 +10,8 @@
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid var(--borderColor-muted);
-  box-shadow: var(--brand-card-glow);
+  /* Sem sombra própria: agora vive dentro de um card (`.shareCard` no perfil) e
+     a sombra duplicada dava a impressão de card dentro de card. */
   /* branco fixo: QR code precisa de fundo claro para leitura */
   background: #ffffff;
   padding: 8px;

@@ -1,152 +1,428 @@
-/* Cards */
-.profileHeaderCard {
+/* ===== PÁGINA ===== */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 32px;
+}
+
+/* ===== CABEÇALHO =====
+   O cabeçalho é um card próprio e o conteúdo vive FORA dele. Antes tudo ficava
+   dentro de um único card com `padding: 8px`, o que produzia card dentro de
+   card (borda interna colada na externa) e desalinhava as laterais: as abas
+   tinham 20px de margem enquanto o conteúdo tinha 8px. */
+.headerCard {
   position: relative;
-  padding-top: 72px;
-  overflow: hidden;
-  isolation: isolate;
-}
-
-/* Accent gradient line no topo do card principal */
-.profileHeaderCard::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--brand-gradient-h);
-  z-index: 3;
-}
-
-.profileCard {
   background: var(--bgColor-default);
   border: 1px solid var(--borderColor-muted);
   border-radius: 14px;
-  padding: 8px;
-  margin-bottom: 16px;
   box-shadow: var(--brand-card-glow);
+  /* Sem `overflow: hidden`: o avatar sobe sobre a capa por margem negativa e
+     seria cortado. Quem arredonda os próprios cantos é a capa. */
 }
 
-.imageWrapper {
-  width: 100%;
-  height: 150px;
+/* ===== CAPA ===== */
+.cover {
   position: relative;
+  width: 100%;
+  height: 180px;
   overflow: hidden;
-  border-radius: 12px 12px 0 0;
+  border-radius: 13px 13px 0 0;
+  background: var(--bgColor-muted);
 }
 
 .coverImage {
   object-fit: cover;
 }
 
-/* Overlay sutil de profundidade no rodapé da capa */
-.imageWrapper::after {
+/* Véu no rodapé: garante contraste do botão que fica sobre a imagem */
+.cover::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, transparent 55%, rgba(var(--brand-rgb-primary), 0.07) 100%);
+  background: linear-gradient(to bottom, transparent 45%, rgba(0, 0, 0, 0.3) 100%);
   pointer-events: none;
 }
 
-/* Anel gradiente ao redor do avatar */
-.avatarContainer {
+.coverActions {
   position: absolute;
-  top: 73px;
-  left: 22px;
-  width: 134px;
-  height: 134px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 1;
+}
+
+/* ===== CORPO DO CABEÇALHO ===== */
+.headerBody {
+  padding: 0 20px 20px;
+}
+
+/* A sobreposição do avatar é UM número (a margem negativa), em vez dos três
+   valores independentes de antes — `padding-top` do card, `top` do avatar e
+   `margin-top` da linha — que precisavam ser recalculados à mão a cada
+   mudança de tamanho e saíam de sincronia no breakpoint mobile. */
+.avatarRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: -44px;
+}
+
+.avatarRing {
+  position: relative;
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   background: var(--brand-gradient);
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: var(--brand-glow-md);
-  z-index: 2;
 }
 
-.profileAvatar {
+.avatar {
   background: var(--bgColor-default);
 }
 
-.coverUploader {
+/* Botão de trocar avatar, ancorado no canto do anel */
+.avatarEdit {
   position: absolute;
-  bottom: 10px;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.coverUploader > * {
-  pointer-events: auto;
-}
-
-.avatarUploader {
-  position: absolute;
+  right: 2px;
   bottom: 2px;
-  right: -6px;
-}
-
-/* Wrapper em linha: info à esquerda, QR à direita */
-.profileHeaderRow {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin: 20px;
-  margin-top: 52px;
 }
 
-.profileHeaderInfo {
-  flex: 1;
-  min-width: 0;
-  padding: 0;
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-bottom: 4px;
+}
+
+/* ===== IDENTIDADE ===== */
+.identity {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
+  margin-top: 12px;
+  min-width: 0;
 }
 
-/* Destaque nos números de estatísticas (seguindo / seguidores / posts) */
-.profileStats strong {
-  color: var(--brand-primary);
+.name {
+  margin: 0;
+  font-size: 1.5rem;
   font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  color: var(--fgColor-default);
+  overflow-wrap: anywhere;
+}
+
+.handle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--fgColor-muted);
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 6px 0 0;
+}
+
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--fgColor-muted);
+}
+
+/* ===== ESTATÍSTICAS =====
+   Números em blocos rotulados, em vez da frase corrida
+   "3 acompanhando · 5 seguidores · 12 postagens": o número vira o dado
+   escaneável e o rótulo dá o contexto, sem depender do negrito no meio do
+   texto para hierarquizar. Grade de 3 colunas para os rótulos ficarem
+   alinhados entre si em qualquer largura. */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 380px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 16px;
+  min-width: 0;
+}
+
+.stat:first-child {
+  padding-left: 0;
+}
+
+.stat + .stat {
+  border-left: 1px solid var(--borderColor-muted);
+}
+
+.statValue {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--fgColor-default);
+  /* tabular-nums: os números não "pulam" de largura ao atualizar */
+  font-variant-numeric: tabular-nums;
+}
+
+.statLabel {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fgColor-muted);
 }
 
 .reputationRow {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-top: 14px;
 }
 
-.profileHeaderActions {
+/* ===== AÇÃO SECUNDÁRIA =====
+   Um só tratamento para "Exportar PDF" e "Editar perfil". Antes cada um tinha
+   cor, borda e padding próprios, competindo com o CTA principal. */
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--borderColor-muted);
+  background: var(--bgColor-default);
+  color: var(--fgColor-default);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.actionBtn:hover {
+  background: var(--brand-hover-bg);
+  border-color: var(--brand-hover-border);
+  color: var(--brand-primary);
+}
+
+.actionBtn:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+/* ===== ABAS ===== */
+.tabBar {
   display: flex;
-  flex-direction: row;
-  gap: 12px;
-  margin-top: 4px;
+  gap: 4px;
+  border-bottom: 1px solid var(--borderColor-muted);
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-/* ===== RESUME LAYOUT ===== */
+.tabBar::-webkit-scrollbar {
+  display: none;
+}
 
-.profileResume {
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  margin-bottom: -1px;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 8px 8px 0 0;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.tab:hover {
+  color: var(--fgColor-default);
+  background: var(--brand-hover-bg);
+}
+
+.tab[aria-selected="true"] {
+  color: var(--brand-primary);
+  border-bottom-color: var(--brand-primary);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: -2px;
+}
+
+/* Contador da aba: dá contexto sem competir com o rótulo */
+.tabCount {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--bgColor-muted);
+  color: var(--fgColor-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.tab[aria-selected="true"] .tabCount {
+  background: var(--brand-active-bg);
+  color: var(--brand-primary);
+}
+
+/* ===== CONTEÚDO =====
+   Fora do card do cabeçalho e alinhado às abas. Coluna lateral com largura
+   fixa (268px) em vez de fração: os cards de navegação/contato ficam estáveis
+   quando o conteúdo principal muda de tamanho. */
+.content {
   display: grid;
-  grid-template-columns: 2.5fr 1fr;
-  gap: 24px;
-  margin-top: 16px;
+  grid-template-columns: minmax(0, 1fr) 268px;
+  gap: 20px;
+  align-items: start;
 }
 
-/* Coluna esquerda */
-.resumeMain {
+.mainCol,
+.sideCol {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
+  min-width: 0;
 }
 
-/* Coluna direita */
-.resumeSidebar {
+/* ===== TEXTO LONGO (Resumo / Bio) =====
+   Resumo como linha de destaque e bio como corpo, em vez de dois campos
+   rotulados ("Resumo:", "Bio:") com o mesmo peso visual. */
+.lead {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  font-weight: 500;
+  color: var(--fgColor-default);
+}
+
+.body {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: var(--fgColor-muted);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.lead + .body {
+  margin-top: 12px;
+}
+
+/* ===== ESTADO VAZIO =====
+   Antes era um texto solto herdando uma classe global (`profile-muted`) que não
+   existia em CSS nenhum — saía sem estilo. */
+.panelEmpty {
+  margin: 0;
+  padding: 12px 14px;
+  border: var(--brand-empty-border);
+  border-radius: 10px;
+  background: var(--brand-empty-bg);
+  font-size: 0.85rem;
+  color: var(--fgColor-muted);
+}
+
+.panelEmptyLink {
+  color: var(--brand-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.panelEmptyLink:hover {
+  text-decoration: underline;
+}
+
+/* ===== QR / COMPARTILHAR (lateral) =====
+   O QR saiu do cabeçalho: ocupava uma coluna inteira do bloco de identidade
+   para uma utilidade secundária e empurrava as ações para o canto. */
+.shareCard {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  background: var(--bgColor-default);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 12px;
+  box-shadow: var(--brand-card-glow);
+}
+
+.shareTitle {
+  align-self: flex-start;
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--fgColor-muted);
+}
+
+/* Ação principal do card de compartilhamento: fica abaixo do QR, ocupando a
+   largura, para o alvo de clique não competir com os ícones pequenos do QR. */
+.shareButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 2px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--brand-active-ring);
+  background: var(--brand-active-bg);
+  color: var(--brand-primary);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.shareButton:hover {
+  border-color: var(--brand-primary);
+  box-shadow: var(--brand-btn-shadow);
+}
+
+.shareButton:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
 }
 
 /* ===== ESTADO GENÉRICO (loading / not-found) ===== */
@@ -170,191 +446,179 @@
   color: var(--fgColor-muted);
 }
 
-/* ===== Responsivo ===== */
-@media (max-width: 900px) {
-  .profileResume {
-    grid-template-columns: 1fr;
+/* ===== SKELETON =====
+   Antes o carregamento era uma linha de texto centralizada, que fazia o layout
+   "pular" quando o conteúdo real entrava. */
+.skeleton {
+  background: var(--bgColor-muted);
+  border-radius: 6px;
+  animation: skeletonPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
   }
 }
 
-@media (max-width: 640px) {
-  .profileCard {
-    border-radius: 10px;
-    padding: 6px;
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
   }
-
-  .profileHeaderRow {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-    margin: 12px;
-    margin-top: 46px;
-  }
-
-  .imageWrapper {
-    height: 120px;
-  }
-
-  .avatarContainer {
-    top: 58px;
-  }
-
-  .profileHeaderActions {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-}
-
-/* ===== TABS DO PERFIL ===== */
-
-.profileTabs {
-  display: flex;
-  gap: 0;
-  border-bottom: 1px solid var(--borderColor-muted);
-  margin: 16px 20px 0;
-  padding: 0;
-  list-style: none;
-}
-
-.profileTab {
-  padding: 10px 20px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--fgColor-muted);
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-  transition:
-    color 0.15s,
-    border-color 0.15s;
-  margin-bottom: -1px;
-}
-
-.profileTab:hover {
-  color: var(--fgColor-default);
-}
-
-.profileTab[aria-selected="true"] {
-  color: var(--brand-primary);
-  border-bottom-color: var(--brand-primary);
-  font-weight: 600;
 }
 
 /* ===== FEED DE POSTS DO PERFIL ===== */
-
 .postsFeed {
-  padding: 16px 0 8px;
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
 .postsState {
-  text-align: center;
+  margin: 0;
   padding: 40px 24px;
+  border: var(--brand-empty-border);
+  border-radius: 12px;
+  background: var(--brand-empty-bg);
+  text-align: center;
   color: var(--fgColor-muted);
   font-size: 0.9rem;
-  margin: 0;
-}
-
-/* ===== BOTÃO DE EXPORTAR PDF ===== */
-
-.profileQrWrapper {
-  /* apenas wrapper para isolamento de print */
-}
-
-.profilePrintActions {
-  margin-top: 4px;
-}
-
-.printBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 14px;
-  border-radius: 6px;
-  border: 1px solid rgba(var(--brand-rgb-primary), 0.4);
-  background: rgba(var(--brand-rgb-primary), 0.06);
-  color: var(--brand-primary);
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    box-shadow 0.15s,
-    transform 0.1s;
-}
-
-.printBtn:hover {
-  background: var(--brand-hover-bg);
-  box-shadow: var(--brand-btn-shadow);
-  transform: translateY(-1px);
-}
-
-.printBtn:active {
-  transform: translateY(0);
 }
 
 /* ===== IMPRESSÃO / EXPORTAR PDF ===== */
-
 @media print {
-  /* Remover elementos interativos e decorativos */
-  .coverUploader,
-  .avatarUploader,
-  .profilePrintActions,
-  .profileHeaderActions,
-  .profileQrWrapper {
+  .coverActions,
+  .avatarEdit,
+  .headerActions,
+  .tabBar,
+  .shareCard {
     display: none !important;
   }
 
-  /* Cards sem sombra/brilho */
-  .profileCard,
-  .profileHeaderCard {
+  .headerCard {
     box-shadow: none !important;
     border-color: #ccc !important;
   }
 
-  /* Remover linha gradiente decorativa */
-  .profileHeaderCard::before {
-    display: none;
-  }
-
-  /* Anel do avatar: borda simples */
-  .avatarContainer {
+  .avatarRing {
     background: #ccc !important;
     box-shadow: none !important;
   }
 
-  /* Layout de uma coluna */
-  .profileResume {
+  .content {
     grid-template-columns: 1fr !important;
     gap: 12px !important;
   }
 }
 
-/* ===== NOTIFICAÇÕES ===== */
-
-.notifSection {
-  padding: 16px 4px 8px;
+/* ===== RESPONSIVO ===== */
+@media (max-width: 860px) {
+  .content {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
+
+@media (max-width: 640px) {
+  .page {
+    gap: 16px;
+  }
+
+  .headerCard {
+    border-radius: 12px;
+  }
+
+  .cover {
+    height: 132px;
+    border-radius: 11px 11px 0 0;
+  }
+
+  .headerBody {
+    padding: 0 14px 16px;
+  }
+
+  /* As ações passam para baixo do avatar ocupando a largura: espremidas ao
+     lado dele, os rótulos quebravam em duas linhas. */
+  .avatarRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: -36px;
+  }
+
+  .name {
+    font-size: 1.3rem;
+  }
+
+  .headerActions {
+    width: 100%;
+    padding-bottom: 0;
+  }
+
+  .headerActions > * {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .stat {
+    padding: 0 10px;
+  }
+
+  .statValue {
+    font-size: 1.1rem;
+  }
+
+  .statLabel {
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+  }
+}
+
+/* ===== NOTIFICAÇÕES ===== */
 
 .notifList {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
+/* `<button>` de verdade (antes era uma div com role="button" e um onKeyDown
+   manual). `text-align` e `font: inherit` porque o botão não herda tipografia
+   nem alinhamento. Itens não clicáveis ficam com `cursor: default`. */
 .notifItem {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  width: 100%;
   padding: 12px 16px;
-  border-radius: 8px;
-  background: var(--bgColor-default);
+  border-radius: 10px;
   border: 1px solid var(--borderColor-muted);
+  background: var(--bgColor-default);
   position: relative;
-  transition: border-color 0.15s;
+  text-align: left;
+  font: inherit;
+  cursor: default;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.notifClickable {
+  cursor: pointer;
+}
+
+.notifClickable:hover {
+  border-color: var(--brand-hover-border);
+  background: var(--brand-hover-bg);
+}
+
+.notifClickable:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
 }
 
 .notifUnread {

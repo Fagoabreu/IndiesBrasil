@@ -1,33 +1,3 @@
-.pageWrapper {
-  max-width: 700px;
-  margin: 0 auto;
-  padding: 24px 16px 64px;
-}
-
-.backLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.85rem;
-  color: var(--fgColor-muted);
-  text-decoration: none;
-  margin-bottom: 20px;
-}
-
-.backLink:hover {
-  color: var(--brand-primary);
-}
-
-.pageTitle {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 0 0 28px;
-  background: var(--brand-gradient-h);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
 .form {
   display: flex;
   flex-direction: column;
@@ -227,7 +197,11 @@
     color 0.15s;
 }
 
-.dayToggle.active {
+/* Classe própria em vez de `.dayToggle.active` composta: para o `styles.active`
+   do JSX resolver, a classe precisa existir no topo do módulo — como só
+   existia `.dayToggle.active`, `styles.active` era `undefined` e o dia
+   selecionado nunca recebia destaque. */
+.dayToggleActive {
   background: rgba(var(--brand-rgb-primary), 0.15);
   border-color: var(--brand-primary);
   color: var(--brand-primary);
@@ -248,111 +222,4 @@
     width: 100%;
     justify-content: center;
   }
-}
-
-/* ===== Imagem de Capa (Banner) ===== */
-.hiddenInput {
-  display: none;
-}
-
-.bannerPreviewWrap {
-  position: relative;
-  width: 100%;
-  height: 200px;
-  margin-bottom: 8px;
-  overflow: hidden;
-}
-
-.bannerImg {
-  object-fit: cover;
-  border-radius: 6px;
-  border: 1px solid var(--borderColor-muted);
-}
-
-.removeBannerBtn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: rgba(0, 0, 0, 0.6);
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  padding: 4px 10px;
-  cursor: pointer;
-  font-size: 0.8rem;
-}
-
-.removeBannerBtn:hover:not(:disabled) {
-  background: rgba(200, 0, 0, 0.8);
-}
-
-.bannerControls {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.bannerInputGroup {
-  display: flex;
-  gap: 8px;
-}
-
-.bannerInputGroup .input {
-  flex: 1;
-}
-
-.bannerBtn {
-  background: var(--bgColor-muted);
-  border: 1px solid var(--borderColor-default);
-  border-radius: 6px;
-  color: var(--fgColor-default);
-  cursor: pointer;
-  font-size: 0.875rem;
-  padding: 7px 14px;
-  transition:
-    border-color 0.15s,
-    color 0.15s;
-  white-space: nowrap;
-}
-
-.bannerBtn:hover:not(:disabled) {
-  border-color: var(--brand-primary);
-  color: var(--brand-primary);
-}
-
-.bannerBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.bannerModeToggle {
-  display: flex;
-  gap: 8px;
-}
-
-.bannerModeBtn {
-  flex: 1;
-  background: var(--bgColor-muted);
-  border: 1px solid var(--borderColor-default);
-  border-radius: 6px;
-  color: var(--fgColor-muted);
-  cursor: pointer;
-  font-size: 0.875rem;
-  padding: 7px 14px;
-  transition:
-    border-color 0.15s,
-    color 0.15s,
-    background 0.15s;
-}
-
-.bannerModeBtn:hover {
-  border-color: var(--brand-primary);
-  color: var(--brand-primary);
-}
-
-.bannerModeBtnActive {
-  background: rgba(var(--brand-rgb-primary), 0.1);
-  border-color: var(--brand-primary);
-  color: var(--brand-primary);
-  font-weight: 600;
 }

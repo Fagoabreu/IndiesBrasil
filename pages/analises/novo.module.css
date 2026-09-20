@@ -136,10 +136,6 @@
   object-fit: cover;
 }
 
-.hiddenInput {
-  display: none;
-}
-
 .coverUploadBtn {
   display: flex;
   align-items: center;

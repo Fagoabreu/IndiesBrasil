@@ -57,13 +57,13 @@
 .previewBox {
   position: relative;
   margin-top: 8px;
-  width: fit-content;
+  /* Mesma proporção do preset `post` e da mídia no PostCard. */
+  width: min(100%, 320px);
+  aspect-ratio: 4 / 3;
 }
 
 .previewImg {
-  width: auto;
-  height: 100%;
-  max-height: 320px;
+  object-fit: cover;
   border-radius: 12px;
   border: 1px solid var(--borderColor-muted);
 }

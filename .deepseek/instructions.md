@@ -98,7 +98,50 @@ Inserir antes de `"read:content_review"`. Usar contexto unico para cada bloco (v
 - Sidebar: novos itens em `components/LeftSidebarComponent.js` dentro do grupo `NavList` apropriado.
 - Video embed customizado: criar componente `VideoEmbed` inline (YouTube/Vimeo parser). Nao usar `Embeds` existente — ele espera estrutura especifica de post.
 - Nao criar arquivos de exemplo/demo sem solicitacao explicita.
-- Extrair antes de repetir: logica usada 2+ vezes vai para `lib/`, `utils/` ou `components/`.
+
+## Modularizacao e reuso (obrigatorio)
+
+Antes de escrever UI ou logica nova, procure o que ja existe (grep no repo). Duplicar e proibido: copias divergem em silencio — foi assim que a pagina de editar evento passou a usar `styles.hint`, classe que so existia no CSS da pagina de criar.
+
+Ordem de preferencia:
+
+1. **Reusar** o que existe. Se falta um caso, adicione prop/variante no componente (ex.: um novo `preset`), nunca um clone.
+2. **Extrair** para compartilhado e consumir nos dois lugares.
+3. **Criar** novo so se nao houver nada reaproveitavel.
+
+Onde colocar: UI em `components/` (com `ComponentName.module.css` ao lado); logica, constantes e helpers em `lib/` ou `utils/`; dados e regra de negocio em `models/`. Nunca copiar CSS Module entre pastas — importe o modulo compartilhado.
+
+Extraia quando: duas paginas tem o mesmo formulario, listagem ou card; o mesmo bloco de JSX se repete com pequenas diferencas; a mesma constante, option list ou formatador aparece em 2+ arquivos; a mesma query ou regra aparece em 2+ rotas.
+
+Como dividir o que difere: variacao de contexto vira prop (`mode`, `submitLabel`); API e efeito colateral ficam na pagina e entram por callback (`onSubmit`); valores iniciais e derivados viram helpers no modulo compartilhado (`emptyValues()`, `valuesFromApi()`).
+
+CSS Module: `styles.x` so resolve se `.x` existir no topo do modulo. Seletor composto (`.a.b`) **nao** cria `styles.b` — o resultado e `className="undefined"` e o estilo nunca aplica.
+
+## Upload de imagem (obrigatorio)
+
+Toda imagem enviada pelo usuario passa por `components/ImageTools/ImageUploader/ImageUploader.jsx`. Nunca escreva `<input type="file">`, `new FileReader` nem `ImageCropModal` direto na pagina — o `ImageUploader` ja encapsula seletor, leitura, fila de recorte e modal.
+
+Excecoes que ja existem e sao intencionais (nao "corrija" migrando para o ImageUploader):
+
+- `CreatePost`: um `<input type="file">` proprio so para a camera do mobile, que precisa do atributo `capture`. O arquivo resultante entra no recorte via `openWith`.
+- `QrCodeCustomizer`: a marca e desenhada pequena dentro do QR, sem recorte.
+- `pages/ferramentas/imagecrop.jsx`: ferramenta publica de recorte livre, chama `generateImage` direto.
+- PDFs (`imagens-para-pdf`, PDF do livro) nao passam por aqui: nao sao imagem.
+
+O formato vem de `lib/image-presets.js` (o catalogo unico). Nunca passe `aspect` inline nem crie um preset paralelo.
+
+- O preset precisa ter a MESMA proporcao com que a imagem e renderizada. Crop e CSS discordando = o usuario enquadra uma coisa e recebe outra. Confira o `aspect-ratio` (ou a altura fixa) do CSS que exibe a imagem antes de escolher o preset; ao mudar um dos lados, atualize o outro.
+- Cada preset declara `aspect`, `shape`, `label`, `outputWidth` e `format`. PNG so onde houver transparencia (avatar circular, logo); JPEG no resto.
+- Comente em cada preset ONDE a imagem aparece — e o que permite conferir a proporcao no CSS. Novo formato: adicione um preset, nunca clone o componente.
+- `getImagePreset` lanca em nome desconhecido de proposito. Nao adicione fallback silencioso: esconderia `preset` errado e entregaria um recorte diferente do esperado sem aviso.
+
+Como usar:
+
+- `preset` (obrigatorio) e `onCropped({ blob, dataUrl, preset })`.
+- Gatilho: `variant="icon"` ou `"button"`; `children` como funcao `({ open, openWith, disabled, busy })` para gatilho proprio estilizado; ou `ref` com `open()` / `openWith(source)` quando a imagem nasce fora do input (webcam, colar da area de transferencia, camera do celular).
+- `multiple` enfileira varios arquivos, um recorte de cada vez.
+- Preview da imagem salva e botao de remover ficam na pagina (sao layout de cada tela); o `ImageUploader` so entrega o recorte.
+- A API fica na pagina, dentro de `onCropped`: upload imediato (`await fetch` com FormData) ou adiado (guardar `blob`/`dataUrl` e enviar no submit do formulario).
 
 ## PowerShell
 

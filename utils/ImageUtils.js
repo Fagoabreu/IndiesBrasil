@@ -3,7 +3,7 @@ function createImage(url) {
     const image = new Image();
     image.setAttribute("crossOrigin", "anonymous");
     image.onload = () => resolve(image);
-    image.onerror = (error) => reject(error);
+    image.onerror = () => reject(new Error("Não foi possível carregar a imagem."));
     image.src = url;
   });
 }
@@ -31,6 +31,8 @@ export async function generateImage({
   contrast = 100,
   saturation = 100,
   format = "image/png",
+  quality = 0.9,
+  outputWidth,
 }) {
   const image = await createImage(imageSrc);
 
@@ -59,21 +61,27 @@ export async function generateImage({
   const croppedCanvas = document.createElement("canvas");
   const croppedCtx = croppedCanvas.getContext("2d");
 
-  // Limita a maior dimensão da imagem gerada. As imagens são exibidas em
-  // cards/capas pequenos, então 1600px é mais que suficiente (8x retina) e
-  // evita que o PNG base64 estoure o limite do bodyParser das API routes.
-  const MAX_DIMENSION = 1600;
-  const downscale = Math.min(1, MAX_DIMENSION / Math.max(crop.width, crop.height));
-  const outputWidth = Math.max(1, Math.round(crop.width * downscale));
+  // Alvo de largura vem do preset (`lib/image-presets.js`), então cada tipo de
+  // imagem sai num tamanho previsível. Quem chama sem `outputWidth` (a
+  // ferramenta de recorte livre) mantém o teto antigo de 1600px.
+  // O teto absoluto é rede de segurança: algumas rotas enviam a imagem como
+  // base64 (análises, cursos) e um payload gigante estoura o bodyParser.
+  // Nunca faz upscale — fonte menor que o alvo mantém o tamanho original.
+  const DEFAULT_MAX_DIMENSION = 1600;
+  const ABSOLUTE_MAX_DIMENSION = 2000;
+  const target = outputWidth > 0 ? outputWidth : DEFAULT_MAX_DIMENSION;
+  const targetWidth = Math.min(target, ABSOLUTE_MAX_DIMENSION);
+  const downscale = Math.min(1, targetWidth / crop.width);
+  const outputWidthPx = Math.max(1, Math.round(crop.width * downscale));
   const outputHeight = Math.max(1, Math.round(crop.height * downscale));
 
-  croppedCanvas.width = outputWidth;
+  croppedCanvas.width = outputWidthPx;
   croppedCanvas.height = outputHeight;
 
   croppedCtx.save();
 
   if (shape > 0) {
-    const radius = (Math.min(outputWidth, outputHeight) / 2) * (shape / 100);
+    const radius = (Math.min(outputWidthPx, outputHeight) / 2) * (shape / 100);
 
     croppedCtx.beginPath();
     croppedCtx.moveTo(radius, 0);
@@ -88,7 +96,7 @@ export async function generateImage({
     croppedCtx.closePath();
     croppedCtx.clip();
   }
-  croppedCtx.drawImage(canvas, crop.x, crop.y, crop.width, crop.height, 0, 0, outputWidth, outputHeight);
+  croppedCtx.drawImage(canvas, crop.x, crop.y, crop.width, crop.height, 0, 0, outputWidthPx, outputHeight);
 
   croppedCtx.restore();
 
@@ -102,7 +110,7 @@ export async function generateImage({
         });
       },
       format,
-      0.9,
+      quality,
     );
   });
 }

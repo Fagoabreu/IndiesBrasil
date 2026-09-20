@@ -111,7 +111,8 @@
 .cardImageWrap {
   position: relative;
   width: 100%;
-  height: 200px;
+  /* 16:9 — a proporção do preset `landscapeCover`. */
+  aspect-ratio: 16 / 9;
   background: var(--bgColor-muted);
   overflow: hidden;
 }

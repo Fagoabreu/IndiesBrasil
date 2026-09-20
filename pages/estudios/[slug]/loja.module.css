@@ -225,10 +225,6 @@
   color: var(--fgColor-success);
 }
 
-.hiddenInput {
-  display: none;
-}
-
 .imageField {
   display: flex;
   flex-direction: column;

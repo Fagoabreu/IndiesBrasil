@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 import Image from "next/image";
 import { useUser } from "@/context/UserContext";
-import ImageCropModal from "@/components/ImageTools/ImageCropTool/ImageCropModal";
+import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 import styles from "./novo.module.css";
 
 const CONTENT_TYPE_OPTIONS = [
@@ -42,9 +42,8 @@ export default function NovaAnalisePage() {
   const [editingSlug, setEditingSlug] = useState("");
 
   // Upload de capa
-  const [coverCropSrc, setCoverCropSrc] = useState(null);
   const [uploadingCover, setUploadingCover] = useState(false);
-  const coverInputRef = useRef(null);
+  const coverUploaderRef = useRef(null);
 
   // Carregar dados para edição
 
@@ -120,44 +119,25 @@ export default function NovaAnalisePage() {
   }
 
   // ── Cover image upload ──────────────────────────────────
-  function handleCoverFileChange(e) {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
-    e.target.value = "";
-    const reader = new FileReader();
-    reader.onload = () => setCoverCropSrc(reader.result);
-    reader.readAsDataURL(selectedFile);
-  }
-
-  function handleCoverCropClose() {
-    setCoverCropSrc(null);
-  }
-
-  async function handleCoverCropConfirm(blob) {
-    setCoverCropSrc(null);
-    if (!blob) return;
-    setUploadingCover(true);
+  /** Recebe o recorte do ImageUploader (preset 16:9, igual ao render do card). */
+  async function handleCoverCropped({ dataUrl }) {
     setError("");
-    try {
-      const reader = new FileReader();
-      const base64 = await new Promise((resolve) => {
-        reader.onload = () => resolve(reader.result);
-        reader.readAsDataURL(blob);
-      });
 
-      let res;
-      if (isEditing && editingSlug) {
-        res = await fetch(`/api/v1/analises/${editingSlug}/cover`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ image: base64 }),
-        });
-      } else {
-        // Se ainda está criando, converte para data URL e armazena como cover_url
-        setCoverImageUrl(base64);
-        return;
-      }
+    // Na criação a análise ainda não existe: a imagem fica pendente como data
+    // URL e vai junto no corpo do POST.
+    if (!isEditing || !editingSlug) {
+      setCoverImageUrl(dataUrl);
+      return;
+    }
+
+    setUploadingCover(true);
+    try {
+      const res = await fetch(`/api/v1/analises/${editingSlug}/cover`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ image: dataUrl }),
+      });
 
       const data = await res.json();
       if (!res.ok) {
@@ -338,7 +318,6 @@ export default function NovaAnalisePage() {
 
           <div className={styles.fieldGroup}>
             <label className={styles.label}>Imagem de Capa</label>
-            <input ref={coverInputRef} type="file" accept="image/*" className={styles.hiddenInput} onChange={handleCoverFileChange} />
             {coverImageUrl ? (
               <div className={styles.coverPreview}>
                 <Image
@@ -350,7 +329,7 @@ export default function NovaAnalisePage() {
                   unoptimized={coverImageUrl.startsWith("data:") || coverImageUrl.startsWith("blob:")}
                 />
                 <div className={styles.coverActions}>
-                  <button type="button" className={styles.coverActionBtn} onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}>
+                  <button type="button" className={styles.coverActionBtn} onClick={() => coverUploaderRef.current?.open()} disabled={uploadingCover}>
                     {uploadingCover ? "Enviando..." : "✏️ Alterar capa"}
                   </button>
                   <button type="button" className={styles.coverRemoveBtn} onClick={handleRemoveCover} disabled={uploadingCover}>
@@ -359,7 +338,7 @@ export default function NovaAnalisePage() {
                 </div>
               </div>
             ) : (
-              <button type="button" className={styles.coverUploadBtn} onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}>
+              <button type="button" className={styles.coverUploadBtn} onClick={() => coverUploaderRef.current?.open()} disabled={uploadingCover}>
                 {uploadingCover ? "Enviando capa..." : "📷 Selecionar imagem de capa"}
               </button>
             )}
@@ -510,8 +489,9 @@ export default function NovaAnalisePage() {
         </form>
       </div>
 
-      {/* Image crop modal */}
-      {coverCropSrc && <ImageCropModal imageSrc={coverCropSrc} preset="cover" onConfirm={handleCoverCropConfirm} onClose={handleCoverCropClose} />}
+      {/* O recorte e o modal ficam a cargo do ImageUploader; os botões da seção
+          "Imagem de Capa" o disparam pelo ref. */}
+      <ImageUploader ref={coverUploaderRef} preset="landscapeCover" variant="none" onCropped={handleCoverCropped} />
     </>
   );
 }
