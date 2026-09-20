@@ -1,49 +1,19 @@
 import { isSafeUrl } from "lib/ssrf-guard";
-import { SITE_URL } from "lib/seo";
-
-/**
- * Converte uma URL do próprio site na equivalente via loopback.
- *
- * Devolve null quando a URL não é nossa (link externo) ou quando aponta para uma
- * rota de API — preview busca páginas, não endpoints internos.
- */
-function internalFetchUrl(url) {
-  let target;
-  let own;
-  try {
-    target = new URL(url);
-    own = new URL(SITE_URL);
-  } catch {
-    return null;
-  }
-
-  if (target.hostname !== own.hostname) return null;
-  if (target.pathname.startsWith("/api/")) return null;
-
-  const port = process.env.PORT || "3000";
-  return `http://127.0.0.1:${port}${target.pathname}${target.search}`;
-}
+import { isOwnHost, toLoopbackUrl } from "lib/internal-url";
 
 /**
  * Decide de onde baixar a página — ou null quando o link não pode ser buscado.
  *
- * **Link externo**: passa pelo guard de SSRF (o endereço vem de conteúdo de
- * usuário, então precisa da checagem).
+ * **Link do próprio site**: vai para o loopback (`lib/internal-url.js`). Buscar
+ * a nossa própria página, em vez de reimplementar título/descrição por tipo de
+ * conteúdo, reaproveita os metadados que cada página já monta no `SeoHead` —
+ * reescrever isso aqui duplicaria a lógica e voltaria a divergir.
  *
- * **Link do próprio site**: o guard reprova, e faz o certo — em produção o
- * container resolve `jogos.social.br` para um IP interno, e ele não tem como
- * distinguir "a nossa própria casa" de "um serviço interno que o atacante
- * quer sondar". Aqui a URL não é host de terceiro: trocamos o host pelo
- * loopback do próprio processo (que o healthcheck do compose já usa e comprova
- * que funciona). Não sobra superfície de SSRF porque quem escreve o post
- * controla só o caminho, nunca o destino.
- *
- * Buscar a nossa própria página, em vez de reimplementar título/descrição por
- * tipo de conteúdo, reaproveita os metadados que cada página já monta no
- * `SeoHead` — reescrever isso aqui duplicaria a lógica e voltaria a divergir.
+ * **Link externo**: passa pelo guard de SSRF, porque o endereço vem de conteúdo
+ * de usuário.
  */
 async function resolveFetchTarget(url) {
-  const internal = internalFetchUrl(url);
+  const internal = toLoopbackUrl(url);
   if (internal) return internal;
 
   if (!(await isSafeUrl(url))) return null;
@@ -58,13 +28,10 @@ function proxyImageUrl(imageUrl) {
   if (imageUrl.startsWith("/api/")) return imageUrl;
 
   // Imagem do próprio site: o browser carrega direto. Passar pelo proxy faria o
-  // servidor buscar a nossa própria URL pública, que o guard de SSRF bloqueia
-  // (mesma razão do `internalFetchUrl`).
-  try {
+  // servidor buscar a nossa própria URL pública, que o guard de SSRF bloqueia.
+  if (isOwnHost(imageUrl)) {
     const parsed = new URL(imageUrl);
-    if (parsed.hostname === new URL(SITE_URL).hostname) return parsed.pathname + parsed.search;
-  } catch {
-    // URL relativa ou inválida — segue para o proxy.
+    return parsed.pathname + parsed.search;
   }
 
   return `/api/v1/image-proxy?url=${encodeURIComponent(imageUrl)}`;
