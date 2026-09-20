@@ -2,6 +2,17 @@
 const nextConfig = {
   output: "standalone",
   poweredByHeader: false,
+  /**
+   * O sharp é usado pelas rotas de Open Graph (`pages/api/og/**`) para
+   * rasterizar o card SVG em PNG. O file tracing do Next copia o binding nativo
+   * (`sharp-<plataforma>.node`) mas **deixa para trás** as bibliotecas
+   * compartilhadas dele (`libvips-*.dll` no Windows,
+   * `@img/sharp-libvips-*` no Linux) — sem elas o `require("sharp")` falha no
+   * build standalone, que é exatamente o que vai para produção.
+   */
+  outputFileTracingIncludes: {
+    "/api/og/**": ["./node_modules/sharp/**/*", "./node_modules/@img/**/*"],
+  },
   i18n: {
     locales: ["pt-BR", "en-US", "fr", "es"],
     defaultLocale: "pt-BR",

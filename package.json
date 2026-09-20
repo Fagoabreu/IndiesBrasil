@@ -51,6 +51,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-easy-crop": "5.5.6",
+    "sharp": "0.34.5",
     "styled-components": "6.4.3",
     "swr": "2.4.1",
     "uuid": "11.1.1"
