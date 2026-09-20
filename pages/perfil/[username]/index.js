@@ -31,16 +31,6 @@ import { SITE_URL } from "@/lib/seo";
  * Metadados (OG) e SSR
  * ===================== */
 
-/**
- * Leitor anônimo para montar a página no servidor.
- *
- * É o mínimo que `models/profile` consulta: `features` (para o desvio de
- * admin) e `id` (para saber se quem lê segue o perfil). Não reaproveitamos a
- * lista de features do `injectAnonymousUser` porque ela existe para autorizar
- * rotas de API — aqui o `filterOutput` já aplica a mesma whitelist de campos.
- */
-const ANONYMOUS_READER = { id: null, features: [] };
-
 export async function getServerSideProps(context) {
   const { username } = context.params;
 
@@ -49,10 +39,11 @@ export async function getServerSideProps(context) {
     const profile = (await import("@/models/profile")).default;
     const authorization = (await import("@/models/authorization")).default;
 
-    const found = await profile.findByUsername(username, ANONYMOUS_READER);
+    const reader = authorization.anonymousReader;
+    const found = await profile.findByUsername(username, reader);
     // Mesma filtragem que a rota de API usa, para o HTML não conter campo que
     // a API esconderia.
-    const secured = authorization.filterOutput(ANONYMOUS_READER, "read:profile", found);
+    const secured = authorization.filterOutput(reader, "read:profile", found);
 
     return {
       // `findByUsername` devolve `Date` em alguns campos, e o Next não serializa

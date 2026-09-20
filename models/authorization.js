@@ -824,9 +824,24 @@ function validateResource(resource) {
   }
 }
 
+/**
+ * Usuário mínimo para leituras sem sessão.
+ *
+ * `filterOutput` exige um objeto de usuário com `features`, mas o SSR público
+ * (`getServerSideProps`) e as rotas de OG não têm cookie de sessão. Sem
+ * `features`, `can()` nega tudo — que é o comportamento desejado: este leitor
+ * só serve para as whitelists de campo, nunca para autorizar uma escrita.
+ *
+ * Mantido aqui (e não duplicado em cada chamador) porque as três telas que
+ * precisam dele — perfil, card de perfil e card de post — têm que enxergar
+ * exatamente o mesmo recorte de dados.
+ */
+const anonymousReader = { id: null, features: [] };
+
 const authorization = {
   can,
   filterOutput,
+  anonymousReader,
 };
 
 export default authorization;

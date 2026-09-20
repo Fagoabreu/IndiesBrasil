@@ -17,6 +17,12 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_SHARP_PATH="/app/node_modules/sharp"
 
+# Os cards de Open Graph (pages/api/og/**) são SVGs rasterizados com o sharp, e
+# o rasterizador precisa de fontconfig + uma fonte instalada: o Alpine não traz
+# nenhuma, e sem fonte o librsvg desenha o card inteiro SEM TEXTO. DejaVu é a
+# família usada em `SVG_FONT_FAMILY` (lib/og-image.js).
+RUN apk add --no-cache fontconfig font-dejavu
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
