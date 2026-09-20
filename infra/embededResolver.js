@@ -1,4 +1,34 @@
 import { isSafeUrl } from "lib/ssrf-guard";
+import { SITE_URL } from "lib/seo";
+
+/**
+ * Reescreve um link do próprio site para o loopback.
+ *
+ * Em produção o app vive só na rede Docker `private` (ver
+ * `deploy/compose.yaml`): alcançar `https://jogos.social.br` de dentro do
+ * container depende de hairpin NAT, que falha. O resultado era todo link
+ * interno (ex.: `/perfil/<username>`) cair no card mínimo, só com o domínio —
+ * o preview aparecia como "jogos.social.br / jogos.social.br".
+ *
+ * O servidor do Next escuta em `0.0.0.0:PORT` dentro do container, então o
+ * loopback resolve. A validação de SSRF roda antes, sobre a URL pública
+ * original: aqui só reescrevemos o host depois de o link já ter sido aprovado.
+ */
+function internalFetchUrl(url) {
+  let target;
+  let own;
+  try {
+    target = new URL(url);
+    own = new URL(SITE_URL);
+  } catch {
+    return url;
+  }
+
+  if (target.hostname !== own.hostname) return url;
+
+  const port = process.env.PORT || "3000";
+  return `http://127.0.0.1:${port}${target.pathname}${target.search}`;
+}
 
 /** Wraps an external image URL through our proxy so CSP doesn't block it.
  *  Uses a relative path so it always resolves to the document's origin. */
@@ -6,6 +36,17 @@ function proxyImageUrl(imageUrl) {
   if (!imageUrl) return null;
   // Don't proxy already-proxied or same-origin relative URLs
   if (imageUrl.startsWith("/api/")) return imageUrl;
+
+  // Imagem do próprio site: o browser carrega direto. Passar pelo proxy faria o
+  // servidor buscar a nossa própria URL pública — impossível em produção, onde
+  // o container está só na rede `private` (mesmo problema do `internalFetchUrl`).
+  try {
+    const parsed = new URL(imageUrl);
+    if (parsed.hostname === new URL(SITE_URL).hostname) return parsed.pathname + parsed.search;
+  } catch {
+    // URL relativa ou inválida — segue para o proxy.
+  }
+
   return `/api/v1/image-proxy?url=${encodeURIComponent(imageUrl)}`;
 }
 
@@ -111,7 +152,7 @@ async function fetchLinkPreview(url) {
 
   try {
     // Browser-mimicking headers reduce anti-bot 429 responses (Cloudflare, etc.)
-    const res = await fetch(url, {
+    const res = await fetch(internalFetchUrl(url), {
       method: "GET",
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
