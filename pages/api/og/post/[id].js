@@ -27,6 +27,7 @@
 
 import post from "@/models/post";
 import authorization from "@/models/authorization";
+import { postText } from "@/lib/seo";
 import {
   fetchAsDataUri,
   renderPng,
@@ -90,7 +91,9 @@ export default async function handler(req, res) {
  */
 async function renderSvg(postData) {
   const username = String(postData.author_username || "indiesbrasil");
-  const content = String(postData.content || "Confira este post no Indies Brasil!");
+  // Mesmo texto que os metadados publicam (`lib/seo.js`), para a imagem e a
+  // prévia do link não contarem coisas diferentes.
+  const content = postText(postData);
 
   // O rasterizador não busca recursos remotos, então avatar e imagem viram
   // data URI. Falha silenciosa: o card perde só aquele elemento.

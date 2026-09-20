@@ -5,7 +5,8 @@ import { ArrowLeftIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import PostCardComponent from "@/components/PostCard/PostCardComponent";
 import { useUser } from "@/context/UserContext";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_URL, postMetaDescription, postMetaTitle } from "@/lib/seo";
+import { loopbackOrigin } from "@/lib/internal-url";
 
 /**
  * getServerSideProps — busca os dados do post no servidor ANTES de enviar o HTML.
@@ -20,11 +21,20 @@ import { SITE_URL } from "@/lib/seo";
 export async function getServerSideProps(context) {
   const { id } = context.params;
 
+  // Id validado antes de virar URL: um valor como `../users/../..` escaparia do
+  // caminho `/api/v1/posts/` e traria outro endpoint interno para dentro das
+  // props — ou seja, conteúdo alheio renderizado sob a nossa URL.
+  const postId = Number(id);
+  if (!Number.isInteger(postId) || postId <= 0) {
+    return {
+      props: { initialPost: null, ssrNotFound: true, ssrError: false, postId: id },
+    };
+  }
+
   try {
-    // Fetch interno ao próprio servidor Next.js (localhost:3000).
-    // NÃO usar a URL pública — de dentro do container Docker a requisição
-    // externa pode falhar (hairpin NAT, DNS, firewall).
-    const res = await fetch(`http://localhost:3000/api/v1/posts/${id}`);
+    // Fetch interno ao próprio servidor Next.js, via loopback: de dentro do
+    // container a URL pública não resolve (ver `lib/internal-url.js`).
+    const res = await fetch(`${loopbackOrigin()}/api/v1/posts/${postId}`);
 
     if (res.status === 404) {
       return {
@@ -44,7 +54,7 @@ export async function getServerSideProps(context) {
         initialPost: post,
         ssrNotFound: false,
         ssrError: false,
-        postId: id,
+        postId,
       },
     };
   } catch {
@@ -64,8 +74,11 @@ export default function PostDetailPage({ initialPost, ssrNotFound, ssrError, pos
   const [notFound, setNotFound] = useState(ssrNotFound);
 
   // ── OG tags: preenchidas com dados do SSR ──
-  const seoTitle = post ? `@${post.author_username} no Indies Brasil` : "Post no Indies Brasil";
-  const seoDescription = post?.content?.slice(0, 200) || "Veja este post na comunidade Indies Brasil.";
+  // Título e descrição descrevem a PUBLICAÇÃO (o autor entra como contexto).
+  // Antes o título era `@username no Indies Brasil`, o que fazia a prévia do
+  // link falar do usuário em vez do post. Ver `lib/seo.js`.
+  const seoTitle = post ? postMetaTitle(post) : "Post no Indies Brasil";
+  const seoDescription = post ? postMetaDescription(post) : "Veja este post na comunidade Indies Brasil.";
   const seoCanonical = `${SITE_URL}/posts/${postId}`;
   const seoImage = `${SITE_URL}/api/og/post/${postId}`;
 
@@ -140,7 +153,7 @@ export default function PostDetailPage({ initialPost, ssrNotFound, ssrError, pos
 
   return (
     <div className="posts-page">
-      <SeoHead title={seoTitle} description={seoDescription} canonical={seoCanonical} ogImage={seoImage} />
+      <SeoHead title={seoTitle} description={seoDescription} canonical={seoCanonical} ogImage={seoImage} ogType="article" />
 
       <div style={{ marginBottom: 12 }}>
         <Link
