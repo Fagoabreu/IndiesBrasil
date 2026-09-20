@@ -1,16 +1,17 @@
 /**
  * OG Image API para o preview de links de post (WhatsApp, Discord, etc.).
  *
- * Renderiza um **card PNG** com avatar do autor, @username, trecho do
- * conteúdo e — quando o post tem imagem — uma miniatura ao lado.
+ * Renderiza um **card PNG** com o texto da publicação e — quando o post tem
+ * imagem — a imagem dela emoldurada. O autor aparece como uma linha de
+ * atribuição pequena no topo.
  *
- * Três decisões que valem explicação:
+ * Decisões que valem explicação:
  *
  * 1. **PNG, não SVG.** O WhatsApp não renderiza SVG em `og:image` — servir SVG
  *    resultava em preview sem imagem nenhuma.
  * 2. **Card sempre, em vez de redirecionar para a foto do post.** O redirect
- *    dependia de a plataforma seguir o 302 e entregava só a imagem, sem autor
- *    nem contexto. A miniatura embutida resolve os dois.
+ *    dependia de a plataforma seguir o 302 e entregava só a imagem, sem
+ *    contexto.
  * 3. **Sem HTTP interno.** Antes esta rota (e a de perfil) chamavam a própria
  *    API via `fetch` para o domínio público. Em produção o app vive só na rede
  *    Docker `private` (ver `deploy/compose.yaml`), então alcançar
@@ -29,19 +30,18 @@ import post from "@/models/post";
 import authorization from "@/models/authorization";
 import { postText } from "@/lib/seo";
 import {
+  escapeXml,
   fetchAsDataUri,
+  fetchImage,
   renderPng,
   setPngHeaders,
-  svgAvatar,
+  svgAuthorRow,
   svgBrandRow,
   svgFooter,
   svgHeader,
   svgText,
-  usernameFontSize,
   wrapText,
-  OG_HEIGHT,
   OG_SAFE,
-  OG_WIDTH,
 } from "@/lib/og-image";
 
 export default async function handler(req, res) {
@@ -83,11 +83,66 @@ export default async function handler(req, res) {
 // ── SVG renderer ──────────────────────────────────────────────
 
 /**
+ * Duas medidas para o mesmo card, conforme o post tenha ou não imagem.
+ *
+ * Com imagem ela ocupa o miolo e o texto fica com o espaço de baixo; sem
+ * imagem o texto sobe e cresce.
+ */
+const LAYOUT = {
+  withPhoto: { authorY: 106, avatarSize: 44, authorFont: 26, textSize: 28, maxChars: 34, maxLines: 3, lineHeight: 36, firstLineY: 478 },
+  withoutPhoto: { authorY: 190, avatarSize: 60, authorFont: 30, textSize: 36, maxChars: 26, maxLines: 4, lineHeight: 54, firstLineY: 290 },
+};
+
+/**
+ * Caixa onde a imagem do post é encaixada, dentro da zona segura.
+ *
+ * É um **limite**, não uma moldura rígida: a imagem é desenhada na proporção
+ * dela, encaixada aqui dentro.
+ */
+const PHOTO_BOX = { maxWidth: 520, maxHeight: 300, y: 132 };
+
+/**
+ * Reduz a imagem para caber na caixa mantendo a proporção.
+ *
+ * A imagem entra inteira, nunca recortada: as publicações antigas foram enviadas
+ * antes do preset `post` (4:3) existir e têm proporções variadas — recortar para
+ * uma moldura fixa cortaria o texto que a própria arte traz (o banner do WAR47,
+ * por exemplo, é 2:1 e tem o título desenhado na imagem).
+ */
+function fitBox(width, height) {
+  const scale = Math.min(PHOTO_BOX.maxWidth / width, PHOTO_BOX.maxHeight / height);
+  return { width: Math.round(width * scale), height: Math.round(height * scale) };
+}
+
+/**
+ * Imagem do post, emoldurada e centralizada.
+ *
+ * Emoldurada em vez de sangrar pelo card inteiro porque a arte das publicações
+ * já costuma trazer texto próprio: cobrindo o card com ela, o nosso texto tinha
+ * que ser desenhado por cima, e os dois competiam.
+ */
+function svgPostPhoto({ dataUri, width, height }) {
+  const fitted = fitBox(width, height);
+  const x = OG_SAFE.centerX - fitted.width / 2;
+  // Centraliza na caixa: artes largas (2:1) ficam mais baixas que a caixa, e o
+  // espaço que sobra fica igual em cima e embaixo.
+  const y = PHOTO_BOX.y + (PHOTO_BOX.maxHeight - fitted.height) / 2;
+  const radius = 16;
+
+  return [
+    `<clipPath id="postPhotoClip"><rect x="${x}" y="${y}" width="${fitted.width}" height="${fitted.height}" rx="${radius}"/></clipPath>`,
+    `<image href="${escapeXml(dataUri)}" x="${x}" y="${y}" width="${fitted.width}" height="${fitted.height}" preserveAspectRatio="none" clip-path="url(#postPhotoClip)"/>`,
+    `<rect x="${x}" y="${y}" width="${fitted.width}" height="${fitted.height}" rx="${radius}" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="2"/>`,
+  ].join("");
+}
+
+/**
  * Card do post, montado dentro da zona segura.
  *
- * Quando o post tem imagem ela vira o fundo inteiro (com um véu escuro por
- * cima): é o elemento que mais chama atenção no feed, e como o texto fica
- * centrado ele sobrevive ao recorte quadrado do WhatsApp.
+ * A publicação é o assunto: o texto dela no centro e a imagem emoldurada. O
+ * autor entra como linha de atribuição pequena no topo — antes ele era o avatar
+ * grande e o `@handle` em destaque no meio do card, a mesma composição do card
+ * de perfil, desenhada por cima da imagem da publicação.
  */
 async function renderSvg(postData) {
   const username = String(postData.author_username || "indiesbrasil");
@@ -95,32 +150,21 @@ async function renderSvg(postData) {
   // prévia do link não contarem coisas diferentes.
   const content = postText(postData);
 
-  // O rasterizador não busca recursos remotos, então avatar e imagem viram
-  // data URI. Falha silenciosa: o card perde só aquele elemento.
-  const [avatar, photo] = await Promise.all([fetchAsDataUri(postData.author_avatar_url), fetchAsDataUri(postData.post_img_url)]);
+  // O rasterizador não busca recursos remotos, então avatar e imagem viram data
+  // URI. Falha silenciosa: o card perde só aquele elemento.
+  const [avatar, photo] = await Promise.all([fetchAsDataUri(postData.author_avatar_url), fetchImage(postData.post_img_url)]);
 
-  // 34 chars cabem na largura útil com a fonte do card.
-  const lines = wrapText(content, 34, 3);
-  const avatarSize = 130;
+  const layout = photo ? LAYOUT.withPhoto : LAYOUT.withoutPhoto;
+  const lines = wrapText(content, layout.maxChars, layout.maxLines);
 
   return [
     svgHeader(),
-
-    // Imagem do post sangrando até a borda, coberta por um véu para o texto
-    // continuar legível em cima dela.
-    photo
-      ? `<image href="${photo}" x="0" y="0" width="${OG_WIDTH}" height="${OG_HEIGHT}" preserveAspectRatio="xMidYMid slice"/>` +
-        `<rect width="${OG_WIDTH}" height="${OG_HEIGHT}" fill="rgba(14,9,32,0.72)"/>`
-      : "",
-
     svgBrandRow(),
-    svgAvatar(avatar, username, { x: OG_SAFE.centerX - avatarSize / 2, y: 74, size: avatarSize }),
-
-    svgText({ content: `@${username}`, y: 262, size: usernameFontSize(username), weight: "bold", fill: "#ffffff" }),
-
-    // Trecho do conteúdo (até 3 linhas)
-    ...lines.map((line, index) => svgText({ content: line, y: 322 + index * 38, size: 30, fill: "#e2dcf6" })),
-
+    svgAuthorRow({ avatarUrl: avatar, username, y: layout.authorY, avatarSize: layout.avatarSize, fontSize: layout.authorFont }),
+    photo ? svgPostPhoto(photo) : "",
+    ...lines.map((line, index) =>
+      svgText({ content: line, y: layout.firstLineY + index * layout.lineHeight, size: layout.textSize, fill: "#e7e1f8" }),
+    ),
     svgFooter(),
   ].join("");
 }
