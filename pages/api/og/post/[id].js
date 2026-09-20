@@ -41,7 +41,8 @@ import {
   svgHeader,
   svgText,
   wrapText,
-  OG_SAFE,
+  OG_PAD,
+  OG_WIDTH,
 } from "@/lib/og-image";
 
 export default async function handler(req, res) {
@@ -83,34 +84,32 @@ export default async function handler(req, res) {
 // ── SVG renderer ──────────────────────────────────────────────
 
 /**
- * Duas medidas para o mesmo card, conforme o post tenha ou não imagem.
+ * Medidas do card, conforme o post tenha ou não imagem anexada.
  *
- * Com imagem ela ocupa o miolo e o texto fica com o espaço de baixo; sem
- * imagem o texto sobe e cresce.
+ * Sem imagem o texto sobe e cresce, ocupando o espaço que a imagem deixaria.
  */
 const LAYOUT = {
-  withPhoto: { authorY: 106, avatarSize: 44, authorFont: 26, textSize: 28, maxChars: 34, maxLines: 3, lineHeight: 36, firstLineY: 478 },
-  withoutPhoto: { authorY: 190, avatarSize: 60, authorFont: 30, textSize: 36, maxChars: 26, maxLines: 4, lineHeight: 54, firstLineY: 290 },
+  withPhoto: { authorY: 108, avatarSize: 54, authorFont: 31, textFont: 31, maxChars: 54, maxLines: 2, lineHeight: 42, firstLineY: 190 },
+  withoutPhoto: { authorY: 150, avatarSize: 72, authorFont: 36, textFont: 38, maxChars: 45, maxLines: 5, lineHeight: 56, firstLineY: 258 },
 };
 
 /**
- * Caixa onde a imagem do post é encaixada, dentro da zona segura.
+ * Faixa onde a imagem do post é encaixada, logo abaixo do texto.
  *
- * É um **limite**, não uma moldura rígida: a imagem é desenhada na proporção
- * dela, encaixada aqui dentro.
- */
-const PHOTO_BOX = { maxWidth: 520, maxHeight: 300, y: 132 };
-
-/**
- * Reduz a imagem para caber na caixa mantendo a proporção.
+ * A largura é a útil do card inteiro: a imagem é o que a pessoa compartilhou,
+ * então é o elemento que mais precisa de espaço. É um **limite**, não uma
+ * moldura — a imagem é desenhada na proporção dela, encaixada aqui dentro.
  *
  * A imagem entra inteira, nunca recortada: as publicações antigas foram enviadas
  * antes do preset `post` (4:3) existir e têm proporções variadas — recortar para
  * uma moldura fixa cortaria o texto que a própria arte traz (o banner do WAR47,
  * por exemplo, é 2:1 e tem o título desenhado na imagem).
  */
+const PHOTO = { y: 254, maxWidth: OG_WIDTH - 2 * OG_PAD, maxHeight: 326 };
+
+/** Reduz a imagem para caber na faixa mantendo a proporção. */
 function fitBox(width, height) {
-  const scale = Math.min(PHOTO_BOX.maxWidth / width, PHOTO_BOX.maxHeight / height);
+  const scale = Math.min(PHOTO.maxWidth / width, PHOTO.maxHeight / height);
   return { width: Math.round(width * scale), height: Math.round(height * scale) };
 }
 
@@ -123,10 +122,10 @@ function fitBox(width, height) {
  */
 function svgPostPhoto({ dataUri, width, height }) {
   const fitted = fitBox(width, height);
-  const x = OG_SAFE.centerX - fitted.width / 2;
-  // Centraliza na caixa: artes largas (2:1) ficam mais baixas que a caixa, e o
+  const x = OG_WIDTH / 2 - fitted.width / 2;
+  // Centraliza na faixa: artes largas (2:1) ficam mais baixas que a faixa, e o
   // espaço que sobra fica igual em cima e embaixo.
-  const y = PHOTO_BOX.y + (PHOTO_BOX.maxHeight - fitted.height) / 2;
+  const y = PHOTO.y + (PHOTO.maxHeight - fitted.height) / 2;
   const radius = 16;
 
   return [
@@ -137,12 +136,13 @@ function svgPostPhoto({ dataUri, width, height }) {
 }
 
 /**
- * Card do post, montado dentro da zona segura.
+ * Card do post: um post de verdade, não um cartão de citação.
  *
- * A publicação é o assunto: o texto dela no centro e a imagem emoldurada. O
- * autor entra como linha de atribuição pequena no topo — antes ele era o avatar
- * grande e o `@handle` em destaque no meio do card, a mesma composição do card
- * de perfil, desenhada por cima da imagem da publicação.
+ * A composição segue a anatomia de uma publicação — cabeçalho do autor no topo,
+ * o texto dela abaixo e a imagem anexada embaixo, alinhados à esquerda. O
+ * avatar grande e centralizado com o `@handle` em destaque (a composição do
+ * card de perfil) saiu daqui: era o que fazia a prévia do post parecer a prévia
+ * do perfil desenhada por cima da publicação.
  */
 async function renderSvg(postData) {
   const username = String(postData.author_username || "indiesbrasil");
@@ -160,11 +160,25 @@ async function renderSvg(postData) {
   return [
     svgHeader(),
     svgBrandRow(),
-    svgAuthorRow({ avatarUrl: avatar, username, y: layout.authorY, avatarSize: layout.avatarSize, fontSize: layout.authorFont }),
-    photo ? svgPostPhoto(photo) : "",
+    svgAuthorRow({
+      avatarUrl: avatar,
+      username,
+      y: layout.authorY,
+      avatarSize: layout.avatarSize,
+      fontSize: layout.authorFont,
+      align: "start",
+    }),
     ...lines.map((line, index) =>
-      svgText({ content: line, y: layout.firstLineY + index * layout.lineHeight, size: layout.textSize, fill: "#e7e1f8" }),
+      svgText({
+        content: line,
+        x: OG_PAD,
+        y: layout.firstLineY + index * layout.lineHeight,
+        size: layout.textFont,
+        fill: "#e7e1f8",
+        anchor: "start",
+      }),
     ),
+    photo ? svgPostPhoto(photo) : "",
     svgFooter(),
   ].join("");
 }
