@@ -2,17 +2,10 @@ import { isSafeUrl } from "lib/ssrf-guard";
 import { SITE_URL } from "lib/seo";
 
 /**
- * Reescreve um link do próprio site para o loopback.
+ * Converte uma URL do próprio site na equivalente via loopback.
  *
- * Em produção o app vive só na rede Docker `private` (ver
- * `deploy/compose.yaml`): alcançar `https://jogos.social.br` de dentro do
- * container depende de hairpin NAT, que falha. O resultado era todo link
- * interno (ex.: `/perfil/<username>`) cair no card mínimo, só com o domínio —
- * o preview aparecia como "jogos.social.br / jogos.social.br".
- *
- * O servidor do Next escuta em `0.0.0.0:PORT` dentro do container, então o
- * loopback resolve. A validação de SSRF roda antes, sobre a URL pública
- * original: aqui só reescrevemos o host depois de o link já ter sido aprovado.
+ * Devolve null quando a URL não é nossa (link externo) ou quando aponta para uma
+ * rota de API — preview busca páginas, não endpoints internos.
  */
 function internalFetchUrl(url) {
   let target;
@@ -21,13 +14,40 @@ function internalFetchUrl(url) {
     target = new URL(url);
     own = new URL(SITE_URL);
   } catch {
-    return url;
+    return null;
   }
 
-  if (target.hostname !== own.hostname) return url;
+  if (target.hostname !== own.hostname) return null;
+  if (target.pathname.startsWith("/api/")) return null;
 
   const port = process.env.PORT || "3000";
   return `http://127.0.0.1:${port}${target.pathname}${target.search}`;
+}
+
+/**
+ * Decide de onde baixar a página — ou null quando o link não pode ser buscado.
+ *
+ * **Link externo**: passa pelo guard de SSRF (o endereço vem de conteúdo de
+ * usuário, então precisa da checagem).
+ *
+ * **Link do próprio site**: o guard reprova, e faz o certo — em produção o
+ * container resolve `jogos.social.br` para um IP interno, e ele não tem como
+ * distinguir "a nossa própria casa" de "um serviço interno que o atacante
+ * quer sondar". Aqui a URL não é host de terceiro: trocamos o host pelo
+ * loopback do próprio processo (que o healthcheck do compose já usa e comprova
+ * que funciona). Não sobra superfície de SSRF porque quem escreve o post
+ * controla só o caminho, nunca o destino.
+ *
+ * Buscar a nossa própria página, em vez de reimplementar título/descrição por
+ * tipo de conteúdo, reaproveita os metadados que cada página já monta no
+ * `SeoHead` — reescrever isso aqui duplicaria a lógica e voltaria a divergir.
+ */
+async function resolveFetchTarget(url) {
+  const internal = internalFetchUrl(url);
+  if (internal) return internal;
+
+  if (!(await isSafeUrl(url))) return null;
+  return url;
 }
 
 /** Wraps an external image URL through our proxy so CSP doesn't block it.
@@ -38,8 +58,8 @@ function proxyImageUrl(imageUrl) {
   if (imageUrl.startsWith("/api/")) return imageUrl;
 
   // Imagem do próprio site: o browser carrega direto. Passar pelo proxy faria o
-  // servidor buscar a nossa própria URL pública — impossível em produção, onde
-  // o container está só na rede `private` (mesmo problema do `internalFetchUrl`).
+  // servidor buscar a nossa própria URL pública, que o guard de SSRF bloqueia
+  // (mesma razão do `internalFetchUrl`).
   try {
     const parsed = new URL(imageUrl);
     if (parsed.hostname === new URL(SITE_URL).hostname) return parsed.pathname + parsed.search;
@@ -144,15 +164,16 @@ function resolveInstagram(url) {
 }
 
 async function fetchLinkPreview(url) {
-  // Bloqueia SSRF: nunca fazer fetch de IPs internos/loopback/metadata
-  // a partir de links arbitrários extraídos de conteúdo de post.
-  if (!(await isSafeUrl(url))) {
+  // Alvo já validado: loopback quando é página nossa, URL original (pós-guard)
+  // quando é externa.
+  const target = await resolveFetchTarget(url);
+  if (!target) {
     return null;
   }
 
   try {
     // Browser-mimicking headers reduce anti-bot 429 responses (Cloudflare, etc.)
-    const res = await fetch(internalFetchUrl(url), {
+    const res = await fetch(target, {
       method: "GET",
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
