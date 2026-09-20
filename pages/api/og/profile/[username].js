@@ -28,16 +28,17 @@ import profile from "@/models/profile";
 import authorization from "@/models/authorization";
 import { SITE_URL } from "@/lib/seo";
 import {
-  escapeXml,
   fetchAsDataUri,
   renderPng,
   setPngHeaders,
   svgAvatar,
+  svgBrandRow,
   svgFooter,
   svgHeader,
-  SVG_FONT_FAMILY,
+  svgText,
+  usernameFontSize,
   wrapText,
-  OG_WIDTH,
+  OG_SAFE,
 } from "@/lib/og-image";
 
 export default async function handler(req, res) {
@@ -93,76 +94,45 @@ function renderQrSvg(profileUrl, size) {
   }
 }
 
+/**
+ * Card do perfil, montado dentro da zona segura.
+ *
+ * Composição vertical centrada (marca, avatar, @, resumo, QR): o WhatsApp
+ * recorta o quadrado central do `og:image`, então nada informativo pode ficar
+ * nas laterais — foi o que deixou o preview anterior ilegível.
+ */
 async function renderProfileSvg(profile) {
   const user = profile.user ?? {};
   const username = String(user.username ?? "indiesbrasil");
-  const displayName = `@${username}`;
   const profileUrl = `${SITE_URL}/perfil/${encodeURIComponent(username)}`;
 
   // O rasterizador não busca recursos remotos, então o avatar precisa virar
   // data URI. Falha silenciosa: cai no círculo com a inicial.
   const avatar = await fetchAsDataUri(user.avatar_image);
 
-  // Resumo costuma ser a melhor linha curta; a bio entra como segunda linha.
-  // 50 chars: com 58 o texto alcançava o QR (que começa em x=920).
+  // Resumo costuma ser a melhor linha curta; a bio entra como alternativa.
+  // 38 chars cabem na largura útil com a fonte do card (bem mais larga que a
+  // do site) sem encostar nas bordas da zona segura.
   const summary = user.resumo || user.bio || "Perfil na comunidade Indies Brasil.";
-  const lines = wrapText(summary, 50, 2);
+  const lines = wrapText(summary, 38, 2);
 
-  // QR de 200px no canto inferior direito, alinhado ao bloco de marca.
-  const qrSize = 200;
-  const qrX = OG_WIDTH - qrSize - 80;
-  const qrY = 330;
+  const avatarSize = 190;
+  const qrSize = 130;
   const qrSvg = renderQrSvg(profileUrl, qrSize);
 
   return [
     svgHeader(),
-    svgAvatar(avatar, username),
+    svgBrandRow(),
+    svgAvatar(avatar, username, { x: OG_SAFE.centerX - avatarSize / 2, y: 74, size: avatarSize }),
 
-    // Nome/handle
-    `<text x="240" y="140" fill="white" font-size="44" font-weight="bold" font-family="${SVG_FONT_FAMILY}">${escapeXml(displayName)}</text>`,
-    `<text x="240" y="176" fill="#8b8ba7" font-size="22" font-family="${SVG_FONT_FAMILY}">Perfil no Indies Brasil</text>`,
+    svgText({ content: `@${username}`, y: 326, size: usernameFontSize(username), weight: "bold", fill: "#ffffff" }),
 
     // Resumo (até 2 linhas)
-    ...lines.map(
-      (line, index) =>
-        `<text x="80" y="${270 + index * 44}" fill="#c8c8dc" font-size="30" font-family="${SVG_FONT_FAMILY}">${escapeXml(line)}</text>`,
-    ),
+    ...lines.map((line, index) => svgText({ content: line, y: 368 + index * 28, size: 26, fill: "#cfc6ee" })),
 
     // QR code do perfil
-    qrSvg ? `<g transform="translate(${qrX}, ${qrY})">${qrSvg}</g>` : "",
+    qrSvg ? `<g transform="translate(${OG_SAFE.centerX - qrSize / 2}, 430)">${qrSvg}</g>` : "",
 
-    // Rótulo do QR, só quando ele existe
-    qrSvg
-      ? `<text x="${qrX + qrSize / 2}" y="${qrY + qrSize + 32}" text-anchor="middle" fill="#8b8ba7" font-size="20" font-family="${SVG_FONT_FAMILY}">Aponte a câmera</text>`
-      : "",
-
-    // Números do perfil, quando existirem
-    renderStats(user, lines.length),
-
-    svgFooter({ brandX: 80 }),
+    svgFooter(),
   ].join("");
-}
-
-/** Linha de estatísticas abaixo do resumo. Omitida quando tudo é zero. */
-function renderStats(user, summaryLines) {
-  const stats = [
-    ["seguidores", user.followers_count],
-    ["seguindo", user.following_count],
-    ["postagens", user.posts_count],
-  ].filter(([, value]) => Number(value) > 0);
-
-  if (stats.length === 0) return "";
-
-  // Posiciona abaixo do resumo; a base da marca começa em y=440.
-  const y = Math.min(270 + summaryLines * 44 + 40, 400);
-
-  return stats
-    .map(([label, value], index) => {
-      const x = 80 + index * 190;
-      return (
-        `<text x="${x}" y="${y}" fill="white" font-size="30" font-weight="bold" font-family="${SVG_FONT_FAMILY}">${escapeXml(String(value))}</text>` +
-        `<text x="${x}" y="${y + 26}" fill="#666688" font-size="19" font-family="${SVG_FONT_FAMILY}">${escapeXml(label)}</text>`
-      );
-    })
-    .join("");
 }

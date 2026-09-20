@@ -27,7 +27,21 @@
 
 import post from "@/models/post";
 import authorization from "@/models/authorization";
-import { escapeXml, fetchAsDataUri, renderPng, setPngHeaders, svgAvatar, svgFooter, svgHeader, SVG_FONT_FAMILY, wrapText } from "@/lib/og-image";
+import {
+  fetchAsDataUri,
+  renderPng,
+  setPngHeaders,
+  svgAvatar,
+  svgBrandRow,
+  svgFooter,
+  svgHeader,
+  svgText,
+  usernameFontSize,
+  wrapText,
+  OG_HEIGHT,
+  OG_SAFE,
+  OG_WIDTH,
+} from "@/lib/og-image";
 
 export default async function handler(req, res) {
   const { id } = req.query;
@@ -36,9 +50,16 @@ export default async function handler(req, res) {
     return res.status(400).end();
   }
 
+  // Id não numérico é recusado aqui, não no banco: o erro do Postgres chega
+  // envelopado pelo `infra/errors.js` e viraria um 500 em vez de 404.
+  const postId = Number(id);
+  if (!Number.isInteger(postId) || postId <= 0) {
+    return res.status(404).end();
+  }
+
   try {
     const reader = authorization.anonymousReader;
-    const found = await post.getPostById(null, id);
+    const found = await post.getPostById(null, postId);
     const secured = authorization.filterOutput(reader, "read:post", found);
 
     const png = await renderPng(await renderSvg(secured));
@@ -46,11 +67,10 @@ export default async function handler(req, res) {
     setPngHeaders(res, { maxAge: 3600 });
     return res.status(200).send(png);
   } catch (error) {
-    // `getPostById` lança `NotFoundError` para post inexistente (e o próprio
-    // banco recusa id não numérico). Retornar 404 só nesse caso (e logar o
-    // resto) importa: quando qualquer falha virava 404 mudo, o preview quebrado
-    // em produção não deixava rastro nenhum.
-    if (error?.statusCode === 404 || error?.code === "22P02") {
+    // `getPostById` lança `NotFoundError` para post inexistente. Retornar 404 só
+    // nesse caso (e logar o resto) importa: quando qualquer falha virava 404
+    // mudo, o preview quebrado em produção não deixava rastro nenhum.
+    if (error?.statusCode === 404) {
       return res.status(404).end();
     }
 
@@ -61,44 +81,43 @@ export default async function handler(req, res) {
 
 // ── SVG renderer ──────────────────────────────────────────────
 
-/** Área da miniatura do post, à direita do texto. */
-const THUMB = { x: 760, y: 110, width: 360, height: 300, radius: 18 };
-
+/**
+ * Card do post, montado dentro da zona segura.
+ *
+ * Quando o post tem imagem ela vira o fundo inteiro (com um véu escuro por
+ * cima): é o elemento que mais chama atenção no feed, e como o texto fica
+ * centrado ele sobrevive ao recorte quadrado do WhatsApp.
+ */
 async function renderSvg(postData) {
   const username = String(postData.author_username || "indiesbrasil");
   const content = String(postData.content || "Confira este post no Indies Brasil!");
 
-  // O rasterizador não busca recursos remotos, então avatar e miniatura viram
+  // O rasterizador não busca recursos remotos, então avatar e imagem viram
   // data URI. Falha silenciosa: o card perde só aquele elemento.
-  const [avatar, thumb] = await Promise.all([fetchAsDataUri(postData.author_avatar_url), fetchAsDataUri(postData.post_img_url)]);
+  const [avatar, photo] = await Promise.all([fetchAsDataUri(postData.author_avatar_url), fetchAsDataUri(postData.post_img_url)]);
 
-  // 40 chars: o texto ocupa ~600px e a miniatura começa em x=760.
-  const lines = wrapText(content, 40, 3);
+  // 34 chars cabem na largura útil com a fonte do card.
+  const lines = wrapText(content, 34, 3);
+  const avatarSize = 130;
 
   return [
-    svgHeader(
-      thumb
-        ? `<clipPath id="thumbClip"><rect x="${THUMB.x}" y="${THUMB.y}" width="${THUMB.width}" height="${THUMB.height}" rx="${THUMB.radius}"/></clipPath>`
-        : "",
-    ),
-    svgAvatar(avatar, username),
+    svgHeader(),
 
-    `<text x="240" y="130" fill="white" font-size="38" font-weight="bold" font-family="${SVG_FONT_FAMILY}">@${escapeXml(username)}</text>`,
-
-    // Trecho do conteúdo (até 3 linhas)
-    ...lines.map(
-      (line, index) =>
-        `<text x="80" y="${280 + index * 46}" fill="#c8c8dc" font-size="30" font-family="${SVG_FONT_FAMILY}">${escapeXml(line)}</text>`,
-    ),
-
-    // Miniatura, em corte centralizado para preencher o retângulo
-    thumb
-      ? `<image href="${escapeXml(thumb)}" x="${THUMB.x}" y="${THUMB.y}" width="${THUMB.width}" height="${THUMB.height}" preserveAspectRatio="xMidYMid slice" clip-path="url(#thumbClip)"/>` +
-        `<rect x="${THUMB.x}" y="${THUMB.y}" width="${THUMB.width}" height="${THUMB.height}" rx="${THUMB.radius}" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="2"/>`
+    // Imagem do post sangrando até a borda, coberta por um véu para o texto
+    // continuar legível em cima dela.
+    photo
+      ? `<image href="${photo}" x="0" y="0" width="${OG_WIDTH}" height="${OG_HEIGHT}" preserveAspectRatio="xMidYMid slice"/>` +
+        `<rect width="${OG_WIDTH}" height="${OG_HEIGHT}" fill="rgba(14,9,32,0.72)"/>`
       : "",
 
-    '<line x1="80" y1="400" x2="700" y2="400" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>',
+    svgBrandRow(),
+    svgAvatar(avatar, username, { x: OG_SAFE.centerX - avatarSize / 2, y: 74, size: avatarSize }),
 
-    svgFooter({ brandX: 80 }),
+    svgText({ content: `@${username}`, y: 262, size: usernameFontSize(username), weight: "bold", fill: "#ffffff" }),
+
+    // Trecho do conteúdo (até 3 linhas)
+    ...lines.map((line, index) => svgText({ content: line, y: 322 + index * 38, size: 30, fill: "#e2dcf6" })),
+
+    svgFooter(),
   ].join("");
 }

@@ -1,23 +1,7 @@
-import Image from "next/image";
 import styles from "./EmbedComponent.module.css";
 import InstagramEmbed from "./InstagramEmbed";
+import LinkPreviewCard from "./LinkPreviewCard";
 import PropTypes from "prop-types";
-
-/** Normalize old absolute proxy URLs to relative — avoids CSP violations when
- *  the site is served from a different domain than the one baked into legacy embeds. */
-function normalizeImageSrc(src) {
-  if (!src) return src;
-  // Already relative — nothing to do
-  if (src.startsWith("/")) return src;
-  try {
-    const u = new URL(src);
-    // /api/v1/image-proxy paths are always relative-safe
-    if (u.pathname.startsWith("/api/")) return u.pathname + u.search;
-  } catch {
-    // Malformed URL — leave as-is
-  }
-  return src;
-}
 
 EmbedComponent.propTypes = {
   embeds: PropTypes.arrayOf(
@@ -101,59 +85,7 @@ export default function EmbedComponent({ embeds }) {
         }
 
         if (embed.type === "preview") {
-          const domain = (() => {
-            try {
-              return new URL(embed.url).hostname.replace(/^www\./, "");
-            } catch {
-              return embed.url;
-            }
-          })();
-
-          // Detecta links de press kit (ex.: /presskit) para exibir o selo de imprensa.
-          const isPressKit = (() => {
-            try {
-              return /\/presskit(?:\/|$)/.test(new URL(embed.url).pathname);
-            } catch {
-              return false;
-            }
-          })();
-
-          return (
-            <a key={key} href={embed.url} target="_blank" rel="noopener noreferrer" className={styles.previewCard}>
-              {embed.image && (
-                <div className={styles.previewImageWrapper}>
-                  <Image
-                    src={normalizeImageSrc(embed.image)}
-                    alt={embed.title || domain}
-                    fill
-                    className={styles.previewImage}
-                    sizes="(max-width: 400px) 100vw, 600px"
-                    unoptimized
-                  />
-                </div>
-              )}
-
-              <div className={styles.previewContent}>
-                <div className={styles.previewSiteRow}>
-                  {embed.icon ? (
-                    <span className={styles.previewIconWrap}>
-                      <Image src={normalizeImageSrc(embed.icon)} alt="" width={16} height={16} className={styles.previewIcon} unoptimized />
-                    </span>
-                  ) : (
-                    <span className={styles.previewIconFallback}>{(domain.charAt(0) || "w").toUpperCase()}</span>
-                  )}
-                  <span className={styles.previewSiteName}>{embed.site_name || domain}</span>
-                  {isPressKit && (
-                    <span className={styles.previewBadge}>
-                      <span aria-hidden="true">📰</span> Press Kit
-                    </span>
-                  )}
-                </div>
-                <strong className={styles.previewTitle}>{embed.title || domain}</strong>
-                {embed.description && <p className={styles.previewDesc}>{embed.description}</p>}
-              </div>
-            </a>
-          );
+          return <LinkPreviewCard key={key} embed={embed} />;
         }
 
         return null;
