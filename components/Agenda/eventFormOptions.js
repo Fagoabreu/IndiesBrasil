@@ -5,16 +5,13 @@
  * as cópias já haviam divergido: `editar.js` usava `styles.hint` de uma classe
  * que só existia no CSS da criação. Manter as opções e a montagem do payload
  * num só lugar evita esse tipo de deriva silenciosa.
+ *
+ * As opções de **tipo de evento** saíram daqui para `lib/event-types.js`: elas
+ * não são vocabulário só do formulário, são o rótulo e a cor que a agenda, a
+ * página do evento e o card de Open Graph também exibem. O `EventForm` importa
+ * direto de lá — sem re-export aqui, para não haver dois caminhos até a mesma
+ * constante.
  */
-
-export const EVENT_TYPES = [
-  { value: "general", label: "Geral" },
-  { value: "game_launch", label: "Lançamento de Jogo" },
-  { value: "game_jam", label: "Game Jam" },
-  { value: "stream_marathon", label: "Maratona de Stream" },
-  { value: "meeting", label: "Reunião / Encontro" },
-  { value: "studio", label: "Evento de Estúdio" },
-];
 
 export const VISIBILITY_OPTIONS = [
   { value: "public", label: "Público — visível para todos" },

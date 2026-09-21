@@ -95,6 +95,48 @@
   gap: 12px;
 }
 
+/* Cada item é o card (que é um link) mais o botão de compartilhar. O botão é
+   irmão do link, não filho: aninhar um botão dentro de um <a> é HTML inválido e
+   o clique dispararia as duas ações. */
+.eventItem {
+  position: relative;
+}
+
+.shareBtn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  /* Scrim escuro com `#fff` no ícone: o botão fica sobre o banner do evento, que
+     é uma foto qualquer, então precisa carregar o próprio contraste. Mesmo
+     recurso do véu da capa do perfil (`.cover::after`, perfil.module.css). */
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition:
+    background 0.15s,
+    transform 0.15s;
+}
+
+.shareBtn:hover {
+  background: rgba(0, 0, 0, 0.68);
+  transform: scale(1.06);
+}
+
+.shareBtn:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
 .eventCard {
   display: flex;
   gap: 16px;
@@ -187,6 +229,9 @@
   border: 1px solid currentColor;
 }
 
+/* As cores por tipo também existem em `lib/event-types.js` (`accent`), porque o
+   card de Open Graph precisa delas e SVG rasterizado não enxerga CSS variable.
+   Ao mudar aqui, mude lá. */
 .typeBadge.general {
   color: #6366f1;
   background: rgba(99, 102, 241, 0.08);

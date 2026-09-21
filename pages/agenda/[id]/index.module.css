@@ -75,6 +75,9 @@
   border: 1px solid currentColor;
 }
 
+/* As cores por tipo também existem em `lib/event-types.js` (`accent`), porque o
+   card de Open Graph precisa delas e SVG rasterizado não enxerga CSS variable.
+   Ao mudar aqui, mude lá. */
 .typeBadge.general {
   color: #6366f1;
   background: rgba(99, 102, 241, 0.08);

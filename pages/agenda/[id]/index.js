@@ -7,19 +7,62 @@ import { CalendarIcon, LocationIcon, BroadcastIcon, PersonIcon, ArrowLeftIcon } 
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL } from "@/lib/seo";
+import { eventTypeLabel } from "@/lib/event-types";
+import { loopbackOrigin } from "@/lib/internal-url";
+import { isUuid } from "@/lib/uuid";
 import CreatePost from "@/components/CreatePost/CreatePost";
 import AddressDisplay from "@/components/Address/AddressDisplay";
 import styles from "./index.module.css";
 import { uploadWithProgress } from "@/utils/uploadWithProgress";
 
-const TYPE_LABELS = {
-  general: "Geral",
-  game_launch: "Lançamento de Jogo",
-  game_jam: "Game Jam",
-  stream_marathon: "Maratona de Stream",
-  meeting: "Reunião",
-  studio: "Evento de Estúdio",
-};
+/**
+ * Id de evento é UUID; qualquer outra coisa é tratada como inexistente.
+ * Validação compartilhada com as outras rotas que recebem id (`lib/uuid.js`).
+ */
+/**
+ * Busca o evento no servidor, antes do HTML sair.
+ *
+ * Sem isto os metadados não chegavam ao crawler: a página monta o `SeoHead` só
+ * depois que o `useEffect` carrega o evento, e quem busca o link (WhatsApp,
+ * Discord) **não executa JavaScript** — lia um HTML com zero meta tags e
+ * compartilhava sem miniatura nenhuma.
+ *
+ * Os dados personalizados (`user_rsvp`, `is_owner`) continuam vindo do cliente,
+ * que é quem tem sessão.
+ */
+export async function getServerSideProps(context) {
+  const { id } = context.params;
+
+  // Id validado antes de virar URL: um valor com `/` ou `..` escaparia do
+  // caminho `/api/v1/events/` e traria outro endpoint interno para dentro das
+  // props. Mesmo cuidado de `pages/posts/[id].jsx`.
+  if (!isUuid(String(id))) {
+    // Id que não é UUID também é "não encontrado" para quem pediu a página.
+    context.res.statusCode = 404;
+    return { props: { initialEvent: null, eventNotFound: true } };
+  }
+
+  try {
+    // Loopback: de dentro do container a URL pública não resolve
+    // (ver `lib/internal-url.js`).
+    const res = await fetch(`${loopbackOrigin()}/api/v1/events/${id}`);
+    if (res.status === 404) {
+      // Evento inexistente sai do servidor já como 404, para o buscador não
+      // indexar uma página vazia.
+      context.res.statusCode = 404;
+      return { props: { initialEvent: null, eventNotFound: true } };
+    }
+    if (!res.ok) {
+      return { props: { initialEvent: null, eventNotFound: false } };
+    }
+
+    return { props: { initialEvent: await res.json(), eventNotFound: false } };
+  } catch {
+    // Falha de rede/banco não é "não existe": quem decide é o cliente, que
+    // ainda pode buscar de novo.
+    return { props: { initialEvent: null, eventNotFound: false } };
+  }
+}
 
 const PT_WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const PT_MONTHS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
@@ -52,14 +95,16 @@ function timeAgo(dateStr) {
   });
 }
 
-export default function EventDetailPage() {
+export default function EventDetailPage({ initialEvent = null, eventNotFound = false }) {
   const router = useRouter();
   const { id } = router.query;
   const { user } = useUser();
 
-  const [ev, setEv] = useState(null);
+  // Estado inicial já vem do servidor: o HTML sai com os dados do evento — e,
+  // quando o evento não existe, já sai com o estado "não encontrado".
+  const [ev, setEv] = useState(initialEvent);
   const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialEvent && !eventNotFound);
   const [rsvpLoading, setRsvpLoading] = useState(false);
   const [userRsvp, setUserRsvp] = useState(null);
   const [counts, setCounts] = useState({ going: 0, maybe: 0, not_going: 0 });
@@ -68,37 +113,68 @@ export default function EventDetailPage() {
   const [orgRsvpLoading, setOrgRsvpLoading] = useState(false);
   const [selectedOrgId, setSelectedOrgId] = useState("");
 
+  // Posts do evento: sempre do cliente. O crawler não precisa deles, e o SSR
+  // já entregou o que os metadados usam.
   useEffect(() => {
     if (!id) return;
 
-    async function load() {
-      setLoading(true);
-      try {
-        const [evRes, postsRes] = await Promise.all([
-          fetch(`/api/v1/events/${id}`, { credentials: "include" }),
-          fetch(`/api/v1/events/${id}/posts`, { credentials: "include" }),
-        ]);
-        const evData = await evRes.json();
-        const postsData = await postsRes.json();
+    let cancelled = false;
+    fetch(`/api/v1/events/${id}/posts`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (!cancelled) setPosts(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (!cancelled) setPosts([]);
+      });
 
-        if (evRes.ok) {
-          setEv(evData);
-          setUserRsvp(evData.user_rsvp ?? null);
-          setCounts({
-            going: Number(evData.rsvp_going ?? 0),
-            maybe: Number(evData.rsvp_maybe ?? 0),
-            not_going: Number(evData.rsvp_not_going ?? 0),
-          });
-          setOrgRsvps(Array.isArray(evData.org_rsvps) ? evData.org_rsvps : []);
-        }
-        if (postsRes.ok) setPosts(Array.isArray(postsData) ? postsData : []);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    load();
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
+
+  // Dados que dependem de sessão (`user_rsvp`, `is_owner`, `org_rsvps`) vêm do
+  // cliente, que é quem tem cookie. A busca também roda quando o SSR não trouxe
+  // nada (falha transitória), para a página não ficar presa em "carregando".
+  //
+  // O `loading` só é desligado aqui, nunca ligado: quando o SSR já desenhou a
+  // página, ligar o carregamento de novo pisca a tela sem necessidade.
+  const needsClientFetch = !initialEvent && !eventNotFound;
+
+  useEffect(() => {
+    if (!id || (!user?.id && !needsClientFetch)) return;
+
+    let cancelled = false;
+    fetch(`/api/v1/events/${id}`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        // Sem dados: se a página ainda não tinha evento (o SSR falhou), sai do
+        // carregamento para mostrar o estado de erro, em vez de girar para
+        // sempre. Se o SSR já desenhou, `loading` já era `false` — no-op.
+        if (!data) {
+          setLoading(false);
+          return;
+        }
+
+        setEv(data);
+        setUserRsvp(data.user_rsvp ?? null);
+        setCounts({
+          going: Number(data.rsvp_going ?? 0),
+          maybe: Number(data.rsvp_maybe ?? 0),
+          not_going: Number(data.rsvp_not_going ?? 0),
+        });
+        setOrgRsvps(Array.isArray(data.org_rsvps) ? data.org_rsvps : []);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, user?.id, needsClientFetch]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -235,6 +311,15 @@ export default function EventDetailPage() {
   if (!ev) {
     return (
       <div className={styles.notFound}>
+        {/* Sem metadados a página sairia vazia para o buscador; com `noIndex`
+            ele não guarda um resultado que não existe. Mesmo tratamento do
+            "post não encontrado" (`pages/posts/[id].jsx`). */}
+        <SeoHead
+          title="Evento não encontrado — Indies Brasil"
+          description="Este evento não foi encontrado na agenda do Indies Brasil."
+          canonical={`${SITE_URL}/agenda/${id}`}
+          noIndex
+        />
         <p>Evento não encontrado.</p>
         <Link href="/agenda">← Voltar para a agenda</Link>
       </div>
@@ -246,7 +331,17 @@ export default function EventDetailPage() {
 
   return (
     <>
-      <SeoHead title={pageTitle} description={ev.description || ev.title} url={pageUrl} />
+      <SeoHead
+        title={pageTitle}
+        description={ev.description || ev.title}
+        canonical={pageUrl}
+        // Card gerado no servidor, com o mesmo fundo dos cards do site.
+        ogImage={`${SITE_URL}/api/og/event/${id}`}
+        ogType="article"
+        // Evento restrito não deve ser indexado — o card de OG também responde
+        // 404 para ele (`pages/api/og/event/[id].js`).
+        noIndex={ev.visibility === "private"}
+      />
 
       <div className={styles.page}>
         <Link
@@ -284,7 +379,7 @@ export default function EventDetailPage() {
           <div className={styles.headerContent}>
             <div className={styles.header}>
               <div className={styles.badges}>
-                <span className={`${styles.typeBadge} ${styles[ev.event_type]}`}>{TYPE_LABELS[ev.event_type] ?? ev.event_type}</span>
+                <span className={`${styles.typeBadge} ${styles[ev.event_type]}`}>{eventTypeLabel(ev.event_type)}</span>
                 {ev.status === "cancelled" && <span className={styles.cancelledBadge}>Cancelado</span>}
                 {ev.visibility === "private" && <span className={styles.privateBadge}>🔒 Privado</span>}
                 {ev.is_recurring && <span className={styles.recurringBadge}>🔁 Recorrente</span>}

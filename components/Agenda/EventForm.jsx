@@ -6,7 +6,8 @@ import { Spinner } from "@primer/react";
 import AddressFormFields from "@/components/Address/AddressFormFields";
 import EventBannerField, { EMPTY_BANNER } from "./EventBannerField";
 import styles from "./EventForm.module.css";
-import { EVENT_TYPES, VISIBILITY_OPTIONS, FREQUENCIES, WEEK_DAYS, buildEventPayload, validateEvent } from "./eventFormOptions";
+import { EVENT_TYPES } from "@/lib/event-types";
+import { VISIBILITY_OPTIONS, FREQUENCIES, WEEK_DAYS, buildEventPayload, validateEvent } from "./eventFormOptions";
 
 /**
  * Formulário de evento, usado tanto na criação quanto na edição.

@@ -3,24 +3,17 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Spinner } from "@primer/react";
-import { CalendarIcon, PlusIcon, LocationIcon, BroadcastIcon } from "@primer/octicons-react";
+import { CalendarIcon, PlusIcon, LocationIcon, BroadcastIcon, ShareAndroidIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
+import ShareModal from "@/components/ShareModal/ShareModal";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL } from "@/lib/seo";
+import { eventTypeLabel } from "@/lib/event-types";
 import styles from "./index.module.css";
 
 const PAGE_TITLE = "Agenda — Indies Brasil";
 const PAGE_DESCRIPTION = "Eventos da comunidade indie brasileira: game jams, lançamentos, reuniões, maratonas de stream e mais.";
 const PAGE_URL = `${SITE_URL}/agenda`;
-
-const TYPE_LABELS = {
-  general: "Geral",
-  game_launch: "Lançamento",
-  game_jam: "Game Jam",
-  stream_marathon: "Maratona",
-  meeting: "Reunião",
-  studio: "Estúdio",
-};
 
 const FILTERS = [
   { value: "", label: "Todos" },
@@ -63,6 +56,10 @@ export default function AgendaPage() {
   const [filter, setFilter] = useState("");
   const [events, setEvents] = useState(null);
   const loading = events === null;
+
+  // Evento cujo link está sendo compartilhado. Fica no nível da página (e não
+  // em cada item) para existir um único modal aberto por vez.
+  const [shareEvent, setShareEvent] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -112,7 +109,7 @@ export default function AgendaPage() {
 
   return (
     <>
-      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} url={PAGE_URL} />
+      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} />
 
       <div className={styles.pageWrapper}>
         {/* Cabeçalho */}
@@ -178,57 +175,81 @@ export default function AgendaPage() {
             {days.map(({ date, day, month: evtMonth, items }) => (
               <div key={date.toISOString()}>
                 {items.map((ev) => (
-                  <Link key={ev.instance_id} href={`/agenda/${ev.event_id}`} className={styles.eventCard}>
-                    {/* Data */}
-                    <div className={styles.dateBadge}>
-                      <span className={styles.dateDay}>{day}</span>
-                      <span className={styles.dateMonth}>{PT_MONTHS_SHORT[evtMonth]}</span>
-                    </div>
-
-                    {/* Corpo */}
-                    <div className={styles.eventBody}>
-                      <div className={styles.eventTop}>
-                        <span className={`${styles.typeBadge} ${styles[ev.event_type]}`}>{TYPE_LABELS[ev.event_type] ?? ev.event_type}</span>
-                        {ev.visibility === "private" && <span className={styles.privateBadge}>🔒 Privado</span>}
+                  <div key={ev.instance_id} className={styles.eventItem}>
+                    <Link href={`/agenda/${ev.event_id}`} className={styles.eventCard}>
+                      {/* Data */}
+                      <div className={styles.dateBadge}>
+                        <span className={styles.dateDay}>{day}</span>
+                        <span className={styles.dateMonth}>{PT_MONTHS_SHORT[evtMonth]}</span>
                       </div>
 
-                      <h2 className={styles.eventTitle}>{ev.override_title || ev.title}</h2>
+                      {/* Corpo */}
+                      <div className={styles.eventBody}>
+                        <div className={styles.eventTop}>
+                          <span className={`${styles.typeBadge} ${styles[ev.event_type]}`}>{eventTypeLabel(ev.event_type)}</span>
+                          {ev.visibility === "private" && <span className={styles.privateBadge}>🔒 Privado</span>}
+                        </div>
 
-                      <div className={styles.eventMeta}>
-                        {!ev.is_all_day && <span className={styles.metaItem}>🕐 {formatDateRange(ev.starts_at, ev.ends_at)}</span>}
-                        {ev.is_online && (
-                          <span className={styles.onlineBadge}>
-                            <BroadcastIcon size={12} /> Online
+                        <h2 className={styles.eventTitle}>{ev.override_title || ev.title}</h2>
+
+                        <div className={styles.eventMeta}>
+                          {!ev.is_all_day && <span className={styles.metaItem}>🕐 {formatDateRange(ev.starts_at, ev.ends_at)}</span>}
+                          {ev.is_online && (
+                            <span className={styles.onlineBadge}>
+                              <BroadcastIcon size={12} /> Online
+                            </span>
+                          )}
+                          {!ev.is_online && ev.location_name && (
+                            <span className={styles.metaItem}>
+                              <LocationIcon size={12} /> {ev.location_name}
+                            </span>
+                          )}
+                          <span className={styles.metaItem}>por @{ev.organizer_username}</span>
+                        </div>
+
+                        {ev.rsvp_going > 0 && (
+                          <span className={styles.rsvpCount}>
+                            <span className={styles.rsvpCountGoing}>{ev.rsvp_going}</span> confirmado{ev.rsvp_going === 1 ? "" : "s"}
                           </span>
                         )}
-                        {!ev.is_online && ev.location_name && (
-                          <span className={styles.metaItem}>
-                            <LocationIcon size={12} /> {ev.location_name}
-                          </span>
-                        )}
-                        <span className={styles.metaItem}>por @{ev.organizer_username}</span>
                       </div>
 
-                      {ev.rsvp_going > 0 && (
-                        <span className={styles.rsvpCount}>
-                          <span className={styles.rsvpCountGoing}>{ev.rsvp_going}</span> confirmado{ev.rsvp_going === 1 ? "" : "s"}
-                        </span>
+                      {/* Banner */}
+                      {ev.banner_url && (
+                        <div className={styles.eventBanner}>
+                          <Image src={ev.banner_url} alt="" fill className={styles.bannerThumb} sizes="300px" />
+                        </div>
                       )}
-                    </div>
+                    </Link>
 
-                    {/* Banner */}
-                    {ev.banner_url && (
-                      <div className={styles.eventBanner}>
-                        <Image src={ev.banner_url} alt="" fill className={styles.bannerThumb} sizes="300px" />
-                      </div>
-                    )}
-                  </Link>
+                    {/* Fora do <Link>: o card inteiro é um link, e aninhar um
+                        botão dentro dele seria HTML inválido (além de o clique
+                        disparar a navegação junto com o compartilhamento). */}
+                    <button
+                      type="button"
+                      className={styles.shareBtn}
+                      aria-label={`Compartilhar ${ev.override_title || ev.title}`}
+                      onClick={() => setShareEvent(ev)}
+                    >
+                      <ShareAndroidIcon size={14} />
+                    </button>
+                  </div>
                 ))}
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {shareEvent && (
+        <ShareModal
+          path={`/agenda/${shareEvent.event_id}`}
+          text={`Confira "${shareEvent.override_title || shareEvent.title}" na agenda do Indies Brasil`}
+          title="Compartilhar evento"
+          hint="Copie o link e cole no WhatsApp, Discord ou Instagram. A miniatura do evento será exibida automaticamente."
+          onClose={() => setShareEvent(null)}
+        />
+      )}
     </>
   );
 }
