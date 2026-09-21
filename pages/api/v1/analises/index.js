@@ -1,6 +1,7 @@
 import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import contentReview from "models/content-review";
+import { isUuid } from "lib/uuid";
 
 export default createRouter()
   .use(controller.injectAnonymousOrUser)
@@ -24,14 +25,12 @@ async function postHandler(request, response) {
   const requestUser = request.context.user;
   const { title, content_type, content_id, cover_image_id, cover_url, rating, sections, positive_points, negative_points } = request.body;
 
-  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
   const review = await contentReview.create({
     title,
     authorId: requestUser.id,
     contentType: content_type,
     contentId: content_id,
-    coverImageId: cover_image_id && UUID_REGEX.test(cover_image_id) ? cover_image_id : null,
+    coverImageId: isUuid(cover_image_id) ? cover_image_id : null,
     coverUrl: cover_url || null,
     rating,
     sections,

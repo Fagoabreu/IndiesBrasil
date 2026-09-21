@@ -566,9 +566,12 @@ export default function StudioPage({ initialStudio }) {
         title={pageTitle}
         description={studio.pitch || `Conheça ${studio.name}, estúdio indie brasileiro.`}
         canonical={pageUrl}
-        ogImage={studioLogoUrl}
-        ogImageWidth={512}
-        ogImageHeight={512}
+        // Card gerado no servidor, com o mesmo fundo dos cards do site. Antes o
+        // preview usava o logo cru (512x512): um quadrado solto, sem nome nem
+        // contexto, e cortado/letterboxed na maioria das redes.
+        ogImage={`${SITE_URL}/api/og/studio/${encodeURIComponent(studio.slug)}`}
+        ogImageWidth={1200}
+        ogImageHeight={630}
         ogType="business.business"
         jsonLd={orgJsonLd}
       />

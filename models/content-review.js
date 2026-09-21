@@ -1,5 +1,6 @@
 import database from "infra/database.js";
 import { NotFoundError, ValidationError, ForbiddenError } from "infra/errors.js";
+import { isUuid } from "lib/uuid";
 
 const VALID_CONTENT_TYPES = ["game", "boardgame", "book"];
 
@@ -332,9 +333,8 @@ async function update(reviewId, userId, fields) {
       setClauses.push(`slug = $${idx++}`);
       values.push(generateSlug(fields[key].trim(), reviewId));
     } else if (key === "cover_image_id") {
-      const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
       setClauses.push(`${key} = $${idx++}`);
-      values.push(fields[key] && UUID_REGEX.test(fields[key]) ? fields[key] : null);
+      values.push(isUuid(fields[key]) ? fields[key] : null);
     } else {
       setClauses.push(`${key} = $${idx++}`);
       values.push(fields[key]);
