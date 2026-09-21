@@ -6,12 +6,14 @@ import styles from "./index.module.css";
 import VerticalCardComponent from "@/components/Card/VerticalCardComponent";
 import MetricCard from "@/components/Card/MetricCard";
 import HighlightCard from "@/components/HighlightCard/HighlightCard";
+import EventCard from "@/components/Agenda/EventCard";
 import TestimonialsSection from "@/components/Landing/TestimonialsSection";
 import { MilestoneIcon, OrganizationIcon, PeopleIcon, StarIcon, VideoIcon, TableIcon, BookIcon, BroadcastIcon } from "@primer/octicons-react";
 import { useEffect, useState } from "react";
 import TyperwriterComponent from "@/components/TypeWriter/TyperwriterComponent";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL, SITE_NAME } from "@/lib/seo";
+import { sortEventsByStart } from "@/lib/eventFormat";
 import useInView from "@/hooks/useInView";
 
 const PAGE_TITLE = "Indies Brasil — A casa dos jogos independentes brasileiros";
@@ -294,11 +296,15 @@ function SectionReveal({ children, className = "", as: Tag = "section", ...props
   );
 }
 
+/** Quantos eventos a home mostra antes de mandar para a agenda completa. */
+const UPCOMING_EVENTS_LIMIT = 2;
+
 function Home() {
   const { user } = useUser();
   const isLoggedIn = Boolean(user?.id);
   const [summary, setSummary] = useState(null);
   const [highlights, setHighlights] = useState([]);
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Fecha o menu mobile com Escape e ao voltar para o breakpoint desktop —
@@ -354,8 +360,31 @@ function Home() {
       }
     }
 
+    // Próximos eventos da agenda. A rota devolve os três meses seguintes na
+    // ordem das instâncias (por id, não por data), então a ordenação por data
+    // acontece aqui.
+    //
+    // Só eventos **públicos**: a home é lida por qualquer visitante, inclusive
+    // anônimo, e eventos de membros não devem aparecer para quem não entrou.
+    async function getUpcomingEvents() {
+      try {
+        const response = await fetch("/api/v1/events", {
+          method: "GET",
+          credentials: "include",
+        });
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const publicos = Array.isArray(data) ? data.filter((ev) => ev.visibility === "public") : [];
+        setUpcomingEvents(sortEventsByStart(publicos).slice(0, UPCOMING_EVENTS_LIMIT));
+      } catch (error) {
+        console.error("Erro ao buscar próximos eventos:", error);
+      }
+    }
+
     getSummary();
     getHighlights();
+    getUpcomingEvents();
   }, []);
 
   return (
@@ -517,6 +546,31 @@ function Home() {
                 <HighlightCard key={`${item.type}-${item.slug}`} item={item} />
               ))}
             </div>
+          </SectionReveal>
+        )}
+
+        {/* ════════════════════════════════════
+            AGENDA — próximos eventos
+            Logo após os destaques: quem veio ver o que a comunidade está
+            fazendo também quer saber quando e onde encontrá-la.
+        ════════════════════════════════════ */}
+        {upcomingEvents.length > 0 && (
+          <SectionReveal className={styles.section}>
+            <header className={styles.sectionHeader}>
+              <p className={styles.sectionLabel}>Agenda</p>
+              <h2 className={styles.sectionTitle}>Próximos eventos</h2>
+              <p className={styles.sectionSub}>Encontros, game jams e lançamentos da comunidade — a agenda é aberta e não exige conta.</p>
+            </header>
+
+            <div className={styles.upcomingList}>
+              {upcomingEvents.map((event) => (
+                <EventCard key={event.instance_id} event={event} />
+              ))}
+            </div>
+
+            <Link href="/agenda" className={styles.upcomingMore}>
+              Ver a agenda completa →
+            </Link>
           </SectionReveal>
         )}
 

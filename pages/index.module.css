@@ -352,6 +352,30 @@
 }
 
 /* ========================================
+   PRÓXIMOS EVENTOS
+   O espaço entre os cards acompanha a lista da agenda
+   (`pages/agenda/index.module.css`, .eventList).
+======================================== */
+.upcomingList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.upcomingMore {
+  display: inline-block;
+  margin-top: 1.25rem;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--brand-primary);
+  text-decoration: none;
+}
+
+.upcomingMore:hover {
+  text-decoration: underline;
+}
+
+/* ========================================
    GENERIC SECTION
 ======================================== */
 .section {
