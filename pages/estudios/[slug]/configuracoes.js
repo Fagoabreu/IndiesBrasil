@@ -155,7 +155,12 @@ export default function ConfiguracoesPage() {
   const [members, setMembers] = useState([]);
   const [ownerId, setOwnerId] = useState(null);
   const [removingUsername, setRemovingUsername] = useState(null);
+  const [roleUsername, setRoleUsername] = useState(null);
   const [memberMsg, setMemberMsg] = useState({ type: null, text: "" });
+
+  // Os controles de permissão só aparecem para o responsável. A API também
+  // recusa qualquer outro — aqui é só para não oferecer um botão que falha.
+  const [viewerIsOwner, setViewerIsOwner] = useState(false);
 
   // Tab navigation
   const [activeTab, setActiveTab] = useState("profile");
@@ -275,6 +280,8 @@ export default function ConfiguracoesPage() {
         router.replace(`/estudios/${slug}`);
         return;
       }
+
+      setViewerIsOwner(Boolean(isOwner));
 
       setName(data.name || "");
       setPitch(data.pitch || "");
@@ -1286,6 +1293,46 @@ export default function ConfiguracoesPage() {
     }
   }
 
+  /**
+   * Concede ou revoga o acesso de administrador do estúdio.
+   *
+   * A resposta da API já devolve a lista de membros atualizada, então não é
+   * preciso buscar o estúdio de novo.
+   */
+  async function handleSetRole(username, action) {
+    setMemberMsg({ type: null, text: "" });
+    setRoleUsername(username);
+    try {
+      const res = await fetch(`/api/v1/studios/${slug}/members/${username}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(action === "grant" ? { addRole: "admin" } : { removeRole: "admin" }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMemberMsg({
+          type: "error",
+          text: data.message || "Erro ao alterar a permissão.",
+        });
+        return;
+      }
+
+      setMembers(Array.isArray(data) ? data : []);
+      setMemberMsg({
+        type: "success",
+        text: action === "grant" ? `@${username} agora pode administrar o estúdio.` : `Acesso de administrador removido de @${username}.`,
+      });
+    } catch {
+      setMemberMsg({
+        type: "error",
+        text: "Erro inesperado. Tente novamente.",
+      });
+    } finally {
+      setRoleUsername(null);
+    }
+  }
+
   async function handleCancelInvite(id) {
     setCancellingId(id);
     try {
@@ -1630,24 +1677,52 @@ export default function ConfiguracoesPage() {
 
             {members.length > 0 && (
               <ul className={styles.pendingList}>
-                {members.map((m) => (
-                  <li key={m.user_id ?? m.id} className={styles.pendingItem}>
-                    <span className={styles.pendingUsername}>
-                      {m.display_name || m.username}
-                      {m.user_id === ownerId && <span className={styles.ownerBadge}> (dono)</span>}
-                    </span>
-                    {m.user_id !== ownerId && (
-                      <button
-                        type="button"
-                        className={styles.btnCancelInvite}
-                        onClick={() => handleRemoveMember(m.username)}
-                        disabled={removingUsername === m.username}
-                      >
-                        {removingUsername === m.username ? "…" : "Remover"}
-                      </button>
-                    )}
-                  </li>
-                ))}
+                {members.map((m) => {
+                  // `findMembers` devolve `u.id`. Comparar com `m.user_id` — que
+                  // é sempre undefined — fazia o selo de dono nunca aparecer e
+                  // o botão "Remover" aparecer para o próprio responsável, cujo
+                  // clique a API recusa.
+                  const isOwnerMember = m.id === ownerId;
+                  const isAdminMember = Array.isArray(m.roles) && m.roles.includes("admin");
+                  // Só o responsável mexe no papel de um administrador; um admin
+                  // com este botão à vista receberia 403.
+                  const canRemoveThis = viewerIsOwner || !isAdminMember;
+                  const roleActionLabel = isAdminMember ? "Revogar acesso" : "Conceder acesso";
+
+                  return (
+                    <li key={m.id} className={styles.pendingItem}>
+                      <span className={styles.pendingUsername}>{m.display_name || m.username}</span>
+
+                      <span className={styles.memberBadges}>
+                        {isOwnerMember && <span className={styles.ownerBadge}>(dono)</span>}
+                        {isAdminMember && !isOwnerMember && <span className={styles.roleBadge}>Administrador</span>}
+                      </span>
+
+                      <span className={styles.memberActions}>
+                        {viewerIsOwner && !isOwnerMember && (
+                          <button
+                            type="button"
+                            className={styles.btnRole}
+                            onClick={() => handleSetRole(m.username, isAdminMember ? "revoke" : "grant")}
+                            disabled={roleUsername === m.username}
+                          >
+                            {roleUsername === m.username ? "…" : roleActionLabel}
+                          </button>
+                        )}
+                        {!isOwnerMember && canRemoveThis && (
+                          <button
+                            type="button"
+                            className={styles.btnCancelInvite}
+                            onClick={() => handleRemoveMember(m.username)}
+                            disabled={removingUsername === m.username}
+                          >
+                            {removingUsername === m.username ? "…" : "Remover"}
+                          </button>
+                        )}
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
             )}
 

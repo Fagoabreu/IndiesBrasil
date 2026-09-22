@@ -458,6 +458,9 @@ async function findAll({ from, to, userId, type, status = "published" }) {
         e.is_all_day,
         e.is_recurring,
         e.created_by,
+        /* O card do evento mostra o local do evento presencial; sem esta coluna
+           a linha nunca aparecia na lista (a UI ja tratava location_name). */
+        e.location_name,
         u.username       AS organizer_username,
         u.avatar_image   AS organizer_avatar,
         ui.secure_url    AS organizer_avatar_url,

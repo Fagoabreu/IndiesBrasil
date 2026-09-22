@@ -1,14 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Spinner } from "@primer/react";
-import { CalendarIcon, PlusIcon, LocationIcon, BroadcastIcon, ShareAndroidIcon } from "@primer/octicons-react";
+import { CalendarIcon, PlusIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import ShareModal from "@/components/ShareModal/ShareModal";
+import EventCard from "@/components/Agenda/EventCard";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL } from "@/lib/seo";
-import { eventTypeLabel } from "@/lib/event-types";
+import { EVENT_MONTHS, sortEventsByStart } from "@/lib/eventFormat";
 import styles from "./index.module.css";
 
 const PAGE_TITLE = "Agenda — Indies Brasil";
@@ -23,29 +23,6 @@ const FILTERS = [
   { value: "meeting", label: "Reuniões" },
   { value: "general", label: "Gerais" },
 ];
-
-const PT_MONTHS = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-const PT_MONTHS_SHORT = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
-
-function formatTime(dateStr) {
-  const d = new Date(dateStr);
-  return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-}
-
-function isSameDay(a, b) {
-  const da = new Date(a);
-  const db = new Date(b);
-  return da.toDateString() === db.toDateString();
-}
-
-function formatDateRange(startsAt, endsAt) {
-  const s = new Date(startsAt);
-  const e = new Date(endsAt);
-  if (isSameDay(startsAt, endsAt)) {
-    return `${formatTime(startsAt)} – ${formatTime(endsAt)}`;
-  }
-  return `${s.getDate()}/${PT_MONTHS_SHORT[s.getMonth()]} – ${e.getDate()}/${PT_MONTHS_SHORT[e.getMonth()]}`;
-}
 
 export default function AgendaPage() {
   const { user } = useUser();
@@ -96,16 +73,9 @@ export default function AgendaPage() {
     } else setMonth((m) => m + 1);
   }
 
-  // Agrupa eventos por dia (UTC — evita off-by-one em timezones negativos)
-  const grouped = (events || []).reduce((acc, ev) => {
-    const d = new Date(ev.starts_at);
-    const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
-    if (!acc[key]) acc[key] = { date: d, day: d.getUTCDate(), month: d.getUTCMonth(), items: [] };
-    acc[key].items.push(ev);
-    return acc;
-  }, {});
-
-  const days = Object.values(grouped).sort((a, b) => a.date - b.date);
+  // A lista vem da API ordenada por id de instância, não por data — a ordem
+  // cronológica é responsabilidade de quem exibe.
+  const sorted = sortEventsByStart(events || []);
 
   return (
     <>
@@ -130,7 +100,7 @@ export default function AgendaPage() {
             ‹
           </button>
           <span className={styles.monthLabel}>
-            {PT_MONTHS[month]} {year}
+            {EVENT_MONTHS[month]} {year}
           </span>
           <button type="button" className={styles.monthBtn} onClick={nextMonth}>
             ›
@@ -157,11 +127,11 @@ export default function AgendaPage() {
             <Spinner size="large" />
           </div>
         )}
-        {!loading && days.length === 0 && (
+        {!loading && sorted.length === 0 && (
           <div className={styles.emptyState}>
             <div className={styles.emptyIcon}>📅</div>
             <p className={styles.emptyText}>
-              Nenhum evento encontrado para {PT_MONTHS[month]} de {year}.
+              Nenhum evento encontrado para {EVENT_MONTHS[month]} de {year}.
             </p>
             {user && (
               <Link href="/agenda/criar" className={styles.createBtn} style={{ marginTop: 16, display: "inline-flex" }}>
@@ -170,72 +140,10 @@ export default function AgendaPage() {
             )}
           </div>
         )}
-        {!loading && days.length > 0 && (
+        {!loading && sorted.length > 0 && (
           <div className={styles.eventList}>
-            {days.map(({ date, day, month: evtMonth, items }) => (
-              <div key={date.toISOString()}>
-                {items.map((ev) => (
-                  <div key={ev.instance_id} className={styles.eventItem}>
-                    <Link href={`/agenda/${ev.event_id}`} className={styles.eventCard}>
-                      {/* Data */}
-                      <div className={styles.dateBadge}>
-                        <span className={styles.dateDay}>{day}</span>
-                        <span className={styles.dateMonth}>{PT_MONTHS_SHORT[evtMonth]}</span>
-                      </div>
-
-                      {/* Corpo */}
-                      <div className={styles.eventBody}>
-                        <div className={styles.eventTop}>
-                          <span className={`${styles.typeBadge} ${styles[ev.event_type]}`}>{eventTypeLabel(ev.event_type)}</span>
-                          {ev.visibility === "private" && <span className={styles.privateBadge}>🔒 Privado</span>}
-                        </div>
-
-                        <h2 className={styles.eventTitle}>{ev.override_title || ev.title}</h2>
-
-                        <div className={styles.eventMeta}>
-                          {!ev.is_all_day && <span className={styles.metaItem}>🕐 {formatDateRange(ev.starts_at, ev.ends_at)}</span>}
-                          {ev.is_online && (
-                            <span className={styles.onlineBadge}>
-                              <BroadcastIcon size={12} /> Online
-                            </span>
-                          )}
-                          {!ev.is_online && ev.location_name && (
-                            <span className={styles.metaItem}>
-                              <LocationIcon size={12} /> {ev.location_name}
-                            </span>
-                          )}
-                          <span className={styles.metaItem}>por @{ev.organizer_username}</span>
-                        </div>
-
-                        {ev.rsvp_going > 0 && (
-                          <span className={styles.rsvpCount}>
-                            <span className={styles.rsvpCountGoing}>{ev.rsvp_going}</span> confirmado{ev.rsvp_going === 1 ? "" : "s"}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Banner */}
-                      {ev.banner_url && (
-                        <div className={styles.eventBanner}>
-                          <Image src={ev.banner_url} alt="" fill className={styles.bannerThumb} sizes="300px" />
-                        </div>
-                      )}
-                    </Link>
-
-                    {/* Fora do <Link>: o card inteiro é um link, e aninhar um
-                        botão dentro dele seria HTML inválido (além de o clique
-                        disparar a navegação junto com o compartilhamento). */}
-                    <button
-                      type="button"
-                      className={styles.shareBtn}
-                      aria-label={`Compartilhar ${ev.override_title || ev.title}`}
-                      onClick={() => setShareEvent(ev)}
-                    >
-                      <ShareAndroidIcon size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
+            {sorted.map((ev) => (
+              <EventCard key={ev.instance_id} event={ev} onShare={setShareEvent} />
             ))}
           </div>
         )}

@@ -272,6 +272,60 @@
   color: var(--fgColor-muted);
 }
 
+/* Papel do membro na lista. `.ownerBadge` (dono) é texto simples; este é um
+   selo, porque "Administrador" é uma concessão e precisa se destacar do nome. */
+.roleBadge {
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  background: rgba(var(--brand-rgb-primary), 0.1);
+  border: 1px solid rgba(var(--brand-rgb-primary), 0.3);
+}
+
+.memberBadges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.memberActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Conceder/revogar acesso. Visual distinto do "Remover"
+   (`.btnCancelInvite`) de propósito: um muda a permissão, o outro tira a
+   pessoa do estúdio. */
+.btnRole {
+  padding: 4px 10px;
+  border-radius: 5px;
+  background: transparent;
+  border: 1px solid rgba(var(--brand-rgb-primary), 0.4);
+  color: var(--brand-primary);
+  font-size: 0.78rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.btnRole:hover:not(:disabled) {
+  background: rgba(var(--brand-rgb-primary), 0.08);
+  border-color: var(--brand-primary);
+}
+
+.btnRole:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Contatos */
 .contactRow {
   display: flex;

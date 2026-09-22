@@ -16,6 +16,8 @@ describe("GET/POST /api/v1/studios/[slug]/invitations", () => {
   let ownerToken;
   let memberB;
   let memberBToken;
+  let memberC;
+  let memberD;
   let studio;
 
   beforeAll(async () => {
@@ -36,6 +38,22 @@ describe("GET/POST /api/v1/studios/[slug]/invitations", () => {
     });
     memberB = memberBCtx.user;
     memberBToken = memberBCtx.sessionToken;
+
+    const memberCCtx = await createActivatedUserWithSession({
+      username: "ConvidadoC",
+      email: "convidado.c@curso.dev",
+      password: TEST_CREDENTIALS.userDefault,
+      cpf: 55123456711,
+    });
+    memberC = memberCCtx.user;
+
+    const memberDCtx = await createActivatedUserWithSession({
+      username: "ConvidadoD",
+      email: "convidado.d@curso.dev",
+      password: TEST_CREDENTIALS.userDefault,
+      cpf: 55123456712,
+    });
+    memberD = memberDCtx.user;
 
     studio = await organization.create(owner, { name: "Estúdio Convites" });
   });
@@ -113,5 +131,69 @@ describe("GET/POST /api/v1/studios/[slug]/invitations", () => {
 
     const body = await response.json();
     expect(body.name).toBe("ValidationError");
+  });
+
+  test("Owner cannot invite with an unknown role", async () => {
+    const response = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/invitations`, {
+      method: "POST",
+      headers: { ...authHeaders(ownerToken), "content-type": "application/json" },
+      body: JSON.stringify({ username: memberC.username, role: "superadmin" }),
+    });
+    expect(response.status).toBe(400);
+
+    const body = await response.json();
+    expect(body.name).toBe("ValidationError");
+  });
+
+  test("Owner cannot invite with an explicit null role", async () => {
+    // Campo ausente vira "member"; `null` explícito é erro do cliente e violaria
+    // o NOT NULL do enum se passasse direto.
+    const response = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/invitations`, {
+      method: "POST",
+      headers: { ...authHeaders(ownerToken), "content-type": "application/json" },
+      body: JSON.stringify({ username: memberC.username, role: null }),
+    });
+    expect(response.status).toBe(400);
+
+    const body = await response.json();
+    expect(body.name).toBe("ValidationError");
+  });
+
+  test("Owner can invite with the admin role", async () => {
+    const response = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/invitations`, {
+      method: "POST",
+      headers: { ...authHeaders(ownerToken), "content-type": "application/json" },
+      body: JSON.stringify({ username: memberC.username, role: "admin" }),
+    });
+    expect(response.status).toBe(201);
+
+    const body = await response.json();
+    expect(body.role).toBe("admin");
+  });
+
+  test("Admin cannot invite with the admin role", async () => {
+    // Prepara um administrador: memberB aceita o convite pendente e é promovido
+    // pelo dono. É o caminho real, e é justamente o que precisa estar fechado —
+    // o papel do convite vira `setMemberRole` no aceite.
+    const pending = await organization.findPendingInvitations(studio.id);
+    const inviteForB = pending.find((i) => i.invited_user_id === memberB.id);
+    await organization.respondToInvitation(inviteForB.id, memberB.id, true);
+    await organization.setMemberRole(studio.id, memberB.id, "admin", owner.id);
+
+    const response = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/invitations`, {
+      method: "POST",
+      headers: { ...authHeaders(memberBToken), "content-type": "application/json" },
+      body: JSON.stringify({ username: memberD.username, role: "admin" }),
+    });
+    expect(response.status).toBe(403);
+  });
+
+  test("Admin can still invite with the member role", async () => {
+    const response = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/invitations`, {
+      method: "POST",
+      headers: { ...authHeaders(memberBToken), "content-type": "application/json" },
+      body: JSON.stringify({ username: memberD.username, role: "member" }),
+    });
+    expect(response.status).toBe(201);
   });
 });

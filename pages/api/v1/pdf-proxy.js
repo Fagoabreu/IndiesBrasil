@@ -10,6 +10,10 @@ import { isSafeUrl } from "lib/ssrf-guard";
  * produção só permite connect-src para 'self' e api.cloudinary.com.
  * Este proxy faz o download server-side e retorna os bytes ao cliente como
  * 'self', sem violar o CSP.
+ *
+ * O Cloudinary serve `raw/upload` como `application/octet-stream`, não como
+ * `application/pdf` — por isso o que valida o arquivo aqui é a assinatura dele,
+ * não o Content-Type anunciado (ver `isPdf`).
  */
 export default createRouter()
   .use(controller.injectAnonymousOrUser)
@@ -18,6 +22,45 @@ export default createRouter()
 
 /** Limite de resposta (Pages Router) e de tamanho do PDF upstream. */
 const MAX_PDF_BYTES = 50 * 1024 * 1024; // 50 MB
+
+/**
+ * Assinatura de um PDF (`%PDF-`), em bytes.
+ *
+ * É a checagem que **realmente decide** se o upstream é um PDF. Confiar no
+ * Content-Type não funciona: o Cloudinary serve `raw/upload` como
+ * `application/octet-stream` (é assim que os PDFs de livro são enviados), então
+ * exigir `application/pdf` reprovava todo arquivo legítimo. Um HTML também nunca
+ * começa com estes bytes.
+ */
+const PDF_SIGNATURE = [0x25, 0x50, 0x44, 0x46, 0x2d]; // "%PDF-"
+
+/**
+ * Tipos que o Cloudinary usa para PDFs.
+ *
+ * `application/pdf` é o caso esperado e `application/octet-stream` é o que o
+ * `raw/upload` sem extensão devolve. A allowlist continua servindo de recusa
+ * antecipada para tipos claramente executáveis (`text/html`, por exemplo).
+ */
+const ACCEPTED_UPSTREAM_MIMES = new Set(["application/pdf", "application/octet-stream"]);
+
+/**
+ * A especificação do PDF permite até 1024 bytes antes do cabeçalho, então a
+ * assinatura é procurada nessa janela — um gerador que insira bytes de lixo no
+ * começo produziria um arquivo válido que a checagem estrita recusaria.
+ */
+const PDF_HEADER_SEARCH_BYTES = 1024;
+
+/** Verdadeiro quando o buffer contém a assinatura de PDF na janela do cabeçalho. */
+function isPdf(buffer) {
+  const bytes = Buffer.from(buffer);
+  const limit = Math.min(bytes.length - PDF_SIGNATURE.length, PDF_HEADER_SEARCH_BYTES);
+
+  for (let offset = 0; offset <= limit; offset += 1) {
+    if (PDF_SIGNATURE.every((byte, index) => bytes[offset + index] === byte)) return true;
+  }
+
+  return false;
+}
 
 export const config = {
   api: {
@@ -57,9 +100,10 @@ async function getHandler(request, response) {
 
     // O Content-Type do upstream nunca é repassado verbatim: um raw do
     // Cloudinary apontado por `pdf_url` poderia responder text/html, e servir
-    // isso da nossa origem seria XSS same-origin. Se não for PDF, recusa.
+    // isso da nossa origem seria XSS same-origin. Esta recusa é antecipada —
+    // quem decide de fato é a assinatura do arquivo, logo abaixo.
     const upstreamMime = contentType ? contentType.split(";")[0].trim().toLowerCase() : "";
-    if (upstreamMime && upstreamMime !== "application/pdf") {
+    if (upstreamMime && !ACCEPTED_UPSTREAM_MIMES.has(upstreamMime)) {
       return response.status(415).json({ error: "Upstream is not a PDF" });
     }
 
@@ -67,6 +111,12 @@ async function getHandler(request, response) {
 
     if (buffer.byteLength > MAX_PDF_BYTES) {
       return response.status(413).json({ error: "PDF too large" });
+    }
+
+    // Assinatura do arquivo: é isto que garante que não estamos servindo um
+    // documento HTML da nossa origem, independente do que o upstream disse ser.
+    if (!isPdf(buffer)) {
+      return response.status(415).json({ error: "Upstream is not a PDF" });
     }
 
     response.setHeader("Content-Type", "application/pdf");
