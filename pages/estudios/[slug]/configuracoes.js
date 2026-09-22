@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import Link from "next/link";
@@ -261,19 +261,38 @@ export default function ConfiguracoesPage() {
   // Classificação indicativa
   const [ratingModal, setRatingModal] = useState(null);
 
-  async function fetchStudio() {
+  /**
+   * Carrega o estúdio e preenche o formulário.
+   *
+   * É o **único** lugar que popula estes campos. Antes existia uma segunda
+   * cópia dentro do efeito de carregamento, e ela ficou para trás quando
+   * `viewerIsOwner` foi acrescentado aqui: os controles de permissão passaram a
+   * depender de um `fetchStudio()` que só rodava depois de remover um membro —
+   * daí o botão "Conceder acesso" só aparecer após uma remoção. Duas cópias do
+   * mesmo carregamento divergem em silêncio.
+   *
+   * `useCallback` porque o efeito de carregamento chama esta função e ela
+   * precisa ser estável na lista de dependências.
+   */
+  const fetchStudio = useCallback(async () => {
     if (!slug) return;
     try {
       const res = await fetch(`/api/v1/studios/${slug}`, {
         credentials: "include",
       });
       const data = await res.json();
+
+      // Estúdio inexistente volta para a listagem; os outros erros, para a
+      // página do estúdio.
       if (!res.ok || data.status_code) {
-        router.replace(`/estudios/${slug}`);
+        const destino = data.status_code === 404 ? "/estudios" : `/estudios/${slug}`;
+        router.replace(destino);
         return;
       }
 
-      // Verificar permissão
+      // A página é de edição: só responsável e administradores entram. Esta
+      // checagem aceitava qualquer membro, enquanto `fetchStudio` já exigia
+      // responsável/admin — a divergência entre as duas cópias.
       const isOwner = data.viewer?.isOwner;
       const isAdmin = data.viewer?.isAdmin;
       if (!isOwner && !isAdmin) {
@@ -300,7 +319,7 @@ export default function ConfiguracoesPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [slug, router]);
 
   async function fetchInvites() {
     if (!slug) return;
@@ -455,44 +474,22 @@ export default function ConfiguracoesPage() {
         .catch(() => {});
     };
 
-    fetch(`/api/v1/studios/${slug}`, { credentials: "include" })
-      .then((r) => r.json())
-      .then((data) => {
-        if (cancelled) return;
-        if (!data || data.status_code === 404) {
-          router.replace("/estudios");
-          return;
-        }
-        if (!data.viewer?.isOwner && !data.viewer?.isMember) {
-          router.replace(`/estudios/${slug}`);
-          return;
-        }
-        setName(data.name || "");
-        setPitch(data.pitch || "");
-        setDescription(data.description || "");
-        setHistory(data.history || "");
-        setCnpj(data.cnpj || "");
-        setFoundedAt(data.founded_at ? data.founded_at.slice(0, 10) : "");
-        setTwitchChannel(data.twitch_channel || "");
-        setYoutubeChannelId(data.youtube_channel_id || "");
-        if (data.address) {
-          setHasAddress(true);
-          setAddress(addrToForm(data.address));
-        }
-        setMembers(data.members || []);
-        setOwnerId(data.owner_id ?? null);
+    // Um só carregador. `fetchStudio` popula o estúdio inteiro, inclusive
+    // `viewerIsOwner`, que decide os controles de permissão — antes este efeito
+    // tinha a própria cópia do fetch e não preenchia esse estado.
+    fetchStudio()
+      .catch(() => {
+        // Erro de rede: `fetchStudio` já cuida dos redirecionamentos e libera o
+        // `loading`; aqui só evitamos a rejeição não tratada.
       })
       .finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-          subFetches();
-        }
+        if (!cancelled) subFetches();
       });
 
     return () => {
       cancelled = true;
     };
-  }, [slug, router]);
+  }, [slug, router, fetchStudio]);
 
   function handleAddressChange(field, value) {
     setAddress((prev) => ({ ...prev, [field]: value }));
