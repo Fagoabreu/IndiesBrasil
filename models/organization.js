@@ -2,6 +2,7 @@ import database from "infra/database";
 import { NotFoundError, ValidationError, ForbiddenError } from "infra/errors.js";
 import { generateUniqueSlug } from "lib/slug";
 import { isValidCnpj } from "lib/cnpj";
+import { actorRole, canGrantRole, canRemoveMember, canRevokeRole } from "lib/studioPermissions";
 import moderation from "./moderation.js";
 import reputation from "./reputation";
 
@@ -190,6 +191,9 @@ async function create(ownerUser, data) {
     values: [org.id, ownerUser.id],
   });
 
+  // Ponto de partida da trilha de auditoria: a concessão que funda o estúdio.
+  await recordRoleEvent(null, { orgId: org.id, memberId: ownerUser.id, role: "admin", action: "granted", actorId: ownerUser.id });
+
   // Pontuação de reputação (best-effort: não bloqueia a criação do estúdio).
   try {
     await reputation.award({
@@ -327,9 +331,26 @@ async function isMember(orgId, userId) {
   return result.rows.length > 0;
 }
 
+/**
+ * É administrador **ativo** do estúdio?
+ *
+ * Exige o vínculo em `org_members` com `status = 'active'`, não só a linha em
+ * `org_roles`. Sem o JOIN, uma linha órfã de papel virava admin permanente: a
+ * remoção de membro apagava o papel numa query separada, e se aquela query
+ * falhasse o usuário saía do estúdio continuando admin — invisível, porque
+ * `findMembers` filtra por `status = 'active'`. Privilégio retido em silêncio.
+ */
 async function isAdmin(orgId, userId) {
   const result = await database.query({
-    text: `SELECT 1 FROM org_roles WHERE org_id = $1 AND member_id = $2 AND role = 'admin'`,
+    text: `
+      SELECT 1
+      FROM org_roles r
+      JOIN org_members m
+        ON m.org_id = r.org_id
+       AND m.member_id = r.member_id
+       AND m.status = 'active'
+      WHERE r.org_id = $1 AND r.member_id = $2 AND r.role = 'admin'
+    `,
     values: [orgId, userId],
   });
   return result.rows.length > 0;
@@ -339,32 +360,115 @@ async function isOwner(org, userId) {
   return org.owner_id === userId;
 }
 
-async function removeMember(orgId, memberId) {
-  await database.query({
-    text: `UPDATE org_members SET status = 'removed' WHERE org_id = $1 AND member_id = $2`,
-    values: [orgId, memberId],
+/**
+ * Papel efetivo de um usuário no estúdio (`owner | admin | member | null`).
+ *
+ * As invariantes de escrita usam isto para decidir sozinhas, sem depender de a
+ * rota ter checado antes.
+ */
+async function resolveMemberRole(orgId, userId) {
+  if (!userId) return null;
+
+  const org = await findById(orgId);
+  if (org.owner_id === userId) return "owner";
+
+  const [admin, member] = await Promise.all([isAdmin(orgId, userId), isMember(orgId, userId)]);
+  return actorRole({ isAdmin: admin, isMember: member });
+}
+
+/**
+ * Registra um evento de papel (auditoria).
+ *
+ * `org_roles` é destrutivo — revogar apaga a linha —, então este é o único
+ * lugar onde a concessão sobrevive à revogação. Aceita o cliente de uma
+ * transação em curso (e aí grava dentro dela) ou usa a conexão padrão.
+ */
+async function recordRoleEvent(client, { orgId, memberId, role, action, actorId }) {
+  const runner = client ?? database;
+  await runner.query({
+    text: `
+      INSERT INTO org_role_events (org_id, member_id, role, action, actor_id)
+      VALUES ($1, $2, $3, $4, $5)
+    `,
+    values: [orgId, memberId, role, action, actorId ?? null],
   });
-  await database.query({
-    text: `DELETE FROM org_roles WHERE org_id = $1 AND member_id = $2`,
-    values: [orgId, memberId],
+}
+
+async function removeMember(orgId, memberId, removedBy) {
+  const [removedByRole, targetRole] = await Promise.all([resolveMemberRole(orgId, removedBy), resolveMemberRole(orgId, memberId)]);
+
+  if (!canRemoveMember(removedByRole, targetRole, removedBy === memberId)) {
+    throw new ForbiddenError({
+      message: "Sem permissão para remover este membro.",
+    });
+  }
+
+  // Uma transação só: `org_members` e `org_roles` precisam sair juntas. Em
+  // queries separadas, uma falha no DELETE deixaria o usuário fora do estúdio
+  // continuando admin (ver o comentário de `isAdmin`).
+  await database.transaction(async (client) => {
+    await client.query({
+      text: `UPDATE org_members SET status = 'removed' WHERE org_id = $1 AND member_id = $2`,
+      values: [orgId, memberId],
+    });
+
+    const revoked = await client.query({
+      text: `DELETE FROM org_roles WHERE org_id = $1 AND member_id = $2 RETURNING role`,
+      values: [orgId, memberId],
+    });
+
+    for (const row of revoked.rows) {
+      await recordRoleEvent(client, { orgId, memberId, role: row.role, action: "revoked", actorId: removedBy });
+    }
   });
 }
 
 async function setMemberRole(orgId, memberId, role, grantedBy) {
-  await database.query({
-    text: `
-      INSERT INTO org_roles (org_id, member_id, role, granted_by)
-      VALUES ($1, $2, $3, $4)
-      ON CONFLICT (org_id, member_id, role) DO NOTHING
-    `,
-    values: [orgId, memberId, role, grantedBy],
+  const grantedByRole = await resolveMemberRole(orgId, grantedBy);
+
+  if (!canGrantRole(grantedByRole, role)) {
+    throw new ForbiddenError({
+      message: "Apenas o responsável pelo estúdio pode conceder acesso de administrador.",
+    });
+  }
+
+  await database.transaction(async (client) => {
+    const inserted = await client.query({
+      text: `
+        INSERT INTO org_roles (org_id, member_id, role, granted_by)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (org_id, member_id, role) DO NOTHING
+        RETURNING role
+      `,
+      values: [orgId, memberId, role, grantedBy],
+    });
+
+    // Só registra quando o papel passou a existir de fato: repetir a concessão
+    // de quem já é admin não é um evento novo.
+    if (inserted.rowCount > 0) {
+      await recordRoleEvent(client, { orgId, memberId, role, action: "granted", actorId: grantedBy });
+    }
   });
 }
 
-async function revokeMemberRole(orgId, memberId, role) {
-  await database.query({
-    text: `DELETE FROM org_roles WHERE org_id = $1 AND member_id = $2 AND role = $3`,
-    values: [orgId, memberId, role],
+async function revokeMemberRole(orgId, memberId, role, revokedBy) {
+  const revokedByRole = await resolveMemberRole(orgId, revokedBy);
+
+  if (!canRevokeRole(revokedByRole, role)) {
+    throw new ForbiddenError({
+      message: "Apenas o responsável pelo estúdio pode revogar o acesso de administrador.",
+    });
+  }
+
+  await database.transaction(async (client) => {
+    const deleted = await client.query({
+      text: `DELETE FROM org_roles WHERE org_id = $1 AND member_id = $2 AND role = $3 RETURNING role`,
+      values: [orgId, memberId, role],
+    });
+
+    if (deleted.rowCount > 0) {
+      await recordRoleEvent(client, { orgId, memberId, role, action: "revoked", actorId: revokedBy });
+    }
   });
 }
 
@@ -929,6 +1033,7 @@ const organization = {
   isMember,
   isAdmin,
   isOwner,
+  resolveMemberRole,
   isStoreEligible,
   removeMember,
   setMemberRole,

@@ -4,6 +4,7 @@ import organization from "models/organization";
 import user from "models/user";
 import notification from "models/notification";
 import { ForbiddenError } from "infra/errors";
+import { canInviteWithRole, parseMemberRole, roleCan } from "lib/studioPermissions";
 
 export default createRouter()
   .use(controller.injectAnonymousOrUser)
@@ -34,18 +35,30 @@ async function createHandler(request, response) {
 
   const studio = await organization.findBySlug(slug);
 
-  const isAdmin = await organization.isAdmin(studio.id, requestUser.id);
-  if (!isAdmin && studio.owner_id !== requestUser.id) {
+  const actorRole = await organization.resolveMemberRole(studio.id, requestUser.id);
+  if (!roleCan(actorRole, "manageMembers")) {
     throw new ForbiddenError({
       message: "Apenas administradores podem convidar membros.",
     });
   }
 
   const { username: invitedUsername, role, message } = request.body;
+  const parsedRole = parseMemberRole(role);
+
+  // O papel é escolhido ao criar o convite e aplicado no aceite
+  // (`respondToInvitation` → `setMemberRole`). Sem esta checagem, um
+  // administrador fabricaria outro administrador por convite — driblando a
+  // regra de que só o responsável concede, que sozinha ficaria no PATCH.
+  if (!canInviteWithRole(actorRole, parsedRole)) {
+    throw new ForbiddenError({
+      message: "Apenas o responsável pelo estúdio pode convidar administradores.",
+    });
+  }
+
   const invitedUser = await user.findOneByUsername(invitedUsername);
 
   const invitation = await organization.createInvitation(studio.id, invitedUser.id, requestUser.id, {
-    role,
+    role: parsedRole,
     message,
   });
 
