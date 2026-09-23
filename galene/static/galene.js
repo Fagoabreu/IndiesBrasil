@@ -269,6 +269,9 @@ function setConnected(connected) {
         testCamera.open = false;
         userbox.classList.remove('invisible');
         connectionbox.classList.add('invisible');
+        // Reentrada: esconde o painel de saida e devolve o formulario ao
+        // estado normal, senao ele reapareceria num proximo logout.
+        hideLeftPanel();
         displayUsername();
         window.onresize = function(e) {
             scheduleReconsiderDownRate();
@@ -387,6 +390,151 @@ function onPeerConnection() {
     return conf;
 }
 
+/* ---- Customizacao 8: saida e reconexao ---------------------------------
+   O "Logout" do Galene fecha o WebSocket e o cliente cai no formulario de
+   usuario/senha. Nas nossas salas a autenticacao e SO por token (authKeys),
+   entao aquele formulario nunca autentica: o `token` foi zerado em gotJoined e
+   nao existe senha no grupo. O resultado era um beco sem saida — reentrar so
+   funcionava recarregando a pagina.
+
+   Aqui a saida passa a oferecer duas opcoes reais: reconectar com o token que
+   esta no sessionStorage, ou voltar para a plataforma (`?back=`). */
+let hasJoined = false;
+let meetingEnded = false;
+
+/** Le/escreve o sessionStorage sem deixar excecao (aba privada) vazar. */
+function storageGet(key) {
+    try {
+        return window.sessionStorage.getItem(key);
+    } catch(e) {
+        return null;
+    }
+}
+
+function storageSet(key, value) {
+    try {
+        window.sessionStorage.setItem(key, value);
+    } catch(e) {
+        console.warn("Couldn't store " + key + ":", e);
+    }
+}
+
+function storageRemove(key) {
+    try {
+        window.sessionStorage.removeItem(key);
+    } catch(e) {
+        // Sem sessionStorage nao ha nada a limpar.
+    }
+}
+
+/** Cria (uma vez) o painel de saida/reconexao. */
+function ensureLeftPanel() {
+    let existing = document.getElementById('ib-left-panel');
+    if(existing)
+        return existing;
+
+    let panel = document.createElement('div');
+    panel.id = 'ib-left-panel';
+    panel.className = 'ib-left-panel invisible';
+
+    let title = document.createElement('h2');
+    title.id = 'ib-left-title';
+    panel.appendChild(title);
+
+    let note = document.createElement('p');
+    note.id = 'ib-left-note';
+    note.className = 'ib-left-note';
+    panel.appendChild(note);
+
+    let actions = document.createElement('div');
+    actions.className = 'ib-left-actions';
+
+    let reconnect = document.createElement('button');
+    reconnect.id = 'ib-reconnect';
+    reconnect.type = 'button';
+    reconnect.className = 'btn btn-blue';
+    reconnect.textContent = 'Entrar novamente';
+    reconnect.onclick = async function() {
+        let stored = storageGet('joinToken');
+        if(!stored)
+            return;
+        token = stored;
+        meetingEnded = false;
+        await serverConnect();
+    };
+    actions.appendChild(reconnect);
+
+    let leave = document.createElement('a');
+    leave.id = 'ib-leave';
+    leave.className = 'btn btn-default ib-leave';
+    leave.textContent = 'Voltar para a plataforma';
+    actions.appendChild(leave);
+
+    panel.appendChild(actions);
+
+    let host = document.getElementById('login-container');
+    if(!host)
+        throw new Error('Missing login-container');
+    host.appendChild(panel);
+
+    return panel;
+}
+
+function hideLeftPanel() {
+    let panel = document.getElementById('ib-left-panel');
+    if(panel)
+        panel.classList.add('invisible');
+    let form = document.getElementById('loginform');
+    if(form)
+        form.classList.remove('invisible');
+}
+
+/**
+ * Mostra o painel de saida, escondendo o formulario do Galene.
+ * @param {boolean} isMeetingEnded true quando a sala foi encerrada pelo
+ *     organizador — nesse caso nao ha o que reconectar.
+ */
+function enterLeftState(isMeetingEnded) {
+    let panel = ensureLeftPanel();
+    let title = document.getElementById('ib-left-title');
+    let note = document.getElementById('ib-left-note');
+    let reconnect = document.getElementById('ib-reconnect');
+    let leave = document.getElementById('ib-leave');
+
+    let back = storageGet('joinBack');
+    if(back)
+        leave.setAttribute('href', back);
+    else
+        leave.classList.add('invisible');
+
+    let stored = storageGet('joinToken');
+
+    if(isMeetingEnded) {
+        // A sala esta trancada e com `expires` no passado: o token nao serve
+        // mais para nada, e mante-lo faria o refresh tentar de novo em loop.
+        storageRemove('joinToken');
+        title.textContent = 'Reunião encerrada';
+        note.textContent = 'O organizador encerrou esta reunião.';
+        reconnect.classList.add('invisible');
+    } else if(stored) {
+        title.textContent = 'Você saiu da reunião';
+        note.textContent = 'Você pode voltar para a sala ou retornar à plataforma.';
+        reconnect.classList.remove('invisible');
+    } else {
+        title.textContent = 'Você saiu da reunião';
+        note.textContent = 'Para entrar de novo, use o link da reunião.';
+        reconnect.classList.add('invisible');
+    }
+
+    // O formulario de usuario/senha do Galene nao tem uso nas nossas salas
+    // (autenticacao por token), entao nao e oferecido.
+    let form = document.getElementById('loginform');
+    if(form)
+        form.classList.add('invisible');
+
+    panel.classList.remove('invisible');
+}
+
 /**
  * @this {ServerConnection}
  * @param {number} code
@@ -399,9 +547,10 @@ function gotClose(code, reason) {
     if(code !== 1000) {
         console.warn('Socket close', code, reason);
     }
-    let form = document.getElementById('loginform');
-    if(!(form instanceof HTMLFormElement))
-        throw new Error('Bad type for loginform');
+    // So oferece reconexao depois de ter entrado: uma falha antes do join
+    // (link invalido, servidor fora) tem tratamento proprio em gotJoined.
+    if(hasJoined)
+        enterLeftState(meetingEnded);
 }
 
 /**
@@ -2255,6 +2404,61 @@ function userMenu(elt) {
     });
 }
 
+/* ---- Customizacao 6: avatar do perfil do participante ------------------
+   O avatar chega na URL de entrada (`?avatar=...&avatarPrefix=...`) porque o
+   JWT e individual: cada cliente so le o proprio. Cada cliente publica o seu
+   via `setdata` (que o servidor replica a todos) e os demais leem de
+   `userinfo.data.avatar`. Ver galene/CUSTOMIZATIONS.md. */
+let avatarPrefix = null;
+let myAvatar = null;
+
+/**
+ * Aceita apenas URL dentro do prefixo publicado pela plataforma.
+ *
+ * Sem esta trava um participante poderia apontar o avatar para um host
+ * arbitrario e coletar o IP de quem assiste — o Galene e SFU e hoje nao expoe
+ * IP entre participantes, entao seria uma regressao de privacidade.
+ * @param {*} value
+ * @returns {string|null}
+ */
+function avatarUrl(value) {
+    if(typeof value !== 'string' || !avatarPrefix)
+        return null;
+    if(value.length > 512 || !value.startsWith(avatarPrefix))
+        return null;
+    if(value.slice(avatarPrefix.length).includes('..'))
+        return null;
+    return value;
+}
+
+/** Publica o proprio avatar para os demais participantes. */
+function publishAvatar() {
+    if(!serverConnection || !serverConnection.id)
+        return;
+    try {
+        serverConnection.userAction(
+            'setdata', serverConnection.id, {avatar: myAvatar},
+        );
+    } catch(e) {
+        console.warn("Couldn't publish avatar:", e);
+    }
+}
+
+/**
+ * Rotulo do painel esquerdo: contagem de participantes.
+ *
+ * Substitui o nome do estudio que a customizacao 2 escrevia aqui — ele ja
+ * aparece no `#title` da barra superior, e repeti-lo era ruido.
+ */
+function updateUsersHeader() {
+    let header = document.querySelector('.galene-header');
+    if(!header)
+        return;
+    let div = document.getElementById('users');
+    let n = div ? div.querySelectorAll('.user-p').length : 0;
+    header.textContent = 'Participantes (' + n + ')';
+}
+
 /**
  * @param {string} id
  * @param {user} userinfo
@@ -2279,6 +2483,7 @@ function addUser(id, userinfo) {
             div.appendChild(user);
         else
             div.insertBefore(user, us[0]);
+        updateUsersHeader();
         return;
     }
 
@@ -2292,12 +2497,14 @@ function addUser(id, userinfo) {
             let childname = (childuser && childuser.username) || null;
             if(!childname || stringCompare(childname, userinfo.username) > 0) {
                 div.insertBefore(user, child);
+                updateUsersHeader();
                 return;
             }
         }
     }
 
     div.appendChild(user);
+    updateUsersHeader();
 }
 
  /**
@@ -2319,8 +2526,24 @@ function changeUser(id, userinfo) {
  * @param {user} userinfo
  */
 function setUserStatus(id, elt, userinfo) {
-    elt.textContent = userinfo.username ? userinfo.username : '(anon)';
-    if(userinfo.data.raisehand)
+    let data = userinfo.data || {};
+
+    // Avatar antes do nome. O texto e reconstruido do zero porque `textContent`
+    // sozinho apagaria a imagem em toda atualizacao de status.
+    elt.textContent = '';
+    let avatar = avatarUrl(data.avatar);
+    if(avatar) {
+        let img = document.createElement('img');
+        img.className = 'user-avatar';
+        img.alt = '';
+        img.src = avatar;
+        elt.appendChild(img);
+    }
+    elt.appendChild(document.createTextNode(
+        userinfo.username ? userinfo.username : '(anon)',
+    ));
+
+    if(data.raisehand)
         elt.classList.add('user-status-raisehand');
     else
         elt.classList.remove('user-status-raisehand');
@@ -2352,7 +2575,9 @@ function setUserStatus(id, elt, userinfo) {
 function delUser(id) {
     let div = document.getElementById('users');
     let user = document.getElementById('user-' + id);
-    div.removeChild(user);
+    if(user)
+        div.removeChild(user);
+    updateUsersHeader();
 }
 
 /**
@@ -2412,9 +2637,10 @@ function setTitle(title) {
     function set(title) {
         document.title = title;
         document.getElementById('title').textContent = title;
-        let header = document.querySelector('.galene-header');
-        if(header)
-            header.textContent = title;
+        // O painel esquerdo NAO recebe o titulo: ele ja aparece aqui em cima, e
+        // repetir o nome do estudio nos dois lugares era ruido (customizacao 2
+        // original, revertida). O painel mostra a contagem de participantes,
+        // atualizada por updateUsersHeader().
     }
     if(title)
         set(title);
@@ -2504,8 +2730,30 @@ async function gotJoined(kind, group, perms, status, data, error, message) {
         // don't discard endPoint and friends
         for(let key in status)
             groupStatus[key] = status[key];
+
+        // Customizacao 7: a sala foi encerrada pelo organizador. `locked` chega
+        // aos PRESENTES porque SetLocked empurra um "change" a todos e o
+        // servidor responde com Status(true, nil) — e a unica forma de expulsar,
+        // ja que o Galene nao tem "kick all". Sem tratar isto aqui, o
+        // participante ficaria preso numa sala que nao aceita mais ninguem.
+        if(status && status.locked) {
+            meetingEnded = true;
+            storageRemove('joinToken');
+            closeUpMedia();
+            closeSafariStream();
+            this.close();
+            return;
+        }
+
+        hasJoined = true;
         setTitle((status && status.displayName) || capitalise(group));
         displayUsername();
+        // Publica o avatar apenas na ENTRADA. `setdata` sempre dispara um
+        // broadcast de "change" no servidor (UpdateData -> Joined("change")),
+        // entao republicar a cada "change" entraria em loop infinito:
+        // change -> publica -> change -> ...
+        if(kind === 'join')
+            publishAvatar();
         setButtonsVisibility();
         setChangePassword(pwAuth && !!groupStatus.canChangePassword &&
                           serverConnection.username
@@ -2526,9 +2774,6 @@ async function gotJoined(kind, group, perms, status, data, error, message) {
         (document.getElementById('input'));
     input.placeholder = 'Type /help for help';
     setTimeout(() => {input.placeholder = '';}, 8000);
-
-    if(status.locked)
-        displayWarning('This group is locked');
 
     if(typeof RTCPeerConnection === 'undefined')
         displayWarning("This browser doesn't support WebRTC");
@@ -4100,8 +4345,20 @@ getSelectElement('test-audioselect').onchange = async function(e) {
 };
 
 document.getElementById('disconnectbutton').onclick = function(e) {
-    serverConnection.close();
+    // "Sair" tem que sair de verdade: descarta o token de sessao (senao o
+    // refresh entraria de volta) e volta para a plataforma. Antes disso o
+    // usuario ficava preso no formulario de senha do Galene, que nunca
+    // autentica nas nossas salas (autenticacao por token).
+    let back = storageGet('joinBack');
+    hasJoined = false;
+    storageRemove('joinToken');
+    storageRemove('joinAvatar');
+    storageRemove('avatarPrefix');
+    if(serverConnection)
+        serverConnection.close();
     closeNav();
+    if(back)
+        window.location.href = back;
 };
 
 function openNav() {
@@ -4225,15 +4482,24 @@ async function start() {
         // O Galene remove o token da URL apos o join (replaceState abaixo) e,
         // sem essa copia, recarregar a pagina cai na tela de login, impedindo
         // reentrada com o link/codigo da reuniao.
-        try {
-            window.sessionStorage.setItem('joinToken', parms.get('token'));
-        } catch(e) {
-            console.warn("Couldn't store join token:", e);
-        }
+        storageSet('joinToken', parms.get('token'));
     }
+    // Avatar (customizacao 6) e destino de saida (customizacao 8) tambem
+    // precisam sobreviver ao replaceState, que limpa a query inteira.
+    if(parms.has('avatarPrefix'))
+        storageSet('avatarPrefix', parms.get('avatarPrefix'));
+    if(parms.has('avatar'))
+        storageSet('joinAvatar', parms.get('avatar'));
+    if(parms.has('back'))
+        storageSet('joinBack', parms.get('back'));
+
+    avatarPrefix = storageGet('avatarPrefix');
+    myAvatar = avatarUrl(storageGet('joinAvatar'));
+
     if(window.location.search)
         window.history.replaceState(null, '', window.location.pathname);
     setTitle(groupStatus.displayName || capitalise(group));
+    updateUsersHeader();
 
     addFilters();
     await setMediaChoices(false);
@@ -4244,11 +4510,7 @@ async function start() {
     else {
         // Refresh da pagina: o token nao esta mais na URL (foi removido no
         // primeiro acesso); recupera do sessionStorage.
-        try {
-            token = window.sessionStorage.getItem('joinToken');
-        } catch(e) {
-            console.warn("Couldn't retrieve join token:", e);
-        }
+        token = storageGet('joinToken');
     }
 
     if(token) {

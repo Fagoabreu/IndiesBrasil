@@ -12,6 +12,7 @@ const PHASE_CLASS = {
 
 export default function MeetingCard({ meeting, viewer, authUser, slug, onChanged }) {
   const [joining, setJoining] = useState(false);
+  const [ending, setEnding] = useState(false);
   const [codeBusy, setCodeBusy] = useState(false);
   const [codeReveal, setCodeReveal] = useState(null); // { guest_code, guest_code_expires_at }
   const [actionError, setActionError] = useState("");
@@ -117,6 +118,35 @@ export default function MeetingCard({ meeting, viewer, authUser, slug, onChanged
     if (onChanged) onChanged();
   }
 
+  async function handleEnd() {
+    // O aviso precisa ser explícito sobre a expulsão: é irreversível e tira
+    // os participantes da sala neste instante.
+    if (
+      !window.confirm(
+        "Encerrar a reunião agora?\n\nOs participantes serão desconectados da sala e a reunião não pode ser reaberta. Para se reunir de novo, crie outra reunião.",
+      )
+    ) {
+      return;
+    }
+
+    setActionError("");
+    setEnding(true);
+    try {
+      const { ok, data } = await apiCall(`/api/v1/studios/${slug}/meetings/${meeting.id}/end`, {
+        method: "POST",
+      });
+      if (!ok) {
+        setActionError(data.message || "Erro ao encerrar reunião.");
+        return;
+      }
+      if (onChanged) onChanged();
+    } catch {
+      setActionError("Erro de conexão. Tente novamente.");
+    } finally {
+      setEnding(false);
+    }
+  }
+
   async function copyText(text) {
     try {
       await navigator.clipboard.writeText(text);
@@ -204,6 +234,12 @@ export default function MeetingCard({ meeting, viewer, authUser, slug, onChanged
           {phase !== "live" && (
             <button type="button" className={styles.cancelBtn} onClick={handleCancel}>
               Cancelar reunião
+            </button>
+          )}
+
+          {phase === "live" && (
+            <button type="button" className={styles.cancelBtn} onClick={handleEnd} disabled={ending}>
+              {ending ? "Encerrando…" : "Encerrar reunião"}
             </button>
           )}
         </div>

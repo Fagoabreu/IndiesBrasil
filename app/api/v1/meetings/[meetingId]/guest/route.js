@@ -1,6 +1,7 @@
 import meeting from "@/models/meeting";
 import controller from "@/infra/controller";
 import galene from "@/lib/galene";
+import { meetingPageUrl } from "@/lib/meetingFormat";
 import { ValidationError } from "@/infra/errors";
 
 /**
@@ -35,6 +36,9 @@ export async function POST(request, { params }) {
       studio: found.org_slug,
       roomId: found.room_id,
       username: data.name,
+      // Convidado externo não tem conta: sem avatar. O `back` vale para todos,
+      // para o botão de sair levar de volta à página do convite.
+      back: meetingPageUrl(found.id),
       permissions: galene.GALENE_PERMISSIONS.guest,
       endsAt: found.ends_at,
       codeExpiresAt: found.guest_code_expires_at,

@@ -68,6 +68,10 @@ jobs:
             echo "GALENE_AUTH_SECRET=${{ secrets.GALENE_AUTH_SECRET }}"
             # Diretório dos grupos dentro do container (volume galene-groups).
             echo "GALENE_GROUPS_DIR=/app/groups"
+            # WebSocket interno do Galene: o app entra na sala como moderador
+            # para trancá-la ao encerrar a reunião. host.docker.internal porque
+            # o serviço usa network_mode: host (ver extra_hosts no compose).
+            echo "GALENE_INTERNAL_WS_URL=ws://host.docker.internal:8000/ws"
           } > /var/www/indies/.env.production
 
       # ── Arquivos de deploy ──

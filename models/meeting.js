@@ -277,6 +277,74 @@ async function cancel(id, userId) {
 }
 
 /**
+ * Encerra uma reunião em andamento (irreversível).
+ *
+ * Diferente de `cancel`, que é para uma reunião que ainda não começou: encerrar
+ * pressupõe que ela está acontecendo. O status `ended` já era tratado em todo o
+ * resto do código (`assertCanJoin`, `getMeetingPhase`, o rótulo "Encerrada") —
+ * só não havia quem o gravasse.
+ *
+ * `ends_at` é preservado de propósito: é o registro da janela que foi agendada.
+ * O encerramento antecipado é um evento à parte.
+ * @param {string} id
+ * @param {string} userId
+ */
+async function end(id, userId) {
+  const found = await findById(id);
+
+  await assertCanManage(found, userId);
+
+  if (found.status === "ended") {
+    throw new ValidationError({ message: "Esta reunião já foi encerrada." });
+  }
+  if (found.status === "cancelled") {
+    throw new ValidationError({ message: "Esta reunião foi cancelada." });
+  }
+
+  const now = Date.now();
+  if (now < new Date(found.starts_at).getTime()) {
+    throw new ValidationError({
+      message: "A reunião ainda não começou. Use cancelar para desmarcá-la.",
+    });
+  }
+
+  await database.query({
+    text: `UPDATE meetings SET status = 'ended', updated_at = NOW() WHERE id = $1`,
+    values: [id],
+  });
+
+  return findById(id);
+}
+
+/**
+ * Salas (`room_id`) de reuniões cuja janela agendada ainda não terminou.
+ *
+ * É a lista do que a plataforma deve MANTER provisionado no disco do Galene,
+ * inclusive as já encerradas antes do tempo: o arquivo da sala carrega o
+ * `expires` que segura a sala fechada se o Galene reiniciar. Passada a janela,
+ * o arquivo vira lixo e pode ser removido.
+ *
+ * O critério é o horário, e não o status: uma reunião encerrada às pressas
+ * continua com `ends_at` no futuro e precisa do arquivo.
+ * @param {string} orgId
+ * @returns {Promise<string[]>}
+ */
+async function listRoomsWithinWindow(orgId) {
+  const results = await database.query({
+    text: `
+      SELECT room_id
+      FROM meetings
+      WHERE org_id = $1
+        AND room_id IS NOT NULL
+        AND status <> 'cancelled'
+        AND ends_at > NOW()`,
+    values: [orgId],
+  });
+
+  return results.rows.map((row) => row.room_id);
+}
+
+/**
  * Verifica se o usuário pode gerenciar a reunião:
  * criador da reunião ou admin/owner do estúdio.
  */
@@ -504,9 +572,11 @@ const meeting = {
   findByIdAndOrg,
   findByRoomId,
   listByOrgId,
+  listRoomsWithinWindow,
   findUpcomingByMember,
   update,
   cancel,
+  end,
   assertCanJoin,
   createGuestCode,
   revokeGuestCode,

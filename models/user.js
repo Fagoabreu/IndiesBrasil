@@ -605,6 +605,34 @@ async function removeFollow(followerId, leaderId) {
   return result.rows[0];
 }
 
+/**
+ * URL pública do avatar do usuário (`uploaded_images.secure_url`), ou null.
+ *
+ * `users.avatar_image` guarda o **id** da imagem, não a URL — a webconferência
+ * precisa da URL pronta para o cliente do Galene exibir. Fica aqui (e não numa
+ * consulta solta na rota) porque é a mesma resolução usada por
+ * `pages/api/v1/user/index.js`.
+ * @param {string} userId
+ * @returns {Promise<string|null>}
+ */
+async function findAvatarUrl(userId) {
+  const results = await database.query({
+    text: `
+      select
+        ui.secure_url
+      from
+        users u
+        left join uploaded_images ui on ui.id = u.avatar_image
+      where
+        u.id = $1
+      limit
+        1`,
+    values: [userId],
+  });
+
+  return results.rows[0]?.secure_url || null;
+}
+
 const user = {
   create,
   update,
@@ -621,6 +649,7 @@ const user = {
   findOneByEmail,
   findUsers,
   isFollowingUser,
+  findAvatarUrl,
   //Security
   secureUserInterface,
 };

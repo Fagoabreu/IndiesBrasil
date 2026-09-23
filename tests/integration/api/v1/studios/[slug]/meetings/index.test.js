@@ -2,9 +2,12 @@ import orchestrator from "tests/orchestrator";
 import webserver from "infra/webserver";
 import database from "infra/database";
 import retry from "async-retry";
+import path from "node:path";
+import { readFile } from "node:fs/promises";
 import TEST_CREDENTIALS from "tests/helpers/testCredentials.js";
 import { createActivatedUserWithSession, authHeaders } from "tests/helpers/storeTestUtils";
 import organization from "models/organization";
+import galene from "@/lib/galene";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -65,6 +68,25 @@ describe("GET/POST/DELETE /api/v1/studios/[slug]/meetings", () => {
     const invitation = await organization.createInvitation(studio.id, memberCtx.user.id, ownerCtx.user.id);
     await organization.respondToInvitation(invitation.id, memberCtx.user.id, true);
   });
+
+  /** Cria uma reunião em andamento e devolve o corpo da resposta. */
+  async function createLiveMeeting(token, overrides = {}) {
+    const now = Date.now();
+    const response = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings`, {
+      method: "POST",
+      headers: { ...authHeaders(token), "content-type": "application/json" },
+      body: JSON.stringify(
+        meetingPayload({
+          title: "Reunião em andamento",
+          starts_at: new Date(now - 30 * 60 * 1000).toISOString(),
+          ends_at: new Date(now + 30 * 60 * 1000).toISOString(),
+          ...overrides,
+        }),
+      ),
+    });
+    expect(response.status).toBe(201);
+    return await response.json();
+  }
 
   test("Anonymous user cannot list meetings of a studio", async () => {
     const response = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings`);
@@ -491,5 +513,148 @@ describe("GET/POST/DELETE /api/v1/studios/[slug]/meetings", () => {
     expect(payload.sub).toBe("Visitante Externo");
     expect(payload.permissions).toEqual(["present", "message"]);
     expect(new Date(body.expires_at).getTime()).toBeLessThanOrEqual(new Date(codeBody.guest_code_expires_at).getTime());
+  });
+
+  /* ================================================================
+   * Encerrar reunião (POST /end)
+   * ================================================================ */
+
+  test("Anonymous cannot end a meeting", async () => {
+    const created = await createLiveMeeting(ownerToken);
+    const response = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings/${created.id}/end`, {
+      method: "POST",
+    });
+    expect(response.status).toBe(403);
+  });
+
+  test("Non-member cannot end a meeting", async () => {
+    const created = await createLiveMeeting(ownerToken);
+    const response = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings/${created.id}/end`, {
+      method: "POST",
+      headers: authHeaders(outsiderToken),
+    });
+    expect(response.status).toBe(403);
+  });
+
+  test("Member cannot end a meeting scheduled by someone else", async () => {
+    const created = await createLiveMeeting(ownerToken);
+    const response = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings/${created.id}/end`, {
+      method: "POST",
+      headers: authHeaders(memberToken),
+    });
+    expect(response.status).toBe(403);
+  });
+
+  test("Owner can end an ongoing meeting and the room is closed on disk", async () => {
+    // Ninguém entrou na sala antes: encerrar precisa funcionar mesmo assim, e a
+    // rota garante o grupo do estúdio por conta própria.
+    const created = await createLiveMeeting(ownerToken);
+
+    const response = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings/${created.id}/end`, {
+      method: "POST",
+      headers: { ...authHeaders(ownerToken), "content-type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    expect(response.status).toBe(200);
+
+    const body = await response.json();
+    expect(body.status).toBe("ended");
+    expect(body.id).toBe(created.id);
+    expect(body.room_id).toBeUndefined();
+
+    // O arquivo da sala fica com `expires` no passado: é o que mantém a sala
+    // fechada se o Galene reiniciar (o `lock` é estado em memória). Sem isso um
+    // token já emitido voltaria a abrir a sala depois de um restart.
+    const groupsDir = galene.getGroupsDir();
+    const roomFile = path.join(groupsDir, studio.slug, `${created.room_id}.json`);
+    const room = JSON.parse(await readFile(roomFile, "utf8"));
+
+    expect(new Date(room.expires).getTime()).toBeLessThan(Date.now());
+    expect(room.displayName).toBe("Estúdio Reuniões");
+    expect(room.authKeys).toHaveLength(1);
+  });
+
+  test("Ended meeting rejects the next join", async () => {
+    const created = await createLiveMeeting(ownerToken);
+
+    const endResponse = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings/${created.id}/end`, {
+      method: "POST",
+      headers: { ...authHeaders(ownerToken), "content-type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    expect(endResponse.status).toBe(200);
+
+    const joinResponse = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings/${created.id}/join`, {
+      method: "POST",
+      headers: { ...authHeaders(ownerToken), "content-type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    // `assertCanJoin` recusa: não há como emitir token novo para uma reunião
+    // encerrada, mesmo estando dentro da janela de horário.
+    expect(joinResponse.status).toBe(400);
+  });
+
+  test("A meeting that has not started cannot be ended (use cancel)", async () => {
+    const createResponse = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings`, {
+      method: "POST",
+      headers: { ...authHeaders(ownerToken), "content-type": "application/json" },
+      body: JSON.stringify(meetingPayload()),
+    });
+    const scheduled = await createResponse.json();
+
+    const response = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings/${scheduled.id}/end`, {
+      method: "POST",
+      headers: { ...authHeaders(ownerToken), "content-type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    expect(response.status).toBe(400);
+
+    const body = await response.json();
+    expect(body.message).toMatch(/não começou/i);
+  });
+
+  test("Ending twice is refused", async () => {
+    const created = await createLiveMeeting(ownerToken);
+    const headers = { ...authHeaders(ownerToken), "content-type": "application/json" };
+
+    const first = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings/${created.id}/end`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({}),
+    });
+    expect(first.status).toBe(200);
+
+    const second = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings/${created.id}/end`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({}),
+    });
+    expect(second.status).toBe(400);
+  });
+
+  test("Ending a meeting does not prevent scheduling a new one", async () => {
+    // Encerrar é irreversível, mas o estúdio segue funcionando: o arquivo
+    // fechado é o da SALA, e o grupo do estúdio (com auto-subgroups) fica
+    // intacto. É o que permite a reunião seguinte existir.
+    const created = await createLiveMeeting(ownerToken);
+
+    const endResponse = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings/${created.id}/end`, {
+      method: "POST",
+      headers: { ...authHeaders(ownerToken), "content-type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    expect(endResponse.status).toBe(200);
+
+    const next = await createLiveMeeting(ownerToken, { title: "Reunião seguinte" });
+    expect(next.id).not.toBe(created.id);
+    expect(next.status).toBe("scheduled");
+
+    const joinResponse = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings/${next.id}/join`, {
+      method: "POST",
+      headers: { ...authHeaders(ownerToken), "content-type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    expect(joinResponse.status).toBe(200);
+    expect((await joinResponse.json()).joinUrl).toContain(`/group/${studio.slug}/${next.room_id}/`);
   });
 });

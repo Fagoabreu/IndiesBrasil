@@ -19,16 +19,16 @@ compilado — o menu correspondente simplesmente não aparece).
 
 ## Estrutura
 
-| Caminho                | Papel                                                           |
-| ---------------------- | --------------------------------------------------------------- |
-| `*.go` e subdiretórios | Código do upstream — **não modificar** sem ler `UPSTREAM.md`    |
-| `static/`              | Cliente web servido pelo Galene (é onde vivem as customizações) |
-| `static/indies.css`    | Skin "MSN Messenger" da marca (customização 3)                  |
-| `CUSTOMIZATIONS.md`    | O porquê de cada customização do cliente (leia antes de mexer)  |
-| `templates/`           | `config.example.json` e `group.example.json` de referência      |
-| `groups/`              | Só um `.gitkeep`: as salas são provisionadas em runtime         |
-| `Dockerfile`           | Build da imagem a partir desta árvore                           |
-| `deploy/galene`        | **não existe mais** — foi tudo consolidado aqui                 |
+| Caminho                | Papel                                                                  |
+| ---------------------- | ---------------------------------------------------------------------- |
+| `*.go` e subdiretórios | Código do upstream — **não modificar** sem ler `UPSTREAM.md`           |
+| `static/`              | Cliente web servido pelo Galene (é onde vivem as customizações)        |
+| `static/indies.css`    | Skin da marca: superfícies planas, raio e paleta roxa (customização 3) |
+| `CUSTOMIZATIONS.md`    | O porquê de cada customização do cliente (leia antes de mexer)         |
+| `templates/`           | `config.example.json` e `group.example.json` de referência             |
+| `groups/`              | Só um `.gitkeep`: as salas são provisionadas em runtime                |
+| `Dockerfile`           | Build da imagem a partir desta árvore                                  |
+| `deploy/galene`        | **não existe mais** — foi tudo consolidado aqui                        |
 
 ## Customizações
 
@@ -37,10 +37,13 @@ São todas no cliente (`static/`). Nenhum arquivo Go do servidor foi alterado.
 | #   | Efeito                                                                                                                                       |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | Mantém o `?token=` no `sessionStorage` para o refresh da página não cair na tela de login                                                    |
-| 2   | Nome do estúdio (`displayName` do grupo) no cabeçalho do painel de participantes                                                             |
+| 2   | Painel esquerdo mostra a contagem de participantes (o nome do estúdio vive só na barra superior, sem duplicar)                               |
 | 3   | Carrega `/indies.css` como overlay depois do `galene.css`                                                                                    |
 | 4   | Classe `peer-screenshare` no tile de compartilhamento de tela                                                                                |
 | 5   | Com tela compartilhada: "palco" no topo (uma tela em linha inteira; várias dividem o topo em grade) + faixa de miniaturas das câmeras abaixo |
+| 6   | Avatar do perfil do participante na lista, publicado por `setdata` e restrito ao nosso Cloudinary                                            |
+| 7   | Sair da sala quando o organizador encerra a reunião (reage ao `status.locked`)                                                               |
+| 8   | Saída que funciona: reconectar com o token guardado, ou voltar para a plataforma (`?back=`)                                                  |
 
 ## Arquitetura de rede
 
@@ -101,9 +104,34 @@ Com `include-subgroups` o Galene casa a audiência por prefixo
 estúdio e para nenhuma de outro. `roomGroupName(studio, roomId)` monta o par e
 valida as duas partes.
 
-Além de `authKeys`, a plataforma grava `displayName` com o nome do estúdio — a
-customização 2 faz esse nome aparecer na barra superior **e** no painel de
-participantes.
+Além de `authKeys`, a plataforma grava `displayName` com o nome do estúdio, que
+aparece na barra superior da sala.
+
+### Encerrar uma reunião
+
+Encerrar exige **expulsar** quem está na sala, e o Galene não tem "expulsar
+todos". O `lib/galene.js` faz três coisas, nesta ordem:
+
+1. `closeRoom()` grava `groups/<estudio>/<roomId>.json` com `expires` no passado
+   — como as permissões de participante não incluem `op`, o Galene recusa a
+   entrada, inclusive de um token já emitido. É o que mantém a sala fechada se o
+   servidor reiniciar (o lock é estado em memória);
+2. `pruneClosedRooms()` remove os arquivos de salas cuja janela já passou. O
+   arquivo do passo 1 só é necessário enquanto `ends_at` é futuro — inclusive
+   para a reunião recém-encerrada, que continua com `ends_at` no futuro quando
+   encerrada antes do tempo;
+3. `lockRoom()` entra na sala com um token efêmero de moderador (`op`, nunca
+   entregue a ninguém), envia `groupaction lock` e sai. O `SetLocked` empurra um
+   `change` a todos e o servidor responde com `Status(true, nil)`, então
+   `locked: true` chega aos presentes — é assim que a customização 7 do cliente
+   sabe que deve sair.
+
+Só o passo 3 depende de rede, e é o último de propósito: uma falha ali deixa a
+reunião já fechada no banco e no disco (fail-closed).
+
+> O parâmetro `GALENE_INTERNAL_WS_URL` é o WebSocket interno do Galene,
+> necessário para o passo 3. O Galene usa `network_mode: host`, então o app o
+> alcança por `host.docker.internal` (ver `extra_hosts` no `deploy/compose.yaml`).
 
 O container `indies-app` e o `galene` compartilham o volume `galene-groups`
 (ambos com uid **1001**). Caminho dos grupos:
