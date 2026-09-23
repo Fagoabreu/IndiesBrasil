@@ -22,3 +22,9 @@ README.md
 !.next/static
 !.next/standalone
 _bkp/
+# Subprojeto Galene: fork vendorizado do upstream, buildado na propria imagem
+# (galene/Dockerfile, contexto proprio). O app nao consome nada daqui — em
+# producao os grupos vem do volume galene-groups (GALENE_GROUPS_DIR=/app/groups).
+# Sem esta linha a arvore inteira (~2 MB, 128 arquivos) entra no contexto de
+# build do app, que faz `COPY . .`.
+galene

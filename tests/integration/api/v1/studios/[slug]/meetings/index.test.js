@@ -396,13 +396,20 @@ describe("GET/POST/DELETE /api/v1/studios/[slug]/meetings", () => {
 
     const body = await response.json();
     expect(typeof body.joinUrl).toBe("string");
-    expect(body.joinUrl.startsWith(`http://localhost:8000/group/${created.room_id}/?username=`)).toBe(true);
+    // A URL aponta para a SALA (subgrupo do estúdio).
+    expect(body.joinUrl.startsWith(`http://localhost:8000/group/${studio.slug}/${created.room_id}/?username=`)).toBe(true);
 
     const token = new URL(body.joinUrl).searchParams.get("token");
     expect(token).toBeTruthy();
     const [, payloadB64] = token.split(".");
     const payload = JSON.parse(Buffer.from(payloadB64, "base64url").toString("utf8"));
-    expect(payload.aud).toBe(`http://localhost:8000/group/${created.room_id}/`);
+    // O escopo do token é o ESTÚDIO, não a sala: com `include-subgroups` o
+    // Galene casa a audiência por prefixo (galene/token/jwt.go → matchGroup),
+    // então o token abre qualquer sala deste estúdio e nenhuma de outro. Se
+    // alguém "consertar" isto para o escopo da sala, a reunião seguinte deixa
+    // de abrir — ver lib/galene.js.
+    expect(payload.aud).toBe(`http://localhost:8000/group/${studio.slug}/`);
+    expect(payload["include-subgroups"]).toBe(true);
     expect(payload.sub).toBe("MembroReuniao");
     expect(payload.permissions).toContain("caption");
 
@@ -474,11 +481,13 @@ describe("GET/POST/DELETE /api/v1/studios/[slug]/meetings", () => {
     expect(body.meeting.id).toBe(created.id);
     expect(body.meeting.room_id).toBeUndefined();
     expect(typeof body.joinUrl).toBe("string");
-    expect(body.joinUrl.startsWith(`http://localhost:8000/group/${created.room_id}/?username=`)).toBe(true);
+    expect(body.joinUrl.startsWith(`http://localhost:8000/group/${studio.slug}/${created.room_id}/?username=`)).toBe(true);
 
     const token = new URL(body.joinUrl).searchParams.get("token");
     const [, payloadB64] = token.split(".");
     const payload = JSON.parse(Buffer.from(payloadB64, "base64url").toString("utf8"));
+    expect(payload.aud).toBe(`http://localhost:8000/group/${studio.slug}/`);
+    expect(payload["include-subgroups"]).toBe(true);
     expect(payload.sub).toBe("Visitante Externo");
     expect(payload.permissions).toEqual(["present", "message"]);
     expect(new Date(body.expires_at).getTime()).toBeLessThanOrEqual(new Date(codeBody.guest_code_expires_at).getTime());

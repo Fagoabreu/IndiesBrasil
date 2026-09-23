@@ -9,8 +9,9 @@ import { ForbiddenError } from "@/infra/errors";
 /**
  * POST /api/v1/studios/[slug]/meetings/[meetingId]/join
  * Gera o link de entrada de um MEMBRO na sala Galene da reunião.
- * Provisiona o grupo (authKeys) quando necessário e emite um JWT curto
- * com as permissões de membro. A reunião precisa estar na janela de tempo.
+ * Garante o grupo do ESTÚDIO (`auto-subgroups`) e emite um JWT com escopo de
+ * estúdio e as permissões de membro. A reunião precisa estar na janela de
+ * tempo.
  */
 export async function POST(request, { params }) {
   try {
@@ -30,8 +31,9 @@ export async function POST(request, { params }) {
     const found = await meeting.findByIdAndOrg(meetingId, studio.id);
     meeting.assertCanJoin(found);
 
-    await galene.ensureRoomProvisioned(found.room_id, found.org_name);
+    await galene.ensureStudioGroup(found.org_slug, found.org_name);
     const access = await galene.createJoinTokenAndUrl({
+      studio: found.org_slug,
       roomId: found.room_id,
       username: user.username,
       permissions: galene.GALENE_PERMISSIONS.member,

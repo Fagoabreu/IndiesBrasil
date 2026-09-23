@@ -1,0 +1,21 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Árvore vendorizada do upstream `jech/galene` — ver UPSTREAM.md.
+#
+# O repositório tem core.autocrlf=true, e o Galene publica a árvore em LF. Sem
+# esta regra o Git converteria o worktree para CRLF e a árvore divergiria byte a
+# byte da tag oficial — exatamente o estado em que o subprojeto foi encontrado
+# na consolidação (galene.js e galene.html estavam em CRLF).
+#
+# Fidelidade byte a byte é o que sustenta o rebase por merge de 3 vias e a
+# auditoria em scripts/audit-galene-upstream.js. Não "corrija" line endings
+# aqui sem comparar com a tag primeiro: o upstream NÃO é uniforme (ver abaixo).
+#
+# `text=auto` normaliza só o que o Git detecta como texto e deixa os binários
+# em paz.
+# ─────────────────────────────────────────────────────────────────────────────
+* text=auto eol=lf
+
+# O upstream publica este arquivo em CRLF (144 CR; blob 5d55749d). Fica byte a
+# byte como ele é: `-text` desliga a conversão, senão `eol=lf` entregaria LF no
+# checkout e a árvore divergiria da tag sem que o diff denunciasse.
+static/third-party/contextual/contextual.css -text

@@ -7,8 +7,9 @@ import { ValidationError } from "@/infra/errors";
  * POST /api/v1/meetings/[meetingId]/guest
  * Valida o código temporário de um convidado EXTERNO (sem sessão).
  * Body: { code: string, name?: string }
- * Quando válido, provisiona o grupo no Galene (authKeys) e emite um JWT de
- * acesso restrito (permissões de convidado) com a URL de entrada da sala.
+ * Quando válido, garante o grupo do ESTÚDIO no Galene (authKeys +
+ * `auto-subgroups`) e emite um JWT de acesso restrito (permissões de
+ * convidado) com a URL de entrada da sala.
  */
 export async function POST(request, { params }) {
   try {
@@ -29,8 +30,9 @@ export async function POST(request, { params }) {
 
     const found = await meeting.validateGuestCode(meetingId, data.code);
 
-    await galene.ensureRoomProvisioned(found.room_id, found.org_name);
+    await galene.ensureStudioGroup(found.org_slug, found.org_name);
     const access = await galene.createJoinTokenAndUrl({
+      studio: found.org_slug,
       roomId: found.room_id,
       username: data.name,
       permissions: galene.GALENE_PERMISSIONS.guest,
