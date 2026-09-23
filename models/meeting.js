@@ -158,6 +158,53 @@ async function listByOrgId(orgId, opts = {}) {
 }
 
 /**
+ * Reuniões das organizações das quais o usuário participa (responsável ou
+ * membro ativo), num intervalo de datas.
+ *
+ * Usado pela agenda, que é uma página **pública** (funciona deslogado e é
+ * indexável): filtrar por participação não é refinamento aqui, é o que impede o
+ * título de uma reunião interna de aparecer para quem não é do estúdio. O
+ * predicado é o mesmo de `organization.findByMember` de propósito — duas
+ * definições de "sou do estúdio" divergem, e nesta a divergência seria um
+ * vazamento de dado privado.
+ *
+ * @param {string} userId
+ * @param {{ from?: Date|string, to?: Date|string }} [range]
+ */
+async function findUpcomingByMember(userId, { from, to } = {}) {
+  const fromDate = from ? new Date(from) : new Date();
+  const toDate = to
+    ? new Date(to)
+    : (() => {
+        const d = new Date();
+        d.setMonth(d.getMonth() + 1);
+        return d;
+      })();
+
+  const result = await database.query({
+    text: `
+      ${BASE_MEETING_QUERY}
+      WHERE m.status <> 'cancelled'
+        AND m.starts_at < $3
+        AND m.ends_at > $2
+        AND (
+          o.owner_id = $1
+          OR EXISTS (
+            SELECT 1 FROM org_members om
+            WHERE om.org_id = o.id
+              AND om.member_id = $1
+              AND om.status = 'active'
+          )
+        )
+      ORDER BY m.starts_at ASC
+    `,
+    values: [userId, fromDate, toDate],
+  });
+
+  return result.rows;
+}
+
+/**
  * Atualiza uma reunião. Apenas o criador, admin ou owner do estúdio podem editar.
  * @param {string} id
  * @param {object} data
@@ -457,6 +504,7 @@ const meeting = {
   findByIdAndOrg,
   findByRoomId,
   listByOrgId,
+  findUpcomingByMember,
   update,
   cancel,
   assertCanJoin,

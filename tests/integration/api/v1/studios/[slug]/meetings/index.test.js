@@ -1,5 +1,7 @@
 import orchestrator from "tests/orchestrator";
 import webserver from "infra/webserver";
+import database from "infra/database";
+import retry from "async-retry";
 import TEST_CREDENTIALS from "tests/helpers/testCredentials.js";
 import { createActivatedUserWithSession, authHeaders } from "tests/helpers/storeTestUtils";
 import organization from "models/organization";
@@ -35,6 +37,7 @@ function meetingPayload(overrides = {}) {
 describe("GET/POST/DELETE /api/v1/studios/[slug]/meetings", () => {
   let ownerToken;
   let memberToken;
+  let memberUserId;
   let outsiderToken;
   let outsiderUser;
   let studio;
@@ -48,6 +51,9 @@ describe("GET/POST/DELETE /api/v1/studios/[slug]/meetings", () => {
 
     const memberCtx = await createUser("MembroReuniao", "membro.reuniao@curso.dev", 55123456902);
     memberToken = memberCtx.sessionToken;
+    // Exposto para a asserção de autoria da notificação: `memberCtx` é `const`
+    // dentro do `beforeAll` e não existe no escopo do teste.
+    memberUserId = memberCtx.user.id;
 
     const outsiderCtx = await createUser("ForaReuniao", "fora.reuniao@curso.dev", 55123456903);
     outsiderToken = outsiderCtx.sessionToken;
@@ -113,6 +119,52 @@ describe("GET/POST/DELETE /api/v1/studios/[slug]/meetings", () => {
       ),
     });
     expect(response.status).toBe(400);
+  });
+
+  test("Scheduling a meeting notifies the studio members", async () => {
+    // Agenda a própria reunião em vez de reaproveitar a do teste anterior: a
+    // asserção depende de uma notificação por reunião, e herdar o estado de
+    // outro teste faz este falhar quando roda sozinho (`jest -t`).
+    const response = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings`, {
+      method: "POST",
+      headers: { ...authHeaders(memberToken), "content-type": "application/json" },
+      body: JSON.stringify(meetingPayload({ title: "Reunião com aviso" })),
+    });
+    expect(response.status).toBe(201);
+
+    const { id } = await response.json();
+
+    // A notificação é gravada sem bloquear a resposta (fire-and-forget, como o
+    // convite de estúdio em `invitations/index.js`): falhar nela não pode
+    // desfazer o agendamento. Por isso a asserção **espera a linha aparecer** em
+    // vez de ler logo após o POST — ler imediatamente torna o teste uma corrida.
+    const rows = await retry(
+      async () => {
+        const result = await database.query({
+          text: `
+            SELECT type, source_user_id, resource_type, subject_title
+            FROM org_notifications
+            WHERE org_id = $1 AND resource_id = $2
+          `,
+          values: [studio.id, id],
+        });
+
+        if (result.rowCount === 0) throw new Error("notificação ainda não gravada");
+        return result.rows;
+      },
+      // `minTimeout` explícito: o default do async-retry é 1000ms, que ficaria
+      // acima do `maxTimeout` e o próprio retry recusa essa combinação.
+      { retries: 10, minTimeout: 100, maxTimeout: 500 },
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].type).toBe("org_meeting_scheduled");
+    expect(rows[0].resource_type).toBe("meeting");
+    expect(rows[0].subject_title).toBe("Reunião com aviso");
+    // Quem agendou não se notifica: `findOrgNotificationsByUserId` descarta
+    // notificações cujo `source_user_id` é o próprio leitor. A linha guarda o
+    // autor justamente para essa filtragem.
+    expect(rows[0].source_user_id).toBe(memberUserId);
   });
 
   test("Non-member cannot schedule a meeting", async () => {

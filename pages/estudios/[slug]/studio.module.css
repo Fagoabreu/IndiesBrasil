@@ -599,16 +599,54 @@
   }
 
   .profileActions {
+    /* Grid de 2 colunas em vez de flex com wrap.
+       Com `flex: 1` + `min-width: 0` (o que estava aqui), o `flex-basis` vira 0
+       e o `min-width: 0` libera o encolhimento abaixo do conteúdo: os cinco
+       botões do responsável (Press Kit, Loja, Pedidos, Reuniões, Editar)
+       cabiam todos numa linha de ~310px — ~55px cada, com o texto espremido e
+       alvos minúsculos. No grid cada botão recebe metade da largura, então a
+       quebra é previsível (5 botões = 3 linhas) e o rótulo nunca é cortado. */
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
-    margin-left: 0;
-    flex-wrap: wrap;
-    gap: 8px;
+    gap: 10px;
+  }
+
+  /* Área de toque mínima. O padding de 6px deixava os botões com ~29px de
+     altura; 44px é o mínimo recomendado para toque em tela sensível (Apple
+     HIG). O seletor cobre os dois tipos de filho da barra: os `Link`
+     estilizados por `.btnOutline` e o "Seguir", que é um `Button` do Primer e
+     não herda `.btnOutline` — sem isto ele ficaria baixinho ao lado dos
+     outros.
+
+     `min-height` e não `height`: o Button do Primer fixa `height: 2rem`
+     (32px), e `min-height` tem precedência sobre `height` por especificação —
+     então o alvo cresce sem precisar sobrescrever o componente.
+
+     `justify-content: center` porque o Button do Primer usa
+     `space-between`, que com um único rótulo alinharia o "Seguir" à esquerda,
+     fora do eixo dos outros botões. */
+  .profileActions > * {
+    min-height: 44px;
+    justify-content: center;
   }
 
   .btnOutline {
-    flex: 1;
-    justify-content: center;
     min-width: 0;
+    /* Padding vertical maior para o rótulo respirar dentro dos 44px. */
+    padding: 10px 12px;
+  }
+
+  /* Botões sobre o banner ("Imagem" / "Vídeo"): mesmo problema de alvo, com
+     espaço mais curto — sobem para 36px em vez de 44px porque o banner mobile
+     tem apenas 120px de altura. */
+  .bannerActions {
+    gap: 8px;
+  }
+
+  .bannerBtn {
+    min-height: 36px;
+    padding: 6px 12px;
   }
 
   /* QR code: show below actions, smaller */
@@ -617,6 +655,20 @@
     width: 100%;
     justify-content: flex-start;
     order: 3;
+  }
+
+  /* Aceitar/Recusar do convite: mesmo defeito de alvo dos botões de ação
+     (~29px de altura). Ficam na mesma tela, então acompanham o mínimo. */
+  .inviteBannerActions {
+    width: 100%;
+    gap: 10px;
+  }
+
+  .btnAccept,
+  .btnDecline {
+    flex: 1;
+    min-height: 44px;
+    justify-content: center;
   }
 }
 
