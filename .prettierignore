@@ -3,3 +3,25 @@ public/scripts/pdf.worker.min.mjs
 .next
 dist
 coverage
+
+# ── Galene (fork vendorizado do upstream — ver galene/UPSTREAM.md) ──────────
+# Prettier não formata o que veio do upstream. Reformatar a árvore quebraria a
+# fidelidade byte a byte com a tag de origem — que é o que sustenta o rebase e
+# a auditoria em scripts/audit-galene-upstream.js (o repo tem core.autocrlf=true
+# e o prettier normalizaria line endings) — e parte dos arquivos nem tem parser
+# válido (galene/static/galene.html, galene/static/galene.css).
+#
+# Os três arquivos que NÓS escrevemos na raiz de galene/ ficam de fora da
+# negação e continuam sendo checados pelo CI.
+galene/static
+
+galene/*.md
+!galene/README.md
+!galene/UPSTREAM.md
+!galene/CUSTOMIZATIONS.md
+
+galene/CHANGES
+galene/LICENCE
+galene/go.mod
+galene/go.sum
+galene/.gitignore

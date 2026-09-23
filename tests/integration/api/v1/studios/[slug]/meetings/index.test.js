@@ -1,5 +1,7 @@
 import orchestrator from "tests/orchestrator";
 import webserver from "infra/webserver";
+import database from "infra/database";
+import retry from "async-retry";
 import TEST_CREDENTIALS from "tests/helpers/testCredentials.js";
 import { createActivatedUserWithSession, authHeaders } from "tests/helpers/storeTestUtils";
 import organization from "models/organization";
@@ -35,6 +37,7 @@ function meetingPayload(overrides = {}) {
 describe("GET/POST/DELETE /api/v1/studios/[slug]/meetings", () => {
   let ownerToken;
   let memberToken;
+  let memberUserId;
   let outsiderToken;
   let outsiderUser;
   let studio;
@@ -48,6 +51,9 @@ describe("GET/POST/DELETE /api/v1/studios/[slug]/meetings", () => {
 
     const memberCtx = await createUser("MembroReuniao", "membro.reuniao@curso.dev", 55123456902);
     memberToken = memberCtx.sessionToken;
+    // Exposto para a asserção de autoria da notificação: `memberCtx` é `const`
+    // dentro do `beforeAll` e não existe no escopo do teste.
+    memberUserId = memberCtx.user.id;
 
     const outsiderCtx = await createUser("ForaReuniao", "fora.reuniao@curso.dev", 55123456903);
     outsiderToken = outsiderCtx.sessionToken;
@@ -113,6 +119,52 @@ describe("GET/POST/DELETE /api/v1/studios/[slug]/meetings", () => {
       ),
     });
     expect(response.status).toBe(400);
+  });
+
+  test("Scheduling a meeting notifies the studio members", async () => {
+    // Agenda a própria reunião em vez de reaproveitar a do teste anterior: a
+    // asserção depende de uma notificação por reunião, e herdar o estado de
+    // outro teste faz este falhar quando roda sozinho (`jest -t`).
+    const response = await fetch(`${webserver.origin}/api/v1/studios/${studio.slug}/meetings`, {
+      method: "POST",
+      headers: { ...authHeaders(memberToken), "content-type": "application/json" },
+      body: JSON.stringify(meetingPayload({ title: "Reunião com aviso" })),
+    });
+    expect(response.status).toBe(201);
+
+    const { id } = await response.json();
+
+    // A notificação é gravada sem bloquear a resposta (fire-and-forget, como o
+    // convite de estúdio em `invitations/index.js`): falhar nela não pode
+    // desfazer o agendamento. Por isso a asserção **espera a linha aparecer** em
+    // vez de ler logo após o POST — ler imediatamente torna o teste uma corrida.
+    const rows = await retry(
+      async () => {
+        const result = await database.query({
+          text: `
+            SELECT type, source_user_id, resource_type, subject_title
+            FROM org_notifications
+            WHERE org_id = $1 AND resource_id = $2
+          `,
+          values: [studio.id, id],
+        });
+
+        if (result.rowCount === 0) throw new Error("notificação ainda não gravada");
+        return result.rows;
+      },
+      // `minTimeout` explícito: o default do async-retry é 1000ms, que ficaria
+      // acima do `maxTimeout` e o próprio retry recusa essa combinação.
+      { retries: 10, minTimeout: 100, maxTimeout: 500 },
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].type).toBe("org_meeting_scheduled");
+    expect(rows[0].resource_type).toBe("meeting");
+    expect(rows[0].subject_title).toBe("Reunião com aviso");
+    // Quem agendou não se notifica: `findOrgNotificationsByUserId` descarta
+    // notificações cujo `source_user_id` é o próprio leitor. A linha guarda o
+    // autor justamente para essa filtragem.
+    expect(rows[0].source_user_id).toBe(memberUserId);
   });
 
   test("Non-member cannot schedule a meeting", async () => {
@@ -344,13 +396,20 @@ describe("GET/POST/DELETE /api/v1/studios/[slug]/meetings", () => {
 
     const body = await response.json();
     expect(typeof body.joinUrl).toBe("string");
-    expect(body.joinUrl.startsWith(`http://localhost:8000/group/${created.room_id}/?username=`)).toBe(true);
+    // A URL aponta para a SALA (subgrupo do estúdio).
+    expect(body.joinUrl.startsWith(`http://localhost:8000/group/${studio.slug}/${created.room_id}/?username=`)).toBe(true);
 
     const token = new URL(body.joinUrl).searchParams.get("token");
     expect(token).toBeTruthy();
     const [, payloadB64] = token.split(".");
     const payload = JSON.parse(Buffer.from(payloadB64, "base64url").toString("utf8"));
-    expect(payload.aud).toBe(`http://localhost:8000/group/${created.room_id}/`);
+    // O escopo do token é o ESTÚDIO, não a sala: com `include-subgroups` o
+    // Galene casa a audiência por prefixo (galene/token/jwt.go → matchGroup),
+    // então o token abre qualquer sala deste estúdio e nenhuma de outro. Se
+    // alguém "consertar" isto para o escopo da sala, a reunião seguinte deixa
+    // de abrir — ver lib/galene.js.
+    expect(payload.aud).toBe(`http://localhost:8000/group/${studio.slug}/`);
+    expect(payload["include-subgroups"]).toBe(true);
     expect(payload.sub).toBe("MembroReuniao");
     expect(payload.permissions).toContain("caption");
 
@@ -422,11 +481,13 @@ describe("GET/POST/DELETE /api/v1/studios/[slug]/meetings", () => {
     expect(body.meeting.id).toBe(created.id);
     expect(body.meeting.room_id).toBeUndefined();
     expect(typeof body.joinUrl).toBe("string");
-    expect(body.joinUrl.startsWith(`http://localhost:8000/group/${created.room_id}/?username=`)).toBe(true);
+    expect(body.joinUrl.startsWith(`http://localhost:8000/group/${studio.slug}/${created.room_id}/?username=`)).toBe(true);
 
     const token = new URL(body.joinUrl).searchParams.get("token");
     const [, payloadB64] = token.split(".");
     const payload = JSON.parse(Buffer.from(payloadB64, "base64url").toString("utf8"));
+    expect(payload.aud).toBe(`http://localhost:8000/group/${studio.slug}/`);
+    expect(payload["include-subgroups"]).toBe(true);
     expect(payload.sub).toBe("Visitante Externo");
     expect(payload.permissions).toEqual(["present", "message"]);
     expect(new Date(body.expires_at).getTime()).toBeLessThanOrEqual(new Date(codeBody.guest_code_expires_at).getTime());

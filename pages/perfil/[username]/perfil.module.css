@@ -559,9 +559,31 @@
     padding-bottom: 0;
   }
 
+  /* Aqui fica `flex`, e não o `grid` que usei na página do estúdio: o
+     `flex-basis: auto` respeita o tamanho do conteúdo, e a barra tem no máximo
+     dois botões ("Seguir" ou "Editar perfil", mais "Exportar PDF"). Não há
+     aperto — o defeito desta página era só a **altura** do alvo. */
   .headerActions > * {
     flex: 1 1 auto;
     justify-content: center;
+    /* 44px é o mínimo recomendado para toque em tela sensível (Apple HIG); os
+       botões tinham 28px. O seletor cobre os dois tipos de filho: o
+       `.actionBtn` (que vinha de `padding: 5px 12px`) e o "Seguir", que é um
+       `Button` do Primer com `height: 2rem` fixo — `min-height` tem precedência
+       sobre `height` por especificação, então o alvo cresce sem precisar
+       sobrescrever o componente. */
+    min-height: 44px;
+  }
+
+  .actionBtn {
+    /* Padding vertical maior para o rótulo respirar dentro dos 44px. */
+    padding: 10px 12px;
+  }
+
+  /* "Compartilhar perfil": já ocupa a largura toda, mas os `padding: 8px 12px`
+     davam 34px de altura. */
+  .shareButton {
+    min-height: 44px;
   }
 
   .stat {

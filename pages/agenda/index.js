@@ -6,6 +6,7 @@ import { CalendarIcon, PlusIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import ShareModal from "@/components/ShareModal/ShareModal";
 import EventCard from "@/components/Agenda/EventCard";
+import StudioMeetingList from "@/components/Agenda/StudioMeetingList";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL } from "@/lib/seo";
 import { EVENT_MONTHS, sortEventsByStart } from "@/lib/eventFormat";
@@ -32,6 +33,9 @@ export default function AgendaPage() {
   const [month, setMonth] = useState(now.getMonth()); // 0-indexed
   const [filter, setFilter] = useState("");
   const [events, setEvents] = useState(null);
+  // Reuniões dos estúdios do usuário. Lista separada dos eventos: são privadas e
+  // vêm de outra tabela (ver `StudioMeetingList`).
+  const [meetings, setMeetings] = useState([]);
   const loading = events === null;
 
   // Evento cujo link está sendo compartilhado. Fica no nível da página (e não
@@ -40,24 +44,41 @@ export default function AgendaPage() {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+
+    // A faixa de datas é calculada uma vez e usada pelas duas buscas — calcular
+    // de novo em cada uma é como duas cópias do mesmo intervalo divergem.
+    const from = new Date(year, month, 1).toISOString();
+    const to = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
+    const typeParam = filter ? `&type=${filter}` : "";
+
+    async function loadJson(url) {
       try {
-        const from = new Date(year, month, 1).toISOString();
-        const to = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
-        const typeParam = filter ? `&type=${filter}` : "";
-        const res = await fetch(`/api/v1/events?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}${typeParam}`, {
-          credentials: "include",
-        });
+        const res = await fetch(url, { credentials: "include" });
         const data = await res.json();
-        if (!cancelled) setEvents(Array.isArray(data) ? data : []);
+        return Array.isArray(data) ? data : [];
       } catch {
-        if (!cancelled) setEvents([]);
+        return [];
       }
+    }
+
+    (async () => {
+      const [eventList, meetingList] = await Promise.all([
+        loadJson(`/api/v1/events?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}${typeParam}`),
+        // `filter` é do calendário público, então não entra nas reuniões.
+        // Reuniões são internas: sem sessão a rota responde 403, então nem
+        // chamamos.
+        user ? loadJson(`/api/v1/meetings/mine?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`) : Promise.resolve([]),
+      ]);
+
+      if (cancelled) return;
+      setEvents(eventList);
+      setMeetings(meetingList);
     })();
+
     return () => {
       cancelled = true;
     };
-  }, [year, month, filter]);
+  }, [year, month, filter, user]);
 
   function prevMonth() {
     if (month === 0) {
@@ -106,6 +127,11 @@ export default function AgendaPage() {
             ›
           </button>
         </div>
+
+        {/* Reuniões dos estúdios do usuário. Fica depois da navegação de mês
+            (que também delimita as reuniões) e antes dos filtros, que são do
+            calendário público — não valem para reuniões. */}
+        <StudioMeetingList meetings={meetings} />
 
         {/* Filtros de tipo */}
         <div className={styles.filters}>

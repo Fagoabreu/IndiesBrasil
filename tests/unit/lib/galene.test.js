@@ -7,7 +7,8 @@ import { ValidationError } from "@/infra/errors";
 /**
  * Testes unitários do provisionamento Galene (Fase 3).
  * Não dependem de servidor/banco: validam escrita de grupo, emissão de JWT
- * (claims aceitas pelo Galene 1.1) e montagem da URL de entrada.
+ * (claims aceitas pelo Galene 1.2.1 — ver galene/token/jwt.go) e montagem da
+ * URL de entrada.
  */
 
 let groupsDir;
@@ -34,20 +35,27 @@ describe("lib/galene.js", () => {
     });
   });
 
-  describe("ensureRoomProvisioned()", () => {
-    test("grava groups/<room>.json com authKeys e allow-anonymous false", async () => {
+  describe("ensureStudioGroup()", () => {
+    test("grava groups/<estudio>.json com authKeys, auto-subgroups e sem campos obsoletos", async () => {
       process.env.GALENE_GROUPS_DIR = groupsDir;
       process.env.MEET_URL = "wss://meet.example.com";
 
-      const roomId = "aa11bb22cc33dd44";
-      const written = await galene.ensureRoomProvisioned(roomId);
+      const written = await galene.ensureStudioGroup("aurora-games");
 
       expect(written).toBe(true);
 
-      const filePath = path.join(groupsDir, `${roomId}.json`);
+      const filePath = path.join(groupsDir, "aurora-games.json");
       const group = JSON.parse(await readFile(filePath, "utf8"));
 
-      expect(group["allow-anonymous"]).toBe(false);
+      // O servidor lê o grupo com `DisallowUnknownFields`
+      // (galene/group/description.go): qualquer campo que não exista na struct
+      // `Description` derruba o carregamento da sala. Travar a forma exata do
+      // JSON aqui impede introduzir um campo que só falharia em runtime —
+      // `allow-anonymous`, por exemplo, está obsoleto desde o Galene 0.9.
+      expect(Object.keys(group).sort()).toEqual(["authKeys", "auto-subgroups", "comment"]);
+      // Sem auto-subgroups o Galene não resolve `<estudio>/<sala>` e TODAS as
+      // salas do estúdio param de abrir (galene/group/description.go).
+      expect(group["auto-subgroups"]).toBe(true);
       expect(group.authKeys).toHaveLength(1);
       expect(group.authKeys[0]).toMatchObject({ kty: "oct", alg: "HS256" });
       expect(group.authKeys[0].k).toBe(galene.getAuthSecret().encoded);
@@ -65,10 +73,9 @@ describe("lib/galene.js", () => {
       expect(padded).toMatch(/=$/);
       process.env.GALENE_AUTH_SECRET = padded;
       try {
-        const roomId = "paddedsecret001";
-        await galene.ensureRoomProvisioned(roomId);
+        await galene.ensureStudioGroup("padded-secret-studio");
 
-        const group = JSON.parse(await readFile(path.join(groupsDir, `${roomId}.json`), "utf8"));
+        const group = JSON.parse(await readFile(path.join(groupsDir, "padded-secret-studio.json"), "utf8"));
         const k = group.authKeys[0].k;
 
         expect(k).toBe(unpadded);
@@ -84,13 +91,11 @@ describe("lib/galene.js", () => {
       process.env.GALENE_GROUPS_DIR = groupsDir;
       process.env.MEET_URL = "wss://meet.example.com";
 
-      const roomId = "studioroom001";
-      const written = await galene.ensureRoomProvisioned(roomId, "Estúdio Aurora Games");
+      const written = await galene.ensureStudioGroup("estudio-aurora", "Estúdio Aurora Games");
 
       expect(written).toBe(true);
 
-      const filePath = path.join(groupsDir, `${roomId}.json`);
-      const group = JSON.parse(await readFile(filePath, "utf8"));
+      const group = JSON.parse(await readFile(path.join(groupsDir, "estudio-aurora.json"), "utf8"));
 
       expect(group.displayName).toBe("Estúdio Aurora Games");
     });
@@ -99,26 +104,23 @@ describe("lib/galene.js", () => {
       process.env.GALENE_GROUPS_DIR = groupsDir;
       process.env.MEET_URL = "wss://meet.example.com";
 
-      const roomId = "studioevo002";
-      await galene.ensureRoomProvisioned(roomId, "Bad\u0000Name\n");
-      const group1 = JSON.parse(await readFile(path.join(groupsDir, `${roomId}.json`), "utf8"));
+      await galene.ensureStudioGroup("estudio-eco", "Bad\u0000Name\n");
+      const group1 = JSON.parse(await readFile(path.join(groupsDir, "estudio-eco.json"), "utf8"));
       expect(group1.displayName).toBe("BadName");
 
-      const roomId2 = "studiolong003";
-      await galene.ensureRoomProvisioned(roomId2, "X".repeat(90));
-      const group2 = JSON.parse(await readFile(path.join(groupsDir, `${roomId2}.json`), "utf8"));
+      await galene.ensureStudioGroup("estudio-longo", "X".repeat(90));
+      const group2 = JSON.parse(await readFile(path.join(groupsDir, "estudio-longo.json"), "utf8"));
       expect(group2.displayName).toHaveLength(80);
     });
 
     test("é idempotente: não reescreve quando o conteúdo é igual", async () => {
       process.env.GALENE_GROUPS_DIR = groupsDir;
 
-      const roomId = "idempotentroom01";
-      const first = await galene.ensureRoomProvisioned(roomId);
-      const filePath = path.join(groupsDir, `${roomId}.json`);
+      const first = await galene.ensureStudioGroup("estudio-idem");
+      const filePath = path.join(groupsDir, "estudio-idem.json");
       const contentBefore = await readFile(filePath, "utf8");
 
-      const second = await galene.ensureRoomProvisioned(roomId);
+      const second = await galene.ensureStudioGroup("estudio-idem");
       const contentAfter = await readFile(filePath, "utf8");
 
       expect(first).toBe(true);
@@ -126,10 +128,22 @@ describe("lib/galene.js", () => {
       expect(contentAfter).toBe(contentBefore);
     });
 
-    test("rejeita room_id com path traversal", async () => {
+    test("rejeita slug com path traversal", async () => {
       process.env.GALENE_GROUPS_DIR = groupsDir;
 
-      await expect(galene.ensureRoomProvisioned("../../etc/passwd")).rejects.toBeInstanceOf(ValidationError);
+      await expect(galene.ensureStudioGroup("../../etc/passwd")).rejects.toBeInstanceOf(ValidationError);
+      await expect(galene.ensureStudioGroup("estudio/com-barra")).rejects.toBeInstanceOf(ValidationError);
+      await expect(galene.ensureStudioGroup("ComMaiuscula")).rejects.toBeInstanceOf(ValidationError);
+      await expect(galene.ensureStudioGroup("")).rejects.toBeInstanceOf(ValidationError);
+    });
+  });
+
+  describe("roomGroupName()", () => {
+    test("monta <estudio>/<reuniao> e valida as duas partes", () => {
+      expect(galene.roomGroupName("aurora-games", "aa11bb22cc33dd44")).toBe("aurora-games/aa11bb22cc33dd44");
+
+      expect(() => galene.roomGroupName("Aurora", "aa11bb22cc33dd44")).toThrow(ValidationError);
+      expect(() => galene.roomGroupName("aurora-games", "../../etc/passwd")).toThrow(ValidationError);
     });
   });
 
@@ -143,6 +157,7 @@ describe("lib/galene.js", () => {
       const endsAt = new Date(nowMs + 2 * 60 * 60 * 1000).toISOString();
 
       const { joinUrl, token, expiresAt } = await galene.createJoinTokenAndUrl({
+        studio: "aurora-games",
         roomId,
         username: "Maria Silva",
         permissions: galene.GALENE_PERMISSIONS.member,
@@ -152,7 +167,11 @@ describe("lib/galene.js", () => {
       const [, payloadB64] = token.split(".");
       const payload = JSON.parse(Buffer.from(payloadB64, "base64url").toString("utf8"));
 
-      expect(payload.aud).toBe("https://meet.example.com/group/cafe0000cafe0000/");
+      // A audiência é o ESTÚDIO (não a sala): com `include-subgroups` o Galene
+      // casa por prefixo (galene/token/jwt.go → matchGroup), então o token
+      // vale para qualquer sala do estúdio e para nenhuma de outro.
+      expect(payload.aud).toBe("https://meet.example.com/group/aurora-games/");
+      expect(payload["include-subgroups"]).toBe(true);
       expect(payload.sub).toBe("Maria Silva");
       expect(payload.permissions).toEqual(galene.GALENE_PERMISSIONS.member);
       expect(payload.exp - payload.iat).toBeGreaterThan(7000);
@@ -162,7 +181,8 @@ describe("lib/galene.js", () => {
       expect(expiryMs).toBeGreaterThan(nowMs);
       expect(expiryMs).toBeLessThanOrEqual(new Date(endsAt).getTime());
 
-      expect(joinUrl).toBe(`https://meet.example.com/group/${roomId}/?username=${encodeURIComponent("Maria Silva")}&token=${token}`);
+      // A URL aponta para a SALA (subgrupo), não para o escopo do token.
+      expect(joinUrl).toBe(`https://meet.example.com/group/aurora-games/${roomId}/?username=${encodeURIComponent("Maria Silva")}&token=${token}`);
     });
 
     test("expira no código do convidado quando ele termina antes da reunião", async () => {
@@ -174,6 +194,7 @@ describe("lib/galene.js", () => {
       const codeExpiresAt = new Date(nowMs + 60 * 60 * 1000).toISOString();
 
       const { expiresAt } = await galene.createJoinTokenAndUrl({
+        studio: "aurora-games",
         roomId: "guestroom00001",
         username: "Visitante",
         permissions: galene.GALENE_PERMISSIONS.guest,
@@ -190,6 +211,7 @@ describe("lib/galene.js", () => {
       process.env.MEET_URL = "wss://meet.example.com";
 
       const { joinUrl } = await galene.createJoinTokenAndUrl({
+        studio: "aurora-games",
         roomId: "nousername0001",
         permissions: galene.GALENE_PERMISSIONS.guest,
         endsAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),

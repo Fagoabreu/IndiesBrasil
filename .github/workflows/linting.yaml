@@ -44,3 +44,22 @@ jobs:
       - run: npm ci
 
       - run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+  # Rede de segurança do fork vendorizado do Galene. Compara `galene/` byte a
+  # byte com a tag do upstream e falha se a divergência não for exatamente a
+  # documentada em galene/UPSTREAM.md. Sem isso, uma customização perdida num
+  # rebase (ou um arquivo salvo em CRLF no Windows, que o repo tem
+  # core.autocrlf=true) passa silenciosamente — foi assim que o repositório
+  # passou a vendorizar a 1.2.1 enquanto o Dockerfile construía a imagem da 1.1.
+  # Não roda `npm ci`: o script só usa módulos nativos do Node.
+  galene-upstream:
+    name: Galene upstream audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: "package.json"
+
+      - run: node scripts/audit-galene-upstream.js

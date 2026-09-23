@@ -1,0 +1,7 @@
+*~
+/galene
+/galenectl/galenectl
+/data
+/groups/**/*.json
+/static/**/*.d.ts
+/static/third-party/tasks-vision

@@ -1,0 +1,10 @@
+{
+  "comment": "Grupo Galene (auth por token JWT HS256). Em producao este arquivo e gerado pela plataforma (lib/galene.js, GALENE_GROUPS_DIR) e recarregado via hot-reload. Use apenas campos que existem na struct Description de group/description.go: ela e lida com DisallowUnknownFields, e um campo desconhecido derruba o carregamento da sala.",
+  "authKeys": [
+    {
+      "kty": "oct",
+      "alg": "HS256",
+      "k": "<SECRET_BASE64URL_32BYTES>"
+    }
+  ]
+}

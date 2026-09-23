@@ -1,5 +1,6 @@
 import meeting from "@/models/meeting";
 import organization from "@/models/organization";
+import notification from "@/models/notification";
 import controller from "@/infra/controller";
 import authorization from "@/models/authorization";
 import { ensureStudioMemberOrOwner } from "@/lib/studioAccess";
@@ -60,6 +61,23 @@ export async function POST(request, { params }) {
 
     const data = await request.json();
     const created = await meeting.create({ ...data, org_id: studio.id }, user.id);
+
+    // Avisa os membros do estúdio. Não bloqueia a resposta: a reunião já existe,
+    // e falhar aqui não pode desfazer o agendamento — mesmo padrão do convite de
+    // estúdio (`invitations/index.js`).
+    //
+    // Quem agendou não se notifica: `findOrgNotificationsByUserId` ignora
+    // notificações cujo `source_user_id` é o próprio leitor.
+    notification
+      .createOrgNotification({
+        org_id: studio.id,
+        type: "org_meeting_scheduled",
+        source_user_id: user.id,
+        resource_type: "meeting",
+        resource_id: created.id,
+        subject_title: created.title,
+      })
+      .catch((error) => console.error("[meeting] erro ao criar notificação:", error?.message));
 
     return Response.json(meeting.serializeMeeting(created), { status: 201 });
   } catch (error) {

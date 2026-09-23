@@ -156,6 +156,45 @@ jobs:
               cat /data/config.json
             '
 
+      # ── Auditoria do fork vendorizado do Galene ──
+      # O deploy compila `galene/` como ela está, então um desvio silencioso
+      # (customização perdida num rebase, arquivo salvo em CRLF no Windows)
+      # vira imagem errada em produção sem que nada acuse. O script compara a
+      # árvore byte a byte com a tag do upstream e exige que a divergência seja
+      # exatamente a documentada em galene/UPSTREAM.md.
+      #
+      # Fica aqui, e não só no linting.yaml, porque aquele workflow roda apenas
+      # em `pull_request`: um push direto na main chegaria neste deploy sem a
+      # checagem.
+      #
+      # Só bloqueia o deploy no código de divergência CONFIRMADA (exit 1, o que
+      # o script reserva para isso). Qualquer outra saída — 2 quando não dá para
+      # verificar por falta de rede, ou um exit inesperado por o runner não ter
+      # node — vira aviso e o deploy segue: bloquear por indisponibilidade do
+      # ambiente seria pior que o risco coberto.
+      - name: Audit Galene fork
+        run: |
+          AUDIT="$GITHUB_WORKSPACE/scripts/audit-galene-upstream.js"
+
+          if ! command -v node >/dev/null 2>&1; then
+            echo "::warning::node não encontrado no runner; auditoria do fork do Galene não executada"
+            exit 0
+          fi
+          if [ ! -f "$AUDIT" ]; then
+            echo "::warning::$AUDIT não encontrado; auditoria do fork do Galene não executada"
+            exit 0
+          fi
+
+          status=0
+          node "$AUDIT" || status=$?
+
+          case "$status" in
+            0) echo "✅ Fork do Galene confere com a tag do upstream" ;;
+            1) echo "::error::O fork do Galene divergiu do documentado em galene/UPSTREAM.md"; exit 1 ;;
+            2) echo "::warning::Não foi possível verificar o fork do Galene (sem rede); seguindo com o deploy" ;;
+            *) echo "::warning::Auditoria do fork do Galene não pôde ser executada (exit $status); seguindo com o deploy" ;;
+          esac
+
       # ── Build & deploy ──
       - name: Build app
         run: |
@@ -166,10 +205,11 @@ jobs:
           # no passo de migrations, garantindo a mesma versão do package-lock.
           docker build --target deps -t indies-migrate:latest .
 
-          # Galene: imagem a partir do Dockerfile versionado (tag fixa do
-          # upstream galene-1.1 — sem imagem oficial publicada).
+          # Galene: imagem a partir do subprojeto `galene/` (fork vendorizado do
+          # upstream na tag galene-1.2.1, com as customizacoes ja aplicadas na
+          # arvore). O jech/galene nao publica imagem oficial.
           echo "🐳 Building Galene image..."
-          docker build -t indies-galene:galene-1.1 "$GITHUB_WORKSPACE/deploy/galene"
+          docker build -t indies-galene:galene-1.2.1 "$GITHUB_WORKSPACE/galene"
 
           cd /var/www/indies
 

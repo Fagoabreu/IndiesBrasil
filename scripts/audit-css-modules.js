@@ -21,6 +21,7 @@ const DEFAULT_FILES = [
   "components/Agenda/EventForm.jsx",
   "components/Agenda/EventBannerField.jsx",
   "components/Agenda/EventCard.jsx",
+  "components/Agenda/StudioMeetingList.jsx",
   "pages/agenda/criar.js",
   "pages/agenda/index.js",
   "pages/agenda/[id]/editar.js",

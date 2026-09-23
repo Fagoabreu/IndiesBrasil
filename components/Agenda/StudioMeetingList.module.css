@@ -1,0 +1,151 @@
+/* ════════════════════════════════════════
+   StudioMeetingList — bloco privado na agenda
+
+   Distinto do EventCard de propósito: o conteúdo aqui é privado (só quem
+   participa do estúdio), e a diferença visual é o que evita confundir com o
+   calendário público. Não é duplicação de estilo — é sinalização.
+═══════════════════════════════════════════ */
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--brand-rgb-primary), 0.25);
+  background: rgba(var(--brand-rgb-primary), 0.04);
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--fgColor-default);
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--fgColor-muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--bgColor-default);
+  border: 1px solid var(--borderColor-muted);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.item:hover {
+  border-color: rgba(var(--brand-rgb-primary), 0.4);
+  box-shadow: var(--brand-card-glow);
+}
+
+.dateBadge {
+  flex-shrink: 0;
+  width: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--brand-rgb-primary), 0.08);
+  border-radius: 7px;
+  padding: 6px 4px;
+  border: 1px solid rgba(var(--brand-rgb-primary), 0.15);
+}
+
+.dateDay {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--brand-primary);
+  line-height: 1;
+}
+
+.dateMonth {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  color: var(--fgColor-muted);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.orgBadge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  background: rgba(var(--brand-rgb-primary), 0.08);
+  border-radius: 10px;
+  padding: 1px 8px;
+}
+
+/* Token do Primer, o mesmo do `.phaseLive` do MeetingCard — em vez do hex cru
+   que a lista de eventos usa (#10b981). */
+.liveBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--fgColor-success);
+}
+
+.itemTitle {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item:hover .itemTitle {
+  color: var(--brand-primary);
+}
+
+.meta {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--fgColor-muted);
+}

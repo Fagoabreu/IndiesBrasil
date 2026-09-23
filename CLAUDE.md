@@ -131,6 +131,17 @@ Como usar:
 - Preview da imagem salva e botao de remover ficam na pagina (sao layout de cada tela); o `ImageUploader` so entrega o recorte.
 - A API fica na pagina, dentro de `onCropped`: upload imediato (`await fetch` com FormData) ou adiado (guardar `blob`/`dataUrl` e enviar no submit do formulario).
 
+## Webconferencia (Galene)
+
+- `galene/` e um **subprojeto Go vendorizado** do upstream `jech/galene` (tag base `galene-1.2.1`) — nao uma pasta de deploy. Leia `galene/UPSTREAM.md` (contrato com o upstream) e `galene/CUSTOMIZATIONS.md` (o porque de cada customizacao) antes de alterar qualquer arquivo de la.
+- Arquivos Go do servidor (`*.go` e subdiretorios) sao do upstream: **nao modificar**. Toda customizacao e de cliente, editada **direto** em `galene/static/` — nao ha arquivos de patch. A arvore e a fonte unica da verdade.
+- Alterar `galene/static/` ou qualquer `.go` **exige rebuild da imagem** (`docker compose -f infra/compose.yaml build galene`) — o compose so recompila quando a imagem nao existe.
+- `galene/` e LF, como o upstream publica, e tem `.gitattributes` proprio. Nao gravar arquivo em CRLF la dentro — e nao "corrigir" line endings sem comparar com a tag: o upstream **nao e uniforme** (terceiros vendorizados vem em CRLF). `node scripts/audit-galene-upstream.js` compara a arvore byte a byte com a tag e falha se algo divergir do documentado; rode depois de qualquer edicao em `galene/`.
+- A tag da imagem e o nome da tag base do upstream (`indies-galene:galene-1.2.1`). Ao rebasear, atualizar nos **3** lugares: `deploy/compose.yaml`, `infra/compose.yaml`, `.github/workflows/deploy.yml`.
+- Grupo de estudio (`groups/<estudio>.json`, gravado por `lib/galene.js`) so aceita campos que existam na struct `Description` de `galene/group/description.go`: ela usa `DisallowUnknownFields`, entao um campo desconhecido faz o decode falhar e a **sala inteira nao carregar**. Nunca adicione campo "por garantia".
+- Provisionamento e **por estudio, nao por reuniao**: o arquivo tem `"auto-subgroups": true` e as salas sao subgrupos dele (`<estudio>/<reuniao>`, via `roomGroupName`). Um arquivo por reuniao deixava sala orfa depois que a reuniao terminava. A funcao e `ensureStudioGroup(slug, displayName)`.
+- O JWT tem escopo de **estudio** (`aud = "<origin>/group/<estudio>/"` + `include-subgroups: true`), nao da sala: com `include-subgroups` o Galene casa por prefixo (`galene/token/jwt.go` → `matchGroup`), entao o token abre qualquer sala do estudio e nenhuma de outro. Nao "conserte" para o escopo da sala sem ler `lib/galene.js`.
+
 ## PowerShell
 
 - Windows PowerShell 5.1: `Get-Content -Raw` e `Set-Content -NoNewline` **nao existem**.

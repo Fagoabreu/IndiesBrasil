@@ -65,6 +65,11 @@ const config = [
       "dist",
       "coverage",
       "infra/**/*.js",
+      // Código vendorizado do subprojeto Galene: o cliente web em galene/static
+      // é do upstream (jech/galene) e só recebe os nossos patches. Reformatar
+      // quebraria os contextos dos patches e o diff contra a tag base — ver
+      // galene/UPSTREAM.md. As customizações são revisadas junto com a árvore.
+      "galene/**/*.js",
       ".deepseek/",
       ".vscode/",
       "**/*.json",

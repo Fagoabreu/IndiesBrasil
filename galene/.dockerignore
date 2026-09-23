@@ -1,0 +1,25 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Contexto de build = esta árvore (fork vendorizado + Dockerfile).
+#
+# O build precisa apenas do código Go (`.go`, `go.mod`, `go.sum`) e de
+# `static/` (copiado para o estágio de runtime). Todo o resto — runtime,
+# patches e documentação — fica fora do contexto.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Controle de versão.
+.git
+.gitattributes
+
+# Runtime: salas provisionadas (hot-reload) e dados/certificados do Galene.
+groups
+data
+
+# Meta do subprojeto.
+patches
+templates
+UPSTREAM.md
+*.md
+
+# Só fazem sentido no host.
+Dockerfile
+.dockerignore
