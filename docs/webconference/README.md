@@ -119,8 +119,9 @@ Estas etapas são manuais e **obrigatórias** antes do primeiro deploy:
 
 O workflow `deploy.yml` já cuida de:
 
-- gerar `.env.production` com `MEET_URL`, `GALENE_AUTH_SECRET` e
-  `GALENE_GROUPS_DIR=/app/groups`;
+- gerar `.env.production` com `MEET_URL`, `GALENE_AUTH_SECRET`,
+  `GALENE_GROUPS_DIR=/app/groups` e
+  `GALENE_INTERNAL_WS_URL=ws://host.docker.internal:8000/ws`;
 - garantir dono `1001:1001` dos volumes `indies_galene-groups` e
   `indies_galene-data`;
 - gravar `data/config.json` com `"proxyURL"` (base https derivada de
@@ -173,18 +174,84 @@ e não há arquivos de patch. Quem explica o porquê de cada uma é
 upstream e o procedimento de rebase estão em
 [`galene/UPSTREAM.md`](../../galene/UPSTREAM.md).
 
-| #                          | Efeito                                                                                                                                                                                                                                   |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1                          | Mantém o `?token=` (sessionStorage) ao dar refresh — evita o "softlock" de login                                                                                                                                                         |
-| 2                          | Exibe o `displayName` do grupo (nome do estúdio) também no painel esquerdo (não só no `#title`)                                                                                                                                          |
-| 3                          | Injeta `<link href="/indies.css">` após o `galene.css` no `head`                                                                                                                                                                         |
-| 4                          | Adiciona a classe `peer-screenshare` ao tile de compartilhamento de tela                                                                                                                                                                 |
-| 5                          | Com screenshare ativo, as telas ficam no topo com destaque (uma = palco em linha inteira; várias = grade) e as câmeras viram faixa de miniaturas (padrão Teams/Zoom/Discord)                                                             |
-| `galene/static/indies.css` | Skin "MSN Messenger": paleta roxa da marca; molduras/bevel, lista de contatos, grade igualitária arredondada e modo palco+faixa (`#peers.has-screenshare`, com variáveis `--thumb-w`/`--thumb-h` para calibrar o tamanho das miniaturas) |
+| #                          | Efeito                                                                                                                                                                       |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1                          | Mantém o `?token=` (sessionStorage) ao dar refresh — evita o "softlock" de login                                                                                             |
+| 2                          | Painel esquerdo mostra a contagem de participantes (antes repetia o nome do estúdio, que já está na barra superior)                                                          |
+| 3                          | Injeta `<link href="/indies.css">` após o `galene.css` no `head`                                                                                                             |
+| 4                          | Adiciona a classe `peer-screenshare` ao tile de compartilhamento de tela                                                                                                     |
+| 5                          | Com screenshare ativo, as telas ficam no topo com destaque (uma = palco em linha inteira; várias = grade) e as câmeras viram faixa de miniaturas (padrão Teams/Zoom/Discord) |
+| 6                          | Avatar do perfil na lista de participantes, publicado por `setdata` e restrito ao nosso Cloudinary (ver "Avatar" abaixo)                                                     |
+| 7                          | Sai da sala quando o organizador encerra a reunião (reage ao `status.locked`)                                                                                                |
+| 8                          | Saída que funciona: "Entrar novamente" (token do sessionStorage) ou "Voltar para a plataforma" (`?back=`) — antes caía num formulário de senha que nunca autentica           |
+| `galene/static/indies.css` | Skin da marca: superfícies planas, cantos arredondados, paleta roxa; e o modo palco+faixa (`#peers.has-screenshare`, com `--thumb-w`/`--thumb-h` lidos pelo JS)              |
 
 O `displayName` é gravado no arquivo do **estúdio** no provisionamento
 (`lib/galene.js` → `ensureStudioGroup(studioSlug, displayName)`) e herdado por
-todas as salas dele, alimentando a customização 2.
+todas as salas dele.
+
+### Avatar do participante
+
+O cliente do Galene **não tem** avatar: a lista mostra só texto, e não há campo
+no protocolo. A customização 6 usa o `setdata` (que já existe e aceita chaves
+arbitrárias): cada cliente publica `{avatar: <url>}` ao entrar, o servidor
+replica a todos, e os demais leem `userinfo.data.avatar`. **Nenhuma linha de Go
+foi alterada.**
+
+Duas peças precisam estar no lugar:
+
+1. **`CLOUDINARY_CLOUD_NAME`** definido no ambiente do app. É dele que sai o
+   prefixo aceito (`https://res.cloudinary.com/<cloud>/`). Sem ele **não há
+   avatar** — fail-closed, de propósito: o cliente não pode renderizar imagem de
+   host arbitrário, senão um participante usaria o avatar para coletar o IP de
+   quem está na sala (o Galene é SFU e não expõe IP entre participantes).
+2. **`img-src` da CSP** em `deploy/nginx/meet.https.conf` incluindo
+   `https://res.cloudinary.com`. Sem isso o navegador bloqueia a imagem em
+   silêncio — o sintoma é "o avatar simplesmente não aparece".
+
+O arquivo do avatar vem de `users.avatar_image` → `uploaded_images.secure_url`
+(`models/user.findAvatarUrl`). Convidado externo não tem conta, logo não tem
+avatar.
+
+### Encerrar a reunião
+
+O botão **"Encerrar reunião"** aparece para quem gerencia, quando a reunião está
+ao vivo (`components/Meetings/MeetingCard.jsx`). Ele chama
+`POST /api/v1/studios/[slug]/meetings/[meetingId]/end`, que em ordem:
+
+1. grava `status = 'ended'` no banco (fonte da verdade);
+2. garante o grupo do estúdio e grava a sala com `expires` no passado;
+3. poda os arquivos de salas cuja janela já passou;
+4. tranca a sala (`groupaction lock`), **expulsando** os participantes.
+
+O passo 4 é o único que depende de rede, e é o último de propósito: se falhar, a
+reunião já está fechada no banco e no disco (fail-closed), e o erro apenas avisa
+que a expulsão não aconteceu.
+
+**Por que trancar, e não só fechar o arquivo:** o Galene não tem "expulsar
+todos". `group.Delete` desiste quando há clientes conectados; a API
+administrativa só apaga o arquivo; e `desc.Expires` é lido exclusivamente no
+`AddClient` — barra entrada nova, mas não tira quem já está dentro. O `lock` é o
+único caminho, e é por isso que o app entra na sala como moderador com um token
+efêmero que carrega `op` (esse token nunca é entregue a um usuário; o do
+participante continua sem `op`).
+
+O `GALENE_INTERNAL_WS_URL` (WebSocket interno do Galene) é obrigatório em
+produção para o passo 4 — sem ele a rota falha em vez de fingir que encerrou.
+
+**Encerrar é irreversível**, e criar uma reunião nova depois funciona
+normalmente: o que fecha é o arquivo daquela **sala**, e o grupo do estúdio
+(com `auto-subgroups`) fica intacto.
+
+### Saída e reconexão
+
+O "Logout" do Galene fechava o WebSocket e caía no formulário **usuário/senha** —
+que nunca autentica nas nossas salas (a autenticação é exclusivamente por token,
+não há senha no grupo) e cujo `token` já tinha sido zerado. A customização 8
+troca isso por duas ações reais: **"Entrar novamente"** (restaura o token do
+`sessionStorage` e reconecta) e **"Voltar para a plataforma"** (navega para o
+`?back=`, a página da reunião no domínio do app — informação que o cliente não
+tem como deduzir, já que roda em `meet.…`).
 
 ### Modo palco + faixa (compartilhamento de tela)
 
@@ -216,6 +283,9 @@ desenvolvedor em "Network" para confirmar que `/indies.css` veio atualizado.
 | Sala não carrega / some depois de um deploy             | Campo desconhecido no `groups/<estudio>.json`                         | O Galene lê o grupo com `DisallowUnknownFields`: conferir o JSON gravado por `lib/galene.js`      |
 | Cliente tenta `ws://` (Mixed Content / "Not Connected") | `data/config.json` sem `proxyURL`                                     | Gravar `"proxyURL": "https://meet.jogos.social.br"` (deploy ou manual) e `docker restart galene`  |
 | Refresh na sala pede login (usuário/senha)              | Galene remove o `?token=` da URL após o join                          | Usar a imagem `indies-galene:galene-1.2.1` (customização 1) — exige `--force-recreate galene`     |
-| Topo esquerdo mostra "Galène" em vez do estúdio         | Grupo sem `displayName` ou imagem sem a customização 2                | Provisionar com `displayName` (nome do estúdio) e recriar o container com a imagem atual          |
-| Tema MSN/grade não aparece no navegador                 | Cache do CSS ou imagem sem a skin                                     | Hard refresh (Ctrl+F5) e confirmar `/indies.css` (customização 3) + `static/indies.css` na imagem |
+| Avatar não aparece na lista de participantes            | `CLOUDINARY_CLOUD_NAME` vazio, ou `img-src` da CSP sem Cloudinary     | Definir a variável e incluir `https://res.cloudinary.com` no `img-src` (`meet.https.conf`)        |
+| "Ainda não consigo relogar" após sair da sala           | Imagem antiga: caía no formulário de senha sem token                  | Recriar com a imagem atual (customização 8); "Entrar novamente" volta sem refresh                 |
+| Botão "Encerrar reunião" retorna erro 500               | `GALENE_INTERNAL_WS_URL` ausente, ou Galene inalcançável pelo app     | Conferir a variável e o `extra_hosts` (`host.docker.internal`) no `deploy/compose.yaml`           |
+| Encerrou, mas alguém continua na sala                   | A expulsão depende de rede; o `lock` falhou                           | Ver o log do container `galene`. A reunião já está fechada: ao recarregar, a pessoa é recusada    |
+| Tema não aparece ou está desatualizado                  | Cache do CSS ou imagem sem a skin                                     | Hard refresh (Ctrl+F5) e confirmar `/indies.css` (customização 3) + `static/indies.css` na imagem |
 | Sem áudio no navegador MI (Xiaomi)                      | Autoplay/permissão de microfone restritas; navegador Chromium próprio | Liberar autoplay e microfone nas configurações do MI; como fallback testar em Chrome/Edge/desktop |

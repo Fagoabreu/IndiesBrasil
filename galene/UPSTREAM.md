@@ -49,7 +49,7 @@ passa despercebida com facilidade e só aparece como bug em produção.
 
 | Caminho              | Mudança                                                                                      |
 | -------------------- | -------------------------------------------------------------------------------------------- |
-| `static/galene.js`   | Customizações 1, 2, 4 e 5 (+149 / −1 linhas)                                                 |
+| `static/galene.js`   | Customizações 1, 2, 4, 5, 6, 7 e 8 (+421 / −11 linhas)                                       |
 | `static/galene.html` | Customização 3 (+1 linha: `<link rel="stylesheet" href="/indies.css"/>`)                     |
 | `README.md`          | Substituído pela nossa documentação (o README do upstream virou a seção "Upstream" do nosso) |
 

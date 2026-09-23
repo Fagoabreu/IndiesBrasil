@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import galene from "@/lib/galene";
@@ -275,6 +275,172 @@ describe("lib/galene.js", () => {
       } finally {
         delete process.env.GALENE_AUTH_SECRET;
       }
+    });
+  });
+
+  describe("avatar do participante", () => {
+    afterEach(() => {
+      delete process.env.CLOUDINARY_CLOUD_NAME;
+    });
+
+    test("sem CLOUDINARY_CLOUD_NAME não há prefixo nem avatar (fail-closed)", () => {
+      delete process.env.CLOUDINARY_CLOUD_NAME;
+
+      expect(galene.getAvatarPrefix()).toBe("");
+      // Sem prefixo, NADA é aceito: não existe caminho para uma URL arbitrária.
+      expect(galene.sanitizeAvatarUrl("https://res.cloudinary.com/x/image/upload/a.png")).toBe("");
+    });
+
+    test("aceita apenas URLs do nosso Cloudinary", () => {
+      process.env.CLOUDINARY_CLOUD_NAME = "indiesbrasil";
+      const prefix = "https://res.cloudinary.com/indiesbrasil/";
+      expect(galene.getAvatarPrefix()).toBe(prefix);
+
+      const ours = `${prefix}image/upload/v1/avatares/maria.png`;
+      expect(galene.sanitizeAvatarUrl(ours)).toBe(ours);
+
+      // Outro cloud, outro host, esquema inseguro, caminho relativo e valor
+      // não-string são todos recusados.
+      expect(galene.sanitizeAvatarUrl("https://res.cloudinary.com/outro/image/upload/a.png")).toBe("");
+      expect(galene.sanitizeAvatarUrl("https://evil.example.com/a.png")).toBe("");
+      expect(galene.sanitizeAvatarUrl(`http://res.cloudinary.com/indiesbrasil/a.png`)).toBe("");
+      expect(galene.sanitizeAvatarUrl("/images/avatar.png")).toBe("");
+      expect(galene.sanitizeAvatarUrl(42)).toBe("");
+      expect(galene.sanitizeAvatarUrl("")).toBe("");
+    });
+
+    test("recusa URL gigante e caminho com ..", () => {
+      process.env.CLOUDINARY_CLOUD_NAME = "indiesbrasil";
+      const prefix = "https://res.cloudinary.com/indiesbrasil/";
+
+      expect(galene.sanitizeAvatarUrl(`${prefix}${"a".repeat(600)}`)).toBe("");
+      expect(galene.sanitizeAvatarUrl(`${prefix}image/../../etc/passwd`)).toBe("");
+    });
+
+    test("a URL de entrada carrega avatar e prefixo quando há cloud configurado", async () => {
+      process.env.GALENE_GROUPS_DIR = groupsDir;
+      process.env.MEET_URL = "wss://meet.example.com";
+      process.env.CLOUDINARY_CLOUD_NAME = "indiesbrasil";
+
+      const avatar = "https://res.cloudinary.com/indiesbrasil/image/upload/v1/avatares/maria.png";
+      const { joinUrl, token } = await galene.createJoinTokenAndUrl({
+        studio: "aurora-games",
+        roomId: "cafe0000cafe0000",
+        username: "Maria Silva",
+        avatar,
+        permissions: galene.GALENE_PERMISSIONS.member,
+        endsAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      });
+
+      const params = new URL(joinUrl).searchParams;
+      expect(params.get("avatar")).toBe(avatar);
+      expect(params.get("avatarPrefix")).toBe("https://res.cloudinary.com/indiesbrasil/");
+      // O token continua intacto — os extras vêm depois dele.
+      expect(params.get("token")).toBe(token);
+
+      // O avatar viaja na URL, NUNCA no JWT (o token é individual; o avatar
+      // precisa ser visto pelos outros).
+      const [, payloadB64] = token.split(".");
+      const payload = JSON.parse(Buffer.from(payloadB64, "base64url").toString("utf8"));
+      expect(payload.avatar).toBeUndefined();
+    });
+
+    test("sem cloud configurado a URL de entrada não ganha parâmetro de avatar", async () => {
+      process.env.GALENE_GROUPS_DIR = groupsDir;
+      process.env.MEET_URL = "wss://meet.example.com";
+      delete process.env.CLOUDINARY_CLOUD_NAME;
+
+      const { joinUrl } = await galene.createJoinTokenAndUrl({
+        studio: "aurora-games",
+        roomId: "semcloud00000001",
+        username: "Maria",
+        avatar: "https://res.cloudinary.com/indiesbrasil/a.png",
+        permissions: galene.GALENE_PERMISSIONS.member,
+        endsAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      });
+
+      expect(new URL(joinUrl).searchParams.get("avatarPrefix")).toBeNull();
+      expect(new URL(joinUrl).searchParams.get("avatar")).toBeNull();
+    });
+  });
+
+  describe("sanitizeBackUrl()", () => {
+    test("aceita http(s) e recusa o resto", () => {
+      expect(galene.sanitizeBackUrl("https://jogos.social.br/reunioes/abc")).toBe("https://jogos.social.br/reunioes/abc");
+      expect(galene.sanitizeBackUrl("http://localhost:3000/reunioes/abc")).toBe("http://localhost:3000/reunioes/abc");
+
+      // Esquemas perigosos ou relativos não passam.
+      expect(galene.sanitizeBackUrl("javascript:alert(1)")).toBe("");
+      expect(galene.sanitizeBackUrl("data:text/html,x")).toBe("");
+      expect(galene.sanitizeBackUrl("/reunioes/abc")).toBe("");
+      expect(galene.sanitizeBackUrl("")).toBe("");
+      expect(galene.sanitizeBackUrl(null)).toBe("");
+      expect(galene.sanitizeBackUrl(`https://x.test/${"a".repeat(600)}`)).toBe("");
+    });
+
+    test("o back entra na URL de entrada", async () => {
+      process.env.GALENE_GROUPS_DIR = groupsDir;
+      process.env.MEET_URL = "wss://meet.example.com";
+      delete process.env.CLOUDINARY_CLOUD_NAME;
+
+      const back = "https://jogos.social.br/reunioes/abc";
+      const { joinUrl } = await galene.createJoinTokenAndUrl({
+        studio: "aurora-games",
+        roomId: "comback000000001",
+        username: "Maria",
+        back,
+        permissions: galene.GALENE_PERMISSIONS.member,
+        endsAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      });
+
+      expect(new URL(joinUrl).searchParams.get("back")).toBe(back);
+    });
+  });
+
+  describe("closeRoom() e pruneClosedRooms()", () => {
+    test("fecha a sala com expires no passado e copia o displayName do estúdio", async () => {
+      process.env.GALENE_GROUPS_DIR = groupsDir;
+      process.env.MEET_URL = "wss://meet.example.com";
+
+      await galene.ensureStudioGroup("estudio-fechar", "Estúdio Fechar");
+      await galene.closeRoom("estudio-fechar", "sala000000000001");
+
+      const room = JSON.parse(await readFile(path.join(groupsDir, "estudio-fechar", "sala000000000001.json"), "utf8"));
+
+      // `expires` no passado: o Galene recusa a entrada de quem não tem `op`,
+      // então um token já emitido deixa de abrir a sala.
+      expect(new Date(room.expires).getTime()).toBeLessThan(Date.now());
+      // Sem a cópia do displayName a sala deixaria de herdar o nome do estúdio
+      // (ao existir arquivo próprio, o Galene para de subir a hierarquia).
+      expect(room.displayName).toBe("Estúdio Fechar");
+      expect(room.authKeys[0].k).toBe(galene.getAuthSecret().encoded);
+      // A sala NÃO tem subgrupos.
+      expect(room["auto-subgroups"]).toBeUndefined();
+      // O grupo do estúdio continua intacto.
+      const studio = JSON.parse(await readFile(path.join(groupsDir, "estudio-fechar.json"), "utf8"));
+      expect(studio["auto-subgroups"]).toBe(true);
+    });
+
+    test("remove só os arquivos de sala fora da janela mantida", async () => {
+      process.env.GALENE_GROUPS_DIR = groupsDir;
+
+      const studio = "estudio-poda";
+      await galene.ensureStudioGroup(studio);
+      await galene.closeRoom(studio, "manter0000000001");
+      await galene.closeRoom(studio, "remover000000001");
+
+      // `manter0000000001` ainda está dentro da janela (ends_at futuro);
+      // `remover000000001` já passou.
+      const removed = await galene.pruneClosedRooms(studio, ["manter0000000001"]);
+      expect(removed).toBe(1);
+
+      const remaining = await readdir(path.join(groupsDir, studio));
+      expect(remaining).toEqual(["manter0000000001.json"]);
+    });
+
+    test("não quebra quando o diretório do estúdio não existe", async () => {
+      process.env.GALENE_GROUPS_DIR = groupsDir;
+      await expect(galene.pruneClosedRooms("estudio-inexistente", [])).resolves.toBe(0);
     });
   });
 });

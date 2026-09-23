@@ -1,15 +1,57 @@
 /* ==========================================================================
-   indies.css - Tema "MSN Messenger" para o cliente Galene (IndiesBrasil).
+   indies.css - tema do cliente Galene para a webconferencia do IndiesBrasil.
    --------------------------------------------------------------------------
-   Carregado apos o galene.css via patch 0003-load-indies-theme.patch.
-   Mantem a paleta original do Galene (roxo #610a86 / #4d076b) e apenas
-   altera: molduras e barras estilo Messenger, lista de contatos, bolhas de
-   conversa e o alinhamento da grade de cameras/screenshare.
+   Overlay carregado DEPOIS do galene.css (customizacao 3). Nenhuma
+   funcionalidade e removida — este arquivo so altera aparencia.
 
-   Nenhuma funcionalidade e removida; arquivo de overlay (skin).
+   CONTRATO COM O JS (nao renomear nem remover):
+     - #peers define --thumb-w, --thumb-h, row-gap e column-gap; o
+       resizePeersScreenshare os le via getComputedStyle para dimensionar o
+       palco e a faixa de miniaturas.
+     - .peer-screenshare, #peers.has-screenshare e .has-many-screens sao
+       marcadas pelo JS (customizacoes 4 e 5) e estilizadas aqui.
+     - .user-avatar e criada por setUserStatus (customizacao 6).
+     - .ib-left-panel* e criada por enterLeftState (customizacao 8).
+     - As classes user-status-* marcam microfone/camera/mao levantada.
+
+   A paleta fica nos tokens --ib-* abaixo: este arquivo e servido pelo Galene,
+   outro servidor, sem acesso as CSS variables do app.
    ========================================================================== */
 
-/* Fonte classica estilo Messenger */
+:root {
+  --ib-brand: #610a86;
+  --ib-brand-strong: #4d076b;
+  --ib-brand-soft: #f4ecf9;
+  --ib-brand-rgb: 97, 10, 134;
+
+  --ib-surface: #ffffff;
+  --ib-surface-subtle: #f6f7f9;
+  --ib-stage: #0d1117;
+  --ib-stage-tile: #161b22;
+
+  --ib-text: #1f2328;
+  --ib-text-muted: #656d76;
+  --ib-text-inverse: #ffffff;
+
+  --ib-border: #d8dee4;
+  --ib-border-subtle: #eaeef2;
+  --ib-success: #1a7f37;
+  --ib-warning: #9a6700;
+  --ib-danger: #cf222e;
+
+  --ib-radius-sm: 6px;
+  --ib-radius-lg: 14px;
+  --ib-shadow-sm: 0 1px 2px rgba(31, 35, 40, 0.08);
+  --ib-shadow-md: 0 4px 12px rgba(31, 35, 40, 0.12);
+  --ib-shadow-lg: 0 12px 32px rgba(31, 35, 40, 0.22);
+
+  --ib-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", sans-serif;
+
+  --ib-avatar: 28px;
+}
+
+/* ==============================  Base  ================================== */
 body,
 .app,
 .topnav,
@@ -26,19 +68,28 @@ body,
 .login-box,
 input,
 textarea {
-  font-family: Tahoma, "Segoe UI", Verdana, Arial, sans-serif;
+  font-family: var(--ib-font);
 }
 
-/* ==========================  Barra superior  =============================
-   Vira a "barra de titulo" da janela do MSN, com gradiente vertical
-   derivado do roxo da marca e relevo 3D. */
+/* Acessibilidade: foco sempre visivel (o tema antigo nao tinha indicador). */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--ib-brand);
+  outline-offset: 2px;
+}
+
+/* ===========================  Barra superior  ===========================
+   Superficie plana na cor da marca. Sem gradiente/bevel: a "barra de titulo"
+   com relevo 3D era o elemento mais datado do tema anterior. */
 .nav-fixed .topnav,
 .topnav.navbar {
-  background: linear-gradient(180deg, #a92ad1 0%, #7a0fa0 42%, #4d076b 100%) !important;
-  border-bottom: 1px solid #330144 !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.28),
-    0 1px 4px rgba(0, 0, 0, 0.35);
+  background: var(--ib-brand) !important;
+  border-bottom: 1px solid var(--ib-brand-strong) !important;
+  box-shadow: var(--ib-shadow-sm) !important;
 }
 
 .topnav #header {
@@ -48,119 +99,177 @@ textarea {
 }
 
 .topnav .header-title {
-  color: #ffffff;
-  font-size: 1.15rem;
-  letter-spacing: 0.02em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  color: var(--ib-text-inverse);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-shadow: none;
 }
 
-.topnav .collapse {
-  color: #f1e6f7;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
-}
-
-.topnav .collapse:hover {
-  color: #ffffff;
-}
-
+.topnav .collapse,
 .nav-menu .nav-link,
 .nav-menu .nav-button {
-  color: #f1e6f7;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: none;
+  border-radius: var(--ib-radius-sm);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
+.topnav .collapse:hover,
 .nav-menu .nav-link:hover,
 .nav-menu .nav-button:hover {
-  color: #ffffff;
+  color: var(--ib-text-inverse);
+  background-color: rgba(255, 255, 255, 0.14);
 }
 
-.nav-menu .nav-link label {
-  color: #ffffff;
+.nav-menu .nav-link label,
+.nav-menu .nav-button label {
+  color: var(--ib-text-inverse);
+  text-shadow: none;
 }
 
-/* ========================  Painel esquerdo (users)  ======================
-   Estilo "lista de contatos" do MSN: fundo branco, linhas com divisor
-   suave e hover azulado. */
+/* ====================  Painel esquerdo (participantes)  =================
+   Lista plana: sem moldura de "janela", linhas com hover suave e avatar. */
 #left-sidebar {
-  background: #f4f4f7;
-  border-right: 1px solid #c8ccd2;
+  background: var(--ib-surface);
+  border-right: 1px solid var(--ib-border-subtle);
 }
 
 #left-sidebar .users-header {
-  background: linear-gradient(180deg, #8a1db8 0%, #5f0b86 55%, #3c0753 100%);
-  border-bottom: 1px solid #2a0240;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  background: var(--ib-brand);
+  border-bottom: 0;
+  box-shadow: none;
   display: flex;
   align-items: center;
+  padding: 0 14px;
 }
 
+/* O painel mostra a CONTAGEM de participantes (updateUsersHeader). O nome do
+   estudio vive no #title da barra superior; repeti-lo aqui era duplicata. */
 .galene-header {
-  color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
-  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: none;
+}
+
+#left-sidebar .galene-header {
+  display: inline-block;
+  line-height: 1.4;
+}
+
+.header-sep {
+  height: 0;
 }
 
 #users {
-  background-color: #ffffff;
-  border: 1px solid #e2e6ea;
-  border-top: 0;
+  background-color: var(--ib-surface);
+  border: 0;
+  border-top: 1px solid var(--ib-border-subtle);
 }
 
 #users > div {
-  color: #24292e;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ib-text);
   cursor: pointer;
   overflow: hidden;
-  white-space: pre;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transition: background-color 0.12s ease;
 }
 
 #users > div:hover {
-  background-color: #eef3fa;
+  background-color: var(--ib-surface-subtle);
 }
 
+/* Avatar do participante (customizacao 6) */
+#users .user-avatar {
+  flex: 0 0 auto;
+  width: var(--ib-avatar);
+  height: var(--ib-avatar);
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: var(--ib-border-subtle);
+  box-shadow: 0 0 0 1px rgba(31, 35, 40, 0.06);
+}
+
+/* Icones de estado no fim da linha.
+
+   O ponto verde de "online" (::before) saiu: numa reuniao em andamento todos
+   os listados estao presentes, entao ele nao informava nada. O ::before fica
+   reservado para a mao levantada, que e informacao real. */
 #users > div::before {
-  color: #41b537;
-  text-shadow: 0 0 2px rgba(65, 181, 55, 0.35);
+  order: 2;
+  margin-left: auto;
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  content: none;
 }
 
 #users > div.user-status-raisehand::before {
-  color: #d29922;
+  content: "\f256";
+  color: var(--ib-warning);
 }
 
-/* ===========================  Painel de chat  ============================
-   Conversa estilo Messenger: bolhas brancas quadradas com nome em roxo. */
+#users > div::after {
+  order: 3;
+  margin-left: auto;
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  color: var(--ib-text-muted);
+}
+
+#users > div.user-status-microphone::after {
+  content: "\f130";
+  color: var(--ib-success);
+}
+
+#users > div.user-status-camera::after {
+  content: "\f030";
+  color: var(--ib-text-muted);
+}
+
+/* ============================  Painel de chat  ==========================
+   Conversa com bolhas arredondadas e sombra sutil. */
 .coln-left {
-  background-color: #ffffff;
+  background-color: var(--ib-surface);
 }
 
 #chat {
-  background-color: #f6f7f9;
-  border-right: 4px solid #e0e2e6;
-  box-shadow: inset 0 0 0 1px #ffffff;
+  background-color: var(--ib-surface-subtle);
+  border-right: 1px solid var(--ib-border-subtle);
+  box-shadow: none;
 }
 
 #box {
-  padding: 10px 12px;
+  padding: 12px 14px;
 }
 
 .message {
-  background: #ffffff;
-  border: 1px solid #e0e3e8;
-  border-radius: 4px;
-  box-shadow: 0 1px 2px rgba(43, 43, 43, 0.09);
+  background: var(--ib-surface);
+  border: 1px solid var(--ib-border-subtle);
+  border-radius: 10px;
+  box-shadow: var(--ib-shadow-sm);
 }
 
 .message-header {
   font-style: normal;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 12px;
-  color: #610a86;
+  color: var(--ib-brand);
   padding-left: 4px;
 }
 
 .message-time {
   font-weight: 400;
   font-style: normal;
-  color: #9aa0a6;
+  color: var(--ib-text-muted);
 }
 
 .message-content {
@@ -168,17 +277,17 @@ textarea {
 }
 
 .message-sender {
-  background: #e8f0fd;
-  border-color: #cfdef6;
+  background: var(--ib-brand-soft);
+  border-color: rgba(var(--ib-brand-rgb), 0.18);
 }
 
 .message-sender .message-header {
-  color: #3a4f7d;
+  color: var(--ib-brand-strong);
 }
 
 .message-private {
-  background: #fff7e6;
-  border-color: #efe0ae;
+  background: #fff8e6;
+  border-color: #f0e0b8;
 }
 
 .message-system {
@@ -186,114 +295,174 @@ textarea {
   border: 0;
   box-shadow: none;
   font-size: 10px;
-  color: #8b9096;
+  color: var(--ib-text-muted);
 }
 
 .message-system .message-header {
-  color: #8b9096;
+  color: var(--ib-text-muted);
 }
 
 .message a {
-  color: #7a0fa0;
+  color: var(--ib-brand);
 }
 
-/* Barra inferior de digitacao: relevo claro estilo MSN */
 .reply {
-  background: linear-gradient(180deg, #fbfbfc 0%, #e7e9ee 100%);
-  border-top: 1px solid #ccd1d9;
+  background: var(--ib-surface);
+  border-top: 1px solid var(--ib-border-subtle);
 }
 
 .reply #input {
-  background-color: #ffffff;
-  border: 1px solid #c6ccd6;
-  border-radius: 3px;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.07);
-  color: #1f2328;
+  background-color: var(--ib-surface);
+  border: 1px solid var(--ib-border);
+  border-radius: var(--ib-radius-sm);
+  box-shadow: none;
+  color: var(--ib-text);
   font-size: 0.95rem;
-  height: 30px;
+  height: 34px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-/* =============================  Botões  ==================================
-   Bevel cinza/azulado classico do Windows (MSN). Botoes de acao verde
-   (present/audience) continuam verdes para nao confundir. */
+.reply #input:focus {
+  border-color: var(--ib-brand);
+  box-shadow: 0 0 0 3px rgba(var(--ib-brand-rgb), 0.14);
+  outline: none;
+}
+
+/* ==============================  Botoes  ================================
+   Planos, com raio e hover por cor. Sem o bevel do tema anterior. */
+.btn,
+.btn-default,
+.btn-blue,
+.btn-success,
+.btn-cancel {
+  border-radius: var(--ib-radius-sm);
+  font-weight: 500;
+  text-shadow: none;
+  box-shadow: none;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
 .btn-default,
 .btn-blue {
-  background: linear-gradient(180deg, #ffffff 0%, #eef1f5 48%, #dfe4ea 100%);
-  border: 1px solid #a7b0bb;
-  border-radius: 3px;
-  color: #1f2328;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  background: var(--ib-surface);
+  border: 1px solid var(--ib-border);
+  color: var(--ib-text);
 }
 
 .btn-default:hover,
 .btn-blue:hover {
-  background: linear-gradient(180deg, #ffffff 0%, #e0e7f0 100%);
-  border-color: #8e99a7;
-  color: #1f2328;
+  background: var(--ib-surface-subtle);
+  border-color: #afb8c1;
+  color: var(--ib-text);
 }
 
 .btn-success {
-  background: linear-gradient(180deg, #e2f2c9 0%, #c8e6a1 100%);
-  border: 1px solid #a5c87b;
-  border-radius: 3px;
-  color: #2c4a12;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  background: var(--ib-success);
+  border: 1px solid var(--ib-success);
+  color: var(--ib-text-inverse);
 }
 
 .btn-success:hover {
-  background: linear-gradient(180deg, #eef7dc 0%, #d2ecb0 100%);
-  color: #2c4a12;
+  background: #196c2e;
+  border-color: #196c2e;
+  color: var(--ib-text-inverse);
 }
 
 .btn-cancel {
-  background: linear-gradient(180deg, #fcecec 0%, #f0d2d2 100%);
-  border: 1px solid #d39b9b;
-  border-radius: 3px;
-  color: #6d1a1a;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  background: var(--ib-surface);
+  border: 1px solid rgba(207, 34, 46, 0.4);
+  color: var(--ib-danger);
 }
 
 .btn-cancel:hover {
-  background: linear-gradient(180deg, #fef4f4 0%, #f5dcdc 100%);
-  color: #6d1a1a;
+  background: #ffebe9;
+  border-color: rgba(207, 34, 46, 0.6);
+  color: var(--ib-danger);
 }
 
-/* ============================  Tela de login  =========================== */
+/* ============================  Tela de login  ===========================
+   (Tambem e a base visual do painel de saida, customizacao 8.) */
 .login-box {
-  background: linear-gradient(180deg, #ffffff 0%, #f0f2f6 100%);
-  border: 1px solid #c6ccd4;
-  border-radius: 6px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+  background: var(--ib-surface);
+  border: 1px solid var(--ib-border);
+  border-radius: var(--ib-radius-lg);
+  box-shadow: var(--ib-shadow-lg);
 }
 
 .login-box h2 {
-  color: #610a86;
-  font-weight: 700;
+  color: var(--ib-text);
+  font-weight: 600;
   text-shadow: none;
 }
 
-/* =========================  Grade de video / tiles  =====================
+/* ====================  Painel "saiu da reuniao"  ========================
+   Substitui o formulario de usuario/senha do Galene, que nunca autentica nas
+   nossas salas (a autenticacao e exclusivamente por token/authKeys). */
+.ib-left-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 20px;
+  margin: 0 auto;
+  max-width: 380px;
+  text-align: center;
+}
+
+.ib-left-panel h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.ib-left-note {
+  margin: 0;
+  color: var(--ib-text-muted);
+  font-size: 0.9rem;
+}
+
+.ib-left-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.ib-left-actions .btn,
+.ib-left-actions .ib-leave {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 16px;
+  font-size: 0.9rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* =======================  Grade de video / tiles  ======================
    Alinhamento estilo Teams/Zoom/Discord:
 
    1. Sem compartilhamento de tela: grade igualitaria (colunas inline via
-      resizePeers), cada tile de camera com frame e cantos arredondados;
-   2. Com compartilhamento de tela (#peers.has-screenshare, patch 0005):
-      a(s) tela(s) ficam no topo com destaque — uma tela ocupa a linha
-      inteira (palco); varias telas dividem o topo em grade — e as
-      cameras descem para uma faixa de miniaturas abaixo.
+      resizePeers), cada tile com raio e anel de "falando";
+   2. Com compartilhamento (#peers.has-screenshare, customizacoes 4 e 5):
+      a(s) tela(s) no topo com destaque — uma ocupa a linha inteira (palco);
+      varias dividem o topo em grade — e as cameras vem na faixa abaixo.
 
-   O JS le --thumb-w/--thumb-h via getComputedStyle para calcular o palco;
-   o CSS usa as mesmas variaveis para dimensionar as miniaturas. */
+   O JS le --thumb-w/--thumb-h via getComputedStyle para calcular o palco; o
+   CSS usa as mesmas variaveis para dimensionar as miniaturas. */
 .video-container {
-  background-color: #000000;
+  background-color: var(--ib-stage);
 }
 
 #peers {
-  row-gap: 10px;
-  column-gap: 12px;
+  row-gap: 12px;
+  column-gap: 14px;
   align-content: center;
   justify-content: center;
 
@@ -302,48 +471,55 @@ textarea {
   --thumb-h: 170px;
 }
 
-/* Tile: frame + cantos arredondados (cameras e telas) */
+/* Tile: raio e sombra. O anel de "falando" vem de .peer-active. */
 .peer {
   position: relative;
-  background: #000000;
-  border: 2px solid #4a4f57;
-  border-radius: 14px;
+  background: var(--ib-stage-tile);
+  border: 2px solid transparent;
+  border-radius: var(--ib-radius-lg);
   overflow: hidden;
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.05),
-    0 2px 10px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--ib-shadow-md);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-/* Quem esta com microfone ativo (fala): borda na cor da marca */
+/* Quem esta com microfone ativo (fala) */
 .peer.peer-active {
-  border-color: #610a86;
+  border-color: var(--ib-brand);
   box-shadow:
-    0 0 0 1px rgba(97, 10, 134, 0.5),
-    0 0 14px rgba(97, 10, 134, 0.8),
-    inset 0 0 0 1px rgba(97, 10, 134, 0.35);
+    0 0 0 1px rgba(var(--ib-brand-rgb), 0.45),
+    0 0 0 4px rgba(var(--ib-brand-rgb), 0.2),
+    var(--ib-shadow-md);
 }
 
 .peer:not(.peer-active):hover {
-  border-color: #8a8f99;
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
 .media {
   display: block;
   width: 100%;
-  background-color: #000000;
+  background-color: var(--ib-stage);
 }
 
 .label {
-  padding: 14px 6px 2px;
+  padding: 16px 10px 6px;
   font-size: 12px;
-  line-height: 26px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
-  background: linear-gradient(0deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0) 72%);
+  font-weight: 500;
+  line-height: 24px;
+  color: var(--ib-text-inverse);
+  text-shadow: none;
+  background: linear-gradient(
+    0deg,
+    rgba(13, 17, 23, 0.78) 0%,
+    rgba(13, 17, 23, 0) 78%
+  );
 }
 
 /* ----------  Modo palco + faixa (so com compartilhamento de tela)  ------
-   #peers vira flex-wrap; o palco e o primeiro item (order -1) e as
-   cameras fluem em miniaturas nas linhas seguintes, centralizadas. */
+   #peers vira flex-wrap; o palco e o primeiro item (order -1) e as cameras
+   fluem em miniaturas nas linhas seguintes, centralizadas. */
 #peers.has-screenshare {
   display: flex;
   flex-wrap: wrap;
@@ -356,48 +532,44 @@ textarea {
   box-sizing: border-box;
 }
 
-/* Palco: linha inteira no topo, com destaque (moldura lilas + glow) */
+/* Palco: linha inteira no topo, com destaque */
 #peers.has-screenshare .peer-screenshare {
   order: -1;
   flex: 1 1 100%;
   min-height: 120px;
-  border-color: #6a1e8a;
-  box-shadow:
-    0 0 0 1px rgba(97, 10, 134, 0.55),
-    0 0 22px rgba(97, 10, 134, 0.55);
+  border-color: rgba(var(--ib-brand-rgb), 0.55);
 }
 
-/* Apresentador falando ao mesmo tempo: anel ativo sobre o palco */
+/* Apresentador falando ao mesmo tempo */
 #peers.has-screenshare .peer-screenshare.peer-active {
-  border-color: #a140cc;
+  border-color: var(--ib-brand);
   box-shadow:
-    0 0 0 2px rgba(97, 10, 134, 0.9),
-    0 0 26px rgba(97, 10, 134, 0.85),
-    0 0 0 1px rgba(255, 255, 255, 0.15);
+    0 0 0 1px rgba(var(--ib-brand-rgb), 0.6),
+    0 0 0 5px rgba(var(--ib-brand-rgb), 0.22),
+    var(--ib-shadow-md);
 }
 
 /* Selo "Apresentando" no canto do palco (nao bloqueia clique) */
 #peers.has-screenshare .peer-screenshare::before {
   content: "Apresentando";
   position: absolute;
-  top: 10px;
+  top: 12px;
   left: 12px;
   z-index: 4;
-  padding: 3px 10px;
-  background: rgba(97, 10, 134, 0.85);
-  color: #ffffff;
+  padding: 4px 12px;
+  background: rgba(var(--ib-brand-rgb), 0.9);
+  color: var(--ib-text-inverse);
   font-size: 12px;
   font-weight: 600;
   line-height: 18px;
-  border-radius: 10px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  border-radius: 999px;
+  box-shadow: var(--ib-shadow-sm);
   pointer-events: none;
 }
 
-/* Varias telas sendo compartilhadas (classe has-many-screens marcada no
-   resizePeersScreenshare): os tiles de tela dividem o topo em grade e o
-   JS dimensiona cada um inline.  Aqui so removemos o que era exclusivo
-   do palco unico: o min-height fixo e o selo "Apresentando" repetido. */
+/* Varias telas compartilhadas (.has-many-screens vem do JS): dividem o topo
+   em grade e o JS dimensiona cada uma inline. Aqui removemos o que era
+   exclusivo do palco unico: o min-height fixo e o selo repetido. */
 #peers.has-screenshare.has-many-screens .peer-screenshare {
   min-height: 0;
   flex: 1 1 auto;
@@ -415,7 +587,7 @@ textarea {
 }
 
 /* No modo palco a midia preenche o tile; a camera corta (cover) para
-   uniformizar a faixa, o palco exibe a tela inteira (contain).  As regras
+   uniformizar a faixa, o palco exibe a tela inteira (contain). As regras
    base do galene.css (.media max-height/padding-bottom) nao valem aqui. */
 #peers.has-screenshare .media {
   position: absolute;
@@ -433,19 +605,28 @@ textarea {
 
 /* =====================  Feedback visual / status  ======================= */
 .vc-overlay {
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.45) 45%, rgba(0, 0, 0, 0.7) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(13, 17, 23, 0.25) 0%,
+    rgba(13, 17, 23, 0.45) 45%,
+    rgba(13, 17, 23, 0.72) 100%
+  );
 }
 
 /* ============================  Responsivo  ============================== */
 @media (max-width: 1024px) {
   #peers {
-    row-gap: 6px;
-    column-gap: 6px;
+    row-gap: 8px;
+    column-gap: 8px;
     --thumb-w: 160px;
     --thumb-h: 100px;
   }
 
   #peers.has-screenshare .peer-screenshare {
     min-height: 96px;
+  }
+
+  .ib-left-panel {
+    padding: 20px 16px;
   }
 }

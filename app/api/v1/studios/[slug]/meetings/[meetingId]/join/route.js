@@ -1,8 +1,10 @@
 import meeting from "@/models/meeting";
 import organization from "@/models/organization";
+import userModel from "@/models/user";
 import controller from "@/infra/controller";
 import authorization from "@/models/authorization";
 import galene from "@/lib/galene";
+import { meetingPageUrl } from "@/lib/meetingFormat";
 import { ensureStudioMemberOrOwner } from "@/lib/studioAccess";
 import { ForbiddenError } from "@/infra/errors";
 
@@ -36,6 +38,10 @@ export async function POST(request, { params }) {
       studio: found.org_slug,
       roomId: found.room_id,
       username: user.username,
+      // Avatar e destino de saída viajam na URL da sala: o JWT é individual
+      // (cada cliente só lê o próprio), então nada disso cabe nele.
+      avatar: await userModel.findAvatarUrl(user.id),
+      back: meetingPageUrl(found.id),
       permissions: galene.GALENE_PERMISSIONS.member,
       endsAt: found.ends_at,
     });

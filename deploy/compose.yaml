@@ -32,6 +32,13 @@ services:
     restart: always
     env_file:
       - .env.production
+    # Encerrar uma reunião exige falar com o WebSocket do Galene a partir do
+    # app (GALENE_INTERNAL_WS_URL): a ação `groupaction lock`, que é a ÚNICA
+    # forma de expulsar os participantes, precisa ser enviada por alguém dentro
+    # da sala. O Galene roda em network_mode: host, então o app o alcança pelo
+    # gateway do Docker host — o mesmo caminho que o nginx já usa.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - uploads-data:/app/public/uploads
       - postgres-certs:/etc/ssl/postgres
