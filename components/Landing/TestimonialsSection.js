@@ -15,7 +15,7 @@ const MAX_CONTENT_LENGTH = 500;
  */
 export default function TestimonialsSection() {
   const { user } = useUser();
-  const [ref, isVisible] = useInView({ threshold: 0.08 });
+  const [ref, isVisible] = useInView({ threshold: 0.08, once: true });
   const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [content, setContent] = useState("");

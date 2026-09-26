@@ -23,6 +23,22 @@ describe("GET /api/v1/meetings/mine", () => {
 
   const emUmaHora = () => new Date(Date.now() + 60 * 60 * 1000);
   const emDuasHoras = () => new Date(Date.now() + 2 * 60 * 60 * 1000);
+  const haUmaHora = () => new Date(Date.now() - 60 * 60 * 1000);
+  const haDuasHoras = () => new Date(Date.now() - 2 * 60 * 60 * 1000);
+
+  /**
+   * Faixa de datas explícita, como a agenda manda (ela envia o mês visível).
+   *
+   * O padrão da rota começa em "agora", então sem `from` uma reunião passada já
+   * ficaria de fora por acidente — e o defeito ficaria escondido. É a faixa
+   * explícita que a mantém dentro da janela. Uso de ±1 dia (em vez do mês
+   * corrente) para o teste não depender do dia do mês em que roda.
+   */
+  const faixaQueCobre = () => {
+    const from = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const to = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    return `from=${encodeURIComponent(from.toISOString())}&to=${encodeURIComponent(to.toISOString())}`;
+  };
 
   beforeAll(async () => {
     ownerCtx = await createActivatedUserWithSession({
@@ -68,6 +84,19 @@ describe("GET /api/v1/meetings/mine", () => {
       ownerCtx.user.id,
     );
     await meeting.cancel(cancelada.id, ownerCtx.user.id);
+
+    // Reunião cuja janela já passou: o status continua 'scheduled' (o banco não
+    // envelhece sozinho), então quem a denuncia é o relógio.
+    await meeting.create({ org_id: studio.id, title: "Reunião da semana passada", starts_at: haDuasHoras(), ends_at: haUmaHora() }, ownerCtx.user.id);
+
+    // Reunião encerrada ANTES do horário planejado. `end()` preserva `ends_at`
+    // de propósito, então aqui o horário ainda está no futuro e só o STATUS a
+    // denuncia — é o caso que um filtro apenas por data deixaria visível.
+    const encerradaCedo = await meeting.create(
+      { org_id: studio.id, title: "Encerrada mais cedo", starts_at: haUmaHora(), ends_at: emUmaHora() },
+      ownerCtx.user.id,
+    );
+    await meeting.end(encerradaCedo.id, ownerCtx.user.id);
 
     // Estúdio de outra pessoa: o membro do Alfa não pode ver nada daqui.
     otherStudio = await organization.create(otherOwnerCtx.user, { name: "Estúdio Beta" });
@@ -121,6 +150,26 @@ describe("GET /api/v1/meetings/mine", () => {
     });
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual([]);
+  });
+
+  test("Meeting whose time has already passed is not listed", async () => {
+    const response = await fetch(`${webserver.origin}/api/v1/meetings/mine?${faixaQueCobre()}`, {
+      headers: authHeaders(memberCtx.sessionToken),
+    });
+    const body = await response.json();
+
+    expect(body.map((m) => m.title)).not.toContain("Reunião da semana passada");
+  });
+
+  test("Meeting ended early is not listed even though ends_at is still in the future", async () => {
+    const response = await fetch(`${webserver.origin}/api/v1/meetings/mine?${faixaQueCobre()}`, {
+      headers: authHeaders(memberCtx.sessionToken),
+    });
+    const body = await response.json();
+
+    // O `ends_at` desta reunião é futuro: se a exclusão dependesse só da data,
+    // ela apareceria na agenda abrindo uma sala que já foi encerrada.
+    expect(body.map((m) => m.title)).not.toContain("Encerrada mais cedo");
   });
 
   test("Meeting outside the requested range is not returned", async () => {

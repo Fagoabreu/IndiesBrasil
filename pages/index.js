@@ -209,8 +209,22 @@ const METRICS = [
   },
 ];
 
-function getMetricValue(summary, field) {
-  return summary ? summary[field] : "...";
+/**
+ * Valor exibido num card de métrica.
+ *
+ * O `"..."` fixo de antes mentia em dois casos: ficava para sempre se a
+ * requisição falhasse (o visitante nunca sabia que o dado não vinha), e não
+ * distinguia "carregando" de "não há esse dado". Agora:
+ *  - `loading`: reticências, que é a convenção de "aguarde";
+ *  - `ready` sem o campo, ou `error`: travessão, que significa "sem dado".
+ * @param {object|null} summary
+ * @param {"loading"|"ready"|"error"} state
+ * @param {string} field
+ */
+function getMetricValue(summary, state, field) {
+  if (state === "loading") return "…";
+  if (state !== "ready" || !summary) return "—";
+  return summary[field] ?? "—";
 }
 
 function NavToggle({ open, onToggle }) {
@@ -288,7 +302,10 @@ function LandingNav({ isLoggedIn, username, menuOpen, onToggle, onNavigate }) {
 }
 
 function SectionReveal({ children, className = "", as: Tag = "section", ...props }) {
-  const [ref, isVisible] = useInView({ threshold: 0.08 });
+  // `once`: a seção revela ao entrar e não volta a se esconder. Sem isso o
+  // conteúdo reaparecia deslocado 30px (translateY em .reveal) a cada rolagem
+  // de volta — a página parecia se remontar sozinha.
+  const [ref, isVisible] = useInView({ threshold: 0.08, once: true });
   return (
     <Tag ref={ref} className={`${styles.reveal} ${isVisible ? styles.revealVisible : ""} ${className}`} {...props}>
       {children}
@@ -303,6 +320,7 @@ function Home() {
   const { user } = useUser();
   const isLoggedIn = Boolean(user?.id);
   const [summary, setSummary] = useState(null);
+  const [summaryState, setSummaryState] = useState("loading");
   const [highlights, setHighlights] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -337,12 +355,19 @@ function Home() {
           credentials: "include",
         });
 
-        if (!response.ok) return;
+        if (!response.ok) {
+          // Não deixa os cards em "carregando" para sempre: um erro precisa
+          // ser visível como ausência de dado, não como lentidão.
+          setSummaryState("error");
+          return;
+        }
 
         const data = await response.json();
         setSummary(data);
+        setSummaryState("ready");
       } catch (error) {
         console.error("Erro ao buscar summary:", error);
+        setSummaryState("error");
       }
     }
 
@@ -492,15 +517,17 @@ function Home() {
             </div>
           )}
 
-          <div className={styles.metrics}>
+          {/* `aria-busy` avisa a tecnologia assistiva que os números ainda
+              estão chegando — antes as reticências passavam como valor. */}
+          <div className={styles.metrics} aria-busy={summaryState === "loading"}>
             {METRICS.map((metric) => (
               <MetricCard
                 key={metric.title}
                 title={metric.title}
                 period={metric.period}
-                value={getMetricValue(summary, metric.field)}
+                value={getMetricValue(summary, summaryState, metric.field)}
                 previousLabel={metric.previousLabel}
-                previousValue={getMetricValue(summary, metric.previousField)}
+                previousValue={getMetricValue(summary, summaryState, metric.previousField)}
                 icon={metric.icon}
                 href={metric.href}
               />

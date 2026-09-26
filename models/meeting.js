@@ -168,6 +168,18 @@ async function listByOrgId(orgId, opts = {}) {
  * definições de "sou do estúdio" divergem, e nesta a divergência seria um
  * vazamento de dado privado.
  *
+ * Só entram reuniões com que ainda dá para interagir: as canceladas, as
+ * encerradas e as cuja janela já passou ficam de fora. A agenda não tem o que
+ * fazer com uma reunião terminada — o clique abriria uma sala fechada.
+ *
+ * As duas condições de tempo/estado são necessárias e NÃO se cobrem:
+ *  - `status` pega o encerramento ANTECIPADO, que preserva `ends_at` (ver
+ *    `end()`): a reunião acabou mas o horário agendado ainda está no futuro, e
+ *    um filtro só por data a deixaria visível;
+ *  - `ends_at > NOW()` pega a reunião cujo horário passou com o status ainda em
+ *    'scheduled' — o banco não envelhece sozinho, e a fase era derivada pelo
+ *    relógio (`lib/meetingFormat.getMeetingPhase`).
+ *
  * @param {string} userId
  * @param {{ from?: Date|string, to?: Date|string }} [range]
  */
@@ -184,9 +196,10 @@ async function findUpcomingByMember(userId, { from, to } = {}) {
   const result = await database.query({
     text: `
       ${BASE_MEETING_QUERY}
-      WHERE m.status <> 'cancelled'
+      WHERE m.status NOT IN ('cancelled', 'ended')
         AND m.starts_at < $3
         AND m.ends_at > $2
+        AND m.ends_at > NOW()
         AND (
           o.owner_id = $1
           OR EXISTS (
