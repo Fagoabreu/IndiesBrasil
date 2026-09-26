@@ -1,7 +1,7 @@
 import { Heading } from "@primer/react";
 import Link from "next/link";
 import PropTypes from "prop-types";
-import "./MetricCard.css";
+import styles from "./MetricCard.module.css";
 
 MetricCard.propTypes = {
   title: PropTypes.string.isRequired,
@@ -23,41 +23,41 @@ MetricCard.propTypes = {
 export default function MetricCard({ title, period, value, previousLabel, previousValue, icon, href }) {
   const content = (
     <>
-      <div className="metric-header">
-        <Heading as="h3" className="metric-title">
+      <div className={styles.header}>
+        <Heading as="h3" className={styles.title}>
           {title}
         </Heading>
 
-        {icon && <div className="metric-icon">{icon}</div>}
+        {icon && <div className={styles.icon}>{icon}</div>}
       </div>
 
-      <span className="metric-period">{period}</span>
+      <span className={styles.period}>{period}</span>
 
-      <div className="metric-value-row">
-        <div className="metric-value">{value}</div>
+      <div className={styles.valueRow}>
+        <div className={styles.value}>{value}</div>
         {href && (
-          <span className="metric-arrow" aria-hidden="true">
+          <span className={styles.arrow} aria-hidden="true">
             →
           </span>
         )}
       </div>
 
       {previousLabel && (
-        <div className="metric-previous">
+        <div className={styles.previous}>
           {previousLabel}: <strong>{previousValue}</strong>
         </div>
       )}
 
-      {href && <span className="metric-sr-only">Ver {title}</span>}
+      {href && <span className={styles.srOnly}>Ver {title}</span>}
     </>
   );
 
   if (!href) {
-    return <div className="metric-card">{content}</div>;
+    return <div className={styles.card}>{content}</div>;
   }
 
   return (
-    <Link href={href} className="metric-card metric-card-link">
+    <Link href={href} className={`${styles.card} ${styles.cardLink}`}>
       {content}
     </Link>
   );

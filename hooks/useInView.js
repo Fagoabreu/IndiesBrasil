@@ -11,9 +11,14 @@ import { useState, useEffect, useCallback } from "react";
  * @param {object} options - Opções do IntersectionObserver
  * @param {number} [options.threshold=0.2] - Percentual visível para considerar "visível"
  * @param {string} [options.rootMargin="0px 0px -70px 0px"] - Margem extra
+ * @param {boolean} [options.once=false] - Revela uma única vez e para de
+ *   observar. Use em revelação de conteúdo: sem isso o elemento volta ao
+ *   estado inicial ao sair da viewport e a seção "desaparece" quando o usuário
+ *   rola de volta. NÃO use em sentinela de scroll infinito (`pages/posts`,
+ *   `pages/membros`), onde voltar a `false` é justamente o que rearma a busca.
  */
 export default function useInView(options = {}) {
-  const { threshold = 0.2, rootMargin = "0px 0px -70px 0px" } = options;
+  const { threshold = 0.2, rootMargin = "0px 0px -70px 0px", once = false } = options;
   const [isVisible, setIsVisible] = useState(false);
   const [node, setNode] = useState(null);
 
@@ -36,14 +41,22 @@ export default function useInView(options = {}) {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setIsVisible(entry.isIntersecting);
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          // `once`: revelou, cumpriu o papel. Sem o disconnect o observer
+          // seguiria disparando a cada rolagem, e o `setIsVisible(false)` do
+          // caminho abaixo voltaria a esconder a seção.
+          if (once) observer.disconnect();
+          return;
+        }
+        setIsVisible(false);
       },
       { threshold, rootMargin },
     );
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, [node, threshold, rootMargin]);
+  }, [node, threshold, rootMargin, once]);
 
   return [ref, isVisible];
 }

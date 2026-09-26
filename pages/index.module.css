@@ -1149,6 +1149,22 @@
 }
 
 /* ========================================
+   ÂNCORAS
+======================================== */
+/* O header é `position: sticky` com 64px de altura (.navInner). Sem
+   scroll-margin, navegar para um id de seção coloca o alvo ATRÁS do header —
+   o conteúdo é empurrado para fora de vista e o "pulo" parece cair no lugar
+   errado. A folga sobre os 64px evita que o título encoste na borda.
+   `#conteudo` é o próprio `.page`, e `#audiencias`/`#recursos`/`#estudios`
+   ficam em elementos com `.section`/`.studioSection` — por isso são as
+   classes que recebem a regra, e não os ids. */
+.page,
+.section,
+.studioSection {
+  scroll-margin-top: 80px;
+}
+
+/* ========================================
    MOVIMENTO REDUZIDO (escopo da landing)
 ======================================== */
 @media (prefers-reduced-motion: reduce) {

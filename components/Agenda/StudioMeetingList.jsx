@@ -17,6 +17,10 @@ import styles from "./StudioMeetingList.module.css";
  *
  * O destino do clique é a página de reuniões do estúdio, não `/reunioes/<id>`:
  * aquela é a entrada de convidado externo, que pede código de acesso.
+ *
+ * Só lista reuniões com que ainda dá para interagir (agendadas ou ao vivo):
+ * uma reunião encerrada não tem ação possível, e o clique levaria a uma sala
+ * fechada.
  */
 export default function StudioMeetingList({ meetings }) {
   // "Agora" atualizado periodicamente: o selo "Ao vivo" precisa mudar sem
@@ -31,6 +35,19 @@ export default function StudioMeetingList({ meetings }) {
 
   if (!meetings?.length) return null;
 
+  // Só fases com que ainda dá para interagir. O SQL já exclui as encerradas,
+  // mas a lista é buscada uma vez por mês: sem este corte, uma reunião que
+  // termina com a aba aberta continuaria na tela até o próximo fetch. O ticker
+  // acima já re-renderiza a cada 30s, então aqui o filtro vale a cada tique.
+  // Lista de permissão (em vez de negar "ended") para que uma fase nova não
+  // apareça por descuido.
+  const active = meetings.filter((meeting) => {
+    const phase = getMeetingPhase(meeting, nowMs);
+    return phase === "scheduled" || phase === "live";
+  });
+
+  if (!active.length) return null;
+
   return (
     <section className={styles.block}>
       <header className={styles.head}>
@@ -41,7 +58,7 @@ export default function StudioMeetingList({ meetings }) {
       </header>
 
       <ul className={styles.list}>
-        {meetings.map((m) => {
+        {active.map((m) => {
           // `eventDateParts` traz dia/mês no fuso de Brasília — o mesmo que o
           // `formatMeetingRange` usa no horário, então o selo de data e a faixa
           // de horário não discordam (era o defeito da lista de eventos).
