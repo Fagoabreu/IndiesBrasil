@@ -4,6 +4,7 @@ import Image from "next/image";
 import Head from "next/head";
 import { QRCodeSVG } from "qrcode.react";
 import styles from "./press-kit.module.css";
+import IconSvg from "@/components/IconSvg/IconSvg";
 import { SITE_URL } from "@/lib/seo";
 
 /* =========================================================
@@ -43,22 +44,6 @@ const BOOK_TYPE_LABELS = {
   zine: "Zine",
 };
 
-const SOCIAL_ICONS = {
-  youtube: "▶",
-  twitch: "📺",
-  twitter: "𝕏",
-  instagram: "📷",
-  discord: "💬",
-  tiktok: "🎵",
-  facebook: "📘",
-  linkedin: "💼",
-  github: "⌨",
-  website: "🌐",
-  email: "✉",
-  steam: "🎮",
-  itch: "🕹",
-};
-
 /* =========================================================
  * Helpers
  * ========================================================= */
@@ -85,15 +70,6 @@ function buildAddressLines(addr) {
   const line2 = [addr.neighborhood, addr.city, addr.state].filter(Boolean).join(", ");
   const line3 = [addr.zip_code, addr.country].filter(Boolean).join(" — ");
   return [line1, line2, line3].filter(Boolean);
-}
-
-function getContactIcon(contact) {
-  if (!contact?.icon_key) return null;
-  const key = contact.icon_key.toLowerCase();
-  for (const [pattern, emoji] of Object.entries(SOCIAL_ICONS)) {
-    if (key.includes(pattern)) return emoji;
-  }
-  return "🔗";
 }
 
 function getVideoId(url) {
@@ -793,12 +769,37 @@ export default function PressKitPage() {
               <section className={styles.section}>
                 <h2 className={styles.sectionTitle}>Redes Sociais</h2>
                 <div className={styles.socialGrid}>
-                  {socialContacts.map((c) => (
-                    <a key={c.id ?? c.contact_value} href={c.contact_value} target="_blank" rel="noopener noreferrer" className={styles.socialLink}>
-                      <span className={styles.socialIcon}>{getContactIcon(c)}</span>
-                      <span className={styles.socialLabel}>{c.icon_key ? c.icon_key.charAt(0).toUpperCase() + c.icon_key.slice(1) : "Link"}</span>
-                    </a>
-                  ))}
+                  {socialContacts.map((c) => {
+                    // Sem URL utilizável (um @usuario do Discord, por exemplo) o
+                    // chip vira texto. Antes o `href` era `c.contact_value` cru:
+                    // com "@usuario" o navegador resolvia um link RELATIVO,
+                    // apontando para dentro do próprio site.
+                    const chip = (
+                      <>
+                        <span className={styles.socialIcon}>
+                          <IconSvg src={`/images/contacts/${c.icon_img}.svg`} alt="" fallback />
+                        </span>
+                        <span className={styles.socialLabel}>{c.label}</span>
+                      </>
+                    );
+
+                    return c.url ? (
+                      <a
+                        key={c.id ?? c.contact_value}
+                        href={c.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.socialLink}
+                        title={c.contact_value}
+                      >
+                        {chip}
+                      </a>
+                    ) : (
+                      <span key={c.id ?? c.contact_value} className={styles.socialLink} title={c.contact_value}>
+                        {chip}
+                      </span>
+                    );
+                  })}
                 </div>
               </section>
             )}
@@ -908,8 +909,10 @@ export default function PressKitPage() {
                   <dt>Contato</dt>
                   <dd>
                     {otherContacts.map((c) => (
-                      <span key={c.id ?? c.contact_value} className={styles.factContactRow}>
-                        {c.contact_value}
+                      // `display` traz o formato legível (telefone com máscara,
+                      // e-mail); a URL crua só aparece quando não há handle.
+                      <span key={c.id ?? c.contact_value} className={styles.factContactRow} title={c.contact_value}>
+                        {c.display || c.contact_value}
                       </span>
                     ))}
                   </dd>

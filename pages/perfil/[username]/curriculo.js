@@ -103,8 +103,10 @@ export default function CurriculoPage() {
               <ul className={styles.cvHeaderContacts}>
                 {contacts.map((c) => (
                   <li key={c.id}>
-                    {(c.nome || c.icon_key) && <span className={styles.cvContactLabel}>{c.nome || c.icon_key}</span>}
-                    <span>{c.contact_value}</span>
+                    {/* `label` vem do registro de contatos — antes era o
+                        `icon_key` cru ("Youtube" em vez de "YouTube"). */}
+                    {c.label && <span className={styles.cvContactLabel}>{c.label}</span>}
+                    <span>{c.display || c.contact_value}</span>
                   </li>
                 ))}
                 <li>
@@ -205,8 +207,8 @@ export default function CurriculoPage() {
                 <ul className={styles.cvSideList}>
                   {contacts.map((c) => (
                     <li key={c.id} className={styles.cvSideItem}>
-                      <span className={styles.cvSideItemName}>{c.nome || c.icon_key}</span>
-                      <span className={styles.cvSideItemLevel}>{c.contact_value}</span>
+                      <span className={styles.cvSideItemName}>{c.label || c.icon_key}</span>
+                      <span className={styles.cvSideItemLevel}>{c.display || c.contact_value}</span>
                     </li>
                   ))}
                 </ul>

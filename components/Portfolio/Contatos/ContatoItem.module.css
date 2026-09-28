@@ -1,16 +1,75 @@
+/* ==========================================================================
+   ContatoItem — linha de contato (ícone + handle).
+   --------------------------------------------------------------------------
+   O `word-break: break-all` que existia aqui é o que partia
+   "store.steampowered.co / m/search/?developer=Green%2 / 0Tale%20Studios" no
+   meio da palavra. Agora o texto exibido é um handle curto — `@canal`,
+   `greentale.itch.io` — e o que for longo é cortado com reticências em vez de
+   quebrado no meio: a URL completa continua acessível no `title` e no `href`.
+   ========================================================================== */
+
 .item {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
+  text-decoration: none;
 }
 
 .link {
-  font-size: 0.875rem;
-  color: var(--brand-primary);
-  text-decoration: none;
-  word-break: break-all;
+  color: inherit;
 }
 
-.link:hover {
+.link:hover .value {
+  color: var(--brand-primary);
   text-decoration: underline;
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.value {
+  font-size: 0.875rem;
+  color: var(--fgColor-default);
+  /* `nowrap` + `ellipsis`: um handle comprido (ou uma URL que virou fallback)
+     encolhe com reticências em vez de quebrar no meio da palavra. */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* O rótulo do tipo ("YouTube", "WhatsApp").
+   Existe sempre no DOM — é ele que dá o nome acessível por extenso — mas só
+   ocupa espaço onde não há hover: com mouse, o `title` do item já mostra o
+   mesmo texto, sem poluir a lista. */
+.label {
+  font-size: 0.7rem;
+  color: var(--fgColor-muted);
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@media (hover: hover) {
+  .label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
 }

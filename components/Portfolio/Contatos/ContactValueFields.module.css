@@ -1,0 +1,70 @@
+/* ==========================================================================
+   ContactValueFields — campos de cadastro de contato.
+   --------------------------------------------------------------------------
+   Estilos próprios (e não herdados da página) porque o componente é usado em
+   três telas com CSS Modules diferentes — depender do `styles` de cada uma
+   tornaria o compartilhamento impossível.
+   ========================================================================== */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+}
+
+.input,
+.select {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  color: var(--fgColor-default);
+  background-color: var(--bgColor-default);
+  border: 1px solid var(--borderColor-default);
+  border-radius: 6px;
+}
+
+.input:focus,
+.select:focus {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 1px;
+}
+
+/* A dica é o que ensina o formato aceito — por isso não é um texto tímido. */
+.hint {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--fgColor-muted);
+}
+
+.warning {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--fgColor-attention);
+}
+
+/* Prévia: mostra o `ContatoItem` real com o valor digitado. */
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px dashed var(--borderColor-muted);
+  border-radius: 8px;
+  background-color: var(--bgColor-muted);
+}
+
+.previewLabel {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fgColor-muted);
+}

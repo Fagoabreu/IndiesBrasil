@@ -1,4 +1,5 @@
 import { InternalServerError } from "@/infra/errors.js";
+import { serializeContact } from "@/lib/contactTypes";
 
 const availableFeatures = new Set([
   //USER
@@ -668,13 +669,29 @@ function getProfileStudioResource(resource) {
   };
 }
 
+/**
+ * Contato de perfil pronto para exibição.
+ *
+ * Ponto único de enriquecimento do contato de PERFIL: passa por
+ * `serializeContact` para ganhar `url`/`display`/`label`. É idempotente, então
+ * serve tanto para uma linha crua do banco (resposta de criação) quanto para
+ * uma que já veio serializada de `findContactsByUserId` — e é o que impede as
+ * telas de voltarem a decidir sozinhas como mostrar um contato.
+ *
+ * (O contato de ESTÚDIO tem o mesmo tratamento em
+ * `organization.findContacts`, porque aquela rota não passa por aqui.)
+ */
 function getProfileContactResource(resource) {
+  const contact = serializeContact(resource);
   return {
-    id: resource.id,
-    icon_img: resource.icon_img,
-    icon_key: resource.icon_key,
-    contact_type_id: resource.contact_type_id,
-    contact_value: resource.contact_value,
+    id: contact.id,
+    icon_img: contact.icon_img,
+    icon_key: contact.icon_key,
+    contact_type_id: contact.contact_type_id,
+    contact_value: contact.contact_value,
+    url: contact.url,
+    display: contact.display,
+    label: contact.label,
   };
 }
 

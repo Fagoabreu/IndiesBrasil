@@ -326,22 +326,16 @@
   cursor: not-allowed;
 }
 
-/* Contatos */
-.contactRow {
+/* Contatos
+   A linha `select + input + botão` virou uma coluna: os campos agora têm
+   rótulo, dica e prévia (components/Portfolio/Contatos/ContactValueFields), e
+   lado a lado isso não caberia. */
+.contactForm {
   display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.contactRow select.input {
-  min-width: 140px;
-  flex-shrink: 0;
-}
-
-.contactRow .input:not(select) {
-  flex: 1;
-  min-width: 120px;
+  flex-direction: column;
+  gap: 14px;
+  align-items: flex-start;
+  max-width: 480px;
 }
 
 /* Jogos */
