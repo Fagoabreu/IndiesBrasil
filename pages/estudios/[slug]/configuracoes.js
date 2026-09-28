@@ -9,6 +9,8 @@ import { ArrowLeftIcon } from "@primer/octicons-react";
 import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
 import AddressFormFields from "@/components/Address/AddressFormFields";
+import ContactValueFields from "@/components/Portfolio/Contatos/ContactValueFields";
+import ContatoItem from "@/components/Portfolio/Contatos/ContatoItem";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
 import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 import ContentRatingModal from "@/components/ContentRatingModal";
@@ -1625,9 +1627,11 @@ export default function ConfiguracoesPage() {
               <ul className={styles.pendingList}>
                 {contacts.map((c) => (
                   <li key={c.id} className={styles.pendingItem}>
-                    <span className={styles.pendingUsername}>
-                      <strong>{c.icon_key}</strong> — {c.contact_value}
-                    </span>
+                    {/* Mesmo componente que exibe o contato no perfil e no
+                        estúdio: antes esta lista escrevia o `icon_key` e o
+                        valor cru, então a prévia do que estava salvo não batia
+                        com o que o visitante veria. */}
+                    <ContatoItem item={c} />
                     <button
                       type="button"
                       className={styles.btnCancelInvite}
@@ -1641,22 +1645,15 @@ export default function ConfiguracoesPage() {
               </ul>
             )}
 
-            <form onSubmit={handleAddContact} className={styles.contactRow}>
-              <select className={styles.input} value={newContactTypeId} onChange={(e) => setNewContactTypeId(e.target.value)}>
-                <option value="">Tipo de contato</option>
-                {contactTypes.map((ct) => (
-                  <option key={ct.id} value={ct.id}>
-                    {ct.icon_key}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="text"
-                className={styles.input}
-                placeholder="URL ou valor"
-                value={newContactValue}
-                onChange={(e) => setNewContactValue(e.target.value)}
-                maxLength={255}
+            <form onSubmit={handleAddContact} className={styles.contactForm}>
+              <ContactValueFields
+                contactTypes={contactTypes}
+                value={{ contact_type_id: newContactTypeId, contact_value: newContactValue }}
+                onChange={(field, val) => {
+                  if (field === "contact_type_id") setNewContactTypeId(val);
+                  else setNewContactValue(val);
+                }}
+                idPrefix="estudio-contato"
               />
               <button type="submit" className={styles.btnSave} disabled={addingContact || !newContactTypeId || !newContactValue.trim()}>
                 {addingContact ? <Spinner size="small" /> : "Adicionar"}

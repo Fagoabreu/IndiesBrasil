@@ -2,6 +2,8 @@ import database from "infra/database";
 import { NotFoundError, ValidationError, ForbiddenError } from "infra/errors.js";
 import { generateUniqueSlug } from "lib/slug";
 import { isValidCnpj } from "lib/cnpj";
+import { serializeContact } from "lib/contactTypes";
+import contactResolver from "./contact";
 import { actorRole, canGrantRole, canRemoveMember, canRevokeRole } from "lib/studioPermissions";
 import moderation from "./moderation.js";
 import reputation from "./reputation";
@@ -783,6 +785,15 @@ async function updateAddress(addressId, addr) {
   });
 }
 
+/**
+ * Contatos do estúdio prontos para exibição.
+ *
+ * Passa por `serializeContact` pelo mesmo motivo que o contato de perfil passa
+ * em `authorization.getProfileContactResource`: a rota de estúdio não usa o
+ * `filterOutput`, então sem isto as duas telas exibiriam o contato de formas
+ * diferentes — que era exatamente o caso antes (uma mostrava a URL crua, a
+ * outra escolhia por conta própria).
+ */
 async function findContacts(orgId) {
   const result = await database.query({
     text: `
@@ -794,19 +805,45 @@ async function findContacts(orgId) {
     `,
     values: [orgId],
   });
-  return result.rows;
+  return result.rows.map(serializeContact);
 }
 
+/**
+ * Cria um contato do estúdio, normalizando o valor pelo tipo.
+ *
+ * A normalização vive aqui (e não na rota) pelo mesmo motivo do contato de
+ * perfil: é neste ponto que tipo e valor estão juntos, e assim as três rotas de
+ * escrita compartilham a mesma regra.
+ *
+ * A CTE devolve o contato já com `icon_key`/`icon_img` — o `RETURNING *` não os
+ * tem (vivem em `contact_type`), e sem eles a serialização não sabe interpretar
+ * o valor, fazendo o handle desaparecer da resposta.
+ */
 async function createContact(orgId, contactTypeId, contactValue) {
+  const { value } = await contactResolver.resolveValue({
+    contact_type_id: contactTypeId,
+    contact_value: contactValue,
+  });
+
   const result = await database.query({
     text: `
-      INSERT INTO organization_contacts (org_id, contact_type_id, contact_value)
-      VALUES ($1, $2, $3)
-      RETURNING *
+      WITH inserted AS (
+        INSERT INTO organization_contacts (org_id, contact_type_id, contact_value)
+        VALUES ($1, $2, $3)
+        RETURNING *
+      )
+      SELECT
+        oc.id,
+        oc.contact_value,
+        ct.icon_key,
+        ct.icon_img,
+        ct.id AS contact_type_id
+      FROM inserted oc
+      JOIN contact_type ct ON ct.id = oc.contact_type_id
     `,
-    values: [orgId, contactTypeId, contactValue.trim()],
+    values: [orgId, contactTypeId, value],
   });
-  return result.rows[0];
+  return serializeContact(result.rows[0]);
 }
 
 async function deleteContact(id, orgId) {

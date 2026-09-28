@@ -5,3 +5,12 @@
   border-radius: 4px;
   padding: 1px;
 }
+
+/* Ícone genérico quando o arquivo do tipo de contato não carrega. Mantém a
+   mesma caixa do ícone real para a linha não desalinhar. */
+.fallbackIcon {
+  margin-left: 8px;
+  vertical-align: middle;
+  flex-shrink: 0;
+  color: var(--fgColor-muted);
+}

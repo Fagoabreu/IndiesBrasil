@@ -674,7 +674,10 @@
 }
 
 .socialIcon {
-  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  /* Era um emoji (`font-size: 1rem`). Agora é o mesmo SVG dos contatos no
+     resto do site, então o que importa é a caixa, não o tamanho da fonte. */
   line-height: 1;
 }
 

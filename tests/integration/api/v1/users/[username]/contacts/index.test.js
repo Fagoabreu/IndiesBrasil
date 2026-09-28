@@ -88,4 +88,88 @@ describe("GET/POST /api/v1/users/[username]/contacts", () => {
       icon_key: "email",
     });
   });
+
+  /* ================================================================
+   * Normalização na escrita e enriquecimento na leitura
+   *
+   * O que este bloco protege: sem a normalização, `@canal` entra no banco como
+   * o usuário digitou e não vira link. Sem o enriquecimento, a tela mostra a
+   * URL crua no lugar do handle — e era assim que o perfil do Green Tale
+   * exibia `https://youtube.com/@GreentaleStudios`.
+   * ================================================================ */
+
+  test("Contact is normalized and serialized for display", async () => {
+    const type = await contact.createType({ icon_key: "youtube", icon_img: "youtube" });
+
+    const postResponse = await fetch(`${webserver.origin}/api/v1/users/${owner.username}/contacts`, {
+      method: "POST",
+      headers: { ...authHeaders(ownerToken), "content-type": "application/json" },
+      body: JSON.stringify({ contact_value: "@MeuCanal", contact_type_id: type.id }),
+    });
+    expect(postResponse.status).toBe(200);
+
+    // O POST já devolve o contato pronto (antes devolvia tudo `undefined`,
+    // porque `saveContato` retornava o array do INSERT).
+    const created = await postResponse.json();
+    expect(created.contact_value).toBe("https://www.youtube.com/@MeuCanal");
+    expect(created.display).toBe("@MeuCanal");
+    expect(created.url).toBe("https://www.youtube.com/@MeuCanal");
+    expect(created.label).toBe("YouTube");
+
+    const getResponse = await fetch(`${webserver.origin}/api/v1/users/${owner.username}/contacts`);
+    const body = await getResponse.json();
+    const canal = body.find((c) => c.icon_key === "youtube");
+
+    expect(canal).toMatchObject({
+      contact_value: "https://www.youtube.com/@MeuCanal",
+      display: "@MeuCanal",
+      url: "https://www.youtube.com/@MeuCanal",
+      label: "YouTube",
+    });
+  });
+
+  test("Invalid phone is refused instead of stored", async () => {
+    const type = await contact.createType({ icon_key: "whatsapp", icon_img: "whatsapp" });
+
+    const response = await fetch(`${webserver.origin}/api/v1/users/${owner.username}/contacts`, {
+      method: "POST",
+      headers: { ...authHeaders(ownerToken), "content-type": "application/json" },
+      // DDD 20 não existe — passa por qualquer checagem de tamanho.
+      body: JSON.stringify({ contact_value: "(20) 99999-9999", contact_type_id: type.id }),
+    });
+
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body.message).toMatch(/telefone válido/i);
+
+    // E não gravou nada: o telefone inválido não pode sobrar no perfil.
+    const getResponse = await fetch(`${webserver.origin}/api/v1/users/${owner.username}/contacts`);
+    const contacts = await getResponse.json();
+    expect(contacts.filter((c) => c.icon_key === "whatsapp")).toHaveLength(0);
+  });
+
+  test("Phone is normalized into a usable link", async () => {
+    const type = await contact.createType({ icon_key: "whatsapp", icon_img: "whatsapp" });
+
+    const response = await fetch(`${webserver.origin}/api/v1/users/${owner.username}/contacts`, {
+      method: "POST",
+      headers: { ...authHeaders(ownerToken), "content-type": "application/json" },
+      body: JSON.stringify({ contact_value: "(11) 99999-8888", contact_type_id: type.id }),
+    });
+    expect(response.status).toBe(200);
+
+    const body = await response.json();
+    expect(body.contact_value).toBe("https://wa.me/5511999998888");
+    expect(body.url).toBe("https://wa.me/5511999998888");
+    expect(body.display).toBe("(11) 99999-8888");
+  });
+
+  test("Unknown contact type is refused", async () => {
+    const response = await fetch(`${webserver.origin}/api/v1/users/${owner.username}/contacts`, {
+      method: "POST",
+      headers: { ...authHeaders(ownerToken), "content-type": "application/json" },
+      body: JSON.stringify({ contact_value: "qualquer", contact_type_id: 999999 }),
+    });
+    expect(response.status).toBe(400);
+  });
 });

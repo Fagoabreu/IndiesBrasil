@@ -143,6 +143,20 @@ Como usar:
 - Preview da imagem salva e botao de remover ficam na pagina (sao layout de cada tela); o `ImageUploader` so entrega o recorte.
 - A API fica na pagina, dentro de `onCropped`: upload imediato (`await fetch` com FormData) ou adiado (guardar `blob`/`dataUrl` e enviar no submit do formulario).
 
+## Contatos (perfil, estudio, press kit, curriculo)
+
+- O contato e **um campo de texto livre** (`contact_value`, `VARCHAR(255)`) em duas tabelas espelhadas: `users_contacts` e `organization_contacts`. Os tipos vem de `contact_type` (gerenciavel em `/admin/contact-types`).
+- Toda traducao entre o que o usuario digita e o que a tela mostra vive em `lib/contactTypes.js` — o **registro unico**. Nunca decida formato/rotulo na tela: eram 6 telas decidindo sozinhas, e divergiam (o press kit usava emoji, o resto SVG).
+- `serializeContact(row)` enriquece um contato com `url` (href), `display` (handle legivel: `@canal`, `greentale.itch.io`, `(11) 99999-9999`) e `label` (rotulo do tipo). Roda na **leitura** e nunca lanca nem descarta.
+- **Contrato que torna a mudanca segura:** URL absoluta desconhecida passa intacta e continua clicavel. Por isso nenhum contato antigo quebra e a migracao de dados e opcional (`node scripts/normalize-contacts.js --dry-run`).
+- Na **escrita** a regra e outra: `contact.resolveValue({contact_type_id, contact_value})` (`models/contact.js`) normaliza e valida. Roda nos models (`profile.saveContato`, `profile.patchContacts`, `organization.createContact`), nao nas rotas — e no PATCH o tipo pode vir do registro ja gravado.
+- Telefone (`lib/phone.js`) aceita so fixo ou celular do Brasil, com **DDD conferido contra a lista da Anatel**: "20" e "36" parecem plausiveis e nao sao DDD nenhum. WhatsApp e Fone sao os unicos tipos com formato obrigatorio; os outros sao permissivos de proposito.
+- `contact_value` guarda a forma canonica: `https://www.youtube.com/@canal`, `https://wa.me/5511999999999`, `tel:+5511999999999`. Um tipo sem entrada no registro cai em `GENERIC` — continua funcionando, so nao ganha handle nem validacao (nao tornamos `contact_type` refem do codigo).
+- Ao criar ou editar, o retorno precisa trazer `icon_key` (usar CTE no `INSERT`/`UPDATE`): um `RETURNING *` de `users_contacts` nao tem essa coluna, e sem ela a serializacao nao sabe interpretar o valor e o handle sai `null`.
+- Exibicao: `components/Portfolio/Contatos/ContatoItem.jsx` e o ponto unico. O hande fica visivel e a URL completa vai no `title`/`href`.
+- **Nao use tooltip em CSS posicionado fora da linha**: `SectionPanel` e `ListableSectionPanel` tem `overflow: hidden` e o balao seria cortado. O rotulo usa `title` nativo, e onde nao existe hover (`@media (hover: none)`) ele aparece como legenda fixa — informacao que so existe no hover e informacao perdida no toque.
+- Contato sem URL utilizavel (um `@usuario` do Discord) vira **texto, nao link** — `href="@usuario"` e um link relativo apontando para dentro do site.
+
 ## Webconferencia (Galene)
 
 - `galene/` e um **subprojeto Go vendorizado** do upstream `jech/galene` (tag base `galene-1.2.1`) — nao uma pasta de deploy. Leia `galene/UPSTREAM.md` (contrato com o upstream) e `galene/CUSTOMIZATIONS.md` (o porque de cada customizacao) antes de alterar qualquer arquivo de la.

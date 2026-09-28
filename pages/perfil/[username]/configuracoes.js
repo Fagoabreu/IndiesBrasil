@@ -5,6 +5,7 @@ import { ArrowLeftIcon } from "@primer/octicons-react";
 
 import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
+import ContactValueFields from "@/components/Portfolio/Contatos/ContactValueFields";
 import { EXPERIENCE_LEVELS } from "@/lib/experience-levels";
 import styles from "./configuracoes.module.css";
 
@@ -334,21 +335,10 @@ function ContatoItemRow({ item, contactTypes, username, onSaved, onDeleted }) {
 
       {open && (
         <form className={styles.itemEditForm} onSubmit={handleSave}>
-          <div className={styles.field}>
-            <label className={styles.label}>Tipo de contato</label>
-            <select className={styles.select} value={form.contact_type_id} onChange={(e) => update("contact_type_id", e.target.value)}>
-              <option value="">Selecione...</option>
-              {contactTypes.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.icon_key}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className={styles.field}>
-            <label className={styles.label}>Valor (URL, e-mail, @usuario…)</label>
-            <input className={styles.input} value={form.contact_value} onChange={(e) => update("contact_value", e.target.value)} />
-          </div>
+          {/* Campos compartilhados com o formulário de adicionar e com o do
+              estúdio: placeholder, dica, inferência do tipo e prévia vivem em
+              um lugar só (components/Portfolio/Contatos/ContactValueFields). */}
+          <ContactValueFields contactTypes={contactTypes} value={form} onChange={update} idPrefix={`contato-${item.id}`} />
           <div className={styles.itemEditActions}>
             <button type="submit" className={styles.btnSave} disabled={saving}>
               {saving ? "Salvando..." : "Salvar"}
@@ -1222,41 +1212,12 @@ export default function ProfileConfiguracoesPage() {
             {showAddContato ? (
               <form className={styles.addForm} onSubmit={handleAddContato}>
                 <p className={styles.addFormTitle}>Novo contato</p>
-                <div className={styles.field}>
-                  <label className={styles.label}>Tipo de contato</label>
-                  <select
-                    className={styles.select}
-                    value={newContato.contact_type_id}
-                    onChange={(e) =>
-                      setNewContato((p) => ({
-                        ...p,
-                        contact_type_id: e.target.value,
-                      }))
-                    }
-                    required
-                  >
-                    <option value="">Selecione...</option>
-                    {contactTypes.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.icon_key}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className={styles.field}>
-                  <label className={styles.label}>Valor (URL, e-mail, @usuario…)</label>
-                  <input
-                    className={styles.input}
-                    value={newContato.contact_value}
-                    onChange={(e) =>
-                      setNewContato((p) => ({
-                        ...p,
-                        contact_value: e.target.value,
-                      }))
-                    }
-                    required
-                  />
-                </div>
+                <ContactValueFields
+                  contactTypes={contactTypes}
+                  value={newContato}
+                  onChange={(field, val) => setNewContato((p) => ({ ...p, [field]: val }))}
+                  idPrefix="novo-contato"
+                />
                 <div className={styles.addFormActions}>
                   <button type="submit" className={styles.btnSave} disabled={addingContato}>
                     {addingContato ? "Adicionando..." : "Adicionar"}

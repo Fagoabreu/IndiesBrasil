@@ -1,6 +1,7 @@
 import database from "infra/database";
 import user from "./user";
 import organization from "./organization";
+import contactType from "./contact";
 import { NotFoundError } from "@/infra/errors";
 import reputation from "./reputation";
 
@@ -572,6 +573,31 @@ async function updateHistoricoById(userInputValues) {
   }
 }
 
+/**
+ * Colunas e junção que dão a um contato a forma que a tela espera.
+ *
+ * O `icon_key` é indispensável: é ele que diz ao `serializeContact` se o valor
+ * é telefone, @usuario ou URL. Um `RETURNING *` de `users_contacts` **não** traz
+ * essa coluna (ela vive em `contact_type`), então criar ou editar um contato
+ * devolvia um registro que a serialização não sabia interpretar — o handle
+ * saía `null` e a tela cairia na URL crua.
+ *
+ * Por isso a forma é declarada uma vez e usada na lista, no insert e no update:
+ * três cópias divergiriam, e a divergência aqui é silenciosa.
+ */
+const CONTACT_SELECT = {
+  columns: `
+          uc.id,
+          uc.user_id,
+          uc.contact_value,
+          uc.contact_type_id,
+          ct.icon_img,
+          ct.icon_key`,
+  join: `
+          inner join contact_type ct
+          on ct.id = uc.contact_type_id`,
+};
+
 //Contato
 async function findContactsByUserId(user_id) {
   const userFound = await runSelectQuery(user_id);
@@ -581,16 +607,10 @@ async function findContactsByUserId(user_id) {
     const results = await database.query({
       text: `
         select
-          uc.id,
-          uc.user_id,
-          uc.contact_value,
-          uc.contact_type_id,
-          ct.icon_img,
-          ct.icon_key
+          ${CONTACT_SELECT.columns}
         from
           users_contacts uc
-          inner join contact_type ct
-          on ct.id = uc.contact_type_id
+          ${CONTACT_SELECT.join}
         where uc.user_id=$1
           `,
       values: [user_id],
@@ -603,22 +623,36 @@ async function saveContato(userInputValues) {
   if (userInputValues.id) {
     return;
   }
-  const result = await runInsertQuery(userInputValues);
+  // Normaliza aqui, e não na rota: é neste ponto que os valores finais do
+  // contato estão reunidos — no PATCH, o tipo pode vir do registro já gravado
+  // (o formulário só manda o valor). Deixar a regra no modelo mantém as três
+  // rotas de escrita (perfil, perfil por id, estúdio) com o mesmo comportamento.
+  const { value } = await contactType.resolveValue(userInputValues);
+  const result = await runInsertQuery({ ...userInputValues, contact_value: value });
   await awardProfileSection(userInputValues.user_id, "contato");
   return result;
 
   async function runInsertQuery(userInputValues) {
+    // CTE para inserir e já voltar no formato da lista, numa ida só.
     const results = await database.query({
       text: `
-        insert into users_contacts
-        (user_id, contact_value, contact_type_id)
-        values(
-        $1,$2,$3
+        with inserted as (
+          insert into users_contacts
+          (user_id, contact_value, contact_type_id)
+          values(
+          $1,$2,$3
+          )
+          returning *
         )
+        select
+          ${CONTACT_SELECT.columns}
+        from
+          inserted uc
+          ${CONTACT_SELECT.join}
           `,
       values: [userInputValues.user_id, userInputValues.contact_value, userInputValues.contact_type_id],
     });
-    return results.rows;
+    return results.rows[0];
   }
 }
 
@@ -628,7 +662,8 @@ async function patchContacts(userInputValues) {
     ...currentContact,
     ...userInputValues,
   };
-  const updatedContact = await updateContatoById(contactWithNewValues);
+  const { value } = await contactType.resolveValue(contactWithNewValues);
+  const updatedContact = await updateContatoById({ ...contactWithNewValues, contact_value: value });
   return updatedContact;
 }
 
@@ -640,13 +675,11 @@ async function selectContatoById(contatoId) {
     const results = await database.query({
       text: `
       select
-        id,
-        user_id,
-        contact_type_id,
-        contact_value
+        ${CONTACT_SELECT.columns}
       from
-        users_contacts
-      where id = $1
+        users_contacts uc
+        ${CONTACT_SELECT.join}
+      where uc.id = $1
         `,
       values: [contatoId],
     });
@@ -666,17 +699,26 @@ async function updateContatoById(userInputValues) {
   return updatedContact;
 
   async function runUpdateQuery(userInputValues) {
+    // Mesmo motivo do insert: o `RETURNING *` do UPDATE não traz `icon_key`, e
+    // sem ele o contato devolvido à tela perderia o handle.
     const results = await database.query({
       text: `
-      update
-        users_contacts
-      set
-        user_id=$2,
-        contact_type_id=$3,
-        contact_value=$4
-      where
-        id = $1
-      returning *
+      with updated as (
+        update
+          users_contacts
+        set
+          user_id=$2,
+          contact_type_id=$3,
+          contact_value=$4
+        where
+          id = $1
+        returning *
+      )
+      select
+        ${CONTACT_SELECT.columns}
+      from
+        updated uc
+        ${CONTACT_SELECT.join}
         `,
       values: [userInputValues.id, userInputValues.user_id, userInputValues.contact_type_id, userInputValues.contact_value],
     });
