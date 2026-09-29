@@ -338,6 +338,66 @@ async function markOrgNotificationRead(notificationId, userId) {
   return results.rows[0] ?? null;
 }
 
+/* =========================================================
+ * Mensagens diretas
+ * ========================================================= */
+
+/**
+ * Notificação de mensagem para um MEMBRO destinatário.
+ *
+ * Diferente de `createUserNotification`, aqui o conflito **reativa** a
+ * notificação (`is_read = false`, `created_at = now()`): o remetente já pode ter
+ * tido uma notificação lida antes, e uma mensagem nova precisa reaparecer.
+ * `DO NOTHING` deixaria a segunda mensagem invisível para sempre.
+ */
+async function upsertUserNotification({ user_id, type, source_user_id, org_slug = "" }) {
+  const results = await database.query({
+    text: `
+      INSERT INTO user_notifications (user_id, type, source_user_id, org_slug, is_read, created_at)
+      VALUES ($1, $2, $3, $4, false, NOW())
+      ON CONFLICT (user_id, type, source_user_id, org_slug)
+      DO UPDATE SET is_read = false, created_at = NOW()
+      RETURNING *
+    `,
+    values: [user_id, type, source_user_id, org_slug],
+  });
+
+  return results.rows[0];
+}
+
+/**
+ * Notificação de mensagem para a caixa do ESTÚDIO.
+ *
+ * Uma linha por conversa (índice único parcial `org_notifications_conversation_unique`),
+ * e não uma por mensagem: o feed do estúdio é uma lista de assuntos, e uma
+ * entrada por mensagem enterraria o resto. Novas mensagens apenas reposicionam
+ * a entrada no topo e atualizam o pré-texto.
+ *
+ * Efeito colateral assumido: as marcas de leitura (`org_notification_reads`)
+ * continuam valendo, então uma conversa já lida volta ao topo sem marcar como
+ * não lida de novo. O sinal de "há novidade" na caixa do estúdio é o contador
+ * de não lidas da própria conversa, não o feed.
+ */
+async function upsertConversationNotification({ org_id, source_user_id, conversation_id, subject_title }) {
+  const results = await database.query({
+    text: `
+      INSERT INTO org_notifications (
+        org_id, type, source_user_id, resource_type, resource_id, subject_title, recipient_role
+      )
+      VALUES ($1, 'new_message', $2, 'conversation', $3, $4, 'member')
+      ON CONFLICT (org_id, type, resource_id) WHERE resource_type = 'conversation'
+      DO UPDATE SET
+        created_at = now(),
+        source_user_id = EXCLUDED.source_user_id,
+        subject_title = EXCLUDED.subject_title
+      RETURNING *
+    `,
+    values: [org_id, source_user_id, conversation_id, subject_title],
+  });
+
+  return results.rows[0];
+}
+
 const notification = {
   createPostNotification,
   updatePostNotification,
@@ -348,8 +408,10 @@ const notification = {
   updateUserNotification,
   findUserNotificationsByKey,
   findUserNotificationsByUserId,
+  upsertUserNotification,
 
   createOrgNotification,
+  upsertConversationNotification,
   findOrgNotificationsByUserId,
   findOrgNotificationsByOrgId,
   markOrgNotificationRead,

@@ -11,6 +11,7 @@ const TARGET_LABELS = {
   game: "Jogo",
   boardgame: "Jogo de Mesa",
   book: "Livro/Quadrinho",
+  conversation: "Conversa",
 };
 
 const REASON_LABELS = {
@@ -179,7 +180,15 @@ export default function ReportsAdminPage() {
                 <td>{report.reporter_username}</td>
                 <td>
                   <span className={styles.targetType}>{TARGET_LABELS[report.target_type] || report.target_type}</span>
-                  <span className={styles.mono}>{report.target_id}</span>
+                  {report.target_type === "conversation" ? (
+                    // A conversa é conteúdo privado: o `id` sozinho não diz nada,
+                    // então o alvo vira link para o visualizador (somente leitura).
+                    <a className={styles.mono} href={`/admin/conversas/${report.target_id}`}>
+                      abrir conversa
+                    </a>
+                  ) : (
+                    <span className={styles.mono}>{report.target_id}</span>
+                  )}
                 </td>
                 <td>{REASON_LABELS[report.reason] || report.reason}</td>
                 <td className={styles.justification}>{report.justification || "—"}</td>

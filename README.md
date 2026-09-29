@@ -19,6 +19,7 @@ Portal da comunidade de desenvolvedores indie brasileiros. Plataforma web com fe
 
 - **Home** com vitrine de conteúdo em destaque, tags em alta e sugestões de quem seguir.
 - **Posts** com texto e imagens, incorporação de conteúdo externo (YouTube, Vimeo, Twitch, Steam, Instagram etc.), **enquetes**, curtidas, comentários, compartilhamento por link, **embed público do post** e denúncia.
+- **Mensagens diretas** entre membros e entre membro e estúdio, com histórico, contador de não lidas, silenciar (e lista das silenciadas) e denúncia da conversa. O estúdio **só responde**: quem inicia é sempre o membro. Na caixa do estúdio, qualquer membro lê e responde em nome dele — e a moderação guarda quem digitou cada mensagem.
 - **Diretório de membros** com busca e filtros.
 
 ### Estúdios e obras
@@ -62,6 +63,7 @@ Portal da comunidade de desenvolvedores indie brasileiros. Plataforma web com fe
 
 - Cadastros base: **tipos de contato**, **ferramentas** e **profissões**.
 - **Fila de denúncias** com resolução (impacta a reputação) e **moderação** de conteúdo.
+- **Leitura de conversas denunciadas** (somente leitura, restrita a administradores) e **congelamento** de conversa: os dois lados continuam lendo o histórico, mas ninguém envia novas mensagens.
 - **Página de status do servidor** (banco, API etc.).
 
 ### Plataforma
@@ -194,6 +196,7 @@ IndiesBrasil/
 │   ├── PostActions/     # Botões de curtir, comentar, compartilhar
 │   ├── ShareModal/      # Modal de compartilhamento
 │   ├── Header/          # Cabeçalho do site
+│   ├── Messages/        # Lista de conversas, thread e botão "Enviar mensagem"
 │   ├── LeftSidebarComponent.js  # Menu lateral
 │   ├── SeoHead.js       # Meta tags (SEO / OG / Twitter Cards)
 │   └── ...
@@ -212,8 +215,11 @@ IndiesBrasil/
 ├── lib/                 # Utilitários compartilhados
 ├── deploy/              # Arquivos de deploy em produção
 │   ├── compose.yaml     # Docker Compose de produção
-│   ├── galene/          # Imagem Galene (Dockerfile, patches, skin indies.css)
 │   └── nginx/           # Configurações do Nginx
+├── galene/              # Subprojeto Galene (Go vendorizado + skin do cliente)
+│   ├── static/          # Cliente web customizado (indies.css, galene.js)
+│   ├── UPSTREAM.md      # Contrato com o upstream jech/galene (tag base)
+│   └── CUSTOMIZATIONS.md # O porquê de cada customização
 ├── .github/workflows/   # GitHub Actions (CI/CD)
 ├── tests/               # Testes automatizados (Jest)
 ├── Dockerfile           # Imagem Docker para produção

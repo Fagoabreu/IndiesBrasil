@@ -1,0 +1,8 @@
+/* O botão em si é estilizado pelo cabeçalho que o hospeda (perfil/estúdio);
+   aqui fica só o retorno de erro, que precisa ser visível ao lado dele. */
+.error {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--fgColor-danger);
+}

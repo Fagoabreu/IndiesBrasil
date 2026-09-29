@@ -37,9 +37,22 @@ function resolveImport(fromDir, specifier) {
   return base ? path.resolve(ROOT, base, rest.join("/")) : null;
 }
 
+/**
+ * Nomes de classe definidos no CSS.
+ *
+ * A linha é aparada antes da regex porque uma classe definida dentro de
+ * `@media` vem indentada — e continua sendo exportada pelo CSS Module. Sem o
+ * `trim`, toda classe que só existe dentro de um `@media` aparecia como
+ * "usada e não definida", um falso positivo.
+ *
+ * Só o PRIMEIRO nome de um seletor composto é capturado: em `.a.b`, o CSS
+ * Module não cria `styles.b` (é a origem do `className="undefined"` que este
+ * script existe para pegar), e a regex precisa continuar reproduzindo isso.
+ */
 function topLevelClasses(cssPath) {
   const css = fs.readFileSync(cssPath, "utf8");
-  return [...new Set([...css.matchAll(/^\.([A-Za-z0-9_-]+)/gm)].map((m) => m[1]))];
+  const selectors = [...css.matchAll(/^\s*\.([A-Za-z0-9_-]+)/gm)].map((m) => m[1]);
+  return [...new Set(selectors)];
 }
 
 let failures = 0;

@@ -21,6 +21,12 @@ const CLIENT_NOTIF_DEFS = {
     title: "Pedido atualizado",
     message: "O status de um pedido foi atualizado na loja %orgSlug.",
   },
+  // Mensagem direta. Se o remetente for um estúdio (`org_slug` preenchido), a
+  // mensagem diz isso — a autoria é do estúdio, embora o humano esteja gravado.
+  new_message: {
+    title: "Nova mensagem",
+    message: "%userId enviou uma mensagem para voc锚.",
+  },
 };
 
 function resolveTitle(n) {
@@ -149,6 +155,10 @@ export default function NotificationButton() {
       router.push(`/estudios/${n.org_slug}`);
     } else if (n.type === "post_liked" || n.type === "post_commented") {
       router.push(`/posts/${n.post_id}`);
+    } else if (n.type === "new_message") {
+      // A caixa de entrada 茅 privada: a notifica莽茫o leva para a PR脫PRIA aba de
+      // mensagens, e n茫o para o perfil de quem escreveu.
+      router.push(`/perfil/${user.username}?tab=mensagens`);
     } else if (n.type === "new_follower" && n.source_username) {
       router.push(`/perfil/${n.source_username}`);
     }

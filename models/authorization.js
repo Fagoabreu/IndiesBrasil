@@ -204,6 +204,10 @@ const availableFeatures = new Set([
   "create:testimonial",
   "read:testimonial",
 
+  //message (mensagens diretas entre membros e estúdios)
+  "read:message",
+  "create:message",
+
   //content-review (analises)
   "read:content_review",
   "read:content_review:all",

@@ -225,7 +225,8 @@ CREATE TYPE notification_type AS ENUM (
     'reminder',
     'studio_invitation',
     'store_order_received',
-    'store_order_updated'
+    'store_order_updated',
+    'new_message'
 );
 
 CREATE TYPE org_invitation_status AS ENUM (
@@ -1719,3 +1720,86 @@ CREATE TABLE book_comments (
 );
 CREATE INDEX book_comments_book_idx ON book_comments (book_id, created_at DESC);
 
+-- =====================================================================================
+-- NOTIFICACOES DO ESTUDIO (feed compartilhado entre membros)
+-- =====================================================================================
+
+CREATE TABLE org_notifications (
+    id              UUID DEFAULT gen_random_uuid() NOT NULL,
+    org_id          UUID NOT NULL,
+    type            notification_type NOT NULL,
+    source_user_id  UUID NOT NULL,
+    resource_type   VARCHAR(32) NOT NULL,
+    resource_id     TEXT NOT NULL,
+    subject_title   TEXT NOT NULL,
+    recipient_role  VARCHAR(16) DEFAULT 'member'::character varying NOT NULL,
+    created_at      TIMESTAMPTZ DEFAULT now() NOT NULL,
+    CONSTRAINT org_notifications_pkey                    PRIMARY KEY (id),
+    CONSTRAINT org_notifications_org_id_fkey             FOREIGN KEY (org_id) REFERENCES organizations(id) ON DELETE CASCADE,
+    CONSTRAINT org_notifications_source_user_id_fkey     FOREIGN KEY (source_user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE INDEX org_notifications_org_created_idx ON org_notifications (org_id, created_at DESC);
+CREATE INDEX org_notifications_source_idx ON org_notifications (source_user_id);
+
+CREATE TABLE org_notification_reads (
+    notification_id  UUID NOT NULL,
+    user_id          UUID NOT NULL,
+    read_at          TIMESTAMPTZ DEFAULT now() NOT NULL,
+    CONSTRAINT org_notification_reads_pkey                    PRIMARY KEY (notification_id, user_id),
+    CONSTRAINT org_notification_reads_notification_id_fkey    FOREIGN KEY (notification_id) REFERENCES org_notifications(id) ON DELETE CASCADE,
+    CONSTRAINT org_notification_reads_user_id_fkey            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+-- =====================================================================================
+-- MENSAGENS DIRETAS (conversas entre membros e estudios)
+-- =====================================================================================
+
+CREATE TABLE conversations (
+    id               UUID DEFAULT gen_random_uuid() NOT NULL,
+    party_a_type     VARCHAR(10) NOT NULL,
+    party_a_id       UUID NOT NULL,
+    party_b_type     VARCHAR(10) NOT NULL,
+    party_b_id       UUID NOT NULL,
+    last_message_at  TIMESTAMPTZ,
+    created_at       TIMESTAMPTZ DEFAULT now() NOT NULL,
+    CONSTRAINT conversations_pkey             PRIMARY KEY (id),
+    CONSTRAINT conversations_party_a_type     CHECK (party_a_type IN ('user', 'studio')),
+    CONSTRAINT conversations_party_b_type     CHECK (party_b_type IN ('user', 'studio')),
+    CONSTRAINT conversations_party_not_self   CHECK ((party_a_type <> party_b_type OR party_a_id <> party_b_id)),
+    CONSTRAINT conversations_pair_ordered     CHECK ((ROW(party_a_type, party_a_id) < ROW(party_b_type, party_b_id)))
+);
+CREATE UNIQUE INDEX conversations_pair_unique ON conversations (party_a_type, party_a_id, party_b_type, party_b_id);
+CREATE INDEX conversations_recent ON conversations (last_message_at DESC NULLS LAST);
+CREATE INDEX conversations_party_a ON conversations (party_a_type, party_a_id);
+CREATE INDEX conversations_party_b ON conversations (party_b_type, party_b_id);
+
+CREATE TABLE messages (
+    id               UUID DEFAULT gen_random_uuid() NOT NULL,
+    conversation_id  UUID NOT NULL,
+    author_type      VARCHAR(10) NOT NULL,
+    author_id        UUID NOT NULL,
+    sent_by_user_id  UUID NOT NULL,
+    body             TEXT NOT NULL,
+    created_at       TIMESTAMPTZ DEFAULT now() NOT NULL,
+    CONSTRAINT messages_pkey               PRIMARY KEY (id),
+    CONSTRAINT messages_author_type        CHECK (author_type IN ('user', 'studio')),
+    CONSTRAINT messages_body_not_blank     CHECK ((length(btrim(body)) > 0)),
+    CONSTRAINT messages_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
+    CONSTRAINT messages_sent_by_user_id_fkey FOREIGN KEY (sent_by_user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE INDEX messages_thread ON messages (conversation_id, created_at DESC);
+
+CREATE TABLE conversation_reads (
+    conversation_id  UUID NOT NULL,
+    reader_type      VARCHAR(10) NOT NULL,
+    reader_id        UUID NOT NULL,
+    last_read_at     TIMESTAMPTZ,
+    muted            BOOLEAN DEFAULT false NOT NULL,
+    CONSTRAINT conversation_reads_pkey             PRIMARY KEY (conversation_id, reader_type, reader_id),
+    CONSTRAINT conversation_reads_type             CHECK (reader_type IN ('user', 'studio')),
+    CONSTRAINT conversation_reads_conversation_id_fkey FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE
+);
+CREATE INDEX conversation_reads_muted ON conversation_reads (reader_type, reader_id) WHERE muted;
+
+-- Uma notificacao por conversa no feed do estudio (novas mensagens reposicionam
+-- a entrada em vez de criar outra).
+CREATE UNIQUE INDEX org_notifications_conversation_unique ON org_notifications (org_id, type, resource_id) WHERE ((resource_type)::text = 'conversation'::text);
