@@ -4,6 +4,19 @@
   gap: 14px;
 }
 
+/* Aviso de consequência (ex.: denunciar uma conversa entrega o conteúdo
+   privado à moderação). Cor de atenção com contraste sobre o fundo do diálogo. */
+.warning {
+  font-size: 12px;
+  line-height: 1.45;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: var(--fgColor-default);
+  background-color: var(--bgColor-attention-muted);
+  border: 1px solid var(--borderColor-attention-muted);
+}
+
 .hint {
   font-size: 12px;
   color: var(--fgColor-muted);

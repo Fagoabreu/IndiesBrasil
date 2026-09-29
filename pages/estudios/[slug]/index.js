@@ -19,10 +19,15 @@ import BookCard from "@/components/Card/BookCard";
 import CreatePost from "@/components/CreatePost/CreatePost";
 import PostCardComponent from "@/components/PostCard/PostCardComponent";
 import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
+import MessagesPanel from "@/components/Messages/MessagesPanel";
+import SendMessageButton from "@/components/Messages/SendMessageButton";
 import { SITE_URL } from "@/lib/seo";
 import { resolveOrgNotificationTitle, resolveOrgNotificationMessage, resolveOrgNotificationHref } from "@/lib/notifications";
 import styles from "./studio.module.css";
 import { uploadWithProgress } from "@/utils/uploadWithProgress";
+
+// Abas válidas do estúdio, usadas para validar `?tab=` do endereço.
+const STUDIO_TABS = ["perfil", "postagens", "mensagens", "notificacoes"];
 
 function formatDateBR(dateStr) {
   if (!dateStr) return "";
@@ -132,8 +137,22 @@ export default function StudioPage({ initialStudio }) {
   // Stream status
   const [studioStream, setStudioStream] = useState(null);
 
-  // Tab
-  const [activeTab, setActiveTab] = useState("perfil");
+  // Aba no endereço (`?tab=`), e só nele — como no perfil: o link de uma
+  // notificação de mensagem precisa abrir direto na caixa de entrada, e um
+  // estado paralelo exigiria um efeito só para se manter sincronizado.
+  const queryTab = router.query.tab;
+  const activeTab = typeof queryTab === "string" && STUDIO_TABS.includes(queryTab) ? queryTab : "perfil";
+
+  /** Troca de aba espelhando o endereço sem reexecutar o SSR. */
+  function selectTab(tab) {
+    const query = { ...router.query };
+    if (tab === "perfil") {
+      delete query.tab;
+    } else {
+      query.tab = tab;
+    }
+    router.replace({ query }, undefined, { shallow: true });
+  }
 
   // Posts
   const [studioPosts, setStudioPosts] = useState(null);
@@ -677,6 +696,11 @@ export default function StudioPage({ initialStudio }) {
                 {!viewer.isOwner && !viewer.isMember && authUser?.id && (
                   <FollowButton endpoint={`/api/v1/studios/${slug}/follow`} isFollowing={viewer.isFollowing} onToggle={handleFollowChange} />
                 )}
+                {/* Membro j谩 fala com o est煤dio por dentro: a conversa existe pelo
+                    lado de fora, e o servidor recusa abrir uma com o pr贸prio est煤dio. */}
+                {!viewer.isMember && !viewer.isAdmin && !viewer.isOwner && studio?.id && (
+                  <SendMessageButton targetType="studio" targetId={studio.id} className={styles.btnOutline} />
+                )}
                 <Link href={`/estudios/${slug}/press-kit`} className={styles.btnOutline} target="_blank" rel="noopener noreferrer">
                   <DownloadIcon size={14} /> Press Kit
                 </Link>
@@ -711,21 +735,34 @@ export default function StudioPage({ initialStudio }) {
 
         {/* ABAS */}
         <div className={styles.tabBar}>
-          <button className={`${styles.tabBtn} ${activeTab === "perfil" ? styles.tabBtnActive : ""}`} onClick={() => setActiveTab("perfil")}>
+          <button className={`${styles.tabBtn} ${activeTab === "perfil" ? styles.tabBtnActive : ""}`} onClick={() => selectTab("perfil")}>
             Perfil
           </button>
-          <button className={`${styles.tabBtn} ${activeTab === "postagens" ? styles.tabBtnActive : ""}`} onClick={() => setActiveTab("postagens")}>
+          <button className={`${styles.tabBtn} ${activeTab === "postagens" ? styles.tabBtnActive : ""}`} onClick={() => selectTab("postagens")}>
             Postagens
           </button>
           {(viewer.isMember || viewer.isAdmin || viewer.isOwner) && (
+            <button className={`${styles.tabBtn} ${activeTab === "mensagens" ? styles.tabBtnActive : ""}`} onClick={() => selectTab("mensagens")}>
+              Mensagens
+            </button>
+          )}
+          {(viewer.isMember || viewer.isAdmin || viewer.isOwner) && (
             <button
               className={`${styles.tabBtn} ${activeTab === "notificacoes" ? styles.tabBtnActive : ""}`}
-              onClick={() => setActiveTab("notificacoes")}
+              onClick={() => selectTab("notificacoes")}
             >
               Notificações
             </button>
           )}
         </div>
+
+        {/* ABA: MENSAGENS — caixa compartilhada do estúdio. Qualquer membro lê e
+            responde; a mensagem sai como do estúdio e o autor humano fica gravado. */}
+        {activeTab === "mensagens" && (viewer.isMember || viewer.isAdmin || viewer.isOwner) && studio?.id && (
+          <div className={styles.messagesTab}>
+            <MessagesPanel partyType="studio" partyId={studio.id} />
+          </div>
+        )}
 
         {/* ABA: POSTAGENS */}
         {activeTab === "postagens" && (

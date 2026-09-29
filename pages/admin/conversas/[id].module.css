@@ -1,0 +1,134 @@
+/* Visualizador de conversa denunciada (moderação). Somente leitura. */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+}
+
+.notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--fgColor-muted);
+  background-color: var(--bgColor-muted);
+  border: 1px solid var(--borderColor-muted);
+}
+
+.state {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
+}
+
+.participants {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 8px;
+  background-color: var(--bgColor-default);
+}
+
+.participant {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.participantBody {
+  display: flex;
+  flex-direction: column;
+}
+
+.participantName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fgColor-default);
+  text-decoration: none;
+}
+
+a.participantName:hover {
+  color: var(--brand-primary);
+  text-decoration: underline;
+}
+
+.participantMeta {
+  font-size: 11px;
+  color: var(--fgColor-muted);
+}
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.loadOlder {
+  display: flex;
+  justify-content: center;
+}
+
+.message {
+  padding: 10px 14px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 8px;
+  background-color: var(--bgColor-default);
+}
+
+.messageHead {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.messageAuthor {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fgColor-default);
+}
+
+.messageSentBy {
+  font-size: 11px;
+  color: var(--brand-primary);
+}
+
+.messageTime {
+  font-size: 11px;
+  color: var(--fgColor-muted);
+  margin-left: auto;
+}
+
+.messageBody {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--fgColor-default);
+  /* Texto puro: preserva as quebras de linha digitadas. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

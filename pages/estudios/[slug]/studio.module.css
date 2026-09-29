@@ -354,6 +354,13 @@
   gap: 12px;
 }
 
+/* ABA MENSAGENS */
+/* A caixa de entrada usa duas colunas (lista + conversa), então ocupa a largura
+   disponível em vez dos 680px das abas de leitura. */
+.messagesTab {
+  width: 100%;
+}
+
 /* ABA NOTIFICAÇÕES */
 .notifTab {
   max-width: 680px;

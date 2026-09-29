@@ -1,7 +1,8 @@
 import database from "infra/database.js";
-import { NotFoundError, ValidationError } from "infra/errors.js";
+import { ForbiddenError, NotFoundError, ValidationError } from "infra/errors.js";
 import sanitizeHtml from "lib/sanitize.js";
 import reputation from "./reputation";
+import conversation from "./conversation";
 import { REPORT_REASONS, REPORT_STATUSES, REPORT_TARGET_TYPES, targetExists } from "./moderation.js";
 
 const MAX_JUSTIFICATION_LENGTH = 2000;
@@ -75,6 +76,18 @@ async function create({ reporterId, targetType, targetId, reason, justification 
       throw new ValidationError({
         message: "Você não pode denunciar o próprio post.",
         action: "Denúncias são destinadas a conteúdo de terceiros.",
+      });
+    }
+  }
+
+  // Conversa só pode ser denunciada por quem participa dela. Sem esta trava, um
+  // `id` adivinhado encheria a moderação de denúncias sobre conversas que o
+  // denunciante nunca viu.
+  if (targetType === "conversation") {
+    const isParticipant = await conversation.isParticipantByUserId(targetId, reporterId);
+    if (!isParticipant) {
+      throw new ForbiddenError({
+        message: "Você só pode denunciar conversas das quais participa.",
       });
     }
   }

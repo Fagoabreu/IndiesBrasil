@@ -25,6 +25,8 @@ import StudioItem from "@/components/Portfolio/Estudios/StudioItem";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
 import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 import ProfileQrCode from "@/components/Portfolio/ProfileQrCode";
+import MessagesPanel from "@/components/Messages/MessagesPanel";
+import SendMessageButton from "@/components/Messages/SendMessageButton";
 import { SITE_URL } from "@/lib/seo";
 
 /* =====================
@@ -102,6 +104,10 @@ function notificationMessage(n) {
  * Página
  * ===================== */
 
+// Abas válidas. `mensagens` fica de fora do endereço público quando o perfil não
+// é o do próprio visitante — quem decide é o `isOwnProfile`, no render.
+const PROFILE_TABS = ["info", "posts", "notifications", "mensagens"];
+
 export default function Perfil({ initialProfile, profileNotFound = false }) {
   const router = useRouter();
   const { username } = router.query;
@@ -114,7 +120,24 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
   const [perfilUser, setPerfilUser] = useState(initialProfile);
   const [loadingProfile, setLoadingProfile] = useState(!initialProfile && !profileNotFound);
 
-  const [activeTab, setActiveTab] = useState("info");
+  // A aba vive no endereço (`?tab=`), e SÓ nele: um estado paralelo seria uma
+  // segunda fonte de verdade, que precisa ser sincronizada com um efeito. Aqui
+  // a URL é a fonte, o que já resolve o link de uma notificação abrir direto em
+  // Mensagens e a aba sobreviver a recarregar/compartilhar a página.
+  const queryTab = router.query.tab;
+  const activeTab = typeof queryTab === "string" && PROFILE_TABS.includes(queryTab) ? queryTab : "info";
+
+  /** Troca de aba espelhando no endereço (shallow: não reexecuta o SSR). */
+  function selectTab(tab) {
+    const query = { ...router.query };
+    if (tab === "info") {
+      delete query.tab;
+    } else {
+      query.tab = tab;
+    }
+    router.replace({ query }, undefined, { shallow: true });
+  }
+
   const [posts, setPosts] = useState(null);
   const loadingPosts = posts === null;
 
@@ -291,6 +314,11 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
 
   const isOwnProfile = authUser?.username === perfilUser?.user?.username;
 
+  // A aba Mensagens só existe para o dono do perfil (a caixa de entrada é
+  // privada). Se o endereço pedir essa aba a um visitante, cai em "info" —
+  // melhor voltar à primeira aba do que renderizar uma área vazia.
+  const effectiveTab = activeTab === "mensagens" && !isOwnProfile ? "info" : activeTab;
+
   /* =====================
    * Render
    * ===================== */
@@ -382,6 +410,9 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
 
                 <div className={style.headerActions}>
                   {!isOwnProfile && authUser && <FollowButton username={username} isFollowing={perfilUser.user.is_following ?? false} />}
+                  {/* Conversar consigo mesmo não existe: no próprio perfil, não há
+                      botão de mensagem. */}
+                  {!isOwnProfile && <SendMessageButton targetType="user" targetId={perfilUser.user.id} className={style.actionBtn} />}
                   {isOwnProfile && (
                     <Link href={`/perfil/${username}/configuracoes`} className={style.actionBtn}>
                       <GearIcon size={14} /> Editar perfil
@@ -435,10 +466,10 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
 
           {/* ===== ABAS ===== */}
           <div className={style.tabBar} role="tablist" aria-label="Seções do perfil">
-            <button type="button" role="tab" aria-selected={activeTab === "info"} className={style.tab} onClick={() => setActiveTab("info")}>
+            <button type="button" role="tab" aria-selected={effectiveTab === "info"} className={style.tab} onClick={() => selectTab("info")}>
               Informações
             </button>
-            <button type="button" role="tab" aria-selected={activeTab === "posts"} className={style.tab} onClick={() => setActiveTab("posts")}>
+            <button type="button" role="tab" aria-selected={effectiveTab === "posts"} className={style.tab} onClick={() => selectTab("posts")}>
               Postagens
               {postsCount > 0 && <span className={style.tabCount}>{postsCount}</span>}
             </button>
@@ -446,9 +477,20 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
               <button
                 type="button"
                 role="tab"
-                aria-selected={activeTab === "notifications"}
+                aria-selected={effectiveTab === "mensagens"}
                 className={style.tab}
-                onClick={() => setActiveTab("notifications")}
+                onClick={() => selectTab("mensagens")}
+              >
+                Mensagens
+              </button>
+            )}
+            {isOwnProfile && (
+              <button
+                type="button"
+                role="tab"
+                aria-selected={effectiveTab === "notifications"}
+                className={style.tab}
+                onClick={() => selectTab("notifications")}
               >
                 Notificações
               </button>
@@ -456,7 +498,7 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
           </div>
 
           {/* ===== INFORMAÇÕES ===== */}
-          {activeTab === "info" && (
+          {effectiveTab === "info" && (
             <div className={style.content}>
               <div className={style.mainCol}>
                 {(hasAbout || isOwnProfile) && (
@@ -551,7 +593,7 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
           )}
 
           {/* ===== POSTAGENS ===== */}
-          {activeTab === "posts" && (
+          {effectiveTab === "posts" && (
             <div className={style.postsFeed}>
               {loadingPosts && <p className={style.postsState}>Carregando postagens...</p>}
               {!loadingPosts && posts.length === 0 && <p className={style.postsState}>Nenhuma postagem ainda.</p>}
@@ -562,8 +604,11 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
             </div>
           )}
 
+          {/* ===== MENSAGENS ===== */}
+          {effectiveTab === "mensagens" && isOwnProfile && <MessagesPanel />}
+
           {/* ===== NOTIFICAÇÕES ===== */}
-          {activeTab === "notifications" && isOwnProfile && (
+          {effectiveTab === "notifications" && isOwnProfile && (
             <div>
               {loadingNotifs && <p className={style.postsState}>Carregando notificações...</p>}
               {!loadingNotifs && <NotificationList userNotifs={userNotifs} postNotifs={postNotifs} />}

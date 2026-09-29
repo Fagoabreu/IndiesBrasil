@@ -12,9 +12,13 @@ const TARGET_LABELS = {
   game: "Jogo",
   boardgame: "Jogo de Mesa",
   book: "Livro/Quadrinho",
+  conversation: "Conversa",
 };
 
-const TARGET_TYPES = ["post", "user", "studio", "game", "boardgame", "book"];
+// Mesma lista de MODERATION_TARGET_TYPES (models/moderation.js). A denúncia de
+// uma conversa chega aqui por `?target_type=conversation`; sem o tipo nesta
+// lista o formulário cairia em "post" e bloquearia o alvo errado.
+const TARGET_TYPES = ["post", "user", "studio", "game", "boardgame", "book", "conversation"];
 
 const REASONS = [
   "violacao_termos",

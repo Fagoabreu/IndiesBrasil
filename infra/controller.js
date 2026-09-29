@@ -216,6 +216,37 @@ function rateLimitBy({ limiter, keyBy }) {
   };
 }
 
+/**
+ * Mesma política de `rateLimitBy`, para rotas do App Router.
+ *
+ * Ali o manipulador é `(request) => Response` — não existe a tríade
+ * (request, response, next) —, então em vez de chamar `next()` a função lança
+ * `TooManyRequestsError` e deixa `onRouterErrorHandler` traduzir.
+ *
+ * `keyBy` recebe a `request` e deve devolver o identificador do consumidor.
+ * Quando o abuso acompanha a conta (e não o IP), o chamador passa o `id` do
+ * usuário — o IP sozinho puniria todo mundo atrás do mesmo NAT.
+ *
+ * @param {{ limiter: object, request: object, keyBy?: (request: object) => string }} options
+ */
+export function rateLimitRequest({ limiter, request, keyBy }) {
+  const clientIp = rateLimit.getClientIpFromWebRequest(request);
+
+  // Tráfego interno/teste não é limitado — mesmo critério do login.
+  if (rateLimit.isLocalRequest(clientIp)) return;
+
+  const key = keyBy ? keyBy(request) : clientIp;
+  const { allowed, resetMs } = limiter.check(key);
+
+  if (!allowed) {
+    throw new TooManyRequestsError({
+      message: "Muitas requisições. Tente novamente mais tarde.",
+      action: "Aguarde alguns minutos antes de tentar novamente.",
+      retryAfterSeconds: Math.ceil(resetMs / 1000),
+    });
+  }
+}
+
 export async function injectApiUser(request) {
   const cookieHeader = request.headers.get("cookie");
   if (!cookieHeader) {
@@ -244,6 +275,7 @@ const controller = {
   injectAnonymousOrUser,
   canRequest,
   rateLimitBy,
+  rateLimitRequest,
   injectAuthenticatedUser,
   injectApiUser,
   onErrorHandler,

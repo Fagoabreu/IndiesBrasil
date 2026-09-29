@@ -171,6 +171,8 @@ describe("Use case: Registration Flow (all successful)", () => {
       "delete:meeting",
       "create:testimonial",
       "read:testimonial",
+      "read:message",
+      "create:message",
       "create:game:like",
       "create:game:comment",
       "create:boardgame:like",

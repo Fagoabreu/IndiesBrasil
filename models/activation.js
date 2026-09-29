@@ -214,6 +214,9 @@ async function activateUserByUserId(userId) {
     //testimonial (depoimentos)
     "create:testimonial",
     "read:testimonial",
+    //message (mensagens diretas entre membros e estúdios)
+    "read:message",
+    "create:message",
     //game/boardgame/book likes & comments (interações)
     "create:game:like",
     "create:game:comment",

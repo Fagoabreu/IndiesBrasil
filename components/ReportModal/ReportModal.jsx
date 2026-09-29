@@ -23,9 +23,19 @@ ReportModal.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   submitting: PropTypes.bool,
   error: PropTypes.string,
+  /** Título do diálogo. Muda com o alvo: post, conversa, etc. */
+  title: PropTypes.string,
+  /** Texto explicativo acima do formulário. */
+  hint: PropTypes.string,
+  /**
+   * Aviso destacado, exibido acima de tudo. Usado quando a denúncia tem uma
+   * consequência que o usuário precisa entender **antes** de enviar — como
+   * entregar uma conversa privada à moderação.
+   */
+  warning: PropTypes.string,
 };
 
-export default function ReportModal({ onClose, onSubmit, submitting, error }) {
+export default function ReportModal({ onClose, onSubmit, submitting, error, title = "Denunciar post", hint, warning }) {
   const [reason, setReason] = useState("");
   const [justification, setJustification] = useState("");
 
@@ -33,7 +43,7 @@ export default function ReportModal({ onClose, onSubmit, submitting, error }) {
 
   return (
     <Dialog
-      title="Denunciar post"
+      title={title}
       onClose={onClose}
       footerButtons={[
         {
@@ -52,7 +62,11 @@ export default function ReportModal({ onClose, onSubmit, submitting, error }) {
       ]}
       renderBody={() => (
         <div className={styles.body}>
-          <p className={styles.hint}>Selecione o motivo da denúncia. A moderação analisará o conteúdo reportado.</p>
+          {/* O aviso vem ANTES da dica e destacado: é o que o usuário precisa
+              saber para decidir, não um detalhe do formulário. */}
+          {warning && <p className={styles.warning}>{warning}</p>}
+
+          <p className={styles.hint}>{hint || "Selecione o motivo da denúncia. A moderação analisará o conteúdo reportado."}</p>
 
           {error && <p className={styles.error}>{error}</p>}
 
