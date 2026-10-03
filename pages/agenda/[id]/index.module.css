@@ -28,10 +28,14 @@
 }
 
 /* ── Banner ── */
+/* Mesma proporção do preset `eventBanner` (866/150) — a referência de onde o
+   recorte nasceu. Com `height: 150px` fixo a caixa afinava conforme a largura
+   encolhia e o `object-fit: cover` cortava as laterais (em 390px de tela a
+   proporção real era 2,6:1, não 5,77:1). */
 .bannerWrap {
   position: relative;
   width: 100%;
-  height: 150px;
+  aspect-ratio: 866 / 150;
   overflow: hidden;
   background: var(--bgColor-muted);
 }
@@ -42,7 +46,7 @@
 }
 
 .bannerPlaceholder {
-  height: 150px;
+  aspect-ratio: 866 / 150;
   background: linear-gradient(135deg, rgba(var(--brand-rgb-primary), 0.12), rgba(var(--brand-rgb-secondary), 0.08));
 }
 

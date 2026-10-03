@@ -119,6 +119,8 @@ Excecoes que ja existem e sao intencionais (nao "corrija" migrando para o ImageU
 O formato vem de `lib/image-presets.js` (o catalogo unico). Nunca passe `aspect` inline nem crie um preset paralelo.
 
 - O preset precisa ter a MESMA proporcao com que a imagem e renderizada. Crop e CSS discordando = o usuario enquadra uma coisa e recebe outra. Confira o `aspect-ratio` (ou a altura fixa) do CSS que exibe a imagem antes de escolher o preset; ao mudar um dos lados, atualize o outro.
+- A proporcao e conferida por `node scripts/audit-image-presets.js`: ele compara o `aspect-ratio` do CSS com o `aspect` do preset e falha quando a superficie declara altura fixa — altura fixa faz a caixa mudar de proporcao conforme a largura da tela e o `object-fit: cover` descarta o enquadramento. Ao declarar uma superficie nova que exibe um recorte escolhido no formulario, adicione o par em `RATIO_SURFACES` nesse script.
+- So o RECORTE e enviado; o arquivo original nao fica guardado. Por isso mudar o `aspect` de um preset existente deixa todas as imagens ja enviadas cortadas sem chance de reenquadrar (o usuario teria de reenviar o arquivo). Corrija o CSS, nao o preset.
 - Cada preset declara `aspect`, `shape`, `label`, `outputWidth` e `format`. PNG so onde houver transparencia (avatar circular, logo); JPEG no resto.
 - Comente em cada preset ONDE a imagem aparece — e o que permite conferir a proporcao no CSS. Novo formato: adicione um preset, nunca clone o componente.
 - `getImagePreset` lanca em nome desconhecido de proposito. Nao adicione fallback silencioso: esconderia `preset` errado e entregaria um recorte diferente do esperado sem aviso.
@@ -130,6 +132,8 @@ Como usar:
 - `multiple` enfileira varios arquivos, um recorte de cada vez.
 - Preview da imagem salva e botao de remover ficam na pagina (sao layout de cada tela); o `ImageUploader` so entrega o recorte.
 - A API fica na pagina, dentro de `onCropped`: upload imediato (`await fetch` com FormData) ou adiado (guardar `blob`/`dataUrl` e enviar no submit do formulario).
+
+Imagem estatica (nao vem de upload): `DEFAULT_OG_IMAGE` (`lib/seo.js`) e a capa padrao dos previews de link, usada por toda pagina que nao informa `ogImage`. E o arquivo `public/images/og-cover.jpg`, gerado de `ArteSite.png` por `node scripts/build-og-cover.js` — **rode o script ao trocar a arte**, e nao edite o jpg a mao (ele nao guarda o original). `OG_IMAGE_SIZE` (`lib/seo.js`) e o tamanho declarado em `og:image:width/height`, e `scripts/audit-image-presets.js` confere as duas coisas: que o arquivo existe e que as dimensoes batem. Nao voltar a apontar para arquivo inexistente: ja aconteceu (`/images/og-cover.png` respondia 404 e a home era compartilhada sem imagem).
 
 ## Contatos (perfil, estudio, press kit, curriculo)
 
