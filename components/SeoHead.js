@@ -1,6 +1,6 @@
 import Head from "next/head";
 import PropTypes from "prop-types";
-import { SITE_NAME, SITE_LOCALE, DEFAULT_OG_IMAGE, TWITTER_HANDLE } from "@/lib/seo";
+import { OG_IMAGE_SIZE, SITE_NAME, SITE_LOCALE, DEFAULT_OG_IMAGE, TWITTER_HANDLE } from "@/lib/seo";
 
 /**
  * Serializa JSON-LD com escape de `<`, `>`, `&` e separadores de linha
@@ -25,8 +25,10 @@ function toSafeJsonLd(jsonLd) {
  */
 export default function SeoHead({ title, description, canonical, ogImage, ogImageWidth, ogImageHeight, ogType, jsonLd, noIndex }) {
   const image = ogImage || DEFAULT_OG_IMAGE;
-  const imgWidth = ogImageWidth || 1200;
-  const imgHeight = ogImageHeight || 630;
+  // O padrão vem de `lib/seo.js` para o número declarado e o arquivo gerado
+  // terem uma fonte só (ver `OG_IMAGE_SIZE`).
+  const imgWidth = ogImageWidth || OG_IMAGE_SIZE.width;
+  const imgHeight = ogImageHeight || OG_IMAGE_SIZE.height;
 
   return (
     <Head>
@@ -73,11 +75,7 @@ SeoHead.propTypes = {
   noIndex: PropTypes.bool,
 };
 
-SeoHead.defaultProps = {
-  ogImage: null,
-  ogImageWidth: 1200,
-  ogImageHeight: 630,
-  ogType: "website",
-  jsonLd: null,
-  noIndex: false,
-};
+// Sem `defaultProps`: o React 19 ignora `defaultProps` de componente de função,
+// então o bloco que existia aqui não tinha efeito nenhum — os padrões reais são
+// os `||` no corpo do componente (acima). Manter os dois era pior que não ter
+// nenhum: quem lesse acreditaria que os valores daqui valiam.

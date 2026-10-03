@@ -1,7 +1,10 @@
+/* Mesma proporção do preset `eventBanner` (866/150) e do card da agenda. Antes
+   era 200px de altura fixa: a caixa ficava em ~3:1 e já mostrava só ~55% da
+   largura enquadrada — o preview mentia antes mesmo de o evento ser salvo. */
 .bannerPreviewWrap {
   position: relative;
   width: 100%;
-  height: 200px;
+  aspect-ratio: 866 / 150;
   margin-bottom: 8px;
   overflow: hidden;
 }
