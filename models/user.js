@@ -2,8 +2,32 @@ import database from "infra/database";
 import password from "models/password";
 import { ValidationError, NotFoundError } from "infra/errors.js";
 import notification from "./notification";
+import { normalizeUsername, usernameProblem } from "lib/username";
+
+/**
+ * Aplica a forma canônica ao username e valida o resultado.
+ *
+ * Roda na ENTRADA de `create` e `update` para que todo o resto do model (a
+ * checagem de unicidade, o INSERT/UPDATE, os `currentUser`) trabalhe com o
+ * mesmo valor — e não com variantes que só diferem por espaço ou normalização
+ * de acento.
+ *
+ * @param {object} values objeto de entrada, modificado no lugar
+ */
+function normalizeUsernameInObject(values) {
+  if (!("username" in values)) return;
+
+  const normalized = normalizeUsername(values.username);
+  const problem = usernameProblem(normalized);
+  if (problem) {
+    throw new ValidationError({ message: problem });
+  }
+
+  values.username = normalized;
+}
 
 async function create(userInputValues) {
+  normalizeUsernameInObject(userInputValues);
   await validateUniqueUsename(userInputValues.username);
   await validateUniqueEmail(userInputValues.email);
   await validateUniqueCPF(userInputValues.cpf);
@@ -52,8 +76,12 @@ async function create(userInputValues) {
 }
 
 async function update(username, userInputValues) {
-  const currentUser = await findOneByUsername(username);
+  // O username usado para LOCALIZAR o usuário também passa pela forma canônica:
+  // uma URL antiga com espaço no fim continua encontrando o registro, em vez de
+  // responder 404.
+  const currentUser = await findOneByUsername(normalizeUsername(username));
   if ("username" in userInputValues) {
+    normalizeUsernameInObject(userInputValues);
     await validateUniqueUsename(userInputValues.username);
   }
   if ("email" in userInputValues) {
@@ -118,7 +146,7 @@ async function findOneById(id) {
 }
 
 async function findOneByUsername(username) {
-  const userFound = await runSelectQuery(username);
+  const userFound = await runSelectQuery(normalizeUsername(username));
   return userFound;
 
   async function runSelectQuery(username) {
@@ -273,12 +301,15 @@ async function validateUniqueEmail(email) {
 }
 
 async function validateUniqueUsename(username) {
+  // A comparação é `LOWER` dos dois lados, então normalizar o valor procurado
+  // faz "Henrique " e "Henrique" serem vistos como o MESMO nome — sem isso, o
+  // segundo cadastro passaria pela validação e criaria um perfil inalcançável.
   const results = await database.query({
     text: `
       select username
       from users u
       where LOWER(u.username) = LOWER($1)`,
-    values: [username],
+    values: [normalizeUsername(username)],
   });
   if (results.rowCount > 0) {
     throw new ValidationError({
