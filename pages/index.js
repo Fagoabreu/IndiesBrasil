@@ -12,7 +12,7 @@ import { MilestoneIcon, OrganizationIcon, PeopleIcon, StarIcon, VideoIcon, Table
 import { useEffect, useState } from "react";
 import TyperwriterComponent from "@/components/TypeWriter/TyperwriterComponent";
 import { useUser } from "@/context/UserContext";
-import { SITE_URL, SITE_NAME } from "@/lib/seo";
+import { SITE_URL, SITE_NAME, OG_COVER_IMAGE, OG_IMAGE_SIZE } from "@/lib/seo";
 import { sortEventsByStart } from "@/lib/eventFormat";
 import useInView from "@/hooks/useInView";
 
@@ -484,10 +484,20 @@ function Home() {
             </div>
 
             {/* Card promocional — maior elemento da dobra, então leva ao
-                conteúdo navegável, não ao cadastro. */}
+                conteúdo navegável, não ao cadastro. A arte é a mesma do preview
+                de link (`OG_COVER_IMAGE`) e as medidas vêm de lá: são elas que
+                reservam a caixa no formato do arquivo antes de a imagem carregar. */}
             <div className={styles.heroPromo}>
               <Link href="/jogos" className={styles.promoCard} aria-label="Explorar jogos independentes brasileiros">
-                <Image src="/images/ArteSite.png" alt="" className={styles.promoImage} width={460} height={345} priority />
+                <Image
+                  src={OG_COVER_IMAGE}
+                  alt=""
+                  className={styles.promoImage}
+                  width={OG_IMAGE_SIZE.width}
+                  height={OG_IMAGE_SIZE.height}
+                  sizes="(max-width: 860px) 100vw, (max-width: 1200px) 50vw, 564px"
+                  priority
+                />
               </Link>
             </div>
           </div>

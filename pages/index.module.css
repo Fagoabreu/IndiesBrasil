@@ -162,6 +162,12 @@
   align-items: center;
 }
 
+/* A arte do site é larga (~1,91:1 — o formato do card de preview de link), então
+   o card ocupa a coluna inteira. O teto de 480px existia para a arte quadrada,
+   que na largura da coluna dominava a dobra; com a arte larga ele só encolheria
+   o texto desenhado dentro dela. O card já é montado em coluna única no mobile,
+   onde continua sem `order: -1`: a arte antes do headline fazia a proposta de
+   valor virar a segunda coisa lida. */
 .promoCard {
   display: block;
   width: 100%;
@@ -412,11 +418,8 @@
   }
 
   /* Sem `order: -1`: a arte promocional aparecia antes do headline e a
-     proposta de valor virava a segunda coisa lida. */
-  .promoCard {
-    max-width: 100%;
-  }
-
+     proposta de valor virava a segunda coisa lida. O card já ocupa a largura
+     inteira desde a regra base — a largura é a da coluna nos dois layouts. */
   .heroContent {
     text-align: center;
     align-items: center;

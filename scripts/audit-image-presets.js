@@ -164,12 +164,19 @@ for (const { preset, css, selector } of RATIO_SURFACES) {
 }
 
 // ── 4. Imagem padrão de preview de link ──
-// `DEFAULT_OG_IMAGE` (lib/seo.js) é usado por toda página que não informa
-// `ogImage` — a home e as listagens. Ele apontava para `/images/og-cover.png`,
-// que não existia: em produção o arquivo respondia 404 e todas essas páginas
-// eram compartilhadas sem imagem. Referência a arquivo estático não faz o build
-// falhar, então a checagem vive aqui.
+// `OG_COVER_IMAGE` (lib/seo.js) é a arte do site: a mesma imagem da home e a
+// capa padrão de toda página que não informa `ogImage` (listagens, por exemplo).
+// Ela apontava para `/images/og-cover.png`, que não existia: em produção o
+// arquivo respondia 404 e todas essas páginas eram compartilhadas sem imagem.
+// Referência a arquivo estático não faz o build falhar, então a checagem vive
+// aqui — e cobre também as medidas e a proporção, que antes eram garantidas pelo
+// gerador (`scripts/build-og-cover.js`) e hoje dependem de quem troca a arte.
 const { DEFAULT_OG_IMAGE, OG_IMAGE_SIZE } = require(path.join(ROOT, "lib/seo.js"));
+
+/** Proporção do card de preview das redes (1200x630) — a que a arte precisa ter. */
+const OG_CARD_RATIO = 1200 / 630;
+/** Folga da proporção: arte desenhada à mão não cai no número exato. */
+const OG_RATIO_TOLERANCE = 0.02;
 
 /**
  * Largura e altura lidas do cabeçalho do arquivo, sem dependência.
@@ -224,11 +231,20 @@ console.log("\n── Imagem padrão de preview ──");
     if (!size) {
       console.log(`  ERRO: nao consegui ler as dimensoes de ${pathname}`);
       failures++;
-    } else if (size.width !== OG_IMAGE_SIZE.width || size.height !== OG_IMAGE_SIZE.height) {
-      console.log(`  ERRO: ${pathname} e ${size.width}x${size.height}, mas o declarado em og:image é ${OG_IMAGE_SIZE.width}x${OG_IMAGE_SIZE.height}`);
-      failures++;
     } else {
-      console.log(`  ${pathname}: ${size.width}x${size.height}, ${kb} KB = declarado em og:image`);
+      const ratio = size.width / size.height;
+
+      if (size.width !== OG_IMAGE_SIZE.width || size.height !== OG_IMAGE_SIZE.height) {
+        console.log(`  ERRO: ${pathname} e ${size.width}x${size.height}, mas o declarado em og:image é ${OG_IMAGE_SIZE.width}x${OG_IMAGE_SIZE.height}`);
+        failures++;
+      } else if (Math.abs(ratio - OG_CARD_RATIO) / OG_CARD_RATIO > OG_RATIO_TOLERANCE) {
+        console.log(
+          `  ERRO: ${pathname} e ${size.width}x${size.height} (${ratio.toFixed(2)}:1), mas a arte do site precisa ser ~${OG_CARD_RATIO.toFixed(2)}:1 — o card e recortado no centro pelas redes e os elementos das laterais somem`,
+        );
+        failures++;
+      } else {
+        console.log(`  ${pathname}: ${size.width}x${size.height} (${ratio.toFixed(2)}:1), ${kb} KB = declarado em og:image`);
+      }
     }
   }
 }
