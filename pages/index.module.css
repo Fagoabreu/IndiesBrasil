@@ -425,8 +425,8 @@
   }
 
   /* Sem `order: -1`: a arte promocional aparecia antes do headline e a
-     proposta de valor virava a segunda coisa lida. O card já ocupa a largura
-     inteira desde a regra base — a largura é a da coluna nos dois layouts. */
+     proposta de valor virava a segunda coisa lida. A largura do card não precisa
+     de ajuste aqui: `width: 100%` com teto de 480px vale nos dois layouts. */
   .heroContent {
     text-align: center;
     align-items: center;

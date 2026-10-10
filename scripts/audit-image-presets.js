@@ -320,7 +320,9 @@ async function checkSiteArt() {
     const ratio = og.width / og.height;
 
     if (og.width !== OG_IMAGE_SIZE.width || og.height !== OG_IMAGE_SIZE.height) {
-      console.log(`  ERRO: o padrao de preview e ${og.width}x${og.height}, mas o declarado em og:image é ${OG_IMAGE_SIZE.width}x${OG_IMAGE_SIZE.height}`);
+      console.log(
+        `  ERRO: o padrao de preview e ${og.width}x${og.height}, mas o declarado em og:image é ${OG_IMAGE_SIZE.width}x${OG_IMAGE_SIZE.height}`,
+      );
       failures++;
     } else if (Math.abs(ratio - OG_CARD_RATIO) / OG_CARD_RATIO > OG_RATIO_TOLERANCE) {
       console.log(
@@ -337,7 +339,9 @@ async function checkSiteArt() {
   const artFile = SITE_ART_FILES[1].file;
   const { hasAlpha } = await sharp(artFile).metadata();
   if (!hasAlpha) {
-    console.log(`  ERRO: ${OG_COVER_ART} e opaco — a home precisa da sobra transparente, senao o card mostra faixa branca nas laterais (o JPEG serve o preview de link)`);
+    console.log(
+      `  ERRO: ${OG_COVER_ART} e opaco — a home precisa da sobra transparente, senao o card mostra faixa branca nas laterais (o JPEG serve o preview de link)`,
+    );
     failures++;
   }
 
@@ -355,13 +359,17 @@ async function checkSiteArt() {
   console.log(`  desenho dentro do canvas: ${box.width}x${box.height} (${contentRatio.toFixed(2)}:1), sobra lateral de ${box.x} e ${rightGap} px`);
 
   if (!declared) {
-    console.log("  ERRO: pages/index.module.css .promoCard nao declara aspect-ratio — o card volta a exibir o canvas inteiro, com as faixas vazias nas laterais");
+    console.log(
+      "  ERRO: pages/index.module.css .promoCard nao declara aspect-ratio — o card volta a exibir o canvas inteiro, com as faixas vazias nas laterais",
+    );
     failures++;
     return;
   }
 
   if (Math.abs(rightGap - box.x) > art.width * ART_RATIO_TOLERANCE) {
-    console.log(`  ERRO: o desenho nao esta centralizado no canvas (sobra de ${box.x} px a esquerda e ${rightGap} px a direita) — o recorte do card da home corta um lado mais que o outro`);
+    console.log(
+      `  ERRO: o desenho nao esta centralizado no canvas (sobra de ${box.x} px a esquerda e ${rightGap} px a direita) — o recorte do card da home corta um lado mais que o outro`,
+    );
     failures++;
   }
 
