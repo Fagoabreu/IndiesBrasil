@@ -162,10 +162,19 @@
   align-items: center;
 }
 
+/* A arte do site é uma moldura de 832x736 centralizada num canvas de 1424x747 —
+   a sobra lateral existe para o preview de link (1,91:1) e na home só deixava a
+   arte pequena, com faixas vazias de cada lado. Então a caixa assume a proporção
+   da MOLDURA (não a do arquivo) e o `object-fit: cover` do `.promoImage`
+   descarta a sobra, cortada em partes iguais porque a moldura está centralizada.
+   Ao trocar a arte, medir de novo o conteúdo de `og-cover.png`:
+   `node scripts/audit-image-presets.js` compara este número com o arquivo e
+   falha se divergirem — os dois números são o mesmo. */
 .promoCard {
   display: block;
   width: 100%;
   max-width: 480px;
+  aspect-ratio: 832 / 736;
   border-radius: 16px;
   overflow: hidden;
   text-decoration: none;
@@ -183,10 +192,14 @@
   border-color: var(--brand-hover-border);
 }
 
+/* O card tem a proporção da moldura da arte, não a do arquivo: a imagem é
+   desenhada maior que a caixa e o `cover` corta a sobra lateral (transparente no
+   PNG) de forma simétrica, porque a moldura está centralizada. */
 .promoImage {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* ========================================
@@ -412,11 +425,8 @@
   }
 
   /* Sem `order: -1`: a arte promocional aparecia antes do headline e a
-     proposta de valor virava a segunda coisa lida. */
-  .promoCard {
-    max-width: 100%;
-  }
-
+     proposta de valor virava a segunda coisa lida. A largura do card não precisa
+     de ajuste aqui: `width: 100%` com teto de 480px vale nos dois layouts. */
   .heroContent {
     text-align: center;
     align-items: center;

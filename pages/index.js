@@ -12,7 +12,7 @@ import { MilestoneIcon, OrganizationIcon, PeopleIcon, StarIcon, VideoIcon, Table
 import { useEffect, useState } from "react";
 import TyperwriterComponent from "@/components/TypeWriter/TyperwriterComponent";
 import { useUser } from "@/context/UserContext";
-import { SITE_URL, SITE_NAME } from "@/lib/seo";
+import { SITE_URL, SITE_NAME, OG_COVER_ART, OG_IMAGE_SIZE } from "@/lib/seo";
 import { sortEventsByStart } from "@/lib/eventFormat";
 import useInView from "@/hooks/useInView";
 
@@ -484,10 +484,23 @@ function Home() {
             </div>
 
             {/* Card promocional — maior elemento da dobra, então leva ao
-                conteúdo navegável, não ao cadastro. */}
+                conteúdo navegável, não ao cadastro. A arte é a versão com a
+                sobra transparente (`OG_COVER_ART`): o CSS do card assume a
+                proporção da moldura da arte e descarta a sobra, que existe só
+                para o preview de link (1,91:1). As medidas do arquivo ficam nos
+                atributos (reserva da caixa) e o `sizes` considera que o
+                `object-fit: cover` desenha a imagem ~1,71x a largura do card. */}
             <div className={styles.heroPromo}>
               <Link href="/jogos" className={styles.promoCard} aria-label="Explorar jogos independentes brasileiros">
-                <Image src="/images/ArteSite.png" alt="" className={styles.promoImage} width={460} height={345} priority />
+                <Image
+                  src={OG_COVER_ART}
+                  alt=""
+                  className={styles.promoImage}
+                  width={OG_IMAGE_SIZE.width}
+                  height={OG_IMAGE_SIZE.height}
+                  sizes="(max-width: 860px) 170vw, 820px"
+                  priority
+                />
               </Link>
             </div>
           </div>
