@@ -87,6 +87,14 @@ function renderBanner(embedUrl, bannerUrl, studioName, styles) {
 
 export async function getServerSideProps(context) {
   const { slug } = context.params;
+
+  // Mesmo gate da rota do tipo — ver `pages/jogos/[slug]/index.js`. O que a
+  // página embute é o mesmo objeto de `GET /api/v1/studios/[slug]`... que não
+  // existe: o detalhe do estúdio é servido **só** aqui, então a feature da
+  // listagem é a referência.
+  const { anonymousCan } = await import("@/infra/controller");
+  if (!anonymousCan("read:studio")) return { notFound: true };
+
   try {
     const organization = (await import("@/models/organization")).default;
     const studio = await organization.findBySlug(slug);

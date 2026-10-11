@@ -7,6 +7,8 @@ import SeoHead from "@/components/SeoHead";
 import GameReviews from "@/components/GameReviews/GameReviews";
 import BookViewer from "@/components/BookViewer/BookViewer";
 import ContentEngagement from "@/components/ContentEngagement/ContentEngagement";
+import { ogImageSizeFromPreset } from "@/lib/seo";
+import { book as bookStructuredData, breadcrumbList, graph } from "@/lib/structured-data";
 
 import styles from "./book.module.css";
 
@@ -38,6 +40,11 @@ function getFollowLabel(loading, following) {
 export async function getServerSideProps(context) {
   const { slug } = context.params;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://jogos.social.br";
+
+  // Mesmo gate da rota do tipo — ver `pages/jogos/[slug]/index.js`.
+  const { anonymousCan } = await import("@/infra/controller");
+  if (!anonymousCan("read:book")) return { notFound: true };
+
   try {
     const book = (await import("@/models/book")).default;
     const bookData = await book.findBySlug(slug);
@@ -118,6 +125,8 @@ export default function BookPage({ initialBook, siteUrl }) {
 
   const coverImage = bookData.cover_url;
   const canonicalUrl = `${siteUrl}/quadrinhos/${slug}`;
+  // Capa do preset `bookCover` (retrato 2:3) — ver `pages/jogos/[slug]/index.js`.
+  const ogSize = ogImageSizeFromPreset("bookCover");
 
   return (
     <>
@@ -126,9 +135,29 @@ export default function BookPage({ initialBook, siteUrl }) {
         description={bookData.short_description || bookData.title}
         canonical={canonicalUrl}
         ogImage={coverImage}
-        ogImageWidth={1200}
-        ogImageHeight={630}
+        ogImageWidth={ogSize.width}
+        ogImageHeight={ogSize.height}
         ogType="article"
+        jsonLd={graph(
+          breadcrumbList([
+            { name: "Quadrinhos e Livros", path: "/quadrinhos" },
+            { name: bookData.title, path: `/quadrinhos/${slug}` },
+          ]),
+          bookStructuredData({
+            title: bookData.title,
+            subtitle: bookData.subtitle,
+            description: bookData.short_description || bookData.description,
+            image: coverImage,
+            url: canonicalUrl,
+            isbn: bookData.isbn,
+            publisher: bookData.publisher,
+            pages: bookData.pages,
+            language: bookData.language,
+            releaseDate: bookData.release_date,
+            rating: bookData.avg_rating,
+            ratingCount: bookData.review_count,
+          }),
+        )}
       />
 
       <div className={styles.page}>

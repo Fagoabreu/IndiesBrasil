@@ -184,6 +184,40 @@ Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESM
 - Avatar do participante usa `setdata` (chave `avatar`), sem tocar em Go. A URL so e aceita se comecar com `https://res.cloudinary.com/<CLOUDINARY_CLOUD_NAME>/` — sem essa trava um participante usaria o avatar para coletar o IP de quem assiste (o Galene e SFU e nao expoe IP entre pares). Sem `CLOUDINARY_CLOUD_NAME` nao ha avatar (fail-closed). A CSP do meet precisa de `https://res.cloudinary.com` no `img-src`, senao a imagem e bloqueada em silencio.
 - O cliente publica o avatar **apenas** no `kind === 'join'`: `setdata` sempre dispara broadcast de `change`, entao republicar a cada `change` entraria em loop infinito.
 
+## SEO / descoberta (Google)
+
+- **Sitemap**: `lib/sitemap.js` e a fonte unica. `sitemap.xml` e um **indice**; cada tipo tem um filho (`/sitemap/jogos.xml`, `/sitemap/noticias.xml`...) servido por `pages/sitemap/[type].js`. Acrescentar um tipo e acrescentar um item em `ENTITY_SITEMAPS` — nenhuma rota nova.
+- O `.xml` faz parte do **valor** do parametro, nao do caminho do arquivo: o Pages Router casa um segmento dinamico inteiro, entao `sitemap-[type].xml.js` (trecho fixo + dinamico no mesmo segmento) nao gera rota nenhuma — a resposta era o 404 em HTML do site.
+- Um indice de sitemaps **nao pode listar a si mesmo** (o Google recusa o arquivo inteiro). Por isso as rotas fixas tambem tem arquivo proprio (`/sitemap/estatico.xml`).
+- Cada tipo tem `findAllForSitemap()` no model: so `slug` (ou `id`) e `updated_at`, sem paginacao e **com o mesmo filtro de moderacao do `findAll`**. Nao reaproveite `findAll` — ela corta em 50 itens, monta o card com JOINs e nao devolve `updated_at`.
+- `<lastmod>` vem do `updated_at` da linha (`created_at` nas organizacoes, que nao tem `updated_at`). Nunca `new Date()`: data que muda a cada requisicao ensina o Google a ignorar o campo.
+- **Listagem monta no servidor** (`getServerSideProps` da primeira pagina): o HTML precisa ter `<a href="/jogos/<slug>">`. Busca em `useEffect` deixa o HTML como spinner e nenhum link — o Google so chega a entidade se executar JavaScript. O `skipInitialLoad` (useRef) evita que o efeito de filtros refaca a busca da pagina 1 na montagem e troque os cards por um spinner.
+- **`Date` em props quebra a rota**: `node-pg` devolve TIMESTAMP como `Date`, e o Next nao serializa — a pagina responde 500 ("Error serializing `.x.created_at`"). Props de model sempre passam por `JSON.parse(JSON.stringify(...))`. Isso ja quebrou `jogos-de-mesa/[slug]` inteiro.
+- Nao gate o render em `loadingUser`: ele comeca `true` e so e resolvido por um efeito de cliente, que **nao roda no servidor**. Use `if (!initialX && (loadingUser || loading))`, senao o HTML servido e o spinner.
+- **JSON-LD**: `lib/structured-data.js` monta (`breadcrumbList`, `videoGame`, `boardGame`, `book`, `newsArticle`, `review`, `course`) e o `SeoHead` serializa com escape anti-XSS. Nunca propriedade sem valor — campo opcional vazio e pior que campo ausente (o validador marca erro e o item perde o rich result); e o papel de `compact`.
+- **`og:image:width/height`** sai de `ogImageSizeFromPreset(nome)` (`lib/seo.js`), que le o preset real do arquivo. Numero digitado a mao nao bate com o arquivo e a rede dimensiona o card errado **antes** de baixar a imagem.
+- `next.config.js` **nao tem `i18n`**: o site e de um idioma so e os quatro locales mantinham tres copias nao traduzidas de cada pagina em `/en-US/`, `/fr/`, `/es/`.
+- `Disallow` no `robots.txt` proibe rastreio, nao indexacao: `/admin/**` recebe `X-Robots-Tag: noindex` em `next.config.js`.
+- `SeoHead` usa a prop `noIndex` (camelCase). `noindex` nao existe e o `undefined` cai no ternario, publicando `index, follow`.
+- Regressao aqui e silenciosa (o site continua funcionando no navegador): `tests/integration/pages/` confere sitemap e os links das listagens no HTML servido.
+
+### Exposicao de dados (o que o SSR pode e nao pode publicar)
+
+- **A lista de features do anonimo (`ANONYMOUS_FEATURES` em `infra/controller.js`) e a fonte unica de "o que e publico".** Nao ha tabela de permissao por tipo: o controller declara e os dois caminhos consultam. As rotas pelo middleware (`injectAnonymousOrUser` + `canRequest`); as paginas por `anonymousCan(feature)`, porque **`getServerSideProps` nao passa por middleware nenhum**.
+- Toda pagina que le conteudo no servidor **precisa** do gate: `const { anonymousCan } = await import("@/infra/controller"); if (!anonymousCan("<feature>")) return { notFound: true };`. Import dinamico dentro do `getServerSideProps`, como os models, para o `infra/controller` nao entrar no bundle do cliente.
+- A feature de cada gate e **a mesma da rota de API que a pagina espelha** (`/jogos` ↔ `GET /api/v1/games` ↔ `read:game:all`; `/jogos/[slug]` ↔ `GET /api/v1/games/[slug]` ↔ `read:game` — o `:all` e a listagem, o simples e o item). Negar vira **404, nao 403**: o projeto ja prefere nao confirmar existencia (ver `models/conversation.js`).
+- O sitemap tambem respeita isso: cada item de `ENTITY_SITEMAPS` (`lib/sitemap.js`) declara `feature`, e `pages/sitemap/[type].js` faz o gate antes de montar. Tipo revogado do anonimo some do sitemap em vez de anunciar endereco que responde 404.
+- `tests/unit/infra/publicReadFeatures.test.js` varre os `anonymousCan(...)` das paginas e falha se alguma feature usada nao estiver na lista do anonimo — e nomeia o arquivo. E o que impede a lista e as paginas de divergirem em silencio.
+- **Nao contorne o gate chamando o model direto.** Se o dado precisa ser privado, ele nao entra em `ANONYMOUS_FEATURES` e a pagina nao o le. Retirar `read:course` da lista derruba a API **e** as tres paginas de curso juntas (verificado).
+- `news` e o unico tipo com whitelist de saida (`getNewsResource` em `models/authorization.js`), e ela equivale as colunas de `newsFields`. Campo novo em `newsFields` sem entrar la faz o SSR publicar o que a API esconderia.
+- Nao existe `pages/api/v1/studios/[slug]`: o detalhe do estudio e servido **so** pelo SSR, entao a feature de referencia e a da listagem (`read:studio`).
+- Tudo que e varredura publica em massa (sitemap, listagem) repete o filtro de moderacao do `findAll`. Verificado ponta a ponta: com jogo ou estudio bloqueado, o detalhe, a listagem e o sitemap deixam de expor o item — inclusive as obras **do** estudio bloqueado (o `findBySlug` de cada tipo checa `studioBlocked`).
+- Texto de usuario no JSON-LD passa pelo escape do `SeoHead` (`\u003c/script\u003e`) e no `<title>`/`<meta>` pelo escape do React. Testado com `</script><img src=x onerror=...>`: nenhuma superficie quebra.
+- Leitura publica e **sem paginacao** ganha teto: `rateLimit.limiters.sitemap` (60/min por IP) em `pages/sitemap/[type].js`, porque o standalone do Next nao guarda cache de `getServerSideProps` e cada arquivo varre a tabela inteira. A isencao de loopback (`isLocalRequest`) mantem os testes sem limite.
+- Resposta de erro **nao reflete** parametro do visitante (o 404 do sitemap lista as chaves validas, sem repetir o valor recebido).
+- Aula e publica por desenho (`read:course:lesson` e anonima, sem checagem de matricula). O conteudo da aula entra no payload de `findFullBySlug`, que e **compartilhado** com `GET /api/v1/courses/[slug]`: restringir aula a matriz/inscrito e mexer no MODEL, nao so na rota — senao o SSR continua embutindo o que a API passou a esconder.
+- **Adicionar uma feature de API?** Registrar nos 3 lugares de sempre (`models/authorization.js`, `models/activation.js`, `infra/controller.js`) — e, se a pagina correspondente precisar dela para o visitante anonimo, o `anonymousCan` no `getServerSideProps` junto.
+
 ## PowerShell
 
 - Windows PowerShell 5.1: `Get-Content -Raw` e `Set-Content -NoNewline` **nao existem**.

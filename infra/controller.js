@@ -119,37 +119,69 @@ async function injectAnonymousOrUser(request, response, next) {
   return next();
 }
 
+/**
+ * O que um visitante **sem sessão** pode ler — a fonte única.
+ *
+ * Esta lista é o contrato de leitura pública do site. Ela nasceu como detalhe
+ * interno de `injectAnonymousUser` (middleware das rotas de API) e virou o
+ * ponto de encontro de dois caminhos: as rotas a consultam pelo middleware, e
+ * as páginas que montam o conteúdo no servidor a consultam por
+ * {@link anonymousCan}, porque `getServerSideProps` não passa por middleware
+ * nenhum.
+ *
+ * Sem isso os dois caminhos divergem: revogar um item daqui parava a API e a
+ * página continuava servindo o mesmo conteúdo, sem nada indicando a diferença.
+ * Com a lista compartilhada, tirar um item derruba a API **e** as páginas
+ * correspondentes — que é o efeito desejado.
+ */
+const ANONYMOUS_FEATURES = Object.freeze([
+  "read:activation_token",
+  "create:session",
+  "create:user",
+  "read:user",
+  "read:post",
+  "read:event",
+  "read:studio",
+  "read:game",
+  "read:game:all",
+  "read:boardgame",
+  "read:boardgame:all",
+  "read:book",
+  "read:book:all",
+  "read:news",
+  "read:news:all",
+  "read:testimonial",
+  "read:content_review",
+  "read:content_review:all",
+  "read:course",
+  "read:course:lesson",
+  "read:course:rating",
+  "read:course:comment",
+  "read:store",
+]);
+
+/** Usuário anônimo no formato que `authorization.can` exige (só `features`). */
+export function getAnonymousUser() {
+  return { features: ANONYMOUS_FEATURES };
+}
+
+/**
+ * Verdadeiro quando o visitante sem sessão tem a feature.
+ *
+ * É o mesmo teste que `canRequest` aplica às rotas, exposto para quem renderiza
+ * a página no servidor: ali não existe a tríade (request, response, next) e o
+ * `getServerSideProps` não tem como rodar o middleware. Use `notFound` quando
+ * a resposta for negativa — o projeto já prefere 404 a 403 para conteúdo que o
+ * visitante não pode ver (ver `models/conversation.js`).
+ */
+export function anonymousCan(feature) {
+  return authorization.can(getAnonymousUser(), feature);
+}
+
 function injectAnonymousUser(request) {
-  const anonymousUserObject = {
-    features: [
-      "read:activation_token",
-      "create:session",
-      "create:user",
-      "read:user",
-      "read:post",
-      "read:event",
-      "read:studio",
-      "read:game",
-      "read:game:all",
-      "read:boardgame",
-      "read:boardgame:all",
-      "read:book",
-      "read:book:all",
-      "read:news",
-      "read:news:all",
-      "read:testimonial",
-      "read:content_review",
-      "read:content_review:all",
-      "read:course",
-      "read:course:lesson",
-      "read:course:rating",
-      "read:course:comment",
-      "read:store",
-    ],
-  };
   request.context = {
     ...request.context,
-    user: anonymousUserObject,
+    user: getAnonymousUser(),
   };
 }
 
@@ -274,6 +306,8 @@ const controller = {
   clearSessionCookie,
   injectAnonymousOrUser,
   canRequest,
+  getAnonymousUser,
+  anonymousCan,
   rateLimitBy,
   rateLimitRequest,
   injectAuthenticatedUser,

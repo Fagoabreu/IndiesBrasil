@@ -30,7 +30,7 @@ export default function EmConstrucao() {
         gap: 16,
       }}
     >
-      <SeoHead title={`${label} — Em Construção`} canonical={`${SITE_URL}/construcao/${slug}`} noindex />
+      <SeoHead title={`${label} — Em Construção`} canonical={`${SITE_URL}/construcao/${slug}`} noIndex />
 
       <div style={{ color: "var(--fgColor-muted)", opacity: 0.5 }}>
         <ToolsIcon size={48} />

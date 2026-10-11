@@ -64,6 +64,25 @@ async function findAll({ page = 1, limit = 20, search = "", tag = "" } = {}) {
   return results.rows;
 }
 
+/**
+ * Lista para o sitemap: só o endereço (`slug`) e quando mudou.
+ *
+ * Mesma razão de `game.findAllForSitemap`: `findAll` agrega aulas e notas,
+ * corta por página e não devolve `updated_at`. Cursos não têm tipo de
+ * moderação (nenhum alvo `course` em `MODERATION_TARGET_TYPES`), então não há
+ * filtro de bloqueio a repetir aqui.
+ */
+async function findAllForSitemap() {
+  const results = await database.query({
+    text: `
+      SELECT c.slug, c.updated_at
+      FROM courses c
+      ORDER BY c.updated_at DESC
+    `,
+  });
+  return results.rows;
+}
+
 async function findBySlug(slug) {
   const results = await database.query({
     text: `
@@ -93,6 +112,40 @@ async function findBySlug(slug) {
   }
 
   return results.rows[0];
+}
+
+/* =========================================================
+ * Leitura completa
+ * ========================================================= */
+
+/**
+ * Curso completo: dados, tags, aulas e o que o visitante pode fazer.
+ *
+ * Existe para a rota `/api/v1/courses/[slug]` e para o `getServerSideProps` da
+ * página do curso montarem a MESMA coisa. Antes essa montagem (três consultas
+ * mais o bloco do `viewer`) vivia só na rota, e a página dependia de buscá-la
+ * por HTTP para renderizar — duas montagens divergiriam no primeiro ajuste, e a
+ * página passaria a mostrar menos que a API sem ninguém perceber.
+ *
+ * `viewer` é `null` sem `userId`: é o caso do servidor, que renderiza para o
+ * visitante anônimo. Os dados de sessão chegam na busca feita pelo cliente.
+ */
+async function findFullBySlug(slug, userId = null) {
+  const courseData = await findBySlug(slug);
+  const [tags, lessons] = await Promise.all([getCourseTags(courseData.id), findLessonsByCourseSlug(slug)]);
+
+  let viewer = null;
+  if (userId) {
+    const [userRating, progress] = await Promise.all([getUserRating(slug, userId), getCourseProgress(slug, userId)]);
+    viewer = {
+      isOwner: courseData.owner_id === userId,
+      userRating: userRating?.rating || null,
+      review: userRating?.review || null,
+      progress,
+    };
+  }
+
+  return { ...courseData, tags, lessons, viewer };
 }
 
 async function create(ownerId, courseData) {
@@ -878,7 +931,9 @@ async function getCourseEnrollments(slug) {
 
 const courseModel = {
   findAll,
+  findAllForSitemap,
   findBySlug,
+  findFullBySlug,
   create,
   update,
   remove,

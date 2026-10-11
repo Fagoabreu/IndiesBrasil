@@ -7,16 +7,52 @@ import { Heading, Spinner, Button } from "@primer/react";
 import { BookIcon, StarIcon, StarFillIcon, CheckIcon, ChevronRightIcon, PencilIcon, TrashIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_URL, ogImageSizeFromPreset } from "@/lib/seo";
+import { breadcrumbList, course as courseStructuredData, graph } from "@/lib/structured-data";
 import styles from "./curso.module.css";
 
-export default function CursoPage() {
+/**
+ * O curso vem do servidor.
+ *
+ * Sem isso o HTML desta rota não tinha `<title>`, descrição nem canonical — o
+ * `SeoHead` só montava depois do `fetch` no cliente. O que o servidor busca é o
+ * mesmo objeto que a API monta (`course.findFullBySlug`): `viewer` sai `null`
+ * porque não há sessão aqui, e os dados do visitante continuam chegando na
+ * busca do cliente.
+ *
+ * Ver `pages/jogos/index.js` para o detalhamento das escolhas de serialização.
+ */
+export async function getServerSideProps(context) {
+  const { slug } = context.params;
+
+  // Mesmo gate de `GET /api/v1/courses/[slug]` — ver `pages/jogos/index.js`.
+  //
+  // As AULAS vêm no mesmo payload (`findFullBySlug`) e a rota de aula tem
+  // feature própria (`read:course:lesson`, usada em
+  // `/api/v1/courses/[slug]/lessons/[order]`). Restringir aula é mexer no
+  // MODEL, e não só na rota: `findFullBySlug` é compartilhado com
+  // `GET /api/v1/courses/[slug]`, então filtrar apenas na API deixaria o SSR
+  // embutindo o conteúdo que a API esconde.
+  const { anonymousCan } = await import("@/infra/controller");
+  if (!anonymousCan("read:course")) return { notFound: true };
+
+  try {
+    const course = (await import("@/models/course")).default;
+    const fullCourse = await course.findFullBySlug(slug);
+
+    return { props: { initialCourse: JSON.parse(JSON.stringify(fullCourse)) } };
+  } catch {
+    return { props: { initialCourse: null } };
+  }
+}
+
+export default function CursoPage({ initialCourse }) {
   const router = useRouter();
   const { slug } = router.query;
   const { user } = useUser();
 
-  const [course, setCourse] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [course, setCourse] = useState(initialCourse);
+  const [loading, setLoading] = useState(!initialCourse);
   const [error, setError] = useState(null);
   const [userRating, setUserRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -38,7 +74,9 @@ export default function CursoPage() {
   }, [slug, user?.id]);
 
   async function loadCourse() {
-    setLoading(true);
+    // Com o curso já renderizado pelo servidor não há motivo para o spinner: a
+    // busca no cliente só completa o que depende de sessão (`viewer`).
+    if (!initialCourse) setLoading(true);
     setError(null);
     try {
       const res = await fetch(`/api/v1/courses/${slug}`, {
@@ -164,6 +202,8 @@ export default function CursoPage() {
   const completedCount = progress?.completedCount ?? 0;
   const totalCount = progress?.totalCount ?? course.lessons?.length ?? 0;
   const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+  // Capa do preset `landscapeCover` (16:9) — ver `pages/jogos/[slug]/index.js`.
+  const ogSize = ogImageSizeFromPreset("landscapeCover");
 
   return (
     <div className={styles.page}>
@@ -171,6 +211,26 @@ export default function CursoPage() {
         title={`${course.title} — Indies Brasil`}
         description={course.description?.slice(0, 160) || `Curso: ${course.title}`}
         canonical={`${SITE_URL}/estudos/${course.slug}`}
+        ogImage={course.cover_url}
+        ogImageWidth={ogSize.width}
+        ogImageHeight={ogSize.height}
+        ogType="article"
+        jsonLd={graph(
+          breadcrumbList([
+            { name: "Cursos", path: "/estudos" },
+            { name: course.title, path: `/estudos/${course.slug}` },
+          ]),
+          courseStructuredData({
+            name: course.title,
+            description: course.description,
+            image: course.cover_url,
+            url: `${SITE_URL}/estudos/${course.slug}`,
+            providerName: course.owner_username,
+            lessonCount: totalCount,
+            rating: course.avg_rating,
+            ratingCount: course.rating_count,
+          }),
+        )}
       />
 
       {/* Breadcrumb */}

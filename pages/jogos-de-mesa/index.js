@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Heading, TextInput, Spinner } from "@primer/react";
 import { TableIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
@@ -32,15 +32,31 @@ const STAGES = {
 
 const LIMIT = 20;
 
-export default function JogosDeMessaPage() {
+/**
+ * A primeira página da listagem vem do servidor — sem isso o HTML desta rota é
+ * um spinner e não há nenhum `<a href="/jogos-de-mesa/...">` para o Google
+ * descobrir. Ver `pages/jogos/index.js` para o detalhamento das escolhas.
+ */
+export async function getServerSideProps() {
+  // Mesmo gate da rota `/api/v1/boardgames` — ver `pages/jogos/index.js`.
+  const { anonymousCan } = await import("@/infra/controller");
+  if (!anonymousCan("read:boardgame:all")) return { notFound: true };
+
+  const boardgame = (await import("@/models/boardgame")).default;
+  const rows = await boardgame.findAll({ page: 1, limit: LIMIT });
+
+  return { props: { initialGames: JSON.parse(JSON.stringify(rows)) } };
+}
+
+export default function JogosDeMessaPage({ initialGames }) {
   const { user } = useUser();
   const [tab, setTab] = useState("all");
 
   // aba "Descubra"
-  const [allGames, setAllGames] = useState([]);
-  const [allLoading, setAllLoading] = useState(true);
+  const [allGames, setAllGames] = useState(initialGames);
+  const [allLoading, setAllLoading] = useState(false);
   const [allPage, setAllPage] = useState(1);
-  const [allHasMore, setAllHasMore] = useState(false);
+  const [allHasMore, setAllHasMore] = useState(initialGames.length === LIMIT);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [stage, setStage] = useState("");
@@ -69,10 +85,20 @@ export default function JogosDeMessaPage() {
     }
   }, []);
 
+  // Primeira execução pulada: a página 1 já veio do servidor (ver
+  // `pages/jogos/index.js`).
+  const skipInitialLoad = useRef(true);
+
   // Debounce filters for "Descubra"
   useEffect(() => {
     const t = setTimeout(() => {
       setAllPage(1);
+
+      if (skipInitialLoad.current) {
+        skipInitialLoad.current = false;
+        if (!search && !category && !stage) return;
+      }
+
       loadAll(1, search, category, stage);
     }, 350);
     return () => clearTimeout(t);

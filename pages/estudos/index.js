@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Heading, TextInput, Spinner } from "@primer/react";
@@ -14,15 +14,33 @@ const PAGE_TITLE = "Cursos — Indies Brasil";
 const PAGE_DESCRIPTION = "Aprenda sobre desenvolvimento de jogos, arte, Unity, Godot e muito mais com cursos criados pela comunidade.";
 const PAGE_URL = `${SITE_URL}/estudos`;
 
-export default function CursosPage() {
+const LIMIT = 20;
+
+/**
+ * A primeira página da listagem vem do servidor — sem isso o HTML desta rota é
+ * um spinner e não há nenhum `<a href="/estudos/...">` para o Google descobrir.
+ * Ver `pages/jogos/index.js` para o detalhamento das escolhas.
+ */
+export async function getServerSideProps() {
+  // Mesmo gate da rota `/api/v1/courses` — ver `pages/jogos/index.js`.
+  const { anonymousCan } = await import("@/infra/controller");
+  if (!anonymousCan("read:course")) return { notFound: true };
+
+  const course = (await import("@/models/course")).default;
+  const rows = await course.findAll({ page: 1, limit: LIMIT });
+
+  return { props: { initialCourses: JSON.parse(JSON.stringify(rows)) } };
+}
+
+export default function CursosPage({ initialCourses }) {
   const { user } = useUser();
 
   const [search, setSearch] = useState("");
   const [tag, setTag] = useState("");
-  const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [courses, setCourses] = useState(initialCourses);
+  const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
+  const [hasMore, setHasMore] = useState(initialCourses.length === LIMIT);
   const [showEnrolled, setShowEnrolled] = useState(false);
 
   const loadCourses = useCallback(
@@ -62,9 +80,19 @@ export default function CursosPage() {
     [showEnrolled],
   );
 
+  // Primeira execução pulada: a página 1 já veio do servidor (ver
+  // `pages/jogos/index.js`).
+  const skipInitialLoad = useRef(true);
+
   useEffect(() => {
     const t = setTimeout(() => {
       setPage(1);
+
+      if (skipInitialLoad.current) {
+        skipInitialLoad.current = false;
+        if (!search && !tag && !showEnrolled) return;
+      }
+
       loadCourses(1, search, tag);
     }, 350);
     return () => clearTimeout(t);

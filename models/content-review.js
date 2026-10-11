@@ -113,6 +113,26 @@ async function findAll({ page = 1, limit = 20, contentType = "" } = {}) {
   return result.rows.map(parseReviewRow);
 }
 
+/**
+ * Lista para o sitemap: só o endereço (`slug`) e quando mudou.
+ *
+ * `findAll` resolve o nome e a capa do conteúdo analisado (três LEFT JOINs com
+ * `games`/`boardgames`/`books` por causa do `content_type` polimórfico) e corta
+ * por página, devolvendo também os pontos positivos e negativos em JSON. O
+ * sitemap não usa nada disso. Não há filtro de moderação a repetir: `análise`
+ * não é alvo em `MODERATION_TARGET_TYPES`.
+ */
+async function findAllForSitemap() {
+  const result = await database.query({
+    text: `
+      SELECT cr.slug, cr.updated_at
+      FROM content_reviews cr
+      ORDER BY cr.updated_at DESC
+    `,
+  });
+  return result.rows;
+}
+
 async function findByContent({ contentType, contentId, page = 1, limit = 10 } = {}) {
   if (!contentType || !contentId) return [];
   const offset = (page - 1) * limit;
@@ -463,6 +483,7 @@ function parseJsonField(field) {
 
 const contentReview = {
   findAll,
+  findAllForSitemap,
   findByContent,
   findBySlug,
   findById,

@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
-import Head from "next/head";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import SeoHead from "@/components/SeoHead";
+import { SITE_URL } from "@/lib/seo";
 import styles from "./analises.module.css";
 
 const CONTENT_TYPE_LABELS = {
@@ -9,6 +10,11 @@ const CONTENT_TYPE_LABELS = {
   boardgame: "Jogo de Mesa",
   book: "Livro/Quadrinho",
 };
+
+const PAGE_TITLE = "Análises — Indies Brasil";
+const PAGE_DESCRIPTION = "Análises e reviews de jogos, jogos de mesa e livros feitas pela comunidade Indies Brasil.";
+const PAGE_URL = `${SITE_URL}/analises`;
+const LIMIT = 20;
 
 function StarRating({ value }) {
   if (!value) return null;
@@ -23,16 +29,35 @@ function StarRating({ value }) {
   );
 }
 
-export default function AnalisesPage() {
-  const [analises, setAnalises] = useState([]);
-  const [loading, setLoading] = useState(true);
+/**
+ * A lista vem do servidor — sem isso o HTML desta rota era um spinner e nenhum
+ * `<a href="/analises/...">` existia para o Google descobrir. Também era a
+ * única listagem com metadados escritos direto em `<Head>`, sem canonical,
+ * `og:*` nem JSON-LD: aqui a página passa a usar o `SeoHead`, como todo o resto
+ * do site (ver `pages/jogos/index.js` para a serialização das props).
+ */
+export async function getServerSideProps() {
+  // Mesmo gate da rota `/api/v1/analises` (`read:content_review:all`) — ver
+  // `pages/jogos/index.js`.
+  const { anonymousCan } = await import("@/infra/controller");
+  if (!anonymousCan("read:content_review:all")) return { notFound: true };
+
+  const contentReview = (await import("@/models/content-review")).default;
+  const rows = await contentReview.findAll({ page: 1, limit: LIMIT });
+
+  return { props: { initialAnalises: JSON.parse(JSON.stringify(rows)) } };
+}
+
+export default function AnalisesPage({ initialAnalises }) {
+  const [analises, setAnalises] = useState(initialAnalises);
+  const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState("");
   const [page, setPage] = useState(1);
 
   const fetchAnalises = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page, limit: 20 });
+      const params = new URLSearchParams({ page, limit: LIMIT });
       if (filter) params.set("content_type", filter);
       const res = await fetch(`/api/v1/analises?${params}`, {
         credentials: "include",
@@ -45,17 +70,24 @@ export default function AnalisesPage() {
     }
   }, [page, filter]);
 
+  // A página 1 já veio do servidor: a primeira execução do efeito não pode
+  // refazer a busca, senão `loading` volta a `true` e os cards do HTML servido
+  // são trocados por um spinner na primeira passada do rastreador.
+  const skipInitialLoad = useRef(true);
+
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (skipInitialLoad.current && page === 1 && !filter) {
+      skipInitialLoad.current = false;
+      return;
+    }
+    skipInitialLoad.current = false;
+
     fetchAnalises();
-  }, [fetchAnalises]);
+  }, [fetchAnalises, page, filter]);
 
   return (
     <>
-      <Head>
-        <title>Análises — Indies Brasil</title>
-        <meta name="description" content="Análises e reviews de jogos, jogos de mesa e livros feitas pela comunidade Indies Brasil." />
-      </Head>
+      <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} />
 
       <div className={styles.page}>
         <header className={styles.header}>

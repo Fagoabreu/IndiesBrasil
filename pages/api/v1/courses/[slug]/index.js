@@ -15,27 +15,11 @@ async function getHandler(request, response) {
   const { slug } = request.query;
   const requestUser = request.context.user;
 
-  const courseData = await course.findBySlug(slug);
-  const tags = await course.getCourseTags(courseData.id);
-  const lessons = await course.findLessonsByCourseSlug(slug);
+  // A montagem (tags, aulas, viewer) vive no model para a página do curso, que
+  // agora renderiza no servidor, produzir exatamente o mesmo objeto.
+  const fullCourse = await course.findFullBySlug(slug, requestUser?.id || null);
 
-  let viewer = null;
-  if (requestUser?.id) {
-    const [userRating, progress] = await Promise.all([course.getUserRating(slug, requestUser.id), course.getCourseProgress(slug, requestUser.id)]);
-    viewer = {
-      isOwner: courseData.owner_id === requestUser.id,
-      userRating: userRating?.rating || null,
-      review: userRating?.review || null,
-      progress,
-    };
-  }
-
-  return response.status(200).json({
-    ...courseData,
-    tags,
-    lessons,
-    viewer,
-  });
+  return response.status(200).json(fullCourse);
 }
 
 async function patchHandler(request, response) {
