@@ -61,6 +61,7 @@ describe("Sitemap", () => {
       "/sitemap/estudos.xml",
       "/sitemap/noticias.xml",
       "/sitemap/analises.xml",
+      "/sitemap/agenda.xml",
     ]);
   });
 
@@ -81,6 +82,7 @@ describe("Sitemap", () => {
       "/sitemap/estudos.xml": ["/estudos", `/estudos/${fixtures.courseSlug}`],
       "/sitemap/noticias.xml": ["/noticias", `/noticias/${fixtures.newsId}`],
       "/sitemap/analises.xml": ["/analises", `/analises/${fixtures.analiseSlug}`],
+      "/sitemap/agenda.xml": ["/agenda", `/agenda/${fixtures.publicEventId}`],
     };
 
     for (const [path, paths] of Object.entries(expected)) {
@@ -101,6 +103,31 @@ describe("Sitemap", () => {
     const { body } = await fetchSitemap("/sitemap/jogos.xml");
 
     expect(locations(body)).not.toContain(`/jogos/${fixtures.blockedGameSlug}`);
+  });
+
+  test("A agenda publica só eventos públicos e publicados", async () => {
+    const { response, body } = await fetchSitemap("/sitemap/agenda.xml");
+    const paths = locations(body);
+
+    expect(response.status).toBe(200);
+    expect(paths).toContain(`/agenda/${fixtures.publicEventId}`);
+
+    // `visibility` menor que público são três estados diferentes e cada um
+    // falharia de um jeito: `members` anuncia conteúdo que exige conta,
+    // `private` anuncia conteúdo restrito (o sitemap é público por natureza) e
+    // `draft` publica uma página que ainda não existe para o visitante.
+    expect(paths).not.toContain(`/agenda/${fixtures.membersEventId}`);
+    expect(paths).not.toContain(`/agenda/${fixtures.privateEventId}`);
+    expect(paths).not.toContain(`/agenda/${fixtures.draftEventId}`);
+  });
+
+  test("As reuniões de estúdio não entram no sitemap", async () => {
+    const { body } = await fetchSitemap("/sitemap/agenda.xml");
+
+    // Reunião vive em outra tabela (`meetings`), tem lista própria e a página
+    // é `noIndex` fixo — o sitemap da agenda publica **eventos**, não reuniões.
+    expect(body).not.toContain("/reunioes/");
+    expect(locations(body).every((path) => path === "/agenda" || path.startsWith("/agenda/"))).toBe(true);
   });
 
   test("O lastmod da entidade é a data real da linha, não a hora da requisição", async () => {

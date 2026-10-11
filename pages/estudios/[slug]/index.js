@@ -21,7 +21,7 @@ import PostCardComponent from "@/components/PostCard/PostCardComponent";
 import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 import MessagesPanel from "@/components/Messages/MessagesPanel";
 import SendMessageButton from "@/components/Messages/SendMessageButton";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_URL, OG_CARD_SIZE } from "@/lib/seo";
 import { resolveOrgNotificationTitle, resolveOrgNotificationMessage, resolveOrgNotificationHref } from "@/lib/notifications";
 import styles from "./studio.module.css";
 import { uploadWithProgress } from "@/utils/uploadWithProgress";
@@ -597,8 +597,8 @@ export default function StudioPage({ initialStudio }) {
         // preview usava o logo cru (512x512): um quadrado solto, sem nome nem
         // contexto, e cortado/letterboxed na maioria das redes.
         ogImage={`${SITE_URL}/api/og/studio/${encodeURIComponent(studio.slug)}`}
-        ogImageWidth={1200}
-        ogImageHeight={630}
+        ogImageWidth={OG_CARD_SIZE.width}
+        ogImageHeight={OG_CARD_SIZE.height}
         ogType="business.business"
         jsonLd={orgJsonLd}
       />

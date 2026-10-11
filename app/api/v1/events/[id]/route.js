@@ -19,15 +19,16 @@ export async function GET(request, { params }) {
     }
 
     const { id } = await params;
+    // `findById` já aplica a regra de visibilidade do visitante (público para
+    // quem não tem sessão; `members` para autenticado; `private` só para quem
+    // criou ou foi convidado — ver `visibilityCondition` em `models/event.js`).
+    // O que não pode ser lido sai daqui como `NotFoundError`, que vira 404.
+    //
+    // Antes havia uma checagem de `visibility === "private"` neste lugar, com o
+    // corpo vazio: `const hasInvite = ...; if (hasInvite) { /* findById já
+    // verifica */ }` — não verificava, e o evento privado saía com 200 e
+    // conteúdo para visitante anônimo.
     const found = await event.findById(id, user.id ?? null);
-
-    // Eventos privados: somente criador ou convidado
-    if (found.visibility === "private" && found.created_by !== user.id) {
-      const hasInvite = found.is_owner === false;
-      if (hasInvite) {
-        // findById já verifica — seguir em frente
-      }
-    }
 
     return Response.json(found, { status: 200 });
   } catch (error) {

@@ -7,6 +7,7 @@ import book from "models/book";
 import course from "models/course";
 import news from "models/news";
 import contentReview from "models/content-review";
+import event from "models/event";
 import moderation from "models/moderation";
 
 /**
@@ -21,6 +22,11 @@ import moderation from "models/moderation";
  * nem no sitemap nem nos links da listagem. É o caso mais fácil de quebrar sem
  * que ninguém note, porque um teste que só confere presença passa com o
  * conteúdo bloqueado publicado.
+ *
+ * Cria também eventos em visibilidades diferentes (público, `members`,
+ * `private` e rascunho). Mesma razão: o sitemap da agenda **tem** de filtrar
+ * por visibilidade e status, e um teste que só confere presença passa com o
+ * evento público convivendo com o privado publicado.
  */
 export async function createSeoFixtures() {
   const { user } = await createActivatedUserWithSession({
@@ -63,6 +69,37 @@ export async function createSeoFixtures() {
     moderatorId: user.id,
   });
 
+  // Datas no futuro: o detalhe do evento não depende disso, mas um evento já
+  // terminado misturaria o teste com a regra de janela do calendário.
+  const inDays = (days) => new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+
+  const publicEvent = await event.create(
+    {
+      title: "Evento Sitemap Público",
+      description: "Evento aberto a qualquer visitante.",
+      starts_at: inDays(5),
+      ends_at: inDays(6),
+      visibility: "public",
+      status: "published",
+    },
+    user.id,
+  );
+
+  const privateEvent = await event.create(
+    { title: "Evento Sitemap Privado", starts_at: inDays(7), ends_at: inDays(8), visibility: "private", status: "published" },
+    user.id,
+  );
+
+  const membersEvent = await event.create(
+    { title: "Evento Sitemap Membros", starts_at: inDays(9), ends_at: inDays(10), visibility: "members", status: "published" },
+    user.id,
+  );
+
+  const draftEvent = await event.create(
+    { title: "Evento Sitemap Rascunho", starts_at: inDays(11), ends_at: inDays(12), visibility: "public", status: "draft" },
+    user.id,
+  );
+
   return {
     user,
     studio,
@@ -72,6 +109,10 @@ export async function createSeoFixtures() {
     courseSlug: courseRow.slug,
     newsId: newsRow.id,
     analiseSlug: analiseRow.slug,
+    publicEventId: publicEvent.id,
+    privateEventId: privateEvent.id,
+    membersEventId: membersEvent.id,
+    draftEventId: draftEvent.id,
     blockedGameSlug: blockedGame.slug,
   };
 }
@@ -82,6 +123,10 @@ export async function createSeoFixtures() {
  * Fica aqui, e não dentro de um teste, porque é a lista dos tipos de conteúdo
  * do site — o sitemap (`lib/sitemap.js`) e as listagens precisam cobrir
  * exatamente os mesmos.
+ *
+ * A agenda **não** entra: o calendário é uma visão de mês (o mês é estado da
+ * tela, não endereço), então o HTML de `/agenda` não lista os eventos — quem os
+ * publica é o sitemap.
  */
 export function hubLinks(fixtures) {
   return {

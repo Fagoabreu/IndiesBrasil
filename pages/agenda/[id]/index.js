@@ -6,7 +6,8 @@ import { Spinner } from "@primer/react";
 import { CalendarIcon, LocationIcon, BroadcastIcon, PersonIcon, ArrowLeftIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_URL, OG_CARD_SIZE } from "@/lib/seo";
+import { breadcrumbList, event as eventStructuredData, graph } from "@/lib/structured-data";
 import { eventTypeLabel } from "@/lib/event-types";
 import { loopbackOrigin } from "@/lib/internal-url";
 import { isUuid } from "@/lib/uuid";
@@ -337,10 +338,45 @@ export default function EventDetailPage({ initialEvent = null, eventNotFound = f
         canonical={pageUrl}
         // Card gerado no servidor, com o mesmo fundo dos cards do site.
         ogImage={`${SITE_URL}/api/og/event/${id}`}
+        // Medidas do arquivo que a rota acima gera (`renderPng` redimensiona
+        // para `OG_WIDTH`x`OG_HEIGHT`). Sem isto o `SeoHead` cai no padrão da
+        // arte do site (1424x747) e as redes dimensionam o card por um número
+        // que não é o do arquivo — imagem esticada ou cortada.
+        ogImageWidth={OG_CARD_SIZE.width}
+        ogImageHeight={OG_CARD_SIZE.height}
         ogType="article"
-        // Evento restrito não deve ser indexado — o card de OG também responde
-        // 404 para ele (`pages/api/og/event/[id].js`).
-        noIndex={ev.visibility === "private"}
+        // Evento restrito não deve ser indexado — e o mesmo vale para
+        // `members`: a regra de leitura é a de `visibilityCondition`
+        // (`models/event.js`), em que só `public` é aberto a qualquer visitante.
+        // O crawler recebe a versão 404 desta página (o SSR busca sem sessão),
+        // então isto é a segunda linha de defesa, não a primeira.
+        noIndex={ev.visibility !== "public"}
+        jsonLd={graph(
+          breadcrumbList([
+            { name: "Agenda", path: "/agenda" },
+            { name: ev.title, path: `/agenda/${id}` },
+          ]),
+          eventStructuredData({
+            name: ev.title,
+            description: ev.description,
+            startDate: ev.starts_at,
+            endDate: ev.ends_at,
+            image: `${SITE_URL}/api/og/event/${id}`,
+            url: pageUrl,
+            status: ev.status,
+            isOnline: ev.is_online,
+            locationName: ev.location_name,
+            locationUrl: ev.location_url,
+            address: ev.address,
+            onlineUrl: ev.online_url,
+            // `Person`, não `Organization`: é o que a página mostra — o card do
+            // organizador é `@username` linkando para `/perfil/<username>`.
+            // Declarar organização aqui descreveria algo que a página não exibe.
+            organizerType: "Person",
+            organizerName: ev.organizer_username,
+            organizerUrl: ev.organizer_username ? `${SITE_URL}/perfil/${ev.organizer_username}` : null,
+          }),
+        )}
       />
 
       <div className={styles.page}>
