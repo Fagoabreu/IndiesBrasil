@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import { Heading } from "@primer/react";
 import { PlusIcon, XIcon, ImageIcon } from "@primer/octicons-react";
@@ -13,10 +13,33 @@ const PAGE_TITLE = "Notícias | Indies Brasil";
 const PAGE_DESCRIPTION = "Fique por dentro das últimas notícias, novidades e atualizações do cenário indie brasileiro.";
 const PAGE_URL = `${SITE_URL}/noticias`;
 
-export default function NewsPage() {
+/**
+ * A lista vem do servidor.
+ *
+ * Sem isso o HTML desta rota era "Carregando notícias..." e nenhum
+ * `<a href="/noticias/...">` existia para o Google descobrir. `news.findAll()`
+ * é chamado direto em vez de `/api/v1/news`: a rota faz uma consulta por
+ * notícia só para acrescentar `user_rating`/`user_factcheck` (dado do visitante,
+ * que o card não usa) — aqui não há visitante.
+ *
+ * Ver `pages/jogos/index.js` para o detalhamento das escolhas de serialização.
+ */
+export async function getServerSideProps() {
+  // Mesmo gate da rota `/api/v1/news` (`read:news:all`) — ver
+  // `pages/jogos/index.js`.
+  const { anonymousCan } = await import("@/infra/controller");
+  if (!anonymousCan("read:news:all")) return { notFound: true };
+
+  const news = (await import("@/models/news")).default;
+  const rows = await news.findAll();
+
+  return { props: { initialNews: JSON.parse(JSON.stringify(rows)) } };
+}
+
+export default function NewsPage({ initialNews }) {
   const { user, loadingUser } = useUser();
-  const [newsList, setNewsList] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [newsList, setNewsList] = useState(initialNews);
+  const [loading, setLoading] = useState(false);
 
   // Formulário
   const [showForm, setShowForm] = useState(false);
@@ -43,9 +66,20 @@ export default function NewsPage() {
     }
   }, []);
 
+  // A lista já veio do servidor: a primeira execução não pode refazer a busca,
+  // senão `loading` volta a `true` e os cards do HTML servido são trocados por
+  // "Carregando notícias..." bem na primeira passada do rastreador.
+  const skipInitialLoad = useRef(initialNews.length > 0);
+
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!loadingUser) fetchNews();
+    if (loadingUser) return;
+
+    if (skipInitialLoad.current) {
+      skipInitialLoad.current = false;
+      return;
+    }
+
+    fetchNews();
   }, [fetchNews, loadingUser]);
 
   /** Recebe o recorte do ImageUploader (16:9, igual ao card de notícia). */

@@ -86,6 +86,39 @@ async function findAll({ page = 1, limit = 20, search = "", genre = "", stage = 
   return result.rows;
 }
 
+/**
+ * Lista para o sitemap: só o endereço (`slug`) e quando mudou.
+ *
+ * Não reaproveita `findAll`: ela faz seis JOINs e agregações para montar o
+ * card, devolve colunas que o sitemap descarta e não traz `updated_at` — que é
+ * justamente o dado do `<lastmod>`. Aqui é uma varredura simples, sem
+ * paginação, porque o sitemap precisa de todas as linhas de uma vez.
+ *
+ * O filtro de moderação é o mesmo de `findAll`: jogo bloqueado — ou de estúdio
+ * bloqueado — não pode entrar no sitemap, senão o Google recebe o endereço de
+ * uma página que responde 404.
+ */
+async function findAllForSitemap() {
+  const result = await database.query({
+    text: `
+      SELECT g.slug, g.updated_at
+      FROM games g
+      WHERE NOT EXISTS (
+        SELECT 1
+        FROM moderation_actions ma
+        WHERE ma.revoked_at IS NULL
+          AND (ma.expires_at IS NULL OR ma.expires_at > now())
+          AND (
+            (ma.target_type = 'game' AND ma.target_id = g.id::text)
+            OR (ma.target_type = 'studio' AND ma.target_id = g.owner_org_id::text)
+          )
+      )
+      ORDER BY g.updated_at DESC
+    `,
+  });
+  return result.rows;
+}
+
 async function findBySlug(slug) {
   const result = await database.query({
     text: `
@@ -805,6 +838,7 @@ const game = {
   STAGES,
   PLATFORMS,
   findAll,
+  findAllForSitemap,
   findBySlug,
   findByOrg,
   findById,

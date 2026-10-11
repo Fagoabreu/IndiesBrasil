@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Heading, TextInput, Spinner } from "@primer/react";
 import { DeviceMobileIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
@@ -42,15 +42,44 @@ const GENRES = [
 
 const LIMIT = 20;
 
-export default function JogosPage() {
+/**
+ * A primeira página da listagem vem do servidor.
+ *
+ * Sem isso o HTML desta rota era um spinner: os cards só existiam depois que o
+ * navegador rodava o JavaScript e chamava `/api/v1/games`. O Google até executa
+ * JavaScript, mas então não havia nenhum `<a href="/jogos/...">` para descobrir
+ * — a listagem não linkava para nada antes de rodar.
+ *
+ * Chamada ao model direto, e não à própria API por HTTP: é o mesmo dado que
+ * `/api/v1/games` devolve (a rota repassa as linhas de `findAll` sem
+ * enriquecimento) e evita uma requisição da máquina para ela mesma.
+ *
+ * O `JSON.parse(JSON.stringify(...))` converte os `Date` que o node-pg devolve
+ * (ex.: `created_at`) em ISO — o Next não serializa `Date` em props.
+ */
+export async function getServerSideProps() {
+  // `getServerSideProps` não passa pelo middleware (`controller.canRequest`),
+  // então consulta a mesma lista do controller antes de ler o model. É o que
+  // mantém "quem lê o quê" em um lugar só: revogar `read:game:all` do anônimo
+  // derruba a API e esta página juntas (ver `infra/controller.js`).
+  const { anonymousCan } = await import("@/infra/controller");
+  if (!anonymousCan("read:game:all")) return { notFound: true };
+
+  const game = (await import("@/models/game")).default;
+  const rows = await game.findAll({ page: 1, limit: LIMIT });
+
+  return { props: { initialGames: JSON.parse(JSON.stringify(rows)) } };
+}
+
+export default function JogosPage({ initialGames }) {
   const { user } = useUser();
   const [tab, setTab] = useState("all");
 
   // aba "Descubra"
-  const [allGames, setAllGames] = useState([]);
-  const [allLoading, setAllLoading] = useState(true);
+  const [allGames, setAllGames] = useState(initialGames);
+  const [allLoading, setAllLoading] = useState(false);
   const [allPage, setAllPage] = useState(1);
-  const [allHasMore, setAllHasMore] = useState(false);
+  const [allHasMore, setAllHasMore] = useState(initialGames.length === LIMIT);
   const [search, setSearch] = useState("");
   const [genre, setGenre] = useState("");
   const [stage, setStage] = useState("");
@@ -79,10 +108,23 @@ export default function JogosPage() {
     }
   }, []);
 
+  // A primeira página já veio do servidor. O efeito de filtros roda também na
+  // montagem, e refazer ali a mesma busca jogaria `allLoading` para `true` —
+  // trocando os cards do HTML servido por um spinner bem na primeira passada do
+  // rastreador. Só a primeira execução (com os filtros ainda vazios) é pulada;
+  // qualquer digitação posterior carrega normalmente.
+  const skipInitialLoad = useRef(true);
+
   // Debounce filters for "Descubra"
   useEffect(() => {
     const t = setTimeout(() => {
       setAllPage(1);
+
+      if (skipInitialLoad.current) {
+        skipInitialLoad.current = false;
+        if (!search && !genre && !stage) return;
+      }
+
       loadAll(1, search, genre, stage);
     }, 350);
     return () => clearTimeout(t);

@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -15,7 +15,25 @@ const PAGE_TITLE = "Estúdios — Indies Brasil";
 const PAGE_DESCRIPTION = "Conheça os estúdios de jogos indie brasileiros: press kits, membros, projetos e muito mais.";
 const PAGE_URL = `${SITE_URL}/estudios`;
 
-export default function StudiosPage() {
+const LIMIT = 20;
+
+/**
+ * A primeira página da listagem vem do servidor — sem isso o HTML desta rota é
+ * um spinner e não há nenhum `<a href="/estudios/...">` para o Google
+ * descobrir. Ver `pages/jogos/index.js` para o detalhamento das escolhas.
+ */
+export async function getServerSideProps() {
+  // Mesmo gate da rota `/api/v1/studios` — ver `pages/jogos/index.js`.
+  const { anonymousCan } = await import("@/infra/controller");
+  if (!anonymousCan("read:studio")) return { notFound: true };
+
+  const organization = (await import("@/models/organization")).default;
+  const rows = await organization.findAll({ page: 1, limit: LIMIT });
+
+  return { props: { initialStudios: JSON.parse(JSON.stringify(rows)) } };
+}
+
+export default function StudiosPage({ initialStudios }) {
   const { user } = useUser();
 
   const router = useRouter();
@@ -27,10 +45,10 @@ export default function StudiosPage() {
   const [search, setSearch] = useState("");
 
   // aba "Descubra"
-  const [allStudios, setAllStudios] = useState([]);
-  const [allLoading, setAllLoading] = useState(true);
+  const [allStudios, setAllStudios] = useState(initialStudios);
+  const [allLoading, setAllLoading] = useState(false);
   const [allPage, setAllPage] = useState(1);
-  const [allHasMore, setAllHasMore] = useState(false);
+  const [allHasMore, setAllHasMore] = useState(initialStudios.length === LIMIT);
 
   // aba "Seguindo"
   const [followingStudios, setFollowingStudios] = useState(null);
@@ -44,7 +62,7 @@ export default function StudiosPage() {
     try {
       const params = new URLSearchParams({
         page: pageNum,
-        limit: 20,
+        limit: LIMIT,
         search: searchQuery,
       });
       const res = await fetch(`/api/v1/studios?${params}`, {
@@ -53,7 +71,7 @@ export default function StudiosPage() {
       const data = await res.json();
       const rows = Array.isArray(data) ? data : [];
       setAllStudios((prev) => (pageNum === 1 ? rows : [...prev, ...rows]));
-      setAllHasMore(rows.length === 20);
+      setAllHasMore(rows.length === LIMIT);
     } catch {
       setAllStudios([]);
     } finally {
@@ -61,9 +79,19 @@ export default function StudiosPage() {
     }
   }
 
+  // Primeira execução pulada: a página 1 já veio do servidor (ver
+  // `pages/jogos/index.js`).
+  const skipInitialLoad = useRef(true);
+
   useEffect(() => {
     const t = setTimeout(() => {
       setAllPage(1);
+
+      if (skipInitialLoad.current) {
+        skipInitialLoad.current = false;
+        if (!search) return;
+      }
+
       loadAll(1, search);
     }, 350);
     return () => clearTimeout(t);

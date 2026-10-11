@@ -7,6 +7,8 @@ import SeoHead from "@/components/SeoHead";
 import GameMediaPlayer from "@/components/GameMedia/GameMediaPlayer";
 import GameReviews from "@/components/GameReviews/GameReviews";
 import ContentEngagement from "@/components/ContentEngagement/ContentEngagement";
+import { ogImageSizeFromPreset } from "@/lib/seo";
+import { boardGame, breadcrumbList, graph } from "@/lib/structured-data";
 
 import styles from "./boardgame.module.css";
 
@@ -48,11 +50,24 @@ function getFollowLabel(loading, following) {
 export async function getServerSideProps(context) {
   const { slug } = context.params;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://jogos.social.br";
+
+  // Mesmo gate da rota do tipo — ver `pages/jogos/[slug]/index.js`.
+  const { anonymousCan } = await import("@/infra/controller");
+  if (!anonymousCan("read:boardgame")) return { notFound: true };
+
   try {
     const boardgame = (await import("@/models/boardgame")).default;
     const bgData = await boardgame.findBySlug(slug);
     if (!bgData) return { props: { initialBgData: null, siteUrl } };
-    return { props: { initialBgData: bgData, siteUrl } };
+
+    // node-pg devolve TIMESTAMP como `Date`, e o Next não serializa `Date` em
+    // props — sem esta linha a rota responde 500 para **todo** jogo de mesa
+    // ("Error serializing `.initialBgData.created_at`"). Era o único detalhe do
+    // site sem a conversão: `jogos/[slug]`, `quadrinhos/[slug]` e
+    // `estudios/[slug]` já a faziam.
+    const serialized = JSON.parse(JSON.stringify(bgData));
+
+    return { props: { initialBgData: serialized, siteUrl } };
   } catch {
     return { props: { initialBgData: null, siteUrl } };
   }
@@ -130,6 +145,8 @@ export default function BoardgamePage({ initialBgData, siteUrl }) {
 
   const coverImage = bgData.banner_url || bgData.cover_url;
   const canonicalUrl = `${siteUrl}/jogos-de-mesa/${slug}`;
+  // Capa do preset `mediaCover` (16:9) — ver `pages/jogos/[slug]/index.js`.
+  const ogSize = ogImageSizeFromPreset("mediaCover");
 
   return (
     <>
@@ -138,9 +155,29 @@ export default function BoardgamePage({ initialBgData, siteUrl }) {
         description={bgData.short_description || bgData.name}
         canonical={canonicalUrl}
         ogImage={coverImage}
-        ogImageWidth={1200}
-        ogImageHeight={630}
+        ogImageWidth={ogSize.width}
+        ogImageHeight={ogSize.height}
         ogType="article"
+        jsonLd={graph(
+          breadcrumbList([
+            { name: "Jogos de Mesa", path: "/jogos-de-mesa" },
+            { name: bgData.name, path: `/jogos-de-mesa/${slug}` },
+          ]),
+          boardGame({
+            name: bgData.name,
+            description: bgData.short_description || bgData.description,
+            image: coverImage,
+            url: canonicalUrl,
+            category: categoryLabel,
+            studioName: bgData.studio_name,
+            studioUrl: bgData.studio_slug ? `${siteUrl}/estudios/${bgData.studio_slug}` : null,
+            minPlayers: bgData.player_count_min,
+            maxPlayers: bgData.player_count_max,
+            releaseDate: bgData.release_date,
+            rating: bgData.avg_rating,
+            ratingCount: bgData.review_count,
+          }),
+        )}
       />
 
       <div className={styles.page}>

@@ -9,6 +9,8 @@ import GameMediaPlayer from "@/components/GameMedia/GameMediaPlayer";
 import GameReviews from "@/components/GameReviews/GameReviews";
 import ContentEngagement from "@/components/ContentEngagement/ContentEngagement";
 import IconSvg from "@/components/IconSvg/IconSvg";
+import { SITE_URL, ogImageSizeFromPreset } from "@/lib/seo";
+import { breadcrumbList, graph, videoGame } from "@/lib/structured-data";
 
 import styles from "./game.module.css";
 
@@ -83,6 +85,15 @@ function getItchStoreUrl(storePages) {
 export async function getServerSideProps(context) {
   const { slug } = context.params;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://jogos.social.br";
+
+  // Mesmo gate da rota `/api/v1/games/[slug]`: `getServerSideProps` não passa
+  // pelo middleware (`controller.canRequest`), então consulta a mesma lista do
+  // controller (ver `infra/controller.js`). Negado vira 404, e não 403 — o
+  // projeto já prefere não confirmar a existência do que o visitante não pode
+  // ver (ver `models/conversation.js`).
+  const { anonymousCan } = await import("@/infra/controller");
+  if (!anonymousCan("read:game")) return { notFound: true };
+
   try {
     const game = (await import("@/models/game")).default;
     const gameData = await game.findBySlug(slug);
@@ -228,6 +239,10 @@ export default function GamePage({ initialGame, siteUrl }) {
 
   const coverImage = gameData.banner_url || gameData.cover_url;
   const canonicalUrl = `${siteUrl}/jogos/${slug}`;
+  // A capa é o arquivo do preset `mediaCover` (16:9): declarar as medidas do
+  // preset em vez de um número fixo é o que evita a rede dimensionar o card
+  // errado antes de baixar a imagem.
+  const ogSize = ogImageSizeFromPreset("mediaCover");
 
   return (
     <>
@@ -236,9 +251,28 @@ export default function GamePage({ initialGame, siteUrl }) {
         description={gameData.short_description || gameData.name}
         canonical={canonicalUrl}
         ogImage={coverImage}
-        ogImageWidth={1200}
-        ogImageHeight={630}
+        ogImageWidth={ogSize.width}
+        ogImageHeight={ogSize.height}
         ogType="article"
+        jsonLd={graph(
+          breadcrumbList([
+            { name: "Jogos", path: "/jogos" },
+            { name: gameData.name, path: `/jogos/${slug}` },
+          ]),
+          videoGame({
+            name: gameData.name,
+            description: gameData.short_description || gameData.description,
+            image: coverImage,
+            url: canonicalUrl,
+            studioName: gameData.studio_name,
+            studioUrl: gameData.studio_slug ? `${SITE_URL}/estudios/${gameData.studio_slug}` : null,
+            genre: gameData.genre,
+            platforms: (gameData.platforms || []).map((platform) => PLATFORM_LABELS[platform] ?? platform),
+            releaseDate: gameData.release_date,
+            rating: gameData.avg_rating,
+            ratingCount: gameData.review_count,
+          }),
+        )}
       />
 
       <div className={styles.page}>

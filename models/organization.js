@@ -50,6 +50,34 @@ async function findAll({ page = 1, limit = 20, search = "" } = {}) {
   return results.rows;
 }
 
+/**
+ * Lista para o sitemap: só o endereço (`slug`) e quando mudou.
+ *
+ * `organizations` é a única tabela de conteúdo sem `updated_at` — criação é o
+ * único marco de tempo que existe. Ela é exposta com o nome `updated_at` para
+ * o mapeamento do sitemap ser uniforme entre os tipos.
+ *
+ * O filtro de moderação é o mesmo de `findAll`: estúdio bloqueado não entra.
+ */
+async function findAllForSitemap() {
+  const results = await database.query({
+    text: `
+      SELECT o.slug, o.created_at AS updated_at
+      FROM organizations o
+      WHERE NOT EXISTS (
+        SELECT 1
+        FROM moderation_actions ma
+        WHERE ma.revoked_at IS NULL
+          AND (ma.expires_at IS NULL OR ma.expires_at > now())
+          AND ma.target_type = 'studio'
+          AND ma.target_id = o.id::text
+      )
+      ORDER BY o.created_at DESC
+    `,
+  });
+  return results.rows;
+}
+
 async function findBySlug(slug) {
   const results = await database.query({
     text: `
@@ -1059,6 +1087,7 @@ async function removeRelationship(relationshipId, orgId) {
 
 const organization = {
   findAll,
+  findAllForSitemap,
   findByMember,
   findBySlug,
   findById,

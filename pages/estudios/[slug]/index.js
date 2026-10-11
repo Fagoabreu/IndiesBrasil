@@ -21,7 +21,7 @@ import PostCardComponent from "@/components/PostCard/PostCardComponent";
 import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 import MessagesPanel from "@/components/Messages/MessagesPanel";
 import SendMessageButton from "@/components/Messages/SendMessageButton";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_URL, OG_CARD_SIZE } from "@/lib/seo";
 import { resolveOrgNotificationTitle, resolveOrgNotificationMessage, resolveOrgNotificationHref } from "@/lib/notifications";
 import styles from "./studio.module.css";
 import { uploadWithProgress } from "@/utils/uploadWithProgress";
@@ -87,6 +87,14 @@ function renderBanner(embedUrl, bannerUrl, studioName, styles) {
 
 export async function getServerSideProps(context) {
   const { slug } = context.params;
+
+  // Mesmo gate da rota do tipo — ver `pages/jogos/[slug]/index.js`. O que a
+  // página embute é o mesmo objeto de `GET /api/v1/studios/[slug]`... que não
+  // existe: o detalhe do estúdio é servido **só** aqui, então a feature da
+  // listagem é a referência.
+  const { anonymousCan } = await import("@/infra/controller");
+  if (!anonymousCan("read:studio")) return { notFound: true };
+
   try {
     const organization = (await import("@/models/organization")).default;
     const studio = await organization.findBySlug(slug);
@@ -589,8 +597,8 @@ export default function StudioPage({ initialStudio }) {
         // preview usava o logo cru (512x512): um quadrado solto, sem nome nem
         // contexto, e cortado/letterboxed na maioria das redes.
         ogImage={`${SITE_URL}/api/og/studio/${encodeURIComponent(studio.slug)}`}
-        ogImageWidth={1200}
-        ogImageHeight={630}
+        ogImageWidth={OG_CARD_SIZE.width}
+        ogImageHeight={OG_CARD_SIZE.height}
         ogType="business.business"
         jsonLd={orgJsonLd}
       />

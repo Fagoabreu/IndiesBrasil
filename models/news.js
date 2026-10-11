@@ -78,6 +78,25 @@ async function findAll() {
   return result.rows;
 }
 
+/**
+ * Lista para o sitemap: só o identificador e quando mudou.
+ *
+ * Devolve `id` e não `slug` porque a URL da notícia é `/noticias/<id>` — não
+ * existe slug na tabela. `findAll` monta o card inteiro (autor, imagem, notas,
+ * contadores de factcheck e comentários) em cinco LATERAL JOINs, o que é
+ * desperdício para quem só precisa montar `<url>`.
+ */
+async function findAllForSitemap() {
+  const result = await database.query({
+    text: `
+      SELECT n.id, n.updated_at
+      FROM news n
+      ORDER BY n.updated_at DESC
+    `,
+  });
+  return result.rows;
+}
+
 // ─── GET BY ID ─────────────────────────────────────────
 async function findById(id) {
   const result = await database.query({
@@ -332,6 +351,7 @@ async function deleteComment(id) {
 const news = {
   create,
   findAll,
+  findAllForSitemap,
   findById,
   update,
   deleteByIdAndAuthor,

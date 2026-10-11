@@ -13,11 +13,16 @@ const nextConfig = {
   outputFileTracingIncludes: {
     "/api/og/**": ["./node_modules/sharp/**/*", "./node_modules/@img/**/*"],
   },
-  i18n: {
-    locales: ["pt-BR", "en-US", "fr", "es"],
-    defaultLocale: "pt-BR",
-    localeDetection: false,
-  },
+  /**
+   * Sem `i18n`: o site tem um idioma só (o conteúdo é escrito em português e o
+   * `SeoHead` já declara `pt-BR` e `content-language`). A configuração existia
+   * com quatro locales e `localeDetection: false`, o que mantinha três cópias
+   * de cada página em português — `/en-US/jogos`, `/fr/jogos`, `/es/jogos` —
+   * todas sem tradução e todas apontando para a mesma canonical. Isso divide o
+   * rastreamento entre URLs duplicadas e não dá nada em troca. Uma verificação
+   * no código confirmou que nada lê `router.locale` nem linka URL com prefixo,
+   * então remover não quebra endereço nenhum em uso.
+   */
   transpilePackages: ["@primer/react", "@primer/primitives"],
   compiler: {
     styledComponents: true,
@@ -65,6 +70,18 @@ const nextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=()" },
         ],
+      },
+      {
+        /**
+         * `Disallow: /admin/` no `robots.txt` proíbe o RASTREIO, não a
+         * indexação: se outra página linkar um endereço de admin (ou o próprio
+         * Google decidir indexar a URL que viu em algum lugar), ela pode entrar
+         * no índice mesmo assim. `X-Robots-Tag: noindex` é a instrução que
+         * remove — e, ao contrário do `noindex` no HTML, funciona também nas
+         * respostas de API, que não têm `<head>`.
+         */
+        source: "/admin/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
     ];
   },

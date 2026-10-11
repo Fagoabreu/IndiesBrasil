@@ -54,6 +54,35 @@ async function findAll({ page = 1, limit = 20, search = "", book_type = "", stag
   return result.rows;
 }
 
+/**
+ * Lista para o sitemap: só o endereço (`slug`) e quando mudou.
+ *
+ * Mesma razão de `game.findAllForSitemap`: `findAll` monta o card com JOINs e
+ * agregações, corta por página e não devolve `updated_at`. O filtro de
+ * moderação é repetido aqui para publicação bloqueada — ou de estúdio
+ * bloqueado — não virar endereço no sitemap.
+ */
+async function findAllForSitemap() {
+  const result = await database.query({
+    text: `
+      SELECT b.slug, b.updated_at
+      FROM books b
+      WHERE NOT EXISTS (
+        SELECT 1
+        FROM moderation_actions ma
+        WHERE ma.revoked_at IS NULL
+          AND (ma.expires_at IS NULL OR ma.expires_at > now())
+          AND (
+            (ma.target_type = 'book' AND ma.target_id = b.id::text)
+            OR (ma.target_type = 'studio' AND ma.target_id = b.owner_org_id::text)
+          )
+      )
+      ORDER BY b.updated_at DESC
+    `,
+  });
+  return result.rows;
+}
+
 async function findFollowedBy(userId) {
   const result = await database.query({
     text: `
@@ -741,6 +770,7 @@ async function deleteBook(slug) {
 
 const book = {
   findAll,
+  findAllForSitemap,
   findFollowedBy,
   findBySlug,
   findByOrg,

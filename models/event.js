@@ -4,6 +4,47 @@ import uploadedImages from "@/models/uploadedImages";
 import addressModel from "@/models/address";
 
 /* ================================================================
+ * LEITURA POR VISIBILIDADE
+ * ================================================================ */
+
+/**
+ * Condição SQL que diz quais eventos um visitante pode **ler**.
+ *
+ * A regra de acesso da agenda mora em um lugar só — a lista (`findAll`) e o
+ * detalhe (`findById`) têm de concordar. Não concordavam: `findById` não
+ * filtrava nada, então um visitante sem sessão lia evento `private` (título e
+ * descrição) só sabendo o UUID, enquanto a lista escondia o mesmo evento.
+ * Esconder na lista e entregar no detalhe não é meia proteção — é a proteção
+ * que não existe, já que o endereço do evento circula justamente por fora do
+ * site: é o link que se compartilha.
+ *
+ * O que cada visibilidade significa (`visibility_type` no schema):
+ *
+ *  - `public`  — qualquer visitante, inclusive sem sessão;
+ *  - `members` — qualquer usuário autenticado;
+ *  - `private` — só quem criou ou foi convidado, e o convite **pendente** já dá
+ *    acesso: sem isso o convidado não leria o evento que acabou de receber.
+ *
+ * @param {number|null} userIdParamIndex — índice do `$n` que carrega o id do
+ *   visitante, ou `null` para visitante sem sessão.
+ * @returns {string} trecho de SQL, sem `AND` na frente.
+ */
+function visibilityCondition(userIdParamIndex) {
+  if (!userIdParamIndex) return "e.visibility = 'public'";
+
+  return `(
+    e.visibility IN ('public', 'members')
+    OR e.created_by = $${userIdParamIndex}
+    OR EXISTS (
+      SELECT 1 FROM event_invitations ei2
+      WHERE ei2.event_id = e.id
+        AND ei2.invited_user_id = $${userIdParamIndex}
+        AND ei2.status IN ('pending', 'accepted')
+    )
+  )`;
+}
+
+/* ================================================================
  * HELPERS
  * ================================================================ */
 
@@ -334,15 +375,22 @@ async function create(data, userId) {
  * Busca um evento pelo ID, com contexto do usuário (RSVP, permissão de edição).
  */
 async function findById(id, userId) {
+  const values = [id];
+  const userIdParamIndex = userId ? values.push(userId) : null;
+
   const result = await database.query({
     text: `
       ${BASE_EVENT_QUERY}
       WHERE e.id = $1
+        AND ${visibilityCondition(userIdParamIndex)}
     `,
-    values: [id],
+    values,
   });
 
   if (!result.rowCount) {
+    // "Não encontrado" também cobre "não pode ver": dizer a diferença revelaria
+    // que existe um evento ali que o visitante não tem direito de ler. É o
+    // mesmo critério da conversa de outra pessoa (`models/conversation.js`).
     throw new NotFoundError({ message: "Evento não encontrado." });
   }
 
@@ -411,31 +459,12 @@ async function findAll({ from, to, userId, type, status = "published" }) {
         return d;
       })();
 
-  // Condições de visibilidade
-  // - public: todos
-  // - members: usuário autenticado com create:session
-  // - private: somente criador ou convidado aceito
+  // Condições de visibilidade: a regra é a de `visibilityCondition`, a mesma
+  // que o detalhe (`findById`) aplica — a lista e a página do evento não podem
+  // discordar sobre quem enxerga o quê.
   const values = [fromDate, toDate, status];
-  let visibilityClause;
-
-  if (userId) {
-    values.push(userId);
-    const userIdx = values.length; // $4
-    visibilityClause = `
-      (
-        e.visibility IN ('public', 'members')
-        OR e.created_by = $${userIdx}
-        OR EXISTS (
-          SELECT 1 FROM event_invitations ei2
-          WHERE ei2.event_id = e.id
-            AND ei2.invited_user_id = $${userIdx}
-            AND ei2.status IN ('pending', 'accepted')
-        )
-      )
-    `;
-  } else {
-    visibilityClause = `e.visibility = 'public'`;
-  }
+  const userIdParamIndex = userId ? values.push(userId) : null;
+  const visibilityClause = visibilityCondition(userIdParamIndex);
 
   const typeClause = type ? `AND e.event_type = $${values.push(type)}` : "";
 
@@ -486,6 +515,39 @@ async function findAll({ from, to, userId, type, status = "published" }) {
       ORDER BY ei.id, ei.starts_at ASC
     `,
     values,
+  });
+
+  return result.rows;
+}
+
+/**
+ * Lista para o sitemap: os eventos que o visitante **anônimo** pode ler.
+ *
+ * Duas condições, e as duas são de exposição, não de conveniência:
+ *
+ *  - `visibility = 'public'` — é o mesmo critério de `findAll` sem `userId`
+ *    (`visibilityClause = "e.visibility = 'public'"`). `members` e `private`
+ *    ficam de fora: o sitemap é público por natureza, então publicar esses
+ *    endereços anunciaria conteúdo restrito.
+ *  - `status = 'published'` — rascunho e cancelado não são páginas válidas.
+ *
+ * Devolve o `id` (não há `slug` na URL: `/agenda/<uuid>`) e `updated_at`, que é
+ * o que o `<lastmod>` usa.
+ *
+ * Enumera **eventos**, não instâncias: `findAll` devolve uma linha por
+ * ocorrência (`event_instances`) porque o calendário precisa delas, e um evento
+ * recorrente apareceria repetido no sitemap — todas as cópias apontando para o
+ * mesmo endereço.
+ */
+async function findAllForSitemap() {
+  const result = await database.query({
+    text: `
+      SELECT e.id, e.updated_at
+      FROM events e
+      WHERE e.visibility = 'public'
+        AND e.status = 'published'
+      ORDER BY e.updated_at DESC
+    `,
   });
 
   return result.rows;
@@ -978,6 +1040,7 @@ const event = {
   create,
   findById,
   findAll,
+  findAllForSitemap,
   update,
   cancel,
   upsertRsvp,

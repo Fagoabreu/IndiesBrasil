@@ -13,10 +13,10 @@
  *    só na rede Docker `private` (ver `deploy/compose.yaml`), então alcançar
  *    `https://jogos.social.br` de dentro do container depende de hairpin NAT —
  *    que falha (ver `lib/internal-url.js`).
- * 3. **Evento privado responde 404.** O card é público por natureza (a rede
- *    social busca sem sessão), então não pode desenhar nome e local de um evento
- *    restrito a convidados. Sem imagem, o link continua funcionando para quem
- *    foi convidado.
+ * 3. **Evento que não é público responde 404.** O card é público por natureza
+ *    (a rede social busca sem sessão), então não pode desenhar nome e local de
+ *    um evento restrito a convidados ou a membros. Sem imagem, o link continua
+ *    funcionando para quem tem acesso.
  *
  * Acesso: público (o crawler não tem sessão).
  */
@@ -68,12 +68,11 @@ export default async function handler(req, res) {
   }
 
   try {
+    // `null` = visitante sem sessão. O `findById` só devolve evento público
+    // nesse caso, e lança `NotFoundError` para `private` e `members` — a
+    // checagem de visibilidade saiu daqui porque passou a morar no model
+    // (`visibilityCondition`), junto da regra que a lista usa.
     const found = await event.findById(id, null);
-
-    // Ver a nota 3 do cabeçalho.
-    if (found.visibility === "private") {
-      return res.status(404).end();
-    }
 
     const png = await renderPng(await renderEventSvg(found));
 

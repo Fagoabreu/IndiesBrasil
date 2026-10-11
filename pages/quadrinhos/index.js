@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Heading, TextInput, Spinner } from "@primer/react";
 import { BookIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
@@ -33,14 +33,30 @@ const STAGES = {
 
 const LIMIT = 24;
 
-export default function QuadrinhosPage() {
+/**
+ * A primeira página da listagem vem do servidor — sem isso o HTML desta rota é
+ * um spinner e não há nenhum `<a href="/quadrinhos/...">` para o Google
+ * descobrir. Ver `pages/jogos/index.js` para o detalhamento das escolhas.
+ */
+export async function getServerSideProps() {
+  // Mesmo gate da rota `/api/v1/books` — ver `pages/jogos/index.js`.
+  const { anonymousCan } = await import("@/infra/controller");
+  if (!anonymousCan("read:book:all")) return { notFound: true };
+
+  const book = (await import("@/models/book")).default;
+  const rows = await book.findAll({ page: 1, limit: LIMIT });
+
+  return { props: { initialBooks: JSON.parse(JSON.stringify(rows)) } };
+}
+
+export default function QuadrinhosPage({ initialBooks }) {
   const { user } = useUser();
   const [tab, setTab] = useState("all");
 
-  const [allBooks, setAllBooks] = useState([]);
-  const [allLoading, setAllLoading] = useState(true);
+  const [allBooks, setAllBooks] = useState(initialBooks);
+  const [allLoading, setAllLoading] = useState(false);
   const [allPage, setAllPage] = useState(1);
-  const [allHasMore, setAllHasMore] = useState(false);
+  const [allHasMore, setAllHasMore] = useState(initialBooks.length === LIMIT);
   const [search, setSearch] = useState("");
   const [bookType, setBookType] = useState("");
   const [stage, setStage] = useState("");
@@ -68,9 +84,19 @@ export default function QuadrinhosPage() {
     }
   }, []);
 
+  // Primeira execução pulada: a página 1 já veio do servidor (ver
+  // `pages/jogos/index.js`).
+  const skipInitialLoad = useRef(true);
+
   useEffect(() => {
     const t = setTimeout(() => {
       setAllPage(1);
+
+      if (skipInitialLoad.current) {
+        skipInitialLoad.current = false;
+        if (!search && !bookType && !stage) return;
+      }
+
       loadAll(1, search, bookType, stage);
     }, 350);
     return () => clearTimeout(t);

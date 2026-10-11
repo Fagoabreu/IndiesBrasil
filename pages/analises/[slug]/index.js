@@ -2,16 +2,25 @@
 import { useState, useEffect, useCallback } from "react";
 import sanitizeHtml from "@/lib/sanitize";
 import { useRouter } from "next/router";
-import Head from "next/head";
 import Link from "next/link";
 import Image from "next/image";
 import { useUser } from "@/context/UserContext";
+import SeoHead from "@/components/SeoHead";
+import { SITE_URL, ogImageSizeFromPreset } from "@/lib/seo";
+import { breadcrumbList, graph, review as reviewStructuredData } from "@/lib/structured-data";
 import styles from "./analise.module.css";
 
 const CONTENT_TYPE_LABELS = {
   game: "Jogo",
   boardgame: "Jogo de Mesa",
   book: "Livro/Quadrinho",
+};
+
+/** Tipo do schema.org do que foi avaliado — muda com o `content_type`. */
+const ITEM_REVIEWED_TYPES = {
+  game: "VideoGame",
+  boardgame: "Game",
+  book: "Book",
 };
 
 function getContentUrl(contentType, slug) {
@@ -36,14 +45,41 @@ function StarRating({ value }) {
   );
 }
 
-export default function AnalisePage() {
+/**
+ * A análise vem do servidor.
+ *
+ * Sem isso o HTML desta rota não tinha `<title>`, canonical nem `og:*`: o
+ * `<Head>` inline só montava depois do `fetch` no cliente. Além do
+ * `getServerSideProps`, a página passa a usar o `SeoHead` (regra do projeto —
+ * nunca `<Head>` inline), o que traz de uma vez canonical, Open Graph, Twitter
+ * Card e o JSON-LD.
+ *
+ * Ver `pages/jogos/index.js` para o detalhamento das escolhas de serialização.
+ */
+export async function getServerSideProps(context) {
+  const { slug } = context.params;
+
+  // Mesmo gate de `GET /api/v1/analises/[slug]` — ver `pages/jogos/index.js`.
+  const { anonymousCan } = await import("@/infra/controller");
+  if (!anonymousCan("read:content_review")) return { notFound: true };
+
+  try {
+    const contentReview = (await import("@/models/content-review")).default;
+    const row = await contentReview.findBySlug(slug);
+
+    return { props: { initialAnalise: JSON.parse(JSON.stringify(row)) } };
+  } catch {
+    return { props: { initialAnalise: null } };
+  }
+}
+
+export default function AnalisePage({ initialAnalise }) {
   const router = useRouter();
   const { slug } = router.query;
   const { user, loadingUser } = useUser();
 
-  const [analise, setAnalise] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [analise, setAnalise] = useState(initialAnalise);
+  const [loading, setLoading] = useState(!initialAnalise);
 
   const fetchAnalise = useCallback(async () => {
     if (!slug) return;
@@ -59,8 +95,12 @@ export default function AnalisePage() {
         throw new Error("Erro ao carregar análise");
       }
       setAnalise(await res.json());
-    } catch (err) {
-      setError(err.message);
+    } catch (error) {
+      // Sem estado de erro: o que a página faz de diferente num erro é não
+      // mostrar nada, e `!analise` já é exatamente esse caso. O erro ficava
+      // num `useState` só para alimentar um `return null` que existia mesmo sem
+      // ele — e um `useState` que ninguém lê ainda dispara render.
+      console.error("Erro ao carregar análise:", error);
     } finally {
       setLoading(false);
     }
@@ -86,7 +126,11 @@ export default function AnalisePage() {
     }
   }
 
-  if (loadingUser || loading) {
+  // Só espera quando **não** há análise: `loadingUser` começa `true` e só é
+  // resolvido por um efeito de cliente, que não roda no servidor — incluí-lo na
+  // condição faria o HTML servido ser o spinner (mesmo padrão de
+  // `pages/jogos/[slug]/index.js`).
+  if ((loadingUser || loading) && !analise) {
     return (
       <div className={styles.loadingPage}>
         <div className={styles.spinner} />
@@ -94,20 +138,45 @@ export default function AnalisePage() {
     );
   }
 
-  if (error || !analise) return null;
+  if (!analise) return null;
 
   const isAuthor = user?.id === analise.author_id;
   const sections = analise.sections || [];
+  // Capa do preset `landscapeCover` (16:9) — ver `pages/jogos/[slug]/index.js`.
+  const ogSize = ogImageSizeFromPreset("landscapeCover");
+  const canonicalUrl = `${SITE_URL}/analises/${analise.slug}`;
+  const contentUrl = analise.content_slug ? `${SITE_URL}${getContentUrl(analise.content_type, analise.content_slug)}` : null;
 
   return (
     <>
-      <Head>
-        <title>{analise.title} — Análises — Indies Brasil</title>
-        <meta name="description" content={analise.title} />
-        <meta property="og:title" content={analise.title} />
-        <meta property="og:type" content="article" />
-        {analise.cover_url && <meta property="og:image" content={analise.cover_url} />}
-      </Head>
+      <SeoHead
+        title={`${analise.title} — Análises — Indies Brasil`}
+        description={`Análise de ${analise.content_name || analise.title} por ${analise.author_username} na comunidade Indies Brasil.`}
+        canonical={canonicalUrl}
+        ogImage={analise.cover_url || analise.content_cover_url}
+        ogImageWidth={ogSize.width}
+        ogImageHeight={ogSize.height}
+        ogType="article"
+        jsonLd={graph(
+          breadcrumbList([
+            { name: "Análises", path: "/analises" },
+            { name: analise.title, path: `/analises/${analise.slug}` },
+          ]),
+          reviewStructuredData({
+            title: analise.title,
+            url: canonicalUrl,
+            image: analise.cover_url,
+            rating: analise.rating,
+            authorName: analise.author_username,
+            datePublished: analise.published_at,
+            itemReviewed: {
+              "@type": ITEM_REVIEWED_TYPES[analise.content_type] ?? "CreativeWork",
+              name: analise.content_name,
+            },
+            contentUrl,
+          }),
+        )}
+      />
 
       <article className={styles.page}>
         {/* Breadcrumb */}

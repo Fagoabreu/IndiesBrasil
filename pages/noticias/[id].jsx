@@ -6,16 +6,43 @@ import { ArrowLeftIcon, LinkExternalIcon, CheckIcon, XIcon, TrashIcon, PencilIco
 import { Spinner } from "@primer/react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_URL, ogImageSizeFromPreset } from "@/lib/seo";
+import { breadcrumbList, graph, newsArticle } from "@/lib/structured-data";
 import styles from "./NewsDetail.module.css";
 
-export default function NewsDetailPage() {
+/**
+ * A notícia vem do servidor.
+ *
+ * Sem isso o HTML desta rota não tinha `<title>`, `<meta name="description">`
+ * nem canonical: o `SeoHead` só montava depois de o navegador buscar
+ * `/api/v1/news/<id>`, e o Google recebia uma página em branco com metadados
+ * nenhum. Os campos do visitante (`user_rating`/`user_factcheck`) continuam
+ * sendo buscados no cliente, onde há sessão.
+ */
+export async function getServerSideProps(context) {
+  const { id } = context.params;
+
+  // Mesmo gate de `GET /api/v1/news/[id]` — ver `pages/jogos/index.js`.
+  const { anonymousCan } = await import("@/infra/controller");
+  if (!anonymousCan("read:news")) return { notFound: true };
+
+  try {
+    const news = (await import("@/models/news")).default;
+    const row = await news.findById(id);
+
+    return { props: { initialNews: JSON.parse(JSON.stringify(row)) } };
+  } catch {
+    return { props: { initialNews: null } };
+  }
+}
+
+export default function NewsDetailPage({ initialNews }) {
   const router = useRouter();
   const { id } = router.query;
   const { user, loadingUser } = useUser();
 
-  const [news, setNews] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [news, setNews] = useState(initialNews);
+  const [loading, setLoading] = useState(!initialNews);
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState(null);
 
@@ -43,7 +70,9 @@ export default function NewsDetailPage() {
     if (!id || loadingUser) return;
 
     (async () => {
-      setLoading(true);
+      // Com a notícia já renderizada pelo servidor não há motivo para mostrar o
+      // spinner: a busca no cliente só completa os dados do visitante.
+      if (!initialNews) setLoading(true);
       setNotFound(false);
       setError(null);
       try {
@@ -76,7 +105,7 @@ export default function NewsDetailPage() {
         setLoading(false);
       }
     })();
-  }, [id, loadingUser]);
+  }, [id, loadingUser, initialNews]);
 
   // ─── Rating ───────────────────────────────────
   const handleRating = async (rating) => {
@@ -185,7 +214,11 @@ export default function NewsDetailPage() {
   };
 
   // ─── Render ───────────────────────────────────
-  if (loading || loadingUser) {
+  // Só espera quando **não** há notícia: `loadingUser` começa `true` e só é
+  // resolvido por um efeito de cliente, que não roda no servidor — incluí-lo na
+  // condição faria o HTML servido ser o spinner (mesmo padrão de
+  // `pages/jogos/[slug]/index.js`).
+  if ((loading || loadingUser) && !news) {
     return (
       <div className={styles.page} style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
         <Spinner size="large" />
@@ -221,6 +254,8 @@ export default function NewsDetailPage() {
 
   const isAuthor = user && news.author_id === user.id;
   const firstLetter = (news.title || "N")[0].toUpperCase();
+  // Capa do preset `newsCover` (16:9) — ver `pages/jogos/[slug]/index.js`.
+  const newsOgSize = ogImageSizeFromPreset("newsCover");
 
   // Status factcheck
   const totalFC = news.factcheck_count + news.fake_count;
@@ -233,6 +268,25 @@ export default function NewsDetailPage() {
         title={`${news.title} — Indies Brasil`}
         description={news.summary?.slice(0, 160) || "Notícia na comunidade Indies Brasil."}
         canonical={`${SITE_URL}/noticias/${id}`}
+        ogImage={news.img_url}
+        ogImageWidth={newsOgSize.width}
+        ogImageHeight={newsOgSize.height}
+        ogType="article"
+        jsonLd={graph(
+          breadcrumbList([
+            { name: "Notícias", path: "/noticias" },
+            { name: news.title, path: `/noticias/${id}` },
+          ]),
+          newsArticle({
+            headline: news.title,
+            description: news.summary,
+            image: news.img_url,
+            url: `${SITE_URL}/noticias/${id}`,
+            authorName: news.author_username,
+            datePublished: news.created_at,
+            dateModified: news.updated_at,
+          }),
+        )}
       />
 
       <Link href="/noticias" className={styles.backLink}>
