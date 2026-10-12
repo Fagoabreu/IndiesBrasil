@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { Heading, Button, FormControl, TextInput, Select, Stack, Spinner, ProgressBar, IconButton } from "@primer/react";
 import { EyeIcon, EyeClosedIcon } from "@primer/octicons-react";
 import PasswordRule from "@/components/PasswordRule.js";
+import { isValidCpf, maskCpfInput, normalizeCpf } from "@/lib/cpf";
 import styles from "./Cadastro.module.css";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
 
@@ -39,40 +40,6 @@ export default function Cadastro() {
   const [errorMsg, setErrorMsg] = useState(null);
   const [successMsg, setSuccessMsg] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
-
-  // ======================================================
-  // CPF MASK
-  function formatCPF(value) {
-    return value
-      .replaceAll(/\D/g, "")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d{1,2})$/, "$1-$2")
-      .substring(0, 14);
-  }
-
-  // ======================================================
-  // CPF VALIDATION (ALGORITHM)
-  function isValidCPF(cpf) {
-    cpf = cpf.replace(/[^\d]+/g, "");
-    if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
-
-    let sum = 0;
-
-    for (let i = 1; i <= 9; i++) sum += Number.parseInt(cpf[i - 1]) * (11 - i);
-
-    let remainder = (sum * 10) % 11;
-    if (remainder >= 10) remainder = 0;
-    if (remainder !== Number.parseInt(cpf[9])) return false;
-
-    sum = 0;
-    for (let i = 1; i <= 10; i++) sum += Number.parseInt(cpf[i - 1]) * (12 - i);
-
-    remainder = (sum * 10) % 11;
-    if (remainder >= 10) remainder = 0;
-
-    return remainder === Number.parseInt(cpf[10]);
-  }
 
   // ======================================================
   // PASSWORD STRENGTH
@@ -137,7 +104,7 @@ export default function Cadastro() {
 
     if (!cpf) {
       newErrors[FIELD_KEYS.cpf] = "Informe o CPF.";
-    } else if (!isValidCPF(cpf)) {
+    } else if (!isValidCpf(cpf)) {
       newErrors[FIELD_KEYS.cpf] = "CPF inválido.";
     }
 
@@ -159,7 +126,10 @@ export default function Cadastro() {
       return;
     }
 
-    const rawCpf = cpf.replace(/\D/g, "");
+    // O CPF é normalizado aqui para o envio, e o servidor normaliza de novo
+    // (`models/user.js`) — a forma canônica é a mesma função (`lib/cpf.js`),
+    // então não há duas regras.
+    const rawCpf = normalizeCpf(cpf);
 
     try {
       const response = await fetch("/api/v1/users", {
@@ -201,7 +171,7 @@ export default function Cadastro() {
   // VALIDATION STATUS
   const statusUser = username ? "success" : undefined;
   const statusEmail = !fieldErrors.email && email ? "success" : undefined;
-  const statusCpf = cpf && isValidCPF(cpf) ? "success" : undefined;
+  const statusCpf = cpf && isValidCpf(cpf) ? "success" : undefined;
   const statusBirthDate = birthDateValue && !fieldErrors.birthDate ? "success" : undefined;
   const statusPass = password && strongEnough ? "success" : undefined;
   const statusConfirm = confirmPass && confirmPass === password ? "success" : undefined;
@@ -259,7 +229,7 @@ export default function Cadastro() {
                   maxLength={14}
                   value={cpf}
                   onChange={(e) => {
-                    setCpf(formatCPF(e.target.value));
+                    setCpf(maskCpfInput(e.target.value));
                     cleanFieldError("cpf");
                   }}
                   placeholder="000.000.000-00"

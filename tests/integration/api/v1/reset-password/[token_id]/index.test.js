@@ -22,7 +22,7 @@ describe("PATCH /api/v1/reset-password/[token_id]", () => {
   });
 
   test("Changes password with a valid token", async () => {
-    const resetToken = await activation.create(createdUser.id);
+    const resetToken = await activation.create(createdUser.id, activation.TOKEN_PURPOSE.RESET);
 
     const response = await fetch(`${webserver.origin}/api/v1/reset-password/${resetToken.id}`, {
       method: "PATCH",
@@ -40,7 +40,7 @@ describe("PATCH /api/v1/reset-password/[token_id]", () => {
   });
 
   test("Short password returns 400", async () => {
-    const resetToken = await activation.create(createdUser.id);
+    const resetToken = await activation.create(createdUser.id, activation.TOKEN_PURPOSE.RESET);
 
     const response = await fetch(`${webserver.origin}/api/v1/reset-password/${resetToken.id}`, {
       method: "PATCH",
@@ -54,7 +54,7 @@ describe("PATCH /api/v1/reset-password/[token_id]", () => {
   });
 
   test("Missing password returns 400", async () => {
-    const resetToken = await activation.create(createdUser.id);
+    const resetToken = await activation.create(createdUser.id, activation.TOKEN_PURPOSE.RESET);
 
     const response = await fetch(`${webserver.origin}/api/v1/reset-password/${resetToken.id}`, {
       method: "PATCH",
@@ -80,7 +80,7 @@ describe("PATCH /api/v1/reset-password/[token_id]", () => {
   });
 
   test("Already used token returns 404", async () => {
-    const resetToken = await activation.create(createdUser.id);
+    const resetToken = await activation.create(createdUser.id, activation.TOKEN_PURPOSE.RESET);
 
     const firstResponse = await fetch(`${webserver.origin}/api/v1/reset-password/${resetToken.id}`, {
       method: "PATCH",
@@ -98,5 +98,31 @@ describe("PATCH /api/v1/reset-password/[token_id]", () => {
 
     const body = await secondResponse.json();
     expect(body.name).toBe("NotFoundError");
+  });
+
+  test("Token de ativação NÃO troca senha", async () => {
+    // O ponto da migration `activation-token-purpose`: os dois tokens viviam na
+    // mesma tabela sem nada que os distinguisse, então o token que chega por
+    // e-mail no cadastro — que fica guardado no inbox, que pode ter sido
+    // encaminhado — servia para trocar a senha. Aqui a finalidade é o que
+    // separa, e o token de ativação precisa ser recusado.
+    const activationToken = await activation.create(createdUser.id);
+
+    const response = await fetch(`${webserver.origin}/api/v1/reset-password/${activationToken.id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ password: "Senha@Invasor1" }),
+    });
+
+    expect(response.status).toBe(400);
+
+    const body = await response.json();
+    expect(body.name).toBe("ValidationError");
+
+    // E o token continua **não consumido**: o fluxo de ativação segue valendo,
+    // que é o que impede a recusa de virar um efeito colateral.
+    const stillValid = await activation.findOneValidById(activationToken.id);
+    expect(stillValid.used_at).toBeNull();
+    expect(stillValid.purpose).toBe(activation.TOKEN_PURPOSE.ACTIVATION);
   });
 });

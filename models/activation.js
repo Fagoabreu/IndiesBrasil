@@ -9,6 +9,17 @@ import resetPasswordEmailTemplate from "@/lib/email/templates/resetPasswordEmail
 
 const EXPIRATION_IN_MILLISECONDS = 60 * 60 * 1000; // 1 hora
 
+/**
+ * Finalidades de token. Os valores são os mesmos do `CHECK` da tabela
+ * (`1790700000001_activation-token-purpose.js`) — sem esta separação, um e-mail
+ * de ativação no inbox virava credencial de troca de senha (ver o cabeçalho
+ * daquela migration).
+ */
+export const TOKEN_PURPOSE = {
+  ACTIVATION: "activation",
+  RESET: "reset",
+};
+
 async function findOneValidById(tokenId) {
   const activationTokenObject = await runSelectQuery(tokenId);
   return activationTokenObject;
@@ -70,25 +81,45 @@ async function markTokenAsUsed(tokenId) {
   }
 }
 
-async function create(userId) {
-  const dateNumber = Date.now();
-  const createdDate = new Date(dateNumber);
-  const expiresAt = new Date(dateNumber + EXPIRATION_IN_MILLISECONDS);
+/**
+ * Emite um token de vida curta para o usuário.
+ *
+ * `purpose` diz para que ele serve, e a finalidade é conferida no consumo
+ * (`changePasswordByToken` exige `reset`): sem isso, o token de ativação — que
+ * fica guardado no e-mail — serviria para trocar a senha.
+ *
+ * O padrão continua `activation` para não mudar quem já chamava esta função
+ * esperando token de cadastro.
+ *
+ * ## A janela é medida em UM relógio só
+ *
+ * `created_at`/`expires_at` são calculados pelo **banco** (`now()`), não pelo
+ * Node. Antes o `created_at` vinha do relógio do processo e a validação
+ * (`expires_at > NOW()`) do relógio do banco — duas fontes medindo a mesma
+ * janela. Com qualquer diferença de relógio entre o processo e o Postgres
+ * (o ambiente local chega a ~5,5 s), a vida útil do token saía errada: um token
+ * podia nascer praticamente vencido, ou durar mais que a hora prevista.
+ *
+ * A **duração** continua vindo de `EXPIRATION_IN_MILLISECONDS` (a constante que
+ * os testes usam como referência); o que o banco decide é a **hora**.
+ */
+async function create(userId, purpose = TOKEN_PURPOSE.ACTIVATION) {
+  const expiresInSeconds = EXPIRATION_IN_MILLISECONDS / 1000;
 
-  const newToken = await runInsertQuery(userId, expiresAt, createdDate);
+  const newToken = await runInsertQuery(userId, expiresInSeconds, purpose);
   return newToken;
 
-  async function runInsertQuery(userId, expiresAt, createdDate) {
+  async function runInsertQuery(userId, expiresInSeconds, purpose) {
     const results = await database.query({
       text: `
         INSERT INTO
-          user_activation_tokens (user_id, expires_at, created_at)
+          user_activation_tokens (user_id, expires_at, created_at, purpose)
         VALUES
-          ($1, $2, $3)
+          ($1, now() + make_interval(secs => $2), now(), $3)
         RETURNING
           *
       `,
-      values: [userId, expiresAt, createdDate],
+      values: [userId, expiresInSeconds, purpose],
     });
 
     return results.rows[0];
@@ -240,6 +271,18 @@ async function changePasswordByToken(tokenId, password) {
   }
 
   const tokenData = await activation.findOneValidById(tokenId);
+
+  // A finalidade é conferida **antes** de tudo: um token de ativação (o que
+  // chega por e-mail ao se cadastrar) não pode trocar senha. Sem esta checagem,
+  // quem tivesse acesso ao e-mail de ativação — que fica no inbox, que pode ter
+  // sido encaminhado — redefinia a senha sem passar pelo fluxo de reset.
+  if (tokenData.purpose !== TOKEN_PURPOSE.RESET) {
+    throw new ValidationError({
+      message: "Este token não serve para redefinir senha.",
+      action: "Solicite a redefinição de senha novamente.",
+    });
+  }
+
   const usertoPatch = await user.findOneById(tokenData.user_id);
   if (!authorization.can(usertoPatch, "read:activation_token") && !authorization.can(usertoPatch, "create:session")) {
     throw new ForbiddenError({
@@ -298,6 +341,7 @@ const activation = {
   activateUserByUserId,
   changePasswordByToken,
   EXPIRATION_IN_MILLISECONDS,
+  TOKEN_PURPOSE,
 };
 
 export default activation;

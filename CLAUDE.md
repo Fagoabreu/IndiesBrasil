@@ -184,6 +184,34 @@ Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESM
 - Avatar do participante usa `setdata` (chave `avatar`), sem tocar em Go. A URL so e aceita se comecar com `https://res.cloudinary.com/<CLOUDINARY_CLOUD_NAME>/` — sem essa trava um participante usaria o avatar para coletar o IP de quem assiste (o Galene e SFU e nao expoe IP entre pares). Sem `CLOUDINARY_CLOUD_NAME` nao ha avatar (fail-closed). A CSP do meet precisa de `https://res.cloudinary.com` no `img-src`, senao a imagem e bloqueada em silencio.
 - O cliente publica o avatar **apenas** no `kind === 'join'`: `setdata` sempre dispara broadcast de `change`, entao republicar a cada `change` entraria em loop infinito.
 
+## Cadastro abandonado (nunca ativado)
+
+- O cadastro grava a linha em `users` **antes** da ativacao, e `email`, `cpf` e `username` sao unicos. Sem saida, quem nao ativa fica travado para sempre — e a mensagem do token vencido ainda manda "faca um novo cadastro", que e o que as validacoes recusam. Reenviar e-mail nao resolve o caso mais provavel (**email digitado errado**: o endereco nao existe) e o CPF e unico, entao trocar de email nao contorna.
+- `user.annulAbandonedRegistrations` (`models/user.js`), chamada no inicio de `create`, apaga o cadastro abandonado e libera as tres chaves. Roda no model (e nao na rota) para valer em todo caminho de criacao e para a unicidade seguir sendo a unica autoridade sobre conflito.
+- So anula com as **tres** condicoes juntas: (1) nunca ativado (`create:session` ausente em `features`); (2) sem nenhum token valido; (3) **nenhum token de outra finalidade** — um token de reset, mesmo vencido ou ja usado, mantem o cadastro. O estado do token nao importa; o que importa e ele ter existido: pedir reset exige saber email + CPF e o link chega por e-mail, o que e engajamento que o cadastro sozinho nao produz.
+- Sem a condicao (3), um cadastro abandonado **com pedido de reset** era anulado e outra pessoa tomava o CPF (verificado: dava 201, agora da 400).
+- `sessions` e `user_activation_tokens` **nao tem FK para `users`**: apagar o usuario deixaria as duas com linhas orfas, entao a limpeza e explicita num unico CTE. Muitas tabelas tem FK `NO ACTION` (posts, comments, organizations); como a condicao garante "nunca ativado", essas linhas nao existem — e se existirem, a operacao falha em vez de apagar dados de alguem pela metade.
+- Testes em `tests/integration/api/v1/users/post.test.js` (bloco "cadastro abandonado"), incluindo os dois negativos. Testes que criam usuario **nunca ativado** e esperam conflito de unicidade precisam ativar a conta de referencia, senao a anulacao os libera e o teste mede outra coisa.
+
+## CPF (documento, nao numero)
+
+- `users.cpf` e **`VARCHAR(11)`**, nao numerico. CPF e documento: `012.345.678-90` e `12.345.678-90` sao documentos diferentes, e coluna numerica apaga o zero a esquerda — o registro passa a apontar para outro CPF. A referencia e `organizations.cnpj VARCHAR(18)`.
+- Toda a traducao entre o que o usuario digita e o que a coluna guarda vive em **`lib/cpf.js`** (registro unico, como `lib/contactTypes.js`): `normalizeCpf` (so digitos), `isValidCpf` (digitos verificadores), `formatCpf` (exibicao), `maskCpfInput` (mascara progressiva enquanto digita).
+- Na **escrita** (`models/user.js`, `normalizeCpfInObject`) o CPF e normalizado e recusado se nao tiver 11 digitos — **400**, nao 500. Antes, entrada mascarada (`"012.345.678-90"`) fazia o Postgres responder `invalid input syntax for type numeric` e virava 500; e sem normalizar, a coluna de texto aceitaria a versao COM e SEM mascara como duas linhas, furando a unicidade.
+- A validacao do model e de **formato** (11 digitos), nao de digito verificador: o formulario ja valida o algoritmo (`isValidCpf`). Recusar por verificador no servidor quebraria dados legados.
+- Na **comparacao** (`/api/v1/reset-password/request`) os dois lados passam por `normalizeCpf`. Era `===` direto, e isso falhava em silencio: o banco devolvia sem mascara e sem zero a esquerda, o usuario digita com mascara, a comparacao nao casava, a API respondia sucesso generico e **nenhum e-mail era enviado**.
+
+## E-mail em desenvolvimento (Mailcatcher)
+
+- O Mailcatcher publica **4025 (SMTP)** e **4080 (HTTP)** no host — nao 1025/1080. A 1025 e `quick` no IANA e o Windows a disputa: o **Rockstar Games Launcher (`RLHostService`) a ocupa em `127.0.0.1` e aceita a conexao sem responder SMTP**, o que aparece como `ETIMEDOUT: Greeting never received` no nodemailer e como e-mail que nunca chega.
+- Dentro do container as portas continuam 1025/1080 (imagem fixa); muda so o lado do host. Ao mexer, atualize os **dois** lugares: `ports` em `infra/compose.yaml` e `EMAIL_SMTP_PORT`/`EMAIL_HTTP_PORT` em `.env.development`.
+- O app usa `EMAIL_HTTP_PORT` no link do e-mail; a suite de testes usa `EMAIL_HTTP_HOST`/`EMAIL_HTTP_PORT` no `orchestrator` (o `beforeAll` testa `GET /` do Mailcatcher — um substituto precisa responder 200 nessa rota).
+
+## Janela de validade de token (um relogio so)
+
+- `activation.create` calcula `created_at`/`expires_at` com **`now()` do banco**, nao com `Date.now()` do Node. Antes eram dois relogios medindo a mesma janela: com qualquer diferenca entre processo e Postgres (o ambiente local chega a ~5,5 s), o token nascia praticamente vencido ou durava mais que a hora prevista.
+- Por isso, teste de token expirado **envelhece a linha no banco** (`UPDATE ... SET expires_at = now() - interval '1 hour'`), nao usa `jest.useFakeTimers` — adiantar o relogio do Node nao tem efeito nenhum sobre quem decide a validade.
+
 ## SEO / descoberta (Google)
 
 - **Sitemap**: `lib/sitemap.js` e a fonte unica. `sitemap.xml` e um **indice**; cada tipo tem um filho (`/sitemap/jogos.xml`, `/sitemap/noticias.xml`...) servido por `pages/sitemap/[type].js`. Acrescentar um tipo e acrescentar um item em `ENTITY_SITEMAPS` — nenhuma rota nova.
@@ -222,6 +250,12 @@ Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESM
 - Texto de usuario no JSON-LD passa pelo escape do `SeoHead` (`\u003c/script\u003e`) e no `<title>`/`<meta>` pelo escape do React. Testado com `</script><img src=x onerror=...>`: nenhuma superficie quebra.
 - Leitura publica e **sem paginacao** ganha teto: `rateLimit.limiters.sitemap` (60/min por IP) em `pages/sitemap/[type].js`, porque o standalone do Next nao guarda cache de `getServerSideProps` e cada arquivo varre a tabela inteira. A isencao de loopback (`isLocalRequest`) mantem os testes sem limite.
 - Resposta de erro **nao reflete** parametro do visitante (o 404 do sitemap lista as chaves validas, sem repetir o valor recebido).
+- **`safeFetch` (`lib/safe-fetch.js`) e o unico jeito de buscar URL que vem de usuario.** `isSafeUrl` sozinho **nao basta**: ele valida a URL de entrada e o `fetch` segue redirecionamentos por padrao, entao um host publico controlado pelo atacante responde `302 Location: http://169.254.169.254/...` e o servidor busca o endereco de metadados. O `safeFetch` segue redirect **a mao**, revalidando cada hop, e **fixa o endereco validado** na conexao (option `lookup` do `http.request`) — o que fecha tambem o DNS rebinding, porque a resposta usada na checagem e a usada no socket. Usado por `image-proxy`, `pdf-proxy`, `fetchLinkPreview` e `fetchItchWidget`.
+- O `image-proxy` **nao repassa o status do upstream**: devolve-lo transformava o proxy num oraculo de varredura da rede interna (porta aberta vs. fechada vs. servico que responde). Sempre 400 generico, com o motivo no log.
+- **Token de ativacao e token de reset sao coisas diferentes**: `user_activation_tokens.purpose` (`activation` | `reset`, migration `1790700000001`). `changePasswordByToken` exige `reset` — sem isso, o token que chega por e-mail no cadastro (fica no inbox, pode ser encaminhado) trocava a senha. Ao criar token, passe a finalidade: `activation.create(userId, activation.TOKEN_PURPOSE.RESET)`.
+- **`sessions.token` guarda o SHA-256 do token**, nao o token: quem obtem um dump do banco nao tem sessoes prontas para usar. `findOneValidByToken` aceita o formato antigo (texto plano) e **converte na hora** (upgrade on read), entao subir nao desloga ninguem. Consequencia: `session.renew` devolve o hash — **nunca** use `row.token` para reescrever o cookie, use o token que veio do cookie (`pages/api/v1/user/index.js`).
+- `rateLimit.isLocalRequest` **nao** trata `"unknown"` como local: sem `X-Forwarded-For` nao da para afirmar que a origem e interna, e presumir isso desligava o limiter inteiro (fail-open).
+- O sanitizador remove `style` de conteudo de usuario (`lib/sanitize.js`): nao e vetor de script, mas permite sobreposicao visual (phishing por cima da pagina). `tests/unit/lib/sanitize.test.js` fixa os payloads de ataque.
 - Aula e publica por desenho (`read:course:lesson` e anonima, sem checagem de matricula). O conteudo da aula entra no payload de `findFullBySlug`, que e **compartilhado** com `GET /api/v1/courses/[slug]`: restringir aula a matriz/inscrito e mexer no MODEL, nao so na rota — senao o SSR continua embutindo o que a API passou a esconder.
 - **Adicionar uma feature de API?** Registrar nos 3 lugares de sempre (`models/authorization.js`, `models/activation.js`, `infra/controller.js`) — e, se a pagina correspondente precisar dela para o visitante anonimo, o `anonymousCan` no `getServerSideProps` junto.
 

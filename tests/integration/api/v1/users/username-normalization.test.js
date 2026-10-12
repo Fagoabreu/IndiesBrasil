@@ -85,7 +85,15 @@ describe("Normalização de username", () => {
     test("não deixa cadastrar o mesmo nome variando só o espaço", async () => {
       // Antes, "Henrique " e "Henrique" passavam como nomes diferentes e o
       // segundo virava um perfil inalcançável.
-      await orchestrator.createUser({ username: "Henrique", email: "henrique.1@curso.dev", cpf: 66123456706 });
+      //
+      // A conta é **ativada** de propósito: este teste mede a unicidade do
+      // username, e um cadastro nunca ativado com token vencido é liberado por
+      // `annulAbandonedRegistrations` (o nome volta a estar livre, que é o
+      // desejado para quem só abandonou o cadastro). Ativando, a anulação não se
+      // aplica e o teste mede o que pretende: as duas formas do nome são o mesmo
+      // nome.
+      const primeiro = await orchestrator.createUser({ username: "Henrique", email: "henrique.1@curso.dev", cpf: 66123456706 });
+      await orchestrator.activateUser(primeiro);
 
       await expect(
         user.create({

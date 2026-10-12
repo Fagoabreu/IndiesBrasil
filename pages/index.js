@@ -1,9 +1,7 @@
 import SeoHead from "@/components/SeoHead";
 import Image from "next/image";
 import Link from "next/link";
-import CarouselComponent from "@/components/Carousel/CarouselComponent";
 import styles from "./index.module.css";
-import VerticalCardComponent from "@/components/Card/VerticalCardComponent";
 import MetricCard from "@/components/Card/MetricCard";
 import HighlightCard from "@/components/HighlightCard/HighlightCard";
 import EventCard from "@/components/Agenda/EventCard";
@@ -691,75 +689,6 @@ function Home() {
               <p className={styles.studioVisualText}>Portfólio, catálogos e press kit em um só lugar.</p>
             </div>
           </div>
-        </SectionReveal>
-
-        {/* ════════════════════════════════════
-            INTEGRAÇÕES — YouTube, Twitch, Steam, Instagram
-        ════════════════════════════════════ */}
-        <SectionReveal className={styles.section}>
-          <header className={styles.sectionHeader}>
-            <p className={styles.sectionLabel}>Integrações</p>
-            <h2 className={styles.sectionTitle}>YouTube, Twitch, Instagram e Steam</h2>
-            <p className={styles.sectionSub}>
-              Incorpore vídeos, lives e posts diretamente nas publicações para compartilhar conteúdo multimídia com a comunidade.
-            </p>
-          </header>
-
-          <CarouselComponent
-            cards={[
-              {
-                content: "Instagram Imagem",
-                image_src: "/images/posts/instagram_image.png",
-              },
-              {
-                content: "Instagram Vídeo",
-                image_src: "/images/posts/instagram_video.png",
-              },
-              { content: "Steam Widget", image_src: "/images/steam_widget.png" },
-              {
-                content: "Canal Twitch",
-                image_src: "/images/posts/twitch_channel.png",
-              },
-              {
-                content: "YouTube Shorts",
-                image_src: "/images/posts/youtube_shorts.png",
-              },
-              {
-                content: "YouTube Vídeo",
-                image_src: "/images/posts/youtube_video.png",
-              },
-            ]}
-          />
-        </SectionReveal>
-
-        {/* ════════════════════════════════════
-            TAGS — Descoberta de conteúdo
-        ════════════════════════════════════ */}
-        <SectionReveal className={styles.section}>
-          <header className={styles.sectionHeader}>
-            <p className={styles.sectionLabel}>Descoberta</p>
-            <h2 className={styles.sectionTitle}>Sistema de Tags</h2>
-            <p className={styles.sectionSub}>Tags para identificar o assunto ou uma trending do post.</p>
-          </header>
-          <VerticalCardComponent
-            image="/images/posts/sistematags.png"
-            alt="ranqueamento Tags"
-            title="Tags"
-            description="Ranqueamento e localização de posts através de tags que auxiliam a classificação do assunto, podendo iniciar uma trend ou uma conversa."
-          />
-        </SectionReveal>
-        <SectionReveal className={styles.section}>
-          <header className={styles.sectionHeader}>
-            <p className={styles.sectionLabel}>Votação</p>
-            <h2 className={styles.sectionTitle}>Sistema de Pesquisa</h2>
-            <p className={styles.sectionSub}>Votação dos usuários para ranquear e destacar pesquisas.</p>
-          </header>
-          <VerticalCardComponent
-            image="/images/posts/questionario.png"
-            alt="ranqueamento Tags"
-            title="Tags"
-            description="Ranqueamento e localização de posts através de tags que auxiliam a classificação do assunto, podendo iniciar uma trend ou uma conversa."
-          />
         </SectionReveal>
 
         {/* ════════════════════════════════════

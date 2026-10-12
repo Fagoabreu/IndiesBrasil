@@ -138,4 +138,69 @@ describe("lib/sanitize.js", () => {
       expect(typeof sanitizeHtml.sanitize("__TAG_0__")).toBe("string");
     });
   });
+
+  describe(".sanitize() — payloads de ataque (regressão)", () => {
+    // Cada caso aqui corresponde a uma técnica real de bypass. O sanitizador é
+    // regex-based, então o que segura a manutenção é ter os payloads fixados num
+    // teste: uma edição futura que abra um destes caminhos falha em vez de
+    // passar silenciosamente.
+    test("remove event handler com espaços e caixa mista", () => {
+      expect(sanitizeHtml.sanitize('<img src=x onerror = "alert(1)">')).not.toMatch(/onerror/i);
+      expect(sanitizeHtml.sanitize('<div ONCLICK="alert(1)">a</div>')).not.toMatch(/onclick/i);
+      expect(sanitizeHtml.sanitize("<body onload=alert(1)>a</body>")).not.toMatch(/onload/i);
+    });
+
+    test("remove event handler ofuscado por entidades", () => {
+      expect(sanitizeHtml.sanitize("<img src=x o&#110;error=alert(1)>")).not.toMatch(/onerror/i);
+    });
+
+    test("neutraliza javascript: com entidades e separadores", () => {
+      expect(sanitizeHtml.sanitize('<a href="java&#115;cript:alert(1)">x</a>')).not.toMatch(/javascript:/i);
+      expect(sanitizeHtml.sanitize('<a href="jav&#x09;ascript:alert(1)">x</a>')).not.toMatch(/javascript:/i);
+      expect(sanitizeHtml.sanitize('<a href="JAVASCRIPT:alert(1)">x</a>')).not.toMatch(/href="javascript:/i);
+    });
+
+    test("neutraliza vbscript: e data: em navegação", () => {
+      expect(sanitizeHtml.sanitize('<a href="vbscript:msgbox(1)">x</a>')).not.toMatch(/vbscript:/i);
+      expect(sanitizeHtml.sanitize('<a href="data:text/html,<script>alert(1)</script>">x</a>')).not.toMatch(/href="data:/i);
+    });
+
+    test("remove o atributo style (sobreposição visual / phishing)", () => {
+      const output = sanitizeHtml.sanitize('<div style="position:fixed;inset:0;z-index:99999">falso</div>');
+      expect(output).not.toMatch(/style/i);
+      expect(output).not.toMatch(/position:fixed/i);
+      expect(output).toContain("falso");
+    });
+
+    test("remove style com caixa mista e sem aspas", () => {
+      expect(sanitizeHtml.sanitize("<p STYLE=color:red>a</p>")).not.toMatch(/style/i);
+      expect(sanitizeHtml.sanitize("<p style='color:red'>a</p>")).not.toMatch(/style/i);
+    });
+
+    test("remove tags de contexto SVG/MathML junto com o conteúdo executável", () => {
+      expect(sanitizeHtml.sanitize("<svg><script>alert(1)</script></svg>")).not.toMatch(/script/i);
+      expect(sanitizeHtml.sanitize("<math><mtext><script>alert(1)</script></mtext></math>")).not.toMatch(/script/i);
+      expect(sanitizeHtml.sanitize('<iframe srcdoc="<script>alert(1)</script>"></iframe>')).not.toMatch(/script/i);
+    });
+
+    test("descarta srcdoc e formaction perigosos", () => {
+      expect(sanitizeHtml.sanitize('<form action="javascript:alert(1)"><input></form>')).not.toMatch(/javascript:/i);
+    });
+
+    test("é idempotente sobre os payloads (segunda passada não ressuscita nada)", () => {
+      const payloads = [
+        '<div style="position:fixed">a</div>',
+        "<img src=x onerror=alert(1)>",
+        '<a href="javascript:alert(1)">x</a>',
+        "<svg><script>alert(1)</script></svg>",
+      ];
+
+      for (const payload of payloads) {
+        const once = sanitizeHtml.sanitize(payload);
+        const twice = sanitizeHtml.sanitize(once);
+        expect(twice).toBe(once);
+        expect(twice).not.toMatch(/onerror|javascript:|<script|style=/i);
+      }
+    });
+  });
 });

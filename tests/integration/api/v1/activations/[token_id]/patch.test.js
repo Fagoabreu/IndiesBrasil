@@ -26,16 +26,28 @@ describe("PATCH /api/v1/activations/[token_id]", () => {
       });
     });
     test("With expired token", async () => {
-      jest.useFakeTimers({
-        now: new Date(Date.now() - activation.EXPIRATION_IN_MILLISECONDS - 5000),
+      const createdUser = await orchestrator.createUser();
+      const activationToken = await activation.create(createdUser.id);
+
+      // A expiração é forçada **no banco**, não com `jest.useFakeTimers`.
+      //
+      // O token nasce com `created_at`/`expires_at` calculados pelo Postgres
+      // (`activation.create`), então adiantar o relógio do Node não muda nada —
+      // e a validade é conferida contra o `NOW()` do banco. Envelhecer a linha
+      // é o único jeito de representar "token vencido" sem mexer em relógio
+      // nenhum.
+      const database = (await import("infra/database.js")).default;
+      await database.query({
+        text: `
+          UPDATE user_activation_tokens
+          SET created_at = now() - interval '2 hours',
+              expires_at = now() - interval '1 hour'
+          WHERE id = $1
+        `,
+        values: [activationToken.id],
       });
 
-      const createdUser = await orchestrator.createUser();
-      const expiredActivationToken = await activation.create(createdUser.id);
-
-      jest.useRealTimers();
-
-      const response = await fetch(`${webserver.origin}/api/v1/activations/${expiredActivationToken.id}`, {
+      const response = await fetch(`${webserver.origin}/api/v1/activations/${activationToken.id}`, {
         method: "PATCH",
       });
       expect(response.status).toBe(404);

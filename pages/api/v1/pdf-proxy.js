@@ -1,7 +1,7 @@
 import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import rateLimit from "lib/rate-limit.js";
-import { isSafeUrl } from "lib/ssrf-guard";
+import { safeFetch } from "lib/safe-fetch";
 
 /**
  * Proxy para PDFs hospedados no Cloudinary (raw/upload).
@@ -75,20 +75,25 @@ async function getHandler(request, response) {
     return response.status(400).json({ error: "Missing url parameter" });
   }
 
-  // Permitir apenas PDFs do Cloudinary (único caso de uso legítimo deste proxy).
-  // A allowlist + validação de IP bloqueia SSRF para serviços internos/metadata.
-  if (!(await isSafeUrl(url, { allowedHosts: ["res.cloudinary.com"] }))) {
-    return response.status(400).json({ error: "Invalid URL" });
-  }
-
   try {
-    const pdfResponse = await fetch(url, {
+    // Permitir apenas PDFs do Cloudinary (único caso de uso legítimo deste
+    // proxy). A allowlist vale para **todo** hop: o `lib/safe-fetch.js` só segue
+    // um redirecionamento se o destino também estiver em `res.cloudinary.com`,
+    // além de fixar o endereço validado na conexão.
+    const pdfResponse = await safeFetch(url, {
+      allowedHosts: ["res.cloudinary.com"],
       headers: { "User-Agent": "IndiesBrasil/1.0 (pdf proxy)" },
-      signal: AbortSignal.timeout(30000),
+      timeoutMs: 30000,
     });
 
+    if (!pdfResponse) {
+      return response.status(400).json({ error: "Invalid URL" });
+    }
+
     if (!pdfResponse.ok) {
-      return response.status(pdfResponse.status).json({ error: "PDF not found" });
+      // Status do upstream não é repassado — ver a nota em `image-proxy.js`.
+      console.warn(`[pdf-proxy] upstream respondeu ${pdfResponse.status}`);
+      return response.status(400).json({ error: "PDF not found" });
     }
 
     const contentType = pdfResponse.headers.get("content-type");
@@ -107,7 +112,7 @@ async function getHandler(request, response) {
       return response.status(415).json({ error: "Upstream is not a PDF" });
     }
 
-    const buffer = await pdfResponse.arrayBuffer();
+    const buffer = Buffer.from(await pdfResponse.arrayBuffer());
 
     if (buffer.byteLength > MAX_PDF_BYTES) {
       return response.status(413).json({ error: "PDF too large" });
@@ -120,15 +125,16 @@ async function getHandler(request, response) {
     }
 
     response.setHeader("Content-Type", "application/pdf");
-    if (contentLength) {
-      response.setHeader("Content-Length", contentLength);
-    }
+    // `byteLength` do buffer já descomprimido, e não o `content-length` do
+    // upstream: são diferentes quando o upstream respondeu comprimido, e um
+    // `Content-Length` menor que o corpo faz o cliente truncar o download.
+    response.setHeader("Content-Length", String(buffer.byteLength));
     // Impede o browser de reinterpretar o conteúdo como outro tipo.
     response.setHeader("X-Content-Type-Options", "nosniff");
     // `inline` é necessário: o pdfjs-dist renderiza o documento no viewer.
     response.setHeader("Content-Disposition", "inline");
     response.setHeader("Cache-Control", "public, max-age=300, s-maxage=86400, stale-while-revalidate=86400");
-    response.status(200).send(Buffer.from(buffer));
+    response.status(200).send(buffer);
   } catch (err) {
     console.error("pdf-proxy error:", err);
     return response.status(502).json({ error: "Failed to fetch PDF from upstream" });
