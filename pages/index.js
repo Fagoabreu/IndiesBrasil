@@ -10,7 +10,7 @@ import { MilestoneIcon, OrganizationIcon, PeopleIcon, StarIcon, VideoIcon, Table
 import { useEffect, useState } from "react";
 import TyperwriterComponent from "@/components/TypeWriter/TyperwriterComponent";
 import { useUser } from "@/context/UserContext";
-import { SITE_URL, SITE_NAME, OG_COVER_ART, OG_IMAGE_SIZE } from "@/lib/seo";
+import { SITE_URL, SITE_NAME, SITE_ALTERNATE_NAMES, OG_COVER_ART, OG_IMAGE_SIZE } from "@/lib/seo";
 import { sortEventsByStart } from "@/lib/eventFormat";
 import useInView from "@/hooks/useInView";
 
@@ -27,6 +27,10 @@ const JSON_LD = {
       "@id": `${SITE_URL}/#website`,
       url: SITE_URL,
       name: SITE_NAME,
+      // O apelido ("Jogos Social") e o endereço sem `www` são como as pessoas
+      // procuram o site; sem esta linha o único nome declarado era "Indies
+      // Brasil", que não é o termo usado na busca. Ver `SITE_ALTERNATE_NAMES`.
+      alternateName: SITE_ALTERNATE_NAMES,
       description: PAGE_DESCRIPTION,
       inLanguage: "pt-BR",
       potentialAction: {
