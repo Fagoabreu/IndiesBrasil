@@ -23,13 +23,23 @@ import { buildSitemapFor, entitySitemapFor, sendSitemapXml, sitemapKeys } from "
  * vira uma consulta à tabela inteira. Tráfego interno e de teste (loopback) não
  * é limitado, o mesmo critério das rotas de login.
  *
+ * O teto de crawler conhecido é o mais alto (`sitemapCrawler`), e existe por um
+ * defeito observado: o Search Console relatava **"não foi possível ler o
+ * sitemap"** enquanto a URL respondia `200` para todo o resto do mundo. Um `429`
+ * nesta rota é uma falha silenciosa de SEO — não há log de erro, só um arquivo
+ * que o Google deixa de processar.
+ *
  * @returns {boolean} `false` quando já respondeu 429 (o chamador deve parar).
  */
 function allowRequest(req, res) {
   const clientIp = rateLimit.getClientIp(req);
   if (rateLimit.isLocalRequest(clientIp)) return true;
 
-  const { allowed, resetMs } = rateLimit.limiters.sitemap.check(clientIp);
+  // Só o **teto** muda: quem passa por aqui é leitura pública, então reconhecer
+  // o crawler não dá acesso a nada que um visitante já não tenha. `User-Agent`
+  // não decide autorização em lugar nenhum desta rota.
+  const limiter = rateLimit.isKnownCrawler(req.headers["user-agent"]) ? rateLimit.limiters.sitemapCrawler : rateLimit.limiters.sitemap;
+  const { allowed, resetMs } = limiter.check(clientIp);
   if (allowed) return true;
 
   res.statusCode = 429;
