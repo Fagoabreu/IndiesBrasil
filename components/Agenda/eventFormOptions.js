@@ -11,7 +11,14 @@
  * página do evento e o card de Open Graph também exibem. O `EventForm` importa
  * direto de lá — sem re-export aqui, para não haver dois caminhos até a mesma
  * constante.
+ *
+ * As datas entram e saem por `lib/eventFormat.js`, que é quem sabe o fuso: o
+ * valor de `<input>` não tem fuso nenhum, e lê-lo com `new Date(...)`/`Date`
+ * usava o fuso do navegador — o mesmo dia gravava instantes diferentes conforme
+ * quem preencheu, e o dia inteiro caía no dia anterior.
  */
+
+import { allDayEndDate, eventDateTimeFromNow, instantToWallClock, wallClockToInstant } from "@/lib/eventFormat";
 
 export const VISIBILITY_OPTIONS = [
   { value: "public", label: "Público — visível para todos" },
@@ -36,25 +43,19 @@ export const WEEK_DAYS = [
   { value: 6, label: "Sáb" },
 ];
 
-/** ISO → valor de <input type="datetime-local"> (YYYY-MM-DDTHH:mm, hora local). */
+/** ISO → valor de `<input type="datetime-local">` (YYYY-MM-DDTHH:mm), em Brasília. */
 export function toDatetimeLocal(isoString) {
-  if (!isoString) return "";
-  const d = new Date(isoString);
-  d.setSeconds(0, 0);
-  return d.toISOString().slice(0, 16);
+  return instantToWallClock(isoString);
 }
 
-/** ISO → valor de <input type="date"> (YYYY-MM-DD). */
+/** ISO → valor de `<input type="date">` (YYYY-MM-DD), em Brasília. */
 export function toDateOnly(isoString) {
-  if (!isoString) return "";
-  return new Date(isoString).toISOString().slice(0, 10);
+  return instantToWallClock(isoString, { dateOnly: true });
 }
 
 /** "<agora + offsetMinutos>" no formato de datetime-local — usado como padrão na criação. */
 export function localDatetimeFromNow(offsetMinutes) {
-  const d = new Date(Date.now() + offsetMinutes * 60 * 1000);
-  d.setSeconds(0, 0);
-  return d.toISOString().slice(0, 16);
+  return eventDateTimeFromNow(offsetMinutes);
 }
 
 export function emptyAddress() {
@@ -101,8 +102,10 @@ export function eventValuesFromApi(ev) {
     description: ev.description || "",
     eventType: ev.event_type || "general",
     visibility: ev.visibility || "public",
+    // Dia inteiro: o término gravado é **exclusivo**, então o dia que o usuário
+    // escolheu é o último incluído (`allDayEndDate`), não o do instante.
     startsAt: ev.is_all_day ? toDateOnly(ev.starts_at) : toDatetimeLocal(ev.starts_at),
-    endsAt: ev.is_all_day ? toDateOnly(ev.ends_at) : toDatetimeLocal(ev.ends_at),
+    endsAt: ev.is_all_day ? allDayEndDate(ev.ends_at) : toDatetimeLocal(ev.ends_at),
     isAllDay: ev.is_all_day || false,
     isOnline: ev.is_online || false,
     onlineUrl: ev.online_url || "",
@@ -169,6 +172,15 @@ function buildRecurrenceRule(values) {
 /**
  * Valores do formulário → corpo da requisição.
  *
+ * O horário digitado é lido como **hora de Brasília** (o fuso em que a agenda
+ * exibe), não como hora local de quem está salvando: `datetime-local` e `date`
+ * não carregam fuso, e `new Date(...)` os lia no fuso do navegador.
+ *
+ * Dia inteiro vai como **o dia escolhido**, à meia-noite de Brasília, inclusive
+ * no término — o fim exclusivo é derivado no servidor (`allDayEndInstant`), que
+ * é onde a regra pode valer para qualquer cliente. Assim o `PATCH` reenvia
+ * exatamente o que leu (`allDayEndDate`) e nada anda de dia.
+ *
  * `mode` muda só o tratamento do endereço (ver `buildAddress`) e se a
  * recorrência entra ou não: ela é editável apenas na criação.
  */
@@ -178,8 +190,8 @@ export function buildEventPayload(values, { mode }) {
     description: values.description.trim() || null,
     event_type: values.eventType,
     visibility: values.visibility,
-    starts_at: new Date(values.startsAt).toISOString(),
-    ends_at: new Date(values.endsAt).toISOString(),
+    starts_at: wallClockToInstant(values.startsAt).toISOString(),
+    ends_at: wallClockToInstant(values.endsAt).toISOString(),
     is_all_day: values.isAllDay,
     is_online: values.isOnline,
     online_url: values.isOnline ? trimmedOrNull(values.onlineUrl) : null,

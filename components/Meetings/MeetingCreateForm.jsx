@@ -113,7 +113,17 @@ export default function MeetingCreateForm({ slug, onCreated, onCancel }) {
           <label className={styles.label} htmlFor="meeting-ends">
             Término <span className={styles.required}>*</span>
           </label>
-          <input id="meeting-ends" type="datetime-local" className={styles.input} value={endsAt} onChange={(e) => setEndsAt(e.target.value)} />
+          <input
+            id="meeting-ends"
+            type="datetime-local"
+            className={styles.input}
+            // O seletor nativo já não oferece um término anterior ao início. O
+            // início pode ser movido para depois do término já escolhido — aí
+            // quem barra é o `validate()` acima, com mensagem.
+            min={startsAt || undefined}
+            value={endsAt}
+            onChange={(e) => setEndsAt(e.target.value)}
+          />
         </div>
       </div>
 

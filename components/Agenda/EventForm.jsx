@@ -166,12 +166,20 @@ export default function EventForm({
             id="endsAt"
             type={values.isAllDay ? "date" : "datetime-local"}
             className={styles.input}
+            // O mínimo acompanha o início: o seletor nativo já não oferece uma
+            // data anterior. O início pode ser movido para depois do término já
+            // escolhido — aí quem barra é `validateEvent`, com mensagem.
+            min={values.isAllDay ? values.startsAt.slice(0, 10) : values.startsAt}
             value={values.isAllDay ? values.endsAt.slice(0, 10) : values.endsAt}
             onChange={(e) => setField("endsAt", e.target.value)}
             required
           />
         </div>
       </div>
+
+      <span className={styles.hint}>
+        {values.isAllDay ? "O evento ocupa os dias escolhidos inteiros, no horário de Brasília." : "Horários no fuso de Brasília (GMT-3)."}
+      </span>
 
       <hr className={styles.divider} />
       <p className={styles.sectionTitle}>Local</p>
