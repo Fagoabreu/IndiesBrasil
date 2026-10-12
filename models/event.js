@@ -2,6 +2,15 @@ import database from "infra/database";
 import { NotFoundError, ValidationError, ForbiddenError } from "@/infra/errors";
 import uploadedImages from "@/models/uploadedImages";
 import addressModel from "@/models/address";
+import {
+  allDayEndInstant,
+  allDayStartInstant,
+  eventCivilDate,
+  eventCivilDayDiff,
+  eventInstantOf,
+  shiftEventDays,
+  wallClockToInstant,
+} from "@/lib/eventFormat";
 
 /* ================================================================
  * LEITURA POR VISIBILIDADE
@@ -60,9 +69,14 @@ function slugify(text) {
     .slice(0, 120);
 }
 
-/** Preserva horário de `ref` na data de `dateOnly`. */
-function withTime(dateOnly, ref) {
-  return new Date(Date.UTC(dateOnly.getUTCFullYear(), dateOnly.getUTCMonth(), dateOnly.getUTCDate(), ref.getUTCHours(), ref.getUTCMinutes(), 0, 0));
+/** Data civil de um `Date` usado como calendário (os campos UTC são a data). */
+function civilOf(date) {
+  return { year: date.getUTCFullYear(), month: date.getUTCMonth() + 1, day: date.getUTCDate() };
+}
+
+/** Data civil `date` com o horário de parede de `reference`. */
+function withWallClockTime(date, reference) {
+  return { year: date.year, month: date.month, day: date.day, hour: reference.hour, minute: reference.minute, second: reference.second };
 }
 
 /**
@@ -91,91 +105,145 @@ function getNthWeekdayOfMonth(year, month, dayOfWeek, week) {
  *
  * Expande uma regra de recorrência em pares {starts_at, ends_at}.
  * Gera instâncias de `eventStart` até `windowEnd` (ou rule.until_date).
+ *
+ * A aritmética acontece em **datas civis de Brasília** — o calendário que o
+ * usuário vê, que é o que a regra descreve ("toda segunda", "todo dia 15"). A
+ * versão anterior fazia a conta com `getUTCDay`/`Date.UTC` e usava o resultado
+ * como instante: coincidia enquanto o horário de parede não cruzava a
+ * meia-noite UTC, e errava duas famílias inteiras de evento — dia inteiro
+ * (âncora `00:00` de Brasília = `03:00Z`) e qualquer evento a partir das 21h.
+ * Em `expandDaily`, o horário era reconstruído com `Date.UTC` sem hora, então a
+ * partir da 2ª ocorrência a instância voltava para `00:00Z` e o evento
+ * reaparecia no dia anterior.
  * ================================================================ */
+
+/**
+ * Coleciona as ocorrências como datas civis e converte uma única vez.
+ *
+ * Cada ocorrência mantém o **horário de parede** do evento e o mesmo
+ * deslocamento em dias: o término é o `endCivil` movido pelo mesmo número de
+ * dias, e não "início + duração em ms". Assim um evento que vira a noite, ou de
+ * vários dias, continua terminando na mesma hora, e a mudança de offset (o
+ * horário de verão que o Brasil teve até 2019) não desloca as ocorrências.
+ */
 function makeInstancePusher(eventStart, eventEnd, until, maxCount) {
-  const duration = eventEnd.getTime() - eventStart.getTime();
+  const startCivil = eventCivilDate(eventStart);
+  const endCivil = eventCivilDate(eventEnd);
   const instances = [];
-  function push(d) {
-    if (d >= eventStart && d <= until && instances.length < maxCount) {
-      instances.push({
-        starts_at: new Date(d),
-        ends_at: new Date(d.getTime() + duration),
-      });
-    }
+
+  function push(civil) {
+    const startsAt = eventInstantOf(civil);
+    if (startsAt < eventStart || startsAt > until || instances.length >= maxCount) return;
+
+    const dayOffset = eventCivilDayDiff(startCivil, civil);
+    instances.push({
+      starts_at: startsAt,
+      ends_at: eventInstantOf(shiftEventDays(endCivil, dayOffset)),
+    });
   }
+
   return { push, instances };
 }
 
 function expandDaily(rule, eventStart, until, maxCount, push) {
   const interval = rule.interval || 1;
+  let civil = eventCivilDate(eventStart);
   let remaining = maxCount;
-  let currentDate = new Date(eventStart);
-  while (currentDate <= until && remaining > 0) {
-    push(new Date(currentDate));
-    currentDate = new Date(Date.UTC(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), currentDate.getUTCDate() + interval));
+  while (eventInstantOf(civil) <= until && remaining > 0) {
+    push(civil);
+    civil = shiftEventDays(civil, interval);
     remaining -= 1;
   }
 }
 
 function expandWeekly(rule, eventStart, until, maxCount, push) {
   const interval = rule.interval || 1;
-  const days = rule.days_of_week?.length > 0 ? [...rule.days_of_week].sort((a, b) => a - b) : [eventStart.getUTCDay()];
-  const startDow = eventStart.getUTCDay();
-  let weekSunday = new Date(Date.UTC(eventStart.getUTCFullYear(), eventStart.getUTCMonth(), eventStart.getUTCDate() - startDow));
+  const startCivil = eventCivilDate(eventStart);
+  const weekdays = rule.days_of_week?.length > 0 ? [...rule.days_of_week].sort((a, b) => a - b) : [startCivil.weekday];
+  // A grade de semanas é ancorada no domingo, como `days_of_week` (0 = Dom).
+  let weekStart = shiftEventDays(startCivil, -startCivil.weekday);
   let remaining = maxCount;
-  while (weekSunday <= until && remaining > 0) {
-    for (const day of days) {
+  while (eventInstantOf(weekStart) <= until && remaining > 0) {
+    for (const weekday of weekdays) {
       if (remaining <= 0) break;
-      push(withTime(new Date(Date.UTC(weekSunday.getUTCFullYear(), weekSunday.getUTCMonth(), weekSunday.getUTCDate() + day)), eventStart));
+      push(shiftEventDays(weekStart, weekday));
       remaining -= 1;
     }
-    weekSunday = new Date(Date.UTC(weekSunday.getUTCFullYear(), weekSunday.getUTCMonth(), weekSunday.getUTCDate() + 7 * interval));
+    weekStart = shiftEventDays(weekStart, 7 * interval);
   }
 }
 
 function expandMonthly(rule, eventStart, until, maxCount, push) {
   const interval = rule.interval || 1;
-  let year = eventStart.getUTCFullYear();
-  let month = eventStart.getUTCMonth();
+  const startCivil = eventCivilDate(eventStart);
+  let year = startCivil.year;
+  let month = startCivil.month;
   let remaining = maxCount;
-  while (new Date(Date.UTC(year, month, 1)) <= until && remaining > 0) {
-    let d = null;
+  while (eventInstantOf({ year, month, day: 1 }) <= until && remaining > 0) {
+    let day = null;
     if (rule.week_of_month != null && rule.days_of_week?.length > 0) {
-      d = getNthWeekdayOfMonth(year, month, rule.days_of_week[0], rule.week_of_month);
+      const nth = getNthWeekdayOfMonth(year, month - 1, rule.days_of_week[0], rule.week_of_month);
+      day = nth && civilOf(nth);
     } else {
-      const dom = rule.day_of_month ?? eventStart.getUTCDate();
-      const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
-      d = new Date(Date.UTC(year, month, Math.min(dom, lastDay)));
+      const requested = rule.day_of_month ?? startCivil.day;
+      const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+      day = { year, month, day: Math.min(requested, lastDay) };
     }
-    if (d) {
-      push(withTime(d, eventStart));
+    if (day) {
+      push(withWallClockTime(day, startCivil));
       remaining -= 1;
     }
     month += interval;
-    if (month > 11) {
-      year += Math.floor(month / 12);
-      month = month % 12;
+    if (month > 12) {
+      year += Math.floor((month - 1) / 12);
+      month = ((month - 1) % 12) + 1;
     }
   }
 }
 
 function expandYearly(rule, eventStart, until, maxCount, push) {
   const interval = rule.interval || 1;
-  const months = rule.months_of_year?.length > 0 ? rule.months_of_year.map((m) => m - 1) : [eventStart.getUTCMonth()];
-  let year = eventStart.getUTCFullYear();
+  const startCivil = eventCivilDate(eventStart);
+  const months = rule.months_of_year?.length > 0 ? [...rule.months_of_year].sort((a, b) => a - b) : [startCivil.month];
+  const lastYear = eventCivilDate(until).year + 1;
+  let year = startCivil.year;
   let remaining = maxCount;
-  while (year <= until.getUTCFullYear() + 1 && remaining > 0) {
-    for (const m of months) {
+  while (year <= lastYear && remaining > 0) {
+    for (const month of months) {
       if (remaining <= 0) break;
-      push(withTime(new Date(Date.UTC(year, m, eventStart.getUTCDate())), eventStart));
+      push(withWallClockTime({ year, month, day: startCivil.day }, startCivil));
       remaining -= 1;
     }
     year += interval;
   }
 }
 
+/**
+ * Término da recorrência como instante — o **último instante** do dia em "até".
+ *
+ * `until_date` é coluna `date`: um dia do calendário, não um instante. "Até 4 de
+ * outubro" tem que incluir o dia 4, e o motor compara `startsAt > until` — usar
+ * a meia-noite daquele dia cortava a última ocorrência, e usar a meia-noite do
+ * dia seguinte incluía uma a mais.
+ *
+ * O driver entrega a coluna como `Date` à meia-noite **local**, então o dia é
+ * lido com os acessores locais — que devolvem o dia gravado em qualquer fuso do
+ * processo —, e não convertido para instante (isso reintroduziria o fuso na
+ * leitura, que é justamente o defeito do dia inteiro).
+ */
+function recurrenceUntilInstant(untilDate) {
+  if (!untilDate) return null;
+
+  const civil =
+    untilDate instanceof Date
+      ? { year: untilDate.getFullYear(), month: untilDate.getMonth() + 1, day: untilDate.getDate() }
+      : eventCivilDate(wallClockToInstant(untilDate));
+
+  return new Date(eventInstantOf(shiftEventDays(civil, 1)).getTime() - 1);
+}
+
 export function expandRecurrenceRule(rule, eventStart, eventEnd, windowEnd) {
-  const ruleUntil = rule.until_date ? new Date(rule.until_date) : null;
+  const ruleUntil = recurrenceUntilInstant(rule.until_date);
   const until = ruleUntil && ruleUntil < windowEnd ? ruleUntil : windowEnd;
   const maxCount = rule.max_occurrences ?? 500;
   const { push, instances } = makeInstancePusher(eventStart, eventEnd, until, maxCount);
@@ -274,6 +342,58 @@ const BASE_EVENT_QUERY = `
   ) rc ON true
 `;
 
+/**
+ * Instantes de início e término a gravar, no contrato do model.
+ *
+ * O cliente manda o que o usuário digitou — o dia escolhido, o horário de
+ * parede —, e traduzir isso em instante é do **servidor**: a regra precisa valer
+ * para qualquer cliente. Foi um cliente deduzindo o fuso por conta própria
+ * (`new Date` sobre o valor do input, que não tem fuso) que gravava o dia
+ * inteiro à meia-noite UTC, uma noite antes em Brasília.
+ *
+ * Dia inteiro não tem hora: o início é a meia-noite de Brasília do dia escolhido
+ * e o término é a meia-noite **seguinte ao último dia escolhido** (fim
+ * exclusivo) — ver `allDayEndInstant` e o cabeçalho de `lib/eventFormat.js`.
+ *
+ * @param {object} data — `starts_at`, `ends_at`, `is_all_day` (como vieram no
+ *   corpo ou como estão gravados).
+ */
+function resolveInstantRange(data) {
+  if (data.starts_at == null || data.ends_at == null) {
+    throw new ValidationError({ message: "Data de início e término são obrigatórias." });
+  }
+
+  const startsAt = parseInstant(data.starts_at, "início");
+  const endsAt = parseInstant(data.ends_at, "término");
+
+  // Os helpers de dia inteiro recebem o valor **cru**: uma data ("2026-10-14")
+  // diz qual é o último dia incluído, um instante já diz qual é a fronteira de
+  // término. Pré-converter apagaria essa diferença e encurtaria o evento em um
+  // dia.
+  const range = data.is_all_day
+    ? { isAllDay: true, startsAt: allDayStartInstant(data.starts_at), endsAt: allDayEndInstant(data.ends_at) }
+    : { isAllDay: false, startsAt, endsAt };
+
+  if (range.endsAt < range.startsAt) {
+    throw new ValidationError({
+      message: "Data de término não pode ser anterior à de início.",
+    });
+  }
+
+  return range;
+}
+
+/** Instante a partir do que chegou (data do input, ISO ou `Date`). */
+function parseInstant(value, fieldLabel) {
+  try {
+    const instant = wallClockToInstant(value);
+    if (Number.isNaN(instant.getTime())) throw new RangeError("Data inválida.");
+    return instant;
+  } catch {
+    throw new ValidationError({ message: `Data inválida para "${fieldLabel}".` });
+  }
+}
+
 /* ================================================================
  * API PÚBLICA DO MODEL
  * ================================================================ */
@@ -288,14 +408,7 @@ async function create(data, userId) {
   if (!data.starts_at) throw new ValidationError({ message: "Data de início é obrigatória." });
   if (!data.ends_at) throw new ValidationError({ message: "Data de término é obrigatória." });
 
-  const startsAt = new Date(data.starts_at);
-  const endsAt = new Date(data.ends_at);
-
-  if (endsAt < startsAt) {
-    throw new ValidationError({
-      message: "Data de término não pode ser anterior à de início.",
-    });
-  }
+  const { startsAt, endsAt } = resolveInstantRange(data);
 
   if (data.is_recurring && !data.recurrence_rule) {
     throw new ValidationError({
@@ -614,10 +727,30 @@ async function update(id, data, userId) {
   const values = [];
 
   for (const key of allowed) {
+    // O intervalo é tratado junto, abaixo: mudar um dos lados ou marcar "dia
+    // inteiro" reancora as duas pontas, e um `$n` por campo não daria conta.
+    if (key === "starts_at" || key === "ends_at" || key === "is_all_day") continue;
     if (key in data) {
       values.push(data[key]);
       sets.push(`${key} = $${values.length}`);
     }
+  }
+
+  // O que o evento vai ficar: o corpo sobre o que já está gravado. O `PATCH` do
+  // formulário manda o intervalo inteiro, mas a regra não pode depender disso —
+  // é justamente o cliente que se enganava com o fuso.
+  const rangeChanged = "starts_at" in data || "ends_at" in data || "is_all_day" in data;
+  let range = null;
+
+  if (rangeChanged) {
+    range = resolveInstantRange({
+      starts_at: "starts_at" in data ? data.starts_at : event.starts_at,
+      ends_at: "ends_at" in data ? data.ends_at : event.ends_at,
+      is_all_day: "is_all_day" in data ? data.is_all_day : event.is_all_day,
+    });
+
+    values.push(range.startsAt, range.endsAt, "is_all_day" in data ? Boolean(data.is_all_day) : event.is_all_day);
+    sets.push(`starts_at = $${values.length - 2}`, `ends_at = $${values.length - 1}`, `is_all_day = $${values.length}`);
   }
 
   /* Endereço estruturado: criar, atualizar ou limpar */
@@ -637,7 +770,68 @@ async function update(id, data, userId) {
     values,
   });
 
+  if (range) {
+    await rescheduleInstances(id, range);
+  }
+
   return findById(id, userId);
+}
+
+/**
+ * Move as instâncias materializadas junto do intervalo do evento.
+ *
+ * A agenda e a home listam `event_instances`, não `events` (`findAll` faz
+ * `DISTINCT ON (ei.id)`), e só o `create` gravava nessa tabela: editar a data
+ * deixava a página do evento correta e o card na data antiga — parecia que a
+ * alteração não tinha sido salva.
+ *
+ * As linhas são **deslocadas**, não recriadas: apagar e reinserir levaria junto
+ * o `override_title`, o `is_cancelled` de cada ocorrência e os RSVP por
+ * instância (`ON DELETE CASCADE`). A âncora é a primeira instância, que é o
+ * `starts_at` do evento quando ela foi criada; cada uma recebe o mesmo
+ * deslocamento em ms e a **duração nova** — assim uma alteração de duração vale
+ * em todas as ocorrências, em vez de ficar só na primeira.
+ *
+ * @param {{ isAllDay: boolean, startsAt: Date, endsAt: Date }} range
+ */
+async function rescheduleInstances(eventId, range) {
+  const result = await database.query({
+    text: `SELECT id, starts_at FROM event_instances WHERE event_id = $1 ORDER BY starts_at ASC`,
+    values: [eventId],
+  });
+
+  if (!result.rowCount) return;
+
+  const deltaMs = range.startsAt.getTime() - new Date(result.rows[0].starts_at).getTime();
+  const durationMs = range.endsAt.getTime() - range.startsAt.getTime();
+
+  const ids = [];
+  const starts = [];
+  const ends = [];
+
+  for (const row of result.rows) {
+    const shiftedStart = new Date(new Date(row.starts_at).getTime() + deltaMs);
+    const shiftedEnd = new Date(shiftedStart.getTime() + durationMs);
+
+    // Dia inteiro tem que continuar na fronteira do dia de Brasília. Para o que
+    // já estava, isto é no-op (`allDay*Instant` é idempotente); para instância
+    // gravada pelo escritor antigo (`00:00Z`, que é a véspera em Brasília), é o
+    // que a traz de volta para o dia certo.
+    ids.push(row.id);
+    starts.push(range.isAllDay ? allDayStartInstant(shiftedStart) : shiftedStart);
+    ends.push(range.isAllDay ? allDayEndInstant(shiftedEnd) : shiftedEnd);
+  }
+
+  await database.query({
+    text: `
+      UPDATE event_instances AS ei
+         SET starts_at = v.starts_at,
+             ends_at   = v.ends_at
+        FROM unnest($2::uuid[], $3::timestamptz[], $4::timestamptz[]) AS v(id, starts_at, ends_at)
+       WHERE ei.id = v.id AND ei.event_id = $1
+    `,
+    values: [eventId, ids, starts, ends],
+  });
 }
 
 /**
@@ -957,11 +1151,19 @@ async function extendInstances(eventId, windowEnd) {
     max_occurrences: row.max_occurrences,
   };
 
-  // Gera a partir do próximo dia após a última instância
-  const fromDate = new Date(lastStart);
-  fromDate.setUTCDate(fromDate.getUTCDate() + 1);
+  // Gera a partir do dia civil seguinte ao da última instância, no calendário de
+  // Brasília — `setUTCDate` sobre um instante é o mesmo erro de sempre: o "dia
+  // seguinte" de um evento de dia inteiro (00:00 BRT) não é o dia UTC seguinte.
+  const fromDate = eventInstantOf(shiftEventDays(eventCivilDate(lastStart), 1));
 
-  const newInstances = expandRecurrenceRule(rule, fromDate, new Date(row.ends_at), windowEnd);
+  // O `eventEnd` do par (início, término) precisa ser o término **relativo ao
+  // novo início**, não a data do fim do evento: o motor usa o deslocamento em
+  // dias entre os dois e o horário de parede de cada um. Passar o `ends_at` do
+  // evento (que está lá atrás) gerava ocorrências terminando antes de começar.
+  const originalSpanMs = new Date(row.ends_at).getTime() - new Date(row.starts_at).getTime();
+  const spanEnd = new Date(fromDate.getTime() + originalSpanMs);
+
+  const newInstances = expandRecurrenceRule(rule, fromDate, spanEnd, windowEnd);
 
   if (newInstances.length) await insertInstances(eventId, newInstances);
 

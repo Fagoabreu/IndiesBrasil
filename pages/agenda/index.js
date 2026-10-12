@@ -9,7 +9,7 @@ import EventCard from "@/components/Agenda/EventCard";
 import StudioMeetingList from "@/components/Agenda/StudioMeetingList";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL } from "@/lib/seo";
-import { EVENT_MONTHS, sortEventsByStart } from "@/lib/eventFormat";
+import { EVENT_MONTHS, brasiliaMonthRange, sortEventsByStart } from "@/lib/eventFormat";
 import styles from "./index.module.css";
 
 const PAGE_TITLE = "Agenda — Indies Brasil";
@@ -46,9 +46,11 @@ export default function AgendaPage() {
     let cancelled = false;
 
     // A faixa de datas é calculada uma vez e usada pelas duas buscas — calcular
-    // de novo em cada uma é como duas cópias do mesmo intervalo divergem.
-    const from = new Date(year, month, 1).toISOString();
-    const to = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
+    // de novo em cada uma é como duas cópias do mesmo intervalo divergem. As
+    // duas pontas saem do calendário de **Brasília** (`brasiliaMonthRange`), o
+    // mesmo em que o card exibe a data: montar a faixa com `new Date(year, ...)`
+    // a calculava no fuso do navegador, e a lista discordava do dia mostrado.
+    const { from, to } = brasiliaMonthRange(year, month);
     const typeParam = filter ? `&type=${filter}` : "";
 
     async function loadJson(url) {
@@ -61,13 +63,18 @@ export default function AgendaPage() {
       }
     }
 
+    const query = (path) => {
+      const params = new URLSearchParams({ from: from.toISOString(), to: to.toISOString() });
+      return `${path}?${params}`;
+    };
+
     (async () => {
       const [eventList, meetingList] = await Promise.all([
-        loadJson(`/api/v1/events?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}${typeParam}`),
+        loadJson(`${query("/api/v1/events")}${typeParam}`),
         // `filter` é do calendário público, então não entra nas reuniões.
         // Reuniões são internas: sem sessão a rota responde 403, então nem
         // chamamos.
-        user ? loadJson(`/api/v1/meetings/mine?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`) : Promise.resolve([]),
+        user ? loadJson(query("/api/v1/meetings/mine")) : Promise.resolve([]),
       ]);
 
       if (cancelled) return;

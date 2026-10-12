@@ -9,6 +9,7 @@ import { useUser } from "@/context/UserContext";
 import { SITE_URL, OG_CARD_SIZE } from "@/lib/seo";
 import { breadcrumbList, event as eventStructuredData, graph } from "@/lib/structured-data";
 import { eventTypeLabel } from "@/lib/event-types";
+import { allDayLastInstant, eventDateParts, formatEventDate, formatEventShortDate } from "@/lib/eventFormat";
 import { loopbackOrigin } from "@/lib/internal-url";
 import { isUuid } from "@/lib/uuid";
 import CreatePost from "@/components/CreatePost/CreatePost";
@@ -65,26 +66,35 @@ export async function getServerSideProps(context) {
   }
 }
 
-const PT_WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-const PT_MONTHS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
-
-function formatDateTime(dateStr, isAllDay) {
-  const d = new Date(dateStr);
-  const weekday = PT_WEEKDAYS[d.getDay()];
-  const day = d.getDate();
-  const month = PT_MONTHS[d.getMonth()];
-  const year = d.getFullYear();
-  if (isAllDay) return `${weekday}, ${day} de ${month} de ${year}`;
-  const time = d.toLocaleTimeString("pt-BR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  return `${weekday}, ${day} de ${month} de ${year} às ${time}`;
+/**
+ * Formatação de data do evento: `lib/eventFormat.js`, que é quem sabe o fuso.
+ *
+ * A versão local usava `getDate()`/`getDay()`, isto é, o fuso de **quem executa**:
+ * o SSR (container em UTC) gerava um HTML e o navegador em Brasília gerava outro
+ * — mismatch de hidratação, e a versão indexada pelo Google era a de UTC.
+ *
+ * O dia do término de um evento de dia inteiro vem de `allDayLastInstant`: o
+ * instante gravado é o **fim exclusivo** (00:00 do dia seguinte ao escolhido),
+ * então exibi-lo direto mostraria um dia a mais.
+ */
+function eventEndForDisplay(ev) {
+  return ev.is_all_day ? allDayLastInstant(ev.ends_at) : ev.ends_at;
 }
 
-function formatShortDate(dateStr) {
-  const d = new Date(dateStr);
-  return `${PT_WEEKDAYS[d.getDay()]}, ${d.getDate()}/${PT_MONTHS[d.getMonth()]}/${d.getFullYear()}`;
+/**
+ * Mostra a linha "Término"?
+ *
+ * Com hora, sempre que início e término não forem o mesmo instante — a linha
+ * acrescenta o horário. De dia inteiro, só quando muda o **dia**: o início é
+ * 00:00 e o término é o dia seguinte, então o teste por instante daria sempre
+ * verdadeiro e a linha repetiria a data de um evento de um só dia.
+ */
+function showsEndDate(ev) {
+  if (!ev.is_all_day) return ev.ends_at !== ev.starts_at;
+
+  const start = eventDateParts(ev.starts_at);
+  const end = eventDateParts(eventEndForDisplay(ev));
+  return !(start.year === end.year && start.month === end.month && start.day === end.day);
 }
 
 function timeAgo(dateStr) {
@@ -435,18 +445,14 @@ export default function EventDetailPage({ initialEvent = null, eventNotFound = f
                 <h2 className={styles.sectionTitle}>Próximas Ocorrências</h2>
                 {ev.upcoming_instances.slice(0, 5).map((inst) => (
                   <div key={inst.id} className={styles.instanceItem}>
-                    <span className={styles.instanceDate}>{formatShortDate(inst.starts_at)}</span>
+                    <span className={styles.instanceDate}>{formatEventShortDate(inst.starts_at)}</span>
                     {!ev.is_all_day && (
                       <span>
-                        {new Date(inst.starts_at).toLocaleTimeString("pt-BR", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        {/* `eventDateParts` traz a hora de Brasília — sem ele o SSR
+                            (UTC) e o navegador discordariam do horário. */}
+                        {eventDateParts(inst.starts_at).time}
                         {" – "}
-                        {new Date(inst.ends_at).toLocaleTimeString("pt-BR", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        {eventDateParts(inst.ends_at).time}
                       </span>
                     )}
                     {inst.override_title && (
@@ -526,16 +532,16 @@ export default function EventDetailPage({ initialEvent = null, eventNotFound = f
                 <CalendarIcon size={16} className={styles.infoIcon} />
                 <div>
                   <div className={styles.infoLabel}>Data de início</div>
-                  {formatDateTime(ev.starts_at, ev.is_all_day)}
+                  {formatEventDate(ev.starts_at, { allDay: ev.is_all_day })}
                 </div>
               </div>
 
-              {ev.ends_at !== ev.starts_at && (
+              {showsEndDate(ev) && (
                 <div className={styles.infoRow}>
                   <CalendarIcon size={16} className={styles.infoIcon} />
                   <div>
                     <div className={styles.infoLabel}>Término</div>
-                    {formatDateTime(ev.ends_at, ev.is_all_day)}
+                    {formatEventDate(eventEndForDisplay(ev), { allDay: ev.is_all_day })}
                   </div>
                 </div>
               )}
