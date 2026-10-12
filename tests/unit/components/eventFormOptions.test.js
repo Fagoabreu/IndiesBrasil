@@ -1,4 +1,5 @@
 import { buildEventPayload, emptyEventValues, eventValuesFromApi, localDatetimeFromNow, validateEvent } from "@/components/Agenda/eventFormOptions";
+import { allDayEndDate } from "@/lib/eventFormat";
 
 /**
  * O que o formulário de evento envia e o que ele lê de volta.
@@ -20,15 +21,36 @@ function values(overrides) {
 
 describe("components/Agenda/eventFormOptions.js", () => {
   describe("buildEventPayload()", () => {
-    test("dia inteiro: o dia escolhido vira a meia-noite de Brasília", () => {
+    test("dia inteiro: o início é a meia-noite de Brasília do dia escolhido", () => {
       const payload = buildEventPayload(values({ isAllDay: true, startsAt: "2026-10-12", endsAt: "2026-10-12" }), { mode: "create" });
 
       // Era "2026-10-12T00:00:00.000Z" — 21h do dia 11 em Brasília.
       expect(payload.starts_at).toBe("2026-10-12T03:00:00.000Z");
-      // O término vai como o dia **escolhido**; o fim exclusivo (00:00 do dia
-      // seguinte) é derivado no servidor, onde a regra vale para todo cliente.
-      expect(payload.ends_at).toBe("2026-10-12T03:00:00.000Z");
       expect(payload.is_all_day).toBe(true);
+    });
+
+    test("dia inteiro: o término é a fronteira DEPOIS do último dia escolhido", () => {
+      const payload = buildEventPayload(values({ isAllDay: true, startsAt: "2026-10-12", endsAt: "2026-10-12" }), { mode: "create" });
+
+      // Não "2026-10-12T03:00:00.000Z": isso é a meia-noite do dia 12, que a API
+      // lê como fronteira do dia 12 — e o evento terminaria no dia 11.
+      expect(payload.ends_at).toBe("2026-10-13T03:00:00.000Z");
+    });
+
+    test("o término enviado denota exatamente o último dia escolhido", () => {
+      // O invariante que o bug de produção violava, e que os testes anteriores
+      // não checavam: o payload tem que voltar pelo mesmo caminho com que a tela
+      // lê (`allDayEndDate`) devolvendo o dia que o usuário digitou. Vale para
+      // um dia e para vários, porque a conversão é a mesma nos dois casos.
+      for (const [inicio, fim] of [
+        ["2026-10-12", "2026-10-12"],
+        ["2026-10-12", "2026-10-14"],
+        ["2026-11-20", "2026-11-22"],
+      ]) {
+        const payload = buildEventPayload(values({ isAllDay: true, startsAt: inicio, endsAt: fim }), { mode: "create" });
+
+        expect(allDayEndDate(payload.ends_at)).toBe(fim);
+      }
     });
 
     test("com hora: o horário digitado é hora de Brasília", () => {
@@ -47,7 +69,7 @@ describe("components/Agenda/eventFormOptions.js", () => {
 
       expect(um).toEqual(outro);
       expect(um.starts_at).toBe("2026-10-12T03:00:00.000Z");
-      expect(um.ends_at).toBe("2026-10-14T03:00:00.000Z");
+      expect(um.ends_at).toBe("2026-10-15T03:00:00.000Z");
     });
   });
 
@@ -91,15 +113,27 @@ describe("components/Agenda/eventFormOptions.js", () => {
 
     test("abrir e salvar sem mexer não anda um dia", () => {
       // É o caminho completo do "editar e salvar": o que o formulário leu volta
-      // igual no payload. Se a leitura devolvesse o dia do fim exclusivo, cada
-      // save empurraria o evento.
+      // igual no payload. A versão anterior deste teste afirmava
+      // `payload.ends_at === api.starts_at` — isto é, exigia o encurtamento de um
+      // dia a cada save, que foi exatamente o defeito visto em produção.
       const api = { title: "Jam", is_all_day: true, starts_at: "2026-10-12T03:00:00.000Z", ends_at: "2026-10-13T03:00:00.000Z" };
 
       const form = eventValuesFromApi(api);
       const payload = buildEventPayload(form, { mode: "edit" });
 
       expect(payload.starts_at).toBe(api.starts_at);
-      expect(payload.ends_at).toBe(api.starts_at);
+      expect(payload.ends_at).toBe(api.ends_at);
+    });
+
+    test("salvar de novo depois de vários dias mantém o intervalo", () => {
+      const api = { title: "Jam", is_all_day: true, starts_at: "2026-11-20T03:00:00.000Z", ends_at: "2026-11-23T03:00:00.000Z" };
+
+      // Dois saves seguidos, como dois cliques em "Salvar Alterações".
+      const primeiro = buildEventPayload(eventValuesFromApi(api), { mode: "edit" });
+      const segundo = buildEventPayload(eventValuesFromApi({ ...api, ...primeiro, title: api.title }), { mode: "edit" });
+
+      expect(primeiro.ends_at).toBe(api.ends_at);
+      expect(segundo.ends_at).toBe(api.ends_at);
     });
   });
 

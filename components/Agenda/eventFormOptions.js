@@ -16,9 +16,20 @@
  * valor de `<input>` não tem fuso nenhum, e lê-lo com `new Date(...)`/`Date`
  * usava o fuso do navegador — o mesmo dia gravava instantes diferentes conforme
  * quem preencheu, e o dia inteiro caía no dia anterior.
+ *
+ * ## Dia inteiro: input e API falam línguas diferentes, de propósito
+ *
+ * O input de término é **inclusivo** ("até 22/11" inclui o dia 22), enquanto a
+ * API guarda e devolve a **fronteira exclusiva** (00:00 do dia seguinte ao
+ * último incluído) — a mesma convenção do `DTEND` do RFC 5545 e do `end.date` do
+ * Google Calendar. A tradução entre as duas é `allDayEndDate`/`allDayEndInstant`,
+ * e ela é obrigatória: converter o dia escolhido com `wallClockToInstant` produz
+ * a meia-noite **daquele** dia, que é indistinguível da fronteira do dia 22 —
+ * o evento perde um dia silenciosamente. Foi assim que o dia 22 voltou a
+ * aparecer como 21 na página do evento.
  */
 
-import { allDayEndDate, eventDateTimeFromNow, instantToWallClock, wallClockToInstant } from "@/lib/eventFormat";
+import { allDayEndDate, allDayEndInstant, allDayStartInstant, eventDateTimeFromNow, instantToWallClock, wallClockToInstant } from "@/lib/eventFormat";
 
 export const VISIBILITY_OPTIONS = [
   { value: "public", label: "Público — visível para todos" },
@@ -176,10 +187,13 @@ function buildRecurrenceRule(values) {
  * exibe), não como hora local de quem está salvando: `datetime-local` e `date`
  * não carregam fuso, e `new Date(...)` os lia no fuso do navegador.
  *
- * Dia inteiro vai como **o dia escolhido**, à meia-noite de Brasília, inclusive
- * no término — o fim exclusivo é derivado no servidor (`allDayEndInstant`), que
- * é onde a regra pode valer para qualquer cliente. Assim o `PATCH` reenvia
- * exatamente o que leu (`allDayEndDate`) e nada anda de dia.
+ * Dia inteiro vai direto na forma da API — **fronteira exclusiva** —, via
+ * `allDayStartInstant`/`allDayEndInstant`, e não como o dia escolhido. Enviar a
+ * meia-noite do dia escolhido (o que `wallClockToInstant` devolveria para
+ * "2026-11-22") apaga a diferença entre "último dia incluído" e "fronteira de
+ * término": o servidor lê fronteira e o evento termina no dia **anterior** ao que
+ * o usuário escolheu. As duas pontas aqui são idempotentes no servidor, que é o
+ * que faz o `PATCH` — que reenvia o que leu (`allDayEndDate`) — não andar de dia.
  *
  * `mode` muda só o tratamento do endereço (ver `buildAddress`) e se a
  * recorrência entra ou não: ela é editável apenas na criação.
@@ -190,8 +204,8 @@ export function buildEventPayload(values, { mode }) {
     description: values.description.trim() || null,
     event_type: values.eventType,
     visibility: values.visibility,
-    starts_at: wallClockToInstant(values.startsAt).toISOString(),
-    ends_at: wallClockToInstant(values.endsAt).toISOString(),
+    starts_at: (values.isAllDay ? allDayStartInstant(values.startsAt) : wallClockToInstant(values.startsAt)).toISOString(),
+    ends_at: (values.isAllDay ? allDayEndInstant(values.endsAt) : wallClockToInstant(values.endsAt)).toISOString(),
     is_all_day: values.isAllDay,
     is_online: values.isOnline,
     online_url: values.isOnline ? trimmedOrNull(values.onlineUrl) : null,
