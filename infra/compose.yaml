@@ -9,9 +9,18 @@ services:
   mailcatcher:
     container_name: "mailcatcher-dev"
     image: "sj26/mailcatcher"
+    # Portas do host fora da faixa comum: a 1025 (SMTP, "quick" no IANA) é
+    # disputada no Windows — o Rockstar Games Launcher (`RLHostService`) a ocupa
+    # em `127.0.0.1` e **aceita a conexão sem responder SMTP**, o que aparece
+    # como "Greeting never received" no nodemailer e como e-mail que nunca chega.
+    # Como o Mailcatcher saudável continua na 1025 **dentro** do container
+    # (imagem fixa), só o lado do host muda: o container fica intocado.
+    #
+    # Quem depende destes números no host: `EMAIL_SMTP_PORT`/`EMAIL_HTTP_PORT`
+    # em `.env.development` (app e suíte de testes). Ao mudar aqui, mude lá.
     ports:
-      - "1025:1025"
-      - "1080:1080"
+      - "4025:1025"
+      - "4080:1080"
   # Webconferência (Galene 1.2.1). Mesma imagem do deploy (`galene/`),
   # compilada localmente na primeira subida com `services:up`. O app (npm run
   # dev, no host) usa MEET_URL padrão ws://localhost:8000 e grava os grupos em

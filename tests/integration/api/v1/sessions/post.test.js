@@ -149,5 +149,80 @@ describe("Post /api/v1/sessions", () => {
         sameSite: "Lax",
       });
     });
+
+    test("O banco guarda o hash do token, não o token", async () => {
+      // Antes o token era gravado literalmente em `sessions.token`: quem
+      // obtivesse um dump do banco tinha sessões prontas para usar, e o bcrypt da
+      // senha não protegia nada disso — a sessão já está autenticada.
+      const createdUser = await orchestrator.createUser({
+        email: "hash.na.sessao@gmail.com",
+        password: TEST_CREDENTIALS.allCorrect,
+      });
+      await orchestrator.activateUser(createdUser);
+
+      const response = await fetch(`${webserver.origin}/api/v1/sessions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: "hash.na.sessao@gmail.com", password: TEST_CREDENTIALS.allCorrect }),
+      });
+      expect(response.status).toBe(201);
+
+      const tokenNoCookie = setCookieParser(response, { map: true }).session_id.value;
+      const database = (await import("infra/database.js")).default;
+
+      const linhas = await database.query({
+        text: `select token from sessions where user_id = $1`,
+        values: [createdUser.id],
+      });
+
+      expect(linhas.rowCount).toBe(1);
+      // O valor no banco é o SHA-256 (64 hex) do que está no cookie — nunca o
+      // próprio token (96 hex).
+      expect(linhas.rows[0].token).toMatch(/^[0-9a-f]{64}$/);
+      expect(linhas.rows[0].token).not.toBe(tokenNoCookie);
+
+      // E o token do cookie continua autenticando (a busca passa pelo hash).
+      const userResponse = await fetch(`${webserver.origin}/api/v1/user`, {
+        headers: { cookie: `session_id=${tokenNoCookie}` },
+      });
+      expect(userResponse.status).toBe(200);
+    });
+
+    test("Sessão legada em texto plano é aceita e convertida no primeiro uso", async () => {
+      // Compatibilidade: subir o hash não pode deslogar quem já está logado. Uma
+      // sessão gravada no formato antigo continua valendo e é migrada na hora.
+      const createdUser = await orchestrator.createUser({
+        email: "sessao.legada@gmail.com",
+        password: TEST_CREDENTIALS.allCorrect,
+      });
+      await orchestrator.activateUser(createdUser);
+
+      const database = (await import("infra/database.js")).default;
+      const tokenLegado = "a".repeat(96);
+
+      const inserida = await database.query({
+        text: `
+          insert into sessions (token, user_id, expires_at)
+          values ($1, $2, now() + interval '1 day')
+          returning id
+        `,
+        values: [tokenLegado, createdUser.id],
+      });
+      const sessionId = inserida.rows[0].id;
+
+      const userResponse = await fetch(`${webserver.origin}/api/v1/user`, {
+        headers: { cookie: `session_id=${tokenLegado}` },
+      });
+      expect(userResponse.status).toBe(200);
+      expect(userResponse.headers.get("set-cookie")).toContain(tokenLegado);
+
+      // Depois do uso, a linha já está no formato novo.
+      const depois = await database.query({
+        text: `select token from sessions where id = $1`,
+        values: [sessionId],
+      });
+      expect(depois.rows[0].token).toMatch(/^[0-9a-f]{64}$/);
+      expect(depois.rows[0].token).not.toBe(tokenLegado);
+    });
   });
 });

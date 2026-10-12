@@ -1,4 +1,5 @@
 import { isSafeUrl } from "lib/ssrf-guard";
+import { safeFetch } from "lib/safe-fetch";
 import { isOwnHost, toLoopbackUrl } from "lib/internal-url";
 
 /**
@@ -11,13 +12,18 @@ import { isOwnHost, toLoopbackUrl } from "lib/internal-url";
  *
  * **Link externo**: passa pelo guard de SSRF, porque o endereço vem de conteúdo
  * de usuário.
+ *
+ * Devolve `internal` junto do alvo porque os dois caminhos usam transporte
+ * diferente: o loopback é um endereço nosso (o `toLoopbackUrl` só aproveita o
+ * caminho da URL original), então vai de `fetch` comum; o externo vai de
+ * `safeFetch`, que revalida cada redirecionamento e fixa o IP validado.
  */
 async function resolveFetchTarget(url) {
   const internal = toLoopbackUrl(url);
-  if (internal) return internal;
+  if (internal) return { target: internal, internal: true };
 
   if (!(await isSafeUrl(url))) return null;
-  return url;
+  return { target: url, internal: false };
 }
 
 /** Wraps an external image URL through our proxy so CSP doesn't block it.
@@ -133,22 +139,30 @@ function resolveInstagram(url) {
 async function fetchLinkPreview(url) {
   // Alvo já validado: loopback quando é página nossa, URL original (pós-guard)
   // quando é externa.
-  const target = await resolveFetchTarget(url);
-  if (!target) {
+  const resolved = await resolveFetchTarget(url);
+  if (!resolved) {
     return null;
   }
 
+  const { target, internal } = resolved;
+
   try {
     // Browser-mimicking headers reduce anti-bot 429 responses (Cloudflare, etc.)
-    const res = await fetch(target, {
-      method: "GET",
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-      },
-      signal: AbortSignal.timeout(8000),
-    });
+    const headers = {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+      "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+    };
+
+    // Externo passa por `safeFetch`: seguir o `Location` de um host público
+    // controlado pelo atacante era o caminho para alcançar a rede interna, e a
+    // validação só cobria a URL de entrada.
+    const res = internal
+      ? await fetch(target, { method: "GET", headers, signal: AbortSignal.timeout(8000) })
+      : await safeFetch(target, { headers, timeoutMs: 8000 });
+
+    // `safeFetch` devolve null quando recusa a URL ou algum hop dela.
+    if (!res) return null;
 
     // Non-OK = anti-bot page, bail out early (caller will use placeholder)
     if (!res.ok) return null;
@@ -367,16 +381,20 @@ function rememberItchWidget(cacheKey, widget) {
 async function fetchItchWidget(storeBaseUrl) {
   try {
     // A página /embed responde um JSON cujo base_url aponta para o widget.
-    const res = await fetch(`${storeBaseUrl}/embed`, {
+    // Passa por `safeFetch` com allowlist do itch.io: o host já é restrito
+    // acima (`isItchHost`), mas assim um redirecionamento do próprio itch.io
+    // também é revalidado em vez de seguido às cegas.
+    const res = await safeFetch(`${storeBaseUrl}/embed`, {
+      allowedHosts: ["itch.io"],
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
         Accept: "application/json, text/html;q=0.9, */*;q=0.8",
         "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
       },
-      signal: AbortSignal.timeout(8000),
+      timeoutMs: 8000,
     });
 
-    if (!res.ok) return null;
+    if (!res || !res.ok) return null;
 
     // O JSON escapa as barras (https:\/\/itch.io\/embed\/123) — normaliza antes.
     const body = (await res.text()).replaceAll("\\/", "/");

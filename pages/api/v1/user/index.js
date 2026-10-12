@@ -15,8 +15,12 @@ async function getHandler(request, response) {
   const sessionToken = request.cookies.session_id;
 
   const sessionObject = await session.findOneValidByToken(sessionToken);
-  const renewedSessionObject = await session.renew(sessionObject.id);
-  controller.setSessionCookie(renewedSessionObject.token, response);
+  await session.renew(sessionObject.id);
+  // O cookie é reescrito com o **mesmo** token que o cliente apresentou. Não se
+  // usa o `token` retornado por `renew`: com o hash no banco, aquele valor é o
+  // hash, e gravá-lo no cookie invalidaria a sessão no pedido seguinte
+  // (ver `models/session.js`).
+  controller.setSessionCookie(sessionToken, response);
 
   const userFound = await user.findOneById(sessionObject.user_id);
   if (userFound?.avatar_image) {

@@ -330,7 +330,7 @@ CREATE TABLE users (
     username          VARCHAR(39) NOT NULL,
     email             VARCHAR(254) NOT NULL,
     password          VARCHAR(60) NOT NULL,
-    cpf               NUMERIC(11, 0) NOT NULL,
+    cpf               VARCHAR(11) NOT NULL,
     created_at        TIMESTAMPTZ DEFAULT (timezone('utc', now())) NOT NULL,
     updated_at        TIMESTAMPTZ DEFAULT (timezone('utc', now())) NOT NULL,
     features          VARCHAR(64)[] DEFAULT '{}' NOT NULL,
@@ -1587,8 +1587,11 @@ CREATE TABLE user_activation_tokens (
     expires_at  TIMESTAMPTZ NOT NULL,
     created_at  TIMESTAMPTZ DEFAULT (timezone('utc', now())) NOT NULL,
     updated_at  TIMESTAMPTZ DEFAULT (timezone('utc', now())) NOT NULL,
-    CONSTRAINT user_activation_tokens_pkey  PRIMARY KEY (id)
+    purpose     VARCHAR(20) DEFAULT 'activation' NOT NULL,
+    CONSTRAINT user_activation_tokens_pkey  PRIMARY KEY (id),
+    CONSTRAINT user_activation_tokens_purpose_check CHECK (((purpose)::text = ANY ((ARRAY['activation'::character varying, 'reset'::character varying])::text[])))
 );
+CREATE INDEX user_activation_tokens_user_purpose_idx ON user_activation_tokens (user_id, purpose);
 
 -- =====================================================================================
 -- ENDERECOS

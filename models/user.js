@@ -3,6 +3,7 @@ import password from "models/password";
 import { ValidationError, NotFoundError } from "infra/errors.js";
 import notification from "./notification";
 import { normalizeUsername, usernameProblem } from "lib/username";
+import { normalizeCpf, isCpfLength, CPF_LENGTH } from "lib/cpf";
 
 /**
  * Aplica a forma canônica ao username e valida o resultado.
@@ -26,8 +27,167 @@ function normalizeUsernameInObject(values) {
   values.username = normalized;
 }
 
+/**
+ * Aplica a forma canônica ao CPF antes de gravar.
+ *
+ * O CPF vem do usuário em qualquer forma — `012.345.678-90`, `01234567890`,
+ * `012 345 678 90` — e a coluna guarda **só os dígitos** (`lib/cpf.js`). Sem
+ * normalizar aqui, um valor com máscara chegava ao banco e a coluna de texto
+ * o aceitaria **inteiro**, criando duas linhas para o mesmo documento ("com
+ * máscara" e "sem máscara") e furando a unicidade. Antes da migration para
+ * `varchar`, o mesmo valor virava 500 (`invalid input syntax for type numeric`).
+ *
+ * A validação aqui é de **formato** (11 dígitos), não de dígito verificador: o
+ * formulário já valida o algoritmo (`isValidCpf`), e o servidor recusar por
+ * verificador quebraria dados legados que já estão no banco — o objetivo desta
+ * camada é impedir corrupção e erro 500, não substituir a validação da tela.
+ *
+ * @param {object} values objeto de entrada, modificado no lugar
+ */
+function normalizeCpfInObject(values) {
+  if (!("cpf" in values)) return;
+
+  const normalized = normalizeCpf(values.cpf);
+  if (!isCpfLength(normalized)) {
+    throw new ValidationError({
+      message: `O CPF deve ter ${CPF_LENGTH} dígitos.`,
+      action: "Confira o número digitado, incluindo os zeros à esquerda.",
+    });
+  }
+
+  values.cpf = normalized;
+}
+
+/**
+ * Anula cadastros **abandonados** que colidem com os dados de um novo cadastro.
+ *
+ * ## O problema que isto resolve
+ *
+ * O cadastro grava a linha em `users` **antes** da ativação. Se a pessoa não
+ * ativa (link perdido, token expirado — a validade é de 1 hora) e tenta se
+ * cadastrar de novo, as três validações de unicidade a barram: email, CPF e
+ * username. Ela fica permanentemente travada, e não há saída no produto:
+ *
+ *  - a mensagem de erro do link expirado manda "faça um novo cadastro", que é
+ *    exatamente o que o sistema recusa;
+ *  - reenviar o e-mail não resolve o caso mais provável, que é **ter digitado o
+ *    email errado** — o endereço não existe, então nenhum e-mail chega;
+ *  - e o CPF é único, então trocar de email não contorna.
+ *
+ * Anular o registro abandonado é a única saída que devolve o acesso: o CPF e o
+ * username voltam a estar livres e a pessoa recomeça do zero.
+ *
+ * ## Quando é seguro anular (as três condições, juntas)
+ *
+ * 1. **Nunca foi ativado** — `features` não contém `create:session`. Ativação é
+ *    o que concede as permissões; sem ela a conta nunca produziu conteúdo, não
+ *    tem organização, post, seguidor nem sessão. É a diferença entre apagar um
+ *    cadastro e apagar a conta de alguém.
+ * 2. **Não existe token válido** (de nenhuma finalidade) — token não usado e não
+ *    vencido significa intenção recente. Nesse caso a conta tem dono ativo e a
+ *    resposta continua sendo "já está sendo utilizado"; destruí-la roubaria a
+ *    ativação de quem só está um pouco atrasado.
+ * 3. **Nunca houve token de outra finalidade** — um token de redefinição de
+ *    senha, mesmo vencido, prova que alguém foi além do cadastro: pediu troca de
+ *    senha sabendo **email e CPF**, e o pedido chegou por e-mail. O estado do
+ *    token não importa; o que importa é que ele existiu. Sem esta condição, um
+ *    cadastro abandonado **com pedido de reset** era anulado e outra pessoa
+ *    tomava o CPF.
+ *
+ * Fora dessas condições nada é apagado, e a validação de unicidade responde o
+ * 400 de sempre.
+ *
+ * ## Por que só o token de ativação libera
+ *
+ * Um token de **ativação** vencido é o abandono normal: a pessoa se cadastrou e
+ * não clicou no link (ou digitou o e-mail errado, e o link nunca chegou) — é
+ * exatamente o caso que a anulação existe para destravar. Qualquer outro tipo de
+ * token é sinal de engajamento que o cadastro sozinho não produz.
+ *
+ * ## Por que aqui, e não numa rota
+ *
+ * Roda no início de `create` para que **todo** caminho de criação tenha o mesmo
+ * comportamento (rota e `tests/orchestrator`), e para que as validações de
+ * unicidade continuem sendo a única autoridade sobre conflito — depois da
+ * anulação, elas decidem sozinhas, sem caso especial na rota.
+ *
+ * @param {{ email: string, cpf: string, username: string }} keys valores já
+ *   normalizados (o chamador normaliza antes).
+ * @returns {Promise<Array<{id: string, username: string, email: string}>>} os
+ *   cadastros anulados (vazio quando não havia nada a anular).
+ */
+async function annulAbandonedRegistrations({ email, cpf, username }) {
+  const results = await database.query({
+    text: `
+      WITH abandoned AS (
+        SELECT u.id
+        FROM users u
+        WHERE (
+            lower(u.email) = lower($1)
+            OR u.cpf = $2
+            OR lower(u.username) = lower($3)
+          )
+          AND NOT ('create:session' = ANY (u.features))
+          AND NOT EXISTS (
+            SELECT 1
+            FROM user_activation_tokens t
+            WHERE t.user_id = u.id
+              AND t.used_at IS NULL
+              AND t.expires_at > now()
+          )
+          /* Qualquer token que NÃO seja de ativação — em qualquer estado — mantém
+             o cadastro. Um pedido de redefinição de senha (mesmo vencido, mesmo já
+             usado) só acontece com quem sabe email e CPF, e chega por e-mail: é
+             sinal de dono engajado, e apagar destruiria um cadastro legítimo. Sem
+             esta condição, um cadastro abandonado com reset pendente era anulado e
+             outra pessoa tomava o CPF. */
+          AND NOT EXISTS (
+            SELECT 1
+            FROM user_activation_tokens t
+            WHERE t.user_id = u.id
+              AND t.purpose <> 'activation'
+          )
+      ),
+      /* 'sessions' e 'user_activation_tokens' não têm FK para 'users' (foram
+         criadas sem a constraint), então apagar o usuário deixaria as duas
+         tabelas com linhas órfãs. A remoção é explícita. */
+      cleared_tokens AS (
+        DELETE FROM user_activation_tokens WHERE user_id IN (SELECT id FROM abandoned)
+      ),
+      cleared_sessions AS (
+        DELETE FROM sessions WHERE user_id IN (SELECT id FROM abandoned)
+      )
+      DELETE FROM users WHERE id IN (SELECT id FROM abandoned)
+      RETURNING id, username, email
+    `,
+    values: [email ?? null, cpf ?? null, username ?? null],
+  });
+
+  if (results.rowCount > 0) {
+    // Visível no log de propósito: apagar registro é irreversível, e este é o
+    // único ponto do sistema que faz isso sem um humano pedindo.
+    console.info(
+      `[cadastro] ${results.rowCount} cadastro(s) nunca ativado(s) anulado(s) para liberar novo cadastro:`,
+      results.rows.map((row) => `${row.username} <${row.email}>`).join(", "),
+    );
+  }
+
+  return results.rows;
+}
+
 async function create(userInputValues) {
   normalizeUsernameInObject(userInputValues);
+  normalizeCpfInObject(userInputValues);
+
+  // Libera cadastro abandonado antes de checar unicidade — assim email, CPF e
+  // username de um registro nunca ativado não bloqueiam quem quer recomeçar
+  // (ver `annulAbandonedRegistrations`).
+  await annulAbandonedRegistrations({
+    email: userInputValues.email,
+    cpf: userInputValues.cpf,
+    username: userInputValues.username,
+  });
+
   await validateUniqueUsename(userInputValues.username);
   await validateUniqueEmail(userInputValues.email);
   await validateUniqueCPF(userInputValues.cpf);
@@ -88,6 +248,7 @@ async function update(username, userInputValues) {
     await validateUniqueEmail(userInputValues.email);
   }
   if ("cpf" in userInputValues) {
+    normalizeCpfInObject(userInputValues);
     await validateUniqueCPF(userInputValues.cpf);
   }
   if ("birth_date" in userInputValues) {
@@ -670,6 +831,8 @@ const user = {
   //permissions
   setFeatures,
   addFeatures,
+  //registration lifecycle
+  annulAbandonedRegistrations,
   //follow
   addFollow,
   removeFollow,

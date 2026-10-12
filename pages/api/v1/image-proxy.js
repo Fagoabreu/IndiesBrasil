@@ -1,7 +1,7 @@
 import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import rateLimit from "lib/rate-limit.js";
-import { isSafeUrl } from "lib/ssrf-guard";
+import { safeFetch } from "lib/safe-fetch";
 
 export const config = {
   api: {
@@ -79,19 +79,27 @@ async function getHandler(request, response) {
     return response.status(400).json({ error: "Missing url parameter" });
   }
 
-  // Bloqueia SSRF: exige HTTP(S) público (sem loopback/privado/link-local)
-  if (!(await isSafeUrl(url))) {
-    return response.status(400).json({ error: "Invalid URL" });
-  }
-
   try {
-    const imageResponse = await fetch(url, {
+    // Bloqueia SSRF em TODOS os hops, não só na URL de entrada: o
+    // `lib/safe-fetch.js` revalida cada redirecionamento e fixa o endereço
+    // validado na conexão. Um `fetch(url)` direto seguia o `Location` de um
+    // host público controlado pelo atacante sem checar para onde ia.
+    const imageResponse = await safeFetch(url, {
       headers: { "User-Agent": "IndiesBrasil/1.0 (image proxy)" },
-      signal: AbortSignal.timeout(10000),
+      timeoutMs: 10000,
     });
 
+    if (!imageResponse) {
+      return response.status(400).json({ error: "Invalid URL" });
+    }
+
+    // Status não-ok do upstream **não** é repassado: devolver o código real
+    // transformava este endpoint num oráculo de varredura da rede interna
+    // (porta aberta vs. fechada vs. serviço HTTP que responde). O cliente
+    // recebe sempre o mesmo 400; o motivo fica no log.
     if (!imageResponse.ok) {
-      return response.status(imageResponse.status).json({ error: "Image not found" });
+      console.warn(`[image-proxy] upstream respondeu ${imageResponse.status}`);
+      return response.status(400).json({ error: "Image not found" });
     }
 
     const contentLength = imageResponse.headers.get("content-length");
@@ -109,14 +117,14 @@ async function getHandler(request, response) {
       return response.status(200).send(Buffer.from(FALLBACK_PIXEL, "base64"));
     }
 
-    const buffer = await imageResponse.arrayBuffer();
+    const buffer = Buffer.from(await imageResponse.arrayBuffer());
 
     if (buffer.byteLength > MAX_IMAGE_BYTES) {
       return response.status(413).json({ error: "Image too large" });
     }
 
     setImageHeaders(response, mime, "public, max-age=86400, s-maxage=86400, stale-while-revalidate=86400");
-    response.status(200).send(Buffer.from(buffer));
+    response.status(200).send(buffer);
   } catch {
     // Return a transparent 1x1 pixel to avoid broken image icons
     setImageHeaders(response, "image/png", "no-cache");
