@@ -717,6 +717,14 @@ getSelectElement('audioselect').onchange = function(e) {
     replaceCameraStream();
 };
 
+getSelectElement('audiooutputselect').onchange = function(e) {
+    e.preventDefault();
+    if(!(this instanceof HTMLSelectElement))
+        throw new Error('Unexpected type for this');
+    updateSetting('audioOutput', this.value);
+    applyAudioOutputToAll();
+};
+
 getInputElement('mirrorbox').onchange = function(e) {
     e.preventDefault();
     if(!(this instanceof HTMLInputElement))
@@ -1087,9 +1095,160 @@ async function setMediaChoices(done) {
         }
     });
 
+    // Customizacao 9: saidas de audio. Reaproveita a mesma enumeracao — o
+    // Chromium so revela as saidas depois de a origem receber permissao de
+    // midia, e por isso este caminho roda uma segunda vez com `done`.
+    audioOutputOptionsFromDevices(devices);
+    if(done)
+        reflectAudioOutput();
+
     mediaChoicesDone = done;
 }
 
+
+/*
+ * Customizacao 9 — escolha do dispositivo de reproducao (saida de audio).
+ *
+ * O Galene nao tinha esta opcao: o audio remoto ia sempre para a saida padrao
+ * do sistema, e o Chromium fixa o elemento na saida escolhida quando o video
+ * comeca a tocar — trocar o padrao do Windows durante a chamada nao movia o
+ * audio. Aqui a escolha e aplicada por `setSinkId` a cada elemento de midia.
+ * Ver galene/CUSTOMIZATIONS.md.
+ */
+
+/** Navegador sem a API (Firefox e Safari nao expoem escolha da saida). */
+const AUDIO_OUTPUT_UNSUPPORTED_HINT =
+    'Seu navegador nao permite escolher a saida de audio. ' +
+    'Troque o dispositivo padrao no sistema.';
+
+/** Sem permissao de midia o navegador esconde as saidas da lista. */
+const AUDIO_OUTPUT_GRANT_HINT =
+    'Ative o microfone (ou a camera) para listar as saidas de audio.';
+
+/** True se o navegador permite escolher a saida (Chromium). */
+function canSelectAudioOutput() {
+    return typeof HTMLMediaElement !== 'undefined' &&
+        'setSinkId' in HTMLMediaElement.prototype;
+}
+
+/** Dispositivo escolhido.  A string vazia e a saida padrao e nunca falha. */
+function getAudioOutput() {
+    // `audioOutput` nao esta no typedef de settings.js (arquivo do upstream);
+    // o acesso por indice evita ter de editar aquele arquivo.
+    let settings = /** @type {Record<string,any>} */(getSettings());
+    let value = settings.audioOutput;
+    return typeof value === 'string' ? value : '';
+}
+
+/**
+ * @param {Array<MediaDeviceInfo>} devices
+ */
+function audioOutputOptionsFromDevices(devices) {
+    let sn = 1;
+    devices.forEach(d => {
+        // Um dispositivo sem `deviceId` nao e uma saida escolhivel (antes da
+        // permissao de midia o navegador pode listar uma sem id): `setSinkId`
+        // com esse valor falharia, entao nao vira opcao do select.
+        if(d.kind !== 'audiooutput' || !d.deviceId)
+            return;
+        addSelectOption(getSelectElement('audiooutputselect'),
+                        d.label || `Speakers ${sn}`, d.deviceId);
+        sn++;
+    });
+}
+
+/**
+ * @param {string} text
+ */
+function showAudioOutputHint(text) {
+    let hint = document.getElementById('audiooutput-hint');
+    if(!hint)
+        return;
+    hint.textContent = text;
+    setVisibility('audiooutput-hint', true);
+}
+
+/**
+ * Aplica a saida escolhida a um elemento de midia.  Nunca deixa o usuario
+ * mudo em silencio: se a escolha nao vale mais, volta ao padrao e avisa.
+ *
+ * @param {HTMLMediaElement} media
+ */
+async function applyAudioOutput(media) {
+    if(!media || !canSelectAudioOutput())
+        return;
+    let wanted = getAudioOutput();
+    try {
+        await media.setSinkId(wanted);
+    } catch(e) {
+        console.warn(`Couldn't set the audio output to ${wanted}:`, e);
+        if(!wanted) {
+            displayError(e);
+            return;
+        }
+        // Descartar a escolha so quando a lista mostra que o dispositivo sumiu
+        // (mais de uma opcao = a enumeracao aconteceu).  Antes da permissao de
+        // midia a lista tem so o padrao e o id guardado pode ainda nao valer;
+        // apaga-lo perderia a escolha do usuario so por recarregar a pagina.
+        let select = getSelectElement('audiooutputselect');
+        if(select.children.length > 1) {
+            updateSetting('audioOutput', '');
+            reflectAudioOutput();
+            displayWarning(
+                'Dispositivo de saida indisponivel; usando o padrao do sistema.',
+            );
+        }
+        try {
+            await media.setSinkId('');
+        } catch(e2) {
+            console.error(e2);
+        }
+    }
+}
+
+/**
+ * Aplica a saida escolhida a TODOS os elementos de midia.  Sao varios: um por
+ * tile, incluindo os ocultos (participante so de audio continua tocando) e o
+ * de compartilhamento de tela.
+ *
+ * Sequencial de proposito: se o dispositivo escolhido sumiu, o primeiro
+ * elemento ja limpa a escolha e os demais nao repetem o mesmo aviso (e o
+ * mesmo toast) uma vez por participante.
+ */
+async function applyAudioOutputToAll() {
+    let medias = document.querySelectorAll('#peers .media');
+    for(let i = 0; i < medias.length; i++) {
+        let media = medias[i];
+        if(media instanceof HTMLMediaElement)
+            await applyAudioOutput(media);
+    }
+}
+
+/**
+ * Reflete no select o estado real e explica quando nao ha escolha possivel.
+ */
+function reflectAudioOutput() {
+    if(!canSelectAudioOutput()) {
+        setVisibility('audiooutputlabel', false);
+        setVisibility('audiooutputselect', false);
+        showAudioOutputHint(AUDIO_OUTPUT_UNSUPPORTED_HINT);
+        return;
+    }
+
+    setVisibility('audiooutputlabel', true);
+    setVisibility('audiooutputselect', true);
+
+    let select = getSelectElement('audiooutputselect');
+    let chosen = getAudioOutput();
+    // Nao descarta a escolha aqui: antes da permissao de midia a lista tem so
+    // o padrao, e apaga-la perderia a escolha so por recarregar a pagina.
+    select.value = selectOptionAvailable(select, chosen) ? chosen : '';
+
+    if(select.children.length <= 1)
+        showAudioOutputHint(AUDIO_OUTPUT_GRANT_HINT);
+    else
+        setVisibility('audiooutput-hint', false);
+}
 
 /**
  * @param {string} [localId]
@@ -1783,6 +1942,12 @@ async function setMedia(c, mirror, video) {
 
     if(!video && media.srcObject !== c.stream)
         media.srcObject = c.stream;
+
+    // Customizacao 9: o elemento nasce na saida padrao; aplica a escolha.  So
+    // vale para stream recebido (o proprio preview e mudo) e e
+    // fire-and-forget: `setSinkId` e assincrono e nao pode atrasar o tile.
+    if(!c.up && media.srcObject === c.stream)
+        applyAudioOutput(media);
 
     if(!c.up) {
         media.onfullscreenchange = function(e) {
@@ -4504,6 +4669,7 @@ async function start() {
     addFilters();
     await setMediaChoices(false);
     reflectSettings();
+    reflectAudioOutput();
 
     if(parms.has('token'))
         token = parms.get('token');
@@ -4521,6 +4687,24 @@ async function start() {
         setVisibility('login-container', true);
         document.getElementById('username').focus()
     }
+
+    // Customizacao 9: plugar/desplugar um headset durante a reuniao precisa
+    // oferecer a saida nova e reaplicar a escolha — o dispositivo escolhido
+    // pode ter desaparecido.
+    if(navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
+        navigator.mediaDevices.addEventListener('devicechange', async e => {
+            try {
+                audioOutputOptionsFromDevices(
+                    await navigator.mediaDevices.enumerateDevices(),
+                );
+            } catch(err) {
+                console.warn(err);
+            }
+            reflectAudioOutput();
+            applyAudioOutputToAll();
+        });
+    }
+
     setViewportHeight();
 }
 

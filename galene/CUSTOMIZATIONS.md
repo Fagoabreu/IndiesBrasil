@@ -9,19 +9,21 @@ Este documento existe porque o diff conta o **o quê**, mas não o **porquê** �
 e é o porquê que permite refazer a mudança depois de um rebase, quando o
 contexto ao redor já mudou.
 
-| #   | Mudança                                      | Onde                                 |
-| --- | -------------------------------------------- | ------------------------------------ |
-| 1   | Mantém o `?token=` no refresh                | `static/galene.js`                   |
-| 2   | Contagem de participantes no painel esquerdo | `static/galene.js`                   |
-| 3   | Carrega a skin `/indies.css`                 | `static/galene.html`                 |
-| 4   | Marca o tile de compartilhamento de tela     | `static/galene.js`                   |
-| 5   | Layout "palco + faixa" com screenshare       | `static/galene.js` + `indies.css`    |
-| 6   | Avatar do perfil do participante             | `static/galene.js` + `lib/galene.js` |
-| 7   | Sai da sala quando o organizador a encerra   | `static/galene.js`                   |
-| 8   | Saída que funciona: reconectar ou voltar     | `static/galene.js`                   |
+| #   | Mudança                                               | Onde                                                     |
+| --- | ----------------------------------------------------- | -------------------------------------------------------- |
+| 1   | Mantém o `?token=` no refresh                         | `static/galene.js`                                       |
+| 2   | Contagem de participantes no painel esquerdo          | `static/galene.js`                                       |
+| 3   | Carrega a skin `/indies.css`                          | `static/galene.html`                                     |
+| 4   | Marca o tile de compartilhamento de tela              | `static/galene.js`                                       |
+| 5   | Layout "palco + faixa" com screenshare                | `static/galene.js` + `indies.css`                        |
+| 6   | Avatar do perfil do participante                      | `static/galene.js` + `lib/galene.js`                     |
+| 7   | Sai da sala quando o organizador a encerra            | `static/galene.js`                                       |
+| 8   | Saída que funciona: reconectar ou voltar              | `static/galene.js`                                       |
+| 9   | Escolha do dispositivo de reprodução (saída de áudio) | `static/galene.html` + `static/galene.js` + `indies.css` |
 
 Nada de Go do servidor foi alterado — todas são de cliente. As customizações 6
-a 8 dependem de contrato com o app (`lib/galene.js`), documentado em cada seção.
+a 8 dependem de contrato com o app (`lib/galene.js`), documentado em cada seção;
+a 9 é inteiramente local.
 
 ## 1. Manter o token de entrada no refresh
 
@@ -222,6 +224,63 @@ ficar de fora.
   `#disconnectbutton`, `start()`.
 - `static/indies.css`: `.ib-left-panel`, `.ib-left-actions`, `.ib-leave`.
 - `lib/galene.js`: `sanitizeBackUrl` + parâmetro `back` na URL de entrada.
+
+## 9. Escolha do dispositivo de reprodução (saída de áudio)
+
+**Problema:** o painel de opções tinha **Camera** e **Microphone**, mas nenhuma
+escolha de **saída** — o áudio remoto ia sempre para a saída padrão do sistema.
+Não era só falta de botão: o cliente alimenta o áudio de cada participante em um
+`<video>` (`setMedia` → `media.srcObject = c.stream`), e o Chromium **fixa o
+elemento na saída que estava escolhida quando ele começou a tocar**. Trocar a
+saída padrão no sistema no meio da chamada não movia quem já estava falando,
+então "mudar o dispositivo de reprodução" simplesmente não funcionava.
+
+**Solução:** um select **Speakers** no `#mediaoptions` e a aplicação da escolha
+por `setSinkId` em cada elemento de mídia.
+
+- `static/galene.html`: o `<select id="audiooutputselect">` (com a opção `""` =
+  saída padrão do sistema, a única que nunca falha) e o
+  `<div id="audiooutput-hint">`.
+- `static/galene.js`: `audioOutputOptionsFromDevices` (popula a lista; ignora
+  dispositivo sem `deviceId`, que não é escolhível), `canSelectAudioOutput`,
+  `getAudioOutput`, `applyAudioOutput`, `applyAudioOutputToAll`,
+  `reflectAudioOutput`, `showAudioOutputHint` e as chamadas em `setMediaChoices`
+  (quando `done`), `setMedia`, `start()` e no evento `devicechange` de
+  `navigator.mediaDevices`.
+- `static/indies.css`: `.ib-hint` e o alinhamento do novo select.
+
+Quatro decisões que não são óbvias:
+
+1. **Vale para todos os elementos, não só o tile visível.** Há vários `<video>`
+   com áudio: um por participante, incluindo os `peer-hidden` (quem está só de
+   áudio continua tocando) e o de compartilhamento de tela. Trocar só o visível
+   deixaria os outros na saída antiga.
+2. **A falha nunca é silenciosa.** Se o dispositivo escolhido sumiu (headset
+   desconectado, `deviceId` rotacionado), o `setSinkId` lança; o cliente volta
+   para a saída padrão, limpa a escolha e avisa. Sem isso o sintoma seria "fiquei
+   mudo e não sei por quê". A aplicação percorre os elementos **em série** por
+   causa disso: o primeiro que falha já limpa a escolha, então o aviso sai uma
+   vez, não um por participante.
+3. **A escolha não é descartada antes da permissão de mídia.** O Chromium esconde
+   as saídas de `enumerateDevices()` até a origem receber permissão de
+   microfone/câmera; nessa janela a lista tem só o padrão. Por isso o descarte da
+   escolha acontece somente quando a lista **mostra** outras saídas (mais de uma
+   opção) e o id guardado não está entre elas — caso contrário um recarregamento
+   apagaria a escolha do usuário (o `sessionStorage` sobrevive ao refresh).
+   Pelo mesmo motivo a lista é repopulada no `devicechange`: plugar o headset
+   durante a reunião precisa oferecer a saída nova.
+4. **Sem a API, o controle é escondido com explicação.** `setSinkId` não existe
+   no Firefox nem no Safari; ali o select não aparece e a `.ib-hint` diz para
+   trocar o dispositivo padrão no sistema. Melhor não oferecer o que não funciona
+   do que oferecer um select que não muda nada.
+
+A escolha vive em `settings.audioOutput` (o `sessionStorage` do próprio
+`settings.js`) — não foi preciso tocar em `settings.js`, que é arquivo do
+upstream: a leitura da chave é feita por índice.
+
+O lado da plataforma não precisou de nada: a sala abre em aba própria
+(`pages/reunioes/[meetingId]/index.js`), então não há _permissions policy_ de
+iframe a habilitar para `speaker-selection`.
 
 ## Por que não há mais arquivos `.patch`
 
