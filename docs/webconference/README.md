@@ -185,6 +185,8 @@ upstream e o procedimento de rebase estão em
 | 7                          | Sai da sala quando o organizador encerra a reunião (reage ao `status.locked`)                                                                                                |
 | 8                          | Saída que funciona: "Entrar novamente" (token do sessionStorage) ou "Voltar para a plataforma" (`?back=`) — antes caía num formulário de senha que nunca autentica           |
 | 9                          | Escolha do dispositivo de reprodução (saída de áudio) no painel de opções via `setSinkId` em cada tile; sem a API (Firefox/Safari) o controle é escondido                    |
+| 10                         | Controles do tile (play, mudo, PiP, tela cheia) respondem de novo: o rótulo do nome não engole o clique                                                                      |
+| 11                         | "Noise suppression" deixa de desligar o cancelamento de eco (microfonia com mais de uma pessoa no mesmo ambiente) e o painel traz a dica de fone                             |
 | `galene/static/indies.css` | Skin da marca: superfícies planas, cantos arredondados, paleta roxa; e o modo palco+faixa (`#peers.has-screenshare`, com `--thumb-w`/`--thumb-h` lidos pelo JS)              |
 
 O `displayName` é gravado no arquivo do **estúdio** no provisionamento
@@ -297,6 +299,52 @@ O que ela garante:
 
 A escolha fica em `settings.audioOutput` (`sessionStorage` do cliente).
 
+### Microfonia com mais de uma pessoa no mesmo ambiente
+
+Cada aparelho toca o áudio dos outros pelas caixas; esse som entra pelo microfone
+do outro aparelho, volta ao servidor e se realimenta — é assim que a reunião
+apita. Quem corta esse caminho é o **cancelamento de eco (AEC)**: cada navegador
+conhece o que está tocando e o remove do próprio microfone. Fone de ouvido em um
+dos lados evita o som do ar, mas o AEC de **cada** lado precisa estar ativo para
+não devolver o áudio do outro.
+
+Duas mudanças na customização 11:
+
+1. **`echoCancellation: true` é pedido sempre.** Antes, desmarcar **"Noise
+   suppression"** no painel de opções desligava o cancelador de eco junto (o
+   rótulo não falava de eco) — um caminho silencioso para a microfonia. Agora a
+   caixa governa só `noiseSuppression` e `autoGainControl`. Não há como desligar
+   o AEC pela interface: de propósito, e a razão está em
+   [`galene/CUSTOMIZATIONS.md`](../../galene/CUSTOMIZATIONS.md) (customização 11).
+2. **A dica no painel de opções** (`#audio-feedback-hint`) orienta quem está na
+   mesma sala: usar fone de ouvido e escolher a saída em **Speakers**
+   (customização 9). Essa é a única medida que resolve o caso acústico — e antes
+   da customização 9 não havia como mandar o áudio da reunião para o próprio fone
+   sem mexer no dispositivo padrão do sistema.
+
+Se a microfonia continuar, o caminho é o da acústica, não o do código: conferir
+se o AEC está ativo no navegador (a caixa "Noise suppression" **não** o controla
+mais), reduzir o volume das caixas e usar fone nos dois lados da mesma sala.
+
+### Controles do tile (play, mudo, tela cheia)
+
+O rótulo com o nome (`.label`) é absoluto, ocupa a largura toda e tem `z-index: 1`
+no `galene.css`; na nossa skin ele ganhou padding e ficou mais alto que a faixa
+que a barra de controles deixa livre. Como o rótulo também é criado **depois** da
+barra, ele pintava por cima e engolia o clique: play, volume, PiP e tela cheia não
+respondiam em nenhum tile (o único que funcionava era o de parar, no topo).
+
+A customização 10 resolve em três pontos: o rótulo não intercepta clique
+(`pointer-events: none`), a barra fica acima dele (`z-index: 2`) e a barra
+**invisível** também não captura clique, com `pointer-events` liberado no mesmo
+`:hover` que o `galene.css` usa para revelá-la. No layout de toque (≤1024px) o
+botão de parar é sempre visível e não há hover, então ali o `pointer-events` volta
+a `auto`.
+
+Verificado com eventos de mouse reais em navegador (CDP): sem hover o ponto do
+botão resolve para o `<video>` e o clique não faz nada; com hover, play, mudo,
+tela cheia e parar executam a ação — na grade e no modo palco.
+
 ## Solução de problemas
 
 | Sintoma                                                 | Causa provável                                                        | Ação                                                                                              |
@@ -314,4 +362,6 @@ A escolha fica em `settings.audioOutput` (`sessionStorage` do cliente).
 | Encerrou, mas alguém continua na sala                   | A expulsão depende de rede; o `lock` falhou                           | Ver o log do container `galene`. A reunião já está fechada: ao recarregar, a pessoa é recusada    |
 | Tema não aparece ou está desatualizado                  | Cache do CSS ou imagem sem a skin                                     | Hard refresh (Ctrl+F5) e confirmar `/indies.css` (customização 3) + `static/indies.css` na imagem |
 | Não consigo mudar a saída de áudio (caixa/fone)         | Navegador sem `setSinkId` (Firefox/Safari) ou cliente antigo em cache | Usar Chromium (Chrome/Edge); senão trocar a saída padrão no sistema (Ctrl+F5 na sala)             |
+| Play/volume/tela cheia não respondem no tile            | Rótulo do nome cobria a barra de controles                            | Imagem com a customização 10 (Ctrl+F5 na sala)                                                    |
+| Microfonia com mais de uma pessoa no mesmo ambiente     | Áudio das caixas volta pelo microfone do outro aparelho               | Imagem com a customização 11; usar fone nos dois lados e escolher a saída em Speakers             |
 | Sem áudio no navegador MI (Xiaomi)                      | Autoplay/permissão de microfone restritas; navegador Chromium próprio | Liberar autoplay e microfone nas configurações do MI; como fallback testar em Chrome/Edge/desktop |
