@@ -20,10 +20,13 @@ contexto ao redor já mudou.
 | 7   | Sai da sala quando o organizador a encerra            | `static/galene.js`                                       |
 | 8   | Saída que funciona: reconectar ou voltar              | `static/galene.js`                                       |
 | 9   | Escolha do dispositivo de reprodução (saída de áudio) | `static/galene.html` + `static/galene.js` + `indies.css` |
+| 10  | Controles do tile respondem de novo                   | `indies.css`                                             |
+| 11  | Eco não é desligado pelo rótulo de ruído              | `static/galene.js` + `static/galene.html`                |
 
 Nada de Go do servidor foi alterado — todas são de cliente. As customizações 6
 a 8 dependem de contrato com o app (`lib/galene.js`), documentado em cada seção;
-a 9 é inteiramente local.
+a 9 é inteiramente local e a 10 corrige um efeito colateral da skin (customização
+3).
 
 ## 1. Manter o token de entrada no refresh
 
@@ -281,6 +284,89 @@ upstream: a leitura da chave é feita por índice.
 O lado da plataforma não precisou de nada: a sala abre em aba própria
 (`pages/reunioes/[meetingId]/index.js`), então não há _permissions policy_ de
 iframe a habilitar para `speaker-selection`.
+
+## 10. Controles do tile voltam a responder ao clique
+
+**Problema:** play, volume/mudo, PiP e tela cheia não funcionavam em nenhum tile
+(câmera ou tela compartilhada). Só o botão de parar do próprio tile respondia.
+
+**Causa:** a plaqueta com o nome (`.label`) é `position: absolute`,
+`width: 100%` e **`z-index: 1`**, e é criada **depois** da barra de controles no
+`setMedia`. A barra (`.video-controls`) fica em `bottom: 25px` e não tem
+`z-index` — ou seja, o rótulo pinta por cima e captura o clique. O upstream tinha
+a mesma fragilidade latente (um nome em duas linhas já passaria dos 25px), mas
+aqui ela passou a acontecer **sempre** porque a skin deu padding ao rótulo
+(`padding: 16px 10px 6px`, do `indies.css`): a caixa foi de 24px para 46px e
+passou a cobrir os 21px de baixo da barra — justo a faixa onde estão os botões.
+
+Medido no navegador (Chrome, CSS e markup reais): com a barra em `y 436..468` e o
+rótulo em `y 447..493`, `elementFromPoint` no centro de **cada** botão devolvia
+`DIV.label`, e o clique não tinha efeito nenhum.
+
+**Solução:** no `indies.css` (nosso arquivo, sem tocar no `galene.css`):
+
+- `.peer .label { pointer-events: none }` — o rótulo é informação, nunca alvo de
+  clique;
+- `.peer > .video-controls, .peer > .top-video-controls { z-index: 2 }` — a barra
+  fica acima da plaqueta independentemente de a plaqueta crescer;
+- a barra invisível não captura clique (`pointer-events: none`), liberado no
+  mesmo `:hover` que o `galene.css` já usa para revelá-la. Sem isso, o clique que
+  antes morria no rótulo passaria a acertar botões invisíveis — trocaríamos um
+  bug por outro (mudo ligado sem querer);
+- no layout de toque (`@media (max-width: 1024px)`) o botão de parar do próprio
+  tile é **sempre visível** (`.top-video-controls { opacity: 1 }` do upstream) e
+  não há hover: ali o `pointer-events` volta a `auto` explicitamente.
+
+Verificado com eventos de mouse reais (CDP): sem hover o ponto do botão resolve
+para o `<video>` e o clique não faz nada; com hover a barra fica `opacity: 1` /
+`pointer-events: auto` e o clique real em play, mudo, tela cheia e parar executa
+a ação — tanto na grade quanto no modo palco.
+
+## 11. Cancelamento de eco não é mais desligado por "Noise suppression"
+
+**Problema:** microfonia quando mais de uma pessoa está no **mesmo ambiente**.
+Cada aparelho toca o áudio dos outros pelas caixas; esse som entra pelo microfone
+do outro aparelho, volta ao servidor e se realimenta. Quem corta esse caminho é o
+cancelamento de eco (AEC), porque cada navegador conhece o que está tocando.
+
+**Causa:** o `addLocalMedia` tratava AEC como parte de "pré-processamento":
+
+```js
+if (!settings.preprocessing) {
+  audio.echoCancellation = false; // <- o rotulo da caixa diz "Noise suppression"
+  audio.noiseSuppression = false;
+  audio.autoGainControl = false;
+}
+```
+
+Desmarcar **"Noise suppression"** desligava o cancelador de eco junto. Como
+"desligue a supressão de ruído" é conselho comum para voz robotizada, existia um
+caminho silencioso para a microfonia — o rótulo não mencionava eco. Com AEC
+desligado nos dois aparelhos da mesma sala, o laço fecha e apita. Fone de ouvido
+em um dos lados evita o som do ar, mas cada lado precisa que o SEU cancelador
+esteja ativo para não devolver o áudio do outro.
+
+**Solução:** `echoCancellation: true` é pedido **sempre** (explícito, sem depender
+do padrão do navegador), e a caixa passa a governar só o que o rótulo diz —
+`noiseSuppression` e `autoGainControl`.
+
+- `static/galene.js`: as constraints de áudio em `addLocalMedia`.
+- `static/galene.html`: a dica `#audio-feedback-hint` no topo das opções de mídia,
+  na mesma linha do que **faz diferença** na sala compartilhada — fone de ouvido.
+  Sem isso, a orientação não chega a quem tem o problema. (A dica não cita o
+  select **Speakers**, que só existe onde há `setSinkId` — customização 9 —, mas é
+  ele que permite mandar o áudio da reunião para o próprio fone sem mexer no
+  dispositivo padrão do sistema.)
+
+O AEC nunca é desligado pelo usuário hoje. Isso é intencional: num app de reunião
+a microfonia é pior do que qualquer artefato do cancelador, e quem precisa de
+AEC desligado (interface de áudio dedicada) precisa de uma opção própria, não do
+rótulo de ruído. Se um dia essa opção existir, mantenha-a **separada** de
+"Noise suppression".
+
+Verificado com o `addLocalMedia` real (stubs interceptando o `getUserMedia`):
+com "Noise suppression" desmarcado, `echoCancellation` continua `true` e só
+`noiseSuppression`/`autoGainControl` vão a `false`.
 
 ## Por que não há mais arquivos `.patch`
 

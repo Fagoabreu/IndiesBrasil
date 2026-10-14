@@ -1581,8 +1581,18 @@ async function addLocalMedia(localId) {
     }
 
     if(audio) {
+        // Customizacao 11: o cancelamento de eco NAO e opcional.
+        //
+        // Ele e o que impede a microfonia quando ha mais de uma pessoa no mesmo
+        // ambiente: o audio dos outros participantes sai pelas caixas de um
+        // aparelho, entra pelo microfone do outro, volta ao servidor e se
+        // realimenta. O AEC corta esse caminho porque cada navegador conhece o
+        // que esta tocando. Antes, desmarcar "Noise suppression" (o rotulo nao
+        // falava de eco) desligava AEC, NS e AGC de uma vez — um caminho
+        // silencioso para a microfonia. Agora a caixa governa apenas o que o
+        // rotulo diz.
+        audio.echoCancellation = true;
         if(!settings.preprocessing) {
-            audio.echoCancellation = false;
             audio.noiseSuppression = false;
             audio.autoGainControl = false;
         }

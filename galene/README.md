@@ -45,6 +45,8 @@ São todas no cliente (`static/`). Nenhum arquivo Go do servidor foi alterado.
 | 7   | Sair da sala quando o organizador encerra a reunião (reage ao `status.locked`)                                                               |
 | 8   | Saída que funciona: reconectar com o token guardado, ou voltar para a plataforma (`?back=`)                                                  |
 | 9   | Escolha do dispositivo de reprodução (saída de áudio): `setSinkId` em cada tile; sem a API (Firefox/Safari) o controle é escondido           |
+| 10  | Controles do tile (play, mudo, PiP, tela cheia) voltam a responder: o rótulo do nome não engole mais o clique                                |
+| 11  | "Noise suppression" não desliga mais o cancelamento de eco — microfonia com mais de uma pessoa no mesmo ambiente                             |
 
 ## Arquitetura de rede
 

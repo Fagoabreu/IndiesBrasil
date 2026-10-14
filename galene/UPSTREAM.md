@@ -49,8 +49,8 @@ passa despercebida com facilidade e só aparece como bug em produção.
 
 | Caminho              | Mudança                                                                                      |
 | -------------------- | -------------------------------------------------------------------------------------------- |
-| `static/galene.js`   | Customizações 1, 2, 4, 5, 6, 7, 8 e 9 (+605 / −11 linhas)                                    |
-| `static/galene.html` | Customizações 3 e 9 (+7 linhas: a skin `indies.css`, o select de saída de áudio e a dica)    |
+| `static/galene.js`   | Customizações 1, 2, 4, 5, 6, 7, 8, 9 e 11 (+616 / −12 linhas)                                |
+| `static/galene.html` | Customizações 3, 9 e 11 (+9 linhas: skin, select de saída, dicas)                            |
 | `README.md`          | Substituído pela nossa documentação (o README do upstream virou a seção "Upstream" do nosso) |
 
 Todo o código Go do servidor (`galene.go` e os subdiretórios) está **intacto**.

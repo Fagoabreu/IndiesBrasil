@@ -621,6 +621,31 @@ select:focus-visible,
   object-fit: contain;
 }
 
+/* ----------  Barra de controles dos tiles  -----------------------------
+   O rotulo do tile (`.label`) e absoluto, `width: 100%` e `z-index: 1`, e na
+   nossa skin tem padding — a caixa dele passa dos 25px de altura que a barra
+   de controles deixa livre embaixo. Como ele e criado DEPOIS da barra, ficava
+   por cima e engolia o clique: play, volume, PiP e tela cheia nao respondiam.
+   O rotulo e informacao, nunca alvo de clique. */
+.peer .label {
+  pointer-events: none;
+}
+
+/* Invisivel a barra nao pode capturar clique: quem mira o nome do tile acertaria
+   botoes que nao esta vendo. O galene.css ja revela a barra no hover do tile, e
+   clicar so faz sentido quando ela esta visivel — os dois seletores andam
+   juntos de proposito. (No layout de toque nao ha hover: veja o @media.) */
+.peer > .video-controls,
+.peer > .top-video-controls {
+  z-index: 2;
+  pointer-events: none;
+}
+
+.peer:hover > .video-controls,
+.peer:hover > .top-video-controls {
+  pointer-events: auto;
+}
+
 /* =====================  Feedback visual / status  ======================= */
 .vc-overlay {
   background: linear-gradient(
@@ -642,6 +667,13 @@ select:focus-visible,
 
   #peers.has-screenshare .peer-screenshare {
     min-height: 96px;
+  }
+
+  /* No layout de toque o galene.css deixa o controle de parar do proprio tile
+     permanentemente visivel (`.top-video-controls { opacity: 1 }`) — sem hover
+     ele precisa continuar clicavel. */
+  .peer > .top-video-controls {
+    pointer-events: auto;
   }
 
   .ib-left-panel {
