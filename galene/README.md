@@ -44,6 +44,7 @@ São todas no cliente (`static/`). Nenhum arquivo Go do servidor foi alterado.
 | 6   | Avatar do perfil do participante na lista, publicado por `setdata` e restrito ao nosso Cloudinary                                            |
 | 7   | Sair da sala quando o organizador encerra a reunião (reage ao `status.locked`)                                                               |
 | 8   | Saída que funciona: reconectar com o token guardado, ou voltar para a plataforma (`?back=`)                                                  |
+| 9   | Escolha do dispositivo de reprodução (saída de áudio): `setSinkId` em cada tile; sem a API (Firefox/Safari) o controle é escondido           |
 
 ## Arquitetura de rede
 

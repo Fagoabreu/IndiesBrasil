@@ -184,6 +184,7 @@ upstream e o procedimento de rebase estão em
 | 6                          | Avatar do perfil na lista de participantes, publicado por `setdata` e restrito ao nosso Cloudinary (ver "Avatar" abaixo)                                                     |
 | 7                          | Sai da sala quando o organizador encerra a reunião (reage ao `status.locked`)                                                                                                |
 | 8                          | Saída que funciona: "Entrar novamente" (token do sessionStorage) ou "Voltar para a plataforma" (`?back=`) — antes caía num formulário de senha que nunca autentica           |
+| 9                          | Escolha do dispositivo de reprodução (saída de áudio) no painel de opções via `setSinkId` em cada tile; sem a API (Firefox/Safari) o controle é escondido                    |
 | `galene/static/indies.css` | Skin da marca: superfícies planas, cantos arredondados, paleta roxa; e o modo palco+faixa (`#peers.has-screenshare`, com `--thumb-w`/`--thumb-h` lidos pelo JS)              |
 
 O `displayName` é gravado no arquivo do **estúdio** no provisionamento
@@ -272,6 +273,30 @@ Como `indies.css` é servido com cache, após alterar a skin faça **hard refres
 (Ctrl+F5)** na sala — e, para validar as mudanças, use a aba de
 desenvolvedor em "Network" para confirmar que `/indies.css` veio atualizado.
 
+### Escolha da saída de áudio
+
+O painel de opções tinha entrada (**Camera**/**Microphone**) e nenhuma escolha de
+**saída**: o áudio remoto ia sempre para a saída padrão do sistema, e o Chromium
+fixa cada `<video>` na saída que estava escolhida quando ele começou a tocar —
+trocar o padrão do sistema no meio da chamada não movia quem já estava falando.
+A customização 9 acrescenta **Speakers** e aplica a escolha com `setSinkId` em
+**todos** os elementos com áudio (inclusive os tiles ocultos de quem está só de
+áudio, e o de compartilhamento de tela).
+
+O que ela garante:
+
+- dispositivo que sumiu (headset desconectado) ⇒ volta à saída padrão **com
+  aviso**, em vez de silêncio sem explicação;
+- `devicechange` (plugar/desplugar headset) ⇒ a lista é atualizada e a escolha,
+  reaplicada;
+- sem `setSinkId` (Firefox/Safari) ⇒ o select **não** é oferecido e uma dica
+  explica que a troca é pelo sistema;
+- antes da permissão de microfone/câmera o Chromium esconde as saídas de
+  `enumerateDevices()`, então a dica pede para ativar uma delas — a escolha
+  salva **não** é descartada nessa janela (senão um refresh a apagaria).
+
+A escolha fica em `settings.audioOutput` (`sessionStorage` do cliente).
+
 ## Solução de problemas
 
 | Sintoma                                                 | Causa provável                                                        | Ação                                                                                              |
@@ -288,4 +313,5 @@ desenvolvedor em "Network" para confirmar que `/indies.css` veio atualizado.
 | Botão "Encerrar reunião" retorna erro 500               | `GALENE_INTERNAL_WS_URL` ausente, ou Galene inalcançável pelo app     | Conferir a variável e o `extra_hosts` (`host.docker.internal`) no `deploy/compose.yaml`           |
 | Encerrou, mas alguém continua na sala                   | A expulsão depende de rede; o `lock` falhou                           | Ver o log do container `galene`. A reunião já está fechada: ao recarregar, a pessoa é recusada    |
 | Tema não aparece ou está desatualizado                  | Cache do CSS ou imagem sem a skin                                     | Hard refresh (Ctrl+F5) e confirmar `/indies.css` (customização 3) + `static/indies.css` na imagem |
+| Não consigo mudar a saída de áudio (caixa/fone)         | Navegador sem `setSinkId` (Firefox/Safari) ou cliente antigo em cache | Usar Chromium (Chrome/Edge); senão trocar a saída padrão no sistema (Ctrl+F5 na sala)             |
 | Sem áudio no navegador MI (Xiaomi)                      | Autoplay/permissão de microfone restritas; navegador Chromium próprio | Liberar autoplay e microfone nas configurações do MI; como fallback testar em Chrome/Edge/desktop |

@@ -425,6 +425,15 @@ select:focus-visible,
   font-size: 0.9rem;
 }
 
+/* Dica de suporte do painel de opcoes (customizacao 9): quando um controle nao
+   pode funcionar, a razao aparece aqui em vez de o controle sumir calado. */
+.ib-hint {
+  margin: 6px 0 0;
+  color: var(--ib-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
 .ib-left-actions {
   display: flex;
   flex-wrap: wrap;
@@ -443,6 +452,15 @@ select:focus-visible,
   font-size: 0.9rem;
   text-decoration: none;
   cursor: pointer;
+}
+
+/* =====================  Painel de opcoes (#optionsdiv)  =================
+   O select de saida de audio (customizacao 9) acompanha o alinhamento dos
+   selects de camera/microfone do galene.css e nao deixa um rotulo longo
+   estourar a largura do painel. */
+#audiooutputselect {
+  text-align-last: center;
+  max-width: 100%;
 }
 
 /* =======================  Grade de video / tiles  ======================
