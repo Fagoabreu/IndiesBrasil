@@ -25,9 +25,10 @@
   padding: 0;
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 50%;
-  /* Scrim escuro com `#fff` no ícone: o botão fica sobre o banner do evento, que
-     é uma foto qualquer, então precisa carregar o próprio contraste. Mesmo
-     recurso do véu da capa do perfil (`.cover::after`, perfil.module.css). */
+  /* Scrim escuro com `#fff` no ícone: o botão fica sobre a capa do evento (uma
+     foto qualquer) ou sobre a superfície do card, e precisa carregar o próprio
+     contraste nos dois casos. Mesmo recurso do véu da capa do perfil
+     (`.cover::after`, perfil.module.css). */
   background: rgba(0, 0, 0, 0.45);
   color: #fff;
   cursor: pointer;
@@ -50,9 +51,6 @@
 .eventCard {
   display: flex;
   flex-direction: column;
-  /* Sem padding: a capa é uma faixa de largura total no topo e precisa encostar
-     nas bordas (o raio de 10px é aparado pelo `overflow: hidden`). O espaçamento
-     interno mora em `.eventRow`. */
   padding: 0;
   background: var(--bgColor-default);
   border: 1px solid var(--borderColor-muted);
@@ -66,8 +64,7 @@
   overflow: hidden;
 }
 
-/* Data + corpo, lado a lado. O padding mora aqui (e não no card) para a capa
-   poder sangrar até as bordas. */
+/* Data, corpo e capa, lado a lado. */
 .eventRow {
   display: flex;
   gap: 16px;
@@ -103,10 +100,19 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 3px;
   background: rgba(var(--brand-rgb-primary), 0.08);
   border-radius: 8px;
   padding: 8px 4px;
   border: 1px solid rgba(var(--brand-rgb-primary), 0.15);
+}
+
+.dateWeekday {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fgColor-muted);
 }
 
 .dateDay {
@@ -179,6 +185,9 @@
 }
 
 .privateBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 0.7rem;
   color: var(--fgColor-muted);
   border: 1px solid var(--borderColor-muted);
@@ -191,9 +200,13 @@
   font-weight: 600;
   color: var(--fgColor-default);
   margin: 0;
-  white-space: nowrap;
+  /* Duas linhas no máximo. Com `white-space: nowrap` o título longo sumia no
+     mobile, onde o corpo ocupa a largura inteira do card. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .eventCard:hover .eventTitle {
@@ -221,31 +234,30 @@
   font-weight: 600;
 }
 
-/* Capa do evento: faixa de largura total no topo do card.
+/* Capa do evento: miniatura 16:9 na coluna da direita do card.
    A proporção é EXATAMENTE a do preset `eventBanner` em `lib/image-presets.js`
-   (866 / 150 ≈ 5,77:1) — é o enquadramento que o formulário fez o usuário
-   escolher. `aspect-ratio` (e não altura fixa) mantém a fidelidade em qualquer
-   largura de tela: com altura fixa a caixa mudava de proporção conforme a
-   largura (era 220px de largura no desktop e 160px de altura no mobile, ou
-   seja ~2,2:1 e ~2,4:1) e o `object-fit: cover` exibia só ~35-42% da largura
-   enquadrada — a imagem "cortada" que chegava ao card.
-   Capa por URL externa não passa pelo recorte e pode ter qualquer proporção,
-   então o `cover` continua sendo necessário. */
-.eventBanner {
+   (16/9), o mesmo formato dos cards de obra e de notícia. Antes era uma faixa
+   de largura total no topo em 5,77:1 (866/150): ela ocupava ~60% da altura do
+   card e exigia uma arte panorâmica que não existe na prática — o formulário
+   recortava uma tarja de ~87px de altura.
+   `object-fit: cover` continua necessário: capa por URL externa não passa pelo
+   recorte e pode ter qualquer proporção. */
+.eventCover {
   position: relative; /* exigido pelo `Image fill` */
-  width: 100%;
-  aspect-ratio: 866 / 150;
+  width: 224px;
+  aspect-ratio: 16 / 9;
   flex-shrink: 0;
+  border-radius: 8px;
   overflow: hidden;
   background: var(--bgColor-muted);
 }
 
-.bannerThumb {
+.coverThumb {
   object-fit: cover;
   transition: transform 0.3s ease;
 }
 
-.eventCard:hover .bannerThumb {
+.eventCard:hover .coverThumb {
   transform: scale(1.04);
 }
 
@@ -261,12 +273,22 @@
 }
 
 @media (max-width: 600px) {
-  /* Data e corpo empilham; a capa continua sendo a faixa no topo (mesma
-     proporção, sem regra própria — é isso que faz o card pequeno mostrar o
-     mesmo enquadramento do desktop). */
+  /* Data e corpo empilham; a capa sobe para o topo e ocupa a largura do card,
+     mantendo a mesma proporção (é isso que faz o card pequeno mostrar o mesmo
+     enquadramento do desktop). `order` porque no HTML a capa vem por último —
+     ela é a coluna da direita no desktop. */
   .eventRow {
     flex-direction: column;
     gap: 12px;
+  }
+
+  .eventCover {
+    order: -1;
+    width: 100%;
+    /* Repetido de propósito: a proporção é a mesma do desktop, e
+       `scripts/audit-image-presets.js` exige `aspect-ratio` em todo bloco da
+       superfície (uma altura fixa aqui cortaria o enquadramento). */
+    aspect-ratio: 16 / 9;
   }
 
   .dateBadge {

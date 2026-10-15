@@ -2,8 +2,9 @@
  * OG Image API para o preview de links de evento (WhatsApp, Discord, etc.).
  *
  * Renderiza um **card PNG** com o mesmo fundo dos cards do site (ver
- * `svgCardHeader` em `lib/og-image.js`): superfície clara, faixa com o banner do
- * evento no topo e, abaixo, o selo do tipo, o título e os dados de quando/onde.
+ * `svgCardHeader` em `lib/og-image.js`): superfície clara, a capa do evento num
+ * bloco à esquerda e, à direita, o selo do tipo, o título e os dados de
+ * quando/onde.
  *
  * Decisões que valem explicação:
  *
@@ -17,40 +18,68 @@
  *    (a rede social busca sem sessão), então não pode desenhar nome e local de
  *    um evento restrito a convidados ou a membros. Sem imagem, o link continua
  *    funcionando para quem tem acesso.
+ * 4. **Capa como bloco, não como faixa.** A capa do evento é 16:9 (preset
+ *    `eventBanner`): esticada nos 1200px do card ela teria 675px de altura e não
+ *    sobraria espaço para o texto, e cortada numa faixa baixa mostrava só o miolo
+ *    do enquadramento do organizador.
  *
  * Acesso: público (o crawler não tem sessão).
  */
 
 import event from "@/models/event";
 import { eventTypeAccent, eventTypeLabel } from "@/lib/event-types";
+import { EVENT_MONTHS_SHORT, EVENT_WEEKDAYS, eventDateParts } from "@/lib/eventFormat";
 import { isUuid } from "@/lib/uuid";
-import { CARD, fetchAsDataUri, renderPng, setPngHeaders, svgCardFooter, svgCardHeader, svgPillRow, svgText, wrapText } from "@/lib/og-image";
+import {
+  CARD,
+  fetchAsDataUri,
+  OG_HEIGHT,
+  renderPng,
+  setPngHeaders,
+  svgCardFooter,
+  svgCardHeader,
+  svgMediaBlock,
+  svgPillRow,
+  svgText,
+  wrapText,
+} from "@/lib/og-image";
 
 /** Cor de "Cancelado" — `--fgColor-danger` do Primer. */
 const CANCELLED_ACCENT = "#d1242f";
 
+/** Margem lateral/conteúdo do card, como a do card de post. */
+const PAD = 64;
+
 /**
- * Medidas do card.
+ * Bloco da capa: 16:9, na lateral esquerda.
  *
- * O banner do evento é bem largo (é a faixa de 866x150 do CSS), então a faixa
- * do card pode ser mais alta que a do perfil sem cortar quase nada.
+ * A proporção é a do preset `eventBanner` — a mesma que o formulário fez o
+ * organizador enquadrar —, então a imagem aparece inteira em vez de recortada.
+ */
+const MEDIA = { x: PAD, width: 448, height: 252, gap: 44 };
+
+/** Coluna do texto: começa depois do bloco da capa e termina na margem. */
+const TEXT = { x: MEDIA.x + MEDIA.width + MEDIA.gap, maxChars: 39 };
+
+/**
+ * Medidas da coluna de texto.
  *
- * O título pode ocupar duas linhas e os metadados são posicionados **depois**
- * dele, contando as linhas usadas — com altura fixa, um título de duas linhas
- * encostaria nos dados de data e local.
+ * O bloco (selos + título + metadados) é medido pelas linhas que o título
+ * realmente ocupa e centralizado na vertical: com posições fixas, um título de
+ * três linhas encostaria nos dados de data e local, e um de uma linha ficaria
+ * boiando no topo.
  */
 const LAYOUT = {
-  banner: 196,
-  pillTop: 250,
-  titleY: 372,
-  titleFont: 48,
-  titleLine: 56,
-  titleMaxChars: 34,
-  titleMaxLines: 2,
-  metaGap: 54,
+  pillHeight: 42,
+  pillSize: 22,
+  titleGap: 66,
+  titleFont: 44,
+  titleLine: 54,
+  titleMaxChars: 22,
+  titleMaxLines: 3,
+  metaGap: 52,
+  metaFont: 25,
   metaLine: 40,
-  metaFont: 27,
-  metaMaxChars: 60,
 };
 
 export default async function handler(req, res) {
@@ -91,18 +120,19 @@ export default async function handler(req, res) {
   }
 }
 
-/** Data e hora do evento, no formato que a página do evento usa. */
+/**
+ * Data e hora do evento, no fuso de exibição da agenda.
+ *
+ * Sai de `eventDateParts` (que lê o instante no fuso de Brasília) e não de
+ * `toLocaleDateString`: sem `timeZone` a formatação usava o fuso do processo —
+ * UTC no servidor — e o card anunciava uma data/hora até 3h à frente da que a
+ * página do evento mostra.
+ */
 function scheduleLine(ev) {
-  const start = new Date(ev.starts_at);
-  const long = start.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-  // `toLocaleDateString` devolve tudo em minúsculas; a linha abre o card, então
-  // começa com maiúscula.
-  const date = long.charAt(0).toUpperCase() + long.slice(1);
+  const { weekday, day, month, year, time } = eventDateParts(ev.starts_at);
+  const date = `${EVENT_WEEKDAYS[weekday]}, ${day} de ${EVENT_MONTHS_SHORT[month]} de ${year}`;
 
-  if (ev.is_all_day) return `${date} · dia inteiro`;
-
-  const time = start.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-  return `${date} · ${time}`;
+  return ev.is_all_day ? `${date} · dia inteiro` : `${date} · ${time}`;
 }
 
 /** Onde acontece: o endereço quando é presencial, "Online" quando é remoto. */
@@ -114,27 +144,39 @@ function placeLine(ev) {
 }
 
 /**
- * Card do evento: banner, selo do tipo, título e os dados de quando/onde.
+ * Card do evento: capa à esquerda, selo do tipo, título e quando/onde à direita.
  *
  * O organizador entra na última linha, como contexto — o assunto do card é o
  * evento, não quem o criou.
  */
 async function renderEventSvg(ev) {
   const title = String(ev.override_title || ev.title || "Evento");
-  const schedule = scheduleLine(ev);
 
-  // O rasterizador não busca recursos remotos, então o banner vira data URI.
+  // O rasterizador não busca recursos remotos, então a capa vira data URI.
   // Falha silenciosa: cai no gradiente da marca.
   const banner = await fetchAsDataUri(ev.banner_url);
 
   const titleLines = wrapText(title, LAYOUT.titleMaxChars, LAYOUT.titleMaxLines);
-  const meta = [schedule, placeLine(ev), `por @${ev.organizer_username}`].map((line) => wrapText(line, LAYOUT.metaMaxChars, 1)[0] ?? line);
+  const meta = [scheduleLine(ev), placeLine(ev), `por @${ev.organizer_username}`].map((line) => wrapText(line, TEXT.maxChars, 1)[0] ?? line);
 
-  // Os metadados começam depois da última linha do título.
-  const metaStartY = LAYOUT.titleY + Math.max(titleLines.length - 1, 0) * LAYOUT.titleLine + LAYOUT.metaGap;
+  // Centraliza o bloco de texto pela altura que ele de fato ocupa.
+  const textHeight = LAYOUT.pillHeight + LAYOUT.titleGap + titleLines.length * LAYOUT.titleLine + LAYOUT.metaGap + meta.length * LAYOUT.metaLine;
+  const pillTop = Math.round((OG_HEIGHT - textHeight) / 2);
+  const titleY = pillTop + LAYOUT.pillHeight + LAYOUT.titleGap;
+  const metaStartY = titleY + (titleLines.length - 1) * LAYOUT.titleLine + LAYOUT.metaGap;
 
   return [
-    svgCardHeader({ bannerDataUri: banner, bannerHeight: LAYOUT.banner }),
+    // Sem faixa (`bannerHeight: 0`): a capa é o bloco da lateral. A barra de
+    // gradiente mantém a identidade que a faixa dava.
+    svgCardHeader({ bannerHeight: 0, brandBar: true }),
+
+    svgMediaBlock({
+      dataUri: banner,
+      x: MEDIA.x,
+      y: (OG_HEIGHT - MEDIA.height) / 2,
+      width: MEDIA.width,
+      height: MEDIA.height,
+    }),
 
     svgPillRow({
       items: [
@@ -144,15 +186,17 @@ async function renderEventSvg(ev) {
         // se confundir com o selo do tipo quando os dois são vermelhos.
         ...(ev.status === "cancelled" ? [{ text: "Cancelado", accent: CANCELLED_ACCENT, variant: "solid" }] : []),
       ],
-      x: 80,
-      y: LAYOUT.pillTop,
+      x: TEXT.x,
+      y: pillTop,
+      height: LAYOUT.pillHeight,
+      fontSize: LAYOUT.pillSize,
     }),
 
     ...titleLines.map((line, index) =>
       svgText({
         content: line,
-        x: 80,
-        y: LAYOUT.titleY + index * LAYOUT.titleLine,
+        x: TEXT.x,
+        y: titleY + index * LAYOUT.titleLine,
         size: LAYOUT.titleFont,
         weight: "bold",
         fill: CARD.text,
@@ -161,7 +205,7 @@ async function renderEventSvg(ev) {
     ),
 
     ...meta.map((line, index) =>
-      svgText({ content: line, x: 80, y: metaStartY + index * LAYOUT.metaLine, size: LAYOUT.metaFont, fill: CARD.textMuted, anchor: "start" }),
+      svgText({ content: line, x: TEXT.x, y: metaStartY + index * LAYOUT.metaLine, size: LAYOUT.metaFont, fill: CARD.textMuted, anchor: "start" }),
     ),
 
     svgCardFooter(),

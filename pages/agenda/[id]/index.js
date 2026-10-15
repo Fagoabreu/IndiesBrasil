@@ -407,7 +407,10 @@ export default function EventDetailPage({ initialEvent = null, eventNotFound = f
 
         {/* HEADER CARD */}
         <div className={styles.headerCard}>
-          {ev.banner_url ? (
+          {/* Sem capa o card não abre com uma faixa vazia: ele começa no título
+              e a identidade fica com a barra da marca (`.headerCard::before`).
+              Em 16:9 o placeholder seriam 487px de gradiente vazio. */}
+          {ev.banner_url && (
             <div className={styles.bannerWrap}>
               <Image
                 src={ev.banner_url}
@@ -418,8 +421,6 @@ export default function EventDetailPage({ initialEvent = null, eventNotFound = f
                 priority
               />
             </div>
-          ) : (
-            <div className={styles.bannerPlaceholder} />
           )}
 
           <div className={styles.headerContent}>

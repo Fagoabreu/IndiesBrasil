@@ -1,19 +1,77 @@
 /**
- * Verifica duas coisas que as instruções de IA passaram a exigir:
+ * Audita os formatos de imagem do projeto:
  *
  * 1. As seções de instruções são idênticas nos dois arquivos (CLAUDE.md e
  *    .deepseek/instructions.md) — eles já divergiram no passado.
  * 2. Todo `preset="..."` usado no código existe em `lib/image-presets.js`, e
  *    todo preset do catálogo é usado em algum lugar (preset morto é sinal de
  *    formato que ninguém aplica mais).
+ * 3. O `aspect-ratio` que cada superfície declara para um recorte é o do preset
+ *    (`RATIO_SURFACES`) — a proporção em que a imagem é exibida é a que o
+ *    formulário fez o usuário enquadrar.
+ * 4. A arte estática do site (`public/images/og-cover.*`) existe, tem o canvas
+ *    declarado em `OG_IMAGE_SIZE` e a proporção que o card da home recorta.
  *
  * Uso: node scripts/audit-image-presets.js
  */
 const fs = require("node:fs");
 const path = require("node:path");
+const Module = require("node:module");
+const { pathToFileURL } = require("node:url");
 
 const ROOT = process.cwd();
 const SKIP_DIRS = new Set(["node_modules", ".next", ".git", "coverage", "public", "docs", "deploy"]);
+
+// ── Alias `@/` (jsconfig `paths`) ──
+// O código do app importa por alias (`@/lib/seo`). O mapa mora no `paths` do
+// `jsconfig.json` e quem o aplica é o Next; o Node não o conhece, então o
+// `require` de um módulo do app morria com `ERR_MODULE_NOT_FOUND` dentro de
+// `lib/seo.js` — e a seção da arte do site (a única que lê aquele módulo) nunca
+// chegava a rodar.
+//
+// O hook lê o MESMO `jsconfig.json`: uma segunda lista de atalhos aqui dentro
+// divergiria do real em silêncio, que é o defeito que esta auditoria existe para
+// pegar em outros lugares. Ele só entra quando a resolução normal **falha** —
+// um pacote de verdade chamado `lib`/`models` continua resolvendo sozinho, e o
+// erro original é reemitido quando o especificador não é de alias.
+//
+// Resolver o alias em vez de trocar os `require` por `import()` (o caminho que
+// `scripts/normalize-contacts.js` usa para os módulos ESM) porque este script é
+// síncrono de ponta a ponta: `import()` obrigaria a reescrevê-lo inteiro como
+// assíncrono, e o `await` não existe no escopo de um arquivo CommonJS.
+const ALIAS_PATHS = require(path.join(ROOT, "jsconfig.json")).compilerOptions.paths;
+
+/** Arquivo do projeto que o atalho aponta, ou `null` se não houver. */
+function fileForAlias(specifier) {
+  for (const [alias, targets] of Object.entries(ALIAS_PATHS)) {
+    const prefix = alias.replace(/\*$/, "");
+    if (!specifier.startsWith(prefix)) continue;
+
+    const rest = specifier.slice(prefix.length);
+    for (const target of targets) {
+      const base = path.resolve(ROOT, target.replace(/\*$/, "") + rest);
+      // O Next completa a extensão como o bundler faz; o Node exige o caminho
+      // exato, então os candidatos são os mesmos que o app usa na prática.
+      for (const candidate of [base, `${base}.js`, `${base}.jsx`, path.join(base, "index.js")]) {
+        if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) return candidate;
+      }
+    }
+  }
+
+  return null;
+}
+
+Module.registerHooks({
+  resolve(specifier, context, nextResolve) {
+    try {
+      return nextResolve(specifier, context);
+    } catch (error) {
+      const file = fileForAlias(specifier);
+      if (!file) throw error;
+      return { url: pathToFileURL(file).href, shortCircuit: true };
+    }
+  },
+});
 
 function walk(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -102,10 +160,9 @@ if (unused.length) {
 // Pares superfície↔preset em que a fidelidade do enquadramento importa. Só entra
 // aqui superfície cujo recorte o usuário escolhe à mão no formulário.
 const RATIO_SURFACES = [
-  { preset: "eventBanner", css: "components/Agenda/EventCard.module.css", selector: ".eventBanner" },
+  { preset: "eventBanner", css: "components/Agenda/EventCard.module.css", selector: ".eventCover" },
   { preset: "eventBanner", css: "components/Agenda/EventBannerField.module.css", selector: ".bannerPreviewWrap" },
   { preset: "eventBanner", css: "pages/agenda/[id]/index.module.css", selector: ".bannerWrap" },
-  { preset: "eventBanner", css: "pages/agenda/[id]/index.module.css", selector: ".bannerPlaceholder" },
 ];
 
 /** Corpo de cada bloco de regra do seletor, inclusive dentro de @media.

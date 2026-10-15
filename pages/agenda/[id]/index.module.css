@@ -28,14 +28,15 @@
 }
 
 /* ── Banner ── */
-/* Mesma proporção do preset `eventBanner` (866/150) — a referência de onde o
-   recorte nasceu. Com `height: 150px` fixo a caixa afinava conforme a largura
-   encolhia e o `object-fit: cover` cortava as laterais (em 390px de tela a
-   proporção real era 2,6:1, não 5,77:1). */
+/* Mesma proporção do preset `eventBanner` (16/9), igual ao card da agenda.
+   `aspect-ratio` (e não altura) porque a caixa precisa manter a proporção do
+   recorte em qualquer largura: era `height: 150px` sobre uma faixa de 5,77:1, e
+   o hero saía com 150px de altura enquanto o formulário recortava uma tarja de
+   ~87px. */
 .bannerWrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 866 / 150;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   background: var(--bgColor-muted);
 }
@@ -43,11 +44,6 @@
 .banner {
   object-fit: cover;
   object-position: center;
-}
-
-.bannerPlaceholder {
-  aspect-ratio: 866 / 150;
-  background: linear-gradient(135deg, rgba(var(--brand-rgb-primary), 0.12), rgba(var(--brand-rgb-secondary), 0.08));
 }
 
 /* ── Header content inside card ── */

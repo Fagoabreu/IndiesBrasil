@@ -1,10 +1,11 @@
-/* Mesma proporção do preset `eventBanner` (866/150) e do card da agenda. Antes
-   era 200px de altura fixa: a caixa ficava em ~3:1 e já mostrava só ~55% da
-   largura enquadrada — o preview mentia antes mesmo de o evento ser salvo. */
+/* Mesma proporção do preset `eventBanner` (16/9) e do hero da página do evento.
+   `aspect-ratio` (e não altura fixa) porque o preview precisa mostrar o MESMO
+   enquadramento que o arquivo gerado: era 200px de altura fixa sobre uma caixa
+   de 5,77:1, e o preview já mostrava só ~55% da largura enquadrada. */
 .bannerPreviewWrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 866 / 150;
+  aspect-ratio: 16 / 9;
   margin-bottom: 8px;
   overflow: hidden;
 }
@@ -81,4 +82,12 @@
   font-size: 0.78rem;
   color: var(--fgColor-muted);
   margin-top: -2px;
+}
+
+/* O que a pessoa precisa saber antes de procurar o arquivo: 16:9 é a forma das
+   artes que existem por aí (captura de tela, key art, thumb de vídeo). */
+.bannerHint {
+  font-size: 0.78rem;
+  color: var(--fgColor-muted);
+  margin-top: 6px;
 }
