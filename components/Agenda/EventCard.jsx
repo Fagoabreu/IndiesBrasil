@@ -1,9 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import PropTypes from "prop-types";
-import { LocationIcon, BroadcastIcon, ShareAndroidIcon } from "@primer/octicons-react";
+import { ClockIcon, LocationIcon, BroadcastIcon, LockIcon, ShareAndroidIcon } from "@primer/octicons-react";
 import { eventTypeLabel } from "@/lib/event-types";
-import { EVENT_MONTHS_SHORT, eventDateParts, formatEventTimeRange } from "@/lib/eventFormat";
+import { EVENT_MONTHS_SHORT, EVENT_WEEKDAYS, eventDateParts, formatEventTimeRange } from "@/lib/eventFormat";
 import styles from "./EventCard.module.css";
 
 /**
@@ -18,25 +18,15 @@ import styles from "./EventCard.module.css";
  */
 export default function EventCard({ event, onShare }) {
   // Um único cálculo por card: cada `eventDateParts` formata a data inteira.
-  const { day, month } = eventDateParts(event.starts_at);
+  const { weekday, day, month } = eventDateParts(event.starts_at);
 
   return (
     <div className={styles.eventItem}>
       <Link href={`/agenda/${event.event_id}`} className={styles.eventCard}>
-        {/* Capa: faixa de largura total no topo. A proporção do CSS é a mesma do
-            recorte feito no formulário (preset `eventBanner`), então o que o
-            usuário enquadrou aparece inteiro — antes a capa era uma caixa de
-            220px no lado direito, e o `object-fit: cover` descartava ~60% da
-            largura enquadrada. */}
-        {event.banner_url && (
-          <div className={styles.eventBanner}>
-            <Image src={event.banner_url} alt="" fill className={styles.bannerThumb} sizes="(max-width: 932px) 100vw, 866px" />
-          </div>
-        )}
-
         <div className={styles.eventRow}>
           {/* Data */}
           <div className={styles.dateBadge}>
+            <span className={styles.dateWeekday}>{EVENT_WEEKDAYS[weekday]}</span>
             <span className={styles.dateDay}>{day}</span>
             <span className={styles.dateMonth}>{EVENT_MONTHS_SHORT[month]}</span>
           </div>
@@ -45,13 +35,21 @@ export default function EventCard({ event, onShare }) {
           <div className={styles.eventBody}>
             <div className={styles.eventTop}>
               <span className={`${styles.typeBadge} ${styles[event.event_type]}`}>{eventTypeLabel(event.event_type)}</span>
-              {event.visibility === "private" && <span className={styles.privateBadge}>🔒 Privado</span>}
+              {event.visibility === "private" && (
+                <span className={styles.privateBadge}>
+                  <LockIcon size={12} /> Privado
+                </span>
+              )}
             </div>
 
             <h2 className={styles.eventTitle}>{event.override_title || event.title}</h2>
 
             <div className={styles.eventMeta}>
-              {!event.is_all_day && <span className={styles.metaItem}>🕐 {formatEventTimeRange(event.starts_at, event.ends_at)}</span>}
+              {!event.is_all_day && (
+                <span className={styles.metaItem}>
+                  <ClockIcon size={12} /> {formatEventTimeRange(event.starts_at, event.ends_at)}
+                </span>
+              )}
               {event.is_online && (
                 <span className={styles.onlineBadge}>
                   <BroadcastIcon size={12} /> Online
@@ -71,6 +69,16 @@ export default function EventCard({ event, onShare }) {
               </span>
             )}
           </div>
+
+          {/* Capa: miniatura 16:9 na coluna da direita no desktop e faixa no topo
+              no mobile (ver `@media` em EventCard.module.css). A proporção do
+              CSS é a mesma do recorte feito no formulário (preset `eventBanner`),
+              então o que o usuário enquadrou aparece inteiro. */}
+          {event.banner_url && (
+            <div className={styles.eventCover}>
+              <Image src={event.banner_url} alt="" fill className={styles.coverThumb} sizes="(max-width: 600px) 100vw, 224px" />
+            </div>
+          )}
         </div>
       </Link>
 

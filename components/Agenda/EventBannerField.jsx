@@ -37,9 +37,10 @@ const bannerPropType = PropTypes.shape({
 /**
  * Campo de imagem de capa do evento, compartilhado por criação e edição.
  *
- * O arquivo escolhido passa pelo `ImageUploader` no preset `eventBanner`, que
- * é a proporção exata do hero da página do evento — sem isso a imagem subia
- * inteira e o `object-fit: cover` cortava as laterais.
+ * O arquivo escolhido passa pelo `ImageUploader` no preset `eventBanner`, que é
+ * a proporção exata do hero da página do evento e da capa do card da agenda
+ * (16:9) — sem isso a imagem subia inteira e o `object-fit: cover` cortava as
+ * laterais.
  *
  * O componente é controlado: `value`/`onChange` carregam a ação pendente e o
  * upload em si fica com a página, porque a rota do banner exige um evento que
@@ -132,6 +133,11 @@ export default function EventBannerField({ value, onChange, savedUrl, disabled =
       )}
 
       {hasPendingUrl && <span className={styles.bannerUrlNote}>A imagem do link não passa por recorte — ela é usada como está.</span>}
+
+      <span className={styles.bannerHint}>
+        Use uma imagem horizontal 16:9 (ex.: 1600×900) — captura de tela, key art ou miniatura de vídeo. Ela aparece assim no topo da página do evento
+        e na capa do card da agenda.
+      </span>
     </>
   );
 }
