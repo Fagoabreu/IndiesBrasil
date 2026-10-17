@@ -135,6 +135,15 @@ Como usar:
 
 Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESMO desenho e o mesmo canvas — `public/images/og-cover.jpg` (`OG_COVER_IMAGE` -> `DEFAULT_OG_IMAGE`, capa de todo preview de link) e `public/images/og-cover.png` (`OG_COVER_ART`, exibida na home). Sao dois porque as superficies pedem coisas opostas: as redes recortam o preview em 1,91:1, entao o jpg ja vem nesse formato, com a moldura da arte centralizada e sobra nas laterais justamente para o recorte nao comer a moldura; na home a sobra nao serve para nada e, opaca, engrossava a borda branca da arte — o png tem a sobra transparente e o card da home a descarta (`.promoCard` declara `aspect-ratio: 832 / 736`, a proporcao do DESENHO e nao a do canvas, e o `.promoImage` faz `object-fit: cover`, que corta a sobra dos dois lados). A arte e mantida a mao, sem gerador (o `scripts/build-og-cover.js` e a arte quadrada `ArteSite.png` sairam junto com ela), entao `scripts/audit-image-presets.js` confere contra os arquivos: que existem, que os dois canvas batem entre si e com `OG_IMAGE_SIZE` (`lib/seo.js`, consumido pelo `og:image:width/height` e pelo `<Image>` da home), que a proporcao do jpg e a do card, que o png tem alfa e que o `aspect-ratio` do `.promoCard` e o do conteudo da arte (medido no bbox do alfa). Nao voltar a apontar para arquivo inexistente: ja aconteceu (`/images/og-cover.png` respondia 404 e a home era compartilhada sem imagem).
 
+## Convite de membro do estudio (autocomplete)
+
+- O campo de convite (`pages/estudios/[slug]/configuracoes.js`, aba Equipe) usa `components/Studio/InviteMemberField.jsx`: busca enquanto digita, navega com seta/Enter/Escape, e marca quem **ja e membro** ou tem **convite pendente** (nao selecionavel).
+- **Continua aceitando texto livre**: o convite e por username e a busca e atalho. Prender o envio a uma sugestao escolhida quebraria quem ja sabe o username.
+- A busca reaproveita `GET /api/v1/users?q=&limit=` (`context/dataHooks/UseUserSuggest.js`, mesmo formato do `useTagSuggest`). Nao criar endpoint novo: essa e a mesma consulta do diretorio e ja filtra conta ativada — convidar quem nunca confirmou o e-mail cria um convite que ninguem ve.
+- O `@` e prefixo de exibicao: `normalizeMemberQuery` o remove antes de enviar. Sem isso a API respondia "usuario nao encontrado" para `@username`, que estava visivelmente certo na tela.
+- `Enter` com a lista aberta escolhe a sugestao destacada; sem sugestao, envia o formulario. O componente chama `onSubmit` porque o `<form>` do React nao dispara `submit` a partir de um `keydown` sintetico.
+- Debounce de 300 ms + minimo de 2 caracteres: a busca e varredura de tabela e uma letra casaria com quase toda a base.
+
 ## Diretorio de membros (`/membros`)
 
 - A lista publica mostra **so conta ativada** (`'create:session' = ANY(u.features)`), a mesma definicao de `user_accounts` em `models/serverStatus.js`. Antes nao havia filtro: o diretorio listava cadastro nunca ativado e `/membros` mostrava mais gente que a home (47 x 41 em producao) — e publicava perfil de quem nunca confirmou o e-mail.
