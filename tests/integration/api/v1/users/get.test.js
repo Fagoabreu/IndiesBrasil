@@ -2,6 +2,9 @@ const { default: orchestrator } = require("tests/orchestrator");
 import webserver from "@/infra/webserver";
 import database from "infra/database";
 import user from "models/user";
+import activation from "models/activation";
+import TEST_CREDENTIALS from "tests/helpers/testCredentials.js";
+import { createAdminUser } from "tests/helpers/testUtils";
 
 const PAGE_SIZE = 20;
 const SEEDED_USERS = 25;
@@ -16,11 +19,17 @@ beforeAll(async () => {
 // `created_at` explícito e distinto por usuário: a listagem é ordenada por
 // `created_at DESC, id DESC` e, sem isso, inserções consecutivas poderiam
 // empatar em microssegundos e deixar a ordem indefinida.
+//
+// A conta precisa ser **ativada**: a listagem pública mostra só quem confirmou
+// o e-mail (`create:session`), a mesma definição do contador da home. Criar sem
+// ativar deixaria o seed invisível e o teste mediria outra coisa.
 async function createUserWithCreatedAt(username, createdAt, resumo) {
-  const createdUser = await orchestrator.createUser({
-    username,
-    resumo: resumo || `Resumo de ${username}`,
-  });
+  const createdUser = await orchestrator.activateUser(
+    await orchestrator.createUser({
+      username,
+      resumo: resumo || `Resumo de ${username}`,
+    }),
+  );
 
   await database.query({
     text: `
@@ -52,6 +61,176 @@ async function getUsers(query = "", cookie) {
 
   return { response, body: await response.json() };
 }
+
+describe("GET /api/v1/users — população da lista", () => {
+  beforeAll(async () => {
+    await orchestrator.waitForAllServices();
+    await orchestrator.clearDatabase();
+    await orchestrator.runPendingMigrations();
+    await orchestrator.deleteAllEmails();
+  });
+
+  test("Cadastro nunca ativado não aparece na lista pública", async () => {
+    await orchestrator.clearDatabase();
+    await orchestrator.runPendingMigrations();
+
+    await orchestrator.activateUser(await orchestrator.createUser({ username: "conta-ativa" }));
+    const nuncaAtivada = await orchestrator.createUser({ username: "conta-nunca-ativada" });
+
+    const { response, body } = await getUsers("?limit=50");
+
+    expect(response.status).toBe(200);
+    // O contador da home (`user_accounts`) já contava só ativados: listar o
+    // cadastro abandonado fazia `/membros` mostrar mais gente que a home
+    // (47 x 41 em produção) e expunha perfil de quem nunca confirmou o e-mail.
+    expect(body.items.map((item) => item.username)).toEqual(["conta-ativa"]);
+    expect(body.total).toBe(1);
+    expect(body.items.some((item) => item.id === nuncaAtivada.id)).toBe(false);
+  });
+
+  test("`status` desconhecido é recusado em vez de cair na lista normal", async () => {
+    const { response } = await getUsers("?status=inativo");
+
+    // Sem o 400, um erro de digitação devolveria a lista pública e o operador
+    // acharia que está vendo as contas travadas.
+    expect(response.status).toBe(400);
+  });
+
+  test("`status=inactive` é restrito a administradores", async () => {
+    const anonimo = await getUsers("?status=inactive");
+    expect(anonimo.response.status).toBe(403);
+
+    const comum = await orchestrator.activateUser(await orchestrator.createUser({ username: "comum-consulta-inativos" }));
+    const session = await orchestrator.createSession(comum);
+    const autenticado = await getUsers("?status=inactive", `session_id=${session.token}`);
+
+    // A lista expõe e-mail e vencimento de token: `read:user` (estar logado)
+    // não basta.
+    expect(autenticado.response.status).toBe(403);
+  });
+
+  describe("Admin", () => {
+    let adminCookie;
+    let expirada;
+    let valida;
+    let semToken;
+
+    beforeAll(async () => {
+      await orchestrator.clearDatabase();
+      await orchestrator.runPendingMigrations();
+
+      const admin = await createAdminUser({
+        username: "admin-lista-inativos",
+        email: "admin.lista.inativos@teste.dev",
+        password: TEST_CREDENTIALS.userDefault,
+        cpf: 95123456701,
+      });
+      adminCookie = `session_id=${admin.sessionToken}`;
+
+      await orchestrator.activateUser(
+        await orchestrator.createUser({
+          username: "ja-ativada",
+          email: "ja.ativada@teste.dev",
+          password: TEST_CREDENTIALS.userDefault,
+          cpf: 95123456702,
+        }),
+      );
+
+      // Conta travada: token emitido, mas vencido.
+      expirada = await orchestrator.createUser({
+        username: "token-vencido",
+        email: "token.vencido@teste.dev",
+        password: TEST_CREDENTIALS.userDefault,
+        cpf: 95123456703,
+      });
+      const tokenVencido = await activation.create(expirada.id);
+      // Envelhece a LINHA, não o relógio do processo: a validade é decidida
+      // pelo `now()` do banco (ver CLAUDE.md, "janela de validade de token").
+      await database.query({
+        text: `UPDATE user_activation_tokens SET expires_at = now() - interval '1 hour' WHERE id = $1`,
+        values: [tokenVencido.id],
+      });
+
+      // Ainda pode ativar: não pertence a esta lista.
+      valida = await orchestrator.createUser({
+        username: "token-valido",
+        email: "token.valido@teste.dev",
+        password: TEST_CREDENTIALS.userDefault,
+        cpf: 95123456704,
+      });
+      await activation.create(valida.id);
+
+      // Sem token nenhum: não é o caso da aba (lá existe token vencido).
+      semToken = await orchestrator.createUser({
+        username: "sem-token",
+        email: "sem.token@teste.dev",
+        password: TEST_CREDENTIALS.userDefault,
+        cpf: 95123456705,
+      });
+      await database.query({ text: `DELETE FROM user_activation_tokens WHERE user_id = $1`, values: [semToken.id] });
+    });
+
+    test("Lista só contas nunca ativadas com token de ativação vencido", async () => {
+      const { response, body } = await getUsers("?status=inactive&limit=50", adminCookie);
+      const usernames = body.items.map((item) => item.username);
+
+      expect(response.status).toBe(200);
+      expect(usernames).toEqual(["token-vencido"]);
+      expect(body.total).toBe(1);
+
+      // Contas que ainda podem ativar, ou que já ativaram, ficam fora.
+      expect(usernames).not.toContain(valida.username);
+      expect(usernames).not.toContain("ja-ativada");
+      expect(usernames).not.toContain(semToken.username);
+    });
+
+    test("Traz e-mail e vencimento do token, e nada além disso", async () => {
+      const { body } = await getUsers("?status=inactive", adminCookie);
+      const [item] = body.items;
+
+      expect(item).toMatchObject({
+        id: expirada.id,
+        username: "token-vencido",
+        email: "token.vencido@teste.dev",
+        has_other_token: false,
+      });
+      expect(typeof item.activation_expires_at).toBe("string");
+      expect(new Date(item.activation_expires_at).getTime()).toBeLessThan(Date.now());
+
+      // Mesmo para admin, a resposta não carrega segredo nem hash.
+      expect(item).not.toHaveProperty("password");
+      expect(item).not.toHaveProperty("cpf");
+      expect(item).not.toHaveProperty("features");
+    });
+
+    test("Sinaliza conta com pedido de reset — que a limpeza automática não anula", async () => {
+      // `annulAbandonedRegistrations` preserva o cadastro que tem token de
+      // outra finalidade: sem este sinal, o administrador não saberia por que
+      // a conta continua no banco depois de um novo cadastro com os mesmos dados.
+      await activation.create(expirada.id, activation.TOKEN_PURPOSE.RESET);
+
+      const { body } = await getUsers("?status=inactive", adminCookie);
+      expect(body.items.find((item) => item.id === expirada.id).has_other_token).toBe(true);
+    });
+
+    test("A busca alcança o e-mail na lista administrativa", async () => {
+      const { body } = await getUsers(`?status=inactive&q=${encodeURIComponent("token.vencido@")}`, adminCookie);
+
+      expect(body.items.map((item) => item.username)).toEqual(["token-vencido"]);
+
+      const { body: semResultado } = await getUsers("?status=inactive&q=ninguem", adminCookie);
+      expect(semResultado.total).toBe(0);
+    });
+
+    test("A lista normal continua devolvendo o formato público", async () => {
+      const { body } = await getUsers("?limit=50", adminCookie);
+
+      // A aba inativa não pode contaminar a resposta padrão com e-mail.
+      expect(body.items.length).toBeGreaterThan(0);
+      expect(body.items.every((item) => item.email === undefined)).toBe(true);
+    });
+  });
+});
 
 describe("GET /api/v1/users", () => {
   describe("Anonymous user", () => {
@@ -162,9 +341,9 @@ describe("GET /api/v1/users", () => {
         await orchestrator.clearDatabase();
         await orchestrator.runPendingMigrations();
 
-        await orchestrator.createUser({ username: "ana-pixel", resumo: "Artista 3D" });
-        await orchestrator.createUser({ username: "bruno-code", resumo: "Programador de gameplay" });
-        await orchestrator.createUser({ username: "carla-sound", resumo: "Compositora" });
+        await orchestrator.activateUser(await orchestrator.createUser({ username: "ana-pixel", resumo: "Artista 3D" }));
+        await orchestrator.activateUser(await orchestrator.createUser({ username: "bruno-code", resumo: "Programador de gameplay" }));
+        await orchestrator.activateUser(await orchestrator.createUser({ username: "carla-sound", resumo: "Compositora" }));
       });
 
       test("Filters by `username`", async () => {
@@ -213,8 +392,8 @@ describe("GET /api/v1/users", () => {
         await orchestrator.clearDatabase();
         await orchestrator.runPendingMigrations();
 
-        await orchestrator.createUser({ username: "anonimo-alvo-1" });
-        await orchestrator.createUser({ username: "anonimo-alvo-2" });
+        await orchestrator.activateUser(await orchestrator.createUser({ username: "anonimo-alvo-1" }));
+        await orchestrator.activateUser(await orchestrator.createUser({ username: "anonimo-alvo-2" }));
       });
 
       test("`isfollowing=true` matches nobody and `is_following` is false", async () => {
@@ -244,7 +423,7 @@ describe("GET /api/v1/users", () => {
 
         loggedUser = await orchestrator.activateUser(await orchestrator.createUser({ username: "usuario-logado" }));
         followedUser = await orchestrator.activateUser(await orchestrator.createUser({ username: "usuario-seguido" }));
-        notFollowedUser = await orchestrator.createUser({ username: "usuario-nao-seguido" });
+        notFollowedUser = await orchestrator.activateUser(await orchestrator.createUser({ username: "usuario-nao-seguido" }));
 
         const sessionObject = await orchestrator.createSession(loggedUser);
         cookie = `session_id=${sessionObject.token}`;

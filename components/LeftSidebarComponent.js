@@ -30,6 +30,7 @@ import {
   FileIcon,
   ReportIcon,
   ShieldIcon,
+  TrashIcon,
 } from "@primer/octicons-react";
 import { useUser } from "@/context/UserContext";
 import styles from "./LeftSidebarComponent.module.css";
@@ -187,6 +188,12 @@ export default function LeftSidebarComponent({ onNavigate }) {
                     <ShieldIcon />
                   </NavList.LeadingVisual>
                   Moderação
+                </NavList.Item>
+                <NavList.Item as={Link} href="/admin/users" aria-current={router.pathname.startsWith("/admin/users")} onClick={onNavigate}>
+                  <NavList.LeadingVisual>
+                    <TrashIcon />
+                  </NavList.LeadingVisual>
+                  Excluir conta
                 </NavList.Item>
                 <NavList.Item as={Link} href="/status" onClick={onNavigate}>
                   <NavList.LeadingVisual>
