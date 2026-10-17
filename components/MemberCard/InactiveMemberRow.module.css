@@ -1,0 +1,105 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 8px;
+  background: var(--bgColor-muted);
+}
+
+@media (max-width: 800px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.username {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+  overflow-wrap: anywhere;
+}
+
+.email {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--brand-primary);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.email:hover {
+  text-decoration: underline;
+}
+
+.dates {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dateLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--fgColor-muted);
+}
+
+.dateValue {
+  font-size: 0.82rem;
+  color: var(--fgColor-default);
+}
+
+.flags {
+  justify-self: start;
+}
+
+.flagKeep,
+.flagFree {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.flagKeep {
+  color: var(--fgColor-attention, #9a6700);
+  border: 1px solid var(--borderColor-attention-muted, rgba(154, 103, 0, 0.35));
+  background: var(--bgColor-attention-muted, rgba(154, 103, 0, 0.09));
+}
+
+.flagFree {
+  color: var(--fgColor-muted);
+  border: 1px solid var(--borderColor-muted);
+  background: var(--bgColor-inset);
+}

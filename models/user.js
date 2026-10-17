@@ -921,11 +921,50 @@ function normalizeMembersLimit(limit) {
 
 // Lista membros com busca e paginação por cursor.
 // Retorna { items, total, hasMore, nextCursor }.
+//
+// `status` escolhe a população:
+// - `"active"` (padrão) — contas ativadas (`create:session`), a mesma definição
+//   que `serverStatus.getSummary` usa em `user_accounts`. Antes não havia filtro
+//   nenhum: o diretório listava cadastro nunca ativado e o número em `/membros`
+//   ficava maior que o da home (47 x 41 em produção), porque a home já contava
+//   só ativados.
+// - `"inactive"` — contas **travadas**: nunca ativadas e sem token de ativação
+//   aproveitável (existe token, mas todos vencidos ou já usados). É o caso que
+//   não sai sozinho: o e-mail/CPF/username continuam ocupados e a pessoa não
+//   consegue ativar. Só administradores podem pedir esta lista (a rota faz o
+//   gate); `email` e a data do token exposto só aparecem nela.
 async function findUsers(options = {}) {
   const { userId, isfollowing, q } = options;
+  const includeInactive = options.status === "inactive";
   const limit = normalizeMembersLimit(options.limit);
   const cursor = decodeMembersCursor(options.cursor);
   const search = typeof q === "string" ? q.trim().slice(0, MAX_MEMBERS_SEARCH_LENGTH) : "";
+
+  // Colunas e junção que só a lista administrativa precisa: e-mail (para o
+  // administrador reconhecer a conta) e o vencimento do último token de
+  // ativação. Ficam fora da consulta pública de propósito — a lista normal não
+  // pode pagar por elas.
+  const inactiveSelect = includeInactive
+    ? `,
+        u.email,
+        tok.expires_at AS activation_expires_at,
+        EXISTS (
+          SELECT 1
+          FROM user_activation_tokens other
+          WHERE other.user_id = u.id
+            AND other.purpose <> 'activation'
+        ) AS has_other_token`
+    : "";
+
+  const inactiveJoin = includeInactive
+    ? `
+        LEFT JOIN LATERAL (
+          SELECT max(t.expires_at) AS expires_at
+          FROM user_activation_tokens t
+          WHERE t.user_id = u.id
+            AND t.purpose = 'activation'
+        ) tok ON true`
+    : "";
 
   // `u.created_at::text` preserva os microssegundos — o driver `pg`
   // converte timestamptz para Date e perderia precisão no cursor.
@@ -943,8 +982,8 @@ async function findUsers(options = {}) {
         ub.secure_url as background_image,
         COALESCE(f.followers_count, 0) AS followers_count,
         COALESCE(p.posts_count, 0) AS posts_count,
-        (uf.follower_id IS NOT NULL) AS is_following
-      FROM users u
+        (uf.follower_id IS NOT NULL) AS is_following${inactiveSelect}
+      FROM users u${inactiveJoin}
         -- Seguidores do usuário
         LEFT JOIN (
             SELECT
@@ -976,6 +1015,30 @@ async function findUsers(options = {}) {
   const conditions = ["($1::uuid IS NULL OR u.id <> $1::uuid)"];
   const whereValues = [userId ?? null];
 
+  // População da lista. A condição de ativo é a MESMA de `serverStatus`
+  // (`user_accounts`), e é por isso que o número de `/membros` e o da home
+  // coincidem — antes divergiam em toda conta nunca ativada.
+  if (includeInactive) {
+    conditions.push(`
+        NOT ('create:session' = ANY(u.features))
+        AND EXISTS (
+          SELECT 1
+          FROM user_activation_tokens t
+          WHERE t.user_id = u.id
+            AND t.purpose = 'activation'
+        )
+        AND NOT EXISTS (
+          SELECT 1
+          FROM user_activation_tokens t
+          WHERE t.user_id = u.id
+            AND t.purpose = 'activation'
+            AND t.used_at IS NULL
+            AND t.expires_at > now()
+        )`);
+  } else {
+    conditions.push(`'create:session' = ANY(u.features)`);
+  }
+
   if (isfollowing !== undefined) {
     const shouldFollow = isfollowing === true || isfollowing === "true";
     conditions.push(`${shouldFollow ? "" : "NOT "}EXISTS (
@@ -989,9 +1052,18 @@ async function findUsers(options = {}) {
   if (search) {
     whereValues.push(search);
     // strpos em vez de LIKE: o termo é literal, sem semântica de % e _.
+    // Na lista de inativos o e-mail também é pesquisável — é o dado que o
+    // administrador tem em mãos quando vai procurar a conta.
+    const searchColumns = [
+      `strpos(lower(u.username), lower($${whereValues.length})) > 0`,
+      `strpos(lower(COALESCE(u.resumo, '')), lower($${whereValues.length})) > 0`,
+    ];
+    if (includeInactive) {
+      searchColumns.push(`strpos(lower(u.email), lower($${whereValues.length})) > 0`);
+    }
+
     conditions.push(`(
-          strpos(lower(u.username), lower($${whereValues.length})) > 0
-          OR strpos(lower(COALESCE(u.resumo, '')), lower($${whereValues.length})) > 0
+          ${searchColumns.join("\n          OR ")}
         )`);
   }
 

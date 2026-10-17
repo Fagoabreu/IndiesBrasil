@@ -2,6 +2,10 @@ import SeoHead from "@/components/SeoHead";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Heading, TextInput, Spinner } from "@primer/react";
 import MemberCard from "@/components/MemberCard/MemberCard";
+import InactiveMemberRow from "@/components/MemberCard/InactiveMemberRow";
+// O wrapper da lista mora no módulo do componente (é o `<ul>` das linhas); a
+// página importa o mesmo módulo em vez de repetir a regra.
+import inactiveListStyles from "@/components/MemberCard/InactiveMemberRow.module.css";
 import styles from "./MembersPage.module.css";
 import { SITE_URL } from "@/lib/seo";
 import { useUser } from "@/context/UserContext";
@@ -19,6 +23,9 @@ const SEARCH_DEBOUNCE_MS = 350;
 export default function MembersPage() {
   const router = useRouter();
   const { user } = useUser();
+  // A aba "Inativos" é ferramenta de administração: a rota também exige
+  // `read:admin`, e esta condição só evita mostrar um botão que daria 403.
+  const isAdmin = Boolean(user?.features?.includes("read:admin"));
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(null);
   const [search, setSearch] = useState("");
@@ -30,6 +37,12 @@ export default function MembersPage() {
   const [tab, setTab] = useState("all");
   const cursorRef = useRef(null);
   const loadingMoreRef = useRef(false);
+
+  // Quem perde `read:admin` com a aba aberta não pode continuar nela: a próxima
+  // requisição responderia 403 e a tela ficaria num erro sem saída. Derivar é
+  // melhor que corrigir em efeito — evita `setState` síncrono no corpo do
+  // efeito, que o lint do projeto recusa (`react-hooks/set-state-in-effect`).
+  const activeTab = tab === "inactive" && !isAdmin ? "all" : tab;
 
   // Sentinel para infinite scroll
   const [sentinelRef, isSentinelVisible] = useInView({
@@ -87,7 +100,10 @@ export default function MembersPage() {
     params.set("limit", String(PAGE_SIZE));
     if (cursor) params.set("cursor", cursor);
     if (appliedSearch) params.set("q", appliedSearch);
-    if (tab === "following") params.set("isfollowing", "true");
+    if (activeTab === "following") params.set("isfollowing", "true");
+    // `status=inactive` é a lista administrativa: contas nunca ativadas cujo
+    // token de ativação já venceu (a rota responde 403 para quem não é admin).
+    if (activeTab === "inactive") params.set("status", "inactive");
 
     return `/api/v1/users?${params.toString()}`;
   }
@@ -124,8 +140,8 @@ export default function MembersPage() {
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- buildUrl é derivado de tab/appliedSearch
-  }, [tab, appliedSearch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- buildUrl é derivado de activeTab/appliedSearch
+  }, [activeTab, appliedSearch]);
 
   // Próxima página — anexa à lista
   const fetchMoreMembers = useCallback(async () => {
@@ -153,8 +169,8 @@ export default function MembersPage() {
       loadingMoreRef.current = false;
       setLoadingMore(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- buildUrl é derivado de tab/appliedSearch
-  }, [hasMore, tab, appliedSearch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- buildUrl é derivado de activeTab/appliedSearch
+  }, [hasMore, activeTab, appliedSearch]);
 
   // Recarrega quando a tab ou a busca aplicada mudam
   useEffect(() => {
@@ -179,12 +195,15 @@ export default function MembersPage() {
 
   const countNum = total ?? items.length;
   const countStr = countNum.toLocaleString("pt-BR");
-  const singular = tab === "following" ? "pessoa" : "membro";
-  const plural = tab === "following" ? "pessoas" : "membros";
+  const isInactiveTab = activeTab === "inactive";
+  const singular = isInactiveTab ? "conta" : activeTab === "following" ? "pessoa" : "membro";
+  const plural = isInactiveTab ? "contas" : activeTab === "following" ? "pessoas" : "membros";
   const countWord = countNum === 1 ? singular : plural;
 
   let emptyTitle;
-  if (tab === "following") {
+  if (isInactiveTab) {
+    emptyTitle = "Nenhuma conta travada";
+  } else if (activeTab === "following") {
     emptyTitle = "Você ainda não segue ninguém";
   } else if (search) {
     emptyTitle = "Nenhum membro encontrado";
@@ -193,7 +212,9 @@ export default function MembersPage() {
   }
 
   let emptyDescription;
-  if (tab === "following") {
+  if (isInactiveTab) {
+    emptyDescription = "Toda conta pendente já foi ativada ou ainda tem token válido para ativar.";
+  } else if (activeTab === "following") {
     emptyDescription = 'Vá para "Descubra" e comece a seguir!';
   } else if (search) {
     emptyDescription = `Nenhum resultado para "${search}". Tente outro termo.`;
@@ -218,11 +239,11 @@ export default function MembersPage() {
           </div>
           <p className={styles.pageSubtitle}>Conheça as pessoas que constroem jogos indie no Brasil.</p>
 
-          {tab === "all" && (
+          {activeTab !== "following" && (
             <div className={styles.searchWrapper}>
               <TextInput
                 aria-label="Pesquisar membros"
-                placeholder="Pesquisar por username ou bio..."
+                placeholder={isInactiveTab ? "Pesquisar por username ou email..." : "Pesquisar por username ou bio..."}
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
                 leadingVisual="search"
@@ -237,8 +258,8 @@ export default function MembersPage() {
             <button
               type="button"
               role="tab"
-              aria-selected={tab === "all"}
-              className={`${styles.feedTab} ${tab === "all" ? styles.feedTabActive : ""}`}
+              aria-selected={activeTab === "all"}
+              className={`${styles.feedTab} ${activeTab === "all" ? styles.feedTabActive : ""}`}
               onClick={() => setTab("all")}
             >
               Descubra
@@ -246,12 +267,26 @@ export default function MembersPage() {
             <button
               type="button"
               role="tab"
-              aria-selected={tab === "following"}
-              className={`${styles.feedTab} ${tab === "following" ? styles.feedTabActive : ""}`}
+              aria-selected={activeTab === "following"}
+              className={`${styles.feedTab} ${activeTab === "following" ? styles.feedTabActive : ""}`}
               onClick={() => setTab("following")}
             >
               Seguindo
             </button>
+            {/* Só para administrador: a rota (`?status=inactive`) exige
+                `read:admin`, e a lista expõe e-mail e vencimento de token. */}
+            {isAdmin && (
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === "inactive"}
+                className={`${styles.feedTab} ${activeTab === "inactive" ? styles.feedTabActive : ""}`}
+                onClick={() => setTab("inactive")}
+                title="Contas nunca ativadas cujo token de ativação expirou"
+              >
+                Inativos
+              </button>
+            )}
           </div>
         )}
       </header>
@@ -275,16 +310,24 @@ export default function MembersPage() {
       {/* GRID */}
       {!isLoading && items.length > 0 && (
         <>
-          <div className={styles.grid}>
-            {items.map((u) => (
-              <MemberCard key={u.id} user={u} />
-            ))}
-          </div>
+          {isInactiveTab ? (
+            <ul className={inactiveListStyles.list}>
+              {items.map((account) => (
+                <InactiveMemberRow key={account.id} member={account} />
+              ))}
+            </ul>
+          ) : (
+            <div className={styles.grid}>
+              {items.map((u) => (
+                <MemberCard key={u.id} user={u} />
+              ))}
+            </div>
+          )}
 
           {/* Loader da próxima página */}
           {loadingMore && (
             <div className={styles.loadingMore} role="status" aria-live="polite">
-              Carregando mais membros...
+              {isInactiveTab ? "Carregando mais contas..." : "Carregando mais membros..."}
             </div>
           )}
 
