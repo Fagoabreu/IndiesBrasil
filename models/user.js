@@ -2,6 +2,7 @@ import database from "infra/database";
 import password from "models/password";
 import { ValidationError, NotFoundError } from "infra/errors.js";
 import notification from "./notification";
+import organization from "./organization";
 import { normalizeUsername, usernameProblem } from "lib/username";
 import { normalizeCpf, isCpfLength, CPF_LENGTH } from "lib/cpf";
 
@@ -173,6 +174,286 @@ async function annulAbandonedRegistrations({ email, cpf, username }) {
   }
 
   return results.rows;
+}
+
+/**
+ * Apaga uma conta **por completo**, pelo email — ação de administrador.
+ *
+ * Diferente de `annulAbandonedRegistrations`: ali só sai cadastro que nunca foi
+ * ativado e sem sinal de dono; aqui a intenção é remover tudo, inclusive o
+ * usuário ativo que pediu exclusão ou a conta de teste que precisa sair do
+ * banco.
+ *
+ * ## Por que não é só `DELETE FROM users`
+ *
+ * As tabelas que apontam para `users` dividem-se em três grupos, e nenhum deles
+ * resolve sozinho:
+ *
+ * - `ON DELETE CASCADE` — apagaria sozinho, mas às vezes conteúdo de terceiros
+ *   (comentários num post do usuário, respostas a ele);
+ * - `NO ACTION` — o `DELETE` falharia com violação de FK e o operador receberia
+ *   um 500 sem saber o que fazer;
+ * - `SET NULL` — preserva o registro apontando para ninguém, que é o desejado
+ *   em pedido pago e em obra do estúdio.
+ *
+ * O que é **recusado** (com mensagem dizendo o que fazer antes):
+ * - ser o próprio usuário que chama;
+ * - conta com `read:admin` (evita perder o último administrador);
+ * - conta que é **titular de um estúdio** sem dizer o que fazer com ele: um
+ *   estúdio não pode ficar sem responsável (`owner_id` é `NOT NULL`) e as obras
+ *   pertencem a ele, não à pessoa. Por isso a exclusão exige escolher uma das
+ *   duas saídas — `studioAction: "delete"` (com `confirmStudioSlug`, apaga o
+ *   estúdio e as obras) ou `studioAction: "transfer"` (com `transferToUserId`,
+ *   passa a titularidade a outro membro ativo). A recusa em si não muda nada no
+ *   banco: as duas ações rodam **na mesma transação** da exclusão;
+ * - conta que **criou reuniões** de estúdio (`meetings.created_by` é `NOT NULL`
+ *   e a reunião pertence ao estúdio, não à pessoa). Excluir o estúdio resolve:
+ *   as reuniões dele caem por `CASCADE` antes desta checagem;
+ * - conta que aplicou **moderação** (`moderation_actions.moderator_id` é
+ *   `NOT NULL` e é trilha de auditoria).
+ *
+ * O que é **apagado**: o que é do usuário (posts — inclusive as respostas de
+ * terceiros a eles, que ficariam órfãs —, comentários, curtidas, seguidores,
+ * papéis, contatos, portfólio, matrículas, presenças, notificações, sessões e
+ * tokens) e o que apontaria para um `id` inexistente depois (conversas de que
+ * ele participa, denúncias e bloqueios contra ele). O que é de outra pessoa ou
+ * do estúdio fica: `games.owner_id`, `books.owner_id` e `boardgames.owner_id`
+ * são `SET NULL`; pedidos pagos mantêm o histórico com `buyer_id` nulo.
+ *
+ * Roda em transação: ou sai tudo, ou não sai nada. O log `console.info` existe
+ * porque a ação é irreversível e não há desfazer.
+ */
+async function purgeByEmail(email, { performedByUserId, studioAction, confirmStudioSlug, transferToUserId } = {}) {
+  const normalizedEmail = String(email ?? "")
+    .trim()
+    .toLowerCase();
+
+  if (!normalizedEmail) {
+    throw new ValidationError({ message: "Informe o email da conta a ser excluída." });
+  }
+
+  return database.transaction(async (client) => {
+    const found = await client.query({
+      text: `SELECT id, username, email, features FROM users WHERE lower(email) = $1 LIMIT 1`,
+      values: [normalizedEmail],
+    });
+
+    if (found.rowCount === 0) {
+      throw new NotFoundError({
+        message: "O email informado não foi encontrado no sistema.",
+        action: "Confira o email digitado — a exclusão não alterou nada.",
+      });
+    }
+
+    const target = found.rows[0];
+
+    if (target.id === performedByUserId) {
+      throw new ValidationError({
+        message: "Você não pode excluir a própria conta por esta tela.",
+        action: "Peça a outro administrador para fazer a exclusão.",
+      });
+    }
+
+    if ((target.features ?? []).includes("read:admin")) {
+      throw new ValidationError({
+        message: "Contas de administrador não podem ser excluídas por aqui.",
+        action: "Remova a feature `read:admin` da conta antes de excluí-la.",
+      });
+    }
+
+    const studios = await client.query({
+      text: `SELECT id, name, slug FROM organizations WHERE owner_id = $1 ORDER BY name ASC`,
+      values: [target.id],
+    });
+
+    // Estúdio do titular: a exclusão da conta **exige** uma decisão explícita.
+    // Deixar seguir em frente deixaria um estúdio sem ninguém que possa
+    // administrá-lo (`owner_id` é NOT NULL e não há "sem dono"), então as duas
+    // saídas são excluir o estúdio e as obras ou passar a titularidade a outro
+    // membro — e ambas têm confirmação própria.
+    let studioOutcome = null;
+
+    if (studios.rowCount > 0) {
+      const studio = studios.rows[0];
+
+      if (studioAction === "delete") {
+        const expected = String(confirmStudioSlug ?? "").trim();
+        if (expected !== studio.slug) {
+          throw new ValidationError({
+            message: "A confirmação do estúdio não corresponde ao endereço dele.",
+            action: `Digite exatamente "${studio.slug}" para confirmar a exclusão do estúdio e das obras.`,
+          });
+        }
+
+        // Recebe o cliente da transação: estúdio e conta saem juntos ou não sai
+        // nada. Sem isso, um erro na exclusão da conta deixaria o estúdio já
+        // apagado (e as obras junto) sem desfazer.
+        const deletion = await organization.deleteWithWorks(studio.id, { client });
+        studioOutcome = { action: "delete", ...deletion };
+      } else if (studioAction === "transfer") {
+        const transfer = await organization.transferOwnership(studio.id, {
+          fromUserId: target.id,
+          toUserId: transferToUserId,
+          actorId: performedByUserId,
+          client,
+        });
+        studioOutcome = { action: "transfer", ...transfer };
+      } else {
+        throw new ValidationError({
+          message: `A conta é titular do estúdio "${studio.name}".`,
+          action:
+            "Escolha excluir o estúdio e as obras (`studio_action: delete`) ou transferir a responsabilidade para outro membro (`studio_action: transfer`).",
+        });
+      }
+    }
+
+    const meetings = await client.query({
+      text: `SELECT count(*)::int AS total FROM meetings WHERE created_by = $1`,
+      values: [target.id],
+    });
+
+    if (meetings.rows[0].total > 0) {
+      throw new ValidationError({
+        message: `A conta criou ${meetings.rows[0].total} reunião(ões) de estúdio.`,
+        action: "As reuniões pertencem ao estúdio; exclua-as ou transfira-as antes de remover a conta.",
+      });
+    }
+
+    const moderation = await client.query({
+      text: `SELECT count(*)::int AS total FROM moderation_actions WHERE moderator_id = $1`,
+      values: [target.id],
+    });
+
+    if (moderation.rows[0].total > 0) {
+      throw new ValidationError({
+        message: "A conta possui histórico de moderação e não pode ser excluída.",
+        action: "O histórico é trilha de auditoria; ele precisa ser preservado.",
+      });
+    }
+
+    // Posts do usuário + todas as respostas encadeadas a eles. Sem isso, uma
+    // resposta de terceiro (`parent_post_id`, NO ACTION) impediria o DELETE e a
+    // mensagem de erro seria violação de FK, não uma explicação.
+    await client.query({
+      text: `
+        CREATE TEMP TABLE purge_posts ON COMMIT DROP AS
+        WITH RECURSIVE tree AS (
+          SELECT id FROM posts WHERE author_id = $1
+          UNION
+          SELECT p.id FROM posts p JOIN tree t ON p.parent_post_id = t.id
+        )
+        SELECT id FROM tree
+      `,
+      values: [target.id],
+    });
+
+    // Linhas que apontam para os posts e não caem por cascade.
+    await client.query({ text: `DELETE FROM post_notifications WHERE post_id IN (SELECT id FROM purge_posts)` });
+    await client.query({ text: `DELETE FROM post_likes WHERE post_id IN (SELECT id FROM purge_posts)` });
+
+    const commentsOnDoomedPosts = await client.query({
+      text: `DELETE FROM comments WHERE post_id IN (SELECT id FROM purge_posts) RETURNING id`,
+    });
+
+    // As respostas apontam para o post pai por `parent_post_id` (NO ACTION), e
+    // o Postgres não garante a ordem de exclusão dentro de um mesmo DELETE:
+    // soltar o vínculo antes evita a violação.
+    await client.query({ text: `UPDATE posts SET parent_post_id = NULL WHERE id IN (SELECT id FROM purge_posts)` });
+
+    const removedPosts = await client.query({
+      text: `DELETE FROM posts WHERE id IN (SELECT id FROM purge_posts) RETURNING id`,
+    });
+
+    const removedComments = await client.query({
+      text: `DELETE FROM comments WHERE author_id = $1 RETURNING id`,
+      values: [target.id],
+    });
+
+    // Restos NO ACTION do usuário (o resto sai por CASCADE no DELETE final).
+    const removedLikes = await client.query({
+      text: `DELETE FROM post_likes WHERE user_id = $1 RETURNING post_id`,
+      values: [target.id],
+    });
+
+    await client.query({
+      text: `DELETE FROM post_notifications WHERE user_id = $1 OR source_user_id = $1`,
+      values: [target.id],
+    });
+
+    await client.query({
+      text: `DELETE FROM user_followers WHERE lead_user_id = $1 OR follower_id = $1`,
+      values: [target.id],
+    });
+
+    await client.query({ text: `DELETE FROM org_followers WHERE follower_id = $1`, values: [target.id] });
+    await client.query({ text: `DELETE FROM org_members WHERE member_id = $1`, values: [target.id] });
+    await client.query({ text: `DELETE FROM user_roles WHERE user_id = $1`, values: [target.id] });
+    await client.query({ text: `DELETE FROM users_contacts WHERE user_id = $1`, values: [target.id] });
+
+    // Conversa em que ele é parte: sem FK (identidade polimórfica), ficaria uma
+    // thread sem mensagens no inbox da outra pessoa. `messages` e
+    // `conversation_reads` caem por CASCADE.
+    const removedConversations = await client.query({
+      text: `
+        DELETE FROM conversations
+        WHERE (party_a_type = 'user' AND party_a_id = $1)
+           OR (party_b_type = 'user' AND party_b_id = $1)
+        RETURNING id
+      `,
+      values: [target.id],
+    });
+
+    // Denúncias e bloqueios contra a conta: `target_id` é texto sem FK e
+    // apontaria para um usuário que deixa de existir.
+    await client.query({ text: `DELETE FROM reports WHERE target_type = 'user' AND target_id = $1::text`, values: [target.id] });
+    await client.query({ text: `DELETE FROM moderation_actions WHERE target_type = 'user' AND target_id = $1::text`, values: [target.id] });
+
+    // `sessions` e `user_activation_tokens` foram criadas sem FK para `users`
+    // (ver `annulAbandonedRegistrations`), então a limpeza é explícita.
+    const removedSessions = await client.query({
+      text: `DELETE FROM sessions WHERE user_id = $1 RETURNING id`,
+      values: [target.id],
+    });
+
+    await client.query({ text: `DELETE FROM user_activation_tokens WHERE user_id = $1`, values: [target.id] });
+
+    const removedUser = await client.query({
+      text: `DELETE FROM users WHERE id = $1 RETURNING id, username, email`,
+      values: [target.id],
+    });
+
+    // Duas exclusões simultâneas da mesma conta: a segunda espera o commit da
+    // primeira e então não apaga linha nenhuma. Sem esta guarda, `rows[0]` seria
+    // `undefined` e o erro apareceria como 500 (TypeError no log), quando a
+    // resposta correta é "não existe mais".
+    if (removedUser.rowCount === 0) {
+      throw new NotFoundError({
+        message: "A conta já foi excluída por outra operação.",
+        action: "Atualize a página — não há nada mais a remover.",
+      });
+    }
+
+    const summary = {
+      user: removedUser.rows[0],
+      studio: studioOutcome,
+      removed: {
+        // A exclusão do estúdio leva junto os posts publicados em nome dele
+        // (inclusive os do próprio usuário, que a CTE abaixo já não encontra).
+        posts: removedPosts.rowCount + (studioOutcome?.removed?.posts ?? 0),
+        // Dois grupos: os comentários que estavam nos posts apagados (de
+        // qualquer autor) e os comentários do usuário em posts que continuam.
+        comments: commentsOnDoomedPosts.rowCount + removedComments.rowCount + (studioOutcome?.removed?.comments ?? 0),
+        post_likes: removedLikes.rowCount,
+        conversations: removedConversations.rowCount,
+        sessions: removedSessions.rowCount,
+      },
+    };
+
+    // Irreversível e sem desfazer: o registro fica no log do servidor.
+    console.info(`[admin] conta excluída definitivamente: ${summary.user.username} <${summary.user.email}>`, summary.removed);
+
+    return summary;
+  });
 }
 
 async function create(userInputValues) {
@@ -833,6 +1114,7 @@ const user = {
   addFeatures,
   //registration lifecycle
   annulAbandonedRegistrations,
+  purgeByEmail,
   //follow
   addFollow,
   removeFollow,

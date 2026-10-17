@@ -55,5 +55,23 @@ describe("infra/embededResolver — embeds de post", () => {
 
     expect(embeds.map((embed) => embed.type)).toEqual(["youtube", "twitch", "instagram"]);
     expect(embeds[0].embedUrl).toBe("https://www.youtube.com/embed/K17df81RL9Y");
+    // O permalink gravado precisa ser o que responde ao embed — `/reels/`
+    // devolve 404 em `/embed/captioned/`.
+    expect(embeds[2].url).toBe("https://www.instagram.com/reel/DekdsTQSSLj/");
+  });
+
+  test("link de transmissão ao vivo do YouTube vira player, não preview vazio", async () => {
+    const [embed] = await embededResolver.getEmbededLinks("https://www.youtube.com/live/nylSK90nI8M?is=zTsTB7X5AE4UrdnU");
+
+    expect(embed).toMatchObject({ type: "youtube", subtype: "video", videoId: "nylSK90nI8M" });
+    expect(embed.embedUrl).toBe("https://www.youtube.com/embed/nylSK90nI8M");
+  });
+
+  test("canal do YouTube não vira player — precisa do preview com imagem", async () => {
+    // Sem isso o embed era `null` e o post ficava com um card vazio: nada de
+    // título nem miniatura.
+    const [embed] = await embededResolver.getEmbededLinks("https://www.youtube.com/@algumcanal");
+
+    expect(embed.type).not.toBe("youtube");
   });
 });

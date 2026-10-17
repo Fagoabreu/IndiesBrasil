@@ -16,6 +16,9 @@ export default function AdminPage() {
         <li>
           <Link href="/admin/tools">Tools</Link>
         </li>
+        <li>
+          <Link href="/admin/users">Excluir conta</Link>
+        </li>
       </ul>
     </section>
   );

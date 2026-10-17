@@ -1,0 +1,161 @@
+.center {
+  display: flex;
+  justify-content: center;
+  padding: 32px;
+}
+
+.intro {
+  margin: 8px 0 16px;
+  max-width: 640px;
+  font-size: 14px;
+  color: var(--fgColor-muted);
+}
+
+.card {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 6px;
+}
+
+/* A moldura vermelha é o último freio visual antes do clique destrutivo. */
+.dangerCard {
+  border-color: var(--borderColor-danger-emphasis, var(--fgColor-danger));
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+  max-width: 560px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.summary {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 0;
+  max-width: 560px;
+  font-size: 14px;
+}
+
+.summaryRow {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.summaryRow dt {
+  flex: 0 0 96px;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+}
+
+.summaryRow dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.summaryStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+/* ---- Bloco do estúdio (conta titular) ---- */
+.studioBlock {
+  margin: 16px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 6px;
+  background: var(--bgColor-muted);
+}
+
+.studioHeading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px !important;
+}
+
+.studioHint {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--fgColor-muted);
+}
+
+.membersTitle {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--fgColor-muted);
+}
+
+.members {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.member {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 4px;
+  background: var(--bgColor-default);
+  font-size: 13px;
+}
+
+.memberName {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.memberRole {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+
+.memberRoleOwner {
+  color: var(--brand-primary);
+  border-color: var(--brand-active-ring);
+  background: var(--brand-active-bg);
+}
+
+.radioGroupLabel {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.studioExtra {
+  margin-top: 12px;
+  max-width: 420px;
+}
+
+.mono {
+  font-family: var(--fontStack-monospace, ui-monospace, monospace);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}

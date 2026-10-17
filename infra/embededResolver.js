@@ -2,6 +2,7 @@ import { isSafeUrl } from "lib/ssrf-guard";
 import { safeFetch } from "lib/safe-fetch";
 import { isOwnHost, toLoopbackUrl } from "lib/internal-url";
 import { siteHostname } from "lib/seo";
+import { isYoutubeShort, normalizeInstagramUrl, youtubeVideoId } from "lib/embedLinks";
 
 /**
  * Decide de onde baixar a página — ou null quando o link não pode ser buscado.
@@ -88,7 +89,11 @@ function extractLinks(text) {
 }
 
 function isYouTube(url) {
-  return /(?:youtube\.com|youtu\.be)/.test(url);
+  // Reconhece **vídeo**, não "qualquer coisa do YouTube": canal, playlist e
+  // busca precisam cair em `fetchLinkPreview` para ganhar título e imagem. Antes
+  // o teste era só `/youtube\.com|youtu\.be/` e o `resolveYouTube` devolvia
+  // `null` para eles, o que virava um card de preview vazio.
+  return youtubeVideoId(url) !== null;
 }
 
 function isTwitch(url) {
@@ -96,10 +101,7 @@ function isTwitch(url) {
 }
 
 function isInstagram(url) {
-  // `reel` (singular) e `reels` (plural) são as duas formas que o Instagram
-  // publica — a regex só aceitava a singular, então um link de Reels caía em
-  // `fetchLinkPreview` e virava card genérico em vez do embed.
-  return /instagram\.com\/(?:p|reels?|tv)\//.test(url);
+  return normalizeInstagramUrl(url) !== null;
 }
 
 function isSteamStore(url) {
@@ -107,26 +109,13 @@ function isSteamStore(url) {
 }
 
 function resolveYouTube(url) {
-  let videoId = null;
-
-  // youtube.com/watch?v=ID
-  videoId = url.match(/[?&]v=([^&]+)/)?.[1];
-
-  // youtu.be/ID
-  if (!videoId) {
-    videoId = url.match(/youtu\.be\/([^?]+)/)?.[1];
-  }
-
-  // youtube.com/shorts/ID
-  if (!videoId) {
-    videoId = url.match(/youtube\.com\/shorts\/([^?]+)/)?.[1];
-  }
+  const videoId = youtubeVideoId(url);
 
   if (!videoId) return null;
 
   return {
     type: "youtube",
-    subtype: url.includes("/shorts/") ? "shorts" : "video",
+    subtype: isYoutubeShort(url) ? "shorts" : "video",
     videoId,
     embedUrl: `https://www.youtube.com/embed/${videoId}`,
     url,
@@ -136,7 +125,9 @@ function resolveYouTube(url) {
 function resolveInstagram(url) {
   return {
     type: "instagram",
-    url,
+    // Permalink canônico (`/reel/`): `/reels/` — a forma que o app compartilha —
+    // responde 404 em `/embed/captioned/`, e o embed ficava em branco.
+    url: normalizeInstagramUrl(url),
   };
 }
 
