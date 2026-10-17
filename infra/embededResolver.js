@@ -1,6 +1,8 @@
 import { isSafeUrl } from "lib/ssrf-guard";
 import { safeFetch } from "lib/safe-fetch";
 import { isOwnHost, toLoopbackUrl } from "lib/internal-url";
+import { siteHostname } from "lib/seo";
+import { isYoutubeShort, normalizeInstagramUrl, youtubeVideoId } from "lib/embedLinks";
 
 /**
  * Decide de onde baixar a página — ou null quando o link não pode ser buscado.
@@ -87,7 +89,11 @@ function extractLinks(text) {
 }
 
 function isYouTube(url) {
-  return /(?:youtube\.com|youtu\.be)/.test(url);
+  // Reconhece **vídeo**, não "qualquer coisa do YouTube": canal, playlist e
+  // busca precisam cair em `fetchLinkPreview` para ganhar título e imagem. Antes
+  // o teste era só `/youtube\.com|youtu\.be/` e o `resolveYouTube` devolvia
+  // `null` para eles, o que virava um card de preview vazio.
+  return youtubeVideoId(url) !== null;
 }
 
 function isTwitch(url) {
@@ -95,7 +101,7 @@ function isTwitch(url) {
 }
 
 function isInstagram(url) {
-  return /instagram\.com\/(p|reel|tv)\//.test(url);
+  return normalizeInstagramUrl(url) !== null;
 }
 
 function isSteamStore(url) {
@@ -103,26 +109,13 @@ function isSteamStore(url) {
 }
 
 function resolveYouTube(url) {
-  let videoId = null;
-
-  // youtube.com/watch?v=ID
-  videoId = url.match(/[?&]v=([^&]+)/)?.[1];
-
-  // youtu.be/ID
-  if (!videoId) {
-    videoId = url.match(/youtu\.be\/([^?]+)/)?.[1];
-  }
-
-  // youtube.com/shorts/ID
-  if (!videoId) {
-    videoId = url.match(/youtube\.com\/shorts\/([^?]+)/)?.[1];
-  }
+  const videoId = youtubeVideoId(url);
 
   if (!videoId) return null;
 
   return {
     type: "youtube",
-    subtype: url.includes("/shorts/") ? "shorts" : "video",
+    subtype: isYoutubeShort(url) ? "shorts" : "video",
     videoId,
     embedUrl: `https://www.youtube.com/embed/${videoId}`,
     url,
@@ -132,7 +125,9 @@ function resolveYouTube(url) {
 function resolveInstagram(url) {
   return {
     type: "instagram",
-    url,
+    // Permalink canônico (`/reel/`): `/reels/` — a forma que o app compartilha —
+    // responde 404 em `/embed/captioned/`, e o embed ficava em branco.
+    url: normalizeInstagramUrl(url),
   };
 }
 
@@ -254,8 +249,11 @@ async function fetchLinkPreview(url) {
 }
 
 function resolveTwitch(url) {
-  console.log("base url", process.env.NEXT_PUBLIC_BASE_URL);
-  const domain = process.env.NEXT_PUBLIC_BASE_URL ? new URL(process.env.NEXT_PUBLIC_BASE_URL).hostname : "localhost";
+  // `siteHostname` aceita o valor com ou sem esquema: `new URL` direto na
+  // variável lançava `TypeError: Invalid URL` quando ela valia `localhost`
+  // (o padrão de `.env.development`), e qualquer post com link da Twitch
+  // respondia 500 em vez de gerar o embed.
+  const domain = siteHostname();
 
   // Canal
   const channelMatch = url.match(/twitch\.tv\/([^/?]+)/);

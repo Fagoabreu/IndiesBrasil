@@ -29,7 +29,7 @@ function normalizeImageSrc(src) {
  * Os dados vêm gravados no embed, resolvidos quando o post foi criado. Só que
  * o embed pode ter sido salvo **sem** título e imagem — foi o que aconteceu com
  * links do próprio site, que o servidor não conseguia buscar (ver
- * `internalFetchUrl` em `infra/embededResolver.js`). Nesses casos o card
+ * `resolveFetchTarget` em `infra/embededResolver.js`). Nesses casos o card
  * aparecia reduzido a "jogos.social.br / jogos.social.br".
  *
  * Por isso, quando falta título, o card se rebusca no cliente e se completa.

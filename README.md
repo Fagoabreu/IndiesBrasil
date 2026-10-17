@@ -54,6 +54,8 @@ Portal da comunidade de desenvolvedores indie brasileiros. Plataforma web com fe
 ### Streams ao vivo
 
 - Agrega **canais Twitch e YouTube** dos estúdios com status ao vivo/offline, título, audiência e miniatura.
+- **Página de assistir** por estúdio (`/streams/<estúdio>`) no estilo das plataformas de streaming: o player embutido grande com tela cheia, as informações da transmissão e as ações do canal, com a lista de outros canais ao lado. O endereço é o do estúdio, então ele continua o mesmo quando a transmissão troca de plataforma.
+- As traduções de plataforma (rótulo, endereço público do canal, endereço do player embutido) ficam no registro único `lib/streams.js`. Uma plataforma nova — a Kick, por exemplo — entra como uma entrada nesse registro e a coluna do canal no banco; nenhuma tela precisa saber que ela existe. A plataforma própria do site (a webconferência em `galene/`) entra do mesmo jeito.
 
 ### Ferramentas
 

@@ -1,0 +1,28 @@
+.badge {
+  display: inline-block;
+  /* Em coluna flex (`gap` da ficha do card) o selo esticaria a largura toda. */
+  width: fit-content;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.6;
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.badgeLarge {
+  font-size: 0.75rem;
+  padding: 2px 9px;
+}
+
+.platform_twitch {
+  background: rgba(145, 70, 255, 0.12);
+  color: #9146ff;
+  border: 1px solid rgba(145, 70, 255, 0.25);
+}
+
+.platform_youtube {
+  background: rgba(255, 0, 0, 0.08);
+  color: #cc0000;
+  border: 1px solid rgba(255, 0, 0, 0.2);
+}

@@ -740,6 +740,244 @@ async function respondToTransfer(transferId, userId, accept) {
   }
 }
 
+/**
+ * Estúdio de que o usuário é **titular**, com os membros ativos e os papéis.
+ *
+ * É o que a tela de exclusão de conta precisa mostrar antes de apagar: um dos
+ * dois caminhos (excluir o estúdio ou transferir) exige saber quem está no
+ * estúdio. Devolve `null` quando a conta não é responsável por nenhum.
+ */
+async function findOwnedWithMembers(userId) {
+  const result = await database.query({
+    text: `SELECT id, slug, name FROM organizations WHERE owner_id = $1 LIMIT 1`,
+    values: [userId],
+  });
+
+  const org = result.rows[0];
+  if (!org) return null;
+
+  const members = await findMembers(org.id);
+  return { ...org, members };
+}
+
+/**
+ * Executa `callback` com o cliente de uma transação já aberta — ou abre uma.
+ *
+ * As funções abaixo são chamadas de dois jeitos: dentro da transação do
+ * `user.purgeByEmail` (onde precisam ser atômicas com o resto) e isoladas, por
+ * quem só quer aquela operação. Receber o cliente em vez de abrir uma transação
+ * interna é o que evita uma transação aninhada — que daria COMMIT parcial e
+ * deixaria a exclusão pela metade justamente quando algo falha.
+ */
+function withClient(client, callback) {
+  if (client) return callback(client);
+  return database.transaction(callback);
+}
+
+/**
+ * Transfere a titularidade **sem etapa de aceite** — caminho administrativo.
+ *
+ * O fluxo normal (`requestOwnershipTransfer` + `respondToTransfer`) é uma
+ * negociação: quem recebe precisa aceitar. Aqui não pode haver espera, porque a
+ * transferência é pré-requisito para excluir a conta do titular atual — deixar
+ * uma transferência pendente bloquearia a exclusão para sempre.
+ *
+ * Por isso as regras de segurança ficam no próprio model e valem para qualquer
+ * chamador: o novo responsável precisa ser **membro ativo** (não se transfere
+ * estúdio para quem não participa), o estúdio precisa de fato pertencer a
+ * `fromUserId` (evita corrida com outra transferência), e o novo dono recebe a
+ * role `admin` — `owner` é derivado de `owner_id`, mas o papel é o que aparece
+ * em `findMembers` e o que as checagens de escrita usam no dia a dia.
+ */
+async function transferOwnership(orgId, { fromUserId, toUserId, actorId, client } = {}) {
+  return withClient(client, async (runner) => {
+    if (!toUserId) {
+      throw new ValidationError({
+        message: "Escolha o novo responsável pelo estúdio.",
+        action: "Informe `toUserId` com um membro ativo do estúdio.",
+      });
+    }
+
+    if (toUserId === fromUserId) {
+      throw new ValidationError({
+        message: "O estúdio já pertence a esta conta.",
+        action: "Escolha outro membro para receber a responsabilidade.",
+      });
+    }
+
+    const orgResult = await runner.query({
+      text: `SELECT id, slug, name, owner_id FROM organizations WHERE id = $1`,
+      values: [orgId],
+    });
+    const org = orgResult.rows[0];
+
+    if (!org) {
+      throw new NotFoundError({ message: "Estúdio não encontrado." });
+    }
+
+    if (org.owner_id !== fromUserId) {
+      throw new ValidationError({
+        message: "Esta conta não é mais a responsável pelo estúdio.",
+        action: "Atualize a página e confira quem é o titular atual.",
+      });
+    }
+
+    const member = await runner.query({
+      text: `SELECT 1 FROM org_members WHERE org_id = $1 AND member_id = $2 AND status = 'active'`,
+      values: [orgId, toUserId],
+    });
+
+    if (member.rowCount === 0) {
+      throw new ValidationError({
+        message: "O novo responsável precisa ser membro ativo do estúdio.",
+        action: "Convide a pessoa para o estúdio antes de transferir a responsabilidade.",
+      });
+    }
+
+    await runner.query({
+      text: `UPDATE organizations SET owner_id = $1 WHERE id = $2`,
+      values: [toUserId, orgId],
+    });
+
+    // `ON CONFLICT DO NOTHING` + evento só quando a linha é criada: o evento é
+    // auditoria de concessão, e repetir "granted" a cada transferência para
+    // quem já era admin tornaria a trilha ilegível.
+    const granted = await runner.query({
+      text: `
+        INSERT INTO org_roles (org_id, member_id, role, granted_by)
+        VALUES ($1, $2, 'admin', $3)
+        ON CONFLICT (org_id, member_id, role) DO NOTHING
+        RETURNING role
+      `,
+      values: [orgId, toUserId, actorId ?? null],
+    });
+
+    if (granted.rowCount > 0) {
+      await recordRoleEvent(runner, { orgId, memberId: toUserId, role: "admin", action: "granted", actorId });
+    }
+
+    // Uma transferência pendente passaria a apontar para um dono que não é mais
+    // o dono; se aceita depois, sobrescreveria a titularidade recém-definida.
+    await runner.query({
+      text: `UPDATE org_ownership_transfers SET status = 'cancelled', responded_at = now() WHERE org_id = $1 AND status = 'pending'`,
+      values: [orgId],
+    });
+
+    return { studio: { id: org.id, slug: org.slug, name: org.name }, from_user_id: fromUserId, to_user_id: toUserId };
+  });
+}
+
+/**
+ * Exclui o estúdio **e as obras dele** (jogos, jogos de mesa, livros).
+ *
+ * Existe para o caso de conta descartável que é dona de um estúdio de teste:
+ * sem isto, a alternativa seria deixar um estúdio sem responsável — estado em
+ * que ninguém consegue administrar, transferir nem excluir.
+ *
+ * Apaga o que o estúdio possui e o que apontaria para ele depois:
+ * - posts do estúdio **e as respostas** encadeadas a eles (de qualquer autor,
+ *   porque `parent_post_id` é `NO ACTION` e ficariam órfãs);
+ * - post_tags / comments / post_likes / post_notifications desses posts, e
+ *   enquetes que eles usavam (`posts.poll_id` é `SET NULL`: a enquete ficaria
+ *   sem dono);
+ * - jogos, jogos de mesa e livros com `owner_org_id` — os filhos caem por
+ *   `CASCADE`;
+ * - `org_followers`, `org_members` e `organization_contacts`, que são
+ *   `NO ACTION` (o `DELETE` do estúdio falharia);
+ * - denúncias e bloqueios contra o estúdio (`target_id` é texto, sem FK);
+ * - o endereço do estúdio, que ficaria sozinho na tabela.
+ *
+ * O que **não** é apagado: `uploaded_images`. É infraestrutura compartilhada
+ * (a mesma imagem pode estar em outro conteúdo) e o arquivo no Cloudinary não
+ * pode ser removido de dentro de uma transação de banco — se a transação
+ * falhasse, a imagem já teria ido embora.
+ */
+async function deleteWithWorks(orgId, { client } = {}) {
+  return withClient(client, async (runner) => {
+    const orgResult = await runner.query({
+      text: `SELECT id, slug, name, address_id FROM organizations WHERE id = $1`,
+      values: [orgId],
+    });
+    const org = orgResult.rows[0];
+
+    if (!org) {
+      throw new NotFoundError({ message: "Estúdio não encontrado." });
+    }
+
+    // Posts do estúdio + todas as respostas encadeadas. A CTE recursiva sobe a
+    // partir dos posts da organização; sem ela, uma resposta de terceiro
+    // impediria o DELETE com violação de FK em `parent_post_id`.
+    await runner.query({
+      text: `
+        CREATE TEMP TABLE org_purge_posts ON COMMIT DROP AS
+        WITH RECURSIVE tree AS (
+          SELECT id FROM posts WHERE organization_id = $1
+          UNION
+          SELECT p.id FROM posts p JOIN tree t ON p.parent_post_id = t.id
+        )
+        SELECT id FROM tree
+      `,
+      values: [orgId],
+    });
+
+    await runner.query({ text: `DELETE FROM post_notifications WHERE post_id IN (SELECT id FROM org_purge_posts)` });
+    await runner.query({ text: `DELETE FROM post_likes WHERE post_id IN (SELECT id FROM org_purge_posts)` });
+
+    const commentsResult = await runner.query({
+      text: `DELETE FROM comments WHERE post_id IN (SELECT id FROM org_purge_posts) RETURNING id`,
+    });
+
+    const pollsResult = await runner.query({
+      text: `
+        DELETE FROM polls
+        WHERE id IN (
+          SELECT poll_id FROM posts
+          WHERE id IN (SELECT id FROM org_purge_posts) AND poll_id IS NOT NULL
+        )
+        RETURNING id
+      `,
+    });
+
+    // Ordem impossível de garantir dentro de um único DELETE: soltar o vínculo
+    // antes é o que evita a violação em `parent_post_id`.
+    await runner.query({ text: `UPDATE posts SET parent_post_id = NULL WHERE id IN (SELECT id FROM org_purge_posts)` });
+
+    const postsResult = await runner.query({ text: `DELETE FROM posts WHERE id IN (SELECT id FROM org_purge_posts) RETURNING id` });
+
+    const gamesResult = await runner.query({ text: `DELETE FROM games WHERE owner_org_id = $1 RETURNING id`, values: [orgId] });
+    const boardgamesResult = await runner.query({ text: `DELETE FROM boardgames WHERE owner_org_id = $1 RETURNING id`, values: [orgId] });
+    const booksResult = await runner.query({ text: `DELETE FROM books WHERE owner_org_id = $1 RETURNING id`, values: [orgId] });
+
+    await runner.query({ text: `DELETE FROM org_followers WHERE org_id = $1`, values: [orgId] });
+    await runner.query({ text: `DELETE FROM org_members WHERE org_id = $1`, values: [orgId] });
+    await runner.query({ text: `DELETE FROM organization_contacts WHERE org_id = $1`, values: [orgId] });
+
+    await runner.query({ text: `DELETE FROM reports WHERE target_type = 'studio' AND target_id = $1::text`, values: [orgId] });
+    await runner.query({ text: `DELETE FROM moderation_actions WHERE target_type = 'studio' AND target_id = $1::text`, values: [orgId] });
+
+    const deletedOrg = await runner.query({
+      text: `DELETE FROM organizations WHERE id = $1 RETURNING id, slug, name`,
+      values: [orgId],
+    });
+
+    if (org.address_id) {
+      await runner.query({ text: `DELETE FROM addresses WHERE id = $1`, values: [org.address_id] });
+    }
+
+    return {
+      studio: deletedOrg.rows[0],
+      removed: {
+        posts: postsResult.rowCount,
+        comments: commentsResult.rowCount,
+        polls: pollsResult.rowCount,
+        games: gamesResult.rowCount,
+        boardgames: boardgamesResult.rowCount,
+        books: booksResult.rowCount,
+      },
+    };
+  });
+}
+
 /* =========================================================
  * Validações
  * ========================================================= */
@@ -1119,6 +1357,9 @@ const organization = {
   deleteContact,
   requestOwnershipTransfer,
   respondToTransfer,
+  findOwnedWithMembers,
+  transferOwnership,
+  deleteWithWorks,
   getRelationships,
   requestRelationship,
   respondToRelationship,

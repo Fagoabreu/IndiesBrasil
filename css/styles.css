@@ -77,6 +77,15 @@
 
   /* Interactive states */
   --brand-hover-bg: rgba(139, 92, 246, 0.05);
+
+  /*
+   * Transmissões ao vivo (streams). Fica aqui, e não no CSS Module de cada tela,
+   * porque duas superfícies desenham o mesmo "AO VIVO": o card da listagem
+   * (`pages/streams/index.js`), a página de assistir e o selo compartilhado
+   * (`components/Streams/LiveBadge`). RGBA via `--live-rgb`, como o brand.
+   */
+  --live-color: #e53e3e;
+  --live-rgb: 229, 62, 62;
 }
 
 /* ========================================

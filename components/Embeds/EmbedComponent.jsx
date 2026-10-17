@@ -2,6 +2,7 @@ import styles from "./EmbedComponent.module.css";
 import InstagramEmbed from "./InstagramEmbed";
 import LinkPreviewCard from "./LinkPreviewCard";
 import PropTypes from "prop-types";
+import { isYoutubeShort, normalizeInstagramUrl, youtubeVideoId } from "@/lib/embedLinks";
 
 EmbedComponent.propTypes = {
   embeds: PropTypes.arrayOf(
@@ -9,6 +10,7 @@ EmbedComponent.propTypes = {
       id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
       type: PropTypes.oneOf(["youtube", "twitch", "instagram", "preview", "steam"]).isRequired,
       subtype: PropTypes.string,
+      videoId: PropTypes.string,
 
       embedUrl: PropTypes.string,
       url: PropTypes.string,
@@ -28,14 +30,24 @@ export default function EmbedComponent({ embeds }) {
       {embeds.map((embed, i) => {
         if (!embed) return null;
         const key = embed.id ?? i;
-        if (embed.type === "youtube") {
+
+        // O reconhecimento é pela URL, não pelo `type` gravado: posts publicados
+        // antes de o resolvedor conhecer `/live/` (YouTube) e `/reels/`
+        // (Instagram) guardaram esses links como `preview`, e um preview desses
+        // nunca teria imagem — as duas plataformas não servem o HTML do vídeo
+        // para uma requisição de servidor. Corrigir na leitura conserta o post
+        // antigo sem regravar nada.
+        const youtubeId = embed.videoId ?? youtubeVideoId(embed.url);
+        if (youtubeId) {
+          const src = embed.embedUrl ?? `https://www.youtube.com/embed/${youtubeId}`;
+          const isShort = embed.subtype === "shorts" || isYoutubeShort(embed.url);
           // Wrapper 16:9 (ou 9:16 para Shorts): sem ele o iframe ficava quase
           // quadrado no mobile e o player cortava as laterais do vídeo.
           return (
-            <div key={key} className={`${styles.videoEmbed}${embed.subtype === "shorts" ? ` ${styles.videoShort}` : ""}`}>
+            <div key={key} className={`${styles.videoEmbed}${isShort ? ` ${styles.videoShort}` : ""}`}>
               <iframe
-                title={embed.title || (embed.subtype === "shorts" ? "Short do YouTube" : "Vídeo do YouTube")}
-                src={embed.embedUrl}
+                title={embed.title || (isShort ? "Short do YouTube" : "Vídeo do YouTube")}
+                src={src}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
                 loading="lazy"
@@ -52,10 +64,11 @@ export default function EmbedComponent({ embeds }) {
           );
         }
 
-        if (embed.type === "instagram") {
+        const instagramUrl = normalizeInstagramUrl(embed.url);
+        if (embed.type === "instagram" || (embed.type === "preview" && instagramUrl)) {
           return (
             <div key={key} className={styles.embed}>
-              <InstagramEmbed url={embed.url} />
+              <InstagramEmbed url={instagramUrl ?? embed.url} />
             </div>
           );
         }

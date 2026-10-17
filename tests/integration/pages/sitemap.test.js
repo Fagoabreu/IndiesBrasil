@@ -62,6 +62,7 @@ describe("Sitemap", () => {
       "/sitemap/noticias.xml",
       "/sitemap/analises.xml",
       "/sitemap/agenda.xml",
+      "/sitemap/streams.xml",
     ]);
   });
 
@@ -83,6 +84,7 @@ describe("Sitemap", () => {
       "/sitemap/noticias.xml": ["/noticias", `/noticias/${fixtures.newsId}`],
       "/sitemap/analises.xml": ["/analises", `/analises/${fixtures.analiseSlug}`],
       "/sitemap/agenda.xml": ["/agenda", `/agenda/${fixtures.publicEventId}`],
+      "/sitemap/streams.xml": ["/streams", `/streams/${fixtures.studio.slug}`],
     };
 
     for (const [path, paths] of Object.entries(expected)) {
@@ -103,6 +105,29 @@ describe("Sitemap", () => {
     const { body } = await fetchSitemap("/sitemap/jogos.xml");
 
     expect(locations(body)).not.toContain(`/jogos/${fixtures.blockedGameSlug}`);
+  });
+
+  test("O arquivo de streams publica o canal do estúdio e esconde o estúdio bloqueado", async () => {
+    const { response, body } = await fetchSitemap("/sitemap/streams.xml");
+    const paths = locations(body);
+
+    expect(response.status).toBe(200);
+    // Quem entra é o estúdio que tem canal cadastrado, ao vivo ou não: a página
+    // offline é conteúdo dela também.
+    expect(paths).toContain(`/streams/${fixtures.studio.slug}`);
+    // Estúdio bloqueado esconderia a página do canal (404) — e é a mesma classe
+    // de defeito que deixava o canal bloqueado como primeiro card da listagem.
+    expect(paths).not.toContain(`/streams/${fixtures.blockedStudioSlug}`);
+  });
+
+  test("O sitemap de streams não carimba lastmod", async () => {
+    const { body } = await fetchSitemap("/sitemap/streams.xml");
+
+    // A única data que muda nesta página é o status ao vivo, reescrito a cada
+    // verificação (5 min). Um `<lastmod>` que se move sem o conteúdo mudar é o
+    // sinal que o Google aprende a ignorar — e, sem `updated_at` na linha, a
+    // tag some sozinha (`buildUrlEntry` omite valor vazio).
+    expect(body).not.toContain("<lastmod>");
   });
 
   test("A agenda publica só eventos públicos e publicados", async () => {
@@ -184,7 +209,7 @@ describe("Sitemap", () => {
     }
 
     // Cada arquivo é uma varredura sem paginação e o Next não cacheia
-    // `getServerSideProps` no standalone: sem teto, um bot nos nove arquivos
+    // `getServerSideProps` no standalone: sem teto, um bot em todos os arquivos
     // vira carga de banco em cima de uma rota de SEO.
     expect(lastStatus).toBe(429);
   });
