@@ -14,6 +14,8 @@ import ContatoItem from "@/components/Portfolio/Contatos/ContatoItem";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
 import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 import ContentRatingModal from "@/components/ContentRatingModal";
+import InviteMemberField from "@/components/Studio/InviteMemberField";
+import { normalizeMemberQuery } from "@/context/dataHooks/UseUserSuggest";
 import styles from "./configuracoes.module.css";
 
 const PLATFORM_OPTIONS = [
@@ -498,8 +500,12 @@ export default function ConfiguracoesPage() {
   }
 
   async function handleInvite(e) {
-    e.preventDefault();
-    if (!inviteUsername.trim()) return;
+    e?.preventDefault?.();
+    // O campo aceita `@username` (prefixo de exibição). O username no banco não
+    // tem `@`, então ele é removido antes de enviar — mandá-lo devolvia
+    // "usuário não encontrado" para algo que estava visivelmente certo na tela.
+    const username = normalizeMemberQuery(inviteUsername);
+    if (!username) return;
     setInviteMsg({ type: null, text: "" });
     setInviting(true);
     try {
@@ -507,7 +513,7 @@ export default function ConfiguracoesPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ username: inviteUsername.trim() }),
+        body: JSON.stringify({ username }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -520,7 +526,7 @@ export default function ConfiguracoesPage() {
       setInviteUsername("");
       setInviteMsg({
         type: "success",
-        text: `Convite enviado para @${inviteUsername.trim()}.`,
+        text: `Convite enviado para @${username}.`,
       });
       fetchInvites();
     } catch {
@@ -2603,15 +2609,15 @@ export default function ConfiguracoesPage() {
             <h2 className={styles.sectionTitle}>Convidar Membros</h2>
 
             <form onSubmit={handleInvite} className={styles.inviteRow}>
-              <input
-                type="text"
-                className={styles.input}
-                placeholder="Username do usuário"
+              <InviteMemberField
                 value={inviteUsername}
-                onChange={(e) => setInviteUsername(e.target.value)}
-                maxLength={50}
+                onChange={setInviteUsername}
+                members={members}
+                pendingInvites={pendingInvites}
+                disabled={inviting}
+                onSubmit={handleInvite}
               />
-              <button type="submit" className={styles.btnSave} disabled={inviting || !inviteUsername.trim()}>
+              <button type="submit" className={styles.btnSave} disabled={inviting || !normalizeMemberQuery(inviteUsername)}>
                 {inviting ? <Spinner size="small" /> : "Convidar"}
               </button>
             </form>

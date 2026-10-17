@@ -1,0 +1,120 @@
+.wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 6px;
+  background: var(--bgColor-default);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.field:focus-within {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb-primary), 0.15);
+}
+
+.icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--fgColor-muted);
+}
+
+/* O input não tem moldura própria: a moldura é do `.field`, para o ícone
+   ficar dentro da área de foco. */
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--fgColor-default);
+  font-size: 0.875rem;
+  font-family: inherit;
+}
+
+.input:disabled {
+  color: var(--fgColor-muted);
+  cursor: not-allowed;
+}
+
+.list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 280px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 8px;
+  background: var(--bgColor-default);
+  box-shadow: var(--shadow-floating-small, 0 8px 24px rgba(0, 0, 0, 0.18));
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--fgColor-default);
+}
+
+.optionActive {
+  background: var(--brand-hover-bg);
+}
+
+.optionDisabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.optionName {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.optionResumo {
+  font-size: 0.78rem;
+  color: var(--fgColor-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.optionFlag {
+  align-self: flex-start;
+  margin-top: 2px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--fgColor-muted);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 999px;
+  padding: 0 6px;
+}
+
+.loading {
+  padding: 8px 10px;
+  font-size: 0.8rem;
+  color: var(--fgColor-muted);
+}
