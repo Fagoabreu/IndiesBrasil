@@ -7,65 +7,17 @@ export default createRouter()
   .get(controller.canRequest("read:studio"), getHandler)
   .handler(controller.errorHandlers);
 
-function pickActivePlatform(row) {
-  if (row.twitch_channel && row.twitch_is_live) return "twitch";
-  if (row.youtube_channel_id && row.youtube_is_live) return "youtube";
-  return null;
-}
-
-function pickStreamFields(row, platform) {
-  if (platform === "twitch") {
-    return {
-      viewer_count: row.twitch_viewer_count,
-      stream_title: row.twitch_stream_title,
-      thumbnail_url: row.twitch_thumbnail_url,
-      category_name: row.twitch_category_name,
-      checked_at: row.twitch_checked_at,
-    };
-  }
-  if (platform === "youtube") {
-    return {
-      viewer_count: row.youtube_viewer_count,
-      stream_title: row.youtube_stream_title,
-      thumbnail_url: row.youtube_thumbnail_url,
-      category_name: row.youtube_category_name,
-      checked_at: row.youtube_checked_at,
-    };
-  }
-  return {
-    viewer_count: null,
-    stream_title: null,
-    thumbnail_url: null,
-    category_name: null,
-    checked_at: null,
-  };
-}
-
 /**
  * GET /api/v1/streams
  * Returns all studios with streaming channels and their latest live status.
  * Results are ordered: live channels first (by viewer count), then offline.
+ *
+ * A tradução linha → objeto do card mudou para o model (`serializeRow`, em
+ * `models/stream.js`): a página de assistir lê o mesmo formato por `findBySlug`,
+ * e manter a leitura aqui era garantir duas versões dela.
  */
 async function getHandler(request, response) {
   const studios = await stream.getStudiosWithStreams();
 
-  const data = studios.map((row) => {
-    const activePlatform = pickActivePlatform(row);
-    const streamFields = pickStreamFields(row, activePlatform);
-
-    return {
-      id: row.id,
-      slug: row.slug,
-      name: row.name,
-      pitch: row.pitch,
-      logo_url: row.logo_url,
-      twitch_channel: row.twitch_channel,
-      youtube_channel_id: row.youtube_channel_id,
-      is_live: row.twitch_is_live || row.youtube_is_live || false,
-      active_platform: activePlatform,
-      ...streamFields,
-    };
-  });
-
-  return response.status(200).json(data);
+  return response.status(200).json(studios);
 }

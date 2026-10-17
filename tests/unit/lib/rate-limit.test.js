@@ -1,4 +1,5 @@
 import rateLimit from "@/lib/rate-limit";
+import { sitemapKeys } from "@/lib/sitemap";
 
 /**
  * Reconhecimento de crawler e os dois tetos do sitemap.
@@ -79,12 +80,16 @@ describe("lib/rate-limit.js — crawler e teto do sitemap", () => {
       expect(rateLimit.limiters.sitemapCrawler.max).toBeGreaterThan(rateLimit.limiters.sitemap.max);
     });
 
-    test("buscar o índice e os nove arquivos cabe no teto comum, com folga", () => {
-      // Um crawler legítimo busca o índice e os nove filhos: dez requisições. O
-      // teto comum precisa estar muito acima disso para não depender de o
-      // `User-Agent` ter sido reconhecido — um crawler novo (ou um IP
-      // compartilhado) não pode ser barrado por engano.
-      const requestsPerCrawl = 10;
+    test("buscar o índice e todos os arquivos cabe no teto comum, com folga", () => {
+      // Um crawler legítimo busca o índice e cada filho. O teto comum precisa
+      // estar muito acima disso para não depender de o `User-Agent` ter sido
+      // reconhecido — um crawler novo (ou um IP compartilhado) não pode ser
+      // barrado por engano.
+      //
+      // A contagem vem de `sitemapKeys()`, e não digitada: um tipo novo
+      // acrescenta um arquivo, e um total fixo aqui continuaria passando
+      // enquanto a margem real encolhia.
+      const requestsPerCrawl = sitemapKeys().length + 1;
       expect(rateLimit.limiters.sitemap.max).toBeGreaterThanOrEqual(requestsPerCrawl * 10);
     });
 

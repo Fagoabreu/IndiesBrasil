@@ -21,7 +21,7 @@ import PostCardComponent from "@/components/PostCard/PostCardComponent";
 import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 import MessagesPanel from "@/components/Messages/MessagesPanel";
 import SendMessageButton from "@/components/Messages/SendMessageButton";
-import { SITE_URL, OG_CARD_SIZE } from "@/lib/seo";
+import { SITE_URL, OG_CARD_SIZE, embedHostname } from "@/lib/seo";
 import { resolveOrgNotificationTitle, resolveOrgNotificationMessage, resolveOrgNotificationHref } from "@/lib/notifications";
 import styles from "./studio.module.css";
 import { uploadWithProgress } from "@/utils/uploadWithProgress";
@@ -53,8 +53,11 @@ function getVideoEmbedUrl(url) {
 function getLiveEmbedSrc(streamData) {
   if (!streamData?.is_live) return null;
   if (streamData.active_platform === "twitch" && streamData.twitch_channel) {
-    const hostname = typeof window !== "undefined" ? window.location.hostname : process.env.NEXT_PUBLIC_BASE_URL || "jogos.social.br";
-    return `https://player.twitch.tv/?channel=${streamData.twitch_channel}&parent=${hostname}&muted=1`;
+    // `embedHostname` devolve só o host — sem porta e sem esquema —, que é o que
+    // o player da Twitch valida em `parent`. A conta estava escrita aqui à mão,
+    // e `NEXT_PUBLIC_BASE_URL` com esquema produzia `parent=http://localhost:3000`
+    // (embed recusado) em vez de `localhost`.
+    return `https://player.twitch.tv/?channel=${streamData.twitch_channel}&parent=${embedHostname()}&muted=1`;
   }
   if (streamData.active_platform === "youtube" && streamData.youtube_channel_id) {
     return `https://www.youtube.com/embed/live_stream?channel=${streamData.youtube_channel_id}&autoplay=1&mute=1`;

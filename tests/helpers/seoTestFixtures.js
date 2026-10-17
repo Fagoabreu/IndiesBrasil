@@ -23,6 +23,10 @@ import moderation from "models/moderation";
  * que ninguém note, porque um teste que só confere presença passa com o
  * conteúdo bloqueado publicado.
  *
+ * O estúdio ganha **canal de transmissão** e há um segundo estúdio, bloqueado,
+ * também com canal: o mesmo raciocínio vale para `/streams`, que é uma varredura
+ * pública em massa e publica `/streams/<estúdio>` no sitemap.
+ *
  * Cria também eventos em visibilidades diferentes (público, `members`,
  * `private` e rascunho). Mesma razão: o sitemap da agenda **tem** de filtrar
  * por visibilidade e status, e um teste que só confere presença passa com o
@@ -37,6 +41,7 @@ export async function createSeoFixtures() {
   });
 
   const studio = await organization.create(user, { name: "Estúdio Sitemap" });
+  await organization.update(studio.slug, { twitch_channel: "estudiositemap" });
 
   const gameRow = await game.create(studio.id, user.id, { name: "Jogo Sitemap", genre: "Aventura", stage: "released" });
 
@@ -65,6 +70,22 @@ export async function createSeoFixtures() {
   await moderation.createBlock({
     targetType: "game",
     targetId: blockedGame.id,
+    reason: "violacao_termos",
+    moderatorId: user.id,
+  });
+
+  const blockedStudioOwner = await createActivatedUserWithSession({
+    username: "DonoBloqueado",
+    email: "dono.bloqueado@teste.dev",
+    password: TEST_CREDENTIALS.userDefault,
+    cpf: 90123456706,
+  });
+
+  const blockedStudio = await organization.create(blockedStudioOwner.user, { name: "Estúdio Bloqueado Sitemap" });
+  await organization.update(blockedStudio.slug, { twitch_channel: "bloqueadositemap" });
+  await moderation.createBlock({
+    targetType: "studio",
+    targetId: blockedStudio.id,
     reason: "violacao_termos",
     moderatorId: user.id,
   });
@@ -114,6 +135,7 @@ export async function createSeoFixtures() {
     membersEventId: membersEvent.id,
     draftEventId: draftEvent.id,
     blockedGameSlug: blockedGame.slug,
+    blockedStudioSlug: blockedStudio.slug,
   };
 }
 
@@ -137,5 +159,6 @@ export function hubLinks(fixtures) {
     "/estudos": `/estudos/${fixtures.courseSlug}`,
     "/noticias": `/noticias/${fixtures.newsId}`,
     "/analises": `/analises/${fixtures.analiseSlug}`,
+    "/streams": `/streams/${fixtures.studio.slug}`,
   };
 }

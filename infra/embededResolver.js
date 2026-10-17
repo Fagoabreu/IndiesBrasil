@@ -1,6 +1,7 @@
 import { isSafeUrl } from "lib/ssrf-guard";
 import { safeFetch } from "lib/safe-fetch";
 import { isOwnHost, toLoopbackUrl } from "lib/internal-url";
+import { siteHostname } from "lib/seo";
 
 /**
  * Decide de onde baixar a página — ou null quando o link não pode ser buscado.
@@ -95,7 +96,10 @@ function isTwitch(url) {
 }
 
 function isInstagram(url) {
-  return /instagram\.com\/(p|reel|tv)\//.test(url);
+  // `reel` (singular) e `reels` (plural) são as duas formas que o Instagram
+  // publica — a regex só aceitava a singular, então um link de Reels caía em
+  // `fetchLinkPreview` e virava card genérico em vez do embed.
+  return /instagram\.com\/(?:p|reels?|tv)\//.test(url);
 }
 
 function isSteamStore(url) {
@@ -254,8 +258,11 @@ async function fetchLinkPreview(url) {
 }
 
 function resolveTwitch(url) {
-  console.log("base url", process.env.NEXT_PUBLIC_BASE_URL);
-  const domain = process.env.NEXT_PUBLIC_BASE_URL ? new URL(process.env.NEXT_PUBLIC_BASE_URL).hostname : "localhost";
+  // `siteHostname` aceita o valor com ou sem esquema: `new URL` direto na
+  // variável lançava `TypeError: Invalid URL` quando ela valia `localhost`
+  // (o padrão de `.env.development`), e qualquer post com link da Twitch
+  // respondia 500 em vez de gerar o embed.
+  const domain = siteHostname();
 
   // Canal
   const channelMatch = url.match(/twitch\.tv\/([^/?]+)/);
