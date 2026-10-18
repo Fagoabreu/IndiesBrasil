@@ -24,7 +24,12 @@ import SendMessageButton from "@/components/Messages/SendMessageButton";
 import { SITE_URL, OG_CARD_SIZE, embedHostname } from "@/lib/seo";
 import { resolveOrgNotificationTitle, resolveOrgNotificationMessage, resolveOrgNotificationHref } from "@/lib/notifications";
 import styles from "./studio.module.css";
+// O estilo dos botões de ação mora junto do componente (ver o comentário lá);
+// a página importa o mesmo módulo para os dois botões que não passam por ele.
+import actionStyles from "@/components/Studio/StudioActionButton.module.css";
+import StudioActionButton from "@/components/Studio/StudioActionButton";
 import { uploadWithProgress } from "@/utils/uploadWithProgress";
+import { STORE_SALES_ENABLED } from "@/lib/store-constants";
 
 // Abas válidas do estúdio, usadas para validar `?tab=` do endereço.
 const STUDIO_TABS = ["perfil", "postagens", "mensagens", "notificacoes"];
@@ -484,7 +489,7 @@ export default function StudioPage({ initialStudio }) {
       <div className={styles.notFound}>
         <OrganizationIcon size={48} />
         <p>Estúdio não encontrado.</p>
-        <Link href="/estudios" className={styles.btnOutline}>
+        <Link href="/estudios" className={actionStyles.btnOutline}>
           Ver todos os estúdios
         </Link>
       </div>
@@ -710,31 +715,29 @@ export default function StudioPage({ initialStudio }) {
                 {/* Membro j谩 fala com o est煤dio por dentro: a conversa existe pelo
                     lado de fora, e o servidor recusa abrir uma com o pr贸prio est煤dio. */}
                 {!viewer.isMember && !viewer.isAdmin && !viewer.isOwner && studio?.id && (
-                  <SendMessageButton targetType="studio" targetId={studio.id} className={styles.btnOutline} />
+                  <SendMessageButton targetType="studio" targetId={studio.id} className={actionStyles.btnOutline} />
                 )}
-                <Link href={`/estudios/${slug}/press-kit`} className={styles.btnOutline} target="_blank" rel="noopener noreferrer">
-                  <DownloadIcon size={14} /> Press Kit
-                </Link>
+                <StudioActionButton href={`/estudios/${slug}/press-kit`} icon={<DownloadIcon size={14} />} label="Press Kit" external />
                 {canEdit && (
-                  <Link href={`/estudios/${slug}/loja`} className={styles.btnOutline}>
-                    <PackageIcon size={14} /> Loja
-                  </Link>
+                  <StudioActionButton
+                    href={`/estudios/${slug}/loja`}
+                    icon={<PackageIcon size={14} />}
+                    label="Loja"
+                    disabled={!STORE_SALES_ENABLED}
+                    disabledHint="Loja em construção — disponível em breve."
+                  />
                 )}
                 {(viewer.isMember || viewer.isAdmin || viewer.isOwner) && (
-                  <Link href={`/estudios/${slug}/pedidos`} className={styles.btnOutline}>
-                    <PackageIcon size={14} /> Pedidos
-                  </Link>
+                  <StudioActionButton
+                    href={`/estudios/${slug}/pedidos`}
+                    icon={<PackageIcon size={14} />}
+                    label="Pedidos"
+                    disabled={!STORE_SALES_ENABLED}
+                    disabledHint="Os pedidos ficam disponíveis quando a loja entrar no ar."
+                  />
                 )}
-                {canPost && (
-                  <Link href={`/estudios/${slug}/reunioes`} className={styles.btnOutline}>
-                    <VideoIcon size={14} /> Reuniões
-                  </Link>
-                )}
-                {canEdit && (
-                  <Link href={`/estudios/${slug}/configuracoes`} className={styles.btnOutline}>
-                    <GearIcon size={14} /> Editar
-                  </Link>
-                )}
+                {canPost && <StudioActionButton href={`/estudios/${slug}/reunioes`} icon={<VideoIcon size={14} />} label="Reuniões" />}
+                {canEdit && <StudioActionButton href={`/estudios/${slug}/configuracoes`} icon={<GearIcon size={14} />} label="Editar" />}
               </div>
             </div>
 
