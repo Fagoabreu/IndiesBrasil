@@ -144,6 +144,13 @@ Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESM
 - `Enter` com a lista aberta escolhe a sugestao destacada; sem sugestao, envia o formulario. O componente chama `onSubmit` porque o `<form>` do React nao dispara `submit` a partir de um `keydown` sintetico.
 - Debounce de 300 ms + minimo de 2 caracteres: a busca e varredura de tabela e uma letra casaria com quase toda a base.
 
+## Loja desligada (botoes do perfil do estudio)
+
+- `STORE_SALES_ENABLED` (`lib/store-constants.js`, le `NEXT_PUBLIC_STORE_SALES_ENABLED`) e a **unica** alavanca: bloqueia pedidos no servidor, mostra o aviso em `/loja` e desabilita os atalhos "Loja" e "Pedidos" no cabecalho do estudio. Uma segunda variavel so para os botoes criaria dois interruptores para a mesma decisao.
+- O estado desabilitado e um `<button disabled>` de verdade, **nao** um `<Link>` com `aria-disabled`: link nao tem estado desabilitado e, com `href`, continua navegavel por clique/teclado/nova aba. Ver `components/Studio/StudioActionButton.jsx`, fixado em `tests/unit/components/studioActionButton.test.js`.
+- O estilo de `.btnOutline` mora em `components/Studio/StudioActionButton.module.css` e a pagina **importa esse modulo** para os dois botoes que nao passam pelo componente (Voltar, mensagem). Copia em `studio.module.css` divergiria — e a classe e hasheada por arquivo, entao uma regra da pagina nunca alcancaria o botao do componente.
+- Mobile: o cabeçalho do estudio empilha em **≤700px** (nao mais so em ≤480): com 122px de recuo do logo + ~135px do QR, o `flex-wrap` quebrava os botoes em linhas irregulares (2, 2, 1). Os botoes viram grid de 2 colunas com alvo de 44px.
+
 ## Diretorio de membros (`/membros`)
 
 - A lista publica mostra **so conta ativada** (`'create:session' = ANY(u.features)`), a mesma definicao de `user_accounts` em `models/serverStatus.js`. Antes nao havia filtro: o diretorio listava cadastro nunca ativado e `/membros` mostrava mais gente que a home (47 x 41 em producao) — e publicava perfil de quem nunca confirmou o e-mail.

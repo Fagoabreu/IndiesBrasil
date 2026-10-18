@@ -453,6 +453,62 @@
   .contentGrid {
     grid-template-columns: 1fr;
   }
+
+  /* Abaixo de 700px o cabeçalho deixa de ter espaço para o QR fixo ao lado do
+     conteúdo: com 122px de recuo do logo + ~135px do QR, sobram ~340px para os
+     botões, e o `flex-wrap` quebrava em linhas irregulares (2, 2, 1) com o
+     último sozinho à esquerda. Aqui o conteúdo desce para baixo do logo e o QR
+     vai para o fim — a mesma ordem que o ≤480px já usava, só que aplicada onde
+     a largura realmente acaba.
+     `padding-top: 56px` é o espaço do logo (86px, terminando 44px abaixo do
+     banner de 150px) mais uma folga. */
+  .profileHeaderRow {
+    flex-direction: column;
+    padding: 56px 20px 20px;
+    margin-top: 0;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .profileContent {
+    width: 100%;
+  }
+
+  .profileRight {
+    display: flex;
+    width: 100%;
+    justify-content: flex-start;
+    order: 3;
+  }
+
+  /* Grid de 2 colunas em vez de flex com wrap: a quebra fica previsível (5
+     botões = 3 linhas) e nenhum rótulo é cortado. Com `flex: 1` + `min-width: 0`
+     o `flex-basis` vira 0 e os botões encolhiam abaixo do conteúdo, cabendo
+     todos numa linha de ~310px com alvos minúsculos. */
+  .profileActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 10px;
+  }
+
+  /* Área de toque mínima: o padding de 6px deixava os botões com ~29px de
+     altura; 44px é o mínimo recomendado (Apple HIG). O seletor cobre os dois
+     tipos de filho da barra: os `Link`/`button` estilizados por `.btnOutline` e
+     o "Seguir", que é um `Button` do Primer e não herda `.btnOutline` — sem
+     isto ele ficaria mais baixo que os vizinhos.
+
+     `min-height` e não `height`: o Button do Primer fixa `height: 2rem` (32px),
+     e `min-height` tem precedência sobre `height` por especificação — o alvo
+     cresce sem precisar sobrescrever o componente.
+
+     `justify-content: center` porque o Button do Primer usa `space-between`, que
+     com um único rótulo alinharia o "Seguir" à esquerda, fora do eixo dos
+     outros. */
+  .profileActions > * {
+    min-height: 44px;
+    justify-content: center;
+  }
 }
 
 .mainCol {
@@ -547,30 +603,10 @@
   color: var(--brand-secondary);
 }
 
-/* BOTÕES */
-.btnOutline {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 6px 14px;
-  border-radius: 6px;
-  background: transparent;
-  border: 1px solid var(--borderColor-default);
-  color: var(--fgColor-default);
-  font-size: 0.8rem;
-  font-weight: 500;
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    border-color 0.15s;
-}
-
-.btnOutline:hover {
-  background: var(--brand-hover-bg);
-  border-color: var(--brand-hover-border);
-}
-
+/* BOTÕES
+   O estilo de .btnOutline mora em
+   components/Studio/StudioActionButton.module.css, junto do componente — a
+   página importa aquele módulo para os botões que não passam por ele. */
 @media (max-width: 480px) {
   .bannerWrapper {
     height: 120px;
@@ -588,60 +624,14 @@
     height: 60px !important;
   }
 
-  /* Stack: content below the logo, no left offset */
+  /* O empilhamento do cabeçalho e o grid dos botões vêm do bloco de 700px;
+     aqui só o recuo muda, porque o banner e o logo são menores. */
   .profileHeaderRow {
-    flex-direction: column;
     padding: 52px 16px 16px;
-    margin-top: 0;
-    gap: 12px;
-    align-items: flex-start;
-  }
-
-  .profileContent {
-    width: 100%;
   }
 
   .studioName {
     font-size: 1.15rem;
-  }
-
-  .profileActions {
-    /* Grid de 2 colunas em vez de flex com wrap.
-       Com `flex: 1` + `min-width: 0` (o que estava aqui), o `flex-basis` vira 0
-       e o `min-width: 0` libera o encolhimento abaixo do conteúdo: os cinco
-       botões do responsável (Press Kit, Loja, Pedidos, Reuniões, Editar)
-       cabiam todos numa linha de ~310px — ~55px cada, com o texto espremido e
-       alvos minúsculos. No grid cada botão recebe metade da largura, então a
-       quebra é previsível (5 botões = 3 linhas) e o rótulo nunca é cortado. */
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    width: 100%;
-    gap: 10px;
-  }
-
-  /* Área de toque mínima. O padding de 6px deixava os botões com ~29px de
-     altura; 44px é o mínimo recomendado para toque em tela sensível (Apple
-     HIG). O seletor cobre os dois tipos de filho da barra: os `Link`
-     estilizados por `.btnOutline` e o "Seguir", que é um `Button` do Primer e
-     não herda `.btnOutline` — sem isto ele ficaria baixinho ao lado dos
-     outros.
-
-     `min-height` e não `height`: o Button do Primer fixa `height: 2rem`
-     (32px), e `min-height` tem precedência sobre `height` por especificação —
-     então o alvo cresce sem precisar sobrescrever o componente.
-
-     `justify-content: center` porque o Button do Primer usa
-     `space-between`, que com um único rótulo alinharia o "Seguir" à esquerda,
-     fora do eixo dos outros botões. */
-  .profileActions > * {
-    min-height: 44px;
-    justify-content: center;
-  }
-
-  .btnOutline {
-    min-width: 0;
-    /* Padding vertical maior para o rótulo respirar dentro dos 44px. */
-    padding: 10px 12px;
   }
 
   /* Botões sobre o banner ("Imagem" / "Vídeo"): mesmo problema de alvo, com
@@ -654,14 +644,6 @@
   .bannerBtn {
     min-height: 36px;
     padding: 6px 12px;
-  }
-
-  /* QR code: show below actions, smaller */
-  .profileRight {
-    display: flex;
-    width: 100%;
-    justify-content: flex-start;
-    order: 3;
   }
 
   /* Aceitar/Recusar do convite: mesmo defeito de alvo dos botões de ação

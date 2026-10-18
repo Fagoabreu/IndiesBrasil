@@ -1,0 +1,52 @@
+/* Estilo único dos botões de ação do cabeçalho do estúdio.
+
+   Mora junto do componente porque ele é o dono da aparência: a página também
+   usa `.btnOutline` em dois pontos que não são este componente (o "Voltar para
+   estúdios" e o botão de mensagem), e importa ESTE módulo em vez de manter uma
+   segunda cópia em `studio.module.css` — cópia divergiria no primeiro ajuste. */
+
+.btnOutline {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid var(--borderColor-default);
+  color: var(--fgColor-default);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.btnOutline:hover {
+  background: var(--brand-hover-bg);
+  border-color: var(--brand-hover-border);
+}
+
+/* Ação ainda não disponível (hoje: Loja e Pedidos enquanto a loja não está
+   pronta). O `:disabled` cobre o hover, que não deve reagir. */
+.btnOutlineDisabled,
+.btnOutlineDisabled:hover,
+.btnOutline:disabled {
+  opacity: 0.55;
+  background: transparent;
+  border-color: var(--borderColor-muted);
+  color: var(--fgColor-muted);
+  cursor: not-allowed;
+}
+
+/* Padding vertical maior no mobile para o rótulo respirar dentro do alvo de
+   44px que a página aplica em `.profileActions > *`. Fica aqui, e não no CSS da
+   página, porque o nome da classe é gerado por módulo: uma regra em
+   `studio.module.css` teria outro hash e nunca alcançaria este botão. */
+@media (max-width: 700px) {
+  .btnOutline {
+    min-width: 0;
+    padding: 10px 12px;
+  }
+}
