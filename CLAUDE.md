@@ -183,6 +183,7 @@ Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESM
 - Testes em `tests/integration/api/v1/testimonials/index.test.js`, incluindo o caso do indice unico exercitado direto no banco.
 
 ## Assets (referenciados externamente)
+
 - **O site nao hospeda o asset.** `assets.external_url` aponta para onde o arquivo esta (itch.io, Kenney, OpenGameArt, Unity Asset Store, GitHub, site do estudio) e a unica imagem enviada ao nosso storage e a **capa opcional** (`cover_image_id`), exatamente como em jogos, livros e cursos. Sem capa, o card e a pagina usam placeholder. Vender/armazenar asset fica para quando a loja e o storage estiverem prontos — `is_free`/`price` sao so informativos hoje.
 - **Asset so existe dentro de um estudio**: `assets.owner_org_id` e `NOT NULL`. Nao ha asset pessoal, e a exclusao do estudio (ou da conta titular, via `studioAction`) nunca deixa asset orfao.
 - **A taxonomia tem dois niveis com papeis diferentes.** Os **grupos** (Arte 2D, Arte 3D, Audio, UI, VFX, Codigo) sao estrutura de apresentacao e vivem em `lib/assetGroups.js` — nao muda com o conteudo e so o codigo sabe renderiza-los. As **categorias** sao dados (`asset_categories`) e sao cadastradas pelo admin em `/admin/asset-categories`, no mesmo padrao de Profissoes e Tipos de Contato. `group_key` e revalidado contra `lib/assetGroups.js` em toda escrita.
