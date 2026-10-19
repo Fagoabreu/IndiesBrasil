@@ -1,6 +1,6 @@
 import SeoHead from "@/components/SeoHead";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Heading, TextInput, Spinner } from "@primer/react";
+import { Heading, Select, TextInput, Spinner } from "@primer/react";
 import MemberCard from "@/components/MemberCard/MemberCard";
 import InactiveMemberRow from "@/components/MemberCard/InactiveMemberRow";
 // O wrapper da lista mora no módulo do componente (é o `<ul>` das linhas); a
@@ -8,6 +8,7 @@ import InactiveMemberRow from "@/components/MemberCard/InactiveMemberRow";
 import inactiveListStyles from "@/components/MemberCard/InactiveMemberRow.module.css";
 import styles from "./MembersPage.module.css";
 import { SITE_URL } from "@/lib/seo";
+import { DEFAULT_MEMBER_SORT, MEMBER_SORT_OPTIONS, memberSortValue, parseMemberSort } from "@/lib/memberSort";
 import { useUser } from "@/context/UserContext";
 import { useRouter } from "next/router";
 import useInView from "@/hooks/useInView";
@@ -35,6 +36,9 @@ export default function MembersPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [tab, setTab] = useState("all");
+  // Ordenação escolhida no seletor. O padrão é o que a página sempre teve
+  // (mais recentes) — trocar o default mudaria a leitura de quem já usa a tela.
+  const [memberSort, setMemberSort] = useState(DEFAULT_MEMBER_SORT);
   const cursorRef = useRef(null);
   const loadingMoreRef = useRef(false);
 
@@ -43,6 +47,7 @@ export default function MembersPage() {
   // melhor que corrigir em efeito — evita `setState` síncrono no corpo do
   // efeito, que o lint do projeto recusa (`react-hooks/set-state-in-effect`).
   const activeTab = tab === "inactive" && !isAdmin ? "all" : tab;
+  const isDefaultSort = memberSort.field === DEFAULT_MEMBER_SORT.field && memberSort.order === DEFAULT_MEMBER_SORT.order;
 
   // Sentinel para infinite scroll
   const [sentinelRef, isSentinelVisible] = useInView({
@@ -56,14 +61,23 @@ export default function MembersPage() {
   useEffect(() => {
     if (!router.isReady || hydrated) return;
     const initialQ = typeof router.query.q === "string" ? router.query.q : "";
+
+    // A ordenação também vem da URL (`?sort=reputation&order=desc` ou
+    // `?sort=created_at:desc`), para o link "mais seguidos" ser compartilhável.
+    // Valor desconhecido cai no padrão: aqui é leitura de link, não integração
+    // de API — recusar deixaria a página em branco por causa de um parâmetro.
+    const parsedSort = parseMemberSort(router.query.sort, router.query.order) ?? DEFAULT_MEMBER_SORT;
+
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSearch(initialQ);
     setAppliedSearch(initialQ);
+    setMemberSort(parsedSort);
     setHydrated(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- hidrata uma única vez, quando o router fica pronto
   }, [router.isReady, hydrated]);
 
-  // Debounce: digitação -> termo aplicado na busca + sync de ?q= na URL
+  // Debounce: digitação -> termo aplicado na busca + sync de ?q= e da ordenação
+  // na URL
   useEffect(() => {
     if (!hydrated) return;
 
@@ -83,6 +97,17 @@ export default function MembersPage() {
         params.delete("q");
       }
 
+      // O padrão não vai para a URL: `?sort=created_at&order=desc` em todo link
+      // é ruído, e a ausência já significa exatamente isso.
+      const sortValue = memberSortValue(memberSort);
+      if (sortValue === memberSortValue(DEFAULT_MEMBER_SORT)) {
+        params.delete("sort");
+        params.delete("order");
+      } else {
+        params.set("sort", memberSortValue(memberSort).split(":")[0]);
+        params.set("order", memberSort.order);
+      }
+
       const query = params.toString();
       const nextUrl = query ? `${pathname}?${query}` : pathname;
 
@@ -92,9 +117,9 @@ export default function MembersPage() {
     }, SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
-  }, [search, hydrated]);
+  }, [search, memberSort, hydrated]);
 
-  // Monta a URL conforme tab e busca ativas
+  // Monta a URL conforme tab, busca e ordenação ativas
   function buildUrl(cursor) {
     const params = new URLSearchParams();
     params.set("limit", String(PAGE_SIZE));
@@ -104,6 +129,13 @@ export default function MembersPage() {
     // `status=inactive` é a lista administrativa: contas nunca ativadas cujo
     // token de ativação já venceu (a rota responde 403 para quem não é admin).
     if (activeTab === "inactive") params.set("status", "inactive");
+    // A ordenação vai em `sort`/`order` (e não no valor composto do seletor)
+    // porque a API também aceita o formato separado; o cursor é recalculado
+    // pelo servidor a partir dela.
+    if (!isDefaultSort) {
+      params.set("sort", memberSort.field);
+      params.set("order", memberSort.order);
+    }
 
     return `/api/v1/users?${params.toString()}`;
   }
@@ -140,8 +172,8 @@ export default function MembersPage() {
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- buildUrl é derivado de activeTab/appliedSearch
-  }, [activeTab, appliedSearch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- buildUrl é derivado de activeTab/appliedSearch/memberSort
+  }, [activeTab, appliedSearch, memberSort]);
 
   // Próxima página — anexa à lista
   const fetchMoreMembers = useCallback(async () => {
@@ -169,8 +201,8 @@ export default function MembersPage() {
       loadingMoreRef.current = false;
       setLoadingMore(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- buildUrl é derivado de activeTab/appliedSearch
-  }, [hasMore, activeTab, appliedSearch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- buildUrl é derivado de activeTab/appliedSearch/memberSort
+  }, [hasMore, activeTab, appliedSearch, memberSort]);
 
   // Recarrega quando a tab ou a busca aplicada mudam
   useEffect(() => {
@@ -239,6 +271,9 @@ export default function MembersPage() {
           </div>
           <p className={styles.pageSubtitle}>Conheça as pessoas que constroem jogos indie no Brasil.</p>
 
+          {/* Busca e ordenação andam juntas: são os controles do diretório.
+              Na aba "Seguindo" nenhum dos dois aparece — a lista é curta e a
+              pergunta ali é "quem eu sigo", não "quem é maior". */}
           {activeTab !== "following" && (
             <div className={styles.searchWrapper}>
               <TextInput
@@ -249,6 +284,22 @@ export default function MembersPage() {
                 leadingVisual="search"
                 className={styles.searchInput}
               />
+
+              <Select
+                aria-label="Ordenar membros"
+                value={memberSortValue(memberSort)}
+                onChange={(e) => {
+                  const [field, order] = e.target.value.split(":");
+                  setMemberSort({ field, order });
+                }}
+                className={styles.sortSelect}
+              >
+                {MEMBER_SORT_OPTIONS.map((option) => (
+                  <Select.Option key={memberSortValue(option)} value={memberSortValue(option)}>
+                    {option.label}
+                  </Select.Option>
+                ))}
+              </Select>
             </div>
           )}
         </div>

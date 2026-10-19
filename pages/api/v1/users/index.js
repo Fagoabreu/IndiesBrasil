@@ -5,6 +5,7 @@ import activation from "models/activation.js";
 import authorization from "@/models/authorization";
 import { ForbiddenError, ValidationError } from "infra/errors";
 import rateLimit from "lib/rate-limit.js";
+import { DEFAULT_MEMBER_SORT, MEMBER_SORT_FIELDS, MEMBER_SORT_ORDERS, memberSortValue, parseMemberSort } from "lib/memberSort";
 
 export default createRouter()
   .use(controller.injectAnonymousOrUser)
@@ -29,7 +30,7 @@ async function postHandler(request, response) {
 
 async function getHandler(request, response) {
   const userTryingToGet = request.context.user;
-  const { isfollowing, cursor, q, limit, status } = request.query;
+  const { isfollowing, cursor, q, limit, status, sort, order } = request.query;
   const userId = request.context.user.id;
 
   const rawStatus = Array.isArray(status) ? status[0] : status;
@@ -40,6 +41,25 @@ async function getHandler(request, response) {
       message: `Status inválido: ${JSON.stringify(rawStatus)}.`,
       action: `Use ${MEMBER_STATUSES.map((value) => `\`${value}\``).join(" ou ")}.`,
     });
+  }
+
+  // Ordenação: `?sort=reputation&order=desc`, ou o atalho `?sort=reputation:desc`
+  // (o valor do seletor da tela). Ausente = padrão (mais recentes), que é a
+  // leitura que a página sempre teve. Desconhecido responde 400 pelo mesmo
+  // motivo do `status`: cair no padrão faria uma opção errada passar como certa.
+  const rawSort = Array.isArray(sort) ? sort[0] : sort;
+  const rawOrder = Array.isArray(order) ? order[0] : order;
+
+  let memberSort = DEFAULT_MEMBER_SORT;
+  if (rawSort !== undefined || rawOrder !== undefined) {
+    const parsed = parseMemberSort(rawSort, rawOrder);
+    if (!parsed) {
+      throw new ValidationError({
+        message: `Ordenação inválida: ${JSON.stringify([rawSort, rawOrder].filter(Boolean).join(" "))}.`,
+        action: `Use sort=${MEMBER_SORT_FIELDS.join("|")} e order=${MEMBER_SORT_ORDERS.join("|")} (ou sort=<campo>:<ordem>).`,
+      });
+    }
+    memberSort = parsed;
   }
 
   const includeInactive = rawStatus === "inactive";
@@ -60,6 +80,7 @@ async function getHandler(request, response) {
     q,
     limit,
     status: includeInactive ? "inactive" : "active",
+    sort: memberSort,
   });
 
   // Contas travadas: resposta montada campo a campo. `filterOutput("read:user")`
@@ -83,5 +104,8 @@ async function getHandler(request, response) {
     total,
     has_more: hasMore,
     next_cursor: nextCursor,
+    // A ordem aplicada volta na resposta: quem pagina precisa saber que o
+    // cursor pertence a ela (um cursor de outra ordenação é descartado).
+    sort: memberSortValue(memberSort),
   });
 }

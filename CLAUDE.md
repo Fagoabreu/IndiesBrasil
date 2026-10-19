@@ -153,6 +153,15 @@ Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESM
 
 ## Diretorio de membros (`/membros`)
 
+- Ordenacao: `lib/memberSort.js` e o registro unico (campos, sentidos, rotulos e o parser que a tela e a rota usam). O SQL de cada criterio fica em `models/user.js` (`MEMBER_SORT_SQL`) — a lista de chaves e compartilhada, a consulta nao.
+- **O padrao nao muda**: sem parametro continua `created_at` desc, inclusive no formato do cursor (`created_at|id`) — link antigo com `?cursor=` segue valendo.
+- O cursor e keyset no **criterio escolhido** + `id` (desempate), nao em `created_at`: com 0 seguidores empatando em massa, sem o `id` a proxima pagina repetiria ou pularia gente. `encodeMembersCursor`/`decodeMembersCursor` recebem o criterio.
+- Cursor de outro criterio e **descartado**, nao gera erro: `'2026-10-17 …'::integer` estouraria em 500. `decodeMembersCursor` valida o formato numerico quando o criterio e numerico.
+- `?sort=` desconhecido responde **400** (como `?status=`): cair no padrao faria `?sort=reputacao` parecer aplicado. A tela, ao contrario, cai no padrao — la e leitura de link, nao integracao de API.
+- A resposta traz `sort` (`campo:ordem`) junto de `items`/`total`/`has_more`/`next_cursor`: quem pagina precisa saber a que criterio o cursor pertence.
+- A ordenacao e sincronizada na URL (`?sort=reputation&order=desc`), omitida no padrao. Na aba "Seguindo" o seletor nao aparece (mesma condicao da busca).
+- Testes em `tests/unit/lib/memberSort.test.js` e `tests/integration/api/v1/users/get.test.js` (bloco "ordenacao").
+
 - A lista publica mostra **so conta ativada** (`'create:session' = ANY(u.features)`), a mesma definicao de `user_accounts` em `models/serverStatus.js`. Antes nao havia filtro: o diretorio listava cadastro nunca ativado e `/membros` mostrava mais gente que a home (47 x 41 em producao) — e publicava perfil de quem nunca confirmou o e-mail.
 - `GET /api/v1/users?status=inactive` lista as contas **travadas**: nunca ativadas, com token de ativacao existente e nenhum aproveitavel (todos vencidos ou usados). Conta sem token nenhum nao entra (nao e o caso da aba) e conta com token valido tambem nao (ainda pode ativar).
 - **Exige `read:admin`**, nao so `read:user`: a resposta traz `email` e `activation_expires_at`, que a listagem publica nao tem. A resposta e montada campo a campo (o `filterOutput("read:user")` descartaria justamente esses dois).
