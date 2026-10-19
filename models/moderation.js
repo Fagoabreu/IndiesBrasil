@@ -9,10 +9,10 @@ import sanitizeHtml from "lib/sanitize.js";
 // Alvos que podem sofrer ação de moderação (bloqueio).
 // `conversation` bloqueada = conversa congelada: os dois lados continuam lendo o
 // histórico (a denúncia precisa dele para ser julgada), mas ninguém escreve mais.
-export const MODERATION_TARGET_TYPES = ["post", "user", "studio", "game", "boardgame", "book", "conversation"];
+export const MODERATION_TARGET_TYPES = ["post", "user", "studio", "game", "boardgame", "book", "asset", "conversation"];
 
 // Alvos que podem ser denunciados pelos usuários.
-export const REPORT_TARGET_TYPES = ["post", "studio", "game", "boardgame", "book", "conversation"];
+export const REPORT_TARGET_TYPES = ["post", "studio", "game", "boardgame", "book", "asset", "conversation"];
 
 // Categorias de justificativa para bloqueio (fixas — evita texto livre não padronizado).
 export const MODERATION_REASONS = [
@@ -55,6 +55,7 @@ const TARGET_TABLES = {
   game: "games",
   boardgame: "boardgames",
   book: "books",
+  asset: "assets",
   conversation: "conversations",
 };
 

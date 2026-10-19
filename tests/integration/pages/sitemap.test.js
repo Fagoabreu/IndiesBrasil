@@ -63,6 +63,7 @@ describe("Sitemap", () => {
       "/sitemap/analises.xml",
       "/sitemap/agenda.xml",
       "/sitemap/streams.xml",
+      "/sitemap/assets.xml",
     ]);
   });
 
@@ -85,6 +86,7 @@ describe("Sitemap", () => {
       "/sitemap/analises.xml": ["/analises", `/analises/${fixtures.analiseSlug}`],
       "/sitemap/agenda.xml": ["/agenda", `/agenda/${fixtures.publicEventId}`],
       "/sitemap/streams.xml": ["/streams", `/streams/${fixtures.studio.slug}`],
+      "/sitemap/assets.xml": ["/assets", `/assets/${fixtures.assetSlug}`],
     };
 
     for (const [path, paths] of Object.entries(expected)) {
@@ -105,6 +107,11 @@ describe("Sitemap", () => {
     const { body } = await fetchSitemap("/sitemap/jogos.xml");
 
     expect(locations(body)).not.toContain(`/jogos/${fixtures.blockedGameSlug}`);
+
+    // Mesma regra para asset: bloqueado — ou de estúdio bloqueado — não é
+    // endereço a anunciar (a página responderia 404).
+    const assets = await fetchSitemap("/sitemap/assets.xml");
+    expect(locations(assets.body)).not.toContain(`/assets/${fixtures.blockedAssetSlug}`);
   });
 
   test("O arquivo de streams publica o canal do estúdio e esconde o estúdio bloqueado", async () => {

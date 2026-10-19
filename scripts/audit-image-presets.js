@@ -163,6 +163,10 @@ const RATIO_SURFACES = [
   { preset: "eventBanner", css: "components/Agenda/EventCard.module.css", selector: ".eventCover" },
   { preset: "eventBanner", css: "components/Agenda/EventBannerField.module.css", selector: ".bannerPreviewWrap" },
   { preset: "eventBanner", css: "pages/agenda/[id]/index.module.css", selector: ".bannerWrap" },
+  // Capa de asset: recorte `mediaCover` (16:9), exibido no card e no herói da
+  // página do asset.
+  { preset: "mediaCover", css: "components/Card/AssetCard.module.css", selector: ".cardCover" },
+  { preset: "mediaCover", css: "pages/assets/[slug]/asset.module.css", selector: ".heroCoverBox" },
 ];
 
 /** Corpo de cada bloco de regra do seletor, inclusive dentro de @media.

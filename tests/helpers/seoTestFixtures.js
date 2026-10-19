@@ -8,6 +8,8 @@ import course from "models/course";
 import news from "models/news";
 import contentReview from "models/content-review";
 import event from "models/event";
+import asset from "models/asset";
+import assetCategory from "models/assetCategory";
 import moderation from "models/moderation";
 
 /**
@@ -49,6 +51,15 @@ export async function createSeoFixtures() {
 
   const bookRow = await book.create(user.id, studio.id, { title: "Livro Sitemap" });
 
+  // A categoria vem do seed da migration `create-assets`: a taxonomia existe
+  // em todo banco migrado, então não é preciso criá-la aqui.
+  const sprites = await assetCategory.findBySlug("sprites");
+  const assetRow = await asset.create(user.id, studio.id, {
+    name: "Asset Sitemap",
+    external_url: "https://exemplo.itch.io/asset-sitemap",
+    category_ids: [sprites.id],
+  });
+
   const courseRow = await course.create(user.id, { title: "Curso Sitemap" });
 
   const newsRow = await news.create({
@@ -70,6 +81,18 @@ export async function createSeoFixtures() {
   await moderation.createBlock({
     targetType: "game",
     targetId: blockedGame.id,
+    reason: "violacao_termos",
+    moderatorId: user.id,
+  });
+
+  const blockedAsset = await asset.create(user.id, studio.id, {
+    name: "Asset Bloqueado Sitemap",
+    external_url: "https://exemplo.itch.io/asset-bloqueado",
+    category_ids: [sprites.id],
+  });
+  await moderation.createBlock({
+    targetType: "asset",
+    targetId: blockedAsset.id,
     reason: "violacao_termos",
     moderatorId: user.id,
   });
@@ -136,6 +159,8 @@ export async function createSeoFixtures() {
     draftEventId: draftEvent.id,
     blockedGameSlug: blockedGame.slug,
     blockedStudioSlug: blockedStudio.slug,
+    assetSlug: assetRow.slug,
+    blockedAssetSlug: blockedAsset.slug,
   };
 }
 
@@ -160,5 +185,6 @@ export function hubLinks(fixtures) {
     "/noticias": `/noticias/${fixtures.newsId}`,
     "/analises": `/analises/${fixtures.analiseSlug}`,
     "/streams": `/streams/${fixtures.studio.slug}`,
+    "/assets": `/assets/${fixtures.assetSlug}`,
   };
 }

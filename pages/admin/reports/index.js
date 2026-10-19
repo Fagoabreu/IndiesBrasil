@@ -11,6 +11,7 @@ const TARGET_LABELS = {
   game: "Jogo",
   boardgame: "Jogo de Mesa",
   book: "Livro/Quadrinho",
+  asset: "Asset",
   conversation: "Conversa",
 };
 

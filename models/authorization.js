@@ -145,6 +145,19 @@ const availableFeatures = new Set([
   "create:book:review",
   "update:book:review",
 
+  //asset
+  "read:asset",
+  "read:asset:all",
+  "create:asset",
+  "update:asset",
+  "delete:asset",
+  "read:asset_category",
+  "read:asset_category:all",
+  "create:asset:like",
+  "create:asset:comment",
+  "create:asset:review",
+  "update:asset:review",
+
   //course
   "read:course",
   "create:course",
@@ -361,6 +374,16 @@ function filterOutput(user, feature, resource) {
 
   if (feature === "read:profession") {
     return getProfessionResource(resource);
+  }
+
+  if (feature === "read:asset_category") {
+    return getAssetCategoryResource(resource);
+  }
+
+  if (feature === "read:asset_category:all") {
+    return resource.map((resourceItem) => {
+      return getAssetCategoryResource(resourceItem);
+    });
   }
 
   if (feature === "read:summary") {
@@ -637,6 +660,26 @@ function getToolResource(resource) {
     id: resource.id,
     name: resource.name,
     icon_img: resource.icon_img,
+  };
+}
+
+/**
+ * Categoria de asset pronta para a tela de administração.
+ *
+ * `usage_count` entra porque é o número que decide entre desativar e excluir:
+ * a exclusão é recusada quando há vínculo (ver `assetCategory.deleteCategory`),
+ * e o admin precisa ver isso antes de tentar.
+ */
+function getAssetCategoryResource(resource) {
+  return {
+    id: resource.id,
+    slug: resource.slug,
+    name: resource.name,
+    description: resource.description,
+    group_key: resource.group_key,
+    display_order: resource.display_order,
+    is_active: resource.is_active,
+    usage_count: resource.usage_count,
   };
 }
 

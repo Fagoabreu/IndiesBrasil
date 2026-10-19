@@ -16,6 +16,7 @@ import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComp
 import GameCard from "@/components/Card/GameCard";
 import BoardGameCard from "@/components/Card/BoardGameCard";
 import BookCard from "@/components/Card/BookCard";
+import AssetCard from "@/components/Card/AssetCard";
 import CreatePost from "@/components/CreatePost/CreatePost";
 import PostCardComponent from "@/components/PostCard/PostCardComponent";
 import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
@@ -150,6 +151,9 @@ export default function StudioPage({ initialStudio }) {
   // Books (quadrinhos/livros)
   const [studioBooks, setStudioBooks] = useState([]);
 
+  // Assets (referenciados externamente)
+  const [studioAssets, setStudioAssets] = useState([]);
+
   // Stream status
   const [studioStream, setStudioStream] = useState(null);
 
@@ -268,6 +272,16 @@ export default function StudioPage({ initialStudio }) {
             r.ok &&
             r.json().then((d) => {
               if (!cancelled) setStudioBooks(Array.isArray(d) ? d : []);
+            }),
+        )
+        .catch(() => {});
+      // Assets
+      fetch(`/api/v1/studios/${slug}/assets`, { credentials: "include" })
+        .then(
+          (r) =>
+            r.ok &&
+            r.json().then((d) => {
+              if (!cancelled) setStudioAssets(Array.isArray(d) ? d : []);
             }),
         )
         .catch(() => {});
@@ -929,6 +943,17 @@ export default function StudioPage({ initialStudio }) {
                   <div className={styles.gameCardList}>
                     {studioBooks.map((b) => (
                       <BookCard key={b.id} book={b} />
+                    ))}
+                  </div>
+                </SectionPanel>
+              )}
+
+              {/* ASSETS */}
+              {studioAssets.length > 0 && (
+                <SectionPanel title="Assets">
+                  <div className={styles.gameCardList}>
+                    {studioAssets.map((item) => (
+                      <AssetCard key={item.id} asset={item} />
                     ))}
                   </div>
                 </SectionPanel>

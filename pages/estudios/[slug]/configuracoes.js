@@ -4,7 +4,17 @@ import { useRouter } from "next/router";
 import Image from "next/image";
 import Link from "next/link";
 import { Spinner } from "@primer/react";
-import { ArrowLeftIcon } from "@primer/octicons-react";
+import {
+  ArrowLeftIcon,
+  PersonIcon,
+  PeopleIcon,
+  MailIcon,
+  PackageIcon,
+  TableIcon,
+  BookIcon,
+  BroadcastIcon,
+  ArchiveIcon,
+} from "@primer/octicons-react";
 
 import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
@@ -15,6 +25,7 @@ import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComp
 import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 import ContentRatingModal from "@/components/ContentRatingModal";
 import InviteMemberField from "@/components/Studio/InviteMemberField";
+import AssetEditor from "@/components/Studio/AssetEditor/AssetEditor";
 import { normalizeMemberQuery } from "@/context/dataHooks/UseUserSuggest";
 import styles from "./configuracoes.module.css";
 
@@ -120,6 +131,31 @@ const EMPTY_ADDRESS = {
   country: "Brasil",
 };
 
+/**
+ * Seções das configurações — a lista única que o painel de botões desenha.
+ *
+ * A lista é fixa e curta, mas vive fora do componente por dois motivos: o
+ * `activeTab` inicial valida `?tab=` contra ela (o botão "Editar" da página do
+ * asset abre `?tab=assets`), e as descrições ficam ao lado do rótulo em vez de
+ * espalhadas no JSX.
+ *
+ * Painel em vez de abas: eram oito itens numa faixa com `overflow-x: auto`, e
+ * numa tela estreita as últimas seções ficavam para fora da área visível sem
+ * nenhuma pista de que existiam.
+ */
+const STUDIO_TABS = [
+  { id: "profile", label: "Perfil", description: "Dados, descrição e endereço", icon: PersonIcon },
+  { id: "team", label: "Equipe", description: "Membros, papéis e convites", icon: PeopleIcon },
+  { id: "contacts", label: "Contatos", description: "Canais e redes sociais", icon: MailIcon },
+  { id: "games", label: "Jogos", description: "Jogos digitais", icon: PackageIcon },
+  { id: "boardgames", label: "Jogos de Mesa", description: "Tabuleiro, cartas e RPG", icon: TableIcon },
+  { id: "books", label: "Publicações", description: "Livros, quadrinhos e PDFs", icon: BookIcon },
+  { id: "streaming", label: "Streaming", description: "Canais da Twitch e YouTube", icon: BroadcastIcon },
+  { id: "assets", label: "Assets", description: "Pacotes para game dev", icon: ArchiveIcon },
+];
+
+const STUDIO_TAB_IDS = STUDIO_TABS.map((tab) => tab.id);
+
 function addrToForm(addr) {
   if (!addr) return EMPTY_ADDRESS;
   return {
@@ -166,8 +202,15 @@ export default function ConfiguracoesPage() {
   // recusa qualquer outro — aqui é só para não oferecer um botão que falha.
   const [viewerIsOwner, setViewerIsOwner] = useState(false);
 
-  // Tab navigation
-  const [activeTab, setActiveTab] = useState("profile");
+  // Seção ativa
+  // `?tab=` permite abrir direto numa seção (o botão "Editar" da página do asset
+  // aponta para `?tab=assets`). Lido na montagem, não por efeito: espelhar o
+  // endereço em estado por efeito disparia `react-hooks/set-state-in-effect`
+  // por um valor que já está disponível no primeiro render.
+  const [activeTab, setActiveTab] = useState(() => {
+    const requested = typeof router.query.tab === "string" ? router.query.tab : "";
+    return STUDIO_TAB_IDS.includes(requested) ? requested : "profile";
+  });
   const [activeGameTab, setActiveGameTab] = useState("info");
 
   // Convites
@@ -1475,25 +1518,27 @@ export default function ConfiguracoesPage() {
           <h1 className={styles.pageTitle}>Configurações do Estúdio</h1>
         </div>
 
-        <nav className={styles.tabs}>
-          {[
-            { id: "profile", label: "Perfil" },
-            { id: "team", label: "Equipe" },
-            { id: "contacts", label: "Contatos" },
-            { id: "games", label: "Jogos" },
-            { id: "boardgames", label: "Jogos de Mesa" },
-            { id: "books", label: "Publicações" },
-            { id: "streaming", label: "Streaming" },
-          ].map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              className={`${styles.tab} ${activeTab === t.id ? styles.tabActive : ""}`}
-              onClick={() => setActiveTab(t.id)}
-            >
-              {t.label}
-            </button>
-          ))}
+        <nav className={styles.tabPanel} aria-label="Seções das configurações">
+          {STUDIO_TABS.map((tab) => {
+            const TabIcon = tab.icon;
+            const isActive = activeTab === tab.id;
+
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                className={`${styles.tabButton} ${isActive ? styles.tabButtonActive : ""}`}
+                onClick={() => setActiveTab(tab.id)}
+                aria-current={isActive ? "true" : undefined}
+              >
+                <span className={styles.tabButtonIcon}>
+                  <TabIcon size={16} />
+                </span>
+                <span className={styles.tabButtonLabel}>{tab.label}</span>
+                <span className={styles.tabButtonDescription}>{tab.description}</span>
+              </button>
+            );
+          })}
         </nav>
 
         {activeTab === "profile" && (
@@ -3249,6 +3294,9 @@ export default function ConfiguracoesPage() {
             </form>
           </>
         )}
+
+        {/* ---- ASSETS TAB ---- */}
+        {activeTab === "assets" && <AssetEditor slug={slug} />}
       </div>
 
       {/* Upload de PDF de publicação */}

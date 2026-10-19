@@ -32,7 +32,7 @@ StarRating.propTypes = {
   readOnly: PropTypes.bool,
 };
 
-export default function GameReviews({ reviewsApiUrl, avgRating, reviewCount, userReview, user, onReviewChange }) {
+export default function GameReviews({ reviewsApiUrl, avgRating, reviewCount, userReview, user, onReviewChange, itemLabel = "jogo" }) {
   const [reviews, setReviews] = useState([]);
   // Estado rastreia edicoes do usuario; null = usar valor da prop
   const [editedRating, setEditedRating] = useState(null);
@@ -136,7 +136,7 @@ export default function GameReviews({ reviewsApiUrl, avgRating, reviewCount, use
             </div>
           ) : (
             <form onSubmit={handleSubmit} className={styles.reviewForm}>
-              <p className={styles.reviewFormTitle}>{hasUserReview ? "Editar avaliação" : "Avaliar este jogo"}</p>
+              <p className={styles.reviewFormTitle}>{hasUserReview ? "Editar avaliação" : `Avaliar este ${itemLabel}`}</p>
               <StarRating value={reviewRating} onChange={setEditedRating} />
               <textarea
                 className={styles.reviewTextarea}
@@ -167,7 +167,7 @@ export default function GameReviews({ reviewsApiUrl, avgRating, reviewCount, use
           <Link href="/login" className={styles.loginLink}>
             Faça login
           </Link>{" "}
-          para avaliar este jogo.
+          para avaliar este {itemLabel}.
         </p>
       )}
 
@@ -207,4 +207,6 @@ GameReviews.propTypes = {
   }),
   user: PropTypes.object,
   onReviewChange: PropTypes.func,
+  /** Substantivo usado no formulário ("Avaliar este **jogo**"). */
+  itemLabel: PropTypes.string,
 };

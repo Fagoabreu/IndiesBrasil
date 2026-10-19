@@ -31,6 +31,8 @@ import {
   ReportIcon,
   ShieldIcon,
   TrashIcon,
+  ArchiveIcon,
+  ListUnorderedIcon,
 } from "@primer/octicons-react";
 import { useUser } from "@/context/UserContext";
 import styles from "./LeftSidebarComponent.module.css";
@@ -119,6 +121,12 @@ export default function LeftSidebarComponent({ onNavigate }) {
               </NavList.LeadingVisual>
               Live Stream
             </NavList.Item>
+            <NavList.Item as={Link} href="/assets" aria-current={router.pathname.startsWith("/assets")} onClick={onNavigate}>
+              <NavList.LeadingVisual>
+                <ArchiveIcon />
+              </NavList.LeadingVisual>
+              Assets
+            </NavList.Item>
           </NavList.SubNav>
         </NavList.Item>
         <NavList.Divider />
@@ -176,6 +184,17 @@ export default function LeftSidebarComponent({ onNavigate }) {
                     <TagIcon />
                   </NavList.LeadingVisual>
                   Cadastro Profissões
+                </NavList.Item>
+                <NavList.Item
+                  as={Link}
+                  href="/admin/asset-categories"
+                  aria-current={router.pathname.startsWith("/admin/asset-categories")}
+                  onClick={onNavigate}
+                >
+                  <NavList.LeadingVisual>
+                    <ListUnorderedIcon />
+                  </NavList.LeadingVisual>
+                  Categorias de Assets
                 </NavList.Item>
                 <NavList.Item as={Link} href="/admin/reports" onClick={onNavigate}>
                   <NavList.LeadingVisual>
