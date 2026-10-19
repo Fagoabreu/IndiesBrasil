@@ -32,8 +32,8 @@ export default function AssetCategoryPicker({ categories, selected, onChange, di
         Categorias <span className={styles.required}>*</span>
       </legend>
       <p className={styles.hint}>
-        Selecione de 1 a {MAX_ASSET_CATEGORIES} categorias. Um asset pode pertencer a mais de uma — um pacote com sprites e efeitos
-        sonoros, por exemplo.
+        Selecione de 1 a {MAX_ASSET_CATEGORIES} categorias. Um asset pode pertencer a mais de uma — um pacote com sprites e efeitos sonoros, por
+        exemplo.
       </p>
 
       {groups.map((group) => (

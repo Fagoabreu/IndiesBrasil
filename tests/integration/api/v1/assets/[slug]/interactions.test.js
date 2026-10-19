@@ -222,9 +222,7 @@ describe("Interações em assets", () => {
     });
 
     test("Ninguém edita a nota de outra pessoa", async () => {
-      const ownerDetail = await (
-        await fetch(`${webserver.origin}/api/v1/assets/${created.slug}`, { headers: authHeaders(otherToken) })
-      ).json();
+      const ownerDetail = await (await fetch(`${webserver.origin}/api/v1/assets/${created.slug}`, { headers: authHeaders(otherToken) })).json();
 
       const response = await fetch(`${webserver.origin}/api/v1/assets/${created.slug}/reviews`, {
         method: "PATCH",

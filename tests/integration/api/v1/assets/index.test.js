@@ -95,9 +95,7 @@ describe("GET /api/v1/assets", () => {
     const body = await response.json();
 
     expect(body).toHaveLength(1);
-    expect(body[0].categories).toEqual([
-      { id: sprites.id, slug: "sprites", name: "Sprites", group_key: "arte-2d", is_active: true },
-    ]);
+    expect(body[0].categories).toEqual([{ id: sprites.id, slug: "sprites", name: "Sprites", group_key: "arte-2d", is_active: true }]);
     expect(body[0].studio_name).toBe("Estúdio Assets Lista");
     expect(body[0].studio_slug).toBe(studio.slug);
   });

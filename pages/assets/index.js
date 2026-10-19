@@ -168,8 +168,7 @@ export default function AssetsPage({ initialAssets, initialCategories }) {
             Assets
           </Heading>
           <p className={styles.subtitle}>
-            Pacotes de arte, áudio, interface, efeitos e código para game dev. O site referencia o pacote — o download acontece no
-            endereço de origem.
+            Pacotes de arte, áudio, interface, efeitos e código para game dev. O site referencia o pacote — o download acontece no endereço de origem.
           </p>
         </header>
 
@@ -220,11 +219,7 @@ export default function AssetsPage({ initialAssets, initialCategories }) {
             </label>
 
             <label className={styles.checkLabel}>
-              <input
-                type="checkbox"
-                checked={free}
-                onChange={(event) => setFilter("free", event.target.checked ? "true" : "")}
-              />
+              <input type="checkbox" checked={free} onChange={(event) => setFilter("free", event.target.checked ? "true" : "")} />
               Somente gratuitos
             </label>
 
@@ -245,9 +240,7 @@ export default function AssetsPage({ initialAssets, initialCategories }) {
 
         {error && <p className={styles.error}>{error}</p>}
 
-        {assets.length === 0 && !loading && !error && (
-          <p className={styles.empty}>Nenhum asset encontrado com esses filtros.</p>
-        )}
+        {assets.length === 0 && !loading && !error && <p className={styles.empty}>Nenhum asset encontrado com esses filtros.</p>}
 
         <div className={styles.grid}>
           {assets.map((asset) => (

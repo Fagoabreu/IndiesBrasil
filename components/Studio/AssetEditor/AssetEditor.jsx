@@ -342,8 +342,8 @@ export default function AssetEditor({ slug }) {
     <section className={styles.wrapper}>
       <h2 className={styles.title}>Assets</h2>
       <p className={styles.hint}>
-        Referencie pacotes de arte, áudio, UI, VFX e código publicados em outros sites (itch.io, Kenney, OpenGameArt, Unity Asset
-        Store…). O arquivo continua onde está — o Indies Brasil publica a ficha e o link.
+        Referencie pacotes de arte, áudio, UI, VFX e código publicados em outros sites (itch.io, Kenney, OpenGameArt, Unity Asset Store…). O arquivo
+        continua onde está — o Indies Brasil publica a ficha e o link.
       </p>
 
       {loading ? (
@@ -360,27 +360,15 @@ export default function AssetEditor({ slug }) {
                     {item.name}
                   </Link>
 
-                  <span className={`${styles.tag} ${item.is_free ? styles.tagFree : styles.tagPaid}`}>
-                    {item.is_free ? "Gratuito" : "Pago"}
-                  </span>
+                  <span className={`${styles.tag} ${item.is_free ? styles.tagFree : styles.tagPaid}`}>{item.is_free ? "Gratuito" : "Pago"}</span>
 
                   <AssetCategoryChips categories={item.categories} limit={3} as="span" className={styles.itemChips} />
 
                   <span className={styles.itemActions}>
-                    <button
-                      type="button"
-                      className={styles.btnSecondarySmall}
-                      onClick={() => handleOpenEdit(item.slug)}
-                      disabled={loadingEdit}
-                    >
+                    <button type="button" className={styles.btnSecondarySmall} onClick={() => handleOpenEdit(item.slug)} disabled={loadingEdit}>
                       {editingSlug === item.slug ? "Fechar" : "Editar"}
                     </button>
-                    <button
-                      type="button"
-                      className={styles.btnDangerSmall}
-                      onClick={() => handleDelete(item)}
-                      disabled={deletingSlug === item.slug}
-                    >
+                    <button type="button" className={styles.btnDangerSmall} onClick={() => handleDelete(item)} disabled={deletingSlug === item.slug}>
                       {deletingSlug === item.slug ? "…" : "Excluir"}
                     </button>
                   </span>
@@ -485,9 +473,7 @@ export default function AssetEditor({ slug }) {
           <button
             type="submit"
             className={styles.btnPrimary}
-            disabled={
-              creating || !newName.trim() || !newUrl.trim() || newCategoryIds.length === 0 || newCategoryIds.length > MAX_ASSET_CATEGORIES
-            }
+            disabled={creating || !newName.trim() || !newUrl.trim() || newCategoryIds.length === 0 || newCategoryIds.length > MAX_ASSET_CATEGORIES}
           >
             {creating ? <Spinner size="small" /> : "Cadastrar asset"}
           </button>

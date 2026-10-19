@@ -328,7 +328,7 @@ async function update(slug, data = {}) {
   if ("price" in data) {
     // `is_free` pode estar na mesma requisição; o preço é normalizado com o
     // estado final para um asset gratuito nunca guardar preço.
-    const willBeFree = "is_free" in data ? parseBoolean(data.is_free, "is_free") : (await findIsFree(assetId));
+    const willBeFree = "is_free" in data ? parseBoolean(data.is_free, "is_free") : await findIsFree(assetId);
     fields.push(`price = $${index++}`);
     values.push(normalizePrice(data.price, willBeFree));
   }

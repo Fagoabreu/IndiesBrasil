@@ -23,9 +23,7 @@ export default function AssetCard({ asset }) {
             </div>
           )}
         </div>
-        <span className={`${styles.priceBadge} ${asset.is_free ? styles.freeBadge : styles.paidBadge}`}>
-          {asset.is_free ? "Gratuito" : "Pago"}
-        </span>
+        <span className={`${styles.priceBadge} ${asset.is_free ? styles.freeBadge : styles.paidBadge}`}>{asset.is_free ? "Gratuito" : "Pago"}</span>
       </div>
 
       <div className={styles.cardBody}>

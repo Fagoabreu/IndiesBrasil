@@ -241,8 +241,8 @@ export default function AssetCategoriesAdminPage() {
           <Heading as="h2">Categorias de Assets</Heading>
         </div>
         <p className={styles.hint}>
-          A taxonomia é fixa em dois níveis: os seis grupos abaixo não mudam, e as categorias de cada grupo são cadastradas aqui. Um
-          asset pode ter várias categorias. Categoria em uso não pode ser excluída — desative-a.
+          A taxonomia é fixa em dois níveis: os seis grupos abaixo não mudam, e as categorias de cada grupo são cadastradas aqui. Um asset pode ter
+          várias categorias. Categoria em uso não pode ser excluída — desative-a.
         </p>
 
         {error && <Flash variant="danger">{error}</Flash>}
@@ -267,12 +267,7 @@ export default function AssetCategoriesAdminPage() {
             maxLength={255}
             aria-label="Descrição da categoria"
           />
-          <select
-            className={styles.input}
-            value={groupKey}
-            onChange={(event) => setGroupKey(event.target.value)}
-            aria-label="Grupo da categoria"
-          >
+          <select className={styles.input} value={groupKey} onChange={(event) => setGroupKey(event.target.value)} aria-label="Grupo da categoria">
             {ASSET_GROUPS.map((group) => (
               <option key={group.key} value={group.key}>
                 {group.label}
