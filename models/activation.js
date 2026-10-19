@@ -255,6 +255,18 @@ async function activateUserByUserId(userId) {
     "create:boardgame:comment",
     "create:book:like",
     "create:book:comment",
+    //asset permissions
+    "read:asset",
+    "read:asset:all",
+    "create:asset",
+    "update:asset",
+    "delete:asset",
+    "read:asset_category",
+    "read:asset_category:all",
+    "create:asset:like",
+    "create:asset:comment",
+    "create:asset:review",
+    "update:asset:review",
     //content-review (analises)
     "read:content_review",
     "read:content_review:all",

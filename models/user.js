@@ -885,14 +885,47 @@ const DEFAULT_MEMBERS_LIMIT = 20;
 const MAX_MEMBERS_LIMIT = 50;
 const MAX_MEMBERS_SEARCH_LENGTH = 64;
 
-// O cursor é keyset (created_at + id) para a paginação ser estável mesmo
-// quando novos membros entram — ORDER BY RANDOM() (comportamento antigo)
-// não permite paginar sem repetir/pular registros.
-function encodeMembersCursor(row) {
-  return `${row.created_at_cursor}|${row.id}`;
+/**
+ * Expressão SQL, tipo do cursor e coluna do resultado para cada critério de
+ * ordenação (`lib/memberSort.js` guarda a lista de chaves e os rótulos; o SQL
+ * mora aqui porque é este o módulo que consulta o banco).
+ *
+ * `followers` é o único calculado: a contagem vem do LEFT JOIN agregado de
+ * `user_followers`, cujo alias é `f.followers_count` — uma coluna de verdade da
+ * tabela derivada, então pode aparecer no `WHERE`/`ORDER BY` (diferente de um
+ * alias do `SELECT`, que não pode).
+ */
+const MEMBER_SORT_SQL = {
+  created_at: { expression: "u.created_at", cast: "timestamptz", column: "created_at_cursor", isNumeric: false },
+  reputation: { expression: "u.reputation", cast: "integer", column: "reputation", isNumeric: true },
+  followers: { expression: "COALESCE(f.followers_count, 0)", cast: "bigint", column: "followers_count", isNumeric: true },
+};
+
+/** Ordem pedida, ou o padrão (mais recentes) quando ausente/desconhecida. */
+function normalizeMembersSort(sort) {
+  const field = MEMBER_SORT_SQL[sort?.field] ? sort.field : "created_at";
+  const order = sort?.order === "asc" ? "asc" : "desc";
+  return { ...MEMBER_SORT_SQL[field], field, order };
 }
 
-function decodeMembersCursor(cursor) {
+// O cursor é keyset (valor da ordenação + id) para a paginação ser estável
+// mesmo quando novos membros entram — ORDER BY RANDOM() (comportamento antigo)
+// não permite paginar sem repetir/pular registros. O `id` é o desempate: sem
+// ele, dezenas de membros com a mesma pontuação (ou os mesmos 0 seguidores)
+// fariam a próxima página repetir ou pular gente.
+function encodeMembersCursor(row, sort) {
+  return `${row[sort.column]}|${row.id}`;
+}
+
+/**
+ * O cursor guarda o texto do valor; o tipo vem do critério vigente.
+ *
+ * Devolve `null` (e a consulta ignora o cursor) quando o valor não se parece
+ * com o tipo esperado: um cursor de `created_at` usado com `sort=reputation`
+ * faria `'2026-10-17 …'::integer` estourar em **500**. Ignorar repete a primeira
+ * página, que é o mesmo comportamento já adotado para cursor malformado.
+ */
+function decodeMembersCursor(cursor, sort) {
   if (typeof cursor !== "string") {
     return null;
   }
@@ -902,13 +935,17 @@ function decodeMembersCursor(cursor) {
     return null;
   }
 
-  const createdAt = cursor.slice(0, separatorIndex);
+  const value = cursor.slice(0, separatorIndex);
   const id = cursor.slice(separatorIndex + 1);
-  if (!createdAt || !id) {
+  if (!value || !id) {
     return null;
   }
 
-  return { createdAt, id };
+  if (sort.isNumeric && !/^-?\d+$/.test(value)) {
+    return null;
+  }
+
+  return { value, id };
 }
 
 function normalizeMembersLimit(limit) {
@@ -937,7 +974,8 @@ async function findUsers(options = {}) {
   const { userId, isfollowing, q } = options;
   const includeInactive = options.status === "inactive";
   const limit = normalizeMembersLimit(options.limit);
-  const cursor = decodeMembersCursor(options.cursor);
+  const sort = normalizeMembersSort(options.sort);
+  const cursor = decodeMembersCursor(options.cursor, sort);
   const search = typeof q === "string" ? q.trim().slice(0, MAX_MEMBERS_SEARCH_LENGTH) : "";
 
   // Colunas e junção que só a lista administrativa precisa: e-mail (para o
@@ -1070,9 +1108,14 @@ async function findUsers(options = {}) {
   const dataValues = [...whereValues];
   let cursorCondition = "";
   if (cursor) {
-    dataValues.push(cursor.createdAt, cursor.id);
+    dataValues.push(cursor.value, cursor.id);
+    // Comparação de linha com a MESMA expressão do ORDER BY. `>` e `<` invertem
+    // com o sentido, e o `id` segue o mesmo sentido — é o que mantém a chave
+    // única quando vários membros empatam no critério (0 seguidores, mesma
+    // pontuação).
+    const comparator = sort.order === "asc" ? ">" : "<";
     cursorCondition = `
-        AND (u.created_at, u.id) < ($${dataValues.length - 1}::timestamptz, $${dataValues.length}::uuid)`;
+        AND (${sort.expression}, u.id) ${comparator} ($${dataValues.length - 1}::${sort.cast}, $${dataValues.length}::uuid)`;
   }
   // Busca uma linha extra para saber se há próxima página sem heurística.
   dataValues.push(limit + 1);
@@ -1093,15 +1136,15 @@ async function findUsers(options = {}) {
       WHERE
         ${conditions.join("\n        AND ")}${cursorCondition}
       ORDER BY
-        u.created_at DESC,
-        u.id DESC
+        ${sort.expression} ${sort.order === "asc" ? "ASC" : "DESC"},
+        u.id ${sort.order === "asc" ? "ASC" : "DESC"}
       LIMIT $${dataValues.length}`,
     values: dataValues,
   });
 
   const hasMore = results.rows.length > limit;
   const items = hasMore ? results.rows.slice(0, limit) : results.rows;
-  const nextCursor = hasMore && items.length > 0 ? encodeMembersCursor(items[items.length - 1]) : null;
+  const nextCursor = hasMore && items.length > 0 ? encodeMembersCursor(items[items.length - 1], sort) : null;
 
   return {
     items,

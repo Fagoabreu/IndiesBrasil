@@ -1,0 +1,374 @@
+/* Aba "Assets" das configurações do estúdio. */
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 8px;
+  background: var(--bgColor-default);
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--fgColor-default);
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--fgColor-muted);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+}
+
+/* ── Lista ── */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.listItem {
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 6px;
+  background: var(--bgColor-muted);
+}
+
+.itemRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.itemLink {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fgColor-accent);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemLink:hover {
+  text-decoration: underline;
+}
+
+.itemChips {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.itemActions {
+  display: inline-flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.tag {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.tagFree {
+  background: var(--bgColor-success-muted);
+  color: var(--fgColor-success);
+}
+
+.tagPaid {
+  background: var(--bgColor-attention-muted);
+  color: var(--fgColor-attention);
+}
+
+.editPanel {
+  padding: 12px;
+  border-top: 1px solid var(--borderColor-muted);
+  background: var(--bgColor-default);
+}
+
+/* ── Formulário ── */
+.form,
+.createForm {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.createForm {
+  padding-top: 16px;
+  border-top: 1px solid var(--borderColor-muted);
+}
+
+.createTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--fgColor-default);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fieldWide {
+  grid-column: 1 / -1;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fgColor-default);
+}
+
+.required {
+  color: var(--fgColor-danger);
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 6px;
+  background: var(--bgColor-default);
+  color: var(--fgColor-default);
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb-primary), 0.15);
+}
+
+.input:disabled {
+  background: var(--bgColor-muted);
+  color: var(--fgColor-muted);
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
+.checkField {
+  justify-content: flex-end;
+}
+
+.checkboxRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--fgColor-default);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.btnPrimary,
+.btnSecondary,
+.btnDanger,
+.btnSecondarySmall,
+.btnDangerSmall {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.btnPrimary {
+  padding: 7px 16px;
+  border: 1px solid var(--brand-primary);
+  background: var(--brand-primary);
+  color: #fff;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: var(--brand-secondary);
+  border-color: var(--brand-secondary);
+}
+
+.btnSecondary,
+.btnSecondarySmall {
+  border: 1px solid var(--borderColor-default);
+  background: var(--bgColor-default);
+  color: var(--fgColor-default);
+}
+
+.btnSecondary {
+  padding: 7px 16px;
+}
+
+.btnSecondarySmall {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.btnSecondary:hover:not(:disabled),
+.btnSecondarySmall:hover:not(:disabled) {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.btnDanger,
+.btnDangerSmall {
+  border: 1px solid var(--borderColor-danger-muted);
+  background: transparent;
+  color: var(--fgColor-danger);
+}
+
+.btnDanger {
+  padding: 7px 16px;
+}
+
+.btnDangerSmall {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.btnDanger:hover:not(:disabled),
+.btnDangerSmall:hover:not(:disabled) {
+  background: var(--bgColor-danger-muted);
+}
+
+.btnPrimary:disabled,
+.btnSecondary:disabled,
+.btnSecondarySmall:disabled,
+.btnDangerSmall:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ── Capa ── */
+.coverRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.coverPreview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 200px;
+  aspect-ratio: 16 / 9;
+  border: 1px dashed var(--borderColor-default);
+  border-radius: 6px;
+  background: var(--bgColor-muted);
+  overflow: hidden;
+}
+
+.coverImage {
+  object-fit: cover;
+}
+
+.coverPlaceholder {
+  font-size: 12px;
+  color: var(--fgColor-muted);
+}
+
+.coverActions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ── Categorias ── */
+.categoryFieldset {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 6px;
+  background: var(--bgColor-muted);
+}
+
+.categoryGroup {
+  margin-top: 10px;
+}
+
+.categoryGroupTitle {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--fgColor-muted);
+}
+
+.categoryOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+
+.categoryOption {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--fgColor-default);
+  cursor: pointer;
+}
+
+.categoryInactive {
+  color: var(--fgColor-muted);
+}
+
+.inactiveTag {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--bgColor-neutral-muted);
+  color: var(--fgColor-muted);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wrapper {
+    padding: 14px;
+  }
+}

@@ -232,6 +232,154 @@ describe("GET /api/v1/users — população da lista", () => {
   });
 });
 
+describe("GET /api/v1/users — ordenação", () => {
+  let alfa;
+  let beta;
+  let gama;
+
+  /**
+   * Três membros com pontuação e base de seguidores distintas e propositalmente
+   * **desalinhadas** entre si: ordenar por um critério e cair na ordem do outro
+   * faria o teste passar sem medir nada.
+   */
+  beforeAll(async () => {
+    await orchestrator.clearDatabase();
+    await orchestrator.runPendingMigrations();
+
+    const base = new Date("2025-01-01T00:00:00.000Z").getTime();
+    const followers = [];
+    const create = async (username, offsetMinutes, reputation) => {
+      const created = await orchestrator.activateUser(await orchestrator.createUser({ username }));
+      await database.query({
+        text: `UPDATE users SET created_at = $1, reputation = $2 WHERE id = $3`,
+        values: [new Date(base + offsetMinutes * 60_000).toISOString(), reputation, created.id],
+      });
+      return created;
+    };
+
+    // Cadastro: alfa < beta < gama (mais recente primeiro = gama, beta, alfa).
+    alfa = await create("ordem-alfa", 0, 30); // 2 seguidores
+    beta = await create("ordem-beta", 1, 10); // 0 seguidores
+    gama = await create("ordem-gama", 2, 20); // 1 seguidor
+
+    followers.push([alfa.id, beta.id], [alfa.id, gama.id], [gama.id, beta.id]);
+    for (const [leadId, followerId] of followers) {
+      await database.query({
+        text: `INSERT INTO user_followers (lead_user_id, follower_id) VALUES ($1, $2)`,
+        values: [leadId, followerId],
+      });
+    }
+  });
+
+  const usernames = (body) => body.items.map((item) => item.username);
+
+  test("sem parâmetro continua sendo mais recentes — o padrão não mudou", async () => {
+    const { body } = await getUsers("?limit=50");
+
+    expect(usernames(body)).toEqual(["ordem-gama", "ordem-beta", "ordem-alfa"]);
+    // A ordem aplicada volta na resposta, para quem pagina saber a que cursor
+    // ele pertence.
+    expect(body.sort).toBe("created_at:desc");
+  });
+
+  test("data de criação nos dois sentidos", async () => {
+    const { body: asc } = await getUsers("?sort=created_at&order=asc&limit=50");
+    expect(usernames(asc)).toEqual(["ordem-alfa", "ordem-beta", "ordem-gama"]);
+
+    const { body: desc } = await getUsers("?sort=created_at&order=desc&limit=50");
+    expect(usernames(desc)).toEqual(["ordem-gama", "ordem-beta", "ordem-alfa"]);
+  });
+
+  test("pontuação nos dois sentidos", async () => {
+    const { body: desc } = await getUsers("?sort=reputation&order=desc&limit=50");
+    expect(usernames(desc)).toEqual(["ordem-alfa", "ordem-gama", "ordem-beta"]);
+    expect(desc.sort).toBe("reputation:desc");
+
+    const { body: asc } = await getUsers("?sort=reputation&order=asc&limit=50");
+    expect(usernames(asc)).toEqual(["ordem-beta", "ordem-gama", "ordem-alfa"]);
+  });
+
+  test("seguidores nos dois sentidos", async () => {
+    const { body: desc } = await getUsers("?sort=followers&order=desc&limit=50");
+    expect(usernames(desc)).toEqual(["ordem-alfa", "ordem-gama", "ordem-beta"]);
+
+    const { body: asc } = await getUsers("?sort=followers&order=asc&limit=50");
+    expect(usernames(asc)).toEqual(["ordem-beta", "ordem-gama", "ordem-alfa"]);
+  });
+
+  test("o valor composto do seletor também é aceito", async () => {
+    const { body } = await getUsers("?sort=reputation:asc&limit=50");
+
+    expect(usernames(body)).toEqual(["ordem-beta", "ordem-gama", "ordem-alfa"]);
+  });
+
+  test("ordenação desconhecida responde 400, não o padrão", async () => {
+    // Sem o 400, `?sort=reputacao` devolveria "mais recentes" e o erro de
+    // integração passaria como se a ordenação pedida tivesse sido aplicada.
+    const { response } = await getUsers("?sort=reputacao&order=desc");
+    expect(response.status).toBe(400);
+
+    const { response: badOrder } = await getUsers("?sort=reputation&order=crescente");
+    expect(badOrder.status).toBe(400);
+  });
+
+  test("pagina por pontuação sem repetir nem pular ninguém", async () => {
+    const collected = [];
+    let cursor = null;
+
+    for (let page = 0; page < 5; page += 1) {
+      const query = cursor ? `?sort=reputation&order=desc&limit=1&cursor=${encodeURIComponent(cursor)}` : "?sort=reputation&order=desc&limit=1";
+      const { body } = await getUsers(query);
+
+      collected.push(...usernames(body));
+      cursor = body.next_cursor;
+      if (!body.has_more) break;
+    }
+
+    // A paginação é keyset: o cursor guarda a pontuação do último item (mais o
+    // id como desempate), então trocar de critério não embaralha a sequência.
+    expect(collected).toEqual(["ordem-alfa", "ordem-gama", "ordem-beta"]);
+  });
+
+  test("cursor de outra ordenação é descartado em vez de estourar 500", async () => {
+    // `'2025-01-01 …'::integer` faria a consulta falhar caso o cursor de data
+    // fosse usado com `sort=reputation`.
+    const { body: porData } = await getUsers("?sort=created_at&limit=1");
+    const cursorDeData = porData.next_cursor;
+
+    const { response, body } = await getUsers(`?sort=reputation&order=desc&limit=50&cursor=${encodeURIComponent(cursorDeData)}`);
+
+    expect(response.status).toBe(200);
+    expect(usernames(body)).toEqual(["ordem-alfa", "ordem-gama", "ordem-beta"]);
+  });
+
+  test("a ordenação também vale na lista administrativa de inativos", async () => {
+    const admin = await createAdminUser({
+      username: "admin-ordem-inativos",
+      email: "admin.ordem.inativos@teste.dev",
+      password: TEST_CREDENTIALS.userDefault,
+      cpf: 97123456701,
+    });
+
+    const travada = await orchestrator.createUser({
+      username: "travada-ordem",
+      email: "travada.ordem@teste.dev",
+      password: TEST_CREDENTIALS.userDefault,
+      cpf: 97123456702,
+    });
+    const token = await activation.create(travada.id);
+    await database.query({
+      text: `UPDATE user_activation_tokens SET expires_at = now() - interval '1 hour' WHERE id = $1`,
+      values: [token.id],
+    });
+
+    const { response, body } = await getUsers(`?status=inactive&sort=${encodeURIComponent("created_at:desc")}`, `session_id=${admin.sessionToken}`);
+
+    expect(response.status).toBe(200);
+    expect(body.items.map((item) => item.username)).toEqual(["travada-ordem"]);
+  });
+});
+
 describe("GET /api/v1/users", () => {
   describe("Anonymous user", () => {
     describe("Pagination", () => {
@@ -247,7 +395,9 @@ describe("GET /api/v1/users", () => {
         const { response, body } = await getUsers(`?limit=${PAGE_SIZE}`);
 
         expect(response.status).toBe(200);
-        expect(Object.keys(body).sort()).toEqual(["has_more", "items", "next_cursor", "total"]);
+        // `sort` entrou no envelope junto com a ordenação: quem pagina precisa
+        // saber a que critério o `next_cursor` pertence.
+        expect(Object.keys(body).sort()).toEqual(["has_more", "items", "next_cursor", "sort", "total"]);
         expect(body.items).toHaveLength(PAGE_SIZE);
         expect(body.total).toBe(SEEDED_USERS);
         expect(body.has_more).toBe(true);

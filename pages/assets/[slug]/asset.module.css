@@ -1,0 +1,227 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.loadingPage {
+  display: flex;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.breadcrumb {
+  font-size: 12px;
+  color: var(--fgColor-muted);
+}
+
+.breadcrumb a {
+  color: var(--fgColor-accent);
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.heroMedia {
+  width: 100%;
+}
+
+/* Proporção do preset `mediaCover` (16:9) — o mesmo recorte que o formulário
+   pede. `scripts/audit-image-presets.js` compara este par. */
+.heroCoverBox {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bgColor-inset);
+}
+
+.heroCoverImage {
+  object-fit: cover;
+}
+
+.heroCoverPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
+  color: #fff;
+  font-size: 4rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.heroInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.name {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--fgColor-default);
+}
+
+.tagline {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--fgColor-muted);
+}
+
+.chips {
+  margin-top: -2px;
+}
+
+.metaList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+  padding: 14px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 8px;
+  background: var(--bgColor-muted);
+}
+
+.metaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.metaLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--fgColor-muted);
+}
+
+.metaValue {
+  font-size: 13px;
+  color: var(--fgColor-default);
+  overflow-wrap: anywhere;
+}
+
+.metaLink {
+  font-size: 13px;
+  color: var(--fgColor-accent);
+  text-decoration: none;
+}
+
+.metaLink:hover {
+  text-decoration: underline;
+}
+
+.freeValue {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fgColor-success);
+}
+
+.paidValue {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fgColor-attention);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.primaryAction,
+.secondaryAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.primaryAction {
+  border: 1px solid var(--brand-primary);
+  background: var(--brand-primary);
+  color: #fff;
+}
+
+.primaryAction:hover {
+  background: var(--brand-secondary);
+  border-color: var(--brand-secondary);
+}
+
+.secondaryAction {
+  border: 1px solid var(--borderColor-default);
+  background: var(--bgColor-default);
+  color: var(--fgColor-default);
+}
+
+.secondaryAction:hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 8px;
+  background: var(--bgColor-default);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--fgColor-default);
+}
+
+.description {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--fgColor-default);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .metaList {
+    grid-template-columns: 1fr;
+  }
+
+  .name {
+    font-size: 22px;
+  }
+}

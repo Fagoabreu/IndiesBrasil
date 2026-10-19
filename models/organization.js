@@ -947,6 +947,9 @@ async function deleteWithWorks(orgId, { client } = {}) {
     const gamesResult = await runner.query({ text: `DELETE FROM games WHERE owner_org_id = $1 RETURNING id`, values: [orgId] });
     const boardgamesResult = await runner.query({ text: `DELETE FROM boardgames WHERE owner_org_id = $1 RETURNING id`, values: [orgId] });
     const booksResult = await runner.query({ text: `DELETE FROM books WHERE owner_org_id = $1 RETURNING id`, values: [orgId] });
+    // `assets` cairia por CASCADE, mas a exclusão explícita entra no resumo —
+    // e é o que mantém a ordem previsível dentro da transação.
+    const assetsResult = await runner.query({ text: `DELETE FROM assets WHERE owner_org_id = $1 RETURNING id`, values: [orgId] });
 
     await runner.query({ text: `DELETE FROM org_followers WHERE org_id = $1`, values: [orgId] });
     await runner.query({ text: `DELETE FROM org_members WHERE org_id = $1`, values: [orgId] });
@@ -973,6 +976,7 @@ async function deleteWithWorks(orgId, { client } = {}) {
         games: gamesResult.rowCount,
         boardgames: boardgamesResult.rowCount,
         books: booksResult.rowCount,
+        assets: assetsResult.rowCount,
       },
     };
   });

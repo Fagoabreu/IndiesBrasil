@@ -61,6 +61,10 @@
 }
 
 .searchWrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
   margin-top: 16px;
   padding-left: 8px;
 }
@@ -68,6 +72,14 @@
 .searchInput {
   width: 100%;
   max-width: 400px;
+}
+
+/* Seletor de ordenação ao lado da busca. `flex: 0 0 auto` para ele não esticar
+   quando os dois estão na mesma linha; em telas estreitas o `flex-wrap` do
+   wrapper o joga para a linha de baixo. */
+.sortSelect {
+  flex: 0 0 auto;
+  min-width: 190px;
 }
 
 .feedTabs {
