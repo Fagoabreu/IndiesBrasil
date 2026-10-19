@@ -170,6 +170,18 @@ Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESM
 - Na UI a aba "Inativos" so aparece para admin (`pages/membros/index.js`), e `activeTab` e derivado de `tab` + feature: quem perde `read:admin` com a aba aberta volta para "Descubra" em vez de ficar num 403 sem saida.
 - Testes em `tests/integration/api/v1/users/get.test.js` (bloco "populacao da lista"). Os seeds daquele arquivo precisam de `orchestrator.activateUser`: usuario criado e nunca ativado nao aparece mais na listagem.
 
+## Depoimentos (um por pessoa)
+
+- **Um depoimento por membro**, garantido pelo indice unico `testimonials_one_per_author` (`author_id`). O model explica a regra antes de chegar no banco (`400` com "Voce ja tem um depoimento publicado" e a acao "Edite o depoimento existente"), mas quem decide de verdade e o indice: dois envios simultaneos passam pela checagem do model e o `23505` e traduzido no mesmo 400.
+- A migration `1790740000005_testimonials-single-per-user` resolve os duplicados que ja existiam mantendo o **mais recente** de cada autor, e acrescenta `updated_at` (edicao precisa de data). O `down` desfaz indice e coluna, mas nao os depoimentos apagados.
+- O autor **edita e exclui o proprio** a qualquer momento. A rota e `pages/api/v1/testimonials/mine` (`GET`/`PATCH`/`DELETE`) — sem id na URL, porque o recurso e unico por pessoa: o cliente nao guarda id e nao existe caminho de escrita que receba o id de outra pessoa (`author_id` esta no `WHERE` de toda query).
+- `GET /mine` devolve `null` (e nao 404) quando a pessoa ainda nao escreveu: "sem depoimento" e o estado inicial do formulario. `PATCH`/`DELETE` sem depoimento respondem **404**.
+- Edicao e remocao usam `create:testimonial`, a mesma feature do envio: o depoimento e um so, e quem pode criar e quem pode manter o seu. Criar `update:testimonial`/`delete:testimonial` exigiria registrar nos 3 lugares e nos arrays de teste sem mudar autorizacao nenhuma.
+- A lista publica (`GET /api/v1/testimonials`) continua mostrando so `status = 'approved'` e mantem o formato de array — `mine` e rota separada para nao quebrar quem ja consome a lista.
+- Limites em `lib/testimonial.js` (modulo puro, importado pelo model **e** por `components/Landing/TestimonialsSection.js`): 500 de conteudo, 80 de funcao. Conteudo e texto puro — `sanitizeHtml` remove tags e o conteudo de `<script>` na escrita.
+- Na UI a secao da home decide o formulario pelo estado de `/mine`: com depoimento, o mesmo formulario vem pre-preenchido como "Seu depoimento" com "Salvar alteracoes" e "Excluir"; sem depoimento, e o formulario de envio. Depois de salvar/excluir a lista publica e recarregada.
+- Testes em `tests/integration/api/v1/testimonials/index.test.js`, incluindo o caso do indice unico exercitado direto no banco.
+
 ## Assets (referenciados externamente)
 
 - **O site nao hospeda o asset.** `assets.external_url` aponta para onde o arquivo esta (itch.io, Kenney, OpenGameArt, Unity Asset Store, GitHub, site do estudio) e a unica imagem enviada ao nosso storage e a **capa opcional** (`cover_image_id`), exatamente como em jogos, livros e cursos. Sem capa, o card e a pagina usam placeholder. Vender/armazenar asset fica para quando a loja e o storage estiverem prontos — `is_free`/`price` sao so informativos hoje.

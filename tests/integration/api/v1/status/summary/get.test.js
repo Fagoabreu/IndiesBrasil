@@ -4,6 +4,12 @@ import database from "infra/database";
 import organization from "models/organization";
 import boardgame from "models/boardgame";
 import book from "models/book";
+import asset from "models/asset";
+import assetCategory from "models/assetCategory";
+import news from "models/news";
+import contentReview from "models/content-review";
+import course from "models/course";
+import game from "models/game";
 import TEST_CREDENTIALS from "tests/helpers/testCredentials.js";
 import { createActivatedUserWithSession } from "tests/helpers/storeTestUtils";
 
@@ -34,6 +40,14 @@ describe("GET /api/v1/status/summary", () => {
     expect(body).toHaveProperty("new_boardgames");
     expect(body).toHaveProperty("books");
     expect(body).toHaveProperty("new_books");
+    expect(body).toHaveProperty("assets");
+    expect(body).toHaveProperty("new_assets");
+    expect(body).toHaveProperty("news");
+    expect(body).toHaveProperty("new_news");
+    expect(body).toHaveProperty("content_reviews");
+    expect(body).toHaveProperty("new_content_reviews");
+    expect(body).toHaveProperty("courses");
+    expect(body).toHaveProperty("new_courses");
     expect(body).toHaveProperty("live_streams");
     expect(body).toHaveProperty("streaming_studios");
   });
@@ -88,5 +102,55 @@ describe("GET /api/v1/status/summary", () => {
     expect(Number(body.new_books)).toBe(1);
     expect(Number(body.live_streams)).toBe(1);
     expect(Number(body.streaming_studios)).toBe(1);
+  });
+
+  test("Summary counts assets, news, reviews and courses", async () => {
+    const { user: author } = await createActivatedUserWithSession({
+      username: "ResumoEditorial",
+      email: "resumo.editorial@teste.dev",
+      password: TEST_CREDENTIALS.userDefault,
+      cpf: 90123456708,
+    });
+
+    const studio = await organization.create(author, { name: "Estúdio Editorial" });
+    const sprites = await assetCategory.findBySlug("sprites");
+
+    await asset.create(author.id, studio.id, {
+      name: "Asset do Resumo",
+      external_url: "https://exemplo.itch.io/asset-resumo",
+      category_ids: [sprites.id],
+    });
+
+    await news.create({
+      author_id: author.id,
+      title: "Notícia do Resumo",
+      summary: "Resumo da notícia de teste.",
+      body: "Corpo da notícia de teste.",
+    });
+
+    // A análise aponta para um jogo existente (o modelo exige conteúdo real).
+    const reviewedGame = await game.create(studio.id, author.id, { name: "Jogo da Análise Resumo" });
+    await contentReview.create({
+      title: "Análise do Resumo",
+      authorId: author.id,
+      contentType: "game",
+      contentId: reviewedGame.id,
+      rating: 4,
+    });
+
+    await course.create(author.id, { title: "Curso do Resumo" });
+
+    const response = await fetch(`${webserver.origin}/api/v1/status/summary`);
+    expect(response.status).toBe(200);
+
+    const body = await response.json();
+    expect(Number(body.assets)).toBe(1);
+    expect(Number(body.new_assets)).toBe(1);
+    expect(Number(body.news)).toBe(1);
+    expect(Number(body.new_news)).toBe(1);
+    expect(Number(body.content_reviews)).toBe(1);
+    expect(Number(body.new_content_reviews)).toBe(1);
+    expect(Number(body.courses)).toBe(1);
+    expect(Number(body.new_courses)).toBe(1);
   });
 });

@@ -77,6 +77,45 @@ async function getSummary() {
             FROM books
             WHERE created_at >= NOW() - INTERVAL '30 days'
           ) AS new_books,
+          -- Assets: a contagem e simples, o resumo publica o tamanho do
+          -- catalogo e cada listagem aplica o filtro de moderacao.
+          (
+            SELECT COUNT(*)
+            FROM assets
+          ) AS assets,
+          (
+            SELECT COUNT(*)
+            FROM assets
+            WHERE created_at >= NOW() - INTERVAL '30 days'
+          ) AS new_assets,
+          -- Notícias, análises e cursos: os três tipos editoriais do site.
+          (
+            SELECT COUNT(*)
+            FROM news
+          ) AS news,
+          (
+            SELECT COUNT(*)
+            FROM news
+            WHERE created_at >= NOW() - INTERVAL '30 days'
+          ) AS new_news,
+          (
+            SELECT COUNT(*)
+            FROM content_reviews
+          ) AS content_reviews,
+          (
+            SELECT COUNT(*)
+            FROM content_reviews
+            WHERE created_at >= NOW() - INTERVAL '30 days'
+          ) AS new_content_reviews,
+          (
+            SELECT COUNT(*)
+            FROM courses
+          ) AS courses,
+          (
+            SELECT COUNT(*)
+            FROM courses
+            WHERE created_at >= NOW() - INTERVAL '30 days'
+          ) AS new_courses,
           -- Estúdios com transmissão ao vivo agora. org_stream_status é um
           -- cache alimentado pelo refresh de /api/v1/streams/refresh, então o
           -- número reflete a última verificação (pode estar defasado se
