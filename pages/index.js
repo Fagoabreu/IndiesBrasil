@@ -6,7 +6,20 @@ import MetricCard from "@/components/Card/MetricCard";
 import HighlightCard from "@/components/HighlightCard/HighlightCard";
 import EventCard from "@/components/Agenda/EventCard";
 import TestimonialsSection from "@/components/Landing/TestimonialsSection";
-import { MilestoneIcon, OrganizationIcon, PeopleIcon, StarIcon, VideoIcon, TableIcon, BookIcon, BroadcastIcon } from "@primer/octicons-react";
+import {
+  MilestoneIcon,
+  OrganizationIcon,
+  PeopleIcon,
+  StarIcon,
+  VideoIcon,
+  TableIcon,
+  BookIcon,
+  BroadcastIcon,
+  ArchiveIcon,
+  PaperAirplaneIcon,
+  CodeReviewIcon,
+  LightBulbIcon,
+} from "@primer/octicons-react";
 import { useEffect, useState } from "react";
 import TyperwriterComponent from "@/components/TypeWriter/TyperwriterComponent";
 import { useUser } from "@/context/UserContext";
@@ -197,6 +210,44 @@ const METRICS = [
     previousField: "new_books",
     icon: <BookIcon />,
     href: "/quadrinhos",
+  },
+  {
+    title: "Assets",
+    period: "Total",
+    field: "assets",
+    previousLabel: "Novos nos últimos 30 dias",
+    previousField: "new_assets",
+    icon: <ArchiveIcon />,
+    href: "/assets",
+  },
+  {
+    title: "Notícias",
+    period: "Total",
+    field: "news",
+    previousLabel: "Novas nos últimos 30 dias",
+    previousField: "new_news",
+    icon: <PaperAirplaneIcon />,
+    href: "/noticias",
+  },
+  {
+    // O campo é `content_reviews` na API; o rótulo diz "Análises" porque é
+    // assim que a seção aparece no site (e na navegação).
+    title: "Análises",
+    period: "Total",
+    field: "content_reviews",
+    previousLabel: "Novas nos últimos 30 dias",
+    previousField: "new_content_reviews",
+    icon: <CodeReviewIcon />,
+    href: "/analises",
+  },
+  {
+    title: "Cursos",
+    period: "Total",
+    field: "courses",
+    previousLabel: "Novos nos últimos 30 dias",
+    previousField: "new_courses",
+    icon: <LightBulbIcon />,
+    href: "/estudos",
   },
   {
     // `live_streams` vem do cache de status alimentado pelo refresh da página

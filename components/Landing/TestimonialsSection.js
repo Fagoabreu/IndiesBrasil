@@ -1,17 +1,20 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { useUser } from "@/context/UserContext";
 import useInView from "@/hooks/useInView";
+import { MAX_TESTIMONIAL_CONTENT_LENGTH, MAX_TESTIMONIAL_ROLE_LENGTH } from "@/lib/testimonial";
 import styles from "./TestimonialsSection.module.css";
-
-const MAX_CONTENT_LENGTH = 500;
 
 /**
  * Seção de depoimentos da comunidade.
- * - Lista apenas depoimentos aprovados (vindos de /api/v1/testimonials).
- * - Não renderiza nada enquanto não houver depoimentos e o visitante
- *   não estiver logado.
- * - Membros logados veem um formulário para deixar o próprio depoimento.
+ *
+ * - Lista apenas depoimentos aprovados (vindos de `/api/v1/testimonials`).
+ * - **Um depoimento por pessoa**: quem já escreveu recebe o formulário
+ *   pré-preenchido para editar e um botão para excluir; quem ainda não escreveu
+ *   vê o formulário de envio. O servidor recusa um segundo depoimento e explica
+ *   que o caminho é editar o existente.
+ * - Não renderiza nada enquanto não houver depoimentos e o visitante não
+ *   estiver logado.
  */
 export default function TestimonialsSection() {
   const { user } = useUser();
@@ -21,18 +24,46 @@ export default function TestimonialsSection() {
   const [content, setContent] = useState("");
   const [role, setRole] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  // Depoimento do próprio usuário (null = ainda não escreveu).
+  const [mine, setMine] = useState(null);
 
-  async function refreshTestimonials() {
+  const isLoggedIn = Boolean(user?.id);
+
+  const refreshTestimonials = useCallback(async () => {
     try {
       const response = await fetch("/api/v1/testimonials", { credentials: "include" });
       if (response.ok) {
         setTestimonials(await response.json());
       }
-    } catch (error) {
-      console.error("Erro ao buscar depoimentos:", error);
+    } catch {
+      // Lista pública indisponível não impede o formulário do próprio usuário.
     }
-  }
+  }, []);
+
+  const refreshMine = useCallback(async () => {
+    try {
+      const response = await fetch("/api/v1/testimonials/mine", { credentials: "include" });
+      if (!response.ok) return null;
+
+      const data = await response.json();
+      setMine(data);
+
+      // Preenche o editor com o que já está publicado — é o que transforma o
+      // formulário de envio em formulário de edição. Forma funcional de
+      // propósito: só preenche campo ainda vazio, para uma resposta tardia não
+      // sobrescrever o que a pessoa começou a digitar.
+      if (data) {
+        setContent((current) => current || data.content || "");
+        setRole((current) => current || data.role || "");
+      }
+
+      return data;
+    } catch {
+      return null;
+    }
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -43,8 +74,8 @@ export default function TestimonialsSection() {
         if (response.ok && !ignore) {
           setTestimonials(await response.json());
         }
-      } catch (error) {
-        console.error("Erro ao buscar depoimentos:", error);
+      } catch {
+        // Sem lista, a seção ainda mostra o formulário de quem está logado.
       } finally {
         if (!ignore) setLoading(false);
       }
@@ -57,6 +88,23 @@ export default function TestimonialsSection() {
     };
   }, []);
 
+  // O depoimento próprio só existe com sessão; ao sair (logout) o estado é
+  // zerado para o formulário não continuar preenchido com dado de outra sessão.
+  // `Promise.resolve().then` mantém o `setState` fora do corpo do efeito —
+  // `react-hooks/set-state-in-effect` acusa chamada síncrona aqui.
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      if (!isLoggedIn) {
+        setMine(null);
+        setContent("");
+        setRole("");
+        return;
+      }
+
+      return refreshMine();
+    });
+  }, [isLoggedIn, refreshMine]);
+
   async function handleSubmit(event) {
     event.preventDefault();
 
@@ -68,9 +116,11 @@ export default function TestimonialsSection() {
     setSubmitting(true);
     setFeedback(null);
 
+    const isEditing = Boolean(mine);
+
     try {
-      const response = await fetch("/api/v1/testimonials", {
-        method: "POST",
+      const response = await fetch(isEditing ? "/api/v1/testimonials/mine" : "/api/v1/testimonials", {
+        method: isEditing ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ content: content.trim(), role: role.trim() || null }),
@@ -78,22 +128,62 @@ export default function TestimonialsSection() {
 
       const data = await response.json();
 
-      if (response.ok) {
-        setContent("");
-        setRole("");
-        setFeedback({ type: "success", text: "Depoimento enviado! Obrigado por contribuir com a comunidade." });
-        await refreshTestimonials();
-      } else {
-        setFeedback({ type: "error", text: data.message || "Não foi possível enviar o depoimento." });
+      if (!response.ok) {
+        setFeedback({ type: "error", text: data.message || "Não foi possível salvar o depoimento." });
+
+        // Outra aba (ou um envio anterior) pode ter criado o depoimento: adota
+        // o existente em vez de deixar o formulário preso no modo de criação.
+        if (!isEditing && data.message?.includes("já tem um depoimento")) {
+          await refreshMine();
+        }
+
+        return;
       }
+
+      setMine(data);
+      setFeedback({
+        type: "success",
+        text: isEditing ? "Depoimento atualizado!" : "Depoimento enviado! Obrigado por contribuir com a comunidade.",
+      });
+      await refreshTestimonials();
     } catch {
-      setFeedback({ type: "error", text: "Não foi possível enviar o depoimento. Tente novamente." });
+      setFeedback({ type: "error", text: "Não foi possível salvar o depoimento. Tente novamente." });
     } finally {
       setSubmitting(false);
     }
   }
 
-  const isLoggedIn = Boolean(user?.id);
+  async function handleRemove() {
+    if (!confirm("Excluir seu depoimento? Ele sai da página inicial imediatamente.")) {
+      return;
+    }
+
+    setRemoving(true);
+    setFeedback(null);
+
+    try {
+      const response = await fetch("/api/v1/testimonials/mine", {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        setFeedback({ type: "error", text: data.message || "Não foi possível excluir o depoimento." });
+        return;
+      }
+
+      setMine(null);
+      setContent("");
+      setRole("");
+      setFeedback({ type: "success", text: "Depoimento excluído." });
+      await refreshTestimonials();
+    } catch {
+      setFeedback({ type: "error", text: "Não foi possível excluir o depoimento. Tente novamente." });
+    } finally {
+      setRemoving(false);
+    }
+  }
 
   if (loading) {
     return null;
@@ -102,6 +192,8 @@ export default function TestimonialsSection() {
   if (testimonials.length === 0 && !isLoggedIn) {
     return null;
   }
+
+  const busy = submitting || removing;
 
   return (
     <section ref={ref} className={`${styles.section} ${isVisible ? styles.visible : ""}`}>
@@ -135,18 +227,23 @@ export default function TestimonialsSection() {
       {isLoggedIn && (
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.formHeader}>
-            <p className={styles.formTitle}>Deixe seu depoimento</p>
-            <p className={styles.formHint}>Conte como a comunidade impactou sua jornada.</p>
+            <p className={styles.formTitle}>{mine ? "Seu depoimento" : "Deixe seu depoimento"}</p>
+            <p className={styles.formHint}>
+              {mine
+                ? "Você pode editar o texto ou excluir o depoimento a qualquer momento."
+                : "Conte como a comunidade impactou sua jornada. É um depoimento por pessoa."}
+            </p>
           </div>
 
           <textarea
             className={styles.textarea}
             value={content}
             onChange={(event) => setContent(event.target.value)}
-            maxLength={MAX_CONTENT_LENGTH}
+            maxLength={MAX_TESTIMONIAL_CONTENT_LENGTH}
             rows={3}
             placeholder="Escreva seu depoimento..."
-            disabled={submitting}
+            aria-label="Seu depoimento"
+            disabled={busy}
           />
 
           <div className={styles.formRow}>
@@ -154,14 +251,24 @@ export default function TestimonialsSection() {
               className={styles.input}
               value={role}
               onChange={(event) => setRole(event.target.value)}
-              maxLength={80}
+              maxLength={MAX_TESTIMONIAL_ROLE_LENGTH}
               placeholder="Sua função (ex.: Desenvolvedor, Artista) — opcional"
-              disabled={submitting}
+              aria-label="Sua função"
+              disabled={busy}
             />
-            <button type="submit" className={styles.submitBtn} disabled={submitting}>
-              {submitting ? "Enviando..." : "Enviar depoimento"}
+            <button type="submit" className={styles.submitBtn} disabled={busy}>
+              {submitting ? "Salvando..." : mine ? "Salvar alterações" : "Enviar depoimento"}
             </button>
+            {mine && (
+              <button type="button" className={styles.removeBtn} onClick={handleRemove} disabled={busy}>
+                {removing ? "Excluindo..." : "Excluir"}
+              </button>
+            )}
           </div>
+
+          <p className={styles.counter}>
+            {content.length}/{MAX_TESTIMONIAL_CONTENT_LENGTH}
+          </p>
 
           {feedback && <p className={feedback.type === "success" ? styles.feedbackSuccess : styles.feedbackError}>{feedback.text}</p>}
         </form>

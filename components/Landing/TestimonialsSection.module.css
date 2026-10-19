@@ -196,6 +196,35 @@
   cursor: not-allowed;
 }
 
+.removeBtn {
+  border: 1px solid var(--borderColor-danger-muted, var(--borderColor-default));
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--fgColor-danger, #cf222e);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.removeBtn:hover:not(:disabled) {
+  background: var(--bgColor-danger-muted);
+}
+
+.removeBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.counter {
+  margin: 8px 0 0;
+  font-size: 12px;
+  text-align: right;
+  color: var(--fgColor-muted);
+}
+
 .feedbackSuccess {
   margin: 12px 0 0;
   font-size: 14px;
