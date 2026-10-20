@@ -2,7 +2,22 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { PageLayout, Avatar } from "@primer/react";
-import { CalendarIcon, DownloadIcon, EyeIcon, GearIcon, ShareIcon } from "@primer/octicons-react";
+import {
+  CalendarIcon,
+  DownloadIcon,
+  EyeIcon,
+  GearIcon,
+  ShareIcon,
+  InfoIcon,
+  CommentDiscussionIcon,
+  MailIcon,
+  BellIcon,
+  PeopleIcon,
+  PersonIcon,
+  CheckCircleFillIcon,
+  CircleIcon,
+  RocketIcon,
+} from "@primer/octicons-react";
 import Image from "next/image";
 import PropTypes from "prop-types";
 
@@ -107,6 +122,43 @@ function notificationMessage(n) {
 // Abas válidas. `mensagens` fica de fora do endereço público quando o perfil não
 // é o do próprio visitante — quem decide é o `isOwnProfile`, no render.
 const PROFILE_TABS = ["info", "posts", "notifications", "mensagens"];
+
+/**
+ * Descrição das abas: rótulo + ícone + se exige ser o dono do perfil.
+ *
+ * Fica fora do componente (como `METRICS` na home) porque é estrutura fixa: a
+ * lista é lida pelo endereço (`PROFILE_TABS`), pelo teclado (navegação com
+ * setas) e pelo `map` que desenha o trilho.
+ */
+const PROFILE_TAB_DEFS = [
+  { id: "info", label: "Informações", icon: InfoIcon },
+  { id: "posts", label: "Postagens", icon: CommentDiscussionIcon },
+  { id: "mensagens", label: "Mensagens", icon: MailIcon, ownerOnly: true },
+  { id: "notifications", label: "Notificações", icon: BellIcon, ownerOnly: true },
+];
+
+/**
+ * Itens que compõem a "força do perfil" (só o dono vê).
+ *
+ * É um checklist do que já está preenchido: sem ele o perfil incompleto não
+ * dizia ao dono o que faltava, e a página de configurações é longa demais para
+ * descobrir isso sozinho.
+ */
+function buildCompleteness(profile) {
+  const user = profile.user ?? {};
+  const count = (list) => (Array.isArray(list) ? list.length : 0);
+
+  return [
+    { key: "sobre", label: "Resumo e bio", done: Boolean(user.resumo && user.bio) },
+    { key: "foto", label: "Foto de perfil", done: Boolean(user.avatar_image) },
+    { key: "capa", label: "Capa personalizada", done: Boolean(user.background_image) },
+    { key: "especializacoes", label: "Especializações", done: count(profile.roles) > 0 },
+    { key: "ferramentas", label: "Ferramentas", done: count(profile.tools) > 0 },
+    { key: "contatos", label: "Um contato", done: count(profile.contacts) > 0 },
+    { key: "historico", label: "Histórico profissional", done: count(profile.historico) > 0 },
+    { key: "formacao", label: "Formação acadêmica", done: count(profile.formacoes) > 0 },
+  ];
+}
 
 export default function Perfil({ initialProfile, profileNotFound = false }) {
   const router = useRouter();
@@ -266,7 +318,7 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
     // centralizada e o layout "pulava" quando o perfil carregava.
     return (
       <PageLayout padding="none">
-        <PageLayout.Content width="medium">
+        <PageLayout.Content width="large">
           <div className={style.page} role="status" aria-live="polite" aria-label="Carregando perfil">
             <div className={style.headerCard}>
               <div className={`${style.cover} ${style.skeleton}`} />
@@ -275,12 +327,15 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
                   <div className={`${style.avatarRing} ${style.skeleton}`} />
                 </div>
                 <div className={style.identity}>
-                  <div className={style.skeleton} style={{ width: 200, height: 26, marginTop: 12 }} />
+                  <div className={style.skeleton} style={{ width: 200, height: 28, marginTop: 14 }} />
                   <div className={style.skeleton} style={{ width: 120, height: 16 }} />
-                  <div className={style.skeleton} style={{ width: 260, height: 38, marginTop: 14 }} />
+                  <div className={style.skeleton} style={{ width: 300, height: 26, marginTop: 12 }} />
+                  <div className={style.skeleton} style={{ width: "100%", maxWidth: 480, height: 62, marginTop: 12 }} />
                 </div>
               </div>
             </div>
+
+            <div className={style.skeleton} style={{ width: 320, height: 46, borderRadius: 999 }} />
 
             <div className={style.content}>
               <div className={style.mainCol}>
@@ -314,10 +369,12 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
 
   const isOwnProfile = authUser?.username === perfilUser?.user?.username;
 
-  // A aba Mensagens só existe para o dono do perfil (a caixa de entrada é
-  // privada). Se o endereço pedir essa aba a um visitante, cai em "info" —
-  // melhor voltar à primeira aba do que renderizar uma área vazia.
-  const effectiveTab = activeTab === "mensagens" && !isOwnProfile ? "info" : activeTab;
+  // Mensagens e Notificações só existem para o dono do perfil (a caixa de
+  // entrada e o feed de notificações são privados). Se o endereço pedir uma
+  // delas a um visitante, cai em "info" — melhor voltar à primeira aba do que
+  // renderizar uma área vazia.
+  const requestedOwnerTab = PROFILE_TAB_DEFS.some((tab) => tab.ownerOnly && tab.id === activeTab);
+  const effectiveTab = requestedOwnerTab && !isOwnProfile ? "info" : activeTab;
 
   /* =====================
    * Render
@@ -341,6 +398,35 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
   const visibilityLabel = VISIBILITY_LABELS[perfilUser.user.visibility] ?? perfilUser.user.visibility;
   const hasAbout = Boolean(perfilUser.user.resumo || perfilUser.user.bio);
 
+  // Abas visíveis: as de mensagens e notificações só existem para o dono.
+  const visibleTabs = PROFILE_TAB_DEFS.filter((tab) => !tab.ownerOnly || isOwnProfile);
+
+  // Força do perfil — só faz sentido para quem pode editar.
+  const completenessItems = isOwnProfile ? buildCompleteness(perfilUser) : [];
+  const completenessDone = completenessItems.filter((item) => item.done).length;
+  const completenessPercent = completenessItems.length ? Math.round((completenessDone / completenessItems.length) * 100) : 0;
+
+  /**
+   * Navegação por teclado no padrão WAI-ARIA de abas: setas movem o foco,
+   * Home/End vão às pontas. Sem isso o trilho era uma fileira de botões que só
+   * respondia a Tab, e a convenção de tablist ficava pela metade.
+   */
+  function handleTabKeyDown(event, index) {
+    if (!["ArrowRight", "ArrowLeft", "Home", "End"].includes(event.key)) return;
+
+    event.preventDefault();
+    const last = visibleTabs.length - 1;
+    let next = index;
+
+    if (event.key === "ArrowRight") next = index === last ? 0 : index + 1;
+    else if (event.key === "ArrowLeft") next = index === 0 ? last : index - 1;
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = last;
+
+    selectTab(visibleTabs[next].id);
+    document.getElementById(`profile-tab-${visibleTabs[next].id}`)?.focus();
+  }
+
   /* =====================
    * Metadados do link compartilhado
    *
@@ -358,7 +444,7 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
 
   return (
     <PageLayout padding="none">
-      <PageLayout.Content width="medium">
+      <PageLayout.Content width="large">
         <div className={style.page}>
           <SeoHead
             title={seoTitle}
@@ -380,9 +466,14 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
                 fill
                 unoptimized
                 priority
-                sizes="(max-width: 860px) 100vw, 768px"
+                sizes="(max-width: 860px) 100vw, 1012px"
                 className={style.coverImage}
               />
+              {/* Duas camadas decorativas: o véu garante contraste do avatar e
+                  dos botões; o halo dá profundidade e amarra a capa à
+                  identidade da marca sem precisar de imagem extra. */}
+              <div className={style.coverScrim} aria-hidden="true" />
+              <div className={style.coverGlow} aria-hidden="true" />
               {isOwnProfile && (
                 <div className={style.coverActions}>
                   <ImageUploader
@@ -400,7 +491,7 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
                   espaço que sobra. */}
               <div className={style.avatarRow}>
                 <div className={style.avatarRing}>
-                  <Avatar size={112} src={perfilUser.user.avatar_image || "/images/avatar.png"} className={style.avatar} />
+                  <Avatar size={124} src={perfilUser.user.avatar_image || "/images/avatar.png"} className={style.avatar} />
                   {isOwnProfile && (
                     <span className={style.avatarEdit}>
                       <ImageUploader preset="avatar" label="Alterar avatar" onCropped={({ blob }) => uploadProfileImage(blob, "avatar_image")} />
@@ -428,78 +519,94 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
                 <h1 className={style.name}>{perfilUser.name || perfilUser.user.username}</h1>
                 <p className={style.handle}>@{perfilUser.user.username}</p>
 
-                <p className={style.metaRow}>
-                  <span className={style.metaItem}>
-                    <CalendarIcon size={14} /> Desde {DateUtils.formatMonthYear(perfilUser.user.created_at)}
+                {/* Reputação, tempo de casa e visibilidade no mesmo lugar: antes
+                    a data e a visibilidade ficavam numa linha de metadados e a
+                    reputação em outra, com um vão no meio do bloco. */}
+                <div className={style.badgeRow}>
+                  <ReputationBadge value={perfilUser.user.reputation ?? 0} showLevel />
+                  <span className={style.badge}>
+                    <CalendarIcon size={12} /> Desde {DateUtils.formatMonthYear(perfilUser.user.created_at)}
                   </span>
                   {isOwnProfile && visibilityLabel && (
-                    <span className={style.metaItem}>
-                      <EyeIcon size={14} /> Perfil {visibilityLabel}
+                    <span className={style.badge}>
+                      <EyeIcon size={12} /> Perfil {visibilityLabel}
                     </span>
                   )}
-                </p>
+                </div>
 
                 {/* Rótulos curtos de propósito: "Acompanhando" não cabe na
-                    coluna de ~110px do mobile. "Seguindo" também é o termo já
+                    coluna estreita do mobile. "Seguindo" também é o termo já
                     usado na aba do feed de posts. */}
-                <ul className={style.stats}>
-                  <li className={style.stat}>
-                    <span className={style.statValue}>{followingCount}</span>
-                    <span className={style.statLabel}>Seguindo</span>
+                <ul className={style.statStrip}>
+                  <li className={style.statTile}>
+                    <span className={style.statIcon} aria-hidden="true">
+                      <PeopleIcon size={16} />
+                    </span>
+                    <span className={style.statText}>
+                      <span className={style.statValue}>{followingCount}</span>
+                      <span className={style.statLabel}>Seguindo</span>
+                    </span>
                   </li>
-                  <li className={style.stat}>
-                    <span className={style.statValue}>{followersCount}</span>
-                    <span className={style.statLabel}>Seguidores</span>
+                  <li className={style.statTile}>
+                    <span className={style.statIcon} aria-hidden="true">
+                      <PersonIcon size={16} />
+                    </span>
+                    <span className={style.statText}>
+                      <span className={style.statValue}>{followersCount}</span>
+                      <span className={style.statLabel}>Seguidores</span>
+                    </span>
                   </li>
-                  <li className={style.stat}>
-                    <span className={style.statValue}>{postsCount}</span>
-                    <span className={style.statLabel}>Postagens</span>
+                  <li className={style.statTile}>
+                    <span className={style.statIcon} aria-hidden="true">
+                      <CommentDiscussionIcon size={16} />
+                    </span>
+                    <span className={style.statText}>
+                      <span className={style.statValue}>{postsCount}</span>
+                      <span className={style.statLabel}>Postagens</span>
+                    </span>
                   </li>
                 </ul>
-
-                <div className={style.reputationRow}>
-                  <ReputationBadge value={perfilUser.user.reputation ?? 0} showLevel />
-                </div>
               </div>
             </div>
           </section>
 
           {/* ===== ABAS ===== */}
           <div className={style.tabBar} role="tablist" aria-label="Seções do perfil">
-            <button type="button" role="tab" aria-selected={effectiveTab === "info"} className={style.tab} onClick={() => selectTab("info")}>
-              Informações
-            </button>
-            <button type="button" role="tab" aria-selected={effectiveTab === "posts"} className={style.tab} onClick={() => selectTab("posts")}>
-              Postagens
-              {postsCount > 0 && <span className={style.tabCount}>{postsCount}</span>}
-            </button>
-            {isOwnProfile && (
-              <button
-                type="button"
-                role="tab"
-                aria-selected={effectiveTab === "mensagens"}
-                className={style.tab}
-                onClick={() => selectTab("mensagens")}
-              >
-                Mensagens
-              </button>
-            )}
-            {isOwnProfile && (
-              <button
-                type="button"
-                role="tab"
-                aria-selected={effectiveTab === "notifications"}
-                className={style.tab}
-                onClick={() => selectTab("notifications")}
-              >
-                Notificações
-              </button>
-            )}
+            {visibleTabs.map((tab, index) => {
+              const TabIcon = tab.icon;
+              const selected = effectiveTab === tab.id;
+
+              return (
+                <button
+                  key={tab.id}
+                  id={`profile-tab-${tab.id}`}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  // Só a aba ativa aponta para um painel: os painéis são
+                  // renderizados sob demanda, então um `aria-controls` nas
+                  // abas inativas apontaria para um id inexistente.
+                  aria-controls={selected ? `profile-panel-${tab.id}` : undefined}
+                  // Roving tabindex: só a aba ativa entra na ordem de Tab; as
+                  // setas navegam entre elas (padrão WAI-ARIA de tablist).
+                  tabIndex={selected ? 0 : -1}
+                  className={style.tab}
+                  onClick={() => selectTab(tab.id)}
+                  onKeyDown={(event) => handleTabKeyDown(event, index)}
+                >
+                  <span className={style.tabIcon} aria-hidden="true">
+                    <TabIcon size={14} />
+                  </span>
+                  {tab.label}
+                  {tab.id === "posts" && postsCount > 0 && <span className={style.tabCount}>{postsCount}</span>}
+                </button>
+              );
+            })}
           </div>
 
           {/* ===== INFORMAÇÕES ===== */}
           {effectiveTab === "info" && (
-            <div className={style.content}>
+            <div className={`${style.content} ${style.tabPanel}`} role="tabpanel" id="profile-panel-info" aria-labelledby="profile-tab-info">
               <div className={style.mainCol}>
                 {(hasAbout || isOwnProfile) && (
                   <SectionPanel title="Sobre">
@@ -542,6 +649,70 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
               </div>
 
               <aside className={style.sideCol}>
+                {/* Força do perfil: só o dono vê (é um convite à ação, não
+                    informação pública). Antes do QR porque é o que tem algo a
+                    pedir — o card de compartilhar é útil, não urgente. */}
+                {isOwnProfile && (
+                  <section className={style.completeness} aria-labelledby="profile-completeness-title">
+                    <div className={style.completenessHead}>
+                      <h2 id="profile-completeness-title" className={style.completenessTitle}>
+                        Força do perfil
+                      </h2>
+                      <span className={style.completenessValue}>{completenessPercent}%</span>
+                    </div>
+
+                    <div
+                      className={style.progressTrack}
+                      role="progressbar"
+                      aria-valuenow={completenessPercent}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-labelledby="profile-completeness-title"
+                    >
+                      <div className={style.progressFill} style={{ width: `${completenessPercent}%` }} />
+                    </div>
+
+                    {completenessPercent < 100 ? (
+                      <>
+                        {/* Só o que falta: listar também os itens prontos
+                            transformava o card num checklist de oito linhas
+                            para dizer três coisas acionáveis. */}
+                        <ul className={style.completenessList}>
+                          {completenessItems
+                            .filter((item) => !item.done)
+                            .map((item) => (
+                              <li key={item.key} className={style.completenessItem}>
+                                <span className={style.completenessPending} aria-hidden="true">
+                                  <CircleIcon size={14} />
+                                </span>
+                                {/* A lista mostra só pendências, mas o leitor de
+                                    tela recebe o rótulo explícito: o ícone é
+                                    decorativo e o contexto do card não é
+                                    anunciado. */}
+                                <span className={style.srOnly}>Falta preencher: </span>
+                                {item.label}
+                              </li>
+                            ))}
+                        </ul>
+
+                        {completenessDone > 0 && (
+                          <p className={style.completenessSummary}>
+                            {completenessDone} de {completenessItems.length} itens já preenchidos
+                          </p>
+                        )}
+
+                        <Link href={`/perfil/${username}/configuracoes`} className={style.completenessLink}>
+                          <RocketIcon size={14} /> Completar perfil
+                        </Link>
+                      </>
+                    ) : (
+                      <p className={style.completenessDone}>
+                        <CheckCircleFillIcon size={16} /> Perfil completo — obrigado por caprichar!
+                      </p>
+                    )}
+                  </section>
+                )}
+
                 {/* O QR saiu do cabeçalho: ocupava uma coluna inteira do bloco
                     de identidade para uma utilidade secundária. */}
                 <div className={style.shareCard}>
@@ -594,8 +765,25 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
 
           {/* ===== POSTAGENS ===== */}
           {effectiveTab === "posts" && (
-            <div className={style.postsFeed}>
-              {loadingPosts && <p className={style.postsState}>Carregando postagens...</p>}
+            <div className={`${style.postsFeed} ${style.tabPanel}`} role="tabpanel" id="profile-panel-posts" aria-labelledby="profile-tab-posts">
+              {loadingPosts && (
+                <div className={style.postSkeletonFeed} role="status" aria-live="polite" aria-label="Carregando postagens">
+                  {[0, 1, 2].map((index) => (
+                    <div key={index} className={style.postSkeletonCard}>
+                      <div className={style.postSkeletonHead}>
+                        <div className={`${style.skeleton} ${style.postSkeletonAvatar}`} />
+                        <div className={style.postSkeletonMeta}>
+                          <div className={style.skeleton} style={{ width: "38%", height: 12 }} />
+                          <div className={style.skeleton} style={{ width: "22%", height: 10 }} />
+                        </div>
+                      </div>
+                      <div className={style.skeleton} style={{ width: "100%", height: 12 }} />
+                      <div className={style.skeleton} style={{ width: "86%", height: 12 }} />
+                      <div className={style.skeleton} style={{ width: "61%", height: 12 }} />
+                    </div>
+                  ))}
+                </div>
+              )}
               {!loadingPosts && posts.length === 0 && <p className={style.postsState}>Nenhuma postagem ainda.</p>}
               {!loadingPosts &&
                 posts.map((p) => (
@@ -605,12 +793,25 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
           )}
 
           {/* ===== MENSAGENS ===== */}
-          {effectiveTab === "mensagens" && isOwnProfile && <MessagesPanel />}
+          {effectiveTab === "mensagens" && isOwnProfile && (
+            <div className={style.tabPanel} role="tabpanel" id="profile-panel-mensagens" aria-labelledby="profile-tab-mensagens">
+              <MessagesPanel />
+            </div>
+          )}
 
           {/* ===== NOTIFICAÇÕES ===== */}
           {effectiveTab === "notifications" && isOwnProfile && (
-            <div>
-              {loadingNotifs && <p className={style.postsState}>Carregando notificações...</p>}
+            <div className={style.tabPanel} role="tabpanel" id="profile-panel-notifications" aria-labelledby="profile-tab-notifications">
+              {loadingNotifs && (
+                <div className={style.postSkeletonFeed} role="status" aria-live="polite" aria-label="Carregando notificações">
+                  {[0, 1, 2].map((index) => (
+                    <div key={index} className={style.postSkeletonCard}>
+                      <div className={style.skeleton} style={{ width: "34%", height: 12 }} />
+                      <div className={style.skeleton} style={{ width: "74%", height: 10 }} />
+                    </div>
+                  ))}
+                </div>
+              )}
               {!loadingNotifs && <NotificationList userNotifs={userNotifs} postNotifs={postNotifs} />}
             </div>
           )}
