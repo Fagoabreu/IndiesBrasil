@@ -2,20 +2,25 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding-bottom: 32px;
+  gap: 18px;
+  padding-bottom: 48px;
 }
 
-/* ===== CABEÇALHO =====
+/* ===== CABEÇALHO / HERÓI =====
    O cabeçalho é um card próprio e o conteúdo vive FORA dele. Antes tudo ficava
    dentro de um único card com `padding: 8px`, o que produzia card dentro de
    card (borda interna colada na externa) e desalinhava as laterais: as abas
-   tinham 20px de margem enquanto o conteúdo tinha 8px. */
+   tinham 20px de margem enquanto o conteúdo tinha 8px.
+
+   `isolation: isolate` cria contexto de empilhamento próprio: as camadas da
+   capa (véu, halo) ficam presas ao herói e não competem com o header fixo do
+   site. */
 .headerCard {
   position: relative;
+  isolation: isolate;
   background: var(--bgColor-default);
   border: 1px solid var(--borderColor-muted);
-  border-radius: 14px;
+  border-radius: 18px;
   box-shadow: var(--brand-card-glow);
   /* Sem `overflow: hidden`: o avatar sobe sobre a capa por margem negativa e
      seria cortado. Quem arredonda os próprios cantos é a capa. */
@@ -25,9 +30,9 @@
 .cover {
   position: relative;
   width: 100%;
-  height: 180px;
+  height: 220px;
   overflow: hidden;
-  border-radius: 13px 13px 0 0;
+  border-radius: 17px 17px 0 0;
   background: var(--bgColor-muted);
 }
 
@@ -35,25 +40,41 @@
   object-fit: cover;
 }
 
-/* Véu no rodapé: garante contraste do botão que fica sobre a imagem */
-.cover::after {
-  content: "";
+/* Véu em duas direções: o degrade vertical escurece o rodapé (onde ficam o
+   avatar e os botões) e o horizontal protege a leitura do lado esquerdo. Antes
+   era um degrade único de 0,3 de opacidade, que sumia sobre capas claras. */
+.coverScrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, transparent 45%, rgba(0, 0, 0, 0.3) 100%);
+  background:
+    linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.18) 44%, transparent 72%),
+    linear-gradient(to right, rgba(0, 0, 0, 0.22) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+/* Halo da marca: profundidade sem imagem extra. `screen` sobre capa escura e
+   `soft-light` sobre clara dariam resultados diferentes demais; o gradiente em
+   opacidade baixa funciona nos dois temas. */
+.coverGlow {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(680px 240px at 10% 130%, rgba(var(--brand-rgb-primary), 0.38), transparent 62%),
+    radial-gradient(520px 220px at 92% -10%, rgba(var(--brand-rgb-secondary), 0.24), transparent 66%);
+  opacity: 0.85;
   pointer-events: none;
 }
 
 .coverActions {
   position: absolute;
-  right: 12px;
-  bottom: 12px;
+  right: 14px;
+  bottom: 14px;
   z-index: 1;
 }
 
 /* ===== CORPO DO CABEÇALHO ===== */
 .headerBody {
-  padding: 0 20px 20px;
+  padding: 0 22px 22px;
 }
 
 /* A sobreposição do avatar é UM número (a margem negativa), em vez dos três
@@ -61,34 +82,45 @@
    `margin-top` da linha — que precisavam ser recalculados à mão a cada
    mudança de tamanho e saíam de sincronia no breakpoint mobile. */
 .avatarRow {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
-  margin-top: -44px;
+  margin-top: -60px;
 }
 
+/* Anel de 4px de gradiente em volta do avatar. `padding` faz o anel crescer
+   para fora sem mexer no tamanho do Avatar; o `box-shadow` branco separa o
+   conjunto da capa, como uma moldura. */
 .avatarRing {
   position: relative;
   flex-shrink: 0;
-  width: 120px;
-  height: 120px;
+  width: 132px;
+  height: 132px;
+  padding: 4px;
   border-radius: 50%;
   background: var(--brand-gradient);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--brand-glow-md);
+  box-shadow:
+    var(--brand-glow-md),
+    0 0 0 5px var(--bgColor-default);
 }
 
 .avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
   background: var(--bgColor-default);
 }
 
 /* Botão de trocar avatar, ancorado no canto do anel */
 .avatarEdit {
   position: absolute;
-  right: 2px;
+  right: 0;
   bottom: 2px;
   display: flex;
 }
@@ -106,16 +138,16 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin-top: 12px;
+  margin-top: 14px;
   min-width: 0;
 }
 
 .name {
   margin: 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.015em;
-  line-height: 1.2;
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.022em;
+  line-height: 1.15;
   color: var(--fgColor-default);
   overflow-wrap: anywhere;
 }
@@ -123,58 +155,88 @@
 .handle {
   margin: 0;
   font-size: 0.9rem;
+  font-weight: 500;
   color: var(--fgColor-muted);
 }
 
-.metaRow {
+/* Linha de selos: reputação, desde quando e visibilidade no MESMO lugar. Antes
+   a data ficava numa linha de metadados e a reputação em outra, com um vão
+   entre elas que quebrava a leitura do bloco. */
+.badgeRow {
   display: flex;
-  align-items: center;
   flex-wrap: wrap;
-  gap: 6px 16px;
-  margin: 6px 0 0;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
 }
 
-.metaItem {
+.badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.82rem;
+  padding: 4px 10px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 999px;
+  background: var(--bgColor-muted);
   color: var(--fgColor-muted);
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
 }
 
 /* ===== ESTATÍSTICAS =====
    Números em blocos rotulados, em vez da frase corrida
    "3 acompanhando · 5 seguidores · 12 postagens": o número vira o dado
    escaneável e o rótulo dá o contexto, sem depender do negrito no meio do
-   texto para hierarquizar. Grade de 3 colunas para os rótulos ficarem
-   alinhados entre si em qualquer largura. */
-.stats {
+   texto para hierarquizar.
+
+   Cada bloco ganhou ícone e caixa própria (antes eram três colunas separadas
+   por linhas verticais): o ícone dá o que reconhecer de relance e a caixa
+   delimita o alvo visual sem depender de separador. */
+.statStrip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  max-width: 380px;
-  margin: 14px 0 0;
+  gap: 10px;
+  max-width: 480px;
+  margin: 18px 0 0;
   padding: 0;
   list-style: none;
 }
 
-.stat {
+.statTile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 12px;
+  background: var(--brand-icon-bg);
+}
+
+.statIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  border: 1px solid var(--brand-icon-border);
+  background: var(--bgColor-default);
+  color: var(--brand-primary);
+}
+
+.statText {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 0 16px;
+  gap: 1px;
   min-width: 0;
 }
 
-.stat:first-child {
-  padding-left: 0;
-}
-
-.stat + .stat {
-  border-left: 1px solid var(--borderColor-muted);
-}
-
 .statValue {
-  font-size: 1.25rem;
+  font-size: 1.05rem;
   font-weight: 700;
   line-height: 1.1;
   color: var(--fgColor-default);
@@ -183,18 +245,14 @@
 }
 
 .statLabel {
-  font-size: 0.68rem;
-  font-weight: 600;
+  font-size: 0.66rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--fgColor-muted);
-}
-
-.reputationRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ===== AÇÃO SECUNDÁRIA =====
@@ -233,11 +291,21 @@
   outline-offset: 2px;
 }
 
-/* ===== ABAS ===== */
+/* ===== ABAS (controle segmentado) =====
+   Pílulas dentro de um trilho, em vez da faixa com sublinhado. A faixa tinha
+   `overflow-x: auto` e rolava para o lado em telas medianas — a última aba
+   ("Notificações") ficava fora da área visível sem nenhuma pista. O trilho
+   cabe inteiro porque cada aba é mais curta, e a aba ativa ganha relevo em vez
+   de só uma linha embaixo. */
 .tabBar {
-  display: flex;
+  display: inline-flex;
+  align-self: flex-start;
+  max-width: 100%;
   gap: 4px;
-  border-bottom: 1px solid var(--borderColor-muted);
+  padding: 4px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 999px;
+  background: var(--bgColor-muted);
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -249,38 +317,47 @@
 .tab {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 14px;
-  margin-bottom: -1px;
-  background: none;
+  gap: 7px;
+  padding: 8px 16px;
   border: 0;
-  border-bottom: 2px solid transparent;
-  border-radius: 8px 8px 0 0;
+  border-radius: 999px;
+  background: transparent;
   font-family: inherit;
-  font-size: 0.875rem;
+  font-size: 0.84rem;
   font-weight: 600;
   color: var(--fgColor-muted);
   cursor: pointer;
   white-space: nowrap;
   transition:
     color 0.15s ease,
-    border-color 0.15s ease,
-    background 0.15s ease;
+    background 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-.tab:hover {
+.tab:hover:not([aria-selected="true"]) {
   color: var(--fgColor-default);
-  background: var(--brand-hover-bg);
+  background: var(--bgColor-default);
 }
 
 .tab[aria-selected="true"] {
-  color: var(--brand-primary);
-  border-bottom-color: var(--brand-primary);
+  color: var(--fgColor-default);
+  background: var(--bgColor-default);
+  box-shadow: var(--brand-glow-sm);
 }
 
 .tab:focus-visible {
   outline: 2px solid var(--brand-primary);
-  outline-offset: -2px;
+  outline-offset: 2px;
+}
+
+.tabIcon {
+  display: inline-flex;
+  color: var(--fgColor-muted);
+  transition: color 0.15s ease;
+}
+
+.tab[aria-selected="true"] .tabIcon {
+  color: var(--brand-primary);
 }
 
 /* Contador da aba: dá contexto sem competir com o rótulo */
@@ -318,13 +395,28 @@
   min-width: 0;
 }
 
+/* A coluna lateral acompanha a rolagem: com os cards de contato, estúdios e
+   ferramentas, ela costuma ser mais alta que o conteúdo principal, e deixá-la
+   parada obrigava a rolar a página inteira para voltar ao QR ou à reputação.
+   `top` respeita o header fixo do site. */
+@media (min-width: 861px) {
+  .sideCol {
+    position: sticky;
+    top: 16px;
+  }
+}
+
 /* ===== TEXTO LONGO (Resumo / Bio) =====
    Resumo como linha de destaque e bio como corpo, em vez de dois campos
-   rotulados ("Resumo:", "Bio:") com o mesmo peso visual. */
+   rotulados ("Resumo:", "Bio:") com o mesmo peso visual. O resumo ganhou a
+   barra lateral da marca: é a frase que o visitante lê primeiro e era a única
+   a começar sem nenhum marco visual dentro do painel. */
 .lead {
   margin: 0;
-  font-size: 0.98rem;
-  line-height: 1.55;
+  padding-left: 12px;
+  border-left: 3px solid var(--brand-primary);
+  font-size: 1rem;
+  line-height: 1.6;
   font-weight: 500;
   color: var(--fgColor-default);
 }
@@ -332,14 +424,14 @@
 .body {
   margin: 0;
   font-size: 0.92rem;
-  line-height: 1.65;
+  line-height: 1.7;
   color: var(--fgColor-muted);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
 .lead + .body {
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
 /* ===== ESTADO VAZIO =====
@@ -425,6 +517,207 @@
   outline-offset: 2px;
 }
 
+/* ===== COMPLETUDE DO PERFIL (só o dono vê) =====
+   Barra de progresso + checklist do que falta. É o padrão "profile strength"
+   que redes sociais usam: o perfil vazio não tem nada dizendo ao dono o que
+   preencher, e a página de configurações é longa demais para descobrir isso
+   sozinho. */
+.completeness {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--brand-icon-border);
+  border-radius: 12px;
+  background: var(--brand-active-bg);
+  box-shadow: var(--brand-card-glow);
+}
+
+.completenessHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.completenessTitle {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--fgColor-muted);
+}
+
+.completenessValue {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--brand-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.progressTrack {
+  height: 8px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 999px;
+  background: var(--bgColor-default);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--brand-gradient-h);
+  transition: width 0.45s ease;
+}
+
+.completenessList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.completenessItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--fgColor-default);
+}
+
+/* "3 de 8 itens já preenchidos": reconhece o progresso sem ocupar uma linha
+   por item concluído. */
+.completenessSummary {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--fgColor-muted);
+}
+
+.completenessPending {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--borderColor-default);
+}
+
+.completenessLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 2px;
+  padding: 8px 12px;
+  border: 1px solid var(--brand-primary);
+  border-radius: 8px;
+  background: var(--brand-primary);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.completenessLink:hover {
+  background: var(--brand-secondary);
+  border-color: var(--brand-secondary);
+}
+
+.completenessLink:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+/* Estado "tudo preenchido": informa em vez de cobrar. */
+.completenessDone {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--fgColor-success);
+}
+
+/* ===== CARREGANDO O FEED (skeleton de post) =====
+   Antes era uma linha de texto centralizada; o layout pulava quando os cards
+   chegavam. O esqueleto mantém a geometria do card. */
+.postSkeletonFeed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.postSkeletonCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 12px;
+  background: var(--bgColor-default);
+}
+
+.postSkeletonHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.postSkeletonAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+
+.postSkeletonMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+/* ===== ACESSIBILIDADE =====
+   Texto só para leitor de tela — usado no estado dos itens da força do perfil
+   (o ícone é decorativo e o risco no texto não é anunciado). */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ===== TRANSIÇÃO ENTRE ABAS =====
+   Entrada curta do painel ao trocar de aba: dá continuidade à navegação em vez
+   de o conteúdo aparecer seco. Respeita `prefers-reduced-motion`. */
+.tabPanel {
+  animation: panelIn 0.22s ease both;
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tabPanel {
+    animation: none;
+  }
+}
+
 /* ===== ESTADO GENÉRICO (loading / not-found) ===== */
 .stateCard {
   border: var(--brand-empty-border);
@@ -470,6 +763,10 @@
   .skeleton {
     animation: none;
   }
+
+  .progressFill {
+    transition: none;
+  }
 }
 
 /* ===== FEED DE POSTS DO PERFIL ===== */
@@ -496,7 +793,9 @@
   .avatarEdit,
   .headerActions,
   .tabBar,
-  .shareCard {
+  .shareCard,
+  .completeness,
+  .coverGlow {
     display: none !important;
   }
 
@@ -520,6 +819,11 @@
 @media (max-width: 860px) {
   .content {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Capa mais baixa: em tela estreita, 220px comem a primeira dobra. */
+  .cover {
+    height: 168px;
   }
 }
 
@@ -586,17 +890,43 @@
     min-height: 44px;
   }
 
-  .stat {
-    padding: 0 10px;
+  .statStrip {
+    gap: 8px;
+  }
+
+  .statTile {
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .statIcon {
+    width: 26px;
+    height: 26px;
   }
 
   .statValue {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
   }
 
   .statLabel {
-    font-size: 0.62rem;
-    letter-spacing: 0.04em;
+    font-size: 0.6rem;
+    letter-spacing: 0.03em;
+  }
+
+  /* O trilho das abas vira grade de 2 colunas: rolando para o lado, a aba
+     "Notificações" ficava fora da tela e ninguém descobria que existia. */
+  .tabBar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    border-radius: 14px;
+  }
+
+  .tab {
+    justify-content: center;
+    padding: 10px 12px;
+    border-radius: 10px;
+    min-height: 44px;
   }
 }
 
