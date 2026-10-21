@@ -125,7 +125,7 @@ export default function LeftSidebarComponent({ onNavigate }) {
               <NavList.LeadingVisual>
                 <ArchiveIcon />
               </NavList.LeadingVisual>
-              Assets
+              Artes e Assets
             </NavList.Item>
           </NavList.SubNav>
         </NavList.Item>
