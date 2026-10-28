@@ -4,6 +4,7 @@ import Head from "next/head";
 import Image from "next/image";
 import { QRCodeSVG } from "qrcode.react";
 import styles from "./curriculo.module.css";
+import PrintBar from "@/components/PressKit/PrintBar";
 import DateUtils from "@/utils/DateUtils";
 import { SITE_URL } from "@/lib/seo";
 import { experienceLabel } from "@/lib/experience-levels";
@@ -54,13 +55,6 @@ export default function CurriculoPage() {
   const sortedHistorico = [...historico].sort((a, b) => a.ordem - b.ordem);
   const sortedFormacoes = [...formacoes].sort((a, b) => a.ordem - b.ordem);
 
-  function handlePrint() {
-    const prevTitle = document.title;
-    document.title = `Currículo - ${fullName}`;
-    globalThis.print();
-    document.title = prevTitle;
-  }
-
   return (
     <>
       <Head>
@@ -68,18 +62,11 @@ export default function CurriculoPage() {
         <meta name="robots" content="noindex" />
       </Head>
 
-      {/* Barra de ação — oculta no print */}
-      <div className={styles.printBar}>
-        <p className={styles.printHint}>
-          Currículo de <strong>{fullName}</strong> ·{" "}
-          <a href={profileUrl} target="_blank" rel="noopener noreferrer">
-            ver perfil completo
-          </a>
-        </p>
-        <button type="button" className={styles.printBtn} onClick={handlePrint}>
-          ⬇ Imprimir / Salvar PDF
-        </button>
-      </div>
+      {/* Barra de ação — oculta no print (componente compartilhado com os press
+          kits; o `@media print` mora nele). */}
+      <PrintBar documentTitle={`Currículo - ${fullName}`} links={[{ label: "ver perfil completo", href: profileUrl, external: true }]}>
+        Currículo de <strong>{fullName}</strong>
+      </PrintBar>
 
       {/* Documento do currículo */}
       <div className={styles.page}>

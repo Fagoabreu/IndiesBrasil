@@ -13,49 +13,11 @@
   background: #f8f8f8;
 }
 
-/* ── Barra de ação (oculta no print) ───────────────── */
-.printBar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 10px 24px;
-  background: #f3f0ff;
-  border-bottom: 3px solid #8b5cf6;
-  font-size: 13px;
-  color: #333;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  font-family: sans-serif;
-}
-
-.printHint {
-  margin: 0;
-  color: #555;
-}
-
-.printBtn {
-  padding: 7px 18px;
-  background: #8b5cf6;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.printBtn:hover {
-  background: #7c3aed;
-}
-
-@media print {
-  .printBar {
-    display: none;
-  }
-}
+/* ── Barra de ação ─────────────────────────────────────
+   A barra, a dica e o botão vivem em `components/PressKit/PrintBar`, que é
+   compartilhado com o press kit do produto e o currículo. Manter uma cópia aqui
+   significava duas regras de `@media print` para o mesmo elemento — e a cópia
+   esquecida aparecia impressa no PDF. */
 
 /* ── Página ────────────────────────────────────────── */
 .page {

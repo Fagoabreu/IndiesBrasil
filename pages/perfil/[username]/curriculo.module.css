@@ -16,56 +16,10 @@
   background: #f8f8f8;
 }
 
-/* ===== BARRA DE AÇÃO (visível na tela, oculta no print) ===== */
-
-.printBar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 10px 24px;
-  background: #f3f0ff;
-  border-bottom: 3px solid #8b5cf6;
-  font-size: 13px;
-  color: #333;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.printHint {
-  margin: 0;
-  color: #555;
-}
-
-.printHint a {
-  color: #8b5cf6;
-  text-decoration: none;
-}
-
-.printHint a:hover {
-  text-decoration: underline;
-}
-
-.printBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 20px;
-  background: #8b5cf6;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s;
-}
-
-.printBtn:hover {
-  background: #7c3aed;
-}
+/* ===== BARRA DE AÇÃO =====
+   A barra vive em `components/PressKit/PrintBar` (compartilhada com os press
+   kits). Uma cópia aqui trazia o próprio `@media print` e a própria cor fixa —
+   duas fontes para o mesmo elemento. */
 
 /* ===== DOCUMENTO DO CURRÍCULO ===== */
 
@@ -308,11 +262,6 @@
 /* ===== IMPRESSÃO / PDF ===== */
 
 @media print {
-  /* Ocultar barra de ação */
-  .printBar {
-    display: none !important;
-  }
-
   /* Remover sombra/borda da página */
   .page {
     margin: 0;

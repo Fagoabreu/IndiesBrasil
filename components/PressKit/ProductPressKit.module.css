@@ -1,0 +1,479 @@
+/* Press kit de produto — documento para leitura e impressão.
+   Cores por CSS variables do tema; nada de hex fixo (a página é dark-mode
+   aware) exceto o branco do QR Code, que precisa de contraste garantido. */
+
+.root {
+  min-height: 100vh;
+  color: var(--fgColor-default);
+  background: var(--bgColor-inset);
+}
+
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 32px 56px;
+  background: var(--bgColor-default);
+  border-left: 1px solid var(--borderColor-default);
+  border-right: 1px solid var(--borderColor-default);
+}
+
+/* ── Cabeçalho ─────────────────────────────────────── */
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 24px;
+  margin-bottom: 28px;
+  border-bottom: 3px solid var(--brand-primary);
+}
+
+/* Key art: recorte `mediaCover` (16:9) exibido na mesma proporção do preset.
+   `scripts/audit-image-presets.js` compara este par — não troque para altura
+   fixa, que muda a proporção com a largura e corta o enquadramento. */
+.heroMedia {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bgColor-inset);
+}
+
+.mediaImg {
+  object-fit: cover;
+}
+
+/* `contain` onde o conteúdo não pode ser cortado: screenshots da galeria (o
+   jornalista precisa ver a tela inteira), capa de livro e logos. */
+.mediaImgContain {
+  object-fit: contain;
+}
+
+.heroText {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Livro/quadrinho: capa retrato (preset `bookCover`, 2/3) ao lado do texto. */
+.heroPortrait {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 24px;
+  align-items: start;
+  padding-bottom: 24px;
+  margin-bottom: 28px;
+  border-bottom: 3px solid var(--brand-primary);
+}
+
+/* `scripts/audit-image-presets.js` compara este par com o preset `bookCover`. */
+.bookCoverBox {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bgColor-inset);
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+}
+
+.eyebrowLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.eyebrowLink:hover {
+  text-decoration: underline;
+}
+
+.title {
+  margin: 0;
+  font-size: 2.1rem;
+  line-height: 1.15;
+  font-weight: 800;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--fgColor-muted);
+  font-style: italic;
+}
+
+.tagline {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--fgColor-default);
+}
+
+.heroLinks {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: var(--fgColor-muted);
+}
+
+/* ── Seções ────────────────────────────────────────── */
+.section {
+  margin-bottom: 28px;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.sectionTitle {
+  margin: 0 0 12px;
+  padding-bottom: 5px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+  border-bottom: 1px solid var(--borderColor-default);
+}
+
+/* ── Factsheet ─────────────────────────────────────── */
+.factGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 8px 24px;
+  margin: 0;
+}
+
+.factRow {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 0;
+  border-bottom: 1px dotted var(--borderColor-muted);
+}
+
+.factLabel {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--fgColor-muted);
+}
+
+.factValue {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--fgColor-default);
+  word-break: break-word;
+}
+
+/* ── Texto ─────────────────────────────────────────── */
+.lead {
+  margin: 0 0 10px;
+  font-size: 1.02rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.body {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: var(--fgColor-default);
+}
+
+.body p {
+  margin: 0 0 10px;
+}
+
+.link {
+  color: var(--brand-primary);
+  text-decoration: none;
+  word-break: break-word;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.note {
+  margin: 0 0 12px;
+  font-size: 0.78rem;
+  color: var(--fgColor-muted);
+}
+
+.featureList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.featureItem {
+  padding: 3px 10px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 999px;
+  font-size: 0.78rem;
+  color: var(--fgColor-muted);
+}
+
+/* ── Vídeos ────────────────────────────────────────── */
+.videoList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.videoItem {
+  margin: 0;
+}
+
+.videoFrame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bgColor-inset);
+}
+
+.iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.videoFallback {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* ── Galeria ───────────────────────────────────────── */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.galleryItem {
+  margin: 0;
+}
+
+.galleryLink {
+  display: block;
+  text-decoration: none;
+}
+
+.galleryBox {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bgColor-inset);
+}
+
+.caption {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: var(--fgColor-muted);
+}
+
+/* ── Logos e key art ───────────────────────────────── */
+.assetGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.assetItem {
+  flex: 0 1 200px;
+  margin: 0;
+}
+
+/* Altura fixa de propósito: é uma vitrine de logo, e `object-fit: contain`
+   (em `.assetImg`) preserva o desenho inteiro qualquer que seja a proporção —
+   nada é cortado, então a caixa não precisa acompanhar o recorte. */
+.assetBox {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 110px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bgColor-inset);
+}
+
+.assetImg {
+  object-fit: contain;
+  padding: 8px;
+}
+
+.assetLabel {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: var(--fgColor-muted);
+}
+
+/* ── Lojas ─────────────────────────────────────────── */
+.storeTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.storeTable th,
+.storeTable td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--borderColor-muted);
+  vertical-align: top;
+}
+
+.storeTable th {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fgColor-muted);
+}
+
+.storeCell {
+  word-break: break-word;
+}
+
+/* ── Equipe ────────────────────────────────────────── */
+.memberList {
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px 20px;
+}
+
+.memberItem {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding-bottom: 8px;
+  border-bottom: 1px dotted var(--borderColor-muted);
+}
+
+.memberName {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.memberRole {
+  font-size: 0.78rem;
+  color: var(--brand-primary);
+}
+
+.memberBio {
+  font-size: 0.78rem;
+  color: var(--fgColor-muted);
+  line-height: 1.45;
+}
+
+/* ── Contato e QR ──────────────────────────────────── */
+.pressContact {
+  color: var(--brand-primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.pressContact:hover {
+  text-decoration: underline;
+}
+
+.socialList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 12px 0;
+}
+
+.socialLink {
+  font-size: 0.8rem;
+  color: var(--fgColor-muted);
+  text-decoration: none;
+}
+
+.socialLink:hover {
+  color: var(--brand-primary);
+}
+
+.qrBlock {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.qrLabel {
+  font-size: 0.7rem;
+  color: var(--fgColor-muted);
+  word-break: break-all;
+}
+
+/* ── Rodapé ────────────────────────────────────────── */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 32px;
+  padding-top: 14px;
+  border-top: 1px solid var(--borderColor-default);
+  font-size: 0.72rem;
+  color: var(--fgColor-muted);
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 24px 18px 40px;
+  }
+
+  .heroPortrait {
+    grid-template-columns: 120px 1fr;
+    gap: 16px;
+  }
+
+  .title {
+    font-size: 1.6rem;
+  }
+
+  .footer {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+
+@media print {
+  .root {
+    background: #fff;
+  }
+
+  .page {
+    max-width: 100%;
+    padding: 0;
+    border: none;
+  }
+
+  .gallery {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .footer {
+    margin-top: 24px;
+  }
+}

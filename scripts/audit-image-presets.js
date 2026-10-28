@@ -167,6 +167,11 @@ const RATIO_SURFACES = [
   // página do asset.
   { preset: "mediaCover", css: "components/Card/AssetCard.module.css", selector: ".cardCover" },
   { preset: "mediaCover", css: "pages/assets/[slug]/asset.module.css", selector: ".heroCoverBox" },
+  // Press kit do produto: a key art (banner) abre o documento com o mesmo
+  // recorte `mediaCover` que o estúdio escolheu no formulário.
+  { preset: "mediaCover", css: "components/PressKit/ProductPressKit.module.css", selector: ".heroMedia" },
+  // Capa de livro/quadrinho no press kit — mesma proporção do card (2/3).
+  { preset: "bookCover", css: "components/PressKit/ProductPressKit.module.css", selector: ".bookCoverBox" },
 ];
 
 /** Corpo de cada bloco de regra do seletor, inclusive dentro de @media.

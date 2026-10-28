@@ -5,44 +5,19 @@ import Head from "next/head";
 import { QRCodeSVG } from "qrcode.react";
 import styles from "./press-kit.module.css";
 import IconSvg from "@/components/IconSvg/IconSvg";
+import PrintBar from "@/components/PressKit/PrintBar";
+import PressKitButton from "@/components/PressKit/PressKitButton";
 import { SITE_URL } from "@/lib/seo";
+import { STAGE_LABELS, GAME_PLATFORM_LABELS, BOOK_TYPE_LABELS, videoEmbed } from "@/lib/productPressKit";
 
 /* =========================================================
  * Constants
  * ========================================================= */
 
-const STAGE_LABELS = {
-  concept: "Conceito",
-  prototype: "Protótipo",
-  alpha: "Alpha",
-  beta: "Beta",
-  early_access: "Acesso Antecipado",
-  released: "Lançado",
-  cancelled: "Cancelado",
-};
-
-const PLATFORM_LABELS = {
-  windows: "Windows",
-  macos: "macOS",
-  linux: "Linux",
-  ps5: "PlayStation 5",
-  ps4: "PlayStation 4",
-  xbox_series: "Xbox Series X|S",
-  xbox_one: "Xbox One",
-  switch: "Nintendo Switch",
-  ios: "iOS",
-  android: "Android",
-  browser: "Navegador",
-};
-
-const BOOK_TYPE_LABELS = {
-  book: "Livro",
-  comic: "Quadrinho",
-  manga: "Mangá",
-  artbook: "Artbook",
-  guide: "Guia",
-  zine: "Zine",
-};
+/* Os rótulos vêm de `lib/productPressKit.js` — o mesmo registro que monta o
+   press kit do produto. Antes eram três mapas copiados aqui e outros três nas
+   páginas de produto; a primeira divergência ("Publicado" x "Lançado") apareceria
+   em documentos diferentes do mesmo estúdio. */
 
 /* =========================================================
  * Helpers
@@ -70,17 +45,6 @@ function buildAddressLines(addr) {
   const line2 = [addr.neighborhood, addr.city, addr.state].filter(Boolean).join(", ");
   const line3 = [addr.zip_code, addr.country].filter(Boolean).join(" — ");
   return [line1, line2, line3].filter(Boolean);
-}
-
-function getVideoId(url) {
-  if (!url) return null;
-  // YouTube
-  const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-  if (ytMatch) return { type: "youtube", id: ytMatch[1] };
-  // Vimeo
-  const vmMatch = url.match(/vimeo\.com\/(\d+)/);
-  if (vmMatch) return { type: "vimeo", id: vmMatch[1] };
-  return null;
 }
 
 function getFeaturesList(featuresString) {
@@ -229,7 +193,7 @@ function GameDetail({ game }) {
   const team = game.team || [];
   const storePages = game.store_pages || [];
   const tags = game.tags || [];
-  const videoInfo = getVideoId(game.trailer_url);
+  const videoInfo = videoEmbed(game.trailer_url);
 
   return (
     <article className={styles.detailSection}>
@@ -249,6 +213,7 @@ function GameDetail({ game }) {
         )}
         <div className={styles.detailHeaderInfo}>
           <h3 className={styles.detailName}>{game.name}</h3>
+          <PressKitButton href={`/jogos/${game.slug}/press-kit`} />
           <div className={styles.detailMeta}>
             {game.stage && <span className={styles.detailStage}>{STAGE_LABELS[game.stage] || game.stage}</span>}
             {genres.map((g) => (
@@ -270,7 +235,7 @@ function GameDetail({ game }) {
 
       {/* Technical specs */}
       <dl className={styles.specList}>
-        {platforms.length > 0 && <SpecRow label="Plataformas" value={platforms.map((p) => PLATFORM_LABELS[p] || p).join(", ")} />}
+        {platforms.length > 0 && <SpecRow label="Plataformas" value={platforms.map((p) => GAME_PLATFORM_LABELS[p] || p).join(", ")} />}
         <SpecRow label="Lançamento" value={formatDateBR(game.release_date)} />
         <SpecRow label="Engine" value={game.engine} />
         <SpecRow
@@ -291,17 +256,13 @@ function GameDetail({ game }) {
         <div className={styles.detailTrailer}>
           <h4 className={styles.detailSubtitle}>Trailer</h4>
           <div className={styles.videoWrap}>
-            {videoInfo.type === "youtube" ? (
-              <iframe
-                src={`https://www.youtube.com/embed/${videoInfo.id}`}
-                title="Trailer"
-                className={styles.videoIframe}
-                allowFullScreen
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              />
-            ) : (
-              <iframe src={`https://player.vimeo.com/video/${videoInfo.id}`} title="Trailer" className={styles.videoIframe} allowFullScreen />
-            )}
+            <iframe
+              src={videoInfo.src}
+              title="Trailer"
+              className={styles.videoIframe}
+              allowFullScreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            />
           </div>
         </div>
       )}
@@ -369,6 +330,7 @@ function BoardgameDetail({ boardgame }) {
         )}
         <div className={styles.detailHeaderInfo}>
           <h3 className={styles.detailName}>{boardgame.name}</h3>
+          <PressKitButton href={`/jogos-de-mesa/${boardgame.slug}/press-kit`} />
           <div className={styles.detailMeta}>
             {boardgame.stage && <span className={styles.detailStage}>{STAGE_LABELS[boardgame.stage] || boardgame.stage}</span>}
             {boardgame.category && <span className={styles.detailTag}>{boardgame.category}</span>}
@@ -435,6 +397,7 @@ function BookDetail({ book }) {
         )}
         <div className={styles.detailHeaderInfo}>
           <h3 className={styles.detailName}>{book.title}</h3>
+          <PressKitButton href={`/quadrinhos/${book.slug}/press-kit`} />
           {book.subtitle && <p className={styles.bookSubtitle}>{book.subtitle}</p>}
           <div className={styles.detailMeta}>
             {book.book_type && <span className={styles.detailStage}>{BOOK_TYPE_LABELS[book.book_type] || book.book_type}</span>}
@@ -591,12 +554,12 @@ export default function PressKitPage() {
   const addressLines = buildAddressLines(studio.address);
   const contacts = studio.contacts ?? [];
   const featuresList = getFeaturesList(studio.features);
-  const videoInfo = getVideoId(studio.banner_video_url);
+  const videoInfo = videoEmbed(studio.banner_video_url);
   const allContent = [...games, ...boardGames, ...books];
 
   // Collect platforms from rich game data
   const allPlatforms =
-    richGames !== null ? [...new Set(richGames.flatMap((g) => (g.platforms || []).map((p) => PLATFORM_LABELS[p] || p)))].sort() : [];
+    richGames !== null ? [...new Set(richGames.flatMap((g) => (g.platforms || []).map((p) => GAME_PLATFORM_LABELS[p] || p)))].sort() : [];
 
   // Separate contacts by type
   const socialContacts = contacts.filter((c) => {
@@ -607,13 +570,6 @@ export default function PressKitPage() {
   });
   const otherContacts = contacts.filter((c) => !socialContacts.includes(c));
 
-  function handlePrint() {
-    const prev = document.title;
-    document.title = `Press Kit — ${studio.name}`;
-    globalThis.print();
-    document.title = prev;
-  }
-
   return (
     <>
       <Head>
@@ -621,18 +577,11 @@ export default function PressKitPage() {
         <meta name="robots" content="noindex" />
       </Head>
 
-      {/* Barra de ação — oculta no print */}
-      <div className={styles.printBar}>
-        <p className={styles.printHint}>
-          Press Kit de <strong>{studio.name}</strong> ·{" "}
-          <a href={studioUrl} target="_blank" rel="noopener noreferrer">
-            ver página
-          </a>
-        </p>
-        <button type="button" className={styles.printBtn} onClick={handlePrint}>
-          ⬇ Imprimir / Salvar PDF
-        </button>
-      </div>
+      {/* Barra de ação — oculta no print (componente compartilhado com o press
+          kit do produto e o currículo; o `@media print` mora nele). */}
+      <PrintBar documentTitle={`Press Kit — ${studio.name}`} links={[{ label: "ver página", href: studioUrl, external: true }]}>
+        Press Kit de <strong>{studio.name}</strong>
+      </PrintBar>
 
       {/* Documento do press kit */}
       <div className={styles.page}>
@@ -685,17 +634,13 @@ export default function PressKitPage() {
               <section className={styles.section}>
                 <h2 className={styles.sectionTitle}>Trailer</h2>
                 <div className={styles.videoWrap}>
-                  {videoInfo.type === "youtube" ? (
-                    <iframe
-                      src={`https://www.youtube.com/embed/${videoInfo.id}`}
-                      title="Trailer"
-                      className={styles.videoIframe}
-                      allowFullScreen
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    />
-                  ) : (
-                    <iframe src={`https://player.vimeo.com/video/${videoInfo.id}`} title="Trailer" className={styles.videoIframe} allowFullScreen />
-                  )}
+                  <iframe
+                    src={videoInfo.src}
+                    title="Trailer"
+                    className={styles.videoIframe}
+                    allowFullScreen
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  />
                 </div>
               </section>
             )}

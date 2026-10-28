@@ -1,0 +1,42 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  box-sizing: border-box;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+/* Sem `width: 100%`: a barra lateral do jogo/jogo de mesa é um flex column e
+   estica os filhos sozinha. Forçar 100% fazia o botão virar uma faixa no meio
+   da ficha do estúdio, onde ele fica abaixo do nome do produto. */
+.outline {
+  border: 2px solid var(--borderColor-default);
+  background: transparent;
+  color: var(--fgColor-default);
+}
+
+.outline:hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.solid {
+  border: 1px solid var(--borderColor-default);
+  background: var(--bgColor-muted);
+  color: var(--fgColor-default);
+}
+
+.solid:hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}

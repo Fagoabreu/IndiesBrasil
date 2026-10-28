@@ -334,10 +334,13 @@ async function saveBanner(slug, imageId) {
  * ========================================================= */
 
 async function findMembers(orgId) {
+  // `bio` entra por causa do press kit de produto: a ficha da equipe é o
+  // "quem faz o quê" que a imprensa usa para humanizar a matéria. É campo
+  // público (já sai em read:user), então não muda autorização.
   const results = await database.query({
     text: `
       SELECT
-        u.id, u.username, u.resumo AS display_name, ui.secure_url AS avatar_url,
+        u.id, u.username, u.resumo AS display_name, u.bio, ui.secure_url AS avatar_url,
         om.joined_at, om.status,
         array_agg(DISTINCT r.role::text) FILTER (WHERE r.role IS NOT NULL) AS roles
       FROM org_members om
@@ -345,7 +348,7 @@ async function findMembers(orgId) {
       LEFT JOIN uploaded_images ui ON ui.id = u.avatar_image
       LEFT JOIN org_roles r ON r.org_id = om.org_id AND r.member_id = om.member_id
       WHERE om.org_id = $1 AND om.status = 'active'
-      GROUP BY u.id, u.username, u.resumo, ui.secure_url, om.joined_at, om.status
+      GROUP BY u.id, u.username, u.resumo, u.bio, ui.secure_url, om.joined_at, om.status
       ORDER BY om.joined_at
     `,
     values: [orgId],
