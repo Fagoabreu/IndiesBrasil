@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <title>Galène</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Cor do chrome do navegador no mobile: acompanha o palco escuro, nao a
+         superficie clara do painel de participantes. -->
+    <meta name="theme-color" content="#0b0d12">
     <meta http-equiv="ScreenOrientation" content="autoRotate:disabled">
     <link rel="stylesheet" type="text/css" href="/common.css"/>
     <link rel="stylesheet" type="text/css" href="/galene.css"/>
@@ -30,41 +33,14 @@
           <header>
             <nav class="topnav navbar navbar-expand navbar-light fixed-top">
               <div id="header">
-                <div class="collapse" title="Collapse left panel" id="sidebarCollapse">
-                  <i class="fas fa-align-left" aria-hidden="true"></i>
+                <div class="collapse" title="Recolher painel de participantes" id="sidebarCollapse">
+                  <i class="fas fa-bars" aria-hidden="true"></i>
                 </div>
-                <h1 id="title" class="header-title">Galène</h1>
+                <div class="ib-titleblock">
+                  <h1 id="title" class="header-title">Galène</h1>
+                  <span id="ib-subtitle" class="ib-subtitle"></span>
+                </div>
               </div>
-
-              <ul class="nav-menu">
-                <li>
-                  <button id="presentbutton" class="invisible btn btn-success">
-                    <i class="fas fa-play" aria-hidden="true"></i><span class="nav-text"> Enable</span>
-                  </button>
-                </li>
-                <li>
-                  <button id="unpresentbutton" class="invisible btn btn-cancel">
-                    <i class="fas fa-stop" aria-hidden="true"></i><span class="nav-text"> Disable</span>
-                  </button>
-                </li>
-                <li>
-                  <div id="mutebutton" class="nav-link nav-button">
-                    <span><i class="fas fa-microphone-slash" aria-hidden="true"></i></span>
-                    <label>Mute</label>
-                  </div>
-                </li>
-                <li>
-                  <div id="sharebutton" class="invisible nav-link nav-button">
-                    <span><i class="fas fa-share-square" aria-hidden="true"></i></span>
-                    <label>Share Screen</label>
-                  </div>
-                </li>
-                <li>
-                  <div class="nav-button nav-link nav-more" id="openside">
-                    <span><i class="fas fa-ellipsis-v" aria-hidden="true"></i></span>
-                  </div>
-                </li>
-              </ul>
             </nav>
           </header>
           <div class="row full-width" id="mainrow">
@@ -107,47 +83,47 @@
                 <div class="login-box">
                   <form id="loginform" class="loginform">
                     <div id="userform">
-                      <label for="username">Username</label>
+                      <label for="username">Usuário</label>
                       <input id="username" type="text" name="username"
                              autocomplete="username" class="form-control"/>
                     </div>
                     <div id="passwordform">
-                      <label for="password">Password</label>
+                      <label for="password">Senha</label>
                       <input id="password" type="password" name="password"
                              autocomplete="current-password" class="form-control"/>
                     </div>
-                    <label>Enable at start:</label>
+                    <label>Ligar ao entrar:</label>
                     <div class="present-switch">
                       <p class="switch-radio">
                         <input id="presentoff" type="radio" name="presentradio" value="" checked/>
-                        <label for="presentoff">Nothing</label>
+                        <label for="presentoff">Nada</label>
                       </p>
                       <p class="switch-radio">
                         <input id="presentmike" type="radio" name="presentradio" value="mike"/>
-                        <label for="presentmike">Microphone</label>
+                        <label for="presentmike">Microfone</label>
                       </p>
                       <p class="switch-radio">
                         <input id="presentboth" type="radio" name="presentradio" value="both"/>
-                        <label for="presentboth">Camera and microphone</label>
+                        <label for="presentboth">Câmera e microfone</label>
                       </p>
                     </div>
                     <div class="clear"></div>
                     <div class="connect">
-                      <input id="connectbutton" type="submit" class="btn btn-blue" value="Connect"/>
+                      <input id="connectbutton" type="submit" class="btn btn-blue" value="Entrar"/>
                     </div>
                   </form>
                 </div>
                 <details id="test-camera">
-                  <summary>Test camera and microphone</summary>
+                  <summary>Testar câmera e microfone</summary>
                   <fieldset>
-                    <label for="test-videoselect" class="sidenav-label-firs">Camera:</label>
+                    <label for="test-videoselect" class="sidenav-label-firs">Câmera:</label>
                     <select id="test-videoselect" class="select select-inline">
-                      <option value="">off</option>
+                      <option value="">desligada</option>
                     </select>
 
-                    <label for="test-audioselect" class="sidenav-label">Microphone:</label>
+                    <label for="test-audioselect" class="sidenav-label">Microfone:</label>
                     <select id="test-audioselect" class="select select-inline">
-                      <option value="">off</option>
+                      <option value="">desligado</option>
                     </select>
                   </fieldset>
                   <video id="test-video" controls muted autoplay playsInline></video>
@@ -159,9 +135,53 @@
       </div>
     </div>
 
+    <!-- Barra de controles flutuante (padrao Teams/Zoom). Os ids sao os
+         mesmos do Galene: o JS encontra os controles por id e alterna a classe
+         `invisible` — a posicao na tela nao participa da logica. -->
+    <div id="controlbar" class="ib-controlbar invisible">
+      <ul class="nav-menu">
+        <li>
+          <button id="mutebutton" type="button" class="ib-ctl">
+            <span class="ib-ctl-icon"><i class="fas fa-microphone" aria-hidden="true"></i></span>
+            <span class="ib-ctl-label">Microfone</span>
+          </button>
+        </li>
+        <li>
+          <button id="presentbutton" type="button" class="ib-ctl invisible">
+            <span class="ib-ctl-icon"><i class="fas fa-video" aria-hidden="true"></i></span>
+            <span class="ib-ctl-label">Ligar</span>
+          </button>
+        </li>
+        <li>
+          <button id="unpresentbutton" type="button" class="ib-ctl ib-ctl-danger invisible">
+            <span class="ib-ctl-icon"><i class="fas fa-video-slash" aria-hidden="true"></i></span>
+            <span class="ib-ctl-label">Desligar</span>
+          </button>
+        </li>
+        <li>
+          <button id="sharebutton" type="button" class="ib-ctl invisible">
+            <span class="ib-ctl-icon"><i class="fas fa-share-square" aria-hidden="true"></i></span>
+            <span class="ib-ctl-label">Compartilhar</span>
+          </button>
+        </li>
+        <li>
+          <button id="stopsharebutton" type="button" class="ib-ctl ib-ctl-danger invisible">
+            <span class="ib-ctl-icon"><i class="fas fa-desktop" aria-hidden="true"></i></span>
+            <span class="ib-ctl-label">Parar tela</span>
+          </button>
+        </li>
+        <li>
+          <button id="openside" type="button" class="ib-ctl">
+            <span class="ib-ctl-icon"><i class="fas fa-ellipsis" aria-hidden="true"></i></span>
+            <span class="ib-ctl-label">Ajustes</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+
     <div id="sidebarnav" class="sidenav">
       <div class="sidenav-header">
-        <h2>Settings</h2>
+        <h2>Ajustes</h2>
         <a class="closebtn" id="clodeside"><i class="fas fa-times" aria-hidden="true"></i></a>
       </div>
       <div class="sidenav-content" id="optionsdiv">
@@ -173,32 +193,32 @@
             <div class="profile-info">
               <span id="userspan"></span>
               <span id="permspan"></span>
-              <span id="chpwspan" class="invisible"><a id="change-password">Change password</a></span>
+              <span id="chpwspan" class="invisible"><a id="change-password">Trocar senha</a></span>
             </div>
             <div class="user-logout">
               <a id="disconnectbutton">
                 <span class="logout-icon"><i class="fas fa-sign-out-alt"></i></span>
-                <span class="logout-text">Logout</span>
+                <span class="logout-text">Sair</span>
               </a>
             </div>
           </div>
         </div>
         <div id="mediaoptions" class="invisible">
           <fieldset>
-            <legend>Media Options</legend>
-            <label for="videoselect" class="sidenav-label-first">Camera:</label>
+            <legend>Dispositivos</legend>
+            <label for="videoselect" class="sidenav-label-first">Câmera:</label>
             <select id="videoselect" class="select select-inline">
-              <option value="">off</option>
+              <option value="">desligada</option>
             </select>
   
-            <label for="audioselect" class="sidenav-label">Microphone:</label>
+            <label for="audioselect" class="sidenav-label">Microfone:</label>
             <select id="audioselect" class="select select-inline">
-              <option value="">off</option>
+              <option value="">desligado</option>
             </select>
 
-            <label for="audiooutputselect" id="audiooutputlabel" class="sidenav-label">Speakers:</label>
+            <label for="audiooutputselect" id="audiooutputlabel" class="sidenav-label">Alto-falante:</label>
             <select id="audiooutputselect" class="select select-inline">
-              <option value="" selected>Default (system)</option>
+              <option value="" selected>Padrão do sistema</option>
             </select>
             <div id="audiooutput-hint" class="ib-hint invisible"></div>
 
@@ -206,84 +226,153 @@
 
             <form>
               <input id="mirrorbox" type="checkbox" checked/>
-              <label for="mirrorbox">Mirror view</label>
+              <label for="mirrorbox">Espelhar minha imagem</label>
             </form>
 
             <form>
               <input id="blackboardbox" type="checkbox"/>
-              <label for="blackboardbox">Blackboard mode</label>
+              <label for="blackboardbox">Modo lousa (prioriza texto)</label>
             </form>
   
             <form>
               <input id="preprocessingbox" type="checkbox" checked/>
-              <label for="preprocessingbox">Noise suppression</label>
+              <label for="preprocessingbox">Supressão de ruído</label>
             </form>
 
             <form>
               <input id="hqaudiobox" type="checkbox"/>
-              <label for="hqaudiobox">High-quality audio</label>
+              <label for="hqaudiobox">Áudio de alta qualidade</label>
             </form>
 
           </fieldset>
         </div>
 
         <fieldset>
-          <legend>Other Settings</legend>
+          <legend>Avançado</legend>
 
           <form id="filterform">
-            <label for="filterselect" class="sidenav-label-first">Filter:</label>
+            <label for="filterselect" class="sidenav-label-first">Filtro:</label>
             <select id="filterselect" class="select select-inline">
-              <option value="" selected>none</option>
+              <option value="" selected>nenhum</option>
             </select>
           </form>
 
           <form id="sendform">
-            <label for="sendselect" class="sidenav-label-first">Send:</label>
+            <label for="sendselect" class="sidenav-label-first">Enviar:</label>
             <select id="sendselect" class="select select-inline">
-              <option value="lowest">lowest</option>
-              <option value="low">low</option>
+              <option value="lowest">mínimo</option>
+              <option value="low">baixo</option>
               <option value="normal" selected>normal</option>
-              <option value="unlimited">unlimited</option>
+              <option value="unlimited">sem limite</option>
             </select>
           </form>
 
           <form id="simulcastform">
             <label for="simulcastselect" class="sidenav-label-first">Simulcast:</label>
             <select id="simulcastselect" class="select select-inline">
-              <option value="off">off</option>
-              <option value="auto" selected>auto</option>
-              <option value="on">on</option>
+              <option value="off">desligado</option>
+              <option value="auto" selected>automático</option>
+              <option value="on">ligado</option>
             </select>
           </form>
 
           <form id="requestform">
-            <label for="requestselect" class="sidenav-label">Receive:</label>
+            <label for="requestselect" class="sidenav-label">Receber:</label>
             <select id="requestselect" class="select select-inline">
-              <option value="">nothing</option>
-              <option value="audio">audio only</option>
-              <option value="screenshare">screenshare only</option>
-              <option value="everything-low">low quality</option>
-              <option value="everything" selected>everything</option>
+              <option value="">nada</option>
+              <option value="audio">só áudio</option>
+              <option value="screenshare">só tela compartilhada</option>
+              <option value="everything-low">qualidade baixa</option>
+              <option value="everything" selected>tudo</option>
             </select>
           </form>
   
           <form>
             <input id="activitybox" type="checkbox"/>
-            <label for="activitybox">Activity detection</label>
+            <label for="activitybox">Detecção de atividade</label>
           </form>
 
           <form>
             <input id="displayallbox" type="checkbox"/>
-            <label for="displayallbox">Display audio-only users</label>
+            <label for="displayallbox">Mostrar quem está só em áudio</label>
           </form>
         </fieldset>
+      </div>
+    </div>
+
+    <!-- Tela de entrada (customizacao 12): previa da camera, nivel do
+         microfone e escolha de dispositivos ANTES de entrar na sala.
+         `ib-hidden` e classe propria: `.invisible` do galene.css perde para os
+         `display` deste arquivo por id. -->
+    <div id="ib-prejoin" class="ib-prejoin ib-hidden" role="dialog" aria-modal="true" aria-labelledby="ib-prejoin-title">
+      <div class="ib-prejoin-card">
+        <header class="ib-prejoin-head">
+          <span class="ib-prejoin-mark"><i class="fas fa-video" aria-hidden="true"></i></span>
+          <div>
+            <h2 id="ib-prejoin-title">Entrar na reunião</h2>
+            <p id="ib-prejoin-sub" class="ib-prejoin-sub">Confira a câmera e o microfone antes de entrar</p>
+          </div>
+        </header>
+
+        <div class="ib-prejoin-body">
+          <div class="ib-prejoin-stage">
+            <div class="ib-prejoin-frame">
+              <video id="ib-prejoin-video" autoplay playsinline muted></video>
+              <div id="ib-prejoin-avatar" class="ib-prejoin-avatar">
+                <span id="ib-prejoin-initials">?</span>
+              </div>
+              <div class="ib-prejoin-toggles">
+                <button type="button" id="ib-prejoin-mic" class="ib-round" title="Microfone" aria-label="Ligar ou desligar o microfone">
+                  <i class="fas fa-microphone" aria-hidden="true"></i>
+                </button>
+                <button type="button" id="ib-prejoin-cam" class="ib-round" title="Câmera" aria-label="Ligar ou desligar a câmera">
+                  <i class="fas fa-video" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+            <div class="ib-meter" aria-hidden="true"><span id="ib-prejoin-meter-fill" class="ib-meter-fill"></span></div>
+          </div>
+
+          <div class="ib-prejoin-side">
+            <section class="ib-device-card">
+              <h3>Áudio do computador</h3>
+              <label class="ib-device-row" for="ib-prejoin-mic-select">
+                <i class="fas fa-microphone" aria-hidden="true"></i>
+                <select id="ib-prejoin-mic-select" class="ib-prejoin-select"></select>
+              </label>
+              <label class="ib-device-row" for="ib-prejoin-output-select">
+                <i class="fas fa-volume-up" aria-hidden="true"></i>
+                <select id="ib-prejoin-output-select" class="ib-prejoin-select"></select>
+              </label>
+              <button type="button" id="ib-prejoin-test" class="ib-linkbtn">Testar microfone e alto-falante</button>
+            </section>
+
+            <section class="ib-device-card">
+              <h3>Câmera</h3>
+              <label class="ib-device-row" for="ib-prejoin-cam-select">
+                <i class="fas fa-video" aria-hidden="true"></i>
+                <select id="ib-prejoin-cam-select" class="ib-prejoin-select"></select>
+              </label>
+            </section>
+
+            <p id="ib-prejoin-hint" class="ib-hint"></p>
+          </div>
+        </div>
+
+        <footer class="ib-prejoin-foot">
+          <span id="ib-prejoin-name" class="ib-prejoin-name"></span>
+          <div class="ib-prejoin-buttons">
+            <button type="button" id="ib-prejoin-cancel" class="ib-btn ib-btn-ghost">Cancelar</button>
+            <button type="button" id="ib-prejoin-join" class="ib-btn ib-btn-primary">Entrar agora</button>
+          </div>
+        </footer>
       </div>
     </div>
 
     <div id="videocontrols-template" class="invisible">
       <div class="video-controls vc-overlay">
         <div class="controls-button controls-left">
-          <span class="video-play" title="Play video">
+          <span class="video-play" title="Reproduzir">
             <i class="fas fa-play"></i>
           </span>
           <span class="volume" title="Volume">
@@ -295,7 +384,7 @@
           <span class="pip" title="Picture In Picture">
             <i class="far fa-clone" aria-hidden="true"></i>
           </span>
-          <span class="fullscreen" title="Fullscreen">
+          <span class="fullscreen" title="Tela cheia">
             <i class="fas fa-expand" aria-hidden="true"></i>
           </span>
         </div>
@@ -304,7 +393,7 @@
     <div id="topvideocontrols-template" class="invisible">
       <div class="top-video-controls">
         <div class="controls-button controls-right">
-          <span class="close-icon video-stop" title="Stop video">
+          <span class="close-icon video-stop" title="Parar vídeo">
           </span>
         </div>
       </div>
@@ -312,17 +401,17 @@
 
     <dialog id="invite-dialog">
       <form method="dialog">
-        <label for="invite-username">Username (optional):</label>
+        <label for="invite-username">Usuário (opcional):</label>
         <input id="invite-username" type="text"/>
         <br>
-        <label for="invite-not-before">Not before:</label>
+        <label for="invite-not-before">Não antes de:</label>
         <input id="invite-not-before" type="datetime-local"/>
         <br>
-        <label for="invite-expires">Expires:</label>
+        <label for="invite-expires">Expira em:</label>
         <input id="invite-expires" type="datetime-local"/>
         <br>
-        <button id="invite-cancel" value="cancel" type="button">Cancel</button>
-        <button value="invite">Invite</button>
+        <button id="invite-cancel" value="cancel" type="button">Cancelar</button>
+        <button value="invite">Convidar</button>
       </form>
     </dialog>
 

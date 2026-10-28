@@ -281,6 +281,9 @@ function setConnected(connected) {
         connectionbox.classList.remove('invisible');
         hideVideo();
         window.onresize = null;
+        // Sem sala nao ha controles (nem tela compartilhada a encerrar).
+        setVisibility('controlbar', false);
+        setVisibility('stopsharebutton', false);
     }
 }
 
@@ -495,6 +498,8 @@ function hideLeftPanel() {
  *     organizador — nesse caso nao ha o que reconectar.
  */
 function enterLeftState(isMeetingEnded) {
+    // A tela de entrada nao convive com o painel de saida.
+    prejoinClose();
     let panel = ensureLeftPanel();
     let title = document.getElementById('ib-left-title');
     let note = document.getElementById('ib-left-note');
@@ -676,6 +681,11 @@ function setButtonsVisibility() {
     setVisibility('simulcastform', canPresent);
 
     setVisibility('collapse-video', mediacount && mobilelayout);
+
+    // Barra de controles flutuante: so dentro da sala.
+    setVisibility('controlbar', !!connected);
+    // Customizacao 15: o botao so aparece enquanto ha tela compartilhada.
+    setVisibility('stopsharebutton', !!findUpMedia('screenshare'));
 }
 
 /**
@@ -762,16 +772,414 @@ document.getElementById('mutebutton').onclick = function(e) {
     e.preventDefault();
     let localMute = getSettings().localMute;
     if (localMute && !findUpMedia('camera')) {
-        displayMessage('Please use Enable to enable your camera or microphone.');
+        displayMessage('Use "Ligar" para ativar a câmera ou o microfone.');
     } else {
         localMute = !localMute;
         setLocalMute(localMute, true);
     }
 };
 
+/* ---- Customizacao 12: tela de entrada (pre-join) ---------------------
+   Antes o cliente conectava assim que via `?token=`: a pessoa entrava muda e
+   so depois descobria o dispositivo errado — e, como o Galene faz uma
+   "sondagem" antes do join, ela ainda passava por uma tela com um botao
+   "Connect" solto. Agora a previa, o nivel do microfone e a escolha de
+   dispositivos acontecem antes de entrar, com um botao explicito, como no
+   Teams.
+
+   Contrato:
+   - as escolhas vao para `settings` (`audio`, `video`, `audioOutput`), de onde
+     `addLocalMedia` le ao publicar;
+   - `prejoinPublishRequested` faz o `gotJoined` publicar com ESSES
+     dispositivos (sem `delSetting('video')`, que trocaria a camera escolhida
+     pela primeira da lista);
+   - fechar a tela SEMPRE para o stream e o AudioContext: camera aberta aqui e
+     camera ocupada pelo navegador. */
+let prejoinActive = false;
+let prejoinPublishRequested = false;
+/** @type {MediaStream|null} */
+let prejoinStream = null;
+/** @type {AudioContext|null} */
+let prejoinCtx = null;
+/** @type {AnalyserNode|null} */
+let prejoinAnalyser = null;
+/** @type {Uint8Array|null} */
+let prejoinSamples = null;
+let prejoinRaf = null;
+
+function prejoinEl(id) {
+    return document.getElementById(id);
+}
+
+function prejoinSetHint(text) {
+    let hint = prejoinEl('ib-prejoin-hint');
+    if(hint)
+        hint.textContent = text || '';
+}
+
+/** Iniciais para o circulo de avatar quando a camera esta desligada. */
+function initialsOf(name) {
+    if(!name)
+        return '?';
+    let parts = String(name).trim().split(/\s+/).slice(0, 2);
+    let out = '';
+    for(let i = 0; i < parts.length; i++) {
+        if(parts[i])
+            out += parts[i].charAt(0).toUpperCase();
+    }
+    return out || '?';
+}
+
+/** Copia as opcoes de um select do painel para o select da tela de entrada.
+ *
+ * `dataset.ibTouched` marca que a pessoa mexeu NAQUELE select: a partir dai o
+ * valor atual manda, inclusive a opcao vazia (desligado). Sem essa marca, o
+ * `devicechange` (que re-sincroniza para mostrar o aparelho recem-conectado)
+ * religaria o microfone que a pessoa tinha desligado.
+ */
+function prejoinSyncSelect(panelId, targetId) {
+    let panel = prejoinEl(panelId);
+    let target = prejoinEl(targetId);
+    if(!(panel instanceof HTMLSelectElement) ||
+       !(target instanceof HTMLSelectElement))
+        return;
+    let previous = target.value;
+    let touched = target.dataset.ibTouched === '1';
+    target.textContent = '';
+    for(let i = 0; i < panel.options.length; i++) {
+        let o = panel.options[i];
+        let option = document.createElement('option');
+        option.value = o.value;
+        option.textContent = o.textContent;
+        target.appendChild(option);
+    }
+    if(touched && selectOptionAvailable(target, previous))
+        target.value = previous;
+    else if(selectOptionAvailable(target, panel.value))
+        target.value = panel.value;
+    else
+        target.value = selectOptionDefault(target);
+}
+
+function prejoinReflectToggles() {
+    let mic = prejoinEl('ib-prejoin-mic-select');
+    let cam = prejoinEl('ib-prejoin-cam-select');
+    let micOn = !!(mic instanceof HTMLSelectElement && mic.value);
+    let camOn = !!(cam instanceof HTMLSelectElement && cam.value);
+
+    let micButton = prejoinEl('ib-prejoin-mic');
+    let camButton = prejoinEl('ib-prejoin-cam');
+    let micIcon = micButton && micButton.querySelector('i');
+    let camIcon = camButton && camButton.querySelector('i');
+    if(micIcon) {
+        micIcon.className = micOn ? 'fas fa-microphone' : 'fas fa-microphone-slash';
+        micButton.classList.toggle('ib-round-off', !micOn);
+    }
+    if(camIcon) {
+        camIcon.className = camOn ? 'fas fa-video' : 'fas fa-video-slash';
+        camButton.classList.toggle('ib-round-off', !camOn);
+    }
+
+    let avatar = prejoinEl('ib-prejoin-avatar');
+    if(avatar)
+        avatar.classList.toggle('ib-hidden', camOn);
+}
+
+function prejoinSync() {
+    prejoinSyncSelect('audioselect', 'ib-prejoin-mic-select');
+    prejoinSyncSelect('videoselect', 'ib-prejoin-cam-select');
+    prejoinSyncSelect('audiooutputselect', 'ib-prejoin-output-select');
+
+    // Sem `setSinkId` (Firefox/Safari) a escolha de saida nao existe: a linha
+    // some em vez de oferecer um controle que nao funciona.
+    let output = prejoinEl('ib-prejoin-output-select');
+    let row = output && output.closest('.ib-device-row');
+    if(row)
+        row.classList.toggle('ib-hidden', !canSelectAudioOutput());
+
+    prejoinReflectToggles();
+}
+
+async function prejoinStopStream() {
+    if(prejoinRaf) {
+        cancelAnimationFrame(prejoinRaf);
+        prejoinRaf = null;
+    }
+    if(prejoinAnalyser) {
+        try { prejoinAnalyser.disconnect(); } catch(e) { }
+        prejoinAnalyser = null;
+    }
+    if(prejoinCtx) {
+        try { await prejoinCtx.close(); } catch(e) { }
+        prejoinCtx = null;
+    }
+    prejoinSamples = null;
+    let video = prejoinEl('ib-prejoin-video');
+    if(video instanceof HTMLVideoElement) {
+        let old = video.srcObject;
+        video.srcObject = null;
+        if(old instanceof MediaStream)
+            stopStream(old);
+    }
+    if(prejoinStream) {
+        stopStream(prejoinStream);
+        prejoinStream = null;
+    }
+    let fill = prejoinEl('ib-prejoin-meter-fill');
+    if(fill)
+        fill.style.width = '2%';
+}
+
+/** Medidor de nivel: um sussurro ja move a barra (escala perceptual). */
+function prejoinDrawMeter() {
+    let fill = prejoinEl('ib-prejoin-meter-fill');
+    if(!prejoinAnalyser || !prejoinSamples) {
+        prejoinRaf = null;
+        return;
+    }
+    prejoinRaf = requestAnimationFrame(() => prejoinDrawMeter());
+    prejoinAnalyser.getByteTimeDomainData(prejoinSamples);
+    let peak = 0;
+    for(let i = 0; i < prejoinSamples.length; i++) {
+        let v = Math.abs(prejoinSamples[i] - 128) / 128;
+        if(v > peak)
+            peak = v;
+    }
+    let level = Math.min(1, Math.pow(peak, 0.6));
+    if(fill)
+        fill.style.width = (2 + level * 98).toFixed(1) + '%';
+}
+
+function prejoinStartMeter() {
+    if(!prejoinStream || prejoinStream.getAudioTracks().length === 0)
+        return;
+    try {
+        prejoinCtx = new AudioContext();
+        prejoinAnalyser = prejoinCtx.createAnalyser();
+        prejoinAnalyser.fftSize = 1024;
+        prejoinCtx.createMediaStreamSource(prejoinStream).connect(prejoinAnalyser);
+        prejoinSamples = new Uint8Array(prejoinAnalyser.fftSize);
+        // Sem gesto do usuario o contexto nasce suspenso e o medidor fica em
+        // zero; o listener de pointerdown da tela retoma.
+        if(prejoinCtx.state === 'suspended')
+            prejoinCtx.resume().catch(() => { });
+        if(!prejoinRaf)
+            prejoinRaf = requestAnimationFrame(() => prejoinDrawMeter());
+    } catch(e) {
+        console.warn('Microphone meter unavailable', e);
+    }
+}
+
+async function prejoinStartStream() {
+    await prejoinStopStream();
+    if(!prejoinActive)
+        return;
+
+    let mic = prejoinEl('ib-prejoin-mic-select');
+    let cam = prejoinEl('ib-prejoin-cam-select');
+    let micId = mic instanceof HTMLSelectElement ? mic.value : '';
+    let camId = cam instanceof HTMLSelectElement ? cam.value : '';
+
+    /** @type {MediaStreamConstraints} */
+    let constraints = { audio: false, video: false };
+    if(micId)
+        // Mesmo `echoCancellation` obrigatorio de `addLocalMedia`
+        // (customizacao 11): a previa tem que refletir o que vai ao ar.
+        constraints.audio = { deviceId: micId, echoCancellation: true };
+    if(camId)
+        constraints.video = { deviceId: camId, width: { ideal: 1280 }, height: { ideal: 720 } };
+
+    if(!constraints.audio && !constraints.video) {
+        prejoinSetHint('Câmera e microfone desligados: você entra só para ouvir e escrever.');
+        prejoinReflectToggles();
+        return;
+    }
+
+    try {
+        prejoinStream = await navigator.mediaDevices.getUserMedia(constraints);
+    } catch(e) {
+        console.error(e);
+        prejoinSetHint('Não foi possível abrir a câmera ou o microfone: ' +
+                       (e && e.message ? e.message : e));
+        prejoinReflectToggles();
+        return;
+    }
+
+    let video = prejoinEl('ib-prejoin-video');
+    if(video instanceof HTMLVideoElement) {
+        video.srcObject = prejoinStream;
+        video.play().catch(() => { });
+    }
+    prejoinSetHint('');
+    prejoinStartMeter();
+    prejoinReflectToggles();
+
+    // Permissao concedida: o navegador agora revela os nomes dos aparelhos.
+    // `setMediaChoices` deduplica por value, entao rodar de novo so renomeia.
+    await setMediaChoices(true);
+    prejoinSync();
+}
+
+async function prejoinOpen() {
+    let overlay = prejoinEl('ib-prejoin');
+    if(!overlay)
+        return;
+    prejoinActive = true;
+    // Primeiro a tela: `enumerateDevices`/`getUserMedia` podem demorar (ou nem
+    // resolver, quando o navegador bloqueia dispositivo). Entrar na sala nao
+    // pode depender disso — o resto chega em seguida.
+    overlay.classList.remove('ib-hidden');
+
+    let name = storageGet('joinName');
+    let nameElt = prejoinEl('ib-prejoin-name');
+    if(nameElt)
+        nameElt.textContent = name ? 'Entrando como ' + name : '';
+    let initials = prejoinEl('ib-prejoin-initials');
+    if(initials)
+        initials.textContent = initialsOf(name);
+    prejoinReflectToggles();
+
+    // `setMediaChoices` deduplica por value: rodar de novo so renomeia as
+    // opcoes quando a permissao ja foi concedida antes.
+    await prejoinWithTimeout(setMediaChoices(true));
+    if(!prejoinActive)
+        return;
+    prejoinSync();
+    await prejoinStartStream();
+}
+
+/**
+ * Executa `promise` mas desiste depois de `ms` — usado nas APIs de midia, que
+ * podem ficar pendentes (sem permissao, headless, dispositivo removido no meio
+ * do `enumerateDevices`). Nao cancela nada: a promise original segue, e o que
+ * ela resolver depois apenas atualiza a lista de opcoes.
+ *
+ * @param {Promise<any>} promise
+ * @param {number} [ms]
+ */
+function prejoinWithTimeout(promise, ms) {
+    return Promise.race([
+        Promise.resolve(promise).catch(e => console.warn(e)),
+        new Promise(resolve => setTimeout(resolve, ms || 1500)),
+    ]);
+}
+
+async function prejoinClose() {
+    prejoinActive = false;
+    await prejoinStopStream();
+    let overlay = prejoinEl('ib-prejoin');
+    if(overlay)
+        overlay.classList.add('ib-hidden');
+}
+
+async function prejoinJoin() {
+    let joinButton = prejoinEl('ib-prejoin-join');
+    if(joinButton instanceof HTMLButtonElement) {
+        if(joinButton.disabled)
+            return;
+        joinButton.disabled = true;
+    }
+    try {
+        // Os selects da tela de entrada sao a fonte da verdade do que sera
+        // publicado: `addLocalMedia` le destas duas chaves.
+        updateSettings({
+            audio: prejoinEl('ib-prejoin-mic-select').value,
+            video: prejoinEl('ib-prejoin-cam-select').value,
+        });
+        let output = prejoinEl('ib-prejoin-output-select');
+        if(output instanceof HTMLSelectElement && canSelectAudioOutput())
+            updateSetting('audioOutput', output.value);
+
+        prejoinPublishRequested = true;
+        await prejoinClose();
+        // O clique em "Entrar agora" E o gesto do usuario: nao ha mais por que
+        // fazer a sondagem e mostrar um segundo botao "Connect". `join()` le
+        // `probingState` e pula a sondagem; o nome vem do `sub` do JWT.
+        probingState = 'success';
+        await serverConnect();
+    } finally {
+        if(joinButton instanceof HTMLButtonElement)
+            joinButton.disabled = false;
+    }
+}
+
+function prejoinCancel() {
+    let back = storageGet('joinBack');
+    if(back) {
+        window.location.href = back;
+        return;
+    }
+    prejoinSetHint('Para sair sem entrar, feche a aba.');
+}
+
+prejoinEl('ib-prejoin')?.addEventListener('pointerdown', () => {
+    if(prejoinCtx && prejoinCtx.state === 'suspended')
+        prejoinCtx.resume().catch(() => { });
+}, { passive: true });
+
+prejoinEl('ib-prejoin-join')?.addEventListener('click', () => prejoinJoin());
+prejoinEl('ib-prejoin-cancel')?.addEventListener('click', () => prejoinCancel());
+
+prejoinEl('ib-prejoin-test')?.addEventListener('click', () => {
+    if(prejoinCtx && prejoinCtx.state === 'suspended')
+        prejoinCtx.resume().catch(() => { });
+    prejoinSetHint(prejoinStream && prejoinStream.getAudioTracks().length > 0
+        ? 'Fale para ver a barra se mexer. Se não mexer, escolha outro microfone.'
+        : 'Ligue o microfone para testar.');
+});
+
+/** Alterna um dispositivo do select e reabre a previa. */
+async function prejoinToggle(selectId) {
+    let select = prejoinEl(selectId);
+    if(!(select instanceof HTMLSelectElement))
+        return;
+    if(select.value)
+        select.value = '';
+    else
+        select.value = selectOptionDefault(select);
+    // A escolha manual manda daqui em diante (ver `prejoinSyncSelect`).
+    select.dataset.ibTouched = '1';
+    // Mantem o painel de ajustes em sincronia (mesma fonte de settings).
+    updateSettings(selectId === 'ib-prejoin-mic-select'
+        ? { audio: select.value }
+        : { video: select.value });
+    await prejoinStartStream();
+}
+
+prejoinEl('ib-prejoin-mic')?.addEventListener('click', () => prejoinToggle('ib-prejoin-mic-select'));
+prejoinEl('ib-prejoin-cam')?.addEventListener('click', () => prejoinToggle('ib-prejoin-cam-select'));
+
+prejoinEl('ib-prejoin-mic-select')?.addEventListener('change', () => {
+    let select = prejoinEl('ib-prejoin-mic-select');
+    select.dataset.ibTouched = '1';
+    updateSettings({ audio: select.value });
+    prejoinReflectToggles();
+    prejoinStartStream();
+});
+
+prejoinEl('ib-prejoin-cam-select')?.addEventListener('change', () => {
+    let select = prejoinEl('ib-prejoin-cam-select');
+    select.dataset.ibTouched = '1';
+    updateSettings({ video: select.value });
+    prejoinReflectToggles();
+    prejoinStartStream();
+});
+
 document.getElementById('sharebutton').onclick = function(e) {
     e.preventDefault();
     addShareMedia();
+};
+
+/* Customizacao 15: botao explicito para encerrar o compartilhamento.
+   O unico controle que existia era o "stop" do proprio tile, invisivel ate o
+   hover — ninguem encontrava (relatado por quem apresentava e por quem
+   assistia). */
+document.getElementById('stopsharebutton').onclick = function(e) {
+    e.preventDefault();
+    if(!findUpMedia('screenshare'))
+        return;
+    closeUpMedia('screenshare');
+    resizePeers();
 };
 
 getSelectElement('filterselect').onchange = async function(e) {
@@ -1650,6 +2058,92 @@ async function addLocalMedia(localId) {
 
 let safariScreenshareDone = false;
 
+/* ---- Customizacao 13: nivel do audio de tela compartilhada ------------
+   `getDisplayMedia({audio: true})` entrega o loopback do sistema em escala
+   digital cheia, enquanto o microfone passa por AGC (fala estabilizada em
+   torno de -18 dBFS). O resultado era "o audio da tela muito mais alto que as
+   vozes", com clipping em cima — o Opus do WebRTC e mono e o downmix L+R do
+   navegador soma os canais.
+
+   Aqui o audio da tela passa por um GainNode e por um destino MONO antes de ir
+   ao ar:
+   - o ganho de -4,4 dB aproxima o nivel do de voz;
+   - o downmix mono do WebAudio divide por 2 por especificacao, o que tira o
+     excesso de nivel e o clipping dos picos.
+
+   O grafo existe so para o envio (o tile local e mudo), entao ninguem ouve o
+   proprio sistema duas vezes. Detalhe que morde: a track do
+   `MediaStreamAudioDestinationNode` NAO herda o evento `ended` da captura
+   original, e sem isso "Parar compartilhamento" na barra do navegador deixava
+   o tile vivo com um stream congelado. */
+const SCREENSHARE_GAIN = 0.6;
+
+/**
+ * @param {Stream} c
+ * @param {MediaStream} stream
+ * @returns {MediaStream}
+ */
+function applyScreenshareGain(c, stream) {
+    let audioTracks = stream.getAudioTracks();
+    if(audioTracks.length === 0)
+        return stream;
+
+    try {
+        let ctx = new AudioContext();
+        let gain = ctx.createGain();
+        gain.gain.value = SCREENSHARE_GAIN;
+        let dest = new MediaStreamAudioDestinationNode(ctx, { channelCount: 1 });
+
+        ctx.createMediaStreamSource(stream).connect(gain);
+        gain.connect(dest);
+
+        let out = new MediaStream();
+        stream.getVideoTracks().forEach(t => out.addTrack(t));
+        dest.stream.getAudioTracks().forEach(t => out.addTrack(t));
+
+        if(ctx.state === 'suspended')
+            ctx.resume().catch(() => { });
+
+        // `setUpStream` chama este hook no fechamento, antes de `delMedia`.
+        c.userdata.onclose = function() {
+            try { ctx.close(); } catch(e) { }
+            delete c.userdata.screenshareAudio;
+        };
+        c.userdata.screenshareAudio = ctx;
+        audioTracks[0].onended = () => {
+            try { c.close(); } catch(e) { }
+        };
+
+        return out;
+    } catch(e) {
+        // Navegador sem WebAudio: compartilha sem atenuacao em vez de nao
+        // compartilhar.
+        console.warn('Screenshare gain unavailable', e);
+        return stream;
+    }
+}
+
+/** Volume inicial do tile de tela no receptor (o slider continua existindo). */
+const SCREENSHARE_VOLUME = 0.75;
+
+/**
+ * Baixa o volume inicial do tile de tela uma unica vez.
+ *
+ * `setMedia` roda a cada track recebido; sem a marca em `dataset` o ajuste
+ * manual do usuario seria desfeito no evento seguinte.
+ *
+ * @param {HTMLElement} container
+ * @param {HTMLVideoElement} media
+ */
+function initScreenshareVolume(container, media) {
+    let slider = getVideoButton(container, 'volume-slider');
+    if(!(slider instanceof HTMLInputElement) || slider.dataset.ibInit === '1')
+        return;
+    slider.dataset.ibInit = '1';
+    slider.value = String(Math.round(SCREENSHARE_VOLUME * 100));
+    media.volume = SCREENSHARE_VOLUME;
+}
+
 async function addShareMedia() {
     if(!safariScreenshareDone) {
         if(isSafari()) {
@@ -1682,6 +2176,8 @@ async function addShareMedia() {
 
     let c = newUpStream();
     c.label = 'screenshare';
+    // Customizacao 13: atenua e faz downmix mono do audio do sistema.
+    stream = applyScreenshareGain(c, stream);
     await setUpStream(c, stream);
     await setMedia(c);
     setButtonsVisibility();
@@ -1943,6 +2439,10 @@ async function setMedia(c, mirror, video) {
         media.id = 'media-' + c.localId;
         div.appendChild(media);
         addCustomControls(media, div, c, !!video);
+        // Customizacao 14: o audio de tela chega alto por natureza; comeca
+        // mais baixo e o slider do tile continua sendo a valvula.
+        if(!c.up && c.label === 'screenshare')
+            initScreenshareVolume(div, media);
     }
 
     if(mirror)
@@ -2366,8 +2866,11 @@ function resizePeersScreenshare(peers, screenPeers) {
 
     // Altura livre para as telas: espaco total menos padding menos as
     // linhas de miniaturas (incluindo o gap entre telas e faixa).
+    // A medida vem do proprio #peers, e nao do container: o #peers termina
+    // acima da barra de controles (customizacao 15) e usar a altura do
+    // container faria o palco invadir a barra.
     let stripH = camRows * (thumbH + rowGap);
-    let stageH = container.offsetHeight - padY - stripH;
+    let stageH = peers.offsetHeight - padY - stripH;
     if(stageH < 120)
         stageH = 120;
 
@@ -2627,11 +3130,17 @@ function publishAvatar() {
  */
 function updateUsersHeader() {
     let header = document.querySelector('.galene-header');
-    if(!header)
-        return;
     let div = document.getElementById('users');
     let n = div ? div.querySelectorAll('.user-p').length : 0;
-    header.textContent = 'Participantes (' + n + ')';
+    if(header)
+        header.textContent = 'Participantes (' + n + ')';
+    // Customizacao 12: a barra superior tem duas linhas — nome da sala e
+    // ocupacao. A contagem repetida no painel esquerdo continua valendo: ali
+    // ela acompanha a lista, aqui ela responde "tem alguem comigo?" sem abrir
+    // o painel.
+    let subtitle = document.getElementById('ib-subtitle');
+    if(subtitle)
+        subtitle.textContent = n === 1 ? '1 pessoa na sala' : n + ' pessoas na sala';
 }
 
 /**
@@ -2862,9 +3371,18 @@ async function gotJoined(kind, group, perms, status, data, error, message) {
 
     switch(kind) {
     case 'fail':
+        prejoinPublishRequested = false;
         if(probingState === 'probing' && error === 'need-username') {
             probingState = 'need-username';
             setVisibility('passwordform', false);
+        } else if(error === 'need-username') {
+            // Customizacao 12: sem a sondagem (a tela de entrada ja consumiu o
+            // gesto do usuario), o pedido de nome chega direto. Mostra o
+            // formulario para digitar o nome em vez de descartar o token.
+            setVisibility('login-container', true);
+            setVisibility('userform', true);
+            setVisibility('passwordform', false);
+            displayMessage('Informe seu nome para entrar na reunião.');
         } else {
             token = null;
             try {
@@ -2878,12 +3396,14 @@ async function gotJoined(kind, group, perms, status, data, error, message) {
         setButtonsVisibility();
         return;
     case 'redirect':
+        prejoinPublishRequested = false;
         closeSafariStream();
         this.close();
         token = null;
         document.location.href = message;
         return;
     case 'leave':
+        prejoinPublishRequested = false;
         closeSafariStream();
         this.close();
         setButtonsVisibility();
@@ -2947,7 +3467,7 @@ async function gotJoined(kind, group, perms, status, data, error, message) {
 
     let input = /** @type{HTMLTextAreaElement} */
         (document.getElementById('input'));
-    input.placeholder = 'Type /help for help';
+    input.placeholder = 'Digite /help para ajuda';
     setTimeout(() => {input.placeholder = '';}, 8000);
 
     if(typeof RTCPeerConnection === 'undefined')
@@ -2973,9 +3493,26 @@ async function gotJoined(kind, group, perms, status, data, error, message) {
             } finally {
                 button.disabled = false;
             }
+        } else if(prejoinPublishRequested) {
+            // Customizacao 12: a escolha de dispositivos foi feita na tela de
+            // entrada. Nao mexe em `settings.video` — `addLocalMedia` publica
+            // exatamente o que a pessoa viu na previa.
+            prejoinPublishRequested = false;
+            let prejoinSettings = getSettings();
+            if(prejoinSettings.audio || prejoinSettings.video) {
+                let button = getButtonElement('presentbutton');
+                button.disabled = true;
+                try {
+                    await addLocalMedia();
+                } finally {
+                    button.disabled = false;
+                }
+            } else {
+                displayMessage('Você entrou sem câmera e microfone. Use "Ligar" para ativá-los.');
+            }
         } else {
             displayMessage(
-                "Press Enable to enable your camera or microphone"
+                'Use "Ligar" para ativar a câmera ou o microfone.'
             );
         }
     }
@@ -4529,6 +5066,9 @@ document.getElementById('disconnectbutton').onclick = function(e) {
     storageRemove('joinToken');
     storageRemove('joinAvatar');
     storageRemove('avatarPrefix');
+    // Solta camera/microfone da previa: sair com a luz da camera acesa e o
+    // sintoma mais visivel de stream esquecido aberto.
+    prejoinClose();
     if(serverConnection)
         serverConnection.close();
     closeNav();
@@ -4660,13 +5200,16 @@ async function start() {
         storageSet('joinToken', parms.get('token'));
     }
     // Avatar (customizacao 6) e destino de saida (customizacao 8) tambem
-    // precisam sobreviver ao replaceState, que limpa a query inteira.
+    // precisam sobreviver ao replaceState, que limpa a query inteira. O nome
+    // (`username=`) alimenta a tela de entrada: e o "Entrando como X".
     if(parms.has('avatarPrefix'))
         storageSet('avatarPrefix', parms.get('avatarPrefix'));
     if(parms.has('avatar'))
         storageSet('joinAvatar', parms.get('avatar'));
     if(parms.has('back'))
         storageSet('joinBack', parms.get('back'));
+    if(parms.has('username'))
+        storageSet('joinName', parms.get('username'));
 
     avatarPrefix = storageGet('avatarPrefix');
     myAvatar = avatarUrl(storageGet('joinAvatar'));
@@ -4677,7 +5220,9 @@ async function start() {
     updateUsersHeader();
 
     addFilters();
-    await setMediaChoices(false);
+    // `enumerateDevices` pode nao resolver (politica de permissao, headless):
+    // a tela de entrada nao pode ficar esperando por ele.
+    await prejoinWithTimeout(setMediaChoices(false));
     reflectSettings();
     reflectAudioOutput();
 
@@ -4690,7 +5235,14 @@ async function start() {
     }
 
     if(token) {
-        await serverConnect();
+        // Customizacao 12: previa de camera/microfone e escolha de dispositivos
+        // antes de entrar. `prejoinJoin()` e quem chama `serverConnect`.
+        // Sem `await`: a tela aparece no primeiro paint, e o que depende de
+        // midia chega depois (ver `prejoinOpen`).
+        prejoinOpen().catch(e => {
+            console.error(e);
+            displayError(e);
+        });
     } else if(groupStatus.authPortal) {
         window.location.href = groupStatus.authPortal;
     } else {
@@ -4712,6 +5264,12 @@ async function start() {
             }
             reflectAudioOutput();
             applyAudioOutputToAll();
+            // Customizacao 12: a tela de entrada precisa ver o aparelho novo
+            // (e soltar o antigo, que pode ter sido desconectado).
+            if(prejoinActive) {
+                prejoinSync();
+                prejoinStartStream();
+            }
         });
     }
 

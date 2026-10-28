@@ -19,15 +19,17 @@
    ========================================================================== */
 
 :root {
-  --ib-brand: #610a86;
-  --ib-brand-strong: #4d076b;
-  --ib-brand-soft: #f4ecf9;
-  --ib-brand-rgb: 97, 10, 134;
+  --ib-brand: #8b5cf6;
+  --ib-brand-strong: #6d28d9;
+  --ib-brand-soft: #f5f0fe;
+  --ib-brand-rgb: 139, 92, 246;
+  --ib-accent: #e879b8;
 
   --ib-surface: #ffffff;
   --ib-surface-subtle: #f6f7f9;
-  --ib-stage: #0d1117;
-  --ib-stage-tile: #161b22;
+  --ib-stage: #0b0d12;
+  --ib-stage-tile: #171a21;
+  --ib-app: #0f1116;
 
   --ib-text: #1f2328;
   --ib-text-muted: #656d76;
@@ -39,16 +41,26 @@
   --ib-warning: #9a6700;
   --ib-danger: #cf222e;
 
-  --ib-radius-sm: 6px;
-  --ib-radius-lg: 14px;
+  --ib-radius-sm: 8px;
+  --ib-radius-lg: 16px;
   --ib-shadow-sm: 0 1px 2px rgba(31, 35, 40, 0.08);
   --ib-shadow-md: 0 4px 12px rgba(31, 35, 40, 0.12);
   --ib-shadow-lg: 0 12px 32px rgba(31, 35, 40, 0.22);
+  --ib-shadow-float: 0 18px 44px rgba(0, 0, 0, 0.45);
 
   --ib-font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
     Arial, "Noto Sans", sans-serif;
 
   --ib-avatar: 28px;
+  /* Altura reservada pela barra de controles flutuante (customizacao 12). */
+  --ib-bar: 56px;
+  --ib-ctlbar: 96px;
+}
+
+/* Utilitario proprio: `.invisible` do galene.css tem especificidade de classe
+   e perderia para `#id { display }` definido depois neste arquivo. */
+.ib-hidden {
+  display: none !important;
 }
 
 /* ==============================  Base  ================================== */
@@ -95,7 +107,26 @@ select:focus-visible,
 .topnav #header {
   display: flex;
   align-items: center;
+  gap: 10px;
   height: 3.5rem;
+}
+
+/* Titulo + subtitulo (contagem de participantes). O nome do estúdio e o
+   assunto da reuniao cabem num bloco so, em duas linhas. */
+.ib-titleblock {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+.ib-subtitle {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.72);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .topnav .header-title {
@@ -646,6 +677,18 @@ select:focus-visible,
   pointer-events: auto;
 }
 
+/* No palco o controle de parar e informacao, nao enfeite: fica sempre visivel.
+   Era o unico jeito de encerrar o compartilhamento antes da barra de controles
+   (customizacao 15), e escondido atras do hover ninguem o encontrava. */
+#peers.has-screenshare .peer-screenshare > .top-video-controls {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#peers.has-screenshare .peer-screenshare > .top-video-controls .video-stop {
+  background: var(--ib-danger);
+}
+
 /* =====================  Feedback visual / status  ======================= */
 .vc-overlay {
   background: linear-gradient(
@@ -678,5 +721,451 @@ select:focus-visible,
 
   .ib-left-panel {
     padding: 20px 16px;
+  }
+
+  /* Conversa em tela cheia: o compositor fica embaixo da barra flutuante se
+     nao houver folga reservada dentro do painel. */
+  #chat {
+    padding-bottom: calc(var(--ib-ctlbar) - 8px);
+    box-sizing: border-box;
+  }
+}
+
+/* ====================  Barra de controles flutuante  ==================
+   Customizacao 15. Antes as acoes ficavam na barra do topo do Galene, com
+   rotulos "Enable/Disable/Mute/Share Screen" e nenhuma forma de encerrar o
+   compartilhamento. Agora: barra centrada na base, sobre o palco, com icone +
+   rotulo — o padrao de Teams/Zoom/Discord. */
+#controlbar.ib-controlbar {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 2100;
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-radius: 999px;
+  background: rgba(17, 19, 24, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--ib-shadow-float);
+  backdrop-filter: blur(14px) saturate(140%);
+  max-width: calc(100vw - 24px);
+}
+
+#controlbar.ib-controlbar.invisible {
+  display: none;
+}
+
+/* Os botoes usam o mesmo `invisible` do Galene (setVisibility). O `display`
+   desta barra tem especificidade de id e venceria a classe — por isso o
+   `!important` aqui, e so aqui. */
+#controlbar .invisible {
+  display: none !important;
+}
+
+#controlbar .nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+#controlbar .nav-menu li {
+  float: none;
+  max-height: none;
+  list-style: none;
+}
+
+.ib-ctl {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 64px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: #e9ecf1;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.1;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.ib-ctl:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.ib-ctl:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.ib-ctl-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 16px;
+}
+
+.ib-ctl:hover .ib-ctl-icon {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.ib-ctl-label {
+  white-space: nowrap;
+}
+
+/* Microfone mudo: `muted` e posta por setLocalMute. */
+#mutebutton.muted {
+  color: #ffd9d9;
+}
+
+#mutebutton.muted .ib-ctl-icon {
+  background: var(--ib-danger);
+}
+
+/* Acoes principais (ligar camera, compartilhar) ganham a cor da marca. */
+#presentbutton .ib-ctl-icon,
+#sharebutton .ib-ctl-icon {
+  background: var(--ib-brand);
+}
+
+/* Encerrar algo e sempre vermelho: desligar a camera e parar a tela. */
+#stopsharebutton .ib-ctl-icon,
+#unpresentbutton .ib-ctl-icon {
+  background: rgba(207, 34, 46, 0.9);
+}
+
+@media (max-width: 1024px) {
+  #controlbar.ib-controlbar {
+    bottom: 8px;
+    padding: 6px;
+  }
+
+  .ib-ctl {
+    min-width: 44px;
+    padding: 6px;
+  }
+
+  .ib-ctl-label {
+    display: none;
+  }
+
+  .ib-ctl-icon {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* A barra flutua sobre o palco: o `#peers` (absoluto, com min-height 100%)
+   precisa terminar acima dela, senao a ultima linha de tiles fica por baixo. */
+#peers {
+  bottom: var(--ib-ctlbar);
+  min-height: calc(100% - var(--ib-ctlbar));
+}
+
+/* ========================  Tela de entrada  ==========================
+   Customizacao 12: a previa substitui o "Connect" solto que o Galene mostrava
+   depois da sondagem. Fundo escuro proprio (a tela roda fora do palco), card
+   centralizado e, no mobile, tela cheia. */
+.ib-prejoin {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(
+      900px 480px at 50% -10%,
+      rgba(var(--ib-brand-rgb), 0.35),
+      transparent 62%
+    ),
+    radial-gradient(
+      700px 500px at 100% 100%,
+      rgba(232, 121, 184, 0.18),
+      transparent 60%
+    ),
+    var(--ib-app);
+  font-family: var(--ib-font);
+}
+
+.ib-prejoin-card {
+  width: min(1000px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  padding: 28px;
+  border-radius: 20px;
+  background: #14161c;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--ib-shadow-float);
+  color: #e9ecf1;
+}
+
+.ib-prejoin-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.ib-prejoin-mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--ib-brand);
+  color: #fff;
+  font-size: 18px;
+}
+
+.ib-prejoin-head h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 650;
+  color: #fff;
+  text-shadow: none;
+}
+
+.ib-prejoin-sub {
+  margin: 2px 0 0;
+  font-size: 0.86rem;
+  color: #9aa3b2;
+}
+
+.ib-prejoin-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.ib-prejoin-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #05070b;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+#ib-prejoin-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.ib-prejoin-avatar {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 40%, #232734, #0b0d12);
+  color: #fff;
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.ib-prejoin-toggles {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.ib-round {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(20, 22, 28, 0.78);
+  color: #fff;
+  font-size: 15px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: background-color 0.15s ease;
+}
+
+.ib-round:hover {
+  background: rgba(50, 54, 64, 0.9);
+}
+
+.ib-round.ib-round-off {
+  background: var(--ib-danger);
+}
+
+.ib-meter {
+  position: relative;
+  height: 6px;
+  margin-top: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.ib-meter-fill {
+  display: block;
+  width: 2%;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--ib-success), #7ee787);
+  transition: width 0.08s linear;
+}
+
+.ib-prejoin-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ib-device-card {
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.ib-device-card h3 {
+  margin: 0 0 12px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.ib-device-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  color: #c3c9d4;
+}
+
+.ib-prejoin-select {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #1b1e26;
+  color: #e9ecf1;
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.ib-prejoin-select:focus-visible {
+  outline: 2px solid var(--ib-brand);
+  outline-offset: 1px;
+}
+
+.ib-linkbtn {
+  margin-top: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #a5b4fc;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.ib-prejoin-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.ib-prejoin-name {
+  font-size: 0.86rem;
+  color: #9aa3b2;
+}
+
+.ib-prejoin-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.ib-btn {
+  min-height: 40px;
+  padding: 0 20px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    filter 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.ib-btn-primary {
+  background: var(--ib-brand);
+  color: #fff;
+}
+
+.ib-btn-primary:hover {
+  filter: brightness(1.08);
+}
+
+.ib-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.ib-btn-ghost {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #e9ecf1;
+}
+
+.ib-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 860px) {
+  .ib-prejoin {
+    padding: 0;
+  }
+
+  .ib-prejoin-card {
+    max-height: 100vh;
+    height: 100%;
+    border-radius: 0;
+    border: 0;
+  }
+
+  .ib-prejoin-body {
+    grid-template-columns: 1fr;
+  }
+
+  .ib-prejoin-foot {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ib-prejoin-name {
+    text-align: center;
   }
 }
