@@ -22,6 +22,11 @@ contexto ao redor já mudou.
 | 9   | Escolha do dispositivo de reprodução (saída de áudio) | `static/galene.html` + `static/galene.js` + `indies.css` |
 | 10  | Controles do tile respondem de novo                   | `indies.css`                                             |
 | 11  | Eco não é desligado pelo rótulo de ruído              | `static/galene.js` + `static/galene.html`                |
+| 12  | Tela de entrada: prévia, medidor e dispositivos       | `static/galene.html` + `static/galene.js` + `indies.css` |
+| 13  | Áudio da tela atenuado e em mono                      | `static/galene.js`                                       |
+| 14  | Volume inicial do tile de tela                        | `static/galene.js`                                       |
+| 15  | Barra de controles flutuante + botão "Parar tela"     | `static/galene.html` + `static/galene.js` + `indies.css` |
+| 16  | Interface em português (textos do HTML)               | `static/galene.html` + `static/galene.js`                |
 
 Nada de Go do servidor foi alterado — todas são de cliente. As customizações 6
 a 8 dependem de contrato com o app (`lib/galene.js`), documentado em cada seção;
@@ -367,6 +372,140 @@ rótulo de ruído. Se um dia essa opção existir, mantenha-a **separada** de
 Verificado com o `addLocalMedia` real (stubs interceptando o `getUserMedia`):
 com "Noise suppression" desmarcado, `echoCancellation` continua `true` e só
 `noiseSuppression`/`autoGainControl` vão a `false`.
+
+## 12. Tela de entrada (prévia, medidor de microfone e dispositivos)
+
+**Problema:** com `?token=` na URL, `start()` conectava direto. O Galene ainda
+fazia uma **sondagem** antes do join e, para dar ao navegador um gesto do usuário
+(autoplay), mostrava uma tela com um botão solto "Connect" — sem prévia, sem
+escolha de dispositivo, sem saber se o microfone estava funcionando. Quem entrava
+com o fone errado descobria depois de já estar na sala, e entrar mudo era o
+caminho mais fácil.
+
+**Solução:** uma tela de entrada antes de conectar, no formato do Teams:
+prévia espelhada da câmera, barra de nível do microfone, seletores de microfone,
+alto-falante e câmera, e os botões "Cancelar" / "Entrar agora".
+
+O clique em **"Entrar agora"** é o gesto do usuário, então não há mais motivo
+para a sondagem: `prejoinJoin()` define `probingState = 'success'` antes de
+`serverConnect()`, e `join()` passa direto. O nome do participante continua
+vindo do `sub` do JWT (o formulário nunca era preenchido nessas salas).
+
+Detalhes que não são óbvios:
+
+1. **As escolhas têm de alimentar `settings`.** `addLocalMedia` lê `settings.audio`
+   e `settings.video`; os selects da tela escrevem nessas chaves. Sem isso, a
+   prévia mostraria uma câmera e a sala publicaria outra.
+2. **Nada de `delSetting('video')`** no caminho de publicação. O `present ===
+   'both'` do Galene deleta a chave para cair na "primeira câmera"; aqui isso
+   trocaria a câmera escolhida. A flag `prejoinPublishRequested` publica
+   exatamente o que a pessoa viu.
+3. **Fechar a tela sempre para o stream e o `AudioContext`.** Câmera aberta na
+   prévia é câmera ocupada pelo navegador — inclusive na reentrada depois de "Sair".
+4. **`echoCancellation` obrigatório na prévia** (customização 11): a prévia tem
+   de refletir o que vai ao ar.
+5. **`pointerdown` retoma o `AudioContext`.** Sem gesto, ele nasce suspenso e o
+   medidor fica em zero — um medidor sempre zerado é pior que nenhum.
+6. **`devicechange` atualiza a tela.** Plugar o headset antes de entrar precisa
+   oferecer o aparelho novo e soltar o antigo (que pode ter sido desconectado).
+
+- `static/galene.html`: `#ib-prejoin` e todo o conteúdo do card.
+- `static/galene.js`: `prejoinOpen`, `prejoinClose`, `prejoinStartStream`,
+  `prejoinStartMeter`, `prejoinDrawMeter`, `prejoinSync`, `prejoinSyncSelect`,
+  `prejoinReflectToggles`, `prejoinJoin`, `prejoinCancel`, `prejoinToggle` e as
+  chamadas em `start()` (token → `prejoinOpen`), `gotJoined` (publica),
+  `enterLeftState` e `disconnectbutton` (fecham a tela).
+- `static/indies.css`: `.ib-prejoin*`, `.ib-device-card`, `.ib-meter`,
+  `.ib-round`, `.ib-btn*`.
+
+## 13. Áudio da tela compartilhada atenuado e em mono
+
+**Problema:** relato de "o áudio da tela fica muito mais alto que as vozes".
+`getDisplayMedia({audio: true})` entrega o loopback do sistema em escala digital
+cheia, enquanto o microfone passa por `autoGainControl` (fala estabilizada perto
+de −18 dBFS): a diferença chega a 10–15 dB. E o Opus do WebRTC é **mono**, então
+o downmix L+R do navegador **soma** os canais — mais 3 a 6 dB e clipping nos
+picos.
+
+**Solução:** o áudio da captura passa por `applyScreenshareGain` antes de ir ao
+ar: `GainNode` de `0.6` (−4,4 dB) e destino `MediaStreamAudioDestinationNode` com
+`channelCount: 1`. O downmix do WebAudio divide por 2 por especificação, o que
+elimina o excesso e o clipping. O vídeo é repassado intacto e o grafo existe só
+para o envio — o tile local é mudo, ninguém ouve o próprio sistema duas vezes.
+
+Dois cuidados:
+
+- **`onended` não é herdado.** A track do destino não propaga o `ended` da
+  captura original: "Parar compartilhamento" na barra do navegador deixaria o
+  tile vivo com um stream congelado. O hook religa o `onended` da captura ao
+  `c.close()`.
+- **O `AudioContext` fecha no `onclose`** do stream (`c.userdata.onclose`), antes
+  de `delMedia`. Sem isso, cada compartilhamento vazaria um contexto de áudio.
+
+- `static/galene.js`: `SCREENSHARE_GAIN`, `applyScreenshareGain` e a chamada em
+  `addShareMedia`.
+
+## 14. Volume inicial do tile de tela
+
+**Problema:** o elemento `<video>` do recebimento nasce com `volume = 1.0`, e o
+slider só aparece no hover do tile (customização 10). Quem não é apresentador
+não tem como baixar o áudio sem descobrir o controle.
+
+**Solução:** o tile de tela começa em `0.75` (`SCREENSHARE_VOLUME`), com o slider
+já refletindo o valor. A marca em `slider.dataset.ibInit` garante que o ajuste
+aconteça **uma vez**: `setMedia` roda a cada track recebido, e sem isso a escolha
+manual do usuário seria desfeita no evento seguinte.
+
+- `static/galene.js`: `SCREENSHARE_VOLUME`, `initScreenshareVolume` e a chamada
+  em `setMedia`.
+
+## 15. Barra de controles flutuante e "Parar tela"
+
+**Problema:** as ações ficavam na barra do topo (`nav-menu` do Galene), com os
+rótulos "Enable/Disable/Mute/Share Screen", e **não havia** nenhum botão para
+encerrar o compartilhamento — o único controle era o "stop" do próprio tile,
+invisível até o hover. Quem apresentava precisava mirar num botão que não
+aparecia, e no mobile ele é sempre visível mas fica no canto do palco.
+
+**Solução:** barra flutuante centrada na base, no padrão de Teams/Zoom/Discord:
+microfone, ligar/desligar câmera, compartilhar tela, **parar tela** e ajustes.
+
+Os `id`s são os mesmos do Galene (`mutebutton`, `presentbutton`,
+`unpresentbutton`, `sharebutton`, `openside`): `setButtonsVisibility` e os
+handlers procuram por `id`, e a posição na tela não participa da lógica. O que
+mudou é o lugar no DOM e o estilo.
+
+- O `#controlbar` só aparece dentro da sala (`setConnected`), e o
+  `#stopsharebutton` só enquanto `findUpMedia('screenshare')` existir
+  (`setButtonsVisibility`).
+- `#mutebutton` deixou de ser `<div>` e virou `<button>` — agora é focável por
+  teclado. `setLocalMute` continua achando o ícone por `span .fas`.
+- **O `#peers` termina acima da barra** (`bottom`/`min-height` com
+  `--ib-ctlbar`), e `resizePeersScreenshare` passou a medir a altura do
+  `#peers` — e não do container — porque usar a altura do container colocaria a
+  última linha de tiles embaixo da barra.
+- O controle de parar do **palco** fica sempre visível: no palco ele é
+  informação, não enfeite.
+
+- `static/galene.html`: `#controlbar` e o `#stopsharebutton`; a `nav-menu` saiu
+  do topo.
+- `static/galene.js`: handler do `#stopsharebutton`, as duas linhas em
+  `setButtonsVisibility`/`setConnected`, `resizePeersScreenshare`.
+- `static/indies.css`: `#controlbar`, `.ib-ctl*`, e o `#peers` com folga.
+
+## 16. Interface em português
+
+**Problema:** o cliente falava inglês ("Enable", "Share Screen", "Media
+Options", "Logout"), no meio de um site em português.
+
+**Solução:** tradução dos textos do HTML (rótulos, títulos, `legend`, botões e
+`title` de acessibilidade) e das mensagens próprias do JS. As mensagens internas
+do upstream (erros de protocolo) continuam em inglês de propósito: traduzir
+`galene.js` inteiro inflaria o diff do arquivo do upstream a cada rebase, sem
+ganho para quem usa.
+
+- `static/galene.html`, `static/galene.js` (placeholders de chat, dica de
+  "Ligar", título do painel de saída).
 
 ## Por que não há mais arquivos `.patch`
 
