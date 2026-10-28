@@ -420,6 +420,67 @@ describe("POST /api/v1/users", () => {
       expect(tokenNovo.rows[0].valido).toBe(true);
     });
 
+    test("Cadastro abandonado com SEGUIDOR é anulado (FK de user_followers)", async () => {
+      const fantasma = await register({
+        username: "FantasmaSeguido",
+        email: "fantasma.seguido@teste.dev",
+        password: TEST_CREDENTIALS.userDefault,
+        cpf: "456.789.123-00",
+      });
+      expect(fantasma.status).toBe(201);
+      const fantasmaId = (await fantasma.json()).id;
+
+      await activation.create(fantasmaId);
+      await expireActivationTokens(fantasmaId);
+
+      // Seguir não exige que o alvo esteja ativado — quem segue é outro membro —
+      // e o cadastro apareceu no diretório público antes do filtro de conta
+      // ativada. As FKs de `user_followers` são NO ACTION, então sem limpeza
+      // explícita o `DELETE FROM users` falhava com 23503 e o novo cadastro
+      // morria com 500: o cadastro abandonado ficava travado para sempre.
+      const seguidor = await orchestrator.createUser({ username: "quem-seguiu" });
+      await database.query({
+        text: `INSERT INTO user_followers (lead_user_id, follower_id) VALUES ($1, $2)`,
+        values: [fantasmaId, seguidor.id],
+      });
+
+      // Seguidores de outras contas não podem ser tocados: a limpeza é da
+      // linha que aponta para o cadastro anulado.
+      const outroLider = await orchestrator.createUser({ username: "outro-lider" });
+      const outroSeguidor = await orchestrator.createUser({ username: "outro-seguidor" });
+      await database.query({
+        text: `INSERT INTO user_followers (lead_user_id, follower_id) VALUES ($1, $2)`,
+        values: [outroLider.id, outroSeguidor.id],
+      });
+
+      const novo = await register({
+        username: "FantasmaSeguido",
+        email: "fantasma.seguido@teste.dev",
+        password: TEST_CREDENTIALS.userAlt,
+        cpf: "45678912300",
+      });
+
+      expect(novo.status).toBe(201);
+      expect((await novo.json()).id).not.toBe(fantasmaId);
+
+      const doFantasma = await database.query({
+        text: `SELECT count(*)::int AS total FROM user_followers WHERE lead_user_id = $1 OR follower_id = $1`,
+        values: [fantasmaId],
+      });
+      expect(doFantasma.rows[0].total).toBe(0);
+
+      const doOutroPar = await database.query({
+        text: `SELECT count(*)::int AS total FROM user_followers WHERE lead_user_id = $1 AND follower_id = $2`,
+        values: [outroLider.id, outroSeguidor.id],
+      });
+      expect(doOutroPar.rows[0].total).toBe(1);
+
+      // O seguidor continua sendo uma conta válida — só deixou de seguir o
+      // cadastro que deixou de existir.
+      const seguidorDepois = await user.findOneById(seguidor.id);
+      expect(seguidorDepois.username).toBe("quem-seguiu");
+    });
+
     test("Token de RESET vencido mantém o cadastro", async () => {
       const usuario = await register({
         username: "ComReset",

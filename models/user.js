@@ -1,6 +1,6 @@
 import database from "infra/database";
 import password from "models/password";
-import { ValidationError, NotFoundError } from "infra/errors.js";
+import { ValidationError, NotFoundError, ServiceError } from "infra/errors.js";
 import notification from "./notification";
 import organization from "./organization";
 import { normalizeUsername, usernameProblem } from "lib/username";
@@ -82,8 +82,13 @@ function normalizeCpfInObject(values) {
  *
  * 1. **Nunca foi ativado** — `features` não contém `create:session`. Ativação é
  *    o que concede as permissões; sem ela a conta nunca produziu conteúdo, não
- *    tem organização, post, seguidor nem sessão. É a diferença entre apagar um
- *    cadastro e apagar a conta de alguém.
+ *    tem organização, post nem sessão. É a diferença entre apagar um cadastro e
+ *    apagar a conta de alguém.
+ *
+ *    Exceção: **seguidor**. Seguir não exige que o alvo esteja ativado — quem
+ *    segue é outro membro —, e enquanto o diretório listava cadastro não
+ *    ativado havia gente seguindo conta fantasma. Por isso a remoção de
+ *    `user_followers` é explícita antes do `DELETE` (ver o comentário no código).
  * 2. **Não existe token válido** (de nenhuma finalidade) — token não usado e não
  *    vencido significa intenção recente. Nesse caso a conta tem dono ativo e a
  *    resposta continua sendo "já está sendo utilizado"; destruí-la roubaria a
@@ -118,62 +123,109 @@ function normalizeCpfInObject(values) {
  *   cadastros anulados (vazio quando não havia nada a anular).
  */
 async function annulAbandonedRegistrations({ email, cpf, username }) {
-  const results = await database.query({
-    text: `
-      WITH abandoned AS (
-        SELECT u.id
-        FROM users u
-        WHERE (
-            lower(u.email) = lower($1)
-            OR u.cpf = $2
-            OR lower(u.username) = lower($3)
-          )
-          AND NOT ('create:session' = ANY (u.features))
-          AND NOT EXISTS (
-            SELECT 1
-            FROM user_activation_tokens t
-            WHERE t.user_id = u.id
-              AND t.used_at IS NULL
-              AND t.expires_at > now()
-          )
-          /* Qualquer token que NÃO seja de ativação — em qualquer estado — mantém
-             o cadastro. Um pedido de redefinição de senha (mesmo vencido, mesmo já
-             usado) só acontece com quem sabe email e CPF, e chega por e-mail: é
-             sinal de dono engajado, e apagar destruiria um cadastro legítimo. Sem
-             esta condição, um cadastro abandonado com reset pendente era anulado e
-             outra pessoa tomava o CPF. */
-          AND NOT EXISTS (
-            SELECT 1
-            FROM user_activation_tokens t
-            WHERE t.user_id = u.id
-              AND t.purpose <> 'activation'
-          )
-      ),
+  let removed;
+
+  try {
+    removed = await database.transaction(async (client) => {
+      /**
+       * As condições de anulação ficam em uma query própria porque as exclusões
+       * precisam ser comandos separados: a checagem de FK do `DELETE FROM users`
+       * não enxerga linhas removidas por outra CTE do mesmo comando, e a ordem
+       * dentro de um único comando não é garantida (mesmo motivo documentado em
+       * `purgeByEmail`). Em comandos distintos, dentro de uma transação, a ordem
+       * é explícita e o resultado é o mesmo: tudo ou nada.
+       */
+      const abandoned = await client.query({
+        text: `
+          SELECT u.id
+          FROM users u
+          WHERE (
+              lower(u.email) = lower($1)
+              OR u.cpf = $2
+              OR lower(u.username) = lower($3)
+            )
+            AND NOT ('create:session' = ANY (u.features))
+            AND NOT EXISTS (
+              SELECT 1
+              FROM user_activation_tokens t
+              WHERE t.user_id = u.id
+                AND t.used_at IS NULL
+                AND t.expires_at > now()
+            )
+            /* Qualquer token que NÃO seja de ativação — em qualquer estado — mantém
+               o cadastro. Um pedido de redefinição de senha (mesmo vencido, mesmo já
+               usado) só acontece com quem sabe email e CPF, e chega por e-mail: é
+               sinal de dono engajado, e apagar destruiria um cadastro legítimo. Sem
+               esta condição, um cadastro abandonado com reset pendente era anulado e
+               outra pessoa tomava o CPF. */
+            AND NOT EXISTS (
+              SELECT 1
+              FROM user_activation_tokens t
+              WHERE t.user_id = u.id
+                AND t.purpose <> 'activation'
+            )
+        `,
+        values: [email ?? null, cpf ?? null, username ?? null],
+      });
+
+      const ids = abandoned.rows.map((row) => row.id);
+      if (ids.length === 0) return [];
+
+      /* `user_followers` NÃO tem `ON DELETE` (as duas FKs são NO ACTION), e a
+         conta pode ter seguidor mesmo sem nunca ter sido ativada: quem segue é
+         outro membro, e o cadastro apareceu no diretório público antes do filtro
+         de conta ativada. Sem esta limpeza o `DELETE` abaixo falhava com 23503
+         (`user_followers_lead_user_id_fkey`) e o novo cadastro morria com 500 —
+         ou seja, o cadastro abandonado continuava travado para sempre, que é
+         exatamente o que esta função existe para impedir. */
+      await client.query({
+        text: `
+          DELETE FROM user_followers
+          WHERE lead_user_id = ANY($1::uuid[])
+             OR follower_id = ANY($1::uuid[])
+        `,
+        values: [ids],
+      });
+
       /* 'sessions' e 'user_activation_tokens' não têm FK para 'users' (foram
          criadas sem a constraint), então apagar o usuário deixaria as duas
          tabelas com linhas órfãs. A remoção é explícita. */
-      cleared_tokens AS (
-        DELETE FROM user_activation_tokens WHERE user_id IN (SELECT id FROM abandoned)
-      ),
-      cleared_sessions AS (
-        DELETE FROM sessions WHERE user_id IN (SELECT id FROM abandoned)
-      )
-      DELETE FROM users WHERE id IN (SELECT id FROM abandoned)
-      RETURNING id, username, email
-    `,
-    values: [email ?? null, cpf ?? null, username ?? null],
-  });
+      await client.query({
+        text: `DELETE FROM user_activation_tokens WHERE user_id = ANY($1::uuid[])`,
+        values: [ids],
+      });
+      await client.query({
+        text: `DELETE FROM sessions WHERE user_id = ANY($1::uuid[])`,
+        values: [ids],
+      });
 
-  if (results.rowCount > 0) {
+      const results = await client.query({
+        text: `DELETE FROM users WHERE id = ANY($1::uuid[]) RETURNING id, username, email`,
+        values: [ids],
+      });
+
+      return results.rows;
+    });
+  } catch (error) {
+    // `database.transaction` propaga o erro original; aqui não há erro de
+    // domínio possível (só queries), então a tradução é a mesma de `query`: o
+    // chamador precisa saber que a falha é de banco, não de dados de entrada.
+    throw new ServiceError({
+      message: "Erro na conexão com Banco ou na Query.",
+      cause: error,
+    });
+  }
+
+  if (removed.length > 0) {
     // Visível no log de propósito: apagar registro é irreversível, e este é o
     // único ponto do sistema que faz isso sem um humano pedindo.
     console.info(
-      `[cadastro] ${results.rowCount} cadastro(s) nunca ativado(s) anulado(s) para liberar novo cadastro:`,
-      results.rows.map((row) => `${row.username} <${row.email}>`).join(", "),
+      `[cadastro] ${removed.length} cadastro(s) nunca ativado(s) anulado(s) para liberar novo cadastro:`,
+      removed.map((row) => `${row.username} <${row.email}>`).join(", "),
     );
   }
 
-  return results.rows;
+  return removed;
 }
 
 /**
