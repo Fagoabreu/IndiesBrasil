@@ -71,6 +71,10 @@ Inserir antes de `"read:content_review"`. Usar contexto unico para cada bloco (v
 
 - Migrations single-purpose com `exports.down`. Sem string-interpolation em SQL.
 - Funcoes `async` de data-access: tratamento explicito de erros obrigatorio.
+- **Ordem das migrations e por POSICAO, nao por nome**: `node-pg-migrate` le `pgmigrations` ordenada por `run_on, id` e compara indice a indice com os arquivos ordenados pelo carimbo do nome (`checkOrder`). Se o `run_on` de uma migration ficar depois do de uma migration seguinte, **todo** `up` passa a falhar com `Not run migration X is preceding already run migration Y` — mesmo sem faltar migration nenhuma. Aconteceu no `local_db`: quatro (`1779580800003`, `…004`, `…005`, `1779840000000_create-games`) foram gravadas 12 s depois das 93 restantes.
+- O reparo e `npm run migrations:repair-order` (`scripts/repair-migration-order.js`): ele move o **minimo** de linhas (mantem a maior subsequencia crescente e encaixa as outras no vao entre as vizinhas), muda so `run_on`, em transacao, e recusa quando falta arquivo na tabela (ai e pendencia de verdade) ou sobra linha sem arquivo (migration apagada). Rode com `--dry-run` primeiro; `--envPath=` troca o `.env`.
+- **Nunca** contorne com `up --no-check-order`: isso desliga a checagem em vez de corrigir o estado, e a divergencia entre arquivo e banco so aparece quando alguem precisa de `down`. Tambem nao rode `up --file` por migration avulsa nem insira linha em `pgmigrations` a mao — e assim que o `run_on` sai de sequencia.
+- Testes do planejador em `tests/unit/scripts/repairMigrationOrder.test.js`.
 
 ## Seguranca
 
@@ -201,6 +205,23 @@ Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESM
 - **Editar asset**: `asset.canEdit` = admin, criador ou membro ativo do estudio — mesma regra de `book.canEdit`. A tela fica na aba **Assets** de `/estudios/[slug]/configuracoes` (`components/Studio/AssetEditor/`), aberta por `?tab=assets` (o botao "Editar" da pagina do asset).
 - **SEO**: `lib/sitemap.js` publica `/sitemap/assets.xml`; o JSON-LD usa `creativeWork` (`lib/structured-data.js`) porque nao e `VideoGame`, `Book` nem `Game`; `license` so entra quando a licenca tem URL. A capa usa o preset **`mediaCover`** (16:9) — o `aspect-ratio` do card (`AssetCard.module.css .cardCover`) e do heroi (`pages/assets/[slug]/asset.module.css .heroCoverBox`) esta em `RATIO_SURFACES` do `scripts/audit-image-presets.js`.
 - Testes: `tests/unit/lib/assetGroups.test.js`, `tests/unit/lib/assetUrl.test.js`, `tests/integration/api/v1/assets/`, `tests/integration/api/v1/asset-categories/`, `tests/integration/api/v1/studios/[slug]/assets/` e `tests/integration/pages/assets.test.js`.
+
+## Press kit de produto (jogo, jogo de mesa, quadrinho)
+
+- Um press kit **por obra**, no formato `presskit()` (factsheet, descricao em niveis, midia, estudio, equipe, contato de imprensa). Rota: `/jogos/<slug>/press-kit`, `/jogos-de-mesa/<slug>/press-kit` e `/quadrinhos/<slug>/press-kit`; o botao "Press Kit" fica na pagina do produto e abre em **outra aba** (o documento e folha para imprimir; tirar a pessoa da pagina que ela estava lendo e o efeito contrario do desejado).
+- **Tudo e derivado — nao existe tabela nem campo de press kit.** Factsheet, pitch e midia saem das colunas que o produto ja tem (`short_description`, `description`, `release_date`, `store_page`, `game_media`/`boardgame_media`, `game_platforms`, `boardgame_mechanics`), e a parte institucional vem de `organization` (`history`, `pitch`, `findMembers`, `findContacts`). Por isso nenhuma migration e nenhum registro de feature: os gates sao `read:game`, `read:boardgame` e `read:book`, que ja existem.
+- O formato mora em **`lib/productPressKit.js`** (modulo puro, testavel sem banco): rotulos (`STAGE_LABELS`, `GAME_PLATFORM_LABELS`, `BOOK_TYPE_LABELS`, `BOARDGAME_CATEGORY_LABELS`), `formatReleaseDate`, `videoEmbed`, `studioContext` e os tres builders. **O press kit do estudio importa os mesmos rotulos** — eram tres mapas copiados em cada lugar.
+- **`release_date` e DATE**: chega como `Date` (node-pg) e como string (depois do `JSON.parse(JSON.stringify())`). Formate com `timeZone: "UTC"`. Sem isso, o servidor em BRT mostra **o dia anterior** ("12 de outubro" vira 11) — o mesmo defeito ja documentado para eventos.
+- **Campo vazio nao entra no factsheet.** Nada de `value: undefined` virando linha em branco; `clean()` filtra. Assets usam `url`/`label` e passam por `cleanAssets()` — usar o filtro de factsheet neles apagava a key art inteira.
+- **Descricao em tres niveis, sem repeticao**: `short_description` e a frase de efeito, o primeiro paragrafo da descricao e o pitch e o texto completo e o "sobre". Quando falta o resumo, o primeiro paragrafo sobe para frase de efeito e deixa de ser pitch; descricao de um paragrafo so nao aparece duas vezes.
+- **Contato de imprensa**: e-mail primeiro, depois telefone/WhatsApp, depois a pagina do estudio. Contato sem URL utilizavel (um `@usuario` do Discord) nao serve — `href="@usuario"` e link relativo para dentro do site.
+- **`components/PressKit/`**: `PrintBar` (barra + `window.print()` com troca de `document.title`, `@media print` incluso; usada tambem pelo press kit do estudio e pelo curriculo), `PressKitButton`, `ProductPressKit` (o documento) e `ProductPressKitPage` (moldura com `SeoHead`, `noIndex`). `noindex` porque o documento repete o conteudo da pagina do produto.
+- As tres paginas sao `noLayout` (propriedade do componente da pagina, lida em `pages/_app.js`): o documento nao pode imprimir cabecalho nem barra lateral do site.
+- O carregamento fica em **`lib/pressKitLoader.js`**, importado dinamicamente dentro de `getServerSideProps` (os models puxam `pg` e nao podem entrar no bundle do cliente). Ele repete o gate (`anonymousCan`), resolve o estudio com membros e contatos e devolve `null` quando o model nega — a pagina entao responde **404**.
+- **Key art x capa**: jogo e jogo de mesa abrem com o banner (preset `mediaCover`, 16:9); livro e quadrinho abrem com a capa retrato (preset `bookCover`, 2/3), porque uma capa 2:3 na caixa 16:9 cortaria justamente o titulo. Os dois pares estao em `RATIO_SURFACES` de `scripts/audit-image-presets.js`.
+- `organization.findMembers` devolve `u.bio` para a ficha da equipe — campo publico (ja sai em `read:user`), entao nao muda autorizacao.
+- **Galeria de screenshots nao existe hoje**: `POST .../media` grava sempre `media_type: "video"`, entao a secao "Imagens" do documento so aparece quando houver imagem na tabela. Arquivo original em alta nao fica guardado (so o recorte): o "pacote de midia em zip" exigiria uma coluna `press_kit_url` por obra.
+- Testes: `tests/unit/lib/productPressKit.test.js` e `tests/integration/pages/productPressKit.test.js` (200 nos tres tipos, `noindex`, produto bloqueado = 404, slug inexistente = 404, e o link do press kit presente na pagina do produto).
 
 ## Embeds de link em post
 

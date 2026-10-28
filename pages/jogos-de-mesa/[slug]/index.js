@@ -7,6 +7,7 @@ import SeoHead from "@/components/SeoHead";
 import GameMediaPlayer from "@/components/GameMedia/GameMediaPlayer";
 import GameReviews from "@/components/GameReviews/GameReviews";
 import ContentEngagement from "@/components/ContentEngagement/ContentEngagement";
+import PressKitButton from "@/components/PressKit/PressKitButton";
 import { ogImageSizeFromPreset } from "@/lib/seo";
 import { boardGame, breadcrumbList, graph } from "@/lib/structured-data";
 
@@ -303,6 +304,9 @@ export default function BoardgamePage({ initialBgData, siteUrl }) {
               <Link href={`/analises/novo?tipo=boardgame&content_id=${bgData.id}`} className={styles.btnAnalise}>
                 📝 Criar Análise
               </Link>
+
+              {/* Press kit do produto — outra aba, para não perder a página. */}
+              <PressKitButton href={`/jogos-de-mesa/${bgData.slug}/press-kit`} />
 
               {bgData.website_url && (
                 <a href={bgData.website_url} target="_blank" rel="noopener noreferrer" className={styles.btnWebsite}>

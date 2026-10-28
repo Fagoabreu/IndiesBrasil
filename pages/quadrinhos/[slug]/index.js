@@ -7,6 +7,7 @@ import SeoHead from "@/components/SeoHead";
 import GameReviews from "@/components/GameReviews/GameReviews";
 import BookViewer from "@/components/BookViewer/BookViewer";
 import ContentEngagement from "@/components/ContentEngagement/ContentEngagement";
+import PressKitButton from "@/components/PressKit/PressKitButton";
 import { ogImageSizeFromPreset } from "@/lib/seo";
 import { book as bookStructuredData, breadcrumbList, graph } from "@/lib/structured-data";
 
@@ -256,6 +257,9 @@ export default function BookPage({ initialBook, siteUrl }) {
                 <Link href={`/analises/novo?tipo=book&content_id=${bookData.id}`} className={styles.btnAnalise}>
                   📝 Criar Análise
                 </Link>
+
+                {/* Press kit do produto — outra aba, para não perder a página. */}
+                <PressKitButton href={`/quadrinhos/${bookData.slug}/press-kit`} variant="solid" />
 
                 {bookData.buy_url && (
                   <a href={bookData.buy_url} target="_blank" rel="noopener noreferrer" className={styles.btnBuy}>

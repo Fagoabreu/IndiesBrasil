@@ -9,6 +9,7 @@ import GameMediaPlayer from "@/components/GameMedia/GameMediaPlayer";
 import GameReviews from "@/components/GameReviews/GameReviews";
 import ContentEngagement from "@/components/ContentEngagement/ContentEngagement";
 import IconSvg from "@/components/IconSvg/IconSvg";
+import PressKitButton from "@/components/PressKit/PressKitButton";
 import { SITE_URL, ogImageSizeFromPreset } from "@/lib/seo";
 import { breadcrumbList, graph, videoGame } from "@/lib/structured-data";
 
@@ -621,6 +622,10 @@ export default function GamePage({ initialGame, siteUrl }) {
               <Link href={`/analises/novo?tipo=game&content_id=${gameData.id}`} className={styles.btnAnalise}>
                 📝 Criar Análise
               </Link>
+
+              {/* Press kit do produto — abre em outra aba: o documento é para
+                  consultar/baixar sem sair da página do jogo. */}
+              <PressKitButton href={`/jogos/${gameData.slug}/press-kit`} />
 
               {/* Site */}
               {gameData.website_url && (
