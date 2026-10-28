@@ -28,7 +28,12 @@ export default function PrintBar({ documentTitle, children, links = [], buttonLa
         {links.map((link) => (
           <span key={link.href}>
             {" · "}
-            <a href={link.href} target={link.external ? "_blank" : undefined} rel={link.external ? "noopener noreferrer" : undefined} className={styles.link}>
+            <a
+              href={link.href}
+              target={link.external ? "_blank" : undefined}
+              rel={link.external ? "noopener noreferrer" : undefined}
+              className={styles.link}
+            >
               {link.label}
             </a>
           </span>

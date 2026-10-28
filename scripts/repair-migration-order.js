@@ -168,13 +168,15 @@ function timestampOf(fileName) {
 }
 
 function readMigrationFiles() {
-  return fs
-    .readdirSync(MIGRATIONS_DIR)
-    .filter((name) => name.endsWith(".js"))
-    // `pgmigrations.name` guarda o nome **sem** a extensão (é assim que o
-    // node-pg-migrate monta o nome da migration a partir do arquivo).
-    .map((name) => name.slice(0, -".js".length))
-    .sort((a, b) => timestampOf(a) - timestampOf(b) || a.localeCompare(b));
+  return (
+    fs
+      .readdirSync(MIGRATIONS_DIR)
+      .filter((name) => name.endsWith(".js"))
+      // `pgmigrations.name` guarda o nome **sem** a extensão (é assim que o
+      // node-pg-migrate monta o nome da migration a partir do arquivo).
+      .map((name) => name.slice(0, -".js".length))
+      .sort((a, b) => timestampOf(a) - timestampOf(b) || a.localeCompare(b))
+  );
 }
 
 function formatEpoch(epoch) {

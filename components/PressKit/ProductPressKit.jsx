@@ -153,9 +153,7 @@ export default function ProductPressKit({ data }) {
             {description.pitch && <p className={styles.lead}>{description.pitch}</p>}
             {description.about && (
               <div className={styles.body}>
-                {description.about.split("\n").map((paragraph, index) =>
-                  paragraph.trim() ? <p key={index}>{paragraph}</p> : null,
-                )}
+                {description.about.split("\n").map((paragraph, index) => (paragraph.trim() ? <p key={index}>{paragraph}</p> : null))}
               </div>
             )}
             {features.length > 0 && (

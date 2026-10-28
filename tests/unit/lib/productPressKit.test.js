@@ -38,7 +38,10 @@ function gameRow(overrides = {}) {
     studio_slug: "estudio-exemplo",
     owner_username: "autora",
     platforms: ["windows", "switch"],
-    tags: [{ id: 1, name: "Pixels" }, { id: 2, name: "Café" }],
+    tags: [
+      { id: 1, name: "Pixels" },
+      { id: 2, name: "Café" },
+    ],
     media: [
       { id: 1, media_type: "video", url: "https://www.youtube.com/watch?v=aaaaaaaaaaa", caption: "Gameplay" },
       { id: 2, media_type: "image", url: "https://res.cloudinary.com/x/shot1.jpg", caption: "Fase 1" },
@@ -151,10 +154,7 @@ describe("buildGamePressKit", () => {
   });
 
   test("Preço único é o próprio valor; sem lojas, a linha não existe", () => {
-    const one = buildGamePressKit(
-      gameRow({ store_pages: [{ id: 1, store_name: "Steam", page_url: "https://loja/1", price: "10.00" }] }),
-      null,
-    );
+    const one = buildGamePressKit(gameRow({ store_pages: [{ id: 1, store_name: "Steam", page_url: "https://loja/1", price: "10.00" }] }), null);
     expect(one.factsheet.find((row) => row.label === "Preço").value).toContain("10,00");
 
     const none = buildGamePressKit(gameRow({ store_pages: [] }), null);
