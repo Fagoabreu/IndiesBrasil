@@ -10,7 +10,7 @@ const PHASE_CLASS = {
   cancelled: styles.phaseCancelled,
 };
 
-export default function MeetingCard({ meeting, viewer, authUser, slug, onChanged }) {
+export default function MeetingCard({ meeting, viewer, authUser, slug, highlighted = false, onChanged }) {
   const [joining, setJoining] = useState(false);
   const [ending, setEnding] = useState(false);
   const [codeBusy, setCodeBusy] = useState(false);
@@ -161,7 +161,7 @@ export default function MeetingCard({ meeting, viewer, authUser, slug, onChanged
   }
 
   return (
-    <article className={styles.card}>
+    <article id={`meeting-${meeting.id}`} className={`${styles.card} ${highlighted ? styles.cardHighlighted : ""}`}>
       <div className={styles.cardTop}>
         <h3 className={styles.title}>{meeting.title}</h3>
         <span className={`${styles.phase} ${PHASE_CLASS[phase] || ""}`}>{phaseLabel}</span>

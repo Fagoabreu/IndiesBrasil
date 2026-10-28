@@ -8,6 +8,29 @@
   padding: 16px;
 }
 
+/* Reunião que veio do link da notificação (`?meeting=`): o card é o destino do
+   clique, então precisa se distinguir da lista sem esconder o conteúdo. O realce
+   some quando a borda é lida normalmente — é orientação, não estado. */
+.cardHighlighted {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb-primary), 0.18);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cardHighlighted {
+    animation: highlightPulse 1.4s ease-out 2;
+  }
+}
+
+@keyframes highlightPulse {
+  from {
+    box-shadow: 0 0 0 8px rgba(var(--brand-rgb-primary), 0.28);
+  }
+  to {
+    box-shadow: 0 0 0 3px rgba(var(--brand-rgb-primary), 0.18);
+  }
+}
+
 .cardTop {
   display: flex;
   align-items: flex-start;

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { Spinner } from "@primer/react";
 import { ArrowLeftIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
@@ -22,6 +23,7 @@ export async function getServerSideProps(context) {
 }
 
 export default function StudioMeetingsPage({ initialStudio, notFound }) {
+  const router = useRouter();
   const { user: authUser, loadingUser } = useUser();
 
   const [viewer, setViewer] = useState(null);
@@ -34,6 +36,13 @@ export default function StudioMeetingsPage({ initialStudio, notFound }) {
 
   const slug = initialStudio?.slug;
   const studioName = initialStudio?.name;
+
+  /**
+   * Reunião a destacar, vinda do `?meeting=` — é o alvo do link da notificação
+   * "Reunião agendada". A lista sozinha não responde "qual delas é a nova?";
+   * com o id, a página rola até o card e o marca.
+   */
+  const highlightedMeetingId = typeof router.query.meeting === "string" ? router.query.meeting : null;
 
   useEffect(() => {
     if (!slug || notFound) return;
@@ -85,6 +94,26 @@ export default function StudioMeetingsPage({ initialStudio, notFound }) {
       cancelled = true;
     };
   }, [slug, canAccess, showPast, reloadKey]);
+
+  // Rola até a reunião do `?meeting=` depois que a lista chega. `scrollIntoView`
+  // e não âncora do navegador porque o card não existe no HTML do SSR — a lista
+  // é carregada pelo cliente, e o navegador não tem o que rolar sozinho.
+  useEffect(() => {
+    if (!highlightedMeetingId || !meetings?.length) return;
+    const elt = document.getElementById(`meeting-${highlightedMeetingId}`);
+    if (!elt) {
+      // A reunião do aviso pode já ter passado — nesse caso ela só aparece com
+      // "Mostrar reuniões passadas". Abrir a lista sem o destino faria o link
+      // da notificação parecer quebrado.
+      //
+      // `Promise.resolve().then` porque `react-hooks/set-state-in-effect` trata
+      // `setState` síncrono no corpo do efeito como erro (mesmo padrão da carga
+      // de mensagens, ver `ConversationThread`).
+      if (!showPast) Promise.resolve().then(() => setShowPast(true));
+      return;
+    }
+    elt.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [highlightedMeetingId, meetings, showPast]);
 
   if (notFound) {
     return (
@@ -159,7 +188,14 @@ export default function StudioMeetingsPage({ initialStudio, notFound }) {
               <ul className={styles.meetingList}>
                 {meetings.map((meeting) => (
                   <li key={meeting.id}>
-                    <MeetingCard meeting={meeting} viewer={viewer} authUser={authUser} slug={slug} onChanged={() => setReloadKey((k) => k + 1)} />
+                    <MeetingCard
+                      meeting={meeting}
+                      viewer={viewer}
+                      authUser={authUser}
+                      slug={slug}
+                      highlighted={meeting.id === highlightedMeetingId}
+                      onChanged={() => setReloadKey((k) => k + 1)}
+                    />
                   </li>
                 ))}
               </ul>
