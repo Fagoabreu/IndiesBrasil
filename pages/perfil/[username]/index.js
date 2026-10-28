@@ -42,6 +42,7 @@ import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 import ProfileQrCode from "@/components/Portfolio/ProfileQrCode";
 import MessagesPanel from "@/components/Messages/MessagesPanel";
 import SendMessageButton from "@/components/Messages/SendMessageButton";
+import { resolveUserNotificationHref } from "@/lib/notifications";
 import { SITE_URL } from "@/lib/seo";
 
 /* =====================
@@ -812,7 +813,7 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
                   ))}
                 </div>
               )}
-              {!loadingNotifs && <NotificationList userNotifs={userNotifs} postNotifs={postNotifs} />}
+              {!loadingNotifs && <NotificationList userNotifs={userNotifs} postNotifs={postNotifs} ownUsername={username} />}
             </div>
           )}
         </div>
@@ -851,7 +852,7 @@ Perfil.propTypes = {
  * NotificationList
  * ===================== */
 
-function NotificationList({ userNotifs, postNotifs }) {
+function NotificationList({ userNotifs, postNotifs, ownUsername }) {
   const router = useRouter();
   const all = [...userNotifs, ...postNotifs].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
@@ -859,25 +860,14 @@ function NotificationList({ userNotifs, postNotifs }) {
     return <p className={style.postsState}>Nenhuma notificação.</p>;
   }
 
-  function handleClick(n) {
-    if (n.type === "post_liked" || n.type === "post_commented") {
-      router.push(`/posts/${n.post_id}`);
-    } else if (n.type === "studio_invitation" && n.org_slug) {
-      router.push(`/estudios/${n.org_slug}`);
-    } else if (n.type === "new_follower" && n.source_username) {
-      router.push(`/perfil/${n.source_username}`);
-    }
-  }
-
   return (
     <div className={style.notifList}>
       {all.map((n) => {
         const nid = `${n.user_id}_${n.type}_${n.source_user_id}${n.post_id != null ? `_${n.post_id}` : ""}`;
-        const isClickable =
-          n.type === "post_liked" ||
-          n.type === "post_commented" ||
-          (n.type === "studio_invitation" && n.org_slug) ||
-          (n.type === "new_follower" && n.source_username);
+        // Mesmo registro de destino do sino (`lib/notifications.js`). Antes cada
+        // tela tinha a sua lista de `if`, e esta não conhecia `new_message`.
+        const href = resolveUserNotificationHref(n, ownUsername);
+        const isClickable = href != null;
 
         // `<button>` de verdade: antes era uma div com `role="button"` e um
         // listener manual de teclado, que o navegador não trata como controle.
@@ -887,7 +877,7 @@ function NotificationList({ userNotifs, postNotifs }) {
             type="button"
             disabled={!isClickable}
             className={`${style.notifItem} ${isClickable ? style.notifClickable : ""} ${!n.is_read ? style.notifUnread : ""}`}
-            onClick={isClickable ? () => handleClick(n) : undefined}
+            onClick={isClickable ? () => router.push(href) : undefined}
           >
             <span className={style.notifHeader}>
               <span className={style.notifTitle}>{notificationTitle(n)}</span>

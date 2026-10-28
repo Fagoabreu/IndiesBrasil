@@ -3,7 +3,12 @@ import { useRouter } from "next/router";
 import { ActionMenu, ActionList, IconButton, Avatar } from "@primer/react";
 import { BellIcon } from "@primer/octicons-react";
 import { useUser } from "@/context/UserContext";
-import { resolveOrgNotificationTitle, resolveOrgNotificationMessage, resolveOrgNotificationHref } from "@/lib/notifications";
+import {
+  resolveOrgNotificationTitle,
+  resolveOrgNotificationMessage,
+  resolveOrgNotificationHref,
+  resolveUserNotificationHref,
+} from "@/lib/notifications";
 import styles from "./NotificationButton.module.css";
 
 // Tipos de notificação cujas mensagens não estão na tabela notification_messages
@@ -120,48 +125,51 @@ export default function NotificationButton() {
     });
   }
 
+  /**
+   * Abre a notificação.
+   *
+   * Marcar como lida e navegar são coisas separadas: a versão anterior fazia
+   * `if (n.is_read) return;` no topo, então **notificação já lida não abria
+   * nada**. O sintoma era o pior possível — a pessoa clica no aviso de reunião
+   * do estúdio, nada acontece, e a única saída é procurar a página na mão. O
+   * sino lista histórico, não só o que é novo: clicar sempre leva ao conteúdo.
+   */
   function handleMarkRead(n) {
-    if (n.is_read) return;
     const isOrg = n.resource_type != null;
-    const isPost = n.post_id != null;
 
     if (isOrg) {
-      setOrgNotifs((prev) => prev.map((o) => (o.id === n.id ? { ...o, is_read: true } : o)));
-      markOrgNotificationRead(user.username, n);
       const href = resolveOrgNotificationHref(n);
+      if (!n.is_read) {
+        setOrgNotifs((prev) => prev.map((o) => (o.id === n.id ? { ...o, is_read: true } : o)));
+        markOrgNotificationRead(user.username, n);
+      }
       if (href) router.push(href);
       return;
     }
 
-    if (isPost) {
-      setPostNotifs((prev) =>
-        prev.map((p) =>
-          p.user_id === n.user_id && p.type === n.type && p.source_user_id === n.source_user_id && p.post_id === n.post_id
-            ? { ...p, is_read: true }
-            : p,
-        ),
-      );
-    } else {
-      setUserNotifs((prev) =>
-        prev.map((u) =>
-          u.user_id === n.user_id && u.type === n.type && u.source_user_id === n.source_user_id && u.org_slug === n.org_slug
-            ? { ...u, is_read: true }
-            : u,
-        ),
-      );
+    if (!n.is_read) {
+      if (n.post_id != null) {
+        setPostNotifs((prev) =>
+          prev.map((p) =>
+            p.user_id === n.user_id && p.type === n.type && p.source_user_id === n.source_user_id && p.post_id === n.post_id
+              ? { ...p, is_read: true }
+              : p,
+          ),
+        );
+      } else {
+        setUserNotifs((prev) =>
+          prev.map((u) =>
+            u.user_id === n.user_id && u.type === n.type && u.source_user_id === n.source_user_id && u.org_slug === n.org_slug
+              ? { ...u, is_read: true }
+              : u,
+          ),
+        );
+      }
+      markUserNotificationRead(user.username, n);
     }
-    markUserNotificationRead(user.username, n);
-    if (n.type === "studio_invitation" && n.org_slug) {
-      router.push(`/estudios/${n.org_slug}`);
-    } else if (n.type === "post_liked" || n.type === "post_commented") {
-      router.push(`/posts/${n.post_id}`);
-    } else if (n.type === "new_message") {
-      // A caixa de entrada 茅 privada: a notifica莽茫o leva para a PR脫PRIA aba de
-      // mensagens, e n茫o para o perfil de quem escreveu.
-      router.push(`/perfil/${user.username}?tab=mensagens`);
-    } else if (n.type === "new_follower" && n.source_username) {
-      router.push(`/perfil/${n.source_username}`);
-    }
+
+    const href = resolveUserNotificationHref(n, user.username);
+    if (href) router.push(href);
   }
 
   const all = [...userNotifs, ...postNotifs, ...orgNotifs].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
