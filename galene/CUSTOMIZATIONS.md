@@ -397,7 +397,7 @@ Detalhes que não são óbvios:
    e `settings.video`; os selects da tela escrevem nessas chaves. Sem isso, a
    prévia mostraria uma câmera e a sala publicaria outra.
 2. **Nada de `delSetting('video')`** no caminho de publicação. O `present ===
-   'both'` do Galene deleta a chave para cair na "primeira câmera"; aqui isso
+'both'` do Galene deleta a chave para cair na "primeira câmera"; aqui isso
    trocaria a câmera escolhida. A flag `prejoinPublishRequested` publica
    exatamente o que a pessoa viu.
 3. **Fechar a tela sempre para o stream e o `AudioContext`.** Câmera aberta na
