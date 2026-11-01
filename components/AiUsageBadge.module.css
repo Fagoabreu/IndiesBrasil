@@ -1,0 +1,70 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: var(--fontStack-monospace, monospace);
+  letter-spacing: 0.02em;
+}
+
+.sm {
+  height: 24px;
+  min-width: 24px;
+  padding: 0 6px;
+  font-size: 11px;
+}
+
+.md {
+  height: 28px;
+  min-width: 28px;
+  padding: 0 8px;
+  font-size: 13px;
+}
+
+/* Nível 0 — declarado sem uso de IA. */
+.none {
+  background-color: var(--bgColor-neutral-emphasis);
+  color: var(--fgColor-onEmphasis);
+}
+
+/* Nível 1 — IA assistiva (apenas utilitária). */
+.assistive {
+  background-color: var(--bgColor-success-emphasis);
+  color: var(--fgColor-onEmphasis);
+}
+
+/* Nível 2 — IA ampliada (iteração e referência). */
+.expanded {
+  background-color: var(--bgColor-attention-emphasis);
+  color: var(--fgColor-onEmphasis);
+}
+
+/* Nível 3 — IA co-criativa (híbrido/cyborg). */
+.cocreative {
+  background-color: var(--bgColor-severe-emphasis);
+  color: var(--fgColor-onEmphasis);
+}
+
+/* Nível 4 — IA dominante (curadoria humana). */
+.dominant {
+  background-color: var(--bgColor-danger-emphasis);
+  color: var(--fgColor-onEmphasis);
+}
+
+/* Nível 5 — IA autônoma (100% sintético). */
+.autonomous {
+  background-color: var(--bgColor-emphasis);
+  color: var(--fgColor-onEmphasis);
+  border: 1px solid var(--borderColor-default);
+}
+
+/* Sem declaração — `ai_level` nulo. */
+.undeclared {
+  background-color: var(--bgColor-muted);
+  color: var(--fgColor-muted);
+  border: 1px dashed var(--borderColor-default);
+}

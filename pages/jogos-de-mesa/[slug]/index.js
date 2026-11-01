@@ -4,11 +4,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
+import AiUsageBadge from "@/components/AiUsageBadge";
 import GameMediaPlayer from "@/components/GameMedia/GameMediaPlayer";
 import GameReviews from "@/components/GameReviews/GameReviews";
 import ContentEngagement from "@/components/ContentEngagement/ContentEngagement";
 import PressKitButton from "@/components/PressKit/PressKitButton";
 import { ogImageSizeFromPreset } from "@/lib/seo";
+import { formatAiLevelName } from "@/lib/ai-usage";
 import { boardGame, breadcrumbList, graph } from "@/lib/structured-data";
 
 import styles from "./boardgame.module.css";
@@ -353,6 +355,12 @@ export default function BoardgamePage({ initialBgData, siteUrl }) {
                     <dd>{new Date(bgData.release_date).toLocaleDateString("pt-BR")}</dd>
                   </div>
                 )}
+                <div className={styles.metaRow}>
+                  <dt>Uso de IA</dt>
+                  <dd title={bgData.ai_level_notes || undefined}>
+                    <AiUsageBadge level={bgData.ai_level} size="sm" /> {formatAiLevelName(bgData.ai_level)}
+                  </dd>
+                </div>
                 {bgData.studio_name && (
                   <div className={styles.metaRow}>
                     <dt>Estúdio</dt>

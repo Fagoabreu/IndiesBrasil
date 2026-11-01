@@ -7,11 +7,13 @@ import { LinkExternalIcon, PencilIcon } from "@primer/octicons-react";
 
 import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
+import AiUsageBadge from "@/components/AiUsageBadge";
 import AssetCategoryChips from "@/components/Asset/AssetCategoryChips";
 import GameReviews from "@/components/GameReviews/GameReviews";
 import ContentEngagement from "@/components/ContentEngagement/ContentEngagement";
 import { ASSET_LICENSES } from "@/lib/assetLicenses";
 import { assetGroupLabel } from "@/lib/assetGroups";
+import { formatAiLevelName } from "@/lib/ai-usage";
 import { SITE_URL, ogImageSizeFromPreset } from "@/lib/seo";
 import { breadcrumbList, creativeWork, graph } from "@/lib/structured-data";
 import styles from "./asset.module.css";
@@ -175,6 +177,13 @@ export default function AssetPage({ initialAsset }) {
                   ) : (
                     license.label
                   )}
+                </span>
+              </div>
+
+              <div className={styles.metaItem}>
+                <span className={styles.metaLabel}>Uso de IA</span>
+                <span className={styles.metaValue} title={asset.ai_level_notes || undefined}>
+                  <AiUsageBadge level={asset.ai_level} size="sm" /> {formatAiLevelName(asset.ai_level)}
                 </span>
               </div>
 

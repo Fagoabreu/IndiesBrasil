@@ -24,6 +24,8 @@ import ContatoItem from "@/components/Portfolio/Contatos/ContatoItem";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
 import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 import ContentRatingModal from "@/components/ContentRatingModal";
+import AiUsageBadge from "@/components/AiUsageBadge";
+import AiUsageModal from "@/components/AiUsageModal";
 import InviteMemberField from "@/components/Studio/InviteMemberField";
 import AssetEditor from "@/components/Studio/AssetEditor/AssetEditor";
 import { normalizeMemberQuery } from "@/context/dataHooks/UseUserSuggest";
@@ -308,6 +310,9 @@ export default function ConfiguracoesPage() {
   // Classificação indicativa
   const [ratingModal, setRatingModal] = useState(null);
 
+  // Declaração de uso de IA
+  const [aiModal, setAiModal] = useState(null);
+
   /**
    * Carrega o estúdio e preenche o formulário.
    *
@@ -458,6 +463,23 @@ export default function ConfiguracoesPage() {
     } catch {
       // silently ignore
     }
+  }
+
+  /**
+   * Fechamento do modal de uso de IA.
+   *
+   * O modal devolve `true` só quando salvou. Recarregamos a lista do tipo para
+   * o selo e o nível exibido refletirem o que a API gravou — sem isso a linha
+   * continuaria mostrando o valor anterior até a página recarregar.
+   */
+  async function handleAiUsageClose(saved) {
+    const modal = aiModal;
+    setAiModal(null);
+    if (!saved || !modal) return;
+
+    if (modal.type === "game") await fetchGames();
+    else if (modal.type === "boardgame") await fetchBoardgames();
+    else if (modal.type === "book") await fetchBooks();
   }
 
   useEffect(() => {
@@ -1790,6 +1812,7 @@ export default function ConfiguracoesPage() {
                         {g.name}
                       </Link>
                       <span className={styles.gameStageBadge}>{STAGE_LABELS[g.stage] ?? g.stage}</span>
+                      <AiUsageBadge level={g.ai_level} size="sm" />
                       <button
                         type="button"
                         className={`${styles.btnEditGame} ${editingGameSlug === g.slug ? styles.btnEditGameActive : ""}`}
@@ -1809,6 +1832,21 @@ export default function ConfiguracoesPage() {
                         }
                       >
                         Classificar
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.btnClassify}
+                        onClick={() =>
+                          setAiModal({
+                            type: "game",
+                            slug: g.slug,
+                            name: g.name,
+                            level: g.ai_level,
+                            notes: g.ai_level_notes,
+                          })
+                        }
+                      >
+                        Classificar IA
                       </button>
                     </div>
 
@@ -2231,6 +2269,7 @@ export default function ConfiguracoesPage() {
                       </Link>
                       <span className={styles.gameStageBadge}>{BG_STAGE_LABELS[bg.stage] ?? bg.stage}</span>
                       <span className={styles.gameStageBadge}>{BG_CATEGORY_LABELS[bg.category] ?? bg.category}</span>
+                      <AiUsageBadge level={bg.ai_level} size="sm" />
                       <button
                         type="button"
                         className={`${styles.btnEditGame} ${editingBoardgameSlug === bg.slug ? styles.btnEditGameActive : ""}`}
@@ -2250,6 +2289,21 @@ export default function ConfiguracoesPage() {
                         }
                       >
                         Classificar
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.btnClassify}
+                        onClick={() =>
+                          setAiModal({
+                            type: "boardgame",
+                            slug: bg.slug,
+                            name: bg.name,
+                            level: bg.ai_level,
+                            notes: bg.ai_level_notes,
+                          })
+                        }
+                      >
+                        Classificar IA
                       </button>
                     </div>
 
@@ -2707,6 +2761,7 @@ export default function ConfiguracoesPage() {
                       </Link>
                       <span className={styles.gameStageBadge}>{BOOK_STAGE_LABELS[bk.stage] ?? bk.stage}</span>
                       <span className={styles.gameStageBadge}>{BOOK_TYPE_LABELS[bk.book_type] ?? bk.book_type}</span>
+                      <AiUsageBadge level={bk.ai_level} size="sm" />
                       <button
                         type="button"
                         className={`${styles.btnEditGame} ${editingBookSlug === bk.slug ? styles.btnEditGameActive : ""}`}
@@ -2726,6 +2781,21 @@ export default function ConfiguracoesPage() {
                         }
                       >
                         Classificar
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.btnClassify}
+                        onClick={() =>
+                          setAiModal({
+                            type: "book",
+                            slug: bk.slug,
+                            name: bk.title,
+                            level: bk.ai_level,
+                            notes: bk.ai_level_notes,
+                          })
+                        }
+                      >
+                        Classificar IA
                       </button>
                       <button
                         type="button"
@@ -3304,6 +3374,17 @@ export default function ConfiguracoesPage() {
 
       {/* Modal de classificação indicativa */}
       {ratingModal && <ContentRatingModal type={ratingModal.type} itemName={ratingModal.name} onClose={handleRatingClose} />}
+
+      {aiModal && (
+        <AiUsageModal
+          type={aiModal.type}
+          slug={aiModal.slug}
+          itemName={aiModal.name}
+          initialLevel={aiModal.level}
+          initialNotes={aiModal.notes}
+          onClose={handleAiUsageClose}
+        />
+      )}
     </>
   );
 }

@@ -414,8 +414,12 @@ CREATE TABLE boardgames (
     content_rating          VARCHAR(4),
     content_rating_reasons  TEXT,
     content_rated_at        TIMESTAMPTZ,
+    ai_level                SMALLINT,
+    ai_level_notes          TEXT,
+    ai_level_rated_at       TIMESTAMPTZ,
     CONSTRAINT boardgames_pkey                  PRIMARY KEY (id),
     CONSTRAINT boardgames_slug_key              UNIQUE (slug),
+    CONSTRAINT boardgames_ai_level_check        CHECK (ai_level IS NULL OR (ai_level >= 0 AND ai_level <= 5)),
     CONSTRAINT boardgames_banner_image_id_fkey  FOREIGN KEY (banner_image_id) REFERENCES uploaded_images(id) ON DELETE SET NULL,
     CONSTRAINT boardgames_cover_image_id_fkey   FOREIGN KEY (cover_image_id) REFERENCES uploaded_images(id) ON DELETE SET NULL,
     CONSTRAINT boardgames_owner_id_fkey         FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE SET NULL,
@@ -423,6 +427,7 @@ CREATE TABLE boardgames (
 );
 CREATE INDEX boardgames_category_index ON boardgames (category);
 CREATE INDEX boardgames_owner_org_id_index ON boardgames (owner_org_id);
+CREATE INDEX boardgames_ai_level_index ON boardgames (ai_level);
 CREATE INDEX boardgames_stage_index ON boardgames (stage);
 
 CREATE TABLE boardgame_followers (
@@ -503,8 +508,12 @@ CREATE TABLE books (
     content_rating_reasons  TEXT,
     content_rated_at        TIMESTAMPTZ,
     pdf_image_id            VARCHAR(256),
+    ai_level                SMALLINT,
+    ai_level_notes          TEXT,
+    ai_level_rated_at       TIMESTAMPTZ,
     CONSTRAINT books_pkey                 PRIMARY KEY (id),
     CONSTRAINT books_slug_key             UNIQUE (slug),
+    CONSTRAINT books_ai_level_check       CHECK (ai_level IS NULL OR (ai_level >= 0 AND ai_level <= 5)),
     CONSTRAINT books_cover_image_id_fkey  FOREIGN KEY (cover_image_id) REFERENCES uploaded_images(id) ON DELETE SET NULL,
     CONSTRAINT books_owner_id_fkey        FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE SET NULL,
     CONSTRAINT books_owner_org_id_fkey    FOREIGN KEY (owner_org_id) REFERENCES organizations(id) ON DELETE SET NULL
@@ -512,6 +521,7 @@ CREATE TABLE books (
 CREATE INDEX books_book_type_index ON books (book_type);
 CREATE INDEX books_owner_org_id_index ON books (owner_org_id);
 CREATE INDEX books_stage_index ON books (stage);
+CREATE INDEX books_ai_level_index ON books (ai_level);
 
 CREATE TABLE book_followers (
     book_id      UUID NOT NULL,
@@ -912,8 +922,12 @@ CREATE TABLE games (
     has_lootboxes           BOOLEAN DEFAULT false,
     has_in_game_purchases   BOOLEAN DEFAULT false,
     has_excessive_ads       BOOLEAN DEFAULT false,
+    ai_level                SMALLINT,
+    ai_level_notes          TEXT,
+    ai_level_rated_at       TIMESTAMPTZ,
     CONSTRAINT games_pkey                  PRIMARY KEY (id),
     CONSTRAINT games_slug_key              UNIQUE (slug),
+    CONSTRAINT games_ai_level_check        CHECK (ai_level IS NULL OR (ai_level >= 0 AND ai_level <= 5)),
     CONSTRAINT games_banner_image_id_fkey  FOREIGN KEY (banner_image_id) REFERENCES uploaded_images(id) ON DELETE SET NULL,
     CONSTRAINT games_cover_image_id_fkey   FOREIGN KEY (cover_image_id) REFERENCES uploaded_images(id) ON DELETE SET NULL,
     CONSTRAINT games_owner_id_fkey         FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE SET NULL,
@@ -921,6 +935,7 @@ CREATE TABLE games (
 );
 CREATE INDEX games_owner_org_id_index ON games (owner_org_id);
 CREATE INDEX games_stage_index ON games (stage);
+CREATE INDEX games_ai_level_index ON games (ai_level);
 
 CREATE TABLE game_followers (
     game_id      UUID NOT NULL,

@@ -5,20 +5,42 @@ import uploadFile from "@/infra/uploadFile.js";
 import moderation from "./moderation.js";
 import notification from "./notification";
 import reputation from "./reputation";
+import { FILTER_NONE } from "lib/productFilters";
 
 /* =========================================================
  * List / Search
  * ========================================================= */
 
-async function findAll({ page = 1, limit = 20, search = "", book_type = "", stage = "" } = {}) {
+async function findAll({ page = 1, limit = 20, search = "", book_type = "", stage = "", contentRating = "", aiLevel = "" } = {}) {
   const offset = (page - 1) * limit;
+  const filters = [];
+  const values = [limit, offset, search, book_type, stage];
+
+  // Ver `game.findAll`: `"none"` é o não classificado; o resto já chega
+  // validado por `lib/productFilters.js`.
+  if (contentRating === FILTER_NONE) {
+    filters.push(`b.content_rating IS NULL`);
+  } else if (contentRating) {
+    values.push(contentRating);
+    filters.push(`b.content_rating = $${values.length}`);
+  }
+
+  if (aiLevel === FILTER_NONE) {
+    filters.push(`b.ai_level IS NULL`);
+  } else if (aiLevel) {
+    values.push(Number(aiLevel));
+    filters.push(`b.ai_level = $${values.length}`);
+  }
+
+  const filterSql = filters.length ? `AND ${filters.join("\n        AND ")}` : "";
+
   const result = await database.query({
     text: `
             SELECT
         b.id, b.slug, b.title, b.subtitle, b.short_description,
         b.book_type, b.stage, b.release_date, b.created_at,
         b.isbn, b.publisher, b.edition, b.pages, b.language,
-        b.website_url, b.buy_url, b.content_rating,
+        b.website_url, b.buy_url, b.content_rating, b.ai_level,
         COALESCE(ui.secure_url, b.cover_url_external) AS cover_url,
         o.name               AS studio_name,
         o.slug               AS studio_slug,
@@ -35,6 +57,7 @@ async function findAll({ page = 1, limit = 20, search = "", book_type = "", stag
       WHERE ($3 = '' OR b.title ILIKE '%' || $3 || '%' OR b.short_description ILIKE '%' || $3 || '%')
         AND ($4 = '' OR b.book_type = $4)
         AND ($5 = '' OR b.stage = $5)
+        ${filterSql}
         AND NOT EXISTS (
           SELECT 1
           FROM moderation_actions ma
@@ -49,7 +72,7 @@ async function findAll({ page = 1, limit = 20, search = "", book_type = "", stag
       ORDER BY b.created_at DESC
       LIMIT $1 OFFSET $2
     `,
-    values: [limit, offset, search, book_type, stage],
+    values,
   });
   return result.rows;
 }
@@ -89,7 +112,7 @@ async function findFollowedBy(userId) {
             SELECT
         b.id, b.slug, b.title, b.subtitle, b.short_description,
         b.book_type, b.stage, b.release_date, b.created_at,
-        b.isbn, b.publisher, b.edition, b.content_rating,
+        b.isbn, b.publisher, b.edition, b.content_rating, b.ai_level,
         COALESCE(ui.secure_url, b.cover_url_external) AS cover_url,
         o.name               AS studio_name,
         o.slug               AS studio_slug,
@@ -168,6 +191,7 @@ async function findByOrg(orgId) {
         b.id, b.slug, b.title, b.subtitle, b.short_description,
         b.book_type, b.stage, b.release_date, b.created_at,
         b.isbn, b.publisher, b.edition, b.website_url, b.buy_url, b.pdf_url, b.content_rating,
+        b.ai_level, b.ai_level_notes,
         COALESCE(ui.secure_url, b.cover_url_external) AS cover_url,
         COALESCE(ui_pdf.secure_url, b.pdf_url) AS pdf_file_url,
         COUNT(DISTINCT bf.follower_id) AS follower_count,

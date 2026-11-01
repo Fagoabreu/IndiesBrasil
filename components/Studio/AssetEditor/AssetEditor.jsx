@@ -8,6 +8,8 @@ import AssetCategoryPicker from "./AssetCategoryPicker";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
 import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 import AssetCategoryChips from "@/components/Asset/AssetCategoryChips";
+import AiUsageBadge from "@/components/AiUsageBadge";
+import AiUsageModal from "@/components/AiUsageModal";
 import { MAX_ASSET_CATEGORIES } from "@/lib/assetGroups";
 import { isValidAssetUrl } from "@/lib/assetUrl";
 import styles from "./AssetEditor.module.css";
@@ -38,6 +40,9 @@ export default function AssetEditor({ slug }) {
   const [editMsg, setEditMsg] = useState({ type: null, text: "" });
   const [coverBusy, setCoverBusy] = useState(false);
   const [deletingSlug, setDeletingSlug] = useState(null);
+
+  // Declaração de uso de IA do asset em edição.
+  const [aiModal, setAiModal] = useState(null);
 
   useEffect(() => {
     if (!slug) return;
@@ -168,6 +173,11 @@ export default function AssetEditor({ slug }) {
     setEditingSlug(asset.slug);
     setEditForm(buildForm(asset));
     setEditMsg({ type: null, text: "" });
+  }
+
+  async function handleAiUsageClose(saved) {
+    setAiModal(null);
+    if (saved) await refreshAssets();
   }
 
   async function handleOpenEdit(assetSlug) {
@@ -362,9 +372,26 @@ export default function AssetEditor({ slug }) {
 
                   <span className={`${styles.tag} ${item.is_free ? styles.tagFree : styles.tagPaid}`}>{item.is_free ? "Gratuito" : "Pago"}</span>
 
+                  <AiUsageBadge level={item.ai_level} size="sm" />
+
                   <AssetCategoryChips categories={item.categories} limit={3} as="span" className={styles.itemChips} />
 
                   <span className={styles.itemActions}>
+                    <button
+                      type="button"
+                      className={styles.btnSecondarySmall}
+                      onClick={() =>
+                        setAiModal({
+                          type: "asset",
+                          slug: item.slug,
+                          name: item.name,
+                          level: item.ai_level,
+                          notes: item.ai_level_notes,
+                        })
+                      }
+                    >
+                      Classificar IA
+                    </button>
                     <button type="button" className={styles.btnSecondarySmall} onClick={() => handleOpenEdit(item.slug)} disabled={loadingEdit}>
                       {editingSlug === item.slug ? "Fechar" : "Editar"}
                     </button>
@@ -483,6 +510,17 @@ export default function AssetEditor({ slug }) {
       </form>
 
       {editMsg.text && !editForm && <StatusMessageComponent type={editMsg.type} message={editMsg.text} />}
+
+      {aiModal && (
+        <AiUsageModal
+          type={aiModal.type}
+          slug={aiModal.slug}
+          itemName={aiModal.name}
+          initialLevel={aiModal.level}
+          initialNotes={aiModal.notes}
+          onClose={handleAiUsageClose}
+        />
+      )}
     </section>
   );
 }

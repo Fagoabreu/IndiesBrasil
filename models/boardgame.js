@@ -4,13 +4,35 @@ import { generateUniqueSlug } from "lib/slug";
 import moderation from "./moderation.js";
 import notification from "./notification";
 import reputation from "./reputation";
+import { FILTER_NONE } from "lib/productFilters";
 
 /* =========================================================
  * List / Search
  * ========================================================= */
 
-async function findAll({ page = 1, limit = 20, search = "", category = "", stage = "" } = {}) {
+async function findAll({ page = 1, limit = 20, search = "", category = "", stage = "", contentRating = "", aiLevel = "" } = {}) {
   const offset = (page - 1) * limit;
+  const filters = [];
+  const values = [limit, offset, search, category, stage];
+
+  // Ver `game.findAll`: `"none"` é o não classificado; o resto já chega
+  // validado por `lib/productFilters.js`.
+  if (contentRating === FILTER_NONE) {
+    filters.push(`bg.content_rating IS NULL`);
+  } else if (contentRating) {
+    values.push(contentRating);
+    filters.push(`bg.content_rating = $${values.length}`);
+  }
+
+  if (aiLevel === FILTER_NONE) {
+    filters.push(`bg.ai_level IS NULL`);
+  } else if (aiLevel) {
+    values.push(Number(aiLevel));
+    filters.push(`bg.ai_level = $${values.length}`);
+  }
+
+  const filterSql = filters.length ? `AND ${filters.join("\n        AND ")}` : "";
+
   const result = await database.query({
     text: `
       SELECT
@@ -18,7 +40,7 @@ async function findAll({ page = 1, limit = 20, search = "", category = "", stage
         bg.category, bg.stage, bg.release_date, bg.created_at,
         bg.player_count_min, bg.player_count_max,
         bg.play_time_min, bg.play_time_max,
-        bg.age_rating, bg.weight, bg.content_rating,
+        bg.age_rating, bg.weight, bg.content_rating, bg.ai_level,
         ui_cover.secure_url  AS cover_url,
         ui_ban.secure_url    AS banner_url,
         o.name               AS studio_name,
@@ -39,6 +61,7 @@ async function findAll({ page = 1, limit = 20, search = "", category = "", stage
       WHERE ($3 = '' OR bg.name ILIKE '%' || $3 || '%' OR bg.short_description ILIKE '%' || $3 || '%')
         AND ($4 = '' OR bg.category = $4)
         AND ($5 = '' OR bg.stage = $5)
+        ${filterSql}
         AND NOT EXISTS (
           SELECT 1
           FROM moderation_actions ma
@@ -54,7 +77,7 @@ async function findAll({ page = 1, limit = 20, search = "", category = "", stage
       ORDER BY bg.created_at DESC
       LIMIT $1 OFFSET $2
     `,
-    values: [limit, offset, search, category, stage],
+    values,
   });
   return result.rows;
 }
@@ -96,7 +119,7 @@ async function findFollowedBy(userId) {
         bg.category, bg.stage, bg.release_date, bg.created_at,
         bg.player_count_min, bg.player_count_max,
         bg.play_time_min, bg.play_time_max,
-        bg.age_rating, bg.weight, bg.content_rating,
+        bg.age_rating, bg.weight, bg.content_rating, bg.ai_level,
         ui_cover.secure_url  AS cover_url,
         ui_ban.secure_url    AS banner_url,
         o.name               AS studio_name,
@@ -179,6 +202,7 @@ async function findByOrg(orgId) {
         bg.player_count_min, bg.player_count_max,
         bg.play_time_min, bg.play_time_max,
         bg.age_rating, bg.weight, bg.website_url, bg.content_rating,
+        bg.ai_level, bg.ai_level_notes,
         ui_cover.secure_url  AS cover_url,
         ui_ban.secure_url    AS banner_url,
         COUNT(DISTINCT bf.follower_id) AS follower_count

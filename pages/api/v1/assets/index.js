@@ -3,6 +3,7 @@ import controller from "infra/controller";
 import asset from "models/asset";
 import assetCategory from "models/assetCategory";
 import { isValidGroupKey, ASSET_GROUP_KEYS } from "lib/assetGroups";
+import { parseAiLevelFilter } from "lib/productFilters";
 import { ValidationError } from "infra/errors";
 
 export default createRouter()
@@ -18,7 +19,7 @@ export default createRouter()
  * mesmo raciocínio de `?sort=` desconhecido em `/api/v1/users`.
  */
 async function getHandler(request, response) {
-  const { page = 1, limit = 20, search = "", category = "", group = "", free } = request.query;
+  const { page = 1, limit = 20, search = "", category = "", group = "", free, ai_level } = request.query;
 
   const pageNumber = Math.max(1, Number.parseInt(page, 10) || 1);
   const limitNumber = Math.min(Math.max(Number.parseInt(limit, 10) || 20, 1), 50);
@@ -58,6 +59,7 @@ async function getHandler(request, response) {
     category,
     group,
     free: freeFilter,
+    aiLevel: parseAiLevelFilter(ai_level),
   });
 
   return response.status(200).json(assets);

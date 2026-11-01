@@ -126,6 +126,18 @@
   z-index: 3;
 }
 
+/* Classificação indicativa e uso de IA empilhados no mesmo canto. */
+.badgeStack {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+
 .stage_released {
   background: rgba(9, 105, 218, 0.85);
 }

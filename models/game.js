@@ -5,6 +5,7 @@ import { generateUniqueSlug } from "lib/slug";
 import moderation from "./moderation.js";
 import notification from "./notification";
 import reputation from "./reputation";
+import { FILTER_NONE } from "lib/productFilters";
 
 /* =========================================================
  * Constantes
@@ -38,13 +39,34 @@ export const PLATFORMS = {
  * Leitura
  * ========================================================= */
 
-async function findAll({ page = 1, limit = 20, search = "", genre = "", stage = "" } = {}) {
+async function findAll({ page = 1, limit = 20, search = "", genre = "", stage = "", contentRating = "", aiLevel = "" } = {}) {
   const offset = (page - 1) * limit;
+  const filters = [];
+  const values = [limit, offset, search, genre, stage];
+
+  // `"none"` filtra o que ainda não foi classificado (`IS NULL`); qualquer
+  // outro valor já vem validado por `lib/productFilters.js` na rota.
+  if (contentRating === FILTER_NONE) {
+    filters.push(`g.content_rating IS NULL`);
+  } else if (contentRating) {
+    values.push(contentRating);
+    filters.push(`g.content_rating = $${values.length}`);
+  }
+
+  if (aiLevel === FILTER_NONE) {
+    filters.push(`g.ai_level IS NULL`);
+  } else if (aiLevel) {
+    values.push(Number(aiLevel));
+    filters.push(`g.ai_level = $${values.length}`);
+  }
+
+  const filterSql = filters.length ? `AND ${filters.join("\n        AND ")}` : "";
+
   const result = await database.query({
     text: `
       SELECT
         g.id, g.slug, g.name, g.short_description, g.genre, g.stage,
-        g.release_date, g.created_at, g.content_rating,
+        g.release_date, g.created_at, g.content_rating, g.ai_level,
         g.has_lootboxes, g.has_in_game_purchases, g.has_excessive_ads,
         ui_cover.secure_url  AS cover_url,
         ui_ban.secure_url    AS banner_url,
@@ -66,6 +88,7 @@ async function findAll({ page = 1, limit = 20, search = "", genre = "", stage = 
       WHERE ($3 = '' OR g.name ILIKE '%' || $3 || '%' OR g.short_description ILIKE '%' || $3 || '%')
         AND ($4 = '' OR g.genre = $4)
         AND ($5 = '' OR g.stage = $5)
+        ${filterSql}
         AND NOT EXISTS (
           SELECT 1
           FROM moderation_actions ma
@@ -81,7 +104,7 @@ async function findAll({ page = 1, limit = 20, search = "", genre = "", stage = 
       ORDER BY g.created_at DESC
       LIMIT $1 OFFSET $2
     `,
-    values: [limit, offset, search, genre, stage],
+    values,
   });
   return result.rows;
 }
@@ -178,6 +201,7 @@ async function findByOrg(orgId) {
       SELECT
         g.id, g.slug, g.name, g.short_description, g.genre, g.stage,
         g.release_date, g.created_at, g.content_rating,
+        g.ai_level, g.ai_level_notes,
         g.has_lootboxes, g.has_in_game_purchases, g.has_excessive_ads,
         ui_cover.secure_url AS cover_url,
         ui_ban.secure_url   AS banner_url,
@@ -506,7 +530,7 @@ async function findFollowedBy(userId) {
     text: `
       SELECT
         g.id, g.slug, g.name, g.short_description, g.genre, g.stage,
-        g.release_date, g.created_at, g.content_rating,
+        g.release_date, g.created_at, g.content_rating, g.ai_level,
         g.has_lootboxes, g.has_in_game_purchases, g.has_excessive_ads,
         ui_cover.secure_url  AS cover_url,
         ui_ban.secure_url    AS banner_url,

@@ -187,18 +187,19 @@
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.ratingBadge {
+/* Pilha dos selos no canto superior esquerdo: classificação indicativa,
+   uso de IA e (em jogos) os selos da Lei Felca. Fica em uma coluna só porque
+   três posições absolutas fixas passariam a se sobrepor quando um deles
+   faltasse. */
+.badgeStack {
   position: absolute;
   top: 10px;
   left: 10px;
   z-index: 3;
-}
-
-.monetizationBadge {
-  position: absolute;
-  top: 38px;
-  left: 10px;
-  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
 }
 
 .stage_released {
@@ -400,6 +401,12 @@
     right: 6px;
     font-size: 0.65rem;
     padding: 2px 6px;
+  }
+
+  .badgeStack {
+    top: 6px;
+    left: 6px;
+    gap: 4px;
   }
 
   .studioLabel {

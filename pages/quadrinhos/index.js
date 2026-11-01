@@ -5,6 +5,8 @@ import SeoHead from "@/components/SeoHead";
 import BookCard from "@/components/Card/BookCard";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL } from "@/lib/seo";
+import { RATING_LABELS, RATING_ORDER } from "@/lib/rating-constants";
+import { AI_USAGE_LEVELS, formatAiLevelLabel } from "@/lib/ai-usage";
 import styles from "./index.module.css";
 
 const PAGE_TITLE = "Quadrinhos e Livros — Indies Brasil";
@@ -60,11 +62,13 @@ export default function QuadrinhosPage({ initialBooks }) {
   const [search, setSearch] = useState("");
   const [bookType, setBookType] = useState("");
   const [stage, setStage] = useState("");
+  const [contentRating, setContentRating] = useState("");
+  const [aiLevel, setAiLevel] = useState("");
 
   const [followingBooks, setFollowingBooks] = useState([]);
   const [followingLoading, setFollowingLoading] = useState(false);
 
-  const loadAll = useCallback(async (pageNum, searchQuery, bookTypeQuery, stageQuery) => {
+  const loadAll = useCallback(async (pageNum, searchQuery, bookTypeQuery, stageQuery, ratingQuery, aiQuery) => {
     setAllLoading(true);
     try {
       const params = new URLSearchParams({
@@ -73,6 +77,8 @@ export default function QuadrinhosPage({ initialBooks }) {
         search: searchQuery,
         book_type: bookTypeQuery,
         stage: stageQuery,
+        content_rating: ratingQuery,
+        ai_level: aiQuery,
       });
       const res = await fetch(`/api/v1/books?${params}`);
       if (!res.ok) return;
@@ -94,18 +100,18 @@ export default function QuadrinhosPage({ initialBooks }) {
 
       if (skipInitialLoad.current) {
         skipInitialLoad.current = false;
-        if (!search && !bookType && !stage) return;
+        if (!search && !bookType && !stage && !contentRating && !aiLevel) return;
       }
 
-      loadAll(1, search, bookType, stage);
+      loadAll(1, search, bookType, stage, contentRating, aiLevel);
     }, 350);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, bookType, stage]);
+  }, [search, bookType, stage, contentRating, aiLevel]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (allPage > 1) loadAll(allPage, search, bookType, stage);
+    if (allPage > 1) loadAll(allPage, search, bookType, stage, contentRating, aiLevel);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allPage]);
 
@@ -130,7 +136,7 @@ export default function QuadrinhosPage({ initialBooks }) {
   let emptyTitle;
   if (tab === "following") {
     emptyTitle = "Você ainda não segue nenhuma publicação";
-  } else if (search || bookType || stage) {
+  } else if (search || bookType || stage || contentRating || aiLevel) {
     emptyTitle = "Nenhuma publicação encontrada";
   } else {
     emptyTitle = "Ainda não há publicações cadastradas";
@@ -139,7 +145,7 @@ export default function QuadrinhosPage({ initialBooks }) {
   let emptyDescription;
   if (tab === "following") {
     emptyDescription = 'Vá para "Descubra" e comece a seguir!';
-  } else if (search || bookType || stage) {
+  } else if (search || bookType || stage || contentRating || aiLevel) {
     emptyDescription = "Tente outros filtros.";
   } else {
     emptyDescription = "Seja o primeiro a cadastrar sua publicação!";
@@ -187,6 +193,24 @@ export default function QuadrinhosPage({ initialBooks }) {
                       {v}
                     </option>
                   ))}
+                </select>
+                <select className={styles.select} value={contentRating} onChange={(e) => setContentRating(e.target.value)}>
+                  <option value="">Todas as classificações</option>
+                  {RATING_ORDER.map((rating) => (
+                    <option key={rating} value={rating}>
+                      {RATING_LABELS[rating]}
+                    </option>
+                  ))}
+                  <option value="none">Não classificados</option>
+                </select>
+                <select className={styles.select} value={aiLevel} onChange={(e) => setAiLevel(e.target.value)}>
+                  <option value="">Todo uso de IA</option>
+                  {AI_USAGE_LEVELS.map((item) => (
+                    <option key={item.level} value={String(item.level)}>
+                      {formatAiLevelLabel(item.level)}
+                    </option>
+                  ))}
+                  <option value="none">Não informado</option>
                 </select>
               </div>
             </div>
