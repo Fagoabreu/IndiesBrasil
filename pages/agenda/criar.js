@@ -6,6 +6,7 @@ import { ArrowLeftIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
 import EventForm from "@/components/Agenda/EventForm";
+import applyBannerChange from "@/components/Agenda/applyBannerChange";
 import { emptyEventValues } from "@/components/Agenda/eventFormOptions";
 import styles from "@/components/Agenda/EventFormPage.module.css";
 
@@ -43,16 +44,7 @@ export default function CriarEventoPage() {
         return;
       }
 
-      if (banner.action === "upload" && banner.file) {
-        const formData = new FormData();
-        formData.append("file", banner.file, "capa-evento.png");
-        await fetch(`/api/v1/events/${data.id}/banner`, {
-          method: "POST",
-          credentials: "include",
-          body: formData,
-        });
-      }
-
+      await applyBannerChange(data.id, banner);
       router.push(`/agenda/${data.id}`);
     } catch {
       setError("Erro de conexão. Tente novamente.");

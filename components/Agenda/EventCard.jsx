@@ -3,6 +3,7 @@ import Link from "next/link";
 import PropTypes from "prop-types";
 import { ClockIcon, LocationIcon, BroadcastIcon, LockIcon, ShareAndroidIcon } from "@primer/octicons-react";
 import { eventTypeLabel } from "@/lib/event-types";
+import { eventProductLabel } from "@/lib/event-products";
 import { EVENT_MONTHS_SHORT, EVENT_WEEKDAYS, eventDateParts, formatEventTimeRange } from "@/lib/eventFormat";
 import styles from "./EventCard.module.css";
 
@@ -35,6 +36,7 @@ export default function EventCard({ event, onShare }) {
           <div className={styles.eventBody}>
             <div className={styles.eventTop}>
               <span className={`${styles.typeBadge} ${styles[event.event_type]}`}>{eventTypeLabel(event.event_type)}</span>
+              {event.organization_name && <span className={styles.studioBadge}>{event.organization_name}</span>}
               {event.visibility === "private" && (
                 <span className={styles.privateBadge}>
                   <LockIcon size={12} /> Privado
@@ -60,6 +62,7 @@ export default function EventCard({ event, onShare }) {
                   <LocationIcon size={12} /> {event.location_name}
                 </span>
               )}
+              {event.product_name && <span className={styles.metaItem}>{eventProductLabel(event.product_type, event.product_name)}</span>}
               <span className={styles.metaItem}>por @{event.organizer_username}</span>
             </div>
 
@@ -112,6 +115,10 @@ EventCard.propTypes = {
     location_name: PropTypes.string,
     banner_url: PropTypes.string,
     organizer_username: PropTypes.string,
+    organization_name: PropTypes.string,
+    organization_slug: PropTypes.string,
+    product_name: PropTypes.string,
+    product_type: PropTypes.string,
     rsvp_going: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   }).isRequired,
   /** Quando informado, mostra o botão de compartilhar e entrega o evento. */

@@ -7,6 +7,7 @@ import { ArrowLeftIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
 import EventForm from "@/components/Agenda/EventForm";
+import applyBannerChange from "@/components/Agenda/applyBannerChange";
 import { eventValuesFromApi } from "@/components/Agenda/eventFormOptions";
 import styles from "@/components/Agenda/EventFormPage.module.css";
 
@@ -49,42 +50,6 @@ export default function EditarEventoPage() {
     load();
   }, [id]);
 
-  /**
-   * Aplica a alteração de capa pendente depois que o PATCH deu certo.
-   *
-   * Antes a capa era salva na hora (upload, link ou remoção), enquanto todos os
-   * outros campos só valiam no "Salvar Alterações" — a diferença fazia com que
-   * sair da tela sem salvar deixasse a capa alterada e o resto não.
-   */
-  async function applyBannerChange(banner) {
-    const endpoint = `/api/v1/events/${id}/banner`;
-
-    if (banner.action === "removed") {
-      await fetch(endpoint, { method: "DELETE", credentials: "include" });
-      return;
-    }
-
-    if (banner.action === "external") {
-      await fetch(endpoint, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ external_url: banner.externalUrl.trim() }),
-      });
-      return;
-    }
-
-    if (banner.action === "upload" && banner.file) {
-      const formData = new FormData();
-      formData.append("file", banner.file, "capa-evento.png");
-      await fetch(endpoint, {
-        method: "POST",
-        credentials: "include",
-        body: formData,
-      });
-    }
-  }
-
   async function handleSubmit({ payload, banner }) {
     setError("");
     setSubmitting(true);
@@ -103,7 +68,7 @@ export default function EditarEventoPage() {
       }
 
       if (banner.action !== "unchanged") {
-        await applyBannerChange(banner);
+        await applyBannerChange(id, banner);
       }
 
       router.push(`/agenda/${id}`);

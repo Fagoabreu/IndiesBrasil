@@ -2,6 +2,8 @@ import database from "infra/database";
 import { NotFoundError, ValidationError, ForbiddenError } from "@/infra/errors";
 import uploadedImages from "@/models/uploadedImages";
 import addressModel from "@/models/address";
+import organization from "@/models/organization";
+import { EVENT_PRODUCT_TYPES, getEventProductType } from "@/lib/event-products";
 import {
   allDayEndInstant,
   allDayStartInstant,
@@ -49,6 +51,25 @@ function visibilityCondition(userIdParamIndex) {
       WHERE ei2.event_id = e.id
         AND ei2.invited_user_id = $${userIdParamIndex}
         AND ei2.status IN ('pending', 'accepted')
+    )
+    /*
+     * Evento de estúdio é do estúdio, não de quem clicou em "criar": qualquer
+     * membro ativo (ou o dono) precisa vê-lo e mantê-lo, mesmo quando a
+     * visibilidade é 'private' — aqui ela significa "fora da agenda pública",
+     * não "escondido da própria equipe". Sem este trecho, um evento privado
+     * criado pelo colega daria 404 para o resto do estúdio, e a pessoa certa
+     * para editá-lo não conseguiria nem abrir.
+     */
+    OR EXISTS (
+      SELECT 1 FROM org_members om
+      WHERE om.org_id = e.organization_id
+        AND om.member_id = $${userIdParamIndex}
+        AND om.status = 'active'
+    )
+    OR EXISTS (
+      SELECT 1 FROM organizations o2
+      WHERE o2.id = e.organization_id
+        AND o2.owner_id = $${userIdParamIndex}
     )
   )`;
 }
@@ -313,25 +334,42 @@ const BASE_EVENT_QUERY = `
     u.avatar_image    AS organizer_avatar,
     ui.secure_url     AS organizer_avatar_url,
     COALESCE(bi.secure_url, e.banner_external_url) AS banner_url,
+    o.name            AS organization_name,
+    o.slug            AS organization_slug,
+    /* O produto é um só ('events_single_product_check'), então a coluna
+       preenchida diz o tipo e o COALESCE traz o nome. */
+    CASE
+      WHEN e.game_id      IS NOT NULL THEN 'game'
+      WHEN e.boardgame_id IS NOT NULL THEN 'boardgame'
+      WHEN e.book_id      IS NOT NULL THEN 'book'
+      WHEN e.asset_id     IS NOT NULL THEN 'asset'
+    END AS product_type,
+    COALESCE(og.name, obg.name, ob.title, oa.name) AS product_name,
+    COALESCE(og.slug, obg.slug, ob.slug, oa.slug)  AS product_slug,
     COALESCE(rc.going,    0) AS rsvp_going,
     COALESCE(rc.maybe,    0) AS rsvp_maybe,
     COALESCE(rc.not_going, 0) AS rsvp_not_going,
-    CASE WHEN a.id IS NOT NULL THEN json_build_object(
-      'id',           a.id,
-      'street',       a.street,
-      'number',       a.number,
-      'complement',   a.complement,
-      'neighborhood', a.neighborhood,
-      'city',         a.city,
-      'state',        a.state,
-      'zip_code',     a.zip_code,
-      'country',      a.country
+    CASE WHEN ad.id IS NOT NULL THEN json_build_object(
+      'id',           ad.id,
+      'street',       ad.street,
+      'number',       ad.number,
+      'complement',   ad.complement,
+      'neighborhood', ad.neighborhood,
+      'city',         ad.city,
+      'state',        ad.state,
+      'zip_code',     ad.zip_code,
+      'country',      ad.country
     ) END AS address
   FROM events e
   INNER JOIN users u  ON u.id = e.created_by
   LEFT JOIN  uploaded_images ui ON ui.id = u.avatar_image
   LEFT JOIN  uploaded_images bi ON bi.id = e.banner_image_id
-  LEFT JOIN  addresses a        ON a.id  = e.address_id
+  LEFT JOIN  addresses ad       ON ad.id = e.address_id
+  LEFT JOIN  organizations o    ON o.id  = e.organization_id
+  LEFT JOIN  games og           ON og.id = e.game_id
+  LEFT JOIN  boardgames obg     ON obg.id = e.boardgame_id
+  LEFT JOIN  books ob           ON ob.id = e.book_id
+  LEFT JOIN  assets oa          ON oa.id = e.asset_id
   LEFT JOIN LATERAL (
     SELECT
       COUNT(*) FILTER (WHERE status = 'going')     AS going,
@@ -341,6 +379,129 @@ const BASE_EVENT_QUERY = `
     WHERE event_id = e.id AND instance_id IS NULL
   ) rc ON true
 `;
+
+/* ================================================================
+ * VÍNCULO COM ESTÚDIO E PRODUTO
+ * ================================================================ */
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Dono, administrador ou membro ativo do estúdio.
+ *
+ * Reaproveita os helpers de `models/organization.js` em vez de repetir o SQL:
+ * são as mesmas três condições que decidem quem administra um jogo, um livro ou
+ * um asset — e uma segunda cópia divergiria na primeira vez que a regra mudasse.
+ */
+async function canManageStudio(organizationId, userId) {
+  if (!organizationId || !userId) return false;
+
+  const owner = await database.query({
+    text: `SELECT 1 FROM organizations WHERE id = $1 AND owner_id = $2`,
+    values: [organizationId, userId],
+  });
+  if (owner.rows[0]) return true;
+
+  return Boolean((await organization.isAdmin(organizationId, userId)) || (await organization.isMember(organizationId, userId)));
+}
+
+/**
+ * Evento de estúdio: além do organizador, quem administra o estúdio mantém.
+ *
+ * Publicar um lançamento não pode depender de uma pessoa específica continuar na
+ * equipe — a obra é do estúdio, e o evento que a anuncia também.
+ */
+async function canManageEvent(eventData, userId) {
+  if (!userId) return false;
+  if (eventData.created_by === userId) return true;
+  return canManageStudio(eventData.organization_id, userId);
+}
+
+/**
+ * Traduz `{ product_type, product_id }` no par coluna/valor do evento.
+ *
+ * O produto tem de pertencer ao estúdio do evento: o `ON DELETE CASCADE` garante
+ * a limpeza, não a autoria — sem esta checagem um evento de lançamento poderia
+ * destacar o jogo de outro estúdio.
+ *
+ * Devolve `null` quando não há vínculo, para o chamador gravar as quatro colunas
+ * com `NULL` (o que também limpa um vínculo anterior na edição).
+ */
+async function resolveProductLink(data, organizationId) {
+  const type = data.product_type || null;
+  const productId = data.product_id || null;
+
+  if (!type && !productId) return null;
+
+  if (!organizationId) {
+    throw new ValidationError({
+      message: "Para destacar um produto, o evento precisa estar ligado a um estúdio.",
+    });
+  }
+
+  const entry = getEventProductType(type);
+  if (!entry) {
+    throw new ValidationError({
+      message: `Tipo de produto inválido: "${type}".`,
+      action: `Use um destes: ${EVENT_PRODUCT_TYPES.map((item) => item.type).join(", ")}.`,
+    });
+  }
+
+  // Sem esta checagem um id malformado chega ao Postgres e vira 500
+  // (`invalid input syntax for type uuid`), em vez de 400.
+  if (!UUID_RE.test(String(productId))) {
+    throw new ValidationError({ message: "Produto inválido." });
+  }
+
+  // `entry.table`/`entry.column` vêm do mapa fechado de `lib/event-products.js`,
+  // nunca do corpo da requisição.
+  const owned = await database.query({
+    text: `SELECT 1 FROM ${entry.table} WHERE id = $1 AND owner_org_id = $2`,
+    values: [productId, organizationId],
+  });
+
+  if (!owned.rows[0]) {
+    throw new ValidationError({
+      message: `O ${entry.label.toLowerCase()} escolhido não pertence a este estúdio.`,
+    });
+  }
+
+  return { column: entry.column, productId };
+}
+
+/** As quatro colunas do vínculo, com só uma preenchida. */
+function productColumns(product) {
+  return {
+    game_id: product?.column === "game_id" ? product.productId : null,
+    boardgame_id: product?.column === "boardgame_id" ? product.productId : null,
+    book_id: product?.column === "book_id" ? product.productId : null,
+    asset_id: product?.column === "asset_id" ? product.productId : null,
+  };
+}
+
+/**
+ * Estúdio do evento novo, validado.
+ *
+ * Quando a rota já resolveu o estúdio pelo endereço (`/estudios/<slug>/events`),
+ * a checagem de permissão já aconteceu — mas repetir aqui é barato e mantém a
+ * regra no model, que é quem grava. `POST /api/v1/events` também passa por aqui.
+ */
+async function resolveOrganization(data, userId) {
+  const organizationId = data.organization_id || null;
+  if (!organizationId) return null;
+
+  if (!UUID_RE.test(String(organizationId))) {
+    throw new ValidationError({ message: "Estúdio inválido." });
+  }
+
+  if (!(await canManageStudio(organizationId, userId))) {
+    throw new ForbiddenError({
+      message: "Apenas membros do estúdio podem publicar eventos nele.",
+    });
+  }
+
+  return organizationId;
+}
 
 /**
  * Instantes de início e término a gravar, no contrato do model.
@@ -416,6 +577,13 @@ async function create(data, userId) {
     });
   }
 
+  // Estúdio e produto são validados **antes** do INSERT: um vínculo inválido
+  // responderia 400 deixando o evento gravado sem dono nem obra — o mesmo
+  // defeito que a validação de categorias de asset já corrigiu.
+  const organizationId = await resolveOrganization(data, userId);
+  const product = await resolveProductLink(data, organizationId);
+  const productIds = productColumns(product);
+
   const slug = `${slugify(data.title)}-${Date.now().toString(36)}`;
 
   let recurrenceRuleId = null;
@@ -438,8 +606,10 @@ async function create(data, userId) {
         title, slug, description, event_type, visibility, status,
         created_by, location_name, location_url, is_online, online_url,
         starts_at, ends_at, is_all_day, is_recurring, recurrence_rule_id, banner_image_id, banner_external_url,
-        address_id, ticket_url
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
+        address_id, ticket_url, organization_id,
+        game_id, boardgame_id, book_id, asset_id
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,
+                $21,$22,$23,$24,$25)
       RETURNING *
     `,
     values: [
@@ -463,6 +633,11 @@ async function create(data, userId) {
       data.banner_external_url || null,
       addressId,
       data.ticket_url || null,
+      organizationId,
+      productIds.game_id,
+      productIds.boardgame_id,
+      productIds.book_id,
+      productIds.asset_id,
     ],
   });
 
@@ -603,6 +778,17 @@ async function findAll({ from, to, userId, type, status = "published" }) {
         /* O card do evento mostra o local do evento presencial; sem esta coluna
            a linha nunca aparecia na lista (a UI ja tratava location_name). */
         e.location_name,
+        e.organization_id,
+        o.name           AS organization_name,
+        o.slug           AS organization_slug,
+        CASE
+          WHEN e.game_id      IS NOT NULL THEN 'game'
+          WHEN e.boardgame_id IS NOT NULL THEN 'boardgame'
+          WHEN e.book_id      IS NOT NULL THEN 'book'
+          WHEN e.asset_id     IS NOT NULL THEN 'asset'
+        END AS product_type,
+        COALESCE(og.name, obg.name, ob.title, oa.name) AS product_name,
+        COALESCE(og.slug, obg.slug, ob.slug, oa.slug)  AS product_slug,
         u.username       AS organizer_username,
         u.avatar_image   AS organizer_avatar,
         ui.secure_url    AS organizer_avatar_url,
@@ -613,6 +799,11 @@ async function findAll({ from, to, userId, type, status = "published" }) {
       INNER JOIN users u  ON u.id = e.created_by
       LEFT JOIN  uploaded_images ui ON ui.id = u.avatar_image
       LEFT JOIN  uploaded_images bi ON bi.id = e.banner_image_id
+      LEFT JOIN  organizations o    ON o.id  = e.organization_id
+      LEFT JOIN  games og           ON og.id = e.game_id
+      LEFT JOIN  boardgames obg     ON obg.id = e.boardgame_id
+      LEFT JOIN  books ob           ON ob.id = e.book_id
+      LEFT JOIN  assets oa          ON oa.id = e.asset_id
       LEFT JOIN LATERAL (
         SELECT COUNT(*) FILTER (WHERE status = 'going') AS going
         FROM event_rsvps
@@ -628,6 +819,72 @@ async function findAll({ from, to, userId, type, status = "published" }) {
       ORDER BY ei.id, ei.starts_at ASC
     `,
     values,
+  });
+
+  return result.rows;
+}
+
+/**
+ * Instâncias do estúdio, para a área de eventos do painel.
+ *
+ * Enumera **instâncias** como `findAll` — o card precisa da data de cada
+ * ocorrência —, mas sem filtro de visibilidade: quem chega aqui é membro do
+ * estúdio, e `ensureStudioMemberOrOwner` já barrou o resto na rota. Aplicar
+ * `visibilityCondition` aqui repetiria a regra e, pior, esconderia do painel o
+ * evento `private` do próprio estúdio.
+ *
+ * `event_type` e `organization_id` não entram no filtro porque a área é a
+ * agenda inteira do estúdio, de reunião interna a lançamento.
+ */
+async function findByOrg(organizationId, { includePast = false } = {}) {
+  const pastClause = includePast ? "" : `AND ei.ends_at > now()`;
+
+  const result = await database.query({
+    text: `
+      SELECT DISTINCT ON (ei.id)
+        ei.id            AS instance_id,
+        ei.starts_at,
+        ei.ends_at,
+        ei.is_cancelled,
+        ei.override_title,
+        e.id             AS event_id,
+        e.title,
+        e.event_type,
+        e.visibility,
+        e.status,
+        e.is_online,
+        e.is_all_day,
+        e.is_recurring,
+        e.created_by,
+        e.location_name,
+        e.game_id,
+        e.boardgame_id,
+        e.book_id,
+        e.asset_id,
+        u.username       AS organizer_username,
+        COALESCE(bi.secure_url, e.banner_external_url) AS banner_url,
+        CASE
+          WHEN e.game_id      IS NOT NULL THEN 'game'
+          WHEN e.boardgame_id IS NOT NULL THEN 'boardgame'
+          WHEN e.book_id      IS NOT NULL THEN 'book'
+          WHEN e.asset_id     IS NOT NULL THEN 'asset'
+        END AS product_type,
+        COALESCE(og.name, obg.name, ob.title, oa.name) AS product_name,
+        COALESCE(og.slug, obg.slug, ob.slug, oa.slug)  AS product_slug
+      FROM event_instances ei
+      INNER JOIN events e ON e.id = ei.event_id
+      INNER JOIN users u  ON u.id = e.created_by
+      LEFT JOIN uploaded_images bi ON bi.id = e.banner_image_id
+      LEFT JOIN games og           ON og.id = e.game_id
+      LEFT JOIN boardgames obg     ON obg.id = e.boardgame_id
+      LEFT JOIN books ob           ON ob.id = e.book_id
+      LEFT JOIN assets oa          ON oa.id = e.asset_id
+      WHERE e.organization_id = $1
+        AND e.status <> 'cancelled'
+        ${pastClause}
+      ORDER BY ei.id, ei.starts_at ASC
+    `,
+    values: [organizationId],
   });
 
   return result.rows;
@@ -695,9 +952,11 @@ async function handleAddressUpdate(event, addressData) {
 async function update(id, data, userId) {
   const event = await findById(id, userId);
 
-  if (event.created_by !== userId) {
+  // Evento de estúdio pertence ao estúdio: dono, admin ou membro ativo mantém,
+  // além de quem criou (ver `canManageEvent`).
+  if (!(await canManageEvent(event, userId))) {
     throw new ForbiddenError({
-      message: "Apenas o organizador pode editar este evento.",
+      message: "Apenas o organizador ou o estúdio podem editar este evento.",
     });
   }
 
@@ -760,6 +1019,27 @@ async function update(id, data, userId) {
       values.push(newAddressId);
       sets.push(`address_id = $${values.length}`);
     }
+  }
+
+  /*
+   * Vínculo com produto: os quatro campos andam juntos.
+   *
+   * Um único comando grava as quatro colunas, zerando as que não foram
+   * escolhidas — é o que faz "trocar de jogo" e "remover o vínculo" funcionarem
+   * sem uma segunda requisição. Se só a coluna escolhida fosse escrita, a antiga
+   * continuaria preenchida e o `events_single_product_check` recusaria.
+   */
+  if ("product_type" in data || "product_id" in data) {
+    const product = await resolveProductLink(data, event.organization_id);
+    const productIds = productColumns(product);
+
+    values.push(productIds.game_id, productIds.boardgame_id, productIds.book_id, productIds.asset_id);
+    sets.push(
+      `game_id = $${values.length - 3}`,
+      `boardgame_id = $${values.length - 2}`,
+      `book_id = $${values.length - 1}`,
+      `asset_id = $${values.length}`,
+    );
   }
 
   if (!sets.length) return event;
@@ -840,9 +1120,9 @@ async function rescheduleInstances(eventId, range) {
 async function cancel(id, userId) {
   const event = await findById(id, userId);
 
-  if (event.created_by !== userId) {
+  if (!(await canManageEvent(event, userId))) {
     throw new ForbiddenError({
-      message: "Apenas o organizador pode cancelar este evento.",
+      message: "Apenas o organizador ou o estúdio podem cancelar este evento.",
     });
   }
 
@@ -1176,9 +1456,9 @@ async function extendInstances(eventId, windowEnd) {
 
 async function setBannerImage(id, file, userId) {
   const ev = await findById(id, userId);
-  if (ev.created_by !== userId) {
+  if (!(await canManageEvent(ev, userId))) {
     throw new ForbiddenError({
-      message: "Apenas o organizador pode editar este evento.",
+      message: "Apenas o organizador ou o estúdio podem editar este evento.",
     });
   }
   if (ev.banner_image_id) {
@@ -1198,9 +1478,9 @@ async function setBannerImage(id, file, userId) {
 
 async function setBannerExternalUrl(id, url, userId) {
   const ev = await findById(id, userId);
-  if (ev.created_by !== userId) {
+  if (!(await canManageEvent(ev, userId))) {
     throw new ForbiddenError({
-      message: "Apenas o organizador pode editar este evento.",
+      message: "Apenas o organizador ou o estúdio podem editar este evento.",
     });
   }
   if (!url?.trim()) throw new ValidationError({ message: "URL da imagem inválida." });
@@ -1220,9 +1500,9 @@ async function setBannerExternalUrl(id, url, userId) {
 
 async function removeBanner(id, userId) {
   const ev = await findById(id, userId);
-  if (ev.created_by !== userId) {
+  if (!(await canManageEvent(ev, userId))) {
     throw new ForbiddenError({
-      message: "Apenas o organizador pode editar este evento.",
+      message: "Apenas o organizador ou o estúdio podem editar este evento.",
     });
   }
   if (ev.banner_image_id) {
@@ -1243,6 +1523,8 @@ const event = {
   findById,
   findAll,
   findAllForSitemap,
+  findByOrg,
+  canManageEvent,
   update,
   cancel,
   upsertRsvp,

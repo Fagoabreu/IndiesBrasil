@@ -22,6 +22,7 @@ export default function EventForm({
   initialValues,
   initialBannerUrl,
   enableRecurrence = false,
+  studioProducts,
   error,
   submitting,
   onSubmit,
@@ -31,6 +32,16 @@ export default function EventForm({
   const [values, setValues] = useState(initialValues);
   const [banner, setBanner] = useState(EMPTY_BANNER);
   const [validationError, setValidationError] = useState(null);
+
+  // O `<select>` trabalha com um valor só (`"tipo:id"`) porque o produto é um
+  // só por evento (`events_single_product_check`). Dois selects — tipo e id —
+  // permitiriam escolher um jogo e um asset ao mesmo tempo na tela.
+  const productValue = values.productType && values.productId ? `${values.productType}:${values.productId}` : "";
+
+  function handleProductChange(value) {
+    const [type = "", id = ""] = value.split(":");
+    setValues((prev) => ({ ...prev, productType: type, productId: id }));
+  }
 
   function setField(field, fieldValue) {
     setValues((prev) => ({ ...prev, [field]: fieldValue }));
@@ -348,6 +359,32 @@ export default function EventForm({
         </>
       )}
 
+      {/* Vínculo com o estúdio — só aparece na área do estúdio
+              (`studioProducts`). A agenda geral não muda. */}
+      {studioProducts && (
+        <>
+          <hr className={styles.divider} />
+          <p className={styles.sectionTitle}>Vínculo com o estúdio</p>
+
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="productId">
+              Produto relacionado
+            </label>
+            <select id="productId" className={styles.select} value={productValue} onChange={(e) => handleProductChange(e.target.value)}>
+              <option value="">Nenhum — evento do estúdio</option>
+              {studioProducts.map((item) => (
+                <option key={`${item.type}:${item.id}`} value={`${item.type}:${item.id}`}>
+                  {item.label} · {item.name}
+                </option>
+              ))}
+            </select>
+            <span className={styles.hint}>
+              Usado em lançamentos: o evento aparece na página do produto escolhido. Só entram produtos deste estúdio.
+            </span>
+          </div>
+        </>
+      )}
+
       {/* Ações */}
       <div className={styles.actions}>
         <Link href={cancelHref} className={styles.cancelBtn}>
@@ -367,6 +404,18 @@ EventForm.propTypes = {
   initialValues: PropTypes.object.isRequired,
   initialBannerUrl: PropTypes.string,
   enableRecurrence: PropTypes.bool,
+  /**
+   * Produtos do estúdio que podem ser vinculados (`{ type, id, name, label }`).
+   * Quando ausente, a seção de vínculo não aparece — é o caso da agenda geral.
+   */
+  studioProducts: PropTypes.arrayOf(
+    PropTypes.shape({
+      type: PropTypes.string.isRequired,
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
+      label: PropTypes.string.isRequired,
+    }),
+  ),
   error: PropTypes.string,
   submitting: PropTypes.bool.isRequired,
   /** ({ payload, banner }) => Promise<void> */

@@ -3,12 +3,13 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import Image from "next/image";
 import { Spinner } from "@primer/react";
-import { CalendarIcon, LocationIcon, BroadcastIcon, PersonIcon, ArrowLeftIcon } from "@primer/octicons-react";
+import { CalendarIcon, LocationIcon, BroadcastIcon, PersonIcon, ArrowLeftIcon, OrganizationIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL, OG_CARD_SIZE } from "@/lib/seo";
 import { breadcrumbList, event as eventStructuredData, graph } from "@/lib/structured-data";
 import { eventTypeLabel } from "@/lib/event-types";
+import { eventProductLabel, eventProductPath } from "@/lib/event-products";
 import { allDayLastInstant, eventDateParts, formatEventDate, formatEventShortDate } from "@/lib/eventFormat";
 import { loopbackOrigin } from "@/lib/internal-url";
 import { isUuid } from "@/lib/uuid";
@@ -607,6 +608,31 @@ export default function EventDetailPage({ initialEvent = null, eventNotFound = f
                 </div>
               </Link>
             </div>
+
+            {/* Estúdio e produto do evento — os dois vínculos que a agenda
+                passa a carregar (ver `events_studio_link` na migration). */}
+            {(ev.organization_slug || ev.product_name) && (
+              <div className={styles.infoCard}>
+                <div className={styles.infoLabel} style={{ marginBottom: 8 }}>
+                  <OrganizationIcon size={13} /> Realização
+                </div>
+
+                {ev.organization_slug && (
+                  <Link href={`/estudios/${ev.organization_slug}`} className={styles.organizer}>
+                    <div>
+                      <div className={styles.organizerName}>{ev.organization_name}</div>
+                      <div className={styles.organizerRole}>Estúdio organizador</div>
+                    </div>
+                  </Link>
+                )}
+
+                {ev.product_name && (
+                  <Link href={eventProductPath(ev.product_type, ev.product_slug)} className={styles.productLink}>
+                    {eventProductLabel(ev.product_type, ev.product_name)}
+                  </Link>
+                )}
+              </div>
+            )}
 
             {ev.status !== "cancelled" && (
               <div className={styles.rsvpCard}>

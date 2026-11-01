@@ -103,6 +103,11 @@ export function emptyEventValues() {
     interval: 1,
     daysOfWeek: [],
     untilDate: "",
+    // Vínculo com o estúdio (ver `events_studio_link` na migration). Vazio na
+    // agenda geral: só a área do estúdio oferece o seletor.
+    organizationId: "",
+    productType: "",
+    productId: "",
   };
 }
 
@@ -131,6 +136,12 @@ export function eventValuesFromApi(ev) {
     interval: 1,
     daysOfWeek: [],
     untilDate: "",
+    organizationId: ev.organization_id || "",
+    // A API devolve `product_type`/`product_slug` (derivados da coluna
+    // preenchida), mas o id vem na coluna de cada tipo — o `CHECK` garante que
+    // só uma delas está preenchida.
+    productType: ev.product_type || "",
+    productId: ev.game_id || ev.boardgame_id || ev.book_id || ev.asset_id || "",
   };
 }
 
@@ -221,6 +232,18 @@ export function buildEventPayload(values, { mode }) {
       payload.recurrence_rule = buildRecurrenceRule(values);
     }
   }
+
+  /*
+   * Vínculo com estúdio e produto.
+   *
+   * `null` explícito (em vez de omitir) é o que torna possível **remover** o
+   * vínculo na edição: o model grava as quatro colunas de uma vez quando vê
+   * `product_type`/`product_id` no corpo, e é assim que "trocar de jogo" zera a
+   * coluna anterior sem violar o `events_single_product_check`.
+   */
+  if (values.organizationId) payload.organization_id = values.organizationId;
+  payload.product_type = values.productType || null;
+  payload.product_id = values.productId || null;
 
   return payload;
 }
