@@ -10,6 +10,17 @@ export function useUser() {
 export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
+
+  /**
+   * Estúdios do usuário (`/api/v1/studios?member=me`).
+   *
+   * Fica no contexto, e não em cada tela, porque quatro listagens precisam
+   * decidir o destino do botão "publicar": sem estúdio o caminho é criar um;
+   * com um estúdio, publicar na aba certa; com vários, escolher qual. Buscar
+   * isso separadamente em cada página daria quatro requisições e quatro
+   * decisões que divergem.
+   */
+  const [myStudios, setMyStudios] = useState([]);
   const router = useRouter();
 
   async function fetchUser() {
@@ -90,10 +101,42 @@ export function UserProvider({ children }) {
     return () => router.events?.off("routeChangeComplete", handleRouteChange);
   }, [router]);
 
+  /**
+   * Carrega os estúdios do usuário quando a sessão muda.
+   *
+   * Depende só de `user?.id`: trocar de estúdio ou editar o nome não precisa
+   * refazer a consulta durante a mesma navegação, e uma requisição por mudança
+   * de rota seria ruído. `Promise.resolve().then` mantém o `setState` fora do
+   * corpo do efeito (`react-hooks/set-state-in-effect` é erro no lint).
+   */
+  const userId = user?.id ?? null;
+
+  useEffect(() => {
+    if (!userId) {
+      Promise.resolve().then(() => setMyStudios([]));
+      return;
+    }
+
+    let cancelled = false;
+    Promise.resolve()
+      .then(() => fetch("/api/v1/studios?member=me", { credentials: "include" }))
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (!cancelled) setMyStudios(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (!cancelled) setMyStudios([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
   const contextValue = useMemo(
-    () => ({ user, setUser, fetchUser, logout, loadingUser }),
+    () => ({ user, setUser, fetchUser, logout, loadingUser, myStudios }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [user, loadingUser],
+    [user, loadingUser, myStudios],
   );
 
   return <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>;

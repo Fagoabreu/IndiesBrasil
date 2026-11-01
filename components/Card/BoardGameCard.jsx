@@ -3,6 +3,7 @@ import Link from "next/link";
 import PropTypes from "prop-types";
 import styles from "./BoardGameCard.module.css";
 import ContentRatingBadge from "@/components/ContentRatingBadge";
+import AiUsageBadge from "@/components/AiUsageBadge";
 
 const CATEGORIES = {
   board_game: "Tabuleiro",
@@ -61,8 +62,9 @@ export default function BoardGameCard({ boardgame }) {
           </div>
         )}
         <span className={`${styles.stageBadge} ${stageClass}`}>{stageLabel}</span>
-        <span className={styles.ratingBadge}>
+        <span className={styles.badgeStack}>
           <ContentRatingBadge rating={boardgame.content_rating} size="sm" />
+          <AiUsageBadge level={boardgame.ai_level} size="sm" />
         </span>
       </div>
 

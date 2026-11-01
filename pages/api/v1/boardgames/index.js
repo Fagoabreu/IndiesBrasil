@@ -1,6 +1,7 @@
 import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import boardgame from "models/boardgame";
+import { parseAiLevelFilter, parseContentRatingFilter } from "lib/productFilters";
 
 export default createRouter()
   .use(controller.injectAnonymousOrUser)
@@ -8,7 +9,7 @@ export default createRouter()
   .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
-  const { page = 1, limit = 20, search = "", category = "", stage = "", isfollowing } = request.query;
+  const { page = 1, limit = 20, search = "", category = "", stage = "", isfollowing, content_rating, ai_level } = request.query;
   const requestUser = request.context.user;
 
   if (isfollowing === "true" && requestUser.id) {
@@ -22,6 +23,8 @@ async function getHandler(request, response) {
     search,
     category,
     stage,
+    contentRating: parseContentRatingFilter(content_rating),
+    aiLevel: parseAiLevelFilter(ai_level),
   });
   return response.status(200).json(boardgames);
 }

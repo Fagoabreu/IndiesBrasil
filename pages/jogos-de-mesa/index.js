@@ -4,8 +4,11 @@ import { Heading, TextInput, Spinner } from "@primer/react";
 import { TableIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import BoardGameCard from "@/components/Card/BoardGameCard";
+import StudioPublishNotice from "@/components/Studio/StudioPublishNotice/StudioPublishNotice";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL } from "@/lib/seo";
+import { RATING_LABELS, RATING_ORDER } from "@/lib/rating-constants";
+import { AI_USAGE_LEVELS, formatAiLevelLabel } from "@/lib/ai-usage";
 import styles from "./index.module.css";
 
 const PAGE_TITLE = "Jogos de Mesa — Indies Brasil";
@@ -60,12 +63,14 @@ export default function JogosDeMessaPage({ initialGames }) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [stage, setStage] = useState("");
+  const [contentRating, setContentRating] = useState("");
+  const [aiLevel, setAiLevel] = useState("");
 
   // aba "Seguindo"
   const [followingGames, setFollowingGames] = useState([]);
   const [followingLoading, setFollowingLoading] = useState(false);
 
-  const loadAll = useCallback(async (pageNum, searchQuery, categoryQuery, stageQuery) => {
+  const loadAll = useCallback(async (pageNum, searchQuery, categoryQuery, stageQuery, ratingQuery, aiQuery) => {
     setAllLoading(true);
     try {
       const params = new URLSearchParams({
@@ -74,6 +79,8 @@ export default function JogosDeMessaPage({ initialGames }) {
         search: searchQuery,
         category: categoryQuery,
         stage: stageQuery,
+        content_rating: ratingQuery,
+        ai_level: aiQuery,
       });
       const res = await fetch(`/api/v1/boardgames?${params}`);
       if (!res.ok) return;
@@ -96,18 +103,18 @@ export default function JogosDeMessaPage({ initialGames }) {
 
       if (skipInitialLoad.current) {
         skipInitialLoad.current = false;
-        if (!search && !category && !stage) return;
+        if (!search && !category && !stage && !contentRating && !aiLevel) return;
       }
 
-      loadAll(1, search, category, stage);
+      loadAll(1, search, category, stage, contentRating, aiLevel);
     }, 350);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, category, stage]);
+  }, [search, category, stage, contentRating, aiLevel]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (allPage > 1) loadAll(allPage, search, category, stage);
+    if (allPage > 1) loadAll(allPage, search, category, stage, contentRating, aiLevel);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allPage]);
 
@@ -133,7 +140,7 @@ export default function JogosDeMessaPage({ initialGames }) {
   let emptyTitle;
   if (tab === "following") {
     emptyTitle = "Você ainda não segue nenhum jogo de mesa";
-  } else if (search || category || stage) {
+  } else if (search || category || stage || contentRating || aiLevel) {
     emptyTitle = "Nenhum jogo encontrado";
   } else {
     emptyTitle = "Ainda não há jogos de mesa cadastrados";
@@ -142,11 +149,13 @@ export default function JogosDeMessaPage({ initialGames }) {
   let emptyDescription;
   if (tab === "following") {
     emptyDescription = 'Vá para "Descubra" e comece a seguir!';
-  } else if (search || category || stage) {
+  } else if (search || category || stage || contentRating || aiLevel) {
     emptyDescription = "Tente outros filtros.";
   } else {
     emptyDescription = "Seja o primeiro a cadastrar o seu jogo!";
   }
+
+  const hasFilters = Boolean(search || category || stage || contentRating || aiLevel);
 
   return (
     <div className={styles.page}>
@@ -192,6 +201,24 @@ export default function JogosDeMessaPage({ initialGames }) {
                     </option>
                   ))}
                 </select>
+                <select className={styles.select} value={contentRating} onChange={(e) => setContentRating(e.target.value)}>
+                  <option value="">Todas as classificações</option>
+                  {RATING_ORDER.map((rating) => (
+                    <option key={rating} value={rating}>
+                      {RATING_LABELS[rating]}
+                    </option>
+                  ))}
+                  <option value="none">Não classificados</option>
+                </select>
+                <select className={styles.select} value={aiLevel} onChange={(e) => setAiLevel(e.target.value)}>
+                  <option value="">Todo uso de IA</option>
+                  {AI_USAGE_LEVELS.map((item) => (
+                    <option key={item.level} value={String(item.level)}>
+                      {formatAiLevelLabel(item.level)}
+                    </option>
+                  ))}
+                  <option value="none">Não informado</option>
+                </select>
               </div>
             </div>
           )}
@@ -221,6 +248,8 @@ export default function JogosDeMessaPage({ initialGames }) {
         )}
       </header>
 
+      {tab === "all" && <StudioPublishNotice tab="boardgames" />}
+
       {/* LOADING */}
       {isLoading && (
         <div className={styles.loadingState} role="status" aria-live="polite">
@@ -234,7 +263,11 @@ export default function JogosDeMessaPage({ initialGames }) {
         <div className={styles.emptyState} role="status" aria-live="polite">
           <TableIcon size={40} className={styles.emptyIcon} />
           <p className={styles.emptyTitle}>{emptyTitle}</p>
-          <p className={styles.emptyDescription}>{emptyDescription}</p>
+          {tab === "following" || hasFilters ? (
+            <p className={styles.emptyDescription}>{emptyDescription}</p>
+          ) : (
+            <StudioPublishNotice variant="empty" tab="boardgames" />
+          )}
         </div>
       )}
 

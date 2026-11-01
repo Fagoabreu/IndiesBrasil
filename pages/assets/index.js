@@ -5,7 +5,9 @@ import { SearchIcon } from "@primer/octicons-react";
 
 import SeoHead from "@/components/SeoHead";
 import AssetCard from "@/components/Card/AssetCard";
+import StudioPublishNotice from "@/components/Studio/StudioPublishNotice/StudioPublishNotice";
 import { ASSET_GROUPS, groupAssetCategories } from "@/lib/assetGroups";
+import { AI_USAGE_LEVELS, formatAiLevelLabel } from "@/lib/ai-usage";
 import { SITE_URL } from "@/lib/seo";
 import styles from "./index.module.css";
 
@@ -49,6 +51,7 @@ export default function AssetsPage({ initialAssets, initialCategories }) {
   const group = typeof router.query.group === "string" ? router.query.group : "";
   const category = typeof router.query.category === "string" ? router.query.category : "";
   const free = router.query.free === "true";
+  const aiLevel = typeof router.query.ai_level === "string" ? router.query.ai_level : "";
 
   const [assets, setAssets] = useState(initialAssets);
   const [loading, setLoading] = useState(false);
@@ -84,7 +87,7 @@ export default function AssetsPage({ initialAssets, initialCategories }) {
 
     if (skipInitialLoad.current) {
       skipInitialLoad.current = false;
-      if (!group && !category && !free && !debouncedSearch) return;
+      if (!group && !category && !free && !debouncedSearch && !aiLevel) return;
     }
 
     const params = new URLSearchParams({ page: "1", limit: String(LIMIT) });
@@ -92,6 +95,7 @@ export default function AssetsPage({ initialAssets, initialCategories }) {
     if (group) params.set("group", group);
     if (category) params.set("category", category);
     if (free) params.set("free", "true");
+    if (aiLevel) params.set("ai_level", aiLevel);
 
     // `Promise.resolve().then` mantém o `setState` fora do corpo do efeito —
     // `react-hooks/set-state-in-effect` acusa chamada síncrona aqui.
@@ -123,7 +127,7 @@ export default function AssetsPage({ initialAssets, initialCategories }) {
     return () => {
       cancelled = true;
     };
-  }, [group, category, free, debouncedSearch]);
+  }, [group, category, free, debouncedSearch, aiLevel]);
 
   async function loadMore() {
     const nextPage = page + 1;
@@ -132,6 +136,7 @@ export default function AssetsPage({ initialAssets, initialCategories }) {
     if (group) params.set("group", group);
     if (category) params.set("category", category);
     if (free) params.set("free", "true");
+    if (aiLevel) params.set("ai_level", aiLevel);
 
     setLoading(true);
     try {
@@ -223,7 +228,20 @@ export default function AssetsPage({ initialAssets, initialCategories }) {
               Somente gratuitos
             </label>
 
-            {(group || category || free || search) && (
+            <label className={styles.selectLabel}>
+              Uso de IA
+              <select className={styles.select} value={aiLevel} onChange={(event) => setFilter("ai_level", event.target.value)}>
+                <option value="">Todo uso de IA</option>
+                {AI_USAGE_LEVELS.map((item) => (
+                  <option key={item.level} value={String(item.level)}>
+                    {formatAiLevelLabel(item.level)}
+                  </option>
+                ))}
+                <option value="none">Não informado</option>
+              </select>
+            </label>
+
+            {(group || category || free || search || aiLevel) && (
               <button
                 type="button"
                 className={styles.clearButton}
@@ -238,9 +256,18 @@ export default function AssetsPage({ initialAssets, initialCategories }) {
           </div>
         </div>
 
+        <StudioPublishNotice tab="assets" />
+
         {error && <p className={styles.error}>{error}</p>}
 
-        {assets.length === 0 && !loading && !error && <p className={styles.empty}>Nenhum asset encontrado com esses filtros.</p>}
+        {assets.length === 0 && !loading && !error && (
+          <div className={styles.empty}>
+            <p>
+              {group || category || free || search || aiLevel ? "Nenhum asset encontrado com esses filtros." : "Ainda não há assets cadastrados."}
+            </p>
+            {!group && !category && !free && !search && !aiLevel && <StudioPublishNotice variant="empty" tab="assets" />}
+          </div>
+        )}
 
         <div className={styles.grid}>
           {assets.map((asset) => (

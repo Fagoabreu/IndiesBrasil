@@ -40,6 +40,43 @@
   color: var(--fgColor-default);
 }
 
+/* Aviso de estúdio recém-criado (`?welcome=1`): "Configurações" não diz que é
+   aqui que se publica, então a primeira visita ganha a explicação. */
+.welcomeBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--brand-active-ring);
+  border-left: 3px solid var(--brand-primary);
+  border-radius: 10px;
+  background: rgba(var(--brand-rgb-primary), 0.06);
+}
+
+.welcomeIcon {
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+.welcomeBody {
+  min-width: 0;
+}
+
+.welcomeTitle {
+  margin: 0 0 3px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--fgColor-default);
+}
+
+.welcomeText {
+  margin: 0;
+  font-size: 0.83rem;
+  line-height: 1.5;
+  color: var(--fgColor-muted);
+}
+
 /* Formulário */
 .form {
   display: flex;

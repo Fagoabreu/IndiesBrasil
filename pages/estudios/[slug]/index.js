@@ -3,7 +3,17 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import Image from "next/image";
 import { Avatar, Spinner } from "@primer/react";
-import { OrganizationIcon, PeopleIcon, DownloadIcon, GearIcon, PencilIcon, VideoIcon, BroadcastIcon, PackageIcon } from "@primer/octicons-react";
+import {
+  OrganizationIcon,
+  PeopleIcon,
+  DownloadIcon,
+  GearIcon,
+  PencilIcon,
+  PlusIcon,
+  VideoIcon,
+  BroadcastIcon,
+  PackageIcon,
+} from "@primer/octicons-react";
 
 import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
@@ -29,6 +39,7 @@ import styles from "./studio.module.css";
 // a página importa o mesmo módulo para os dois botões que não passam por ele.
 import actionStyles from "@/components/Studio/StudioActionButton.module.css";
 import StudioActionButton from "@/components/Studio/StudioActionButton";
+import StudioAddMenu from "@/components/Studio/StudioAddMenu/StudioAddMenu";
 import { uploadWithProgress } from "@/utils/uploadWithProgress";
 import { STORE_SALES_ENABLED } from "@/lib/store-constants";
 
@@ -92,6 +103,25 @@ function renderBanner(embedUrl, bannerUrl, studioName, styles) {
     );
   }
   return <div className={styles.bannerPlaceholder} />;
+}
+
+/**
+ * Seção de produto sem nenhum item, visível só para quem pode publicar.
+ *
+ * Antes a seção inteira era escondida quando vazia (`studioGames.length > 0 &&
+ * …`), então o dono de um estúdio recém-criado não via onde um jogo entraria —
+ * a área de publicação simplesmente não existia na tela dele. Para o visitante
+ * nada muda: seção vazia continua fora, porque ali não há o que fazer.
+ */
+function EmptyProductSection({ label, tab, slug, styles }) {
+  return (
+    <div className={styles.emptySection}>
+      <p className={styles.emptySectionText}>Nenhum {label} publicado ainda.</p>
+      <Link href={`/estudios/${slug}/configuracoes?tab=${tab}`} className={styles.emptySectionBtn}>
+        <PlusIcon size={14} /> Adicionar {label}
+      </Link>
+    </div>
+  );
 }
 
 export async function getServerSideProps(context) {
@@ -751,7 +781,15 @@ export default function StudioPage({ initialStudio }) {
                   />
                 )}
                 {canPost && <StudioActionButton href={`/estudios/${slug}/reunioes`} icon={<VideoIcon size={14} />} label="Reuniões" />}
-                {canEdit && <StudioActionButton href={`/estudios/${slug}/configuracoes`} icon={<GearIcon size={14} />} label="Editar" />}
+                {canEdit && (
+                  <>
+                    {/* Publicar é a ação mais frequente de quem tem estúdio — por
+                        isso ela vem do menu, e não de um botão "Editar" que abria
+                        a aba "Perfil". */}
+                    <StudioAddMenu slug={slug} />
+                    <StudioActionButton href={`/estudios/${slug}/configuracoes`} icon={<GearIcon size={14} />} label="Gerenciar" />
+                  </>
+                )}
               </div>
             </div>
 
@@ -915,47 +953,64 @@ export default function StudioPage({ initialStudio }) {
                 </SectionPanel>
               )}
 
-              {/* JOGOS */}
-              {studioGames.length > 0 && (
+              {/* JOGOS — a seção existe para quem publica mesmo sem nenhum
+                  item, senão o dono de estúdio novo não vê onde o jogo entra. */}
+              {(studioGames.length > 0 || canEdit) && (
                 <SectionPanel title="Jogos">
-                  <div className={styles.gameCardList}>
-                    {studioGames.map((g, idx) => (
-                      <GameCard key={g.id} game={g} priority={idx === 0} />
-                    ))}
-                  </div>
+                  {studioGames.length === 0 ? (
+                    <EmptyProductSection label="jogo" tab="games" slug={slug} styles={styles} />
+                  ) : (
+                    <div className={styles.gameCardList}>
+                      {studioGames.map((g, idx) => (
+                        <GameCard key={g.id} game={g} priority={idx === 0} />
+                      ))}
+                    </div>
+                  )}
                 </SectionPanel>
               )}
 
               {/* JOGOS DE TABULEIRO */}
-              {studioBoardGames.length > 0 && (
+              {(studioBoardGames.length > 0 || canEdit) && (
                 <SectionPanel title="Jogos de Tabuleiro">
-                  <div className={styles.gameCardList}>
-                    {studioBoardGames.map((bg) => (
-                      <BoardGameCard key={bg.id} boardgame={bg} />
-                    ))}
-                  </div>
+                  {studioBoardGames.length === 0 ? (
+                    <EmptyProductSection label="jogo de mesa" tab="boardgames" slug={slug} styles={styles} />
+                  ) : (
+                    <div className={styles.gameCardList}>
+                      {studioBoardGames.map((bg) => (
+                        <BoardGameCard key={bg.id} boardgame={bg} />
+                      ))}
+                    </div>
+                  )}
                 </SectionPanel>
               )}
 
               {/* LIVROS E QUADRINHOS */}
-              {studioBooks.length > 0 && (
+              {(studioBooks.length > 0 || canEdit) && (
                 <SectionPanel title="Livros e Quadrinhos">
-                  <div className={styles.gameCardList}>
-                    {studioBooks.map((b) => (
-                      <BookCard key={b.id} book={b} />
-                    ))}
-                  </div>
+                  {studioBooks.length === 0 ? (
+                    <EmptyProductSection label="livro ou quadrinho" tab="books" slug={slug} styles={styles} />
+                  ) : (
+                    <div className={styles.gameCardList}>
+                      {studioBooks.map((b) => (
+                        <BookCard key={b.id} book={b} />
+                      ))}
+                    </div>
+                  )}
                 </SectionPanel>
               )}
 
               {/* ASSETS */}
-              {studioAssets.length > 0 && (
+              {(studioAssets.length > 0 || canEdit) && (
                 <SectionPanel title="Assets">
-                  <div className={styles.gameCardList}>
-                    {studioAssets.map((item) => (
-                      <AssetCard key={item.id} asset={item} />
-                    ))}
-                  </div>
+                  {studioAssets.length === 0 ? (
+                    <EmptyProductSection label="asset" tab="assets" slug={slug} styles={styles} />
+                  ) : (
+                    <div className={styles.gameCardList}>
+                      {studioAssets.map((item) => (
+                        <AssetCard key={item.id} asset={item} />
+                      ))}
+                    </div>
+                  )}
                 </SectionPanel>
               )}
             </main>

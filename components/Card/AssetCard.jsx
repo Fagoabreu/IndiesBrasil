@@ -3,6 +3,7 @@ import Image from "next/image";
 import PropTypes from "prop-types";
 import styles from "./AssetCard.module.css";
 import AssetCategoryChips from "@/components/Asset/AssetCategoryChips";
+import AiUsageBadge from "@/components/AiUsageBadge";
 
 /**
  * Card de asset.
@@ -24,6 +25,9 @@ export default function AssetCard({ asset }) {
           )}
         </div>
         <span className={`${styles.priceBadge} ${asset.is_free ? styles.freeBadge : styles.paidBadge}`}>{asset.is_free ? "Gratuito" : "Pago"}</span>
+        <span className={styles.badgeStack}>
+          <AiUsageBadge level={asset.ai_level} size="sm" />
+        </span>
       </div>
 
       <div className={styles.cardBody}>

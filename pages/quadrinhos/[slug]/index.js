@@ -4,11 +4,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
+import AiUsageBadge from "@/components/AiUsageBadge";
 import GameReviews from "@/components/GameReviews/GameReviews";
 import BookViewer from "@/components/BookViewer/BookViewer";
 import ContentEngagement from "@/components/ContentEngagement/ContentEngagement";
 import PressKitButton from "@/components/PressKit/PressKitButton";
 import { ogImageSizeFromPreset } from "@/lib/seo";
+import { formatAiLevelName } from "@/lib/ai-usage";
 import { book as bookStructuredData, breadcrumbList, graph } from "@/lib/structured-data";
 
 import styles from "./book.module.css";
@@ -224,6 +226,12 @@ export default function BookPage({ initialBook, siteUrl }) {
                     <dd className={styles.heroMetaValue}>{bookData.language}</dd>
                   </div>
                 )}
+                <div className={styles.heroMetaRow}>
+                  <dt className={styles.heroMetaLabel}>Uso de IA</dt>
+                  <dd className={styles.heroMetaValue} title={bookData.ai_level_notes || undefined}>
+                    <AiUsageBadge level={bookData.ai_level} size="sm" /> {formatAiLevelName(bookData.ai_level)}
+                  </dd>
+                </div>
                 {bookData.release_date && (
                   <div className={styles.heroMetaRow}>
                     <dt className={styles.heroMetaLabel}>Lançamento</dt>
@@ -274,7 +282,7 @@ export default function BookPage({ initialBook, siteUrl }) {
                 )}
 
                 {bookData.viewer?.canEdit && (
-                  <Link href={`/estudios/${bookData.studio_slug}/configuracoes`} className={styles.btnEdit}>
+                  <Link href={`/estudios/${bookData.studio_slug}/configuracoes?tab=books`} className={styles.btnEdit}>
                     Editar
                   </Link>
                 )}

@@ -75,7 +75,7 @@ export default function NovoEstudioPage() {
         return;
       }
 
-      router.push(`/estudios/${data.slug}`);
+      router.push(`/estudios/${data.slug}/configuracoes?welcome=1`);
     } catch {
       setError("Erro inesperado. Tente novamente.");
     } finally {

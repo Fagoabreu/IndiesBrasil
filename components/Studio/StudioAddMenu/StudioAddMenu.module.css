@@ -1,0 +1,17 @@
+/* O gatilho do menu herda a altura e o padding dos botões de ação vizinhos
+   (`.btnOutline`, em `StudioActionButton.module.css`) para a linha de ações não
+   ter dois tamanhos de botão. O nome da classe daquele módulo tem outro hash —
+   por isso os valores são repetidos aqui, não importados. */
+.trigger {
+  min-height: 30px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+@media (max-width: 700px) {
+  .trigger {
+    padding: 10px 12px;
+  }
+}

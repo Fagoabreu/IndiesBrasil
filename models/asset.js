@@ -4,6 +4,7 @@ import { generateUniqueSlug } from "lib/slug";
 import { MAX_ASSET_CATEGORIES } from "lib/assetGroups";
 import { ASSET_LICENSES, DEFAULT_ASSET_LICENSE } from "lib/assetLicenses";
 import { normalizeAssetUrl } from "lib/assetUrl";
+import { FILTER_NONE } from "lib/productFilters";
 import uploadFile from "@/infra/uploadFile.js";
 import moderation from "./moderation.js";
 import notification from "./notification.js";
@@ -52,6 +53,7 @@ const SELECT_BASE = `
     a.id, a.slug, a.name, a.short_description, a.description,
     a.external_url, a.source_name, a.credit, a.license, a.is_free, a.price,
     a.file_format, a.created_at, a.updated_at,
+    a.ai_level, a.ai_level_notes,
     a.owner_org_id, a.owner_id, a.cover_image_id,
     ui.secure_url AS cover_url,
     o.name AS studio_name,
@@ -90,7 +92,7 @@ function moderationCondition(alias = "a") {
  * Leitura
  * ========================================================= */
 
-async function findAll({ page = 1, limit = 20, search = "", category = "", group = "", free = null } = {}) {
+async function findAll({ page = 1, limit = 20, search = "", category = "", group = "", free = null, aiLevel = "" } = {}) {
   const offset = Math.max(0, (page - 1) * limit);
   const conditions = [moderationCondition("a")];
   const values = [];
@@ -126,6 +128,15 @@ async function findAll({ page = 1, limit = 20, search = "", category = "", group
   if (free === true || free === false) {
     values.push(free);
     conditions.push(`a.is_free = $${values.length}`);
+  }
+
+  // Mesmo contrato de `game.findAll`: `"none"` é o não declarado; o resto já
+  // chega validado por `lib/productFilters.js`.
+  if (aiLevel === FILTER_NONE) {
+    conditions.push(`a.ai_level IS NULL`);
+  } else if (aiLevel) {
+    values.push(Number(aiLevel));
+    conditions.push(`a.ai_level = $${values.length}`);
   }
 
   values.push(limit, offset);

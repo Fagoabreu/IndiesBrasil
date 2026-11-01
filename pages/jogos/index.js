@@ -4,8 +4,11 @@ import { Heading, TextInput, Spinner } from "@primer/react";
 import { DeviceMobileIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import GameCard from "@/components/Card/GameCard";
+import StudioPublishNotice from "@/components/Studio/StudioPublishNotice/StudioPublishNotice";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL } from "@/lib/seo";
+import { RATING_LABELS, RATING_ORDER } from "@/lib/rating-constants";
+import { AI_USAGE_LEVELS, formatAiLevelLabel } from "@/lib/ai-usage";
 import styles from "./index.module.css";
 
 const PAGE_TITLE = "Jogos — Indies Brasil";
@@ -83,12 +86,14 @@ export default function JogosPage({ initialGames }) {
   const [search, setSearch] = useState("");
   const [genre, setGenre] = useState("");
   const [stage, setStage] = useState("");
+  const [contentRating, setContentRating] = useState("");
+  const [aiLevel, setAiLevel] = useState("");
 
   // aba "Seguindo"
   const [followingGames, setFollowingGames] = useState([]);
   const [followingLoading, setFollowingLoading] = useState(false);
 
-  const loadAll = useCallback(async (pageNum, searchQuery, genreQuery, stageQuery) => {
+  const loadAll = useCallback(async (pageNum, searchQuery, genreQuery, stageQuery, ratingQuery, aiQuery) => {
     setAllLoading(true);
     try {
       const params = new URLSearchParams({
@@ -97,6 +102,8 @@ export default function JogosPage({ initialGames }) {
         search: searchQuery,
         genre: genreQuery,
         stage: stageQuery,
+        content_rating: ratingQuery,
+        ai_level: aiQuery,
       });
       const res = await fetch(`/api/v1/games?${params}`);
       if (!res.ok) return;
@@ -122,18 +129,18 @@ export default function JogosPage({ initialGames }) {
 
       if (skipInitialLoad.current) {
         skipInitialLoad.current = false;
-        if (!search && !genre && !stage) return;
+        if (!search && !genre && !stage && !contentRating && !aiLevel) return;
       }
 
-      loadAll(1, search, genre, stage);
+      loadAll(1, search, genre, stage, contentRating, aiLevel);
     }, 350);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, genre, stage]);
+  }, [search, genre, stage, contentRating, aiLevel]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (allPage > 1) loadAll(allPage, search, genre, stage);
+    if (allPage > 1) loadAll(allPage, search, genre, stage, contentRating, aiLevel);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allPage]);
 
@@ -159,20 +166,16 @@ export default function JogosPage({ initialGames }) {
   let emptyTitle;
   if (tab === "following") {
     emptyTitle = "Você ainda não segue nenhum jogo";
-  } else if (search || genre || stage) {
+  } else if (search || genre || stage || contentRating || aiLevel) {
     emptyTitle = "Nenhum jogo encontrado";
   } else {
     emptyTitle = "Ainda não há jogos cadastrados";
   }
 
-  let emptyDescription;
-  if (tab === "following") {
-    emptyDescription = 'Vá para "Descubra" e comece a seguir!';
-  } else if (search || genre || stage) {
-    emptyDescription = "Tente outros filtros.";
-  } else {
-    emptyDescription = "Seja o primeiro a cadastrar o seu jogo!";
-  }
+  // O estado vazio sem conteúdo mostra o caminho de publicação, não um convite
+  // sem destino: "cadastre o seu jogo" não existe sem um estúdio, e é o
+  // `StudioPublishNotice` que explica isso e leva ao lugar certo.
+  const hasFilters = Boolean(search || genre || stage || contentRating || aiLevel);
 
   return (
     <div className={styles.page}>
@@ -218,6 +221,24 @@ export default function JogosPage({ initialGames }) {
                     </option>
                   ))}
                 </select>
+                <select className={styles.select} value={contentRating} onChange={(e) => setContentRating(e.target.value)}>
+                  <option value="">Todas as classificações</option>
+                  {RATING_ORDER.map((rating) => (
+                    <option key={rating} value={rating}>
+                      {RATING_LABELS[rating]}
+                    </option>
+                  ))}
+                  <option value="none">Não classificados</option>
+                </select>
+                <select className={styles.select} value={aiLevel} onChange={(e) => setAiLevel(e.target.value)}>
+                  <option value="">Todo uso de IA</option>
+                  {AI_USAGE_LEVELS.map((item) => (
+                    <option key={item.level} value={String(item.level)}>
+                      {formatAiLevelLabel(item.level)}
+                    </option>
+                  ))}
+                  <option value="none">Não informado</option>
+                </select>
               </div>
             </div>
           )}
@@ -247,6 +268,10 @@ export default function JogosPage({ initialGames }) {
         )}
       </header>
 
+      {/* A listagem é onde a intenção de publicar aparece — o aviso fica antes
+          dos cards para não ser confundido com filtro (ver o componente). */}
+      {tab === "all" && <StudioPublishNotice tab="games" />}
+
       {/* LOADING */}
       {isLoading && (
         <div className={styles.loadingState} role="status" aria-live="polite">
@@ -260,7 +285,13 @@ export default function JogosPage({ initialGames }) {
         <div className={styles.emptyState} role="status" aria-live="polite">
           <DeviceMobileIcon size={40} className={styles.emptyIcon} />
           <p className={styles.emptyTitle}>{emptyTitle}</p>
-          <p className={styles.emptyDescription}>{emptyDescription}</p>
+          {tab === "following" ? (
+            <p className={styles.emptyDescription}>{'Vá para "Descubra" e comece a seguir!'}</p>
+          ) : hasFilters ? (
+            <p className={styles.emptyDescription}>Tente outros filtros.</p>
+          ) : (
+            <StudioPublishNotice variant="empty" tab="games" />
+          )}
         </div>
       )}
 

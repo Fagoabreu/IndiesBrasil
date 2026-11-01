@@ -5,12 +5,14 @@ import Image from "next/image";
 import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
 import ContentRatingBadge from "@/components/ContentRatingBadge";
+import AiUsageBadge from "@/components/AiUsageBadge";
 import GameMediaPlayer from "@/components/GameMedia/GameMediaPlayer";
 import GameReviews from "@/components/GameReviews/GameReviews";
 import ContentEngagement from "@/components/ContentEngagement/ContentEngagement";
 import IconSvg from "@/components/IconSvg/IconSvg";
 import PressKitButton from "@/components/PressKit/PressKitButton";
 import { SITE_URL, ogImageSizeFromPreset } from "@/lib/seo";
+import { formatAiLevelName } from "@/lib/ai-usage";
 import { breadcrumbList, graph, videoGame } from "@/lib/structured-data";
 
 import styles from "./game.module.css";
@@ -361,6 +363,12 @@ export default function GamePage({ initialGame, siteUrl }) {
                     </span>
                   </div>
                 )}
+                <div className={styles.heroDetailRow}>
+                  <span className={styles.heroDetailLabel}>Uso de IA</span>
+                  <span className={styles.heroDetailValue} title={gameData.ai_level_notes || undefined}>
+                    <AiUsageBadge level={gameData.ai_level} size="sm" /> {formatAiLevelName(gameData.ai_level)}
+                  </span>
+                </div>
                 {gameData.engine && (
                   <div className={styles.heroDetailRow}>
                     <span className={styles.heroDetailLabel}>Engine</span>
@@ -613,7 +621,7 @@ export default function GamePage({ initialGame, siteUrl }) {
 
               {/* Editar jogo */}
               {viewer?.canEdit && (
-                <Link href={`/estudios/${gameData.studio_slug}/configuracoes`} className={styles.editLink}>
+                <Link href={`/estudios/${gameData.studio_slug}/configuracoes?tab=games`} className={styles.editLink}>
                   ⚙️ Gerenciar jogo
                 </Link>
               )}
