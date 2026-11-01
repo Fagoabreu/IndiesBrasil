@@ -13,6 +13,7 @@ import {
   VideoIcon,
   BroadcastIcon,
   PackageIcon,
+  CalendarIcon,
 } from "@primer/octicons-react";
 
 import { useUser } from "@/context/UserContext";
@@ -781,6 +782,9 @@ export default function StudioPage({ initialStudio }) {
                   />
                 )}
                 {canPost && <StudioActionButton href={`/estudios/${slug}/reunioes`} icon={<VideoIcon size={14} />} label="Reuniões" />}
+                {(viewer.isMember || viewer.isAdmin || viewer.isOwner) && (
+                  <StudioActionButton href={`/estudios/${slug}/eventos`} icon={<CalendarIcon size={14} />} label="Eventos" />
+                )}
                 {canEdit && (
                   <>
                     {/* Publicar é a ação mais frequente de quem tem estúdio — por

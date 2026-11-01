@@ -261,6 +261,21 @@
   color: var(--fgColor-muted);
 }
 
+/* Link do produto vinculado (jogo, jogo de mesa, livro, asset). Fica abaixo do
+   estúdio no mesmo cartão — os dois são o que identifica a realização. */
+.productLink {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  text-decoration: none;
+}
+
+.productLink:hover {
+  text-decoration: underline;
+}
+
 /* ── RSVP ── */
 .rsvpCard {
   background: var(--bgColor-muted);

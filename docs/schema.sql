@@ -596,7 +596,6 @@ CREATE TABLE events (
     visibility           visibility_type DEFAULT 'public' NOT NULL,
     status               event_status DEFAULT 'draft' NOT NULL,
     created_by           UUID NOT NULL,
-    studio_id            INTEGER,
     location_name        VARCHAR(255),
     location_url         VARCHAR(512),
     is_online            BOOLEAN DEFAULT false NOT NULL,
@@ -607,18 +606,28 @@ CREATE TABLE events (
     is_recurring         BOOLEAN DEFAULT false NOT NULL,
     recurrence_rule_id   INTEGER,
     banner_image_id      VARCHAR(256),
-    game_id              INTEGER,
     created_at           TIMESTAMPTZ DEFAULT (timezone('utc', now())) NOT NULL,
     updated_at           TIMESTAMPTZ DEFAULT (timezone('utc', now())) NOT NULL,
     banner_external_url  VARCHAR(512),
     address_id           UUID,
     ticket_url           TEXT,
+    organization_id      UUID,
+    game_id              UUID,
+    boardgame_id         UUID,
+    book_id              UUID,
+    asset_id             UUID,
     CONSTRAINT events_pkey                     PRIMARY KEY (id),
     CONSTRAINT events_ends_after_starts        CHECK ((ends_at >= starts_at)),
     CONSTRAINT events_recurring_requires_rule  CHECK (((is_recurring = false) OR (recurrence_rule_id IS NOT NULL))),
+    CONSTRAINT events_single_product_check     CHECK ((((game_id IS NOT NULL))::integer + ((boardgame_id IS NOT NULL))::integer + ((book_id IS NOT NULL))::integer + ((asset_id IS NOT NULL))::integer) <= 1),
     CONSTRAINT events_address_id_fkey          FOREIGN KEY (address_id) REFERENCES addresses(id) ON DELETE SET NULL,
+    CONSTRAINT events_asset_id_fkey            FOREIGN KEY (asset_id) REFERENCES assets(id) ON DELETE CASCADE,
     CONSTRAINT events_banner_image_id_fkey     FOREIGN KEY (banner_image_id) REFERENCES uploaded_images(id) ON DELETE SET NULL,
+    CONSTRAINT events_boardgame_id_fkey        FOREIGN KEY (boardgame_id) REFERENCES boardgames(id) ON DELETE CASCADE,
+    CONSTRAINT events_book_id_fkey             FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
     CONSTRAINT events_created_by_fkey          FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT events_game_id_fkey             FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE,
+    CONSTRAINT events_organization_id_fkey     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
     CONSTRAINT events_recurrence_rule_id_fkey  FOREIGN KEY (recurrence_rule_id) REFERENCES event_recurrence_rules(id) ON DELETE SET NULL
 );
 CREATE INDEX idx_events_created_by ON events (created_by);
@@ -626,6 +635,7 @@ CREATE UNIQUE INDEX idx_events_slug ON events (slug) WHERE (slug IS NOT NULL);
 CREATE INDEX idx_events_starts_at ON events (starts_at);
 CREATE INDEX idx_events_status_visibility ON events (status, visibility);
 CREATE INDEX idx_events_type ON events (event_type);
+CREATE INDEX events_organization_id_index ON events (organization_id);
 
 -- =====================================================================================
 -- ENQUETES

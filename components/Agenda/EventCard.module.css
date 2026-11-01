@@ -195,6 +195,22 @@
   border-radius: 12px;
 }
 
+/* Selo do estúdio organizador — é o que responde "de quem é este evento" sem
+   abrir a página. */
+.studioBadge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  background: rgba(var(--brand-rgb-primary), 0.08);
+  border: 1px solid var(--brand-active-ring);
+  padding: 2px 8px;
+  border-radius: 12px;
+  max-width: 46%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .eventTitle {
   font-size: 1rem;
   font-weight: 600;
