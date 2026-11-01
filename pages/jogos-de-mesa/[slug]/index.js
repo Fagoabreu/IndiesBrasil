@@ -384,7 +384,7 @@ export default function BoardgamePage({ initialBgData, siteUrl }) {
               </dl>
 
               {bgData.viewer?.canEdit && (
-                <Link href={`/estudios/${bgData.studio_slug}/configuracoes`} className={styles.btnEdit}>
+                <Link href={`/estudios/${bgData.studio_slug}/configuracoes?tab=boardgames`} className={styles.btnEdit}>
                   Editar jogo
                 </Link>
               )}

@@ -621,7 +621,7 @@ export default function GamePage({ initialGame, siteUrl }) {
 
               {/* Editar jogo */}
               {viewer?.canEdit && (
-                <Link href={`/estudios/${gameData.studio_slug}/configuracoes`} className={styles.editLink}>
+                <Link href={`/estudios/${gameData.studio_slug}/configuracoes?tab=games`} className={styles.editLink}>
                   ⚙️ Gerenciar jogo
                 </Link>
               )}

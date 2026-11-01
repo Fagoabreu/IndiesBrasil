@@ -668,6 +668,47 @@
   gap: 16px;
 }
 
+/* Seção de produto vazia, mostrada só para quem pode publicar (ver
+   `EmptyProductSection`): é o convite a publicar dentro do lugar onde o item
+   vai aparecer. */
+.emptySection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  border: 1px dashed var(--borderColor-default);
+  border-radius: 8px;
+  background: var(--bgColor-muted);
+}
+
+.emptySectionText {
+  flex: 1;
+  min-width: 160px;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--fgColor-muted);
+}
+
+.emptySectionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border: 1px solid var(--brand-active-ring);
+  border-radius: 6px;
+  background: rgba(var(--brand-rgb-primary), 0.08);
+  color: var(--brand-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.emptySectionBtn:hover {
+  background: rgba(var(--brand-rgb-primary), 0.14);
+}
+
 /* STREAM AO VIVO */
 .streamEmbed {
   width: 100%;

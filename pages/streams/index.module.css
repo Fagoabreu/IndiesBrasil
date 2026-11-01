@@ -411,23 +411,6 @@
   max-width: 380px;
 }
 
-.emptyLink {
-  display: inline-block;
-  padding: 8px 20px;
-  border-radius: 6px;
-  background: var(--brand-active-bg);
-  color: var(--brand-primary);
-  border: 1px solid var(--brand-active-ring);
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: background 0.15s;
-}
-
-.emptyLink:hover {
-  background: var(--brand-hover-bg);
-}
-
 /* ---- Offline grid ---- */
 .offlineGrid {
   display: flex;

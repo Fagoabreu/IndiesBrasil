@@ -4,6 +4,7 @@ import { Heading, TextInput, Spinner } from "@primer/react";
 import { TableIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import BoardGameCard from "@/components/Card/BoardGameCard";
+import StudioPublishNotice from "@/components/Studio/StudioPublishNotice/StudioPublishNotice";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL } from "@/lib/seo";
 import { RATING_LABELS, RATING_ORDER } from "@/lib/rating-constants";
@@ -154,6 +155,8 @@ export default function JogosDeMessaPage({ initialGames }) {
     emptyDescription = "Seja o primeiro a cadastrar o seu jogo!";
   }
 
+  const hasFilters = Boolean(search || category || stage || contentRating || aiLevel);
+
   return (
     <div className={styles.page}>
       <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} />
@@ -245,6 +248,8 @@ export default function JogosDeMessaPage({ initialGames }) {
         )}
       </header>
 
+      {tab === "all" && <StudioPublishNotice tab="boardgames" />}
+
       {/* LOADING */}
       {isLoading && (
         <div className={styles.loadingState} role="status" aria-live="polite">
@@ -258,7 +263,11 @@ export default function JogosDeMessaPage({ initialGames }) {
         <div className={styles.emptyState} role="status" aria-live="polite">
           <TableIcon size={40} className={styles.emptyIcon} />
           <p className={styles.emptyTitle}>{emptyTitle}</p>
-          <p className={styles.emptyDescription}>{emptyDescription}</p>
+          {tab === "following" || hasFilters ? (
+            <p className={styles.emptyDescription}>{emptyDescription}</p>
+          ) : (
+            <StudioPublishNotice variant="empty" tab="boardgames" />
+          )}
         </div>
       )}
 

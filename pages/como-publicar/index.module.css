@@ -1,0 +1,360 @@
+/* Página de explicação do modelo estúdio-primeiro. Larga o suficiente para a
+   tabela de tipos de conteúdo, estreita o suficiente para o texto corrido. */
+.page {
+  width: min(100%, 860px);
+  margin: 0 auto;
+  padding: 20px 0 56px;
+}
+
+/* ── Hero ── */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--brand-ambient-bg);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 16px;
+  padding: 28px 24px;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--brand-gradient-v);
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  padding-left: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+}
+
+.title {
+  margin: 0 0 12px;
+  padding-left: 6px;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--fgColor-default);
+}
+
+.lead {
+  margin: 0;
+  padding-left: 6px;
+  max-width: 62ch;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--fgColor-muted);
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  padding-left: 6px;
+}
+
+/* ── Botões ── */
+
+.ctaPrimary,
+.ctaSecondary,
+.ctaGhost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.ctaPrimary {
+  background: var(--brand-primary);
+  border: 1px solid var(--brand-primary);
+  color: var(--fgColor-onEmphasis);
+}
+
+.ctaPrimary:hover {
+  background: var(--brand-secondary);
+  border-color: var(--brand-secondary);
+}
+
+.ctaSecondary {
+  background: rgba(var(--brand-rgb-primary), 0.08);
+  border: 1px solid var(--brand-active-ring);
+  color: var(--brand-primary);
+}
+
+.ctaSecondary:hover {
+  background: rgba(var(--brand-rgb-primary), 0.14);
+}
+
+.ctaGhost {
+  background: transparent;
+  border: 1px solid var(--borderColor-default);
+  color: var(--fgColor-muted);
+}
+
+.ctaGhost:hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+/* ── Seções ── */
+
+.sectionTitle {
+  margin: 0 0 12px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--fgColor-default);
+}
+
+.sectionLead {
+  margin: 0 0 16px;
+  max-width: 66ch;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--fgColor-muted);
+}
+
+.mono {
+  font-family: var(--fontStack-monospace, monospace);
+  font-size: 0.85em;
+  color: var(--fgColor-default);
+}
+
+.steps,
+.typesSection,
+.faqSection {
+  margin-top: 32px;
+}
+
+/* ── Passos ── */
+
+.stepList {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 12px;
+  background: var(--bgColor-default);
+}
+
+.stepNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--brand-primary);
+  color: var(--fgColor-onEmphasis);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.stepBody {
+  min-width: 0;
+}
+
+.stepTitle {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--fgColor-default);
+}
+
+.stepText {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--fgColor-muted);
+}
+
+/* ── Tabela de tipos ── */
+
+.typeTable {
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.typeRow {
+  display: grid;
+  grid-template-columns: 1.1fr 1.7fr 0.9fr;
+  gap: 12px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--borderColor-muted);
+  font-size: 0.875rem;
+}
+
+.typeRow:first-child {
+  border-top: 0;
+}
+
+.typeHeader {
+  background: var(--bgColor-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fgColor-muted);
+}
+
+.typeName {
+  font-weight: 600;
+  color: var(--fgColor-default);
+}
+
+.typeDetail {
+  color: var(--fgColor-muted);
+  line-height: 1.5;
+}
+
+.typeTab {
+  color: var(--brand-primary);
+  font-weight: 600;
+}
+
+/* ── FAQ ── */
+
+.faqList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.faqItem {
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 10px;
+  background: var(--bgColor-default);
+}
+
+.faqQuestion {
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+  cursor: pointer;
+}
+
+.faqQuestion:hover {
+  color: var(--brand-primary);
+}
+
+.faqAnswer {
+  margin: 0;
+  padding: 0 16px 14px;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--fgColor-muted);
+}
+
+/* ── CTA final ── */
+
+.finalCta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 36px;
+  padding: 20px;
+  border: 1px solid var(--brand-active-ring);
+  border-radius: 14px;
+  background: rgba(var(--brand-rgb-primary), 0.06);
+}
+
+.finalIcon {
+  flex-shrink: 0;
+  color: var(--brand-primary);
+}
+
+.finalBody {
+  flex: 1;
+  min-width: 220px;
+}
+
+.finalTitle {
+  margin: 0 0 2px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--fgColor-default);
+}
+
+.finalText {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--fgColor-muted);
+}
+
+/* Em telas estreitas a tabela vira lista empilhada: três colunas de texto
+   corrido num celular viram uma faixa de duas palavras por linha. */
+@media (max-width: 640px) {
+  .page {
+    padding-bottom: 40px;
+  }
+
+  .hero {
+    padding: 22px 18px;
+  }
+
+  .heroActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ctaPrimary,
+  .ctaSecondary,
+  .ctaGhost {
+    width: 100%;
+  }
+
+  .typeRow {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .typeHeader {
+    display: none;
+  }
+
+  .typeTab {
+    font-size: 0.8rem;
+  }
+
+  .finalCta {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .finalIcon {
+    display: none;
+  }
+}

@@ -5,6 +5,7 @@ import { SearchIcon } from "@primer/octicons-react";
 
 import SeoHead from "@/components/SeoHead";
 import AssetCard from "@/components/Card/AssetCard";
+import StudioPublishNotice from "@/components/Studio/StudioPublishNotice/StudioPublishNotice";
 import { ASSET_GROUPS, groupAssetCategories } from "@/lib/assetGroups";
 import { AI_USAGE_LEVELS, formatAiLevelLabel } from "@/lib/ai-usage";
 import { SITE_URL } from "@/lib/seo";
@@ -255,9 +256,18 @@ export default function AssetsPage({ initialAssets, initialCategories }) {
           </div>
         </div>
 
+        <StudioPublishNotice tab="assets" />
+
         {error && <p className={styles.error}>{error}</p>}
 
-        {assets.length === 0 && !loading && !error && <p className={styles.empty}>Nenhum asset encontrado com esses filtros.</p>}
+        {assets.length === 0 && !loading && !error && (
+          <div className={styles.empty}>
+            <p>
+              {group || category || free || search || aiLevel ? "Nenhum asset encontrado com esses filtros." : "Ainda não há assets cadastrados."}
+            </p>
+            {!group && !category && !free && !search && !aiLevel && <StudioPublishNotice variant="empty" tab="assets" />}
+          </div>
+        )}
 
         <div className={styles.grid}>
           {assets.map((asset) => (

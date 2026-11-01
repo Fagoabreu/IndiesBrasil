@@ -127,6 +127,20 @@ export default function LeftSidebarComponent({ onNavigate }) {
               </NavList.LeadingVisual>
               Artes e Assets
             </NavList.Item>
+            {/* Publicar exige um estúdio, e este grupo é onde os tipos de
+                conteúdo aparecem lado a lado — é aqui que a regra precisa estar
+                visível, não só na tela de explicção. */}
+            <NavList.Item
+              as={Link}
+              href="/como-publicar"
+              aria-current={router.pathname.startsWith("/como-publicar") ? "page" : undefined}
+              onClick={onNavigate}
+            >
+              <NavList.LeadingVisual>
+                <LightBulbIcon />
+              </NavList.LeadingVisual>
+              Como publicar
+            </NavList.Item>
           </NavList.SubNav>
         </NavList.Item>
         <NavList.Divider />

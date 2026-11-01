@@ -3,6 +3,7 @@ import { Heading, TextInput, Spinner } from "@primer/react";
 import { BookIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import BookCard from "@/components/Card/BookCard";
+import StudioPublishNotice from "@/components/Studio/StudioPublishNotice/StudioPublishNotice";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL } from "@/lib/seo";
 import { RATING_LABELS, RATING_ORDER } from "@/lib/rating-constants";
@@ -151,6 +152,8 @@ export default function QuadrinhosPage({ initialBooks }) {
     emptyDescription = "Seja o primeiro a cadastrar sua publicação!";
   }
 
+  const hasFilters = Boolean(search || bookType || stage || contentRating || aiLevel);
+
   return (
     <div className={styles.page}>
       <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} />
@@ -241,6 +244,8 @@ export default function QuadrinhosPage({ initialBooks }) {
         )}
       </header>
 
+      {tab === "all" && <StudioPublishNotice tab="books" />}
+
       {isLoading && (
         <div className={styles.loadingState} role="status" aria-live="polite">
           <Spinner size="medium" />
@@ -252,7 +257,11 @@ export default function QuadrinhosPage({ initialBooks }) {
         <div className={styles.emptyState} role="status" aria-live="polite">
           <BookIcon size={40} className={styles.emptyIcon} />
           <p className={styles.emptyTitle}>{emptyTitle}</p>
-          <p className={styles.emptyDescription}>{emptyDescription}</p>
+          {tab === "following" || hasFilters ? (
+            <p className={styles.emptyDescription}>{emptyDescription}</p>
+          ) : (
+            <StudioPublishNotice variant="empty" tab="books" />
+          )}
         </div>
       )}
 

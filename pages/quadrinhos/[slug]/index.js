@@ -282,7 +282,7 @@ export default function BookPage({ initialBook, siteUrl }) {
                 )}
 
                 {bookData.viewer?.canEdit && (
-                  <Link href={`/estudios/${bookData.studio_slug}/configuracoes`} className={styles.btnEdit}>
+                  <Link href={`/estudios/${bookData.studio_slug}/configuracoes?tab=books`} className={styles.btnEdit}>
                     Editar
                   </Link>
                 )}

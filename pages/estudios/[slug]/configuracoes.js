@@ -213,6 +213,9 @@ export default function ConfiguracoesPage() {
     const requested = typeof router.query.tab === "string" ? router.query.tab : "";
     return STUDIO_TAB_IDS.includes(requested) ? requested : "profile";
   });
+
+  // Vindo de `/estudios/novo?welcome=1` — ver o aviso no topo da página.
+  const welcome = router.query.welcome === "1";
   const [activeGameTab, setActiveGameTab] = useState("info");
 
   // Convites
@@ -1539,6 +1542,24 @@ export default function ConfiguracoesPage() {
           </Link>
           <h1 className={styles.pageTitle}>Configurações do Estúdio</h1>
         </div>
+
+        {/* Chegada de `/estudios/novo?welcome=1`: sem esta linha, quem acabou de
+            criar o estúdio cai numa tela chamada "Configurações" sem saber que é
+            aqui que se publica. O aviso some na primeira troca de aba. */}
+        {welcome && (
+          <div className={styles.welcomeBanner} role="status">
+            <span className={styles.welcomeIcon} aria-hidden="true">
+              🎉
+            </span>
+            <div className={styles.welcomeBody}>
+              <p className={styles.welcomeTitle}>Estúdio criado. Agora publique a primeira obra.</p>
+              <p className={styles.welcomeText}>
+                Escolha abaixo o tipo de conteúdo — Jogos, Jogos de Mesa, Publicações, Assets ou Streaming. Também dá para convidar a equipe na aba
+                Equipe.
+              </p>
+            </div>
+          </div>
+        )}
 
         <nav className={styles.tabPanel} aria-label="Seções das configurações">
           {STUDIO_TABS.map((tab) => {

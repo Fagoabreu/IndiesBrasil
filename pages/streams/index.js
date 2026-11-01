@@ -7,6 +7,7 @@ import { ArrowUpRightIcon, BroadcastIcon, PersonIcon, SyncIcon } from "@primer/o
 import SeoHead from "@/components/SeoHead";
 import LiveBadge from "@/components/Streams/LiveBadge";
 import PlatformBadge from "@/components/Streams/PlatformBadge";
+import StudioPublishNotice from "@/components/Studio/StudioPublishNotice/StudioPublishNotice";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL } from "@/lib/seo";
 import { formatViewerCount, getPlatformLabel, getWatchUrl, resolvePlatformId } from "@/lib/streams";
@@ -285,10 +286,8 @@ export default function StreamsPage({ initialStudios }) {
           <div className={styles.emptyState}>
             <BroadcastIcon size={40} className={styles.emptyIcon} />
             <p className={styles.emptyTitle}>Nenhum estúdio com canal cadastrado ainda</p>
-            <p className={styles.emptyDescription}>Estúdios podem cadastrar seus canais da Twitch ou YouTube nas configurações do estúdio.</p>
-            <Link href="/estudios" className={styles.emptyLink}>
-              Ver estúdios
-            </Link>
+            <p className={styles.emptyDescription}>Os canais da Twitch e do YouTube são cadastrados na aba Streaming do estúdio.</p>
+            <StudioPublishNotice variant="empty" tab="streaming" />
           </div>
         )}
 

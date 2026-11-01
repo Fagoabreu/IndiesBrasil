@@ -4,6 +4,7 @@ import { Heading, TextInput, Spinner } from "@primer/react";
 import { DeviceMobileIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import GameCard from "@/components/Card/GameCard";
+import StudioPublishNotice from "@/components/Studio/StudioPublishNotice/StudioPublishNotice";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL } from "@/lib/seo";
 import { RATING_LABELS, RATING_ORDER } from "@/lib/rating-constants";
@@ -171,14 +172,10 @@ export default function JogosPage({ initialGames }) {
     emptyTitle = "Ainda não há jogos cadastrados";
   }
 
-  let emptyDescription;
-  if (tab === "following") {
-    emptyDescription = 'Vá para "Descubra" e comece a seguir!';
-  } else if (search || genre || stage || contentRating || aiLevel) {
-    emptyDescription = "Tente outros filtros.";
-  } else {
-    emptyDescription = "Seja o primeiro a cadastrar o seu jogo!";
-  }
+  // O estado vazio sem conteúdo mostra o caminho de publicação, não um convite
+  // sem destino: "cadastre o seu jogo" não existe sem um estúdio, e é o
+  // `StudioPublishNotice` que explica isso e leva ao lugar certo.
+  const hasFilters = Boolean(search || genre || stage || contentRating || aiLevel);
 
   return (
     <div className={styles.page}>
@@ -271,6 +268,10 @@ export default function JogosPage({ initialGames }) {
         )}
       </header>
 
+      {/* A listagem é onde a intenção de publicar aparece — o aviso fica antes
+          dos cards para não ser confundido com filtro (ver o componente). */}
+      {tab === "all" && <StudioPublishNotice tab="games" />}
+
       {/* LOADING */}
       {isLoading && (
         <div className={styles.loadingState} role="status" aria-live="polite">
@@ -284,7 +285,13 @@ export default function JogosPage({ initialGames }) {
         <div className={styles.emptyState} role="status" aria-live="polite">
           <DeviceMobileIcon size={40} className={styles.emptyIcon} />
           <p className={styles.emptyTitle}>{emptyTitle}</p>
-          <p className={styles.emptyDescription}>{emptyDescription}</p>
+          {tab === "following" ? (
+            <p className={styles.emptyDescription}>{'Vá para "Descubra" e comece a seguir!'}</p>
+          ) : hasFilters ? (
+            <p className={styles.emptyDescription}>Tente outros filtros.</p>
+          ) : (
+            <StudioPublishNotice variant="empty" tab="games" />
+          )}
         </div>
       )}
 
