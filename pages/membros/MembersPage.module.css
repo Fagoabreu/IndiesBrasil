@@ -82,6 +82,42 @@
   min-width: 190px;
 }
 
+/* Filtros de catálogo (profissão e ferramenta), na linha abaixo da busca. */
+.filterBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  padding-left: 8px;
+}
+
+.filterSelect {
+  flex: 0 0 auto;
+  min-width: 200px;
+  max-width: 280px;
+}
+
+/* `all: unset` como no `.feedTab`: o botão é texto e não um controle de caixa. */
+.clearFilters {
+  all: unset;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--brand-primary);
+  padding: 6px 4px;
+  border-radius: 4px;
+}
+
+.clearFilters:hover {
+  text-decoration: underline;
+}
+
+.clearFilters:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
 .feedTabs {
   display: inline-flex;
   gap: 6px;
@@ -195,6 +231,18 @@
 
   .searchInput {
     max-width: 100%;
+  }
+
+  /* Em tela estreita os dois seletores ocupam a largura toda: lado a lado eles
+     passariam de 400px só de mínimo. */
+  .filterBar {
+    padding-left: 0;
+  }
+
+  .filterSelect {
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
   }
 
   .grid {

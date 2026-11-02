@@ -48,6 +48,21 @@ export default function MembersPage() {
   // efeito, que o lint do projeto recusa (`react-hooks/set-state-in-effect`).
   const activeTab = tab === "inactive" && !isAdmin ? "all" : tab;
   const isDefaultSort = memberSort.field === DEFAULT_MEMBER_SORT.field && memberSort.order === DEFAULT_MEMBER_SORT.order;
+  // Filtros de catálogo (profissão e ferramenta). Ficam separados da busca
+  // livre: `?q=` casa trecho em username, bio, profissão e ferramenta; os
+  // seletores abaixo pedem o valor EXATO do catálogo e são o que torna a
+  // possibilidade visível — antes dela, quem não adivinhasse o termo não
+  // descobria que a busca alcançava o portfólio.
+  const [professionFilter, setProfessionFilter] = useState("");
+  const [toolFilter, setToolFilter] = useState("");
+  // Opções vindas da API (`filters`). Saem do catálogo, não dos vínculos: uma
+  // profissão que ninguém preencheu continua no seletor, com 0 membros.
+  const [filterOptions, setFilterOptions] = useState({ professions: [], tools: [] });
+  // Os filtros só valem na aba "Descubra": nas outras a barra some, e manter o
+  // recorte ativo esconderia gente sem explicação na tela.
+  const activeProfession = activeTab === "all" ? professionFilter : "";
+  const activeTool = activeTab === "all" ? toolFilter : "";
+  const hasActiveFilter = Boolean(activeProfession || activeTool);
 
   // Sentinel para infinite scroll
   const [sentinelRef, isSentinelVisible] = useInView({
@@ -68,10 +83,17 @@ export default function MembersPage() {
     // de API — recusar deixaria a página em branco por causa de um parâmetro.
     const parsedSort = parseMemberSort(router.query.sort, router.query.order) ?? DEFAULT_MEMBER_SORT;
 
+    // Os filtros de catálogo também vêm da URL (`?profession=Artista 2D`),
+    // senão o link filtrado não sobrevive a recarregar nem pode ser enviado.
+    const initialProfession = typeof router.query.profession === "string" ? router.query.profession : "";
+    const initialTool = typeof router.query.tool === "string" ? router.query.tool : "";
+
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSearch(initialQ);
     setAppliedSearch(initialQ);
     setMemberSort(parsedSort);
+    setProfessionFilter(initialProfession);
+    setToolFilter(initialTool);
     setHydrated(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- hidrata uma única vez, quando o router fica pronto
   }, [router.isReady, hydrated]);
@@ -108,6 +130,19 @@ export default function MembersPage() {
         params.set("order", memberSort.order);
       }
 
+      // Filtro vazio não vai para a URL — a ausência já significa "sem filtro".
+      if (activeProfession) {
+        params.set("profession", activeProfession);
+      } else {
+        params.delete("profession");
+      }
+
+      if (activeTool) {
+        params.set("tool", activeTool);
+      } else {
+        params.delete("tool");
+      }
+
       const query = params.toString();
       const nextUrl = query ? `${pathname}?${query}` : pathname;
 
@@ -117,7 +152,7 @@ export default function MembersPage() {
     }, SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
-  }, [search, memberSort, hydrated]);
+  }, [search, memberSort, activeProfession, activeTool, hydrated]);
 
   // Monta a URL conforme tab, busca e ordenação ativas
   function buildUrl(cursor) {
@@ -136,6 +171,11 @@ export default function MembersPage() {
       params.set("sort", memberSort.field);
       params.set("order", memberSort.order);
     }
+    if (activeProfession) params.set("profession", activeProfession);
+    if (activeTool) params.set("tool", activeTool);
+    // Só a primeira página pede as opções dos seletores: o recorte não muda ao
+    // paginar, e a lista de inativos não tem portfólio para contar.
+    if (!cursor) params.set("include_filters", "true");
 
     return `/api/v1/users?${params.toString()}`;
   }
@@ -164,6 +204,13 @@ export default function MembersPage() {
       setTotal(typeof data.total === "number" ? data.total : list.length);
       cursorRef.current = data.next_cursor || null;
       setHasMore(Boolean(data.has_more));
+
+      if (data.filters) {
+        setFilterOptions({
+          professions: data.filters.professions || [],
+          tools: data.filters.tools || [],
+        });
+      }
     } catch (e) {
       console.error("Erro ao carregar membros", e);
       setItems([]);
@@ -172,8 +219,8 @@ export default function MembersPage() {
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- buildUrl é derivado de activeTab/appliedSearch/memberSort
-  }, [activeTab, appliedSearch, memberSort]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- buildUrl é derivado de activeTab/appliedSearch/memberSort/filtros
+  }, [activeTab, appliedSearch, memberSort, professionFilter, toolFilter]);
 
   // Próxima página — anexa à lista
   const fetchMoreMembers = useCallback(async () => {
@@ -201,8 +248,8 @@ export default function MembersPage() {
       loadingMoreRef.current = false;
       setLoadingMore(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- buildUrl é derivado de activeTab/appliedSearch/memberSort
-  }, [hasMore, activeTab, appliedSearch, memberSort]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- buildUrl é derivado de activeTab/appliedSearch/memberSort/filtros
+  }, [hasMore, activeTab, appliedSearch, memberSort, professionFilter, toolFilter]);
 
   // Recarrega quando a tab ou a busca aplicada mudam
   useEffect(() => {
@@ -237,7 +284,7 @@ export default function MembersPage() {
     emptyTitle = "Nenhuma conta travada";
   } else if (activeTab === "following") {
     emptyTitle = "Você ainda não segue ninguém";
-  } else if (search) {
+  } else if (search || hasActiveFilter) {
     emptyTitle = "Nenhum membro encontrado";
   } else {
     emptyTitle = "Ainda não há membros";
@@ -250,6 +297,8 @@ export default function MembersPage() {
     emptyDescription = 'Vá para "Descubra" e comece a seguir!';
   } else if (search) {
     emptyDescription = `Nenhum resultado para "${search}". Tente outro nome, profissão ou ferramenta.`;
+  } else if (hasActiveFilter) {
+    emptyDescription = "Nenhum membro com esse filtro. Escolha outro ou clique em Limpar filtros.";
   } else {
     emptyDescription = "Seja o primeiro a fazer parte da comunidade!";
   }
@@ -300,6 +349,65 @@ export default function MembersPage() {
                   </Select.Option>
                 ))}
               </Select>
+            </div>
+          )}
+
+          {/* Filtros de catálogo. Ficam visíveis (e não escondidos atrás da
+              busca livre) porque são a resposta a "quem trabalha com isso":
+              o valor é exato, enquanto `?q=` casa trecho em qualquer campo.
+              A lista de inativos não os mostra — ela é diagnóstico de conta,
+              não diretório, e a API não calcula as opções ali. */}
+          {activeTab === "all" && filterOptions.professions.length + filterOptions.tools.length > 0 && (
+            <div className={styles.filterBar}>
+              <Select
+                aria-label="Filtrar membros por profissão"
+                value={professionFilter}
+                onChange={(e) => setProfessionFilter(e.target.value)}
+                className={styles.filterSelect}
+              >
+                <Select.Option value="">Todas as profissões</Select.Option>
+                {/* Valor vindo de um link antigo (profissão desativada depois)
+                    continua selecionado: sem esta opção o `<Select>` ficaria em
+                    branco e o filtro aplicado pareceria não estar valendo. */}
+                {activeProfession && !filterOptions.professions.some((option) => option.value === activeProfession) && (
+                  <Select.Option value={activeProfession}>{activeProfession}</Select.Option>
+                )}
+                {filterOptions.professions.map((option) => (
+                  <Select.Option key={option.value} value={option.value}>
+                    {`${option.value} (${option.total})`}
+                  </Select.Option>
+                ))}
+              </Select>
+
+              <Select
+                aria-label="Filtrar membros por ferramenta"
+                value={toolFilter}
+                onChange={(e) => setToolFilter(e.target.value)}
+                className={styles.filterSelect}
+              >
+                <Select.Option value="">Todas as ferramentas</Select.Option>
+                {activeTool && !filterOptions.tools.some((option) => option.value === activeTool) && (
+                  <Select.Option value={activeTool}>{activeTool}</Select.Option>
+                )}
+                {filterOptions.tools.map((option) => (
+                  <Select.Option key={option.value} value={option.value}>
+                    {`${option.value} (${option.total})`}
+                  </Select.Option>
+                ))}
+              </Select>
+
+              {hasActiveFilter && (
+                <button
+                  type="button"
+                  className={styles.clearFilters}
+                  onClick={() => {
+                    setProfessionFilter("");
+                    setToolFilter("");
+                  }}
+                >
+                  Limpar filtros
+                </button>
+              )}
             </div>
           )}
         </div>

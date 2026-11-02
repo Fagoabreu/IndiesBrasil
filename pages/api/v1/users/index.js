@@ -30,7 +30,7 @@ async function postHandler(request, response) {
 
 async function getHandler(request, response) {
   const userTryingToGet = request.context.user;
-  const { isfollowing, cursor, q, limit, status, sort, order } = request.query;
+  const { isfollowing, cursor, q, limit, status, sort, order, profession, tool, include_filters } = request.query;
   const userId = request.context.user.id;
 
   const rawStatus = Array.isArray(status) ? status[0] : status;
@@ -64,6 +64,11 @@ async function getHandler(request, response) {
 
   const includeInactive = rawStatus === "inactive";
 
+  // `?include_filters=true`: opções dos seletores de profissão e ferramenta do
+  // diretório. É opt-in porque o autocomplete de convite usa esta mesma rota a
+  // cada tecla e não desenha seletor nenhum.
+  const rawIncludeFilters = Array.isArray(include_filters) ? include_filters[0] : include_filters;
+
   // A lista de contas travadas expõe e-mail e vencimento de token — dados que
   // não pertencem à listagem pública. `read:user` (quem está logado) não basta.
   if (includeInactive && !authorization.can(userTryingToGet, "read:admin")) {
@@ -73,7 +78,7 @@ async function getHandler(request, response) {
     });
   }
 
-  const { items, total, hasMore, nextCursor } = await user.findUsers({
+  const { items, total, hasMore, nextCursor, filters } = await user.findUsers({
     userId,
     isfollowing,
     cursor,
@@ -81,6 +86,11 @@ async function getHandler(request, response) {
     limit,
     status: includeInactive ? "inactive" : "active",
     sort: memberSort,
+    profession,
+    tool,
+    // As opções dos seletores só fazem sentido na primeira página: o recorte não
+    // muda ao paginar, e a lista de inativos não tem portfólio para contar.
+    includeFilters: rawIncludeFilters === "true" && !cursor && !includeInactive,
   });
 
   // Contas travadas: resposta montada campo a campo. `filterOutput("read:user")`
@@ -107,5 +117,9 @@ async function getHandler(request, response) {
     // A ordem aplicada volta na resposta: quem pagina precisa saber que o
     // cursor pertence a ela (um cursor de outra ordenação é descartado).
     sort: memberSortValue(memberSort),
+    // Opções dos seletores, só quando `?include_filters=true` e na primeira
+    // página. A chave aparece sempre: `null` significa "não pedido", que é
+    // diferente de "catálogo vazio".
+    filters: filters ?? null,
   });
 }
