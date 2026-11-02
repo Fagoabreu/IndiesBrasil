@@ -175,6 +175,7 @@ Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESM
 - `status` desconhecido responde **400** em vez de cair na lista normal — sem isso, `?status=inativo` devolveria a lista publica e o operador acharia que esta vendo as contas travadas.
 - `has_other_token` sinaliza token de outra finalidade (reset), que **mantem** o cadastro contra a limpeza automatica de `annulAbandonedRegistrations`. E o que explica por que a conta continua no banco depois de alguem tentar cadastrar com os mesmos dados.
 - Na UI a aba "Inativos" so aparece para admin (`pages/membros/index.js`), e `activeTab` e derivado de `tab` + feature: quem perde `read:admin` com a aba aberta volta para "Descubra" em vez de ficar num 403 sem saida.
+- **A busca (`?q=`) cobre username, resumo, profissao e ferramenta** — os dois ultimos por `EXISTS` em `portfolio_role_ref`/`portfolio_tool_ref` (dentro de `findUsers`, `models/user.js`), nunca por JOIN: um membro com "Roteirista" e "Roteirista Tecnico" casaria duas vezes e inflaria o `total`. A lista administrativa de inativos acrescenta `email`; as duas continuam usando o MESMO `conditions`, entao o `total` e o cursor keyset acompanham sem codigo extra. Nao existe `?profession=`/`?tool=` separado: e um campo de texto so na tela.
 - Testes em `tests/integration/api/v1/users/get.test.js` (bloco "populacao da lista"). Os seeds daquele arquivo precisam de `orchestrator.activateUser`: usuario criado e nunca ativado nao aparece mais na listagem.
 
 ## Depoimentos (um por pessoa)

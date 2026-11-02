@@ -249,7 +249,7 @@ export default function MembersPage() {
   } else if (activeTab === "following") {
     emptyDescription = 'Vá para "Descubra" e comece a seguir!';
   } else if (search) {
-    emptyDescription = `Nenhum resultado para "${search}". Tente outro termo.`;
+    emptyDescription = `Nenhum resultado para "${search}". Tente outro nome, profissão ou ferramenta.`;
   } else {
     emptyDescription = "Seja o primeiro a fazer parte da comunidade!";
   }
@@ -278,7 +278,7 @@ export default function MembersPage() {
             <div className={styles.searchWrapper}>
               <TextInput
                 aria-label="Pesquisar membros"
-                placeholder={isInactiveTab ? "Pesquisar por username ou email..." : "Pesquisar por username ou bio..."}
+                placeholder={isInactiveTab ? "Pesquisar por username ou email..." : "Pesquisar por username, bio, profissão ou ferramenta..."}
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
                 leadingVisual="search"

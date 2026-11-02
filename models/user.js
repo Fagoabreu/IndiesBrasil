@@ -1147,6 +1147,23 @@ async function findUsers(options = {}) {
     const searchColumns = [
       `strpos(lower(u.username), lower($${whereValues.length})) > 0`,
       `strpos(lower(COALESCE(u.resumo, '')), lower($${whereValues.length})) > 0`,
+      // Profissão e ferramenta são atributos do portfólio, não texto do perfil:
+      // quem digita "Blender" procura quem lista Blender, e a palavra pode não
+      // aparecer em resumo nenhum. `EXISTS` (e não um JOIN) para o membro não
+      // duplicar quando o termo casa em duas profissões ou ferramentas dele.
+      `EXISTS (
+            SELECT 1
+            FROM portfolio_role_ref prr
+            WHERE prr.user_id = u.id
+              AND strpos(lower(prr.portfolio_role_name), lower($${whereValues.length})) > 0
+          )`,
+      `EXISTS (
+            SELECT 1
+            FROM portfolio_tool_ref ptr
+            INNER JOIN portfolio_tools pt ON pt.id = ptr.portfolio_tool_id
+            WHERE ptr.user_id = u.id
+              AND strpos(lower(COALESCE(pt.name, '')), lower($${whereValues.length})) > 0
+          )`,
     ];
     if (includeInactive) {
       searchColumns.push(`strpos(lower(u.email), lower($${whereValues.length})) > 0`);

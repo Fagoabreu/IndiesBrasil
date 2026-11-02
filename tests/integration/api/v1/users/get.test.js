@@ -487,13 +487,72 @@ describe("GET /api/v1/users", () => {
     });
 
     describe("Search", () => {
+      let ana;
+      let carla;
+
       beforeAll(async () => {
         await orchestrator.clearDatabase();
         await orchestrator.runPendingMigrations();
 
-        await orchestrator.activateUser(await orchestrator.createUser({ username: "ana-pixel", resumo: "Artista 3D" }));
+        // Os ids ficam guardados para vincular profissão e ferramenta: sem eles
+        // o teste de portfólio não teria a quem associar.
+        ana = await orchestrator.activateUser(await orchestrator.createUser({ username: "ana-pixel", resumo: "Artista 3D" }));
         await orchestrator.activateUser(await orchestrator.createUser({ username: "bruno-code", resumo: "Programador de gameplay" }));
-        await orchestrator.activateUser(await orchestrator.createUser({ username: "carla-sound", resumo: "Compositora" }));
+        carla = await orchestrator.activateUser(await orchestrator.createUser({ username: "carla-sound", resumo: "Compositora" }));
+      });
+
+      // Os termos abaixo não existem no `username` nem no `resumo` de ninguém
+      // de propósito: se aparecessem, o teste passaria pelo motivo errado.
+      test("Filters by profession", async () => {
+        await database.query({
+          text: `INSERT INTO portfolio_roles (name, group_key) VALUES ('Especialista em Localização', 'conteudo') ON CONFLICT DO NOTHING`,
+        });
+        await database.query({
+          text: `INSERT INTO portfolio_role_ref (user_id, portfolio_role_name) VALUES ($1, $2)`,
+          values: [carla.id, "Especialista em Localização"],
+        });
+
+        const { body } = await getUsers("?q=localiza");
+
+        expect(body.total).toBe(1);
+        expect(body.items.map((item) => item.username)).toEqual(["carla-sound"]);
+      });
+
+      test("Filters by tool", async () => {
+        const tool = await database.query({
+          text: `INSERT INTO portfolio_tools (name) VALUES ('Aseprite') RETURNING id`,
+        });
+        await database.query({
+          text: `INSERT INTO portfolio_tool_ref (user_id, portfolio_tool_id) VALUES ($1, $2)`,
+          values: [ana.id, tool.rows[0].id],
+        });
+
+        const { body } = await getUsers("?q=aseprite");
+
+        expect(body.total).toBe(1);
+        expect(body.items.map((item) => item.username)).toEqual(["ana-pixel"]);
+      });
+
+      test("Does not duplicate a member who matches in more than one profession", async () => {
+        // "Roteirista" e "Roteirista Técnico" casam com o mesmo termo: um JOIN
+        // devolveria a pessoa duas vezes e inflaria o `total`.
+        await database.query({
+          text: `
+            INSERT INTO portfolio_roles (name, group_key)
+            VALUES ('Roteirista', 'conteudo'), ('Roteirista Técnico', 'conteudo')
+            ON CONFLICT DO NOTHING`,
+        });
+        await database.query({
+          text: `
+            INSERT INTO portfolio_role_ref (user_id, portfolio_role_name)
+            VALUES ($1, 'Roteirista'), ($1, 'Roteirista Técnico')`,
+          values: [carla.id],
+        });
+
+        const { body } = await getUsers("?q=roteirista");
+
+        expect(body.total).toBe(1);
+        expect(body.items.map((item) => item.username)).toEqual(["carla-sound"]);
       });
 
       test("Filters by `username`", async () => {
