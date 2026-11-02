@@ -24,8 +24,32 @@
   line-height: 1;
 }
 
+/* Linha não lida.
+   O tom vem de `--brand-*`, como na aba de notificações do perfil: o valor
+   anterior (`--bgColor-accent-subtle`) **não existe** no Primer — só
+   `-accent-muted` e `-accent-emphasis` —, então a declaração era descartada e
+   não lida ficava visualmente idêntica a lida. */
 .unreadItem {
-  background-color: var(--bgColor-accent-subtle);
+  background-color: rgba(var(--brand-rgb-primary), 0.06);
+  box-shadow: inset 3px 0 0 var(--brand-primary);
+}
+
+.unreadDot {
+  color: var(--brand-primary);
+}
+
+.notifTitleUnread {
+  font-weight: 700;
+}
+
+/* Ação em massa e mensagem de erro da marcação. */
+.bulkAction {
+  font-weight: 600;
+}
+
+.errorItem {
+  color: var(--fgColor-danger);
+  white-space: normal;
 }
 
 .notifRow {

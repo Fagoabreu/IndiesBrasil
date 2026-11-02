@@ -938,6 +938,30 @@
   gap: 8px;
 }
 
+/* Barra acima da lista: contagem de não lidas + "marcar todas".
+   Existe porque a aba era só leitura — não havia como saber quantas faltavam
+   nem como zerar o contador sem abrir uma a uma. */
+.notifToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.notifCount {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+}
+
+/* Falha ao marcar como lida — antes era silenciosa e o item reaparecia não lido. */
+.notifError {
+  margin: 0 0 12px;
+  font-size: 0.82rem;
+  color: var(--fgColor-danger);
+}
+
 /* `<button>` de verdade (antes era uma div com role="button" e um onKeyDown
    manual). `text-align` e `font: inherit` porque o botão não herda tipografia
    nem alinhamento. Itens não clicáveis ficam com `cursor: default`. */

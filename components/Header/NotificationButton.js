@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 import { ActionMenu, ActionList, IconButton, Avatar } from "@primer/react";
-import { BellIcon } from "@primer/octicons-react";
+import { BellIcon, DotFillIcon, CheckIcon } from "@primer/octicons-react";
 import { useUser } from "@/context/UserContext";
 import {
   resolveOrgNotificationTitle,
@@ -9,6 +10,7 @@ import {
   resolveOrgNotificationHref,
   resolveUserNotificationHref,
 } from "@/lib/notifications";
+import { isOrgNotification, isUnread, markAllNotificationsRead, markNotificationRead, notificationKey } from "@/lib/notificationActions";
 import styles from "./NotificationButton.module.css";
 
 // Tipos de notificação cujas mensagens não estão na tabela notification_messages
@@ -30,7 +32,7 @@ const CLIENT_NOTIF_DEFS = {
   // mensagem diz isso — a autoria é do estúdio, embora o humano esteja gravado.
   new_message: {
     title: "Nova mensagem",
-    message: "%userId enviou uma mensagem para voc锚.",
+    message: "%userId enviou uma mensagem para você.",
   },
 };
 
@@ -67,49 +69,24 @@ async function loadNotifications(username) {
   };
 }
 
-async function markUserNotificationRead(username, n) {
-  const isPost = n.post_id != null;
-  const url = isPost ? `/api/v1/users/${username}/notifications/post` : `/api/v1/users/${username}/notifications`;
-  const body = {
-    user_id: n.user_id,
-    type: n.type,
-    source_user_id: n.source_user_id,
-    is_read: true,
-    org_slug: n.org_slug || "",
-    ...(isPost && { post_id: n.post_id }),
-  };
-  await fetch(url, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(body),
-  });
-}
-
-async function markOrgNotificationRead(username, n) {
-  await fetch(`/api/v1/users/${username}/notifications/org`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ notification_id: n.id }),
-  });
+/** As três listas são exibidas juntas; o estado guarda a união. */
+function flatten({ userNotifs, postNotifs, orgNotifs }) {
+  return [...userNotifs, ...postNotifs, ...orgNotifs];
 }
 
 export default function NotificationButton() {
   const router = useRouter();
   const { user } = useUser();
-  const [userNotifs, setUserNotifs] = useState([]);
-  const [postNotifs, setPostNotifs] = useState([]);
-  const [orgNotifs, setOrgNotifs] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [error, setError] = useState(null);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   useEffect(() => {
     if (!user?.username) return;
     let active = true;
-    loadNotifications(user.username).then(({ userNotifs: u, postNotifs: p, orgNotifs: o }) => {
+    loadNotifications(user.username).then((data) => {
       if (!active) return;
-      setUserNotifs(u);
-      setPostNotifs(p);
-      setOrgNotifs(o);
+      setNotifications(flatten(data));
     });
     return () => {
       active = false;
@@ -117,63 +94,70 @@ export default function NotificationButton() {
   }, [user?.username]);
 
   function handleMenuOpen(open) {
+    setError(null);
     if (!open || !user?.username) return;
-    loadNotifications(user.username).then(({ userNotifs: u, postNotifs: p, orgNotifs: o }) => {
-      setUserNotifs(u);
-      setPostNotifs(p);
-      setOrgNotifs(o);
-    });
+    // Recarrega ao abrir: o feed muda por ação de outra pessoa (mensagem,
+    // curtida), e a lista montada no login envelhece.
+    loadNotifications(user.username).then((data) => setNotifications(flatten(data)));
+  }
+
+  /** Aplica `is_read` a uma linha — pelo `notificationKey`, que é o id estável. */
+  function setRead(target, read) {
+    const key = notificationKey(target);
+    setNotifications((prev) => prev.map((n) => (notificationKey(n) === key ? { ...n, is_read: read } : n)));
   }
 
   /**
    * Abre a notificação.
    *
-   * Marcar como lida e navegar são coisas separadas: a versão anterior fazia
-   * `if (n.is_read) return;` no topo, então **notificação já lida não abria
-   * nada**. O sintoma era o pior possível — a pessoa clica no aviso de reunião
-   * do estúdio, nada acontece, e a única saída é procurar a página na mão. O
-   * sino lista histórico, não só o que é novo: clicar sempre leva ao conteúdo.
+   * Marcar e navegar são coisas separadas: um `if (n.is_read) return` no topo já
+   * existiu e o efeito era notificação lida não abrir nada. O sino lista
+   * histórico — clicar sempre leva ao conteúdo, e marca se ainda não estava lida.
+   *
+   * A marcação é otimista **com reversão**: antes a falha era engolida, o item
+   * ficava "lido" na tela e voltava como não lido na próxima abertura, sem
+   * nenhuma explicação.
    */
-  function handleMarkRead(n) {
-    const isOrg = n.resource_type != null;
+  async function handleMarkRead(n) {
+    const href = isOrgNotification(n) ? resolveOrgNotificationHref(n) : resolveUserNotificationHref(n, user.username);
 
-    if (isOrg) {
-      const href = resolveOrgNotificationHref(n);
-      if (!n.is_read) {
-        setOrgNotifs((prev) => prev.map((o) => (o.id === n.id ? { ...o, is_read: true } : o)));
-        markOrgNotificationRead(user.username, n);
+    if (isUnread(n)) {
+      setRead(n, true);
+      try {
+        await markNotificationRead(user.username, n);
+      } catch (err) {
+        setRead(n, false);
+        setError(err.message);
       }
-      if (href) router.push(href);
-      return;
     }
 
-    if (!n.is_read) {
-      if (n.post_id != null) {
-        setPostNotifs((prev) =>
-          prev.map((p) =>
-            p.user_id === n.user_id && p.type === n.type && p.source_user_id === n.source_user_id && p.post_id === n.post_id
-              ? { ...p, is_read: true }
-              : p,
-          ),
-        );
-      } else {
-        setUserNotifs((prev) =>
-          prev.map((u) =>
-            u.user_id === n.user_id && u.type === n.type && u.source_user_id === n.source_user_id && u.org_slug === n.org_slug
-              ? { ...u, is_read: true }
-              : u,
-          ),
-        );
-      }
-      markUserNotificationRead(user.username, n);
-    }
-
-    const href = resolveUserNotificationHref(n, user.username);
     if (href) router.push(href);
   }
 
-  const all = [...userNotifs, ...postNotifs, ...orgNotifs].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  const unreadCount = all.filter((n) => !n.is_read).length;
+  /** "Marcar todas": as que falharem voltam para não lidas, com aviso. */
+  async function handleMarkAll() {
+    const unread = notifications.filter(isUnread);
+    if (unread.length === 0) return;
+
+    setError(null);
+    setBulkBusy(true);
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+
+    try {
+      const failed = await markAllNotificationsRead(user.username, unread);
+      if (failed.length > 0) {
+        for (const n of failed) setRead(n, false);
+        setError(
+          `${failed.length} ${failed.length === 1 ? "notificação não pôde" : "notificações não puderam"} ser marcada${failed.length === 1 ? "" : "s"}.`,
+        );
+      }
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
+  const all = [...notifications].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const unreadCount = all.filter(isUnread).length;
 
   return (
     <div className={styles.bellWrapper}>
@@ -184,27 +168,51 @@ export default function NotificationButton() {
 
         <ActionMenu.Overlay width="medium">
           <ActionList>
+            {unreadCount > 0 && (
+              <>
+                <ActionList.Item onSelect={handleMarkAll} disabled={bulkBusy} className={styles.bulkAction}>
+                  <ActionList.LeadingVisual>
+                    <CheckIcon />
+                  </ActionList.LeadingVisual>
+                  {bulkBusy ? "Marcando…" : `Marcar todas como lidas (${unreadCount})`}
+                </ActionList.Item>
+                <ActionList.Divider />
+              </>
+            )}
+
+            {error && (
+              <ActionList.Item disabled className={styles.errorItem}>
+                {error}
+              </ActionList.Item>
+            )}
+
             {all.length === 0 ? (
               <ActionList.Item disabled>Nenhuma notificação</ActionList.Item>
             ) : (
               all.map((n) => {
-                const isOrg = n.resource_type != null;
-                const title = isOrg ? resolveOrgNotificationTitle(n) : resolveTitle(n);
-                const message = isOrg ? resolveOrgNotificationMessage(n) : resolveMessage(n);
+                const org = isOrgNotification(n);
+                const title = org ? resolveOrgNotificationTitle(n) : resolveTitle(n);
+                const message = org ? resolveOrgNotificationMessage(n) : resolveMessage(n);
+                const unread = isUnread(n);
+
                 return (
-                  <ActionList.Item
-                    key={isOrg ? `org_${n.id}` : `${n.user_id}_${n.type}_${n.source_user_id}${n.post_id != null ? `_${n.post_id}` : ""}`}
-                    className={!n.is_read ? styles.unreadItem : undefined}
-                    onSelect={() => handleMarkRead(n)}
-                  >
-                    {isOrg && (
+                  <ActionList.Item key={notificationKey(n)} className={unread ? styles.unreadItem : undefined} onSelect={() => handleMarkRead(n)}>
+                    {/* A bolinha é o sinal que faltava: o fundo sozinho não
+                        distinguia nada (e o token CSS usado nem existia no
+                        Primer, então a regra era descartada). */}
+                    <ActionList.LeadingVisual>
+                      {unread ? <DotFillIcon className={styles.unreadDot} aria-label="Não lida" /> : null}
+                    </ActionList.LeadingVisual>
+
+                    {org && (
                       <span className={styles.orgChip}>
                         <Avatar src={n.org_logo_url || "/images/studio.jpg"} size={16} alt="" />
                         <span className={styles.orgChipName}>{n.org_name || "Estúdio"}</span>
                       </span>
                     )}
+
                     <span className={styles.notifRow}>
-                      <span className={styles.notifTitle}>{title}</span>
+                      <span className={`${styles.notifTitle} ${unread ? styles.notifTitleUnread : ""}`}>{title}</span>
                       <span className={styles.notifDate}>
                         {new Intl.DateTimeFormat("pt-BR", {
                           day: "2-digit",
@@ -217,6 +225,11 @@ export default function NotificationButton() {
                 );
               })
             )}
+
+            <ActionList.Divider />
+            <ActionList.Item as={Link} href={`/perfil/${user?.username}?tab=notifications`}>
+              Ver todas as notificações
+            </ActionList.Item>
           </ActionList>
         </ActionMenu.Overlay>
       </ActionMenu>

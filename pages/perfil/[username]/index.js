@@ -43,6 +43,7 @@ import ProfileQrCode from "@/components/Portfolio/ProfileQrCode";
 import MessagesPanel from "@/components/Messages/MessagesPanel";
 import SendMessageButton from "@/components/Messages/SendMessageButton";
 import { resolveUserNotificationHref } from "@/lib/notifications";
+import { isUnread, markAllNotificationsRead, markNotificationRead, notificationKey } from "@/lib/notificationActions";
 import { SITE_URL } from "@/lib/seo";
 
 /* =====================
@@ -200,6 +201,7 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
   // Notificações (apenas para o próprio perfil)
   const [userNotifs, setUserNotifs] = useState(null);
   const [postNotifs, setPostNotifs] = useState(null);
+  const [notifError, setNotifError] = useState(null);
   const loadingNotifs = userNotifs === null || postNotifs === null;
 
   async function fetchJSON(url, options = {}) {
@@ -369,6 +371,58 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
   }
 
   const isOwnProfile = authUser?.username === perfilUser?.user?.username;
+
+  /**
+   * Marca uma notificação como lida **a partir da lista completa**.
+   *
+   * A aba não marcava nada: o clique só navegava. Quem abria "Notificações" e
+   * lia tudo nunca via o item sair do estado não lido, e o sino continuava com o
+   * contador — o mesmo dado, duas telas, comportamentos diferentes.
+   *
+   * Otimista com reversão: falha no PATCH devolve o item a não lido e mostra o
+   * motivo. Antes o erro era engolido e a notificação reaparecia "do nada".
+   */
+  async function handleMarkNotifRead(notification) {
+    setNotifError(null);
+
+    const key = notificationKey(notification);
+    const apply = (read) => {
+      const patch = (prev) => prev?.map((n) => (notificationKey(n) === key ? { ...n, is_read: read } : n)) ?? prev;
+      setUserNotifs(patch);
+      setPostNotifs(patch);
+    };
+
+    apply(true);
+    try {
+      await markNotificationRead(username, notification);
+    } catch (err) {
+      apply(false);
+      setNotifError(err.message);
+    }
+  }
+
+  /** "Marcar todas" da aba; as que falharem voltam para não lidas. */
+  async function handleMarkAllNotifsRead() {
+    const all = [...(userNotifs ?? []), ...(postNotifs ?? [])];
+    setNotifError(null);
+
+    setUserNotifs((prev) => prev?.map((n) => ({ ...n, is_read: true })) ?? prev);
+    setPostNotifs((prev) => prev?.map((n) => ({ ...n, is_read: true })) ?? prev);
+
+    const failed = await markAllNotificationsRead(username, all);
+
+    if (failed.length > 0) {
+      const keys = new Set(failed.map(notificationKey));
+      const revert = (prev) => prev?.map((n) => (keys.has(notificationKey(n)) ? { ...n, is_read: false } : n)) ?? prev;
+      setUserNotifs(revert);
+      setPostNotifs(revert);
+      setNotifError(
+        `${failed.length} ${failed.length === 1 ? "notificação não pôde" : "notificações não puderam"} ser marcada${failed.length === 1 ? "" : "s"}.`,
+      );
+    }
+  }
+
+  const unreadNotifs = [...(userNotifs ?? []), ...(postNotifs ?? [])].filter(isUnread).length;
 
   // Mensagens e Notificações só existem para o dono do perfil (a caixa de
   // entrada e o feed de notificações são privados). Se o endereço pedir uma
@@ -813,7 +867,26 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
                   ))}
                 </div>
               )}
-              {!loadingNotifs && <NotificationList userNotifs={userNotifs} postNotifs={postNotifs} ownUsername={username} />}
+              {!loadingNotifs && (
+                <>
+                  {notifError && (
+                    <p className={style.notifError} role="alert">
+                      {notifError}
+                    </p>
+                  )}
+
+                  <div className={style.notifToolbar}>
+                    <span className={style.notifCount}>{unreadNotifs > 0 ? `${unreadNotifs} não lidas` : "Tudo lido"}</span>
+                    {unreadNotifs > 0 && (
+                      <button type="button" className={style.actionBtn} onClick={handleMarkAllNotifsRead}>
+                        Marcar todas como lidas
+                      </button>
+                    )}
+                  </div>
+
+                  <NotificationList userNotifs={userNotifs} postNotifs={postNotifs} ownUsername={username} onMarkRead={handleMarkNotifRead} />
+                </>
+              )}
             </div>
           )}
         </div>
@@ -852,7 +925,7 @@ Perfil.propTypes = {
  * NotificationList
  * ===================== */
 
-function NotificationList({ userNotifs, postNotifs, ownUsername }) {
+function NotificationList({ userNotifs, postNotifs, ownUsername, onMarkRead }) {
   const router = useRouter();
   const all = [...userNotifs, ...postNotifs].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
@@ -863,21 +936,31 @@ function NotificationList({ userNotifs, postNotifs, ownUsername }) {
   return (
     <div className={style.notifList}>
       {all.map((n) => {
-        const nid = `${n.user_id}_${n.type}_${n.source_user_id}${n.post_id != null ? `_${n.post_id}` : ""}`;
         // Mesmo registro de destino do sino (`lib/notifications.js`). Antes cada
         // tela tinha a sua lista de `if`, e esta não conhecia `new_message`.
         const href = resolveUserNotificationHref(n, ownUsername);
-        const isClickable = href != null;
+        const unread = isUnread(n);
+        // Clicável mesmo sem destino: notificação sem href (`new_follower` sem
+        // username, `post_liked` sem post_id) ficava presa como não lida para
+        // sempre, porque o botão saía desabilitado.
+        const isClickable = href != null || unread;
 
         // `<button>` de verdade: antes era uma div com `role="button"` e um
         // listener manual de teclado, que o navegador não trata como controle.
         return (
           <button
-            key={nid}
+            key={notificationKey(n)}
             type="button"
             disabled={!isClickable}
-            className={`${style.notifItem} ${isClickable ? style.notifClickable : ""} ${!n.is_read ? style.notifUnread : ""}`}
-            onClick={isClickable ? () => router.push(href) : undefined}
+            className={`${style.notifItem} ${isClickable ? style.notifClickable : ""} ${unread ? style.notifUnread : ""}`}
+            onClick={
+              isClickable
+                ? () => {
+                    if (unread) onMarkRead(n);
+                    if (href) router.push(href);
+                  }
+                : undefined
+            }
           >
             <span className={style.notifHeader}>
               <span className={style.notifTitle}>{notificationTitle(n)}</span>
@@ -890,7 +973,7 @@ function NotificationList({ userNotifs, postNotifs, ownUsername }) {
               </span>
             </span>
             {notificationMessage(n) && <span className={style.notifMessage}>{notificationMessage(n)}</span>}
-            {!n.is_read && <span className={style.notifUnreadDot} />}
+            {unread && <span className={style.notifUnreadDot} aria-label="Não lida" />}
           </button>
         );
       })}
