@@ -396,8 +396,10 @@ describe("GET /api/v1/users", () => {
 
         expect(response.status).toBe(200);
         // `sort` entrou no envelope junto com a ordenação: quem pagina precisa
-        // saber a que critério o `next_cursor` pertence.
-        expect(Object.keys(body).sort()).toEqual(["has_more", "items", "next_cursor", "sort", "total"]);
+        // saber a que critério o `next_cursor` pertence. `filters` vem sempre,
+        // `null` quando não pedido (`?include_filters=true`).
+        expect(Object.keys(body).sort()).toEqual(["filters", "has_more", "items", "next_cursor", "sort", "total"]);
+        expect(body.filters).toBeNull();
         expect(body.items).toHaveLength(PAGE_SIZE);
         expect(body.total).toBe(SEEDED_USERS);
         expect(body.has_more).toBe(true);
@@ -593,6 +595,113 @@ describe("GET /api/v1/users", () => {
         expect(body.has_more).toBe(false);
         expect(body.next_cursor).toBeNull();
         expect(body.items).toEqual([]);
+      });
+    });
+
+    describe("Filtros de catálogo (profissão e ferramenta)", () => {
+      let designer;
+      let asepriteId;
+
+      beforeAll(async () => {
+        await orchestrator.clearDatabase();
+        await orchestrator.runPendingMigrations();
+
+        designer = await orchestrator.activateUser(await orchestrator.createUser({ username: "duda-design", resumo: "Pessoa de design" }));
+        const audio = await orchestrator.activateUser(await orchestrator.createUser({ username: "eva-audio", resumo: "Pessoa de audio" }));
+
+        await database.query({
+          text: `
+            INSERT INTO portfolio_roles (name, group_key)
+            VALUES ('Artista 2D', 'arte'), ('Compositor', 'audio'), ('Profissão Sem Ninguém', 'outros')
+            ON CONFLICT DO NOTHING`,
+        });
+
+        await database.query({
+          text: `
+            INSERT INTO portfolio_role_ref (user_id, portfolio_role_name)
+            VALUES ($1, 'Artista 2D'), ($2, 'Compositor')`,
+          values: [designer.id, audio.id],
+        });
+
+        const tool = await database.query({
+          text: `INSERT INTO portfolio_tools (name) VALUES ('Aseprite') RETURNING id`,
+        });
+        asepriteId = tool.rows[0].id;
+
+        await database.query({
+          text: `INSERT INTO portfolio_tool_ref (user_id, portfolio_tool_id) VALUES ($1, $2)`,
+          values: [designer.id, asepriteId],
+        });
+      });
+
+      test("`profession` filtra pelo valor do catálogo", async () => {
+        const { body } = await getUsers(`?profession=${encodeURIComponent("Artista 2D")}`);
+
+        expect(body.total).toBe(1);
+        expect(body.items.map((item) => item.username)).toEqual(["duda-design"]);
+      });
+
+      test("`profession` é valor exato, e não trecho como `q`", async () => {
+        const { body } = await getUsers(`?profession=${encodeURIComponent("Artista")}`);
+
+        expect(body.total).toBe(0);
+        expect(body.items).toEqual([]);
+      });
+
+      test("`profession` ignora a caixa do valor digitado na URL", async () => {
+        const { body } = await getUsers(`?profession=${encodeURIComponent("artista 2d")}`);
+
+        expect(body.items.map((item) => item.username)).toEqual(["duda-design"]);
+      });
+
+      test("`tool` filtra pelo nome da ferramenta", async () => {
+        const { body } = await getUsers("?tool=aseprite");
+
+        expect(body.total).toBe(1);
+        expect(body.items.map((item) => item.username)).toEqual(["duda-design"]);
+      });
+
+      test("profissão e ferramenta se combinam com E", async () => {
+        const { body: combined } = await getUsers(`?profession=${encodeURIComponent("Compositor")}&tool=aseprite`);
+
+        expect(combined.total).toBe(0);
+        expect(combined.items).toEqual([]);
+      });
+
+      test("`include_filters` devolve as opções com contagem, inclusive as vazias", async () => {
+        const { body } = await getUsers("?include_filters=true");
+
+        expect(body.filters).not.toBeNull();
+
+        const artista = body.filters.professions.find((option) => option.value === "Artista 2D");
+        expect(artista.total).toBe(1);
+
+        // Profissão do catálogo sem nenhum membro continua na lista: é o que
+        // faz o seletor existir num diretório recém-criado.
+        const vazia = body.filters.professions.find((option) => option.value === "Profissão Sem Ninguém");
+        expect(vazia.total).toBe(0);
+
+        const aseprite = body.filters.tools.find((option) => option.value === "Aseprite");
+        expect(aseprite.total).toBe(1);
+      });
+
+      test("as opções descrevem a população, não o recorte atual", async () => {
+        const { body } = await getUsers(`?include_filters=true&profession=${encodeURIComponent("Artista 2D")}`);
+
+        expect(body.total).toBe(1);
+
+        // Se a contagem fosse feita depois do filtro, "Compositor" apareceria
+        // zerado e trocar de opção pareceria não devolver ninguém.
+        const compositor = body.filters.professions.find((option) => option.value === "Compositor");
+        expect(compositor.total).toBe(1);
+      });
+
+      test("a paginação não recalcula as opções", async () => {
+        const { body: firstPage } = await getUsers("?include_filters=true&limit=1");
+        expect(firstPage.filters).not.toBeNull();
+
+        const { body: nextPage } = await getUsers(`?include_filters=true&limit=1&cursor=${encodeURIComponent(firstPage.next_cursor)}`);
+        expect(nextPage.filters).toBeNull();
       });
     });
 

@@ -936,6 +936,22 @@ async function runUpdatedQuery(userWithNewValues) {
 const DEFAULT_MEMBERS_LIMIT = 20;
 const MAX_MEMBERS_LIMIT = 50;
 const MAX_MEMBERS_SEARCH_LENGTH = 64;
+// Mesmo teto de `portfolio_roles.name` (varchar(80)): valor maior que isso não
+// casa com nenhuma linha, e cortar evita mandar lixo de tamanho arbitrário ao SQL.
+const MAX_MEMBER_FILTER_LENGTH = 80;
+
+/**
+ * Valor de `?profession=`/`?tool=`.
+ *
+ * Devolve string vazia para ausente, o que desliga o filtro. Valor que não
+ * existe no catálogo simplesmente não casa com ninguém: a resposta é uma lista
+ * vazia, visível na tela — diferente de `?sort=`/`?status=`, em que cair no
+ * padrão faria um parâmetro errado passar por aplicado.
+ */
+function normalizeFilterValue(value) {
+  if (typeof value !== "string") return "";
+  return value.trim().slice(0, MAX_MEMBER_FILTER_LENGTH);
+}
 
 /**
  * Expressão SQL, tipo do cursor e coluna do resultado para cada critério de
@@ -1029,6 +1045,8 @@ async function findUsers(options = {}) {
   const sort = normalizeMembersSort(options.sort);
   const cursor = decodeMembersCursor(options.cursor, sort);
   const search = typeof q === "string" ? q.trim().slice(0, MAX_MEMBERS_SEARCH_LENGTH) : "";
+  const profession = normalizeFilterValue(options.profession);
+  const tool = normalizeFilterValue(options.tool);
 
   // Colunas e junção que só a lista administrativa precisa: e-mail (para o
   // administrador reconhecer a conta) e o vencimento do último token de
@@ -1174,6 +1192,38 @@ async function findUsers(options = {}) {
         )`);
   }
 
+  // Opções dos seletores de profissão e ferramenta. O snapshot de `conditions`
+  // é tirado ANTES dos dois filtros entrarem: as opções descrevem a população
+  // (aba, busca, seguidores), não o recorte atual. Contá-las já filtradas
+  // zeraria todas as outras opções do próprio seletor — escolher "Artista 2D"
+  // deixaria "Compositor (0)" e o filtro pareceria quebrado.
+  const filterSnapshot = options.includeFilters ? { conditions: [...conditions], values: [...whereValues] } : null;
+
+  // Filtro por valor exato do catálogo, diferente de `?q=`, que casa trecho em
+  // qualquer campo. Sem caixa (`lower` nos dois lados) para `?profession=artista 2d`
+  // digitado na mão continuar valendo. `EXISTS` mantém o membro com uma linha
+  // só quando ele tem duas profissões (ou duas ferramentas) que casariam.
+  if (profession) {
+    whereValues.push(profession);
+    conditions.push(`EXISTS (
+          SELECT 1
+          FROM portfolio_role_ref prf
+          WHERE prf.user_id = u.id
+            AND lower(prf.portfolio_role_name) = lower($${whereValues.length})
+        )`);
+  }
+
+  if (tool) {
+    whereValues.push(tool);
+    conditions.push(`EXISTS (
+          SELECT 1
+          FROM portfolio_tool_ref ptf
+          INNER JOIN portfolio_tools ptt ON ptt.id = ptf.portfolio_tool_id
+          WHERE ptf.user_id = u.id
+            AND lower(ptt.name) = lower($${whereValues.length})
+        )`);
+  }
+
   const dataValues = [...whereValues];
   let cursorCondition = "";
   if (cursor) {
@@ -1215,12 +1265,66 @@ async function findUsers(options = {}) {
   const items = hasMore ? results.rows.slice(0, limit) : results.rows;
   const nextCursor = hasMore && items.length > 0 ? encodeMembersCursor(items[items.length - 1], sort) : null;
 
+  // Duas consultas extras, e só quando a tela pede (`?include_filters=true`):
+  // o consumidor mais frequente desta rota é o autocomplete de convite, que
+  // busca a cada tecla e não desenha seletor nenhum.
+  const filters = filterSnapshot ? await findMemberFilters(filterSnapshot) : null;
+
   return {
     items,
     total: totalResults.rows[0]?.total ?? 0,
     hasMore,
     nextCursor,
+    filters,
   };
+}
+
+/**
+ * Opções dos filtros de profissão e ferramenta do diretório de membros.
+ *
+ * A lista sai do CATÁLOGO, não dos vínculos: uma profissão sem nenhum membro
+ * continua no seletor, com `total: 0` e no fim da ordem. Um seletor montado a
+ * partir de quem já preencheu o perfil desaparece inteiro num diretório novo —
+ * que é justamente quando a pessoa precisa descobrir que o filtro existe.
+ */
+async function findMemberFilters({ conditions, values }) {
+  const where = conditions.join("\n          AND ");
+
+  const [professions, tools] = await Promise.all([
+    database.query({
+      text: `
+        SELECT p.name AS value, COALESCE(c.total, 0)::int AS total
+        FROM portfolio_roles p
+        LEFT JOIN (
+          SELECT prr.portfolio_role_name AS name, count(*)::int AS total
+          FROM portfolio_role_ref prr
+          INNER JOIN users u ON u.id = prr.user_id
+          WHERE ${where}
+          GROUP BY 1
+        ) c ON c.name = p.name
+        WHERE p.is_active
+        ORDER BY COALESCE(c.total, 0) DESC, p.name ASC`,
+      values,
+    }),
+    database.query({
+      text: `
+        SELECT t.name AS value, COALESCE(c.total, 0)::int AS total
+        FROM portfolio_tools t
+        LEFT JOIN (
+          SELECT pt.name AS name, count(*)::int AS total
+          FROM portfolio_tool_ref ptr
+          INNER JOIN portfolio_tools pt ON pt.id = ptr.portfolio_tool_id
+          INNER JOIN users u ON u.id = ptr.user_id
+          WHERE ${where}
+          GROUP BY 1
+        ) c ON c.name = t.name
+        WHERE t.name IS NOT NULL
+        ORDER BY COALESCE(c.total, 0) DESC, t.name ASC`,
+      values,
+    }),
+  ]);
+
+  return { professions: professions.rows, tools: tools.rows };
 }
 
 async function addFollow(followerId, leaderId) {
