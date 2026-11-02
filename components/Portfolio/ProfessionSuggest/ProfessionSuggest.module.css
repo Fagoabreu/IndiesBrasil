@@ -1,0 +1,113 @@
+/* Sugestão de profissão dentro do editor de especializações do perfil. */
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.toggle {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--brand-primary);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.toggle:hover {
+  text-decoration: underline;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px dashed var(--borderColor-default);
+  border-radius: 8px;
+  background: var(--bgColor-muted);
+}
+
+.intro {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--fgColor-muted);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 6px;
+  background: var(--bgColor-default);
+  color: var(--fgColor-default);
+  font-family: inherit;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.textarea {
+  resize: vertical;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb-primary), 0.15);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.success,
+.error {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.success {
+  color: var(--fgColor-success);
+}
+
+.error {
+  color: var(--fgColor-danger);
+}
+
+.link {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--fgColor-muted);
+}
+
+.link a {
+  color: var(--brand-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.link a:hover {
+  text-decoration: underline;
+}

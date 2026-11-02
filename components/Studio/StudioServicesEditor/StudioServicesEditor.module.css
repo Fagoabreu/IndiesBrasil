@@ -1,0 +1,206 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--fgColor-default);
+}
+
+.intro {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--fgColor-muted);
+}
+
+.intro a {
+  color: var(--brand-primary);
+  text-decoration: none;
+}
+
+.intro a:hover {
+  text-decoration: underline;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+}
+
+.group {
+  margin-top: 4px;
+}
+
+.groupTitle {
+  margin: 0 0 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--fgColor-muted);
+}
+
+.serviceList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.serviceItem {
+  padding: 10px 12px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 8px;
+  background: var(--bgColor-default);
+}
+
+.serviceSelected {
+  border-color: var(--brand-active-ring);
+  background: rgba(var(--brand-rgb-primary), 0.04);
+}
+
+.serviceLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+  cursor: pointer;
+}
+
+.serviceLabel input {
+  accent-color: var(--brand-primary);
+}
+
+.serviceName {
+  min-width: 0;
+}
+
+.inactiveTag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fgColor-muted);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+
+.serviceFields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+  padding-left: 24px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.priceField {
+  grid-column: span 1;
+}
+
+.fieldLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+}
+
+.input {
+  width: 100%;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 6px;
+  background: var(--bgColor-default);
+  color: var(--fgColor-default);
+  font-family: inherit;
+  font-size: 0.82rem;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb-primary), 0.15);
+}
+
+.priceRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.currency {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+}
+
+.priceRow .input:first-of-type {
+  flex: 0 0 110px;
+}
+
+.hint {
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--fgColor-muted);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.counter {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+}
+
+.suggestionHint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--fgColor-muted);
+}
+
+.suggestionHint a {
+  color: var(--brand-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.suggestionHint a:hover {
+  text-decoration: underline;
+}
+
+/* Em duas colunas o resumo fica estreito demais no celular; empilhar é melhor
+   que truncar o que a pessoa escreveu. */
+@media (max-width: 700px) {
+  .serviceFields {
+    grid-template-columns: 1fr;
+    padding-left: 0;
+  }
+
+  .priceRow {
+    flex-wrap: wrap;
+  }
+}

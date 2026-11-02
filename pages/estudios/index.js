@@ -1,13 +1,12 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { Heading, TextInput, Spinner, Avatar } from "@primer/react";
-import { OrganizationIcon, PlusIcon, PeopleIcon } from "@primer/octicons-react";
+import { Heading, TextInput, Spinner } from "@primer/react";
+import { OrganizationIcon, PlusIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
+import StudioCard from "@/components/Card/StudioCard";
 import { useUser } from "@/context/UserContext";
-import useTiltEffect from "@/hooks/useTiltEffect";
 import { SITE_URL } from "@/lib/seo";
 import styles from "./index.module.css";
 
@@ -277,55 +276,5 @@ export default function StudiosPage({ initialStudios }) {
         </>
       )}
     </div>
-  );
-}
-
-function StudioCard({ studio }) {
-  const tiltRef = useTiltEffect({
-    max: 8,
-    perspective: 900,
-    scale: 1.02,
-    maxGlare: 0.12,
-  });
-
-  return (
-    <li className={styles.studioCard} ref={tiltRef}>
-      <Link href={`/estudios/${studio.slug}`} className={styles.cardLink}>
-        <div className={styles.cardBanner}>
-          {studio.banner_url ? (
-            <div style={{ position: "relative", width: "100%", height: "100%" }}>
-              <Image
-                src={studio.banner_url}
-                alt=""
-                fill
-                className={styles.bannerImg}
-                sizes="(max-width: 600px) 100vw, 300px"
-                style={{ objectFit: "cover" }}
-              />
-            </div>
-          ) : (
-            <div className={styles.bannerPlaceholder} />
-          )}
-        </div>
-        <div className={styles.cardBody}>
-          <div className={styles.cardLogoRow}>
-            <Avatar src={studio.logo_url || "/images/studio.jpg"} size={48} alt={studio.name} className={styles.studioLogo} />
-          </div>
-          <h2 className={styles.studioName}>{studio.name}</h2>
-          {studio.pitch && <p className={styles.studioPitch}>{studio.pitch}</p>}
-          <div className={styles.cardMeta}>
-            <span className={styles.metaItem}>
-              <PeopleIcon size={13} />
-              {studio.member_count ?? 0} {studio.member_count === 1 ? "membro" : "membros"}
-            </span>
-            {(studio.follower_count ?? 0) > 0 && (
-              <span className={styles.metaItem}>
-                {studio.follower_count} {studio.follower_count === 1 ? "seguidor" : "seguidores"}
-              </span>
-            )}
-          </div>
-        </div>
-      </Link>
-    </li>
   );
 }

@@ -1,0 +1,240 @@
+/* Tela de administração do catálogo de serviços. Compartilha o vocabulário
+   visual de `/admin/asset-categories`, mas o arquivo é próprio porque as classes
+   de CSS Module são hasheadas por arquivo. */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  color: var(--fgColor-default);
+}
+
+.hint {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--fgColor-muted);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+}
+
+.section {
+  margin-bottom: 28px;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fgColor-default);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--bgColor-attention-emphasis);
+  color: var(--fgColor-onEmphasis);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.emptyLine {
+  margin: 0;
+  font-size: 13px;
+  color: var(--fgColor-muted);
+}
+
+/* ---- Fila de sugestões ---- */
+
+.suggestionList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.suggestionItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--borderColor-attention-muted);
+  border-radius: 8px;
+  background: var(--bgColor-attention-muted);
+}
+
+.suggestionBody {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.suggestionName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fgColor-default);
+}
+
+.suggestionMeta {
+  font-size: 12px;
+  color: var(--fgColor-muted);
+}
+
+.suggestionWhy {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--fgColor-default);
+}
+
+.suggestionActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---- Formulários ---- */
+
+.createForm,
+.editForm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.createForm {
+  padding: 12px;
+  margin-bottom: 20px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 8px;
+  background: var(--bgColor-muted);
+}
+
+.input,
+.select {
+  flex: 1 1 180px;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 6px;
+  background: var(--bgColor-default);
+  color: var(--fgColor-default);
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb-primary), 0.15);
+}
+
+.orderInput {
+  flex: 0 0 90px;
+}
+
+/* ---- Grupos ---- */
+
+.group {
+  margin-bottom: 20px;
+}
+
+.groupTitle {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fgColor-muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 8px;
+}
+
+.itemInactive {
+  opacity: 0.6;
+  background: var(--bgColor-muted);
+}
+
+.itemInfo {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.itemName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fgColor-default);
+}
+
+.itemDescription {
+  font-size: 13px;
+  color: var(--fgColor-muted);
+}
+
+.itemMeta {
+  font-size: 12px;
+  color: var(--fgColor-muted);
+}
+
+.itemActions {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 700px) {
+  .suggestionItem,
+  .item {
+    align-items: stretch;
+  }
+
+  .suggestionActions,
+  .itemActions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .input,
+  .select {
+    flex: 1 1 100%;
+  }
+}

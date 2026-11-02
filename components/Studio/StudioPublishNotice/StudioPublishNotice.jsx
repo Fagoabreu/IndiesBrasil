@@ -33,15 +33,14 @@ export default function StudioPublishNotice({ tab, variant = "inline", className
   const entry = resolveStudioEntry({ user, loadingUser, studios: myStudios, tab });
 
   const isCreate = entry.kind === STUDIO_ENTRY_KINDS.CREATE;
-  const isPublish = entry.kind === STUDIO_ENTRY_KINDS.PUBLISH;
 
   if (variant === "empty") {
     return (
       <div className={`${styles.emptyBlock} ${className || ""}`}>
         <p className={styles.emptyTitle}>Tudo aqui é publicado por um estúdio</p>
-        <p className={styles.emptyText}>
-          {isPublish ? entry.hint : "Crie o seu estúdio para publicar o primeiro item. Você pode convidar a equipe depois — ou publicar sozinho."}
-        </p>
+        {/* O texto vem do próprio destino: com estúdios ainda carregando, dizer
+            "crie o seu" afirmaria algo falso para quem já tem um. */}
+        <p className={styles.emptyText}>{entry.hint}</p>
 
         <div className={styles.emptyActions}>
           <Link href={entry.href} className={styles.primaryAction}>

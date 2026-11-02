@@ -1,0 +1,303 @@
+.page {
+  width: min(100%, 1100px);
+  margin: 0 auto;
+  padding: 12px 0 32px;
+}
+
+.header {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 20px;
+  padding: 20px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 16px;
+  background: var(--brand-ambient-bg);
+}
+
+.header::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--brand-gradient-v);
+}
+
+.title {
+  margin: 0;
+  padding-left: 8px;
+  font-size: clamp(1.4rem, 3vw, 1.8rem);
+  font-weight: 800;
+  color: var(--fgColor-default);
+}
+
+.subtitle {
+  margin: 8px 0 0;
+  padding-left: 8px;
+  max-width: 70ch;
+  font-size: 0.93rem;
+  line-height: 1.6;
+  color: var(--fgColor-muted);
+}
+
+/* Faixa "é um estúdio?" — o único caminho de publicação dentro da listagem de
+   quem contrata, por isso fica no cabeçalho e não no estado vazio. */
+.offerRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+  padding-left: 8px;
+  font-size: 0.82rem;
+}
+
+.offerText {
+  color: var(--fgColor-muted);
+}
+
+.offerLink {
+  font-weight: 700;
+  color: var(--brand-primary);
+  text-decoration: none;
+}
+
+.offerLink:hover {
+  text-decoration: underline;
+}
+
+.offerDivider {
+  color: var(--borderColor-default);
+}
+
+.offerMuted {
+  color: var(--fgColor-muted);
+  text-decoration: underline;
+}
+
+.offerMuted:hover {
+  color: var(--brand-primary);
+}
+
+/* ---- Filtros ---- */
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 14px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 12px;
+  background: var(--bgColor-default);
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--fgColor-muted);
+}
+
+.searchInput {
+  flex: 1;
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 4px 12px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fgColor-muted);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.chip:hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.chipActive {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: var(--fgColor-onEmphasis);
+}
+
+.chipActive:hover {
+  color: var(--fgColor-onEmphasis);
+}
+
+.serviceRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.selectLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+}
+
+.select {
+  padding: 6px 10px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 6px;
+  background: var(--bgColor-default);
+  color: var(--fgColor-default);
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb-primary), 0.15);
+}
+
+.clearButton {
+  margin-left: auto;
+  padding: 6px 12px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--brand-primary);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.clearButton:hover {
+  background: rgba(var(--brand-rgb-primary), 0.08);
+}
+
+/* ---- Grade ---- */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ---- Estados ---- */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.emptyIcon {
+  color: var(--fgColor-muted);
+}
+
+.emptyTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--fgColor-default);
+}
+
+.emptyText {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--fgColor-muted);
+}
+
+.emptyAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  margin-top: 6px;
+  padding: 7px 16px;
+  border: 1px solid var(--brand-primary);
+  border-radius: 7px;
+  background: var(--brand-primary);
+  color: var(--fgColor-onEmphasis);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.emptyAction:hover {
+  background: var(--brand-secondary);
+  border-color: var(--brand-secondary);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+}
+
+.moreRow {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.moreButton {
+  padding: 8px 20px;
+  border: 1px solid var(--borderColor-default);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--brand-primary);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.moreButton:hover {
+  background: rgba(var(--brand-rgb-primary), 0.08);
+}
+
+.count {
+  margin: 16px 0 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--fgColor-muted);
+}
+
+@media (max-width: 600px) {
+  .header {
+    padding: 16px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .clearButton {
+    margin-left: 0;
+  }
+}

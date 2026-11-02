@@ -5,6 +5,7 @@ import { MAX_ASSET_CATEGORIES } from "lib/assetGroups";
 import { ASSET_LICENSES, DEFAULT_ASSET_LICENSE } from "lib/assetLicenses";
 import { normalizeAssetUrl } from "lib/assetUrl";
 import { FILTER_NONE } from "lib/productFilters";
+import { normalizePrice as normalizePriceValue } from "lib/price";
 import uploadFile from "@/infra/uploadFile.js";
 import moderation from "./moderation.js";
 import notification from "./notification.js";
@@ -905,18 +906,7 @@ function parseBoolean(raw, field) {
 
 function normalizePrice(raw, isFree) {
   if (isFree) return null;
-  if (raw === undefined || raw === null || raw === "") return null;
-
-  const value = Number(raw);
-
-  if (!Number.isFinite(value) || value < 0) {
-    throw new ValidationError({
-      message: "Preço inválido.",
-      action: "Informe um valor numérico maior ou igual a zero.",
-    });
-  }
-
-  return Number(value.toFixed(2));
+  return normalizePriceValue(raw, (message) => new ValidationError({ message, action: "Informe um valor numérico maior ou igual a zero." }));
 }
 
 const asset = {

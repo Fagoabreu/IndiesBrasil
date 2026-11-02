@@ -6,6 +6,7 @@ import { ArrowLeftIcon } from "@primer/octicons-react";
 import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
 import ContactValueFields from "@/components/Portfolio/Contatos/ContactValueFields";
+import ProfessionSuggest from "@/components/Portfolio/ProfessionSuggest/ProfessionSuggest";
 import { EXPERIENCE_LEVELS } from "@/lib/experience-levels";
 import styles from "./configuracoes.module.css";
 
@@ -426,6 +427,10 @@ function RoleItemRow({ item, professions, username, onSaved, onDeleted }) {
             <label className={styles.label}>Especialização</label>
             <select className={styles.select} value={form.name} onChange={(e) => update("name", e.target.value)}>
               <option value="">Selecione...</option>
+              {/* Profissão que o admin desativou depois continua na lista, marcada
+                  como tal: sem esta linha o `<select>` cairia em "Selecione..."
+                  e salvar o nível trocaria a especialidade por vazio. */}
+              {form.name && !professions.some((p) => p.name === form.name) && <option value={form.name}>{form.name} (desativada)</option>}
               {professions.map((p) => (
                 <option key={p.name} value={p.name}>
                   {p.name}
@@ -453,6 +458,11 @@ function RoleItemRow({ item, professions, username, onSaved, onDeleted }) {
           </div>
         </form>
       )}
+
+      {/* Fora do `<form>` de propósito: `ProfessionSuggest` tem o próprio
+          formulário, e formulário dentro de formulário é HTML inválido — o
+          navegador descarta o interno e o envio dispararia o de especialização. */}
+      {open && <ProfessionSuggest />}
     </div>
   );
 }
@@ -1310,6 +1320,11 @@ export default function ProfileConfiguracoesPage() {
                   + Adicionar especialização
                 </button>
               )}
+
+              {/* Fora do `<form>` acima: o componente tem o próprio formulário, e
+                  formulário dentro de formulário é HTML inválido — o navegador
+                  descarta o interno e o envio dispararia o de especialização. */}
+              <ProfessionSuggest />
             </section>
 
             {/* Ferramentas */}

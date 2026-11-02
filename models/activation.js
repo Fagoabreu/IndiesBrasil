@@ -267,6 +267,11 @@ async function activateUserByUserId(userId) {
     "create:asset:comment",
     "create:asset:review",
     "update:asset:review",
+    //service permissions
+    "read:service",
+    "read:service:all",
+    "create:service_suggestion",
+    "create:profession_suggestion",
     //content-review (analises)
     "read:content_review",
     "read:content_review:all",

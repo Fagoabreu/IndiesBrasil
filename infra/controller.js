@@ -152,6 +152,8 @@ const ANONYMOUS_FEATURES = Object.freeze([
   "read:asset:all",
   "read:asset_category",
   "read:asset_category:all",
+  "read:service",
+  "read:service:all",
   "read:news",
   "read:news:all",
   "read:testimonial",

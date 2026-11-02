@@ -78,4 +78,41 @@ describe("GET/POST /api/v1/studios", () => {
     expect(body[0].name).toBe("Estúdio Teste");
     expect(body[0].owner_username).toBe(owner.username);
   });
+
+  /**
+   * `?member=me` informa o **papel** de quem pede em cada estúdio.
+   *
+   * É o dado que `/estudios/escolher` usa para separar "posso publicar" de
+   * "apenas participo": sem ele, a tela ofereceria estúdio que responde 403, e o
+   * botão "Oferecer serviços" abriria a aba de um estúdio arbitrário.
+   */
+  test("?member=me devolve o papel do usuário em cada estúdio", async () => {
+    const response = await fetch(`${webserver.origin}/api/v1/studios?member=me`, {
+      headers: authHeaders(ownerToken),
+    });
+
+    expect(response.status).toBe(200);
+
+    const body = await response.json();
+    expect(body).toHaveLength(1);
+    expect(body[0].role).toBe("owner");
+  });
+
+  test("quem não participa não aparece em ?member=me", async () => {
+    const outsiderCtx = await createActivatedUserWithSession({
+      username: "SemEstudio",
+      email: "sem.estudio@curso.dev",
+      password: TEST_CREDENTIALS.userDefault,
+      cpf: 55123456702,
+    });
+
+    const response = await fetch(`${webserver.origin}/api/v1/studios?member=me`, {
+      headers: authHeaders(outsiderCtx.sessionToken),
+    });
+
+    expect(response.status).toBe(200);
+
+    const body = await response.json();
+    expect(body).toEqual([]);
+  });
 });

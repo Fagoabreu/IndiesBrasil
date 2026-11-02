@@ -55,6 +55,7 @@ const availableFeatures = new Set([
   //profession
   "read:profession:all",
   "read:profession",
+  "create:profession_suggestion",
 
   //profile
   "read:profile",
@@ -157,6 +158,11 @@ const availableFeatures = new Set([
   "create:asset:comment",
   "create:asset:review",
   "update:asset:review",
+
+  //service (serviços prestados)
+  "read:service",
+  "read:service:all",
+  "create:service_suggestion",
 
   //course
   "read:course",
@@ -645,6 +651,13 @@ function getProfessionResource(resource) {
   return {
     name: resource.name,
     icon_img: resource.icon_img,
+    // A tela de admin precisa destes três para editar e separar ativas de
+    // desativadas; o seletor do perfil filtra por `is_active`.
+    description: resource.description ?? null,
+    group_key: resource.group_key,
+    display_order: resource.display_order,
+    is_active: resource.is_active,
+    usage_count: resource.usage_count,
   };
 }
 

@@ -17,6 +17,12 @@ export default function AdminPage() {
           <Link href="/admin/tools">Tools</Link>
         </li>
         <li>
+          <Link href="/admin/asset-categories">Categorias de Assets</Link>
+        </li>
+        <li>
+          <Link href="/admin/services">Serviços</Link>
+        </li>
+        <li>
           <Link href="/admin/users">Excluir conta</Link>
         </li>
       </ul>
