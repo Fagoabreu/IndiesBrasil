@@ -193,6 +193,7 @@ describe("Use case: Registration Flow (all successful)", () => {
       "read:service",
       "read:service:all",
       "create:service_suggestion",
+      "create:profession_suggestion",
       "read:content_review",
       "read:content_review:all",
       "create:content_review",

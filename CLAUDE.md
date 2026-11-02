@@ -59,11 +59,14 @@ Toda nova feature de API exige registro em **3 lugares**:
 
 ### Testes de feature arrays — atualizar sempre
 
-Novas features exigem atualizar os arrays em **3 arquivos de teste**:
+Novas features exigem atualizar os arrays em **4 arquivos de teste**:
 
 1. `tests/integration/_use-cases/registration-flow.test.js` — indentaçao 6 espaços
 2. `tests/integration/api/v1/users/[username]/patch.test.js` — indentaçao 10 espaços (3 blocos)
 3. `tests/integration/api/v1/user/get.test.js` — indentaçao 10 espaços (2 blocos)
+4. `tests/integration/api/v1/activations/[token_id]/patch.test.js` — indentaçao 8 espaços (1 bloco)
+
+O quarto ficou de fora desta lista por muito tempo, e o sintoma era um unico teste vermelho (`PATCH /api/v1/activations/[token_id] › Anonymous user › With valid token`) enquanto os outros tres passavam — o teste compara a lista de features do usuario recem-ativado por `toEqual`, entao qualquer feature nova o quebra mesmo quando `models/activation.js` esta correto.
 
 Inserir antes de `"read:content_review"`. Usar contexto unico para cada bloco (varia entre arquivos).
 
@@ -413,3 +416,18 @@ Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESM
 - **Card de estudio e compartilhado**: `components/Card/StudioCard.jsx` (extraido de `pages/estudios/index.js`) desenha ate 3 chips de servico + "+N". `organization.findAll` traz os servicos por `json_agg` correlacionado, **nao** por JOIN: o `GROUP BY` ja tem seis colunas e um terceiro join multiplicaria as linhas de seguidores/membros.
 - **Sidebar**: grupo "Servicos" com "Procurar servicos" (`/servicos`) e "Oferecer servicos" (destino vindo de `resolveStudioEntry({ tab: "services" })` — nunca uma escada de `if` propria).
 - Testes: `tests/unit/lib/serviceGroups.test.js`, `tests/integration/api/v1/services/`, `tests/integration/api/v1/studios/[slug]/services/`, `tests/integration/api/v1/service-suggestions/` e `tests/unit/lib/studioEntry.test.js`.
+
+## Profissoes (catalogo + sugestoes)
+
+- **Eram enum, viraram dados.** `portfolio_roles.name` era `developer_role` e o seed inseriu todos os valores do tipo na tabela — resultado: `POST /api/v1/professions` colidia com a primary key e respondia **500 sempre**, entao a tela de admin nunca cadastrou nada (e o teste de integracao documentava o defeito em vez de corrigi-lo). A migration `1793750400000` converteu para `varchar(80)`.
+- **Enum nao servia para catalogo editavel**: o Postgres nao remove valor de tipo e cada `ADD VALUE` exige `noTransaction`. O tipo `developer_role` foi removido; o `down` o recria a partir das linhas existentes e **falha** se alguma profissao criada em runtime nao couber nele (reverter perderia a classificacao de quem a usa).
+- **A FK e por nome**: `portfolio_role_ref.portfolio_role_name` referencia `portfolio_roles.name`, entao renomear depende de `ON UPDATE CASCADE` — sem isso a alteracao so valeria para cadastros novos e os perfis existentes apontariam para um nome inexistente. `ON DELETE RESTRICT` pelo motivo de sempre: profissao em uso e desativada, nao excluida.
+- **Duplicata e checada por nome normalizado** (`professionKey`, em `lib/professionGroups.js`): com a coluna de texto, "Programador de Jogos" e "programador de jogos" viram duas linhas se a comparacao for `=`.
+- **Grupos em codigo, profissoes em banco**: `lib/professionGroups.js` (8 grupos, incluindo `outros` como reserva NOT NULL) e `lib/professionIcons.js` (25 icones, um por PNG de `public/images/professions/`). Servidor revalida `group_key` e `icon_img` em toda escrita.
+- **Icone e validado contra a lista** porque o valor vira `src` de `/images/professions/<icon>.png`: campo livre aceita nome inexistente e a imagem quebra no perfil sem aviso para quem cadastrou. `tests/unit/lib/professionGroups.test.js` confere que todo nome declarado tem arquivo.
+- **Fluxo igual ao de Servicos**: catalogo curado em `/admin/professions` (criar, editar, desativar, excluir) + fila de sugestoes. Aprovar **cria a profissao na mesma chamada** e exige grupo e icone — nao ha como inferir o icone, e sem ele o perfil mostra imagem quebrada.
+- **Sugestao no perfil**: `components/Portfolio/ProfessionSuggest/` (details fechado por padrao) dentro do editor de especializacoes. Fica **fora** do `<form>` porque o componente tem o proprio formulario, e formulario dentro de formulario e HTML invalido — o navegador descarta o interno e o envio dispararia o de especializacao.
+- O `<select>` de especializacao do perfil so lista ativas; uma profissao **desativada que a pessoa ja declarou** aparece como `<option>` extra marcada "(desativada)". Sem isso o select cairia em "Selecione..." e salvar o nivel trocaria a especialidade por vazio.
+- **Features**: `read:profession`, `read:profession:all` (existentes) e `create:profession_suggestion` (nova, fora de `ANONYMOUS_FEATURES`). Escrita no catalogo usa `read:admin`.
+- **O quarto array de testes de feature**: `tests/integration/api/v1/activations/[token_id]/patch.test.js` (indentacao 8 espacos). Ele ficou de fora da lista por muito tempo e o sintoma era um unico teste vermelho enquanto os outros tres passavam. Ver a secao "Testes de feature arrays".
+- Testes: `tests/unit/lib/professionGroups.test.js`, `tests/integration/api/v1/professions/` e `tests/integration/api/v1/profession-suggestions/`.

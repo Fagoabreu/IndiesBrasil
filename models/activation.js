@@ -271,6 +271,7 @@ async function activateUserByUserId(userId) {
     "read:service",
     "read:service:all",
     "create:service_suggestion",
+    "create:profession_suggestion",
     //content-review (analises)
     "read:content_review",
     "read:content_review:all",
