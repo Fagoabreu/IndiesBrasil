@@ -158,6 +158,11 @@ const availableFeatures = new Set([
   "create:asset:review",
   "update:asset:review",
 
+  //service (serviços prestados)
+  "read:service",
+  "read:service:all",
+  "create:service_suggestion",
+
   //course
   "read:course",
   "create:course",

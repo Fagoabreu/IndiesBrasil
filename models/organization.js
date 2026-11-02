@@ -3,6 +3,8 @@ import { NotFoundError, ValidationError, ForbiddenError } from "infra/errors.js"
 import { generateUniqueSlug } from "lib/slug";
 import { isValidCnpj } from "lib/cnpj";
 import { serializeContact } from "lib/contactTypes";
+import { MAX_PRICE_NOTE_LENGTH, MAX_SERVICE_SUMMARY_LENGTH, MAX_STUDIO_SERVICES } from "lib/serviceGroups";
+import { normalizePrice } from "lib/price";
 import contactResolver from "./contact";
 import { actorRole, canGrantRole, canRemoveMember, canRevokeRole } from "lib/studioPermissions";
 import moderation from "./moderation.js";
@@ -12,7 +14,28 @@ import reputation from "./reputation";
  * Leitura
  * ========================================================= */
 
-async function findAll({ page = 1, limit = 20, search = "" } = {}) {
+/**
+ * Serviços do estúdio agregados numa coluna JSON.
+ *
+ * Subquery correlacionada, e não um JOIN com `GROUP BY`: o `findAll` já agrupa
+ * por seis colunas e junta `org_followers`/`org_members`; um terceiro join
+ * multiplicaria as linhas e inflaria `follower_count`/`member_count` — números
+ * que os cards exibem.
+ *
+ * O `json_agg` só leva o que o card precisa (nome e grupo) para a listagem não
+ * carregar resumo e preço de todo mundo.
+ */
+const SERVICES_AGG = `COALESCE((
+  SELECT json_agg(
+    json_build_object('id', s.id, 'slug', s.slug, 'name', s.name, 'group_key', s.group_key)
+    ORDER BY s.group_key, s.display_order, s.name
+  )
+  FROM organization_services os
+  JOIN services s ON s.id = os.service_id
+  WHERE os.org_id = o.id
+), '[]'::json) AS services`;
+
+async function findAll({ page = 1, limit = 20, search = "", service = "" } = {}) {
   const offset = (page - 1) * limit;
   const results = await database.query({
     text: `
@@ -25,14 +48,36 @@ async function findAll({ page = 1, limit = 20, search = "" } = {}) {
         u.username          AS owner_username,
         u.avatar_image      AS owner_avatar_image,
         COUNT(DISTINCT of2.follower_id) AS follower_count,
-        COUNT(DISTINCT om.member_id)    AS member_count
+        COUNT(DISTINCT om.member_id)    AS member_count,
+        ${SERVICES_AGG}
       FROM organizations o
       LEFT JOIN uploaded_images ui_logo ON ui_logo.id = o.img
       LEFT JOIN uploaded_images ui_ban  ON ui_ban.id  = o.banner_image_id
       LEFT JOIN users u   ON u.id = o.owner_id
       LEFT JOIN org_followers of2 ON of2.org_id = o.id
       LEFT JOIN org_members om    ON om.org_id   = o.id AND om.status = 'active'
-      WHERE ($3 = '' OR o.name ILIKE '%' || $3 || '%' OR o.pitch ILIKE '%' || $3 || '%')
+      WHERE (
+          $3 = ''
+          OR o.name ILIKE '%' || $3 || '%'
+          OR o.pitch  ILIKE '%' || $3 || '%'
+          /* A busca também alcança o nome do serviço: quem digita "QA" espera
+             achar quem faz QA sem antes escolher o filtro de serviço. */
+          OR EXISTS (
+            SELECT 1
+            FROM organization_services osb
+            JOIN services sb ON sb.id = osb.service_id
+            WHERE osb.org_id = o.id AND sb.name ILIKE '%' || $3 || '%'
+          )
+        )
+        AND (
+          $4 = ''
+          OR EXISTS (
+            SELECT 1
+            FROM organization_services osf
+            JOIN services sf ON sf.id = osf.service_id
+            WHERE osf.org_id = o.id AND sf.slug = $4
+          )
+        )
         AND NOT EXISTS (
           SELECT 1
           FROM moderation_actions ma
@@ -45,7 +90,7 @@ async function findAll({ page = 1, limit = 20, search = "" } = {}) {
       ORDER BY o.created_at DESC
       LIMIT $1 OFFSET $2
     `,
-    values: [limit, offset, search],
+    values: [limit, offset, search, service],
   });
   return results.rows;
 }
@@ -1129,16 +1174,201 @@ async function deleteContact(id, orgId) {
   }
 }
 
+/* =========================================================
+ * Serviços prestados
+ * ========================================================= */
+
+/**
+ * Serviços que o estúdio declara, com rótulo e grupo.
+ *
+ * Inclui serviços **desativados** que o estúdio ainda declara: é o que permite o
+ * formulário mostrá-los marcados (em vez de apagá-los em silêncio no próximo
+ * salvamento) e a página pública continuar dizendo o que o estúdio faz.
+ */
+async function findServices(orgId) {
+  const result = await database.query({
+    text: `
+      SELECT
+        s.id, s.slug, s.name, s.group_key,
+        s.is_active, s.display_order,
+        os.summary, os.price, os.price_note
+      FROM organization_services os
+      JOIN services s ON s.id = os.service_id
+      WHERE os.org_id = $1
+      ORDER BY s.group_key, s.display_order, s.name
+    `,
+    values: [orgId],
+  });
+  return result.rows;
+}
+
+/**
+ * Substitui a lista de serviços do estúdio.
+ *
+ * Valida **antes** de escrever: uma lista inválida respondia 400 deixando o
+ * estúdio sem serviço nenhum (o mesmo defeito que a validação de categorias de
+ * asset já corrigiu).
+ *
+ * Aceita serviço **ativo** ou **já vinculado** ao estúdio. Sem a segunda parte,
+ * salvar o formulário de um estúdio antigo apagaria o serviço que o admin
+ * desativou depois — e o estúdio não teria como recuperá-lo, porque ele não
+ * aparece mais no seletor.
+ *
+ * @param {string} orgId
+ * @param {Array<{ service_id: number|string, summary?: string, price?: number|string|null, price_note?: string|null }>} entries
+ */
+async function setServices(orgId, entries) {
+  if (entries !== undefined && !Array.isArray(entries)) {
+    throw new ValidationError({ message: "A lista de serviços deve ser um array." });
+  }
+
+  const list = entries ?? [];
+
+  if (list.length > MAX_STUDIO_SERVICES) {
+    throw new ValidationError({
+      message: `O estúdio pode declarar no máximo ${MAX_STUDIO_SERVICES} serviços.`,
+      action: "Desmarque os que não presta mais.",
+    });
+  }
+
+  const normalized = list.map(normalizeServiceEntry);
+  const ids = normalized.map((entry) => entry.serviceId);
+
+  if (new Set(ids).size !== ids.length) {
+    throw new ValidationError({
+      message: "A lista de serviços tem itens repetidos.",
+    });
+  }
+
+  if (ids.length > 0) {
+    const allowed = await database.query({
+      text: `
+        SELECT s.id
+        FROM services s
+        WHERE s.id = ANY($1::int[])
+          AND (
+            s.is_active
+            OR EXISTS (
+              SELECT 1 FROM organization_services os
+              WHERE os.org_id = $2 AND os.service_id = s.id
+            )
+          )
+      `,
+      values: [ids, orgId],
+    });
+
+    const allowedIds = new Set(allowed.rows.map((row) => row.id));
+    const rejected = ids.filter((id) => !allowedIds.has(id));
+
+    if (rejected.length > 0) {
+      throw new ValidationError({
+        message: "Um ou mais serviços escolhidos não estão disponíveis.",
+        action: "Recarregue a página e marque os serviços novamente.",
+      });
+    }
+  }
+
+  await database.transaction(async (client) => {
+    await client.query({
+      text: `DELETE FROM organization_services WHERE org_id = $1`,
+      values: [orgId],
+    });
+
+    for (const entry of normalized) {
+      await client.query({
+        text: `
+          INSERT INTO organization_services (org_id, service_id, summary, price, price_note)
+          VALUES ($1, $2, $3, $4, $5)
+        `,
+        values: [orgId, entry.serviceId, entry.summary, entry.price, entry.priceNote],
+      });
+    }
+  });
+
+  return findServices(orgId);
+}
+
+/** Normaliza uma entrada de `setServices`, recusando o que viria como `NaN`. */
+function normalizeServiceEntry(raw) {
+  const serviceId = Number.parseInt(raw?.service_id, 10);
+
+  if (!Number.isInteger(serviceId) || serviceId <= 0) {
+    throw new ValidationError({ message: "Serviço inválido na lista." });
+  }
+
+  return {
+    serviceId,
+    summary: normalizeServiceSummary(raw.summary),
+    price: normalizePrice(raw.price, (message) => new ValidationError({ message })),
+    priceNote: normalizePriceNote(raw.price_note),
+  };
+}
+
+function normalizeServiceSummary(raw) {
+  if (raw === undefined || raw === null) return null;
+
+  const value = String(raw).trim().replace(/\s+/g, " ");
+  if (!value) return null;
+
+  if (value.length > MAX_SERVICE_SUMMARY_LENGTH) {
+    throw new ValidationError({
+      message: `O resumo do serviço deve ter no máximo ${MAX_SERVICE_SUMMARY_LENGTH} caracteres.`,
+    });
+  }
+
+  return value;
+}
+
+function normalizePriceNote(raw) {
+  if (raw === undefined || raw === null) return null;
+
+  const value = String(raw).trim();
+  if (!value) return null;
+
+  if (value.length > MAX_PRICE_NOTE_LENGTH) {
+    throw new ValidationError({
+      message: `A nota de preço deve ter no máximo ${MAX_PRICE_NOTE_LENGTH} caracteres.`,
+    });
+  }
+
+  return value;
+}
+
 /**
  * Retorna os estúdios dos quais o usuário é dono ou membro ativo.
  * Útil para renderizar seletor de RSVP em eventos.
+ */
+/**
+ * Estúdios de que o usuário participa, com o **papel** dele em cada um.
+ *
+ * O papel é o que permite a tela "escolher estúdio" mostrar só os que a pessoa
+ * pode de fato editar e separar os que são só leitura. Antes, `/api/v1/studios`
+ * devolvia lista de slugs sem dizer o papel, e quem era membro comum de um
+ * estúdio e admin de outro só descobria a diferença depois do 403.
+ *
+ * `owner` vem de `organizations.owner_id` (é estrutural), `admin` exige a linha
+ * em `org_roles` **e** o vínculo ativo em `org_members` — a mesma regra de
+ * `isAdmin`, que existe porque papel órfão virava admin permanente.
  */
 async function findByMember(userId) {
   const results = await database.query({
     text: `
       SELECT
         o.id, o.slug, o.name,
-        ui_logo.secure_url AS logo_url
+        ui_logo.secure_url AS logo_url,
+        CASE
+          WHEN o.owner_id = $1 THEN 'owner'
+          WHEN EXISTS (
+            SELECT 1
+            FROM org_roles r
+            JOIN org_members m
+              ON m.org_id = r.org_id
+             AND m.member_id = r.member_id
+             AND m.status = 'active'
+            WHERE r.org_id = o.id AND r.member_id = $1 AND r.role = 'admin'
+          ) THEN 'admin'
+          ELSE 'member'
+        END AS role
       FROM organizations o
       LEFT JOIN uploaded_images ui_logo ON ui_logo.id = o.img
       WHERE o.owner_id = $1
@@ -1362,6 +1592,8 @@ const organization = {
   findContacts,
   createContact,
   deleteContact,
+  findServices,
+  setServices,
   requestOwnershipTransfer,
   respondToTransfer,
   findOwnedWithMembers,

@@ -24,6 +24,7 @@ async function getHandler(request, response) {
   const pendingInvitation = requestUser.id && !isMember ? await organization.findPendingInvitationForUser(studio.id, requestUser.id) : null;
   const members = await organization.findMembers(studio.id);
   const contacts = await organization.findContacts(studio.id);
+  const services = await organization.findServices(studio.id);
 
   // Agrupar campos de endereço em objeto aninhado (vêm como colunas planas do JOIN)
   const { street, number, complement, neighborhood, city, state, zip_code, country, ...studioData } = studio;
@@ -45,6 +46,7 @@ async function getHandler(request, response) {
     ...studioData,
     address,
     contacts,
+    services,
     members,
     viewer: { isFollowing, isMember, isAdmin, isOwner, pendingInvitation },
   });

@@ -33,6 +33,7 @@ import PostCardComponent from "@/components/PostCard/PostCardComponent";
 import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 import MessagesPanel from "@/components/Messages/MessagesPanel";
 import SendMessageButton from "@/components/Messages/SendMessageButton";
+import { formatPriceWithNote } from "@/lib/price";
 import { SITE_URL, OG_CARD_SIZE, embedHostname } from "@/lib/seo";
 import { resolveOrgNotificationTitle, resolveOrgNotificationMessage, resolveOrgNotificationHref } from "@/lib/notifications";
 import styles from "./studio.module.css";
@@ -1034,6 +1035,42 @@ export default function StudioPage({ initialStudio }) {
                       <ContatoItem key={c.id ?? c.type} item={c} />
                     ))}
                   </ul>
+                </SectionPanel>
+              )}
+
+              {/* Serviços prestados: o que o estúdio faz para outros times. O
+                  card fica aqui, na barra lateral, porque é informação de
+                  "contratar" — não de "conhecer a equipe". */}
+              {(studio.services?.length > 0 || canEdit) && (
+                <SectionPanel title="Serviços">
+                  {studio.services?.length > 0 ? (
+                    <>
+                      <ul className={styles.serviceList}>
+                        {studio.services.map((service) => {
+                          const price = formatPriceWithNote(service.price, service.price_note);
+                          return (
+                            <li key={service.id} className={styles.serviceItem}>
+                              <span className={styles.serviceName}>{service.name}</span>
+                              {service.summary && <span className={styles.serviceSummary}>{service.summary}</span>}
+                              {price && <span className={styles.servicePrice}>{price}</span>}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                      {studio.id && viewer.isMember && (
+                        <div className={styles.serviceContact}>
+                          <SendMessageButton targetType="studio" targetId={studio.id} className={actionStyles.btnOutline} />
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <p className={styles.emptyHint}>
+                      Nenhum serviço declarado.{" "}
+                      <Link href={`/estudios/${slug}/configuracoes?tab=services`} className={styles.inlineLink}>
+                        Declarar serviços
+                      </Link>
+                    </p>
+                  )}
                 </SectionPanel>
               )}
 

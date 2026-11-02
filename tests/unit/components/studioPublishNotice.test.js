@@ -12,7 +12,7 @@ import StudioPublishNotice from "@/components/Studio/StudioPublishNotice/StudioP
  * cadastrar o seu jogo!").
  */
 
-const mockUser = { user: null, loadingUser: false, myStudios: [] };
+const mockUser = { user: null, loadingUser: false, myStudios: null };
 
 jest.mock("../../../context/UserContext", () => ({
   useUser: () => globalThis.__mockUserState,
@@ -75,15 +75,50 @@ describe("components/Studio/StudioPublishNotice", () => {
       user: { id: "u1" },
       loadingUser: false,
       myStudios: [
-        { slug: "a", name: "A" },
-        { slug: "b", name: "B" },
+        { slug: "a", name: "A", role: "owner" },
+        { slug: "b", name: "B", role: "admin" },
       ],
     };
 
     const html = render({ tab: "assets" });
 
     expect(html).toContain("Escolher estúdio");
-    expect(html).toContain("/estudios?tab=member");
+    expect(html).toContain("/estudios/escolher?tab=assets");
+  });
+
+  test("a escolha acontece antes do formulário, não dentro dele", () => {
+    // O botão das listagens não pode abrir a aba de um estúdio arbitrário: com
+    // vários, o destino é o seletor.
+    globalThis.__mockUserState = {
+      user: { id: "u1" },
+      loadingUser: false,
+      myStudios: [
+        { slug: "a", name: "A", role: "admin" },
+        { slug: "b", name: "B", role: "admin" },
+      ],
+    };
+
+    const html = render({ tab: "services" });
+
+    expect(html).not.toContain("/estudios/a/configuracoes");
+    expect(html).not.toContain("/estudios/b/configuracoes");
+    expect(html).toContain("/estudios/escolher?tab=services");
+  });
+
+  /**
+   * Regressão do bug "Oferecer serviços cai em criar estúdio": com a lista de
+   * estúdios ainda desconhecida (`null`), o aviso não pode afirmar que a pessoa
+   * não tem estúdio nem apontar para `/estudios/novo`.
+   */
+  test("estúdios ainda carregando não viram 'criar estúdio'", () => {
+    globalThis.__mockUserState = { user: { id: "u1" }, loadingUser: false, myStudios: null };
+
+    const html = render({ tab: "services" });
+
+    expect(html).toContain("Meus estúdios");
+    expect(html).toContain("/estudios?member=me");
+    expect(html).not.toContain("/estudios/novo");
+    expect(html).not.toContain("Criar meu estúdio");
   });
 
   test("as duas variantes linkam a página de explicação", () => {

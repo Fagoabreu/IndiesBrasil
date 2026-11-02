@@ -19,8 +19,15 @@ export function UserProvider({ children }) {
    * com um estúdio, publicar na aba certa; com vários, escolher qual. Buscar
    * isso separadamente em cada página daria quatro requisições e quatro
    * decisões que divergem.
+   *
+   * Começa **`null`** (desconhecido), não `[]`. A diferença é o que separa "a
+   * pessoa não tem estúdio" de "ainda não sabemos": com `[]` como valor
+   * inicial, `resolveStudioEntry` concluía "sem estúdio" no primeiro render e
+   * mandava quem **tem** estúdio para `/estudios/novo` — bastava clicar antes de
+   * a requisição responder. Em erro de rede também permanece `null`, porque
+   * "não consegui perguntar" nunca deve virar "você não tem".
    */
-  const [myStudios, setMyStudios] = useState([]);
+  const [myStudios, setMyStudios] = useState(null);
   const router = useRouter();
 
   async function fetchUser() {
@@ -113,19 +120,29 @@ export function UserProvider({ children }) {
 
   useEffect(() => {
     if (!userId) {
+      // Sem sessão não há estúdio a listar: `[]` é a resposta certa, e o botão
+      // vai para o login de qualquer forma.
       Promise.resolve().then(() => setMyStudios([]));
       return;
     }
 
+    // Sessão nova (ou troca de conta): volta a "desconhecido" enquanto busca.
+    // Sem isto, os estúdios da conta anterior ficariam visíveis até a resposta.
+    Promise.resolve().then(() => setMyStudios(null));
+
     let cancelled = false;
     Promise.resolve()
       .then(() => fetch("/api/v1/studios?member=me", { credentials: "include" }))
-      .then((res) => (res.ok ? res.json() : []))
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (!cancelled) setMyStudios(Array.isArray(data) ? data : []);
+        if (cancelled) return;
+        // `null` quando a consulta falhou: continua desconhecido, e o botão fica
+        // no destino seguro (`/estudios?member=me`) em vez de afirmar "você não
+        // tem estúdio".
+        setMyStudios(Array.isArray(data) ? data : null);
       })
       .catch(() => {
-        if (!cancelled) setMyStudios([]);
+        if (!cancelled) setMyStudios(null);
       });
 
     return () => {

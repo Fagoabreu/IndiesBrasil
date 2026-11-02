@@ -14,6 +14,7 @@ import {
   BookIcon,
   BroadcastIcon,
   ArchiveIcon,
+  ToolsIcon,
 } from "@primer/octicons-react";
 
 import { useUser } from "@/context/UserContext";
@@ -28,6 +29,7 @@ import AiUsageBadge from "@/components/AiUsageBadge";
 import AiUsageModal from "@/components/AiUsageModal";
 import InviteMemberField from "@/components/Studio/InviteMemberField";
 import AssetEditor from "@/components/Studio/AssetEditor/AssetEditor";
+import StudioServicesEditor from "@/components/Studio/StudioServicesEditor/StudioServicesEditor";
 import { normalizeMemberQuery } from "@/context/dataHooks/UseUserSuggest";
 import styles from "./configuracoes.module.css";
 
@@ -154,6 +156,7 @@ const STUDIO_TABS = [
   { id: "books", label: "Publicações", description: "Livros, quadrinhos e PDFs", icon: BookIcon },
   { id: "streaming", label: "Streaming", description: "Canais da Twitch e YouTube", icon: BroadcastIcon },
   { id: "assets", label: "Assets", description: "Pacotes para game dev", icon: ArchiveIcon },
+  { id: "services", label: "Serviços", description: "O que o estúdio presta", icon: ToolsIcon },
 ];
 
 const STUDIO_TAB_IDS = STUDIO_TABS.map((tab) => tab.id);
@@ -3388,6 +3391,9 @@ export default function ConfiguracoesPage() {
 
         {/* ---- ASSETS TAB ---- */}
         {activeTab === "assets" && <AssetEditor slug={slug} />}
+
+        {/* ---- SERVIÇOS TAB ---- */}
+        {activeTab === "services" && <StudioServicesEditor slug={slug} />}
       </div>
 
       {/* Upload de PDF de publicação */}

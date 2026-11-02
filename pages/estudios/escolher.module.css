@@ -1,0 +1,208 @@
+/* Seletor de estúdio (`/estudios/escolher`). Página curta e estreita: a decisão
+   é uma lista de cartões, não um painel. */
+
+.page {
+  width: min(100%, 620px);
+  margin: 0 auto;
+  padding: 24px 0 56px;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+  color: var(--fgColor-muted);
+  text-decoration: none;
+}
+
+.backLink:hover {
+  color: var(--brand-primary);
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--fgColor-default);
+}
+
+.subtitle {
+  margin: 0 0 20px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--fgColor-muted);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: 10px;
+  background: var(--bgColor-default);
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+a.card:hover {
+  border-color: var(--brand-primary);
+  background: rgba(var(--brand-rgb-primary), 0.05);
+}
+
+a.card:hover .cardAction {
+  text-decoration: underline;
+}
+
+/* Estúdio em que a pessoa é só membro: presente na lista porque ela participa,
+   visualmente apagado porque não há ação possível. */
+.cardDisabled {
+  background: var(--bgColor-muted);
+  border-style: dashed;
+}
+
+.logo {
+  flex-shrink: 0;
+  border-radius: 6px;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.cardName {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardRole {
+  font-size: 0.75rem;
+  color: var(--fgColor-muted);
+}
+
+.cardAction {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  white-space: nowrap;
+}
+
+.cardActionMuted {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--fgColor-muted);
+  white-space: nowrap;
+}
+
+.readOnlySection {
+  margin-top: 24px;
+}
+
+.readOnlyTitle {
+  margin: 0 0 2px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fgColor-muted);
+}
+
+.readOnlyHint {
+  margin: 0 0 10px;
+  font-size: 0.8rem;
+  color: var(--fgColor-muted);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.emptyIcon {
+  color: var(--fgColor-muted);
+}
+
+.emptyTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--fgColor-default);
+}
+
+.emptyText {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--fgColor-muted);
+}
+
+.primaryAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  margin-top: 6px;
+  padding: 7px 16px;
+  border: 1px solid var(--brand-primary);
+  border-radius: 7px;
+  background: var(--brand-primary);
+  color: var(--fgColor-onEmphasis);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.primaryAction:hover {
+  background: var(--brand-secondary);
+  border-color: var(--brand-secondary);
+}
+
+.footerHint {
+  margin: 20px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--fgColor-muted);
+}
+
+.inlineLink {
+  color: var(--brand-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.inlineLink:hover {
+  text-decoration: underline;
+}

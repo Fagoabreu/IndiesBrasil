@@ -33,13 +33,31 @@ import {
   TrashIcon,
   ArchiveIcon,
   ListUnorderedIcon,
+  SearchIcon,
+  PlusIcon,
 } from "@primer/octicons-react";
 import { useUser } from "@/context/UserContext";
+import { resolveStudioEntry } from "@/lib/studioEntry";
 import styles from "./LeftSidebarComponent.module.css";
 
 export default function LeftSidebarComponent({ onNavigate }) {
   const router = useRouter();
-  const { user } = useUser();
+  const { user, loadingUser, myStudios } = useUser();
+
+  /**
+   * Destino de "Oferecer serviços".
+   *
+   * Vem de `resolveStudioEntry` — a mesma função das listagens: visitante vai ao
+   * login, conta sem estúdio vai criar um, com um estúdio vai direto à aba
+   * Serviços, com vários escolhe qual. Decidir isso aqui criaria uma segunda
+   * escada de `if` que divergiria do resto do site na primeira mudança.
+   *
+   * Enquanto `/api/v1/studios?member=me` não responde, `myStudios` é `null` e o
+   * destino é a lista dos meus estúdios — nunca a criação. Antes, a lista
+   * começava `[]` e quem tinha estúdio era mandado a `/estudios/novo` no
+   * primeiro instante da página.
+   */
+  const offerServicesHref = resolveStudioEntry({ user, loadingUser, studios: myStudios, tab: "services" }).href;
 
   return (
     <div className={styles.sidebar}>
@@ -147,6 +165,28 @@ export default function LeftSidebarComponent({ onNavigate }) {
 
         <NavList.Item href="#" defaultOpen>
           <NavList.LeadingVisual>
+            <ToolsIcon />
+          </NavList.LeadingVisual>
+          Serviços
+          <NavList.SubNav>
+            <NavList.Item as={Link} href="/servicos" aria-current={router.pathname.startsWith("/servicos") ? "page" : undefined} onClick={onNavigate}>
+              <NavList.LeadingVisual>
+                <SearchIcon />
+              </NavList.LeadingVisual>
+              Procurar serviços
+            </NavList.Item>
+            <NavList.Item as={Link} href={offerServicesHref} onClick={onNavigate}>
+              <NavList.LeadingVisual>
+                <PlusIcon />
+              </NavList.LeadingVisual>
+              Oferecer serviços
+            </NavList.Item>
+          </NavList.SubNav>
+        </NavList.Item>
+        <NavList.Divider />
+
+        <NavList.Item href="#" defaultOpen>
+          <NavList.LeadingVisual>
             <LightBulbIcon />
           </NavList.LeadingVisual>
           Artigos e Estudos
@@ -209,6 +249,17 @@ export default function LeftSidebarComponent({ onNavigate }) {
                     <ListUnorderedIcon />
                   </NavList.LeadingVisual>
                   Categorias de Assets
+                </NavList.Item>
+                <NavList.Item
+                  as={Link}
+                  href="/admin/services"
+                  aria-current={router.pathname.startsWith("/admin/services") ? "page" : undefined}
+                  onClick={onNavigate}
+                >
+                  <NavList.LeadingVisual>
+                    <ToolsIcon />
+                  </NavList.LeadingVisual>
+                  Serviços e Sugestões
                 </NavList.Item>
                 <NavList.Item as={Link} href="/admin/reports" onClick={onNavigate}>
                   <NavList.LeadingVisual>
