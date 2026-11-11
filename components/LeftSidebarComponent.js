@@ -28,6 +28,7 @@ import {
   RocketIcon,
   StackIcon,
   FileIcon,
+  VideoIcon,
   ReportIcon,
   ShieldIcon,
   TrashIcon,
@@ -326,6 +327,12 @@ export default function LeftSidebarComponent({ onNavigate }) {
                 <FileIcon />
               </NavList.LeadingVisual>
               Imagens para PDF
+            </NavList.Item>
+            <NavList.Item as={Link} href="/ferramentas/comprimir-video" onClick={onNavigate}>
+              <NavList.LeadingVisual>
+                <VideoIcon />
+              </NavList.LeadingVisual>
+              Comprimir Vídeo
             </NavList.Item>
           </NavList.SubNav>
         </NavList.Item>

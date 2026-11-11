@@ -132,3 +132,7 @@ dist
 infra/certs
 infra/.env.production
 _bkp/
+
+# Binário do ffmpeg.wasm (~32 MB), copiado de node_modules por
+# `npm run ffmpeg:sync` (encadeado em dev/build/test). Não versionar.
+public/ffmpeg/

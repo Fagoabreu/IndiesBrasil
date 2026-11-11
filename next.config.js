@@ -63,6 +63,19 @@ const nextConfig = {
   async headers() {
     return [
       {
+        /**
+         * Core do ffmpeg.wasm, copiado para `public/ffmpeg/` por
+         * `scripts/sync-ffmpeg-core.js`. São ~32 MB baixados na primeira
+         * compressão; sem cache imutável, cada visita baixaria tudo de novo —
+         * e a ferramenta existe justamente para quem está com dados limitados.
+         *
+         * `immutable` é seguro porque o nome do arquivo é fixo e o conteúdo só
+         * muda junto com a dependência (`@ffmpeg/core`), que muda o `package.json`.
+         */
+        source: "/ffmpeg/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      {
         source: "/(.*)",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
