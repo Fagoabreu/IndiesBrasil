@@ -28,6 +28,20 @@
 - Tema por cookie. Usar `[data-color-mode="light"]`, nunca `prefers-color-scheme`.
 - Excecoes: `#fff` em texto sobre gradiente; `#ffffff` em `<iframe>` de preview HTML.
 
+## Design system (tokens e primitivas)
+
+- **Geometria, elevacao, movimento e tipografia tem token.** Antes so a cor era tokenizada: havia 204 `border-radius` >=10px escritos a mao em 76 arquivos e **zero** ocorrencia de `--space-*`/`--radius-*`. Tudo isso vive em `css/styles.css :root`:
+  - Espaco: `--space-1..12` (base 4px).
+  - Raio **por tipo de superficie**, nao por gosto da tela: `--radius-xs` (chip/selo), `--radius-sm` (botao, aba, controle), `--radius-md` (capa de card), `--radius-lg` (card e painel), `--radius-full` (pilula).
+  - Elevacao: `--shadow-sm/md/lg` e `--ring-brand` (foco). Nao criar sombra nova: o glow da marca (`--brand-glow-*`) e legado e sai na medida em que as telas migram.
+  - Movimento: `--duration-fast/base/slow` + `--ease-out`. Hover muda cor/borda; **nao** desloca o elemento (`translateX/rotateY`) — isso e o que datava os cards.
+  - Largura: `--layout-content` (1040px) e `--layout-wide` (1200px). Nao escrever `max-width: 960px` em pagina nova.
+- **Texto em gradiente e proibido em titulo** (`.u-gradient-text`, `.pageTitle` antigo). O gradiente fica no CTA da landing; o resto usa `--brand-solid`/`--brand-strong`.
+- `--brand-strong` (`#7c3aed`) existe por contraste: branco sobre `--brand-primary` da 4.2:1, abaixo de AA para texto de 13px. Preenchimento solido com texto claro usa `--brand-strong` + `var(--fgColor-onEmphasis)`.
+- **Cabecalho de pagina e componente, nao CSS copiado**: `components/PageHeader.jsx` (variantes `bare` e `card`). Havia 11 copias de `.pageHeader` com fundo ambient e barra gradiente. Nao recriar a classe na pagina.
+- **Abas sao componente**: `components/TabBar.jsx` (`role="tablist"` + setas do teclado). Havia 5 copias de `.feedTabs` em pilula.
+- Fonte: Inter via `next/font` em `pages/_document.js`, exposta como `--font-inter` no `<html>` e consumida por `--font-sans`. O fallback dentro do `var()` e obrigatorio: sem ele, a familia inteira fica invalida e o navegador cai no Times.
+
 ## Lint & Qualidade
 
 - `npm run lint` apos toda mudanca. Zero erros para entregar.

@@ -1,9 +1,11 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Heading, TextInput, Spinner } from "@primer/react";
+import { TextInput, Spinner } from "@primer/react";
 import { DeviceMobileIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import GameCard from "@/components/Card/GameCard";
+import PageHeader from "@/components/PageHeader";
+import TabBar from "@/components/TabBar";
 import StudioPublishNotice from "@/components/Studio/StudioPublishNotice/StudioPublishNotice";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL } from "@/lib/seo";
@@ -14,6 +16,12 @@ import styles from "./index.module.css";
 const PAGE_TITLE = "Jogos — Indies Brasil";
 const PAGE_DESCRIPTION = "Descubra jogos criados por desenvolvedores indie brasileiros.";
 const PAGE_URL = `${SITE_URL}/jogos`;
+
+/** Abas do feed — no escopo do módulo para não recriar o array a cada render. */
+const FEED_TABS = [
+  { id: "all", label: "Descubra" },
+  { id: "following", label: "Seguindo" },
+];
 
 const STAGES = {
   concept: "Conceito",
@@ -181,92 +189,62 @@ export default function JogosPage({ initialGames }) {
     <div className={styles.page}>
       <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} />
 
-      {/* PAGE HEADER */}
-      <header className={styles.pageHeader}>
-        <div className={styles.headerBlock}>
-          <div className={styles.headerTitle}>
-            <Heading as="h2">Jogos</Heading>
-            {!isLoading && (
-              <span className={styles.memberCount} aria-live="polite">
-                {countStr} {countWord}
-              </span>
-            )}
-          </div>
-          <p className={styles.pageSubtitle}>Descubra projetos de desenvolvedores indie brasileiros.</p>
-
-          {tab === "all" && (
-            <div className={styles.searchWrapper}>
-              <TextInput
-                aria-label="Pesquisar jogos"
-                placeholder="Pesquisar por nome ou descrição..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                leadingVisual="search"
-                className={styles.searchInput}
-              />
-              <div className={styles.selectRow}>
-                <select className={styles.select} value={genre} onChange={(e) => setGenre(e.target.value)}>
-                  <option value="">Todos os gêneros</option>
-                  {GENRES.map((g) => (
-                    <option key={g} value={g}>
-                      {g}
-                    </option>
-                  ))}
-                </select>
-                <select className={styles.select} value={stage} onChange={(e) => setStage(e.target.value)}>
-                  <option value="">Todas as fases</option>
-                  {Object.entries(STAGES).map(([k, v]) => (
-                    <option key={k} value={k}>
-                      {v}
-                    </option>
-                  ))}
-                </select>
-                <select className={styles.select} value={contentRating} onChange={(e) => setContentRating(e.target.value)}>
-                  <option value="">Todas as classificações</option>
-                  {RATING_ORDER.map((rating) => (
-                    <option key={rating} value={rating}>
-                      {RATING_LABELS[rating]}
-                    </option>
-                  ))}
-                  <option value="none">Não classificados</option>
-                </select>
-                <select className={styles.select} value={aiLevel} onChange={(e) => setAiLevel(e.target.value)}>
-                  <option value="">Todo uso de IA</option>
-                  {AI_USAGE_LEVELS.map((item) => (
-                    <option key={item.level} value={String(item.level)}>
-                      {formatAiLevelLabel(item.level)}
-                    </option>
-                  ))}
-                  <option value="none">Não informado</option>
-                </select>
-              </div>
+      <PageHeader
+        eyebrow="Descobrir"
+        title="Jogos"
+        badge={isLoading ? null : `${countStr} ${countWord}`}
+        subtitle="Descubra projetos de desenvolvedores indie brasileiros."
+        tabs={user ? <TabBar ariaLabel="Filtros de jogos" items={FEED_TABS} value={tab} onChange={setTab} /> : null}
+      >
+        {tab === "all" && (
+          <>
+            <TextInput
+              aria-label="Pesquisar jogos"
+              placeholder="Pesquisar por nome ou descrição..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              leadingVisual="search"
+              className={styles.searchInput}
+            />
+            <div className={styles.selectRow}>
+              <select className={styles.select} value={genre} onChange={(e) => setGenre(e.target.value)}>
+                <option value="">Todos os gêneros</option>
+                {GENRES.map((g) => (
+                  <option key={g} value={g}>
+                    {g}
+                  </option>
+                ))}
+              </select>
+              <select className={styles.select} value={stage} onChange={(e) => setStage(e.target.value)}>
+                <option value="">Todas as fases</option>
+                {Object.entries(STAGES).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+              <select className={styles.select} value={contentRating} onChange={(e) => setContentRating(e.target.value)}>
+                <option value="">Todas as classificações</option>
+                {RATING_ORDER.map((rating) => (
+                  <option key={rating} value={rating}>
+                    {RATING_LABELS[rating]}
+                  </option>
+                ))}
+                <option value="none">Não classificados</option>
+              </select>
+              <select className={styles.select} value={aiLevel} onChange={(e) => setAiLevel(e.target.value)}>
+                <option value="">Todo uso de IA</option>
+                {AI_USAGE_LEVELS.map((item) => (
+                  <option key={item.level} value={String(item.level)}>
+                    {formatAiLevelLabel(item.level)}
+                  </option>
+                ))}
+                <option value="none">Não informado</option>
+              </select>
             </div>
-          )}
-        </div>
-
-        {user && (
-          <div className={styles.feedTabs} role="tablist" aria-label="Filtros de jogos">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={tab === "all"}
-              className={`${styles.feedTab} ${tab === "all" ? styles.feedTabActive : ""}`}
-              onClick={() => setTab("all")}
-            >
-              Descubra
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={tab === "following"}
-              className={`${styles.feedTab} ${tab === "following" ? styles.feedTabActive : ""}`}
-              onClick={() => setTab("following")}
-            >
-              Seguindo
-            </button>
-          </div>
+          </>
         )}
-      </header>
+      </PageHeader>
 
       {/* A listagem é onde a intenção de publicar aparece — o aviso fica antes
           dos cards para não ser confundido com filtro (ver o componente). */}
