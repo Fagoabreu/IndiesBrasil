@@ -70,6 +70,12 @@ const config = [
       // quebraria os contextos dos patches e o diff contra a tag base — ver
       // galene/UPSTREAM.md. As customizações são revisadas junto com a árvore.
       "galene/**/*.js",
+      // Cópias de `@ffmpeg/core` e `@ffmpeg/ffmpeg` feitas por
+      // `scripts/sync-ffmpeg-core.js` para servir o core do compressor de
+      // vídeo. São minificadas/vendorizadas, não existem num clone limpo (a
+      // pasta é gitignored) e fazem `npm run lint` falhar com dezenas de erros
+      // de `no-undef`/`no-redeclare` que não são nossos para corrigir.
+      "public/ffmpeg/",
       ".deepseek/",
       ".vscode/",
       "**/*.json",

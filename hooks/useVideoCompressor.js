@@ -51,8 +51,13 @@ function absolute(pathname) {
   return new URL(pathname, window.location.origin).href;
 }
 
-const INPUT_FILE = "input";
-const OUTPUT_FILE = "output.mp4";
+/**
+ * Nomes no MEMFS **por execução**: a limpeza de uma compressão não pode apagar
+ * o arquivo de outra. Com nomes fixos, "cancelar durante a carga do motor e
+ * comprimir de novo" deixava as duas execuções disputando `input`/`output.mp4`.
+ */
+const memfsInputName = (runId) => `input-${runId}`;
+const memfsOutputName = (runId) => `output-${runId}.mp4`;
 
 /** Erro do core vem como string; a mensagem final precisa dizer o que fazer. */
 function describeError(rawError) {
@@ -80,7 +85,19 @@ function describeError(rawError) {
 export default function useVideoCompressor() {
   const ffmpegRef = useRef(null);
   const objectUrlRef = useRef(null);
-  const cancelledRef = useRef(false);
+  /**
+   * Identificador da compressão em andamento. Cancelar **incrementa** o número
+   * em vez de marcar um booleano: com `cancelledRef`, "cancelar e tentar de
+   * novo" voltava o booleano para `false` e a execução antiga (que ainda estava
+   * carregando o motor) seguia em frente, escrevendo no MEMFS junto com a nova.
+   */
+  const runIdRef = useRef(0);
+  /**
+   * Carregamento em andamento. `ffmpeg.load` baixa e instancia ~32 MB de
+   * WebAssembly; cancelar durante a carga e comprimir de novo abria um segundo
+   * worker, e o primeiro ficava vivo sem uso.
+   */
+  const loadPromiseRef = useRef(null);
   const mountedRef = useRef(true);
 
   const [engineStatus, setEngineStatus] = useState(ENGINE_STATUS.idle);
@@ -120,62 +137,91 @@ export default function useVideoCompressor() {
 
   const ensureEngine = useCallback(async () => {
     if (ffmpegRef.current) return ffmpegRef.current;
+    if (loadPromiseRef.current) return loadPromiseRef.current;
 
     setEngineStatus(ENGINE_STATUS.loading);
     setError(null);
 
-    const { FFmpeg } = await import("@ffmpeg/ffmpeg");
-    const ffmpeg = new FFmpeg();
+    const loading = (async () => {
+      const { FFmpeg } = await import("@ffmpeg/ffmpeg");
+      const ffmpeg = new FFmpeg();
 
-    ffmpeg.on("progress", ({ progress: value }) => {
-      if (!mountedRef.current) return;
-      setProgress(Math.min(1, Math.max(0, Number(value) || 0)));
-    });
+      ffmpeg.on("progress", ({ progress: value }) => {
+        if (!mountedRef.current) return;
+        setProgress(Math.min(1, Math.max(0, Number(value) || 0)));
+      });
+
+      try {
+        await ffmpeg.load({
+          coreURL: absolute(CORE_PATH),
+          wasmURL: absolute(WASM_PATH),
+          classWorkerURL: absolute(WORKER_PATH),
+        });
+      } catch (loadError) {
+        try {
+          ffmpeg.terminate();
+        } catch {
+          // Worker pode nem ter sido criado.
+        }
+        throw loadError;
+      }
+
+      ffmpegRef.current = ffmpeg;
+      if (mountedRef.current) setEngineStatus(ENGINE_STATUS.ready);
+      return ffmpeg;
+    })();
+
+    loadPromiseRef.current = loading;
 
     try {
-      await ffmpeg.load({
-        coreURL: absolute(CORE_PATH),
-        wasmURL: absolute(WASM_PATH),
-        classWorkerURL: absolute(WORKER_PATH),
-      });
-    } catch (loadError) {
-      try {
-        ffmpeg.terminate();
-      } catch {
-        // Worker pode nem ter sido criado.
-      }
-      throw loadError;
+      return await loading;
+    } finally {
+      loadPromiseRef.current = null;
     }
-
-    ffmpegRef.current = ffmpeg;
-    setEngineStatus(ENGINE_STATUS.ready);
-    return ffmpeg;
   }, []);
 
   const compress = useCallback(
     async ({ file, preset, plan }) => {
       if (!file) return null;
 
-      cancelledRef.current = false;
+      const runId = runIdRef.current + 1;
+      runIdRef.current = runId;
+
+      // Cancelar invalida esta execução; uma nova compressão também (o id muda).
+      const isStale = () => runIdRef.current !== runId || !mountedRef.current;
+
       setIsCompressing(true);
       setError(null);
       setProgress(0);
       releaseResult();
 
+      const input = memfsInputName(runId);
+      const output = memfsOutputName(runId);
       let ffmpeg = null;
 
       try {
         ffmpeg = await ensureEngine();
 
+        // Cancelar durante a carga do motor não interrompe o download (ele fica
+        // em cache para a próxima tentativa), mas a execução cancelada para aqui
+        // — antes de escrever qualquer byte no MEMFS.
+        if (isStale()) return null;
+
         // O MEMFS é um sistema de arquivos em memória: o arquivo inteiro é
         // copiado para lá. `writeFile` não aceita `File`, só `Uint8Array`.
-        await ffmpeg.writeFile(INPUT_FILE, new Uint8Array(await file.arrayBuffer()));
-        const args = buildFfmpegArgs({ input: INPUT_FILE, output: OUTPUT_FILE, plan, preset });
+        const buffer = new Uint8Array(await file.arrayBuffer());
+        if (isStale()) return null;
+
+        await ffmpeg.writeFile(input, buffer);
+
+        const args = buildFfmpegArgs({ input, output, plan, preset });
 
         const code = await ffmpeg.exec(args);
+        if (isStale()) return null;
         if (code !== 0) throw new Error(`O ffmpeg terminou com código ${code}.`);
 
-        const data = await ffmpeg.readFile(OUTPUT_FILE);
+        const data = await ffmpeg.readFile(output);
+        if (isStale()) return null;
         if (typeof data === "string") throw new Error("Saída inesperada do ffmpeg.");
 
         const blob = new Blob([data], { type: "video/mp4" });
@@ -184,7 +230,15 @@ export default function useVideoCompressor() {
         const url = URL.createObjectURL(blob);
         objectUrlRef.current = url;
 
-        const compressed = { blob, url, bytes: blob.size, filename: outputFileName(file.name, preset.id) };
+        const compressed = {
+          blob,
+          url,
+          bytes: blob.size,
+          filename: outputFileName(file.name, preset.id),
+          // O resultado guarda o preset usado: trocar a seleção depois não pode
+          // reescrever o "Destino" de um arquivo que já foi comprimido.
+          presetId: preset.id,
+        };
         setProgress(1);
         setResult(compressed);
 
@@ -192,15 +246,17 @@ export default function useVideoCompressor() {
       } catch (thrown) {
         // Cancelar encerra o worker no meio do `exec`, o que rejeita a promise
         // com erro de terminação. Não é falha: é o usuário desistindo.
-        if (!cancelledRef.current) setError(describeError(thrown));
+        if (!isStale()) setError(describeError(thrown));
         return null;
       } finally {
         if (ffmpeg) {
           // Sem isso a cópia em memória do original fica viva até a página
           // recarregar, e a segunda compressão estoura a memória do wasm.
-          await Promise.allSettled([ffmpeg.deleteFile(INPUT_FILE), ffmpeg.deleteFile(OUTPUT_FILE)]);
+          await Promise.allSettled([ffmpeg.deleteFile(input), ffmpeg.deleteFile(output)]);
         }
-        if (mountedRef.current) setIsCompressing(false);
+        // Só encerra o "comprimindo" da PRÓPRIA execução: se ela foi cancelada,
+        // `cancel` já desligou; se outra começou, o indicador é dela.
+        if (!isStale()) setIsCompressing(false);
       }
     },
     [ensureEngine, releaseResult],
@@ -210,9 +266,12 @@ export default function useVideoCompressor() {
    * Cancelar é `terminate()`: não existe interrupção graciosa do `exec` no
    * ffmpeg.wasm. O worker morre, a instância é descartada e a próxima
    * compressão cria outra — os 32 MB do core continuam no cache HTTP.
+   *
+   * Incrementar o `runId` é o que invalida a execução em andamento; só o
+   * `terminate` não resolvia o caso em que ela ainda estava carregando o motor.
    */
   const cancel = useCallback(() => {
-    cancelledRef.current = true;
+    runIdRef.current += 1;
     setProgress(0);
     setIsCompressing(false);
 

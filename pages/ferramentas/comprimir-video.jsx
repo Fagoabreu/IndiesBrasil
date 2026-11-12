@@ -43,6 +43,9 @@ export default function ComprimirVideo() {
   const { compress, cancel, reset, engineStatus, isCompressing, progress, error, result } = useVideoCompressor();
 
   const preset = getVideoPreset(presetId);
+  // O resultado é de uma compressão passada: trocar o preset depois não pode
+  // reescrever o "Destino" do arquivo que já está pronto.
+  const resultPreset = getVideoPreset(result?.presetId ?? presetId);
 
   // `meta` vem do próprio `<video>`: codec que o navegador não decodifica deixa
   // os campos nulos, e a compressão continua possível (é o ffmpeg que decodifica).
@@ -117,6 +120,9 @@ export default function ComprimirVideo() {
 
   const progressPercent = Math.round(progress * 100);
   const savedPercent = result && file ? Math.round((1 - result.bytes / file.size) * 100) : 0;
+  // Reencodar um vídeo já bem comprimido pode aumentar o arquivo: o MP4 é
+  // recriado do zero e o x264 tem um piso que não desce por bitrate.
+  const resultGrew = Boolean(result && file && result.bytes >= file.size);
   const canCompress = Boolean(file) && !isCompressing;
 
   return (
@@ -213,7 +219,11 @@ export default function ComprimirVideo() {
         <section className={shared.panel}>
           <div className={shared.panelHeader}>
             <span className={shared.panelLabel}>Resultado</span>
-            {result && <span className={styles.savedChip}>{savedPercent > 0 ? `−${savedPercent}%` : "pronto"}</span>}
+            {result && (
+              <span className={`${styles.savedChip} ${resultGrew ? styles.savedChipWarn : ""}`}>
+                {resultGrew ? "maior que o original" : savedPercent > 0 ? `−${savedPercent}%` : "pronto"}
+              </span>
+            )}
           </div>
 
           {!result && !isCompressing && (
@@ -224,7 +234,14 @@ export default function ComprimirVideo() {
 
           {isCompressing && (
             <div className={styles.progressWrap}>
-              <div className={styles.progressTrack} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progressPercent}>
+              <div
+                className={styles.progressTrack}
+                role="progressbar"
+                aria-label="Progresso da compressão"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={progressPercent}
+              >
                 <div className={styles.progressFill} style={{ width: `${Math.max(progressPercent, 2)}%` }} />
               </div>
               <p className={styles.progressStatus}>
@@ -253,8 +270,8 @@ export default function ComprimirVideo() {
                 <div className={styles.metaRow}>
                   <dt className={styles.metaTerm}>Destino</dt>
                   <dd className={styles.metaValue}>
-                    {preset.label}
-                    {preset.targetBytes ? ` (alvo ${formatBytesPtBr(preset.targetBytes)})` : ""}
+                    {resultPreset.label}
+                    {resultPreset.targetBytes ? ` (alvo ${formatBytesPtBr(resultPreset.targetBytes)})` : ""}
                   </dd>
                 </div>
               </dl>
@@ -265,6 +282,13 @@ export default function ComprimirVideo() {
                 </Button>
                 <Button onClick={handleClear}>Comprimir outro vídeo</Button>
               </div>
+
+              {resultGrew && (
+                <p className={styles.warning}>
+                  O arquivo de saída ficou maior que o original ({formatBytesPtBr(file.size)} → {formatBytesPtBr(result.bytes)}). O vídeo já estava
+                  muito comprimido e o MP4 é recriado do zero — se o tamanho é o que importa, fique com o original.
+                </p>
+              )}
             </div>
           )}
         </section>
