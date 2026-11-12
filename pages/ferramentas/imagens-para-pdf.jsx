@@ -3,6 +3,8 @@ import styles from "./imagens-para-pdf.module.css";
 import { useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import { SITE_URL } from "@/lib/seo";
+import { formatBytes } from "@/lib/bytes";
+import { downloadBlob } from "@/lib/download";
 
 const PAGE_TITLE = "Converter Imagens em PDF Grátis Online | Indies Brasil";
 const PAGE_DESCRIPTION =
@@ -39,14 +41,6 @@ const MAX_DIM_OPTIONS = [
   { label: "1440px", value: 1440 },
   { label: "1024px", value: 1024 },
 ];
-
-function formatBytes(bytes) {
-  if (bytes === 0) return "0 B";
-  const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
-}
 
 function downscaleCanvas(canvas, maxDim) {
   if (!maxDim) return canvas;
@@ -114,17 +108,6 @@ async function renderPdfPageToCanvas(pdf, pageNum) {
   const ctx = canvas.getContext("2d");
   await page.render({ canvasContext: ctx, viewport }).promise;
   return canvas;
-}
-
-function downloadBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
 }
 
 export default function ImagensParaPdf() {

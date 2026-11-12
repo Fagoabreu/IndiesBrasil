@@ -28,6 +28,20 @@
 - Tema por cookie. Usar `[data-color-mode="light"]`, nunca `prefers-color-scheme`.
 - Excecoes: `#fff` em texto sobre gradiente; `#ffffff` em `<iframe>` de preview HTML.
 
+## Design system (tokens e primitivas)
+
+- **Geometria, elevacao, movimento e tipografia tem token.** Antes so a cor era tokenizada: havia 204 `border-radius` >=10px escritos a mao em 76 arquivos e **zero** ocorrencia de `--space-*`/`--radius-*`. Tudo isso vive em `css/styles.css :root`:
+  - Espaco: `--space-1..12` (base 4px).
+  - Raio **por tipo de superficie**, nao por gosto da tela: `--radius-xs` (chip/selo), `--radius-sm` (botao, aba, controle), `--radius-md` (capa de card), `--radius-lg` (card e painel), `--radius-full` (pilula).
+  - Elevacao: `--shadow-sm/md/lg` e `--ring-brand` (foco). Nao criar sombra nova: o glow da marca (`--brand-glow-*`) e legado e sai na medida em que as telas migram.
+  - Movimento: `--duration-fast/base/slow` + `--ease-out`. Hover muda cor/borda; **nao** desloca o elemento (`translateX/rotateY`) — isso e o que datava os cards.
+  - Largura: `--layout-content` (1040px) e `--layout-wide` (1200px). Nao escrever `max-width: 960px` em pagina nova.
+- **Texto em gradiente e proibido em titulo** (`.u-gradient-text`, `.pageTitle` antigo). O gradiente fica no CTA da landing; o resto usa `--brand-solid`/`--brand-strong`.
+- `--brand-strong` (`#7c3aed`) existe por contraste: branco sobre `--brand-primary` da 4.2:1, abaixo de AA para texto de 13px. Preenchimento solido com texto claro usa `--brand-strong` + `var(--fgColor-onEmphasis)`.
+- **Cabecalho de pagina e componente, nao CSS copiado**: `components/PageHeader.jsx` (variantes `bare` e `card`). Havia 11 copias de `.pageHeader` com fundo ambient e barra gradiente. Nao recriar a classe na pagina.
+- **Abas sao componente**: `components/TabBar.jsx` (`role="tablist"` + setas do teclado). Havia 5 copias de `.feedTabs` em pilula.
+- Fonte: Inter via `next/font` em `pages/_document.js`, exposta como `--font-inter` no `<html>` e consumida por `--font-sans`. O fallback dentro do `var()` e obrigatorio: sem ele, a familia inteira fica invalida e o navegador cai no Times.
+
 ## Lint & Qualidade
 
 - `npm run lint` apos toda mudanca. Zero erros para entregar.
@@ -141,6 +155,19 @@ Como usar:
 - A API fica na pagina, dentro de `onCropped`: upload imediato (`await fetch` com FormData) ou adiado (guardar `blob`/`dataUrl` e enviar no submit do formulario).
 
 Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESMO desenho e o mesmo canvas — `public/images/og-cover.jpg` (`OG_COVER_IMAGE` -> `DEFAULT_OG_IMAGE`, capa de todo preview de link) e `public/images/og-cover.png` (`OG_COVER_ART`, exibida na home). Sao dois porque as superficies pedem coisas opostas: as redes recortam o preview em 1,91:1, entao o jpg ja vem nesse formato, com a moldura da arte centralizada e sobra nas laterais justamente para o recorte nao comer a moldura; na home a sobra nao serve para nada e, opaca, engrossava a borda branca da arte — o png tem a sobra transparente e o card da home a descarta (`.promoCard` declara `aspect-ratio: 832 / 736`, a proporcao do DESENHO e nao a do canvas, e o `.promoImage` faz `object-fit: cover`, que corta a sobra dos dois lados). A arte e mantida a mao, sem gerador (o `scripts/build-og-cover.js` e a arte quadrada `ArteSite.png` sairam junto com ela), entao `scripts/audit-image-presets.js` confere contra os arquivos: que existem, que os dois canvas batem entre si e com `OG_IMAGE_SIZE` (`lib/seo.js`, consumido pelo `og:image:width/height` e pelo `<Image>` da home), que a proporcao do jpg e a do card, que o png tem alfa e que o `aspect-ratio` do `.promoCard` e o do conteudo da arte (medido no bbox do alfa). Nao voltar a apontar para arquivo inexistente: ja aconteceu (`/images/og-cover.png` respondia 404 e a home era compartilhada sem imagem).
+
+## Comprimir video (`/ferramentas/comprimir-video`)
+
+- Ferramenta **100% no navegador**: `ffmpeg.wasm` roda num Web Worker e o video nunca sai da maquina. Nao existe rota de API, upload, fila nem storage — e o motivo de existir (comprimir centenas de MB sem onerar o servidor). Nao ha feature em `models/authorization.js` nem gate em `getServerSideProps` porque nao ha dado de banco na pagina.
+- O core (`.js` + `.wasm`, ~31 MB) mora em `public/ffmpeg/` e **nao e versionado** (`.gitignore`). Quem copia e `scripts/sync-ffmpeg-core.js` (`npm run ffmpeg:sync`), encadeado em `dev`, `build` e `test`. Sem esse encadeamento a pagina responde 200 e a ferramenta falha so no clique de "Comprimir" — o `postinstall` nao serve porque o `package.json` tem `allowScripts` com allowlist. `next.config.js` serve `/ffmpeg/**` com `Cache-Control: immutable`; sem isso os 31 MB voltam a cada visita, justamente para o publico de dados limitados.
+- Toda a regra (presets, escala, bitrate, argumentos) esta em **`lib/videoPresets.js`**, modulo puro: e a unica parte testavel sem WebAssembly. `maxDimension` e o **lado maior** (retrato 1080x1920 vira 270x480 no preset de 480, nao miniatura); o alvo em bytes **inclui o audio**; `MIN_VIDEO_KBPS` impede bitrate ilegivel em video longo (e `planCompression` devolve `fitsTarget: false` + aviso em vez de prometer o alvo); `getVideoPreset` lanca em id desconhecido, como `getImagePreset`.
+- `buildFfmpegArgs` carrega as decisoes que nao sao obvias: `-map 0:a:0?` (video mudo nao pode abortar o encode), `-pix_fmt yuv420p` + `-profile:v main` (e o que abre no WhatsApp; HEVC 10 bits de iPhone nao toca fora do navegador), `-movflags +faststart`, `-map_metadata -1` (tira GPS/modelo do aparelho antes de compartilhar) e `-sn`.
+- **CSP de producao e a pegadinha**: `deploy/nginx/indies.https.conf` precisa de `script-src 'self' 'wasm-unsafe-eval'`, `worker-src 'self' blob:` e `media-src 'self' blob:`. Faltando qualquer um, tudo funciona em `npm run dev` (que nao aplica CSP) e quebra no deploy.
+- `hooks/useVideoCompressor.js` faz `import("@ffmpeg/ffmpeg")` **dentro** da funcao (import estatico arrastaria o pacote para o bundle de quem so quer ler a pagina), escreve o arquivo no MEMFS, encoda, le a saida e **apaga os dois** (sem isso a segunda compressao estoura a memoria). `cancel()` faz `terminate()` — nao ha interrupcao graciosa no `exec` — **e incrementa um `runIdRef`**: so terminar o worker nao parava a execucao que ainda estava carregando o motor, e ela seguia escrevendo no MEMFS junto com a proxima. Cada execucao usa nomes proprios (`input-<runId>`/`output-<runId>.mp4`) para a limpeza de uma nunca apagar o arquivo da outra, e `ensureEngine` compartilha um unico `loadPromiseRef` (cancelar durante a carga e comprimir de novo abria um segundo worker de 32 MB). O erro de terminacao continua distinto de falha real, e o resultado guarda o `presetId` usado: trocar a selecao depois nao reescreve o "Destino" de um arquivo ja pronto.
+- Reencodar **pode aumentar** o arquivo: `sourceBytes` limita o bitrate _pedido_, mas um clipe curto e ja comprimido esbarra no piso do x264 e no cabecalho do MP4 (medido: 14 KB → 78 KB num video sintetico de 3 s). A tela avisa (`resultGrew`, selo "maior que o original") em vez de fingir reducao; `alreadyFits` ja avisa antes de comprimir.
+- O `<input type="file" accept="video/*">` da pagina **nao** passa pelo `ImageUploader` — ele e de imagem (mesma excecao ja aberta para PDF). O `<video>` usa `ObjectURL`, entao a regra do `next/image` nao se aplica.
+- `formatBytes` e `downloadBlob` sairam de `pages/ferramentas/imagens-para-pdf.jsx` para **`lib/bytes.js`** e **`lib/download.js`**; as duas ferramentas importam de la. Duas copias divergem (uma arredondando diferente) e o numero da tela para de bater com o arquivo baixado.
+- Testes: `tests/unit/lib/videoPresets.test.js` (escala sem upscale, paridade, alvo, args) e `tests/integration/pages/toolsPages.test.js` (200 na pagina, core servido e com cache imutavel — o teste pega o script de sync nao ter rodado).
 
 ## Convite de membro do estudio (autocomplete)
 

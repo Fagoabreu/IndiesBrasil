@@ -2,7 +2,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Segoe UI", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-sans);
 }
 
 /* ========================================
@@ -77,6 +77,68 @@
 
   /* Interactive states */
   --brand-hover-bg: rgba(139, 92, 246, 0.05);
+
+  /*
+   * Cor sólida da marca. O gradiente é reservado ao CTA da landing: em botão
+   * de aba, selo e item ativo ele lê como decoração e piora o contraste.
+   * `--brand-strong` existe porque branco sobre `--brand-primary` dá 4.2:1 —
+   * abaixo de AA para texto pequeno. Este par dá 5.7:1.
+   */
+  --brand-solid: var(--brand-primary);
+  --brand-strong: #7c3aed;
+  --brand-strong-hover: #6d28d9;
+
+  /* ========================================
+     SISTEMA VISUAL — geometria, elevação,
+     movimento e tipografia.
+     Antes existiam 204 raios hardcoded em 76
+     arquivos e nenhum token de espaço/raio.
+  ======================================== */
+
+  /* Espaçamento — base 4px */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  /* Raio por tipo de superfície, não por gosto de cada tela */
+  --radius-xs: 4px; /* chip e selo */
+  --radius-sm: 6px; /* botão, aba, controle */
+  --radius-md: 10px; /* capa de card, bloco interno */
+  --radius-lg: 12px; /* card e painel de seção */
+  --radius-full: 999px;
+
+  /* Elevação — substitui --brand-glow-* e --brand-btn-shadow* */
+  --shadow-sm: 0 1px 2px rgba(1, 4, 9, 0.24);
+  --shadow-md: 0 4px 16px rgba(1, 4, 9, 0.28);
+  --shadow-lg: 0 12px 32px rgba(1, 4, 9, 0.36);
+  --ring-brand: 0 0 0 3px rgba(var(--brand-rgb-primary), 0.35);
+
+  /* Movimento */
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-slow: 240ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Largura de conteúdo — havia 152 max-width espalhados em 70 arquivos */
+  --layout-content: 1040px;
+  --layout-wide: 1200px;
+
+  /*
+   * Tipografia. `--font-inter` vem do `next/font` (pages/_document.js) e é
+   * aplicado no <html>; o fallback dentro do var() mantém a pilha válida se o
+   * carregador da fonte não estiver montado (sem ele, a família inteira vira
+   * inválida e o navegador cai no Times).
+   */
+  --font-sans: var(--font-inter, "Inter", "Segoe UI"), system-ui, -apple-system, "Noto Sans", sans-serif;
+  --text-display: clamp(1.75rem, 3.2vw, 2.4rem);
+  --text-eyebrow: 0.6875rem;
+  --tracking-eyebrow: 0.12em;
+  --tracking-display: -0.01em;
 
   /*
    * Transmissões ao vivo (streams). Fica aqui, e não no CSS Module de cada tela,

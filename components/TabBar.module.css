@@ -1,0 +1,63 @@
+/* Abas de listagem — ver TabBar.jsx. */
+
+.tabList {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: var(--radius-sm);
+  background: var(--bgColor-muted);
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--fgColor-muted);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.tab:hover {
+  background: rgba(var(--brand-rgb-primary), 0.06);
+  color: var(--fgColor-default);
+}
+
+.tab:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-brand);
+}
+
+/* Sólido sobre `--brand-strong`: branco puro sobre `--brand-primary` ficaria
+   em 4.2:1, abaixo de AA para texto de 13px. */
+.tabActive,
+.tabActive:hover {
+  background: var(--brand-strong);
+  color: var(--fgColor-onEmphasis);
+}
+
+.icon {
+  display: inline-flex;
+}
+
+@media (max-width: 600px) {
+  .tabList {
+    display: flex;
+    width: 100%;
+  }
+
+  .tab {
+    flex: 1;
+    justify-content: center;
+  }
+}
