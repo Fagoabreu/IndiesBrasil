@@ -14,7 +14,8 @@
   width: 100%;
   aspect-ratio: 752 / 150; /* preset `profileBanner` (lib/image-presets.js) */
   overflow: hidden;
-  background: var(--bgColor-muted);
+  /* `--bgColor-inset`: no escuro o card é `muted` e a faixa sumiria. */
+  background: var(--bgColor-inset);
   flex-shrink: 0;
 }
 
@@ -97,7 +98,9 @@
   box-sizing: border-box;
   border-radius: var(--radius-xs);
   border: 1px solid var(--borderColor-muted);
-  background: var(--bgColor-muted);
+  /* Mistura sobre transparente: no escuro `--bgColor-muted` é a cor do card,
+     então o bloco ficaria sem preenchimento. */
+  background: color-mix(in srgb, var(--fgColor-muted) 14%, transparent);
   font-size: 0.6875rem;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -125,7 +128,7 @@
   padding: 2px 8px;
   border-radius: var(--radius-xs);
   border: 1px solid var(--borderColor-muted);
-  background: var(--bgColor-muted);
+  background: color-mix(in srgb, var(--fgColor-muted) 12%, transparent);
   color: var(--fgColor-muted);
   font-size: 0.6875rem;
   font-weight: 600;

@@ -6,8 +6,10 @@
   width: 52px;
   height: 28px;
   border-radius: 14px;
-  border: 1px solid var(--borderColor-muted);
-  background: var(--bgColor-inset);
+  /* `--bgColor-inset` é `#010409` no escuro: a trilha ficaria invisível no
+     header. `muted` + borda `default` aparece nos dois temas. */
+  border: 1px solid var(--borderColor-default);
+  background: var(--bgColor-muted);
   cursor: pointer;
   padding: 0;
   flex-shrink: 0;
@@ -54,6 +56,9 @@
 /* Night mode: knob on the left */
 .knobNight {
   transform: translateX(0);
+  background: var(--brand-strong);
+  color: var(--fgColor-onEmphasis);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
 /* Day mode: knob slides to the right, uses brand gradient */

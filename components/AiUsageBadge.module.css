@@ -62,9 +62,12 @@
   border: 1px solid var(--borderColor-default);
 }
 
-/* Sem declaração — `ai_level` nulo. */
+/* Sem declaração — `ai_level` nulo.
+   Mistura sobre `transparent` em vez de usar `--bgColor-muted`: no tema escuro
+   o card já é `--bgColor-muted`, então o selo ficava sem preenchimento (só a
+   borda tracejada). Assim ele compõe sobre QUALQUER superfície. */
 .undeclared {
-  background-color: var(--bgColor-muted);
+  background-color: color-mix(in srgb, var(--fgColor-muted) 16%, transparent);
   color: var(--fgColor-muted);
   border: 1px dashed var(--borderColor-default);
 }

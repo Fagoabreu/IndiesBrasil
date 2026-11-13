@@ -1,0 +1,116 @@
+/* ============================================================
+   Ajustes do tema escuro.
+
+   ## Por que este arquivo existe (e não pode morar em `css/styles.css`)
+
+   O escuro do Primer chega por DOIS caminhos:
+
+     1. escolha explícita  -> [data-color-mode="dark"]
+     2. sistema escuro     -> [data-color-mode="auto"] dentro de
+                              @media (prefers-color-scheme: dark)
+
+   Quem visita o site pela primeira vez fica em `auto` (sem cookie), então o
+   caminho 2 é o mais comum — e um override escrito só com
+   `[data-color-mode="dark"]` não pega nele. Como `css/styles.css` é importado
+   ANTES dos temas do Primer em `pages/_app.js`, também não dá para vencer por
+   ordem de cascata. A solução é este arquivo, importado **depois** dos temas,
+   com os dois caminhos declarados.
+
+   ## O problema que ele corrige
+
+   O escuro não é "o claro com outras cores": os mesmos valores que funcionam
+   sobre branco desaparecem sobre `#010409`. Cada bloco abaixo traz a razão —
+   repetir o número sem entender volta a quebrar.
+   ============================================================ */
+
+/*
+ * Superfície elevada do TEMA CLARO. Fica no escopo de `[data-color-mode]`
+ * (a div do ThemeProvider), não no `:root` de `styles.css`: as custom properties
+ * do Primer só existem ali, e `var()` de um token inexistente resolve para
+ * vazio no elemento onde a propriedade foi declarada.
+ */
+[data-color-mode] {
+  --surface-raised: var(--bgColor-default);
+}
+
+[data-color-mode="dark"] {
+  /* ----------------------------------------
+     1. Superfície elevada
+     Card e painel sobem um degrau acima da página (`--bgColor-muted` #151b23
+     sobre `--bgColor-inset` #010409). A separação NÃO pode vir de sombra: a
+     sombra do sistema é `rgba(1,4,9,.28)`, exatamente a cor da página — ela
+     tem a cor do fundo e não aparece. No claro (página #f6f8fa, card branco) a
+     sombra funciona; no escuro a elevação é a superfície.
+     ---------------------------------------- */
+  --surface-raised: var(--bgColor-muted);
+
+  /* ----------------------------------------
+     2. Hover de marca
+     `rgba(139,92,246,.05)` sobre #010409 resulta em #0a0812 — indistinguível
+     do fundo. São 31 usos no app (item de sidebar, botão, linha de lista),
+     então o feedback de hover sumia inteiro no escuro.
+     ---------------------------------------- */
+  --brand-hover-bg: rgba(139, 92, 246, 0.14);
+  --brand-hover-border: rgba(139, 92, 246, 0.5);
+  --brand-active-ring: rgba(139, 92, 246, 0.45);
+  --brand-active-bg: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(232, 121, 184, 0.14));
+  --brand-empty-border: 1px dashed rgba(139, 92, 246, 0.42);
+  --brand-icon-border: rgba(139, 92, 246, 0.32);
+  --brand-icon-bg: linear-gradient(135deg, rgba(139, 92, 246, 0.18), rgba(232, 121, 184, 0.12));
+
+  /* ----------------------------------------
+     3. Roxo legível
+     `#8b5cf6` sobre `#0d1117` fica em 4.5:1 — no limite para texto pequeno e
+     apagado no escuro. Mesmo matiz, um degrau mais claro.
+     ---------------------------------------- */
+  --brand-chip: #a78bfa;
+
+  /* ----------------------------------------
+     4. Sem neon
+     Halo de marca (`0 0 0 2px` + `0 4px 16px` roxos) sobre preto lê como LED,
+     não como elevação: eram três traços de gradiente (header, topo e borda da
+     sidebar) e dois halos roxos disputando atenção. No escuro o realce é a
+     BORDA; a sombra só precisa separar silhuetas sobre preto.
+     ---------------------------------------- */
+  --brand-glow-sm: 0 1px 3px rgba(0, 0, 0, 0.6);
+  --brand-glow-md: 0 2px 8px rgba(0, 0, 0, 0.55);
+  --brand-glow-lg: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --brand-btn-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+  --brand-btn-shadow-hover: 0 4px 14px rgba(0, 0, 0, 0.6);
+
+  /* As três sombras do sistema: `rgba(1,4,9,…)` é a cor da página no escuro. */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+}
+
+/*
+ * Caminho 2: `auto` no sistema operacional escuro (o estado de quem nunca
+ * escolheu tema — primeira visita). Seletores espelhando o `dark.css` do
+ * Primer, para vencer por ordem de carregamento sem `!important`.
+ */
+@media (prefers-color-scheme: dark) {
+  [data-color-mode][data-color-mode="auto"] {
+    --surface-raised: var(--bgColor-muted);
+
+    --brand-hover-bg: rgba(139, 92, 246, 0.14);
+    --brand-hover-border: rgba(139, 92, 246, 0.5);
+    --brand-active-ring: rgba(139, 92, 246, 0.45);
+    --brand-active-bg: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(232, 121, 184, 0.14));
+    --brand-empty-border: 1px dashed rgba(139, 92, 246, 0.42);
+    --brand-icon-border: rgba(139, 92, 246, 0.32);
+    --brand-icon-bg: linear-gradient(135deg, rgba(139, 92, 246, 0.18), rgba(232, 121, 184, 0.12));
+
+    --brand-chip: #a78bfa;
+
+    --brand-glow-sm: 0 1px 3px rgba(0, 0, 0, 0.6);
+    --brand-glow-md: 0 2px 8px rgba(0, 0, 0, 0.55);
+    --brand-glow-lg: 0 4px 16px rgba(0, 0, 0, 0.5);
+    --brand-btn-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+    --brand-btn-shadow-hover: 0 4px 14px rgba(0, 0, 0, 0.6);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.55);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6);
+  }
+}

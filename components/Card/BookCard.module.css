@@ -22,39 +22,27 @@
   object-fit: cover;
 }
 
-/* Tom do chip de fase. `--chip-*` são lidos por `.chip` no cardBase. */
+/* Tom do chip de fase. `--chip-tone` é consumida por `.chip` no cardBase. */
 .stage_released {
-  --chip-bg: var(--bgColor-success-muted);
-  --chip-border: var(--borderColor-success-muted);
-  --chip-fg: var(--fgColor-success);
+  --chip-tone: var(--fgColor-success);
 }
 
 .stage_crowdfunding {
-  --chip-bg: var(--bgColor-attention-muted);
-  --chip-border: var(--borderColor-attention-muted);
-  --chip-fg: var(--fgColor-attention);
+  --chip-tone: var(--fgColor-attention);
 }
 
 .stage_production {
-  --chip-bg: var(--bgColor-done-muted);
-  --chip-border: var(--borderColor-done-muted);
-  --chip-fg: var(--fgColor-done);
+  --chip-tone: var(--fgColor-done);
 }
 
 .stage_writing {
-  --chip-bg: var(--bgColor-accent-muted);
-  --chip-border: var(--borderColor-accent-muted);
-  --chip-fg: var(--fgColor-accent);
+  --chip-tone: var(--fgColor-accent);
 }
 
 .stage_concept {
-  --chip-bg: var(--bgColor-neutral-muted);
-  --chip-border: var(--borderColor-neutral-muted);
-  --chip-fg: var(--fgColor-neutral);
+  --chip-tone: var(--fgColor-neutral);
 }
 
 .stage_cancelled {
-  --chip-bg: var(--bgColor-danger-muted);
-  --chip-border: var(--borderColor-danger-muted);
-  --chip-fg: var(--fgColor-danger);
+  --chip-tone: var(--fgColor-danger);
 }

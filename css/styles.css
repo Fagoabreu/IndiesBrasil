@@ -129,6 +129,17 @@
   --layout-wide: 1200px;
 
   /*
+   * Superfície elevada (card, painel). O valor útil é declarado em
+   * `css/theme-dark.css`, no escopo de `[data-color-mode]` — e não aqui no
+   * `:root`, porque `var(--bgColor-default)` só existe dentro do ThemeProvider
+   * do Primer. Declarado no `:root`, o token ficava vazio no tema claro (a
+   * substituição acontece no elemento onde a propriedade é declarada).
+   */
+
+  /* Tom padrão dos chips de texto (os cards podem sobrescrever por estado). */
+  --brand-chip: var(--brand-primary);
+
+  /*
    * Tipografia. `--font-inter` vem do `next/font` (pages/_document.js) e é
    * aplicado no <html>; o fallback dentro do var() mantém a pilha válida se o
    * carregador da fonte não estiver montado (sem ele, a família inteira vira
@@ -271,6 +282,15 @@
   --syntax-null: #6e40c9; /* Primer purple */
   --syntax-attr: #0a3069; /* Primer dark blue */
 }
+
+/* ========================================
+   AJUSTES DO TEMA ESCURO
+   Estão em `css/theme-dark.css`, importado DEPOIS dos temas do Primer em
+   `_app.js`. Não dá para morar aqui: o escuro chega por dois caminhos
+   (`[data-color-mode="dark"]` e `[data-color-mode="auto"]` + media query de
+   `prefers-color-scheme`), e só o arquivo carregado depois consegue cobrir os
+   dois sem `!important`.
+======================================== */
 
 html {
   /* Clipping horizontal no nível do viewport. Overflow-x no <body> é

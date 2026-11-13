@@ -57,7 +57,19 @@
 - `--brand-strong` (`#7c3aed`) existe por contraste: branco sobre `--brand-primary` da 4.2:1, abaixo de AA para texto de 13px. Preenchimento solido com texto claro usa `--brand-strong` + `var(--fgColor-onEmphasis)`.
 - **Cabecalho de pagina e componente, nao CSS copiado**: `components/PageHeader.jsx` (variantes `bare` e `card`). Havia 11 copias de `.pageHeader` com fundo ambient e barra gradiente. Nao recriar a classe na pagina.
 - **Abas sao componente**: `components/TabBar.jsx` (`role="tablist"` + setas do teclado). Havia 5 copias de `.feedTabs` em pilula.
-- Fonte: Inter via `next/font` em `pages/_document.js`, exposta como `--font-inter` no `<html>` e consumida por `--font-sans`. O fallback dentro do `var()` e obrigatorio: sem ele, a familia inteira fica invalida e o navegador cai no Times.
+- Fonte: Inter via `next/font` em `pages/_app.js` (NAO em `_document.js` — la lanca `Cannot be used within _document.js` e derruba toda pagina com 500), exposta como `--font-inter` e consumida por `--font-sans`. O fallback dentro do `var()` e obrigatorio: sem ele, a familia inteira fica invalida e o navegador cai no Times.
+
+### Tema escuro (`css/theme-dark.css`)
+
+- **O escuro chega por DOIS caminhos**: `[data-color-mode="dark"]` (cookie `theme-mode=night`) e `[data-color-mode="auto"]` dentro de `@media (prefers-color-scheme: dark)` — este ultimo e o estado de quem nunca escolheu tema, ou seja, a primeira visita. Um override escrito so com `[data-color-mode="dark"]` nao pega no caminho 2. Como `css/styles.css` e importado ANTES dos temas do Primer em `pages/_app.js`, tambem nao da para vencer por ordem de cascata: por isso os ajustes moram em `css/theme-dark.css`, importado **depois** de `light.css`/`dark.css`, com os dois caminhos declarados.
+- **Nao espalhe `[data-color-mode]` pelos CSS Modules.** Use o token `--surface-raised`: `--bgColor-default` no claro, `--bgColor-muted` no escuro. O card faz `--card-surface: var(--surface-raised)` e compoe os filhos sobre ela. Um seletor por atributo no componente deixaria metade dos visitantes de fora (justamente os de `auto`).
+- **`--surface-raised` e declarado no escopo de `[data-color-mode]`, nao no `:root`**: as custom properties do Primer so existem dentro do ThemeProvider, e `var()` de token inexistente resolve para vazio no elemento onde a propriedade foi declarada.
+- **Sombra nao existe no escuro.** `--shadow-md` e `rgba(1,4,9,.28)` e `#010409` e a cor da pagina — a sombra tem a cor do fundo. Por isso o card sobe um degrau (`--bgColor-muted` sobre `--bgColor-inset`) e a borda fecha a silhueta; a elevacao e a superficie.
+- **`--bgColor-*-muted` e opaco no claro e translucido no escuro** (`#dafbe1` x `#2ea04326`). Usado como preenchimento, o mesmo componente vira "chip preenchido" num tema e "vazado" no outro — e o chip de fase, que aparece em todos os cards, sumia no escuro. Onde a cor precisa compor sobre a superficie, use `color-mix(... , transparent)` (ou sobre `--card-surface`) em vez de `--bgColor-*-muted`.
+- **Hover de marca e 3x mais forte no escuro** (`rgba(139,92,246,.14)`): a 5% sobre `#010409` da `#0a0812`, indistinguivel do fundo, e sao 31 usos no app.
+- **Sem neon**: `--brand-glow-*` e `--brand-btn-shadow*` viram sombra preta no escuro. Halo roxo (`0 0 0 2px` + `0 4px 16px`) sobre preto le como LED, nao como elevacao.
+- `--brand-chip` (`#a78bfa`) e o roxo para texto pequeno no escuro: `#8b5cf6` sobre `#0d1117` fica em 4.5:1.
+- **Cor de fundo clara exige texto escuro**: `ContentRatingBadge` escolhe a cor do texto pela luminancia do fundo (`isLightColor`). Texto branco fixo dava 1.9:1 no amarelo do "10 anos".
 
 ## Lint & Qualidade
 

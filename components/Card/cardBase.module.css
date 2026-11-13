@@ -25,7 +25,21 @@
   flex-direction: column;
   overflow: hidden;
   isolation: isolate;
-  background: var(--bgColor-default);
+  /*
+   * `--surface-raised` é a superfície de card decidida por tema em
+   * `css/theme-dark.css`: branco sobre a página acinzentada no claro,
+   * `--bgColor-muted` um degrau acima do `#010409` no escuro.
+   *
+   * Não há `[data-color-mode]` aqui de propósito: o escuro também chega com
+   * `data-color-mode="auto"` + `prefers-color-scheme`, e um seletor por
+   * atributo deixaria metade dos visitantes de fora.
+   *
+   * A separação não pode vir de sombra: `--shadow-md` é `rgba(1,4,9,.28)`, que
+   * é exatamente a cor da página no escuro — a sombra não aparece. No escuro a
+   * elevação é a superfície; a borda de 1px fecha a silhueta.
+   */
+  --card-surface: var(--surface-raised, var(--bgColor-default));
+  background: var(--card-surface);
   border: 1px solid var(--borderColor-muted);
   border-radius: var(--radius-lg);
   text-decoration: none;
@@ -85,7 +99,9 @@
   width: 100%;
   flex-shrink: 0;
   overflow: hidden;
-  background: var(--bgColor-inset);
+  /* Superfície do próprio card, não `--bgColor-inset`: no escuro o inset é
+     `#010409` e a área da capa virava um retângulo preto dentro do card. */
+  background: var(--card-surface, var(--bgColor-inset));
 }
 
 .coverInner {
@@ -243,14 +259,23 @@
   white-space: nowrap;
 }
 
-/* Chip de texto. A cor vem de `--chip-*`, definida pelos cards de fase/preço;
-   sem elas usa o roxo da marca. */
+/* Chip de texto.
+ *
+ * O tom vem de `--chip-tone` (definida pelos cards de fase/preço). O
+ * preenchimento NÃO usa `--bgColor-*-muted`: esse token é opaco no tema claro
+ * (`#dafbe1`) e translúcido no escuro (`#2ea04326`), então o mesmo chip ficava
+ * "preenchido" no claro e "vazado" no escuro — e o de fase, que aparece em
+ * todos os cards, praticamente sumia sobre `#0d1117`.
+ *
+ * `color-mix` sobre `--bgColor-default` dá a mesma densidade aparente nos dois
+ * temas com uma regra só, sem bloco por tema e sem hex novo.
+ */
 .chip {
   padding: 2px 7px;
   border-radius: var(--radius-xs);
-  border: 1px solid var(--chip-border, rgba(var(--brand-rgb-primary), 0.3));
-  background: var(--chip-bg, rgba(var(--brand-rgb-primary), 0.1));
-  color: var(--chip-fg, var(--brand-primary));
+  border: 1px solid color-mix(in srgb, var(--chip-tone, var(--brand-chip, var(--brand-primary))) 38%, transparent);
+  background: color-mix(in srgb, var(--chip-tone, var(--brand-chip, var(--brand-primary))) 16%, var(--card-surface, var(--bgColor-default)));
+  color: var(--chip-tone, var(--brand-chip, var(--brand-primary)));
   font-size: 0.625rem;
   font-weight: 700;
   line-height: 1.7;
@@ -262,9 +287,7 @@
 
 /* Chip sem estado (gênero, categoria): não compete com o de fase. */
 .chipNeutral {
-  --chip-bg: var(--bgColor-neutral-muted);
-  --chip-border: var(--borderColor-neutral-muted);
-  --chip-fg: var(--fgColor-neutral);
+  --chip-tone: var(--fgColor-neutral);
 }
 
 /* Mobile: capa e corpo lado a lado, com a capa mantendo a PROPORÇÃO
