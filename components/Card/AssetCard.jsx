@@ -32,22 +32,23 @@ export default function AssetCard({ asset }) {
 
       <div className={cardStyles.body}>
         <h2 className={cardStyles.title}>{asset.name}</h2>
-        {asset.short_description && <p className={cardStyles.desc}>{asset.short_description}</p>}
+        {/* Slot fixo: o vazio reservado mantém a zona de selos alinhada entre
+            os cards da mesma linha do grid. */}
+        <p className={cardStyles.desc}>{asset.short_description}</p>
 
-        <div className={cardStyles.footer}>
-          <div className={cardStyles.footerFlags}>
-            <span className={`${cardStyles.chip} ${asset.is_free ? styles.freeChip : styles.paidChip}`}>{asset.is_free ? "Gratuito" : "Pago"}</span>
-            <AiUsageBadge level={asset.ai_level} size="sm" />
-          </div>
+        {/* Zona 3 — estado: preço (free/paid) e uso de IA. */}
+        <div className={cardStyles.badges}>
+          <span className={`${cardStyles.chip} ${asset.is_free ? styles.freeChip : styles.paidChip}`}>{asset.is_free ? "Gratuito" : "Pago"}</span>
+          <AiUsageBadge level={asset.ai_level} size="sm" />
         </div>
 
-        <div className={cardStyles.meta}>
-          {asset.studio_name && (
-            <span className={cardStyles.studioLabel} title={asset.studio_name}>
-              {asset.studio_name}
-            </span>
-          )}
-          <AssetCategoryChips categories={asset.categories} limit={3} as="span" />
+        {/* Zona 4 — identidade à esquerda; categorias ocupam a linha quando não
+            há estúdio, sem criar uma quinta linha de conteúdo. */}
+        <div className={cardStyles.footer}>
+          <span className={cardStyles.identity} title={asset.studio_name}>
+            {asset.studio_name}
+          </span>
+          <AssetCategoryChips categories={asset.categories} limit={2} as="span" className={styles.categories} />
         </div>
       </div>
     </Link>

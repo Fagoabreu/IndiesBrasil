@@ -47,26 +47,37 @@ export default function NewsCard({ news }) {
 
         <p className={cardStyles.desc}>{news.summary}</p>
 
-        <div className={cardStyles.meta}>
-          <div className={styles.author}>
+        {/* Zona 3 — selo de checagem, o "estado" da notícia. */}
+        <div className={cardStyles.badges}>
+          <span
+            className={`${styles.factcheckBadge} ${
+              factcheckStatus === "ok" ? styles.factcheckOk : factcheckStatus === "warning" ? styles.factcheckWarning : styles.factcheckNeutral
+            }`}
+          >
+            {factcheckLabel}
+          </span>
+        </div>
+
+        {/* Zona 4 — autoria à esquerda, engajamento à direita. */}
+        <div className={cardStyles.footer}>
+          <span className={styles.author}>
             {news.author_avatar_url ? (
               <Image src={news.author_avatar_url} alt={news.author_username} width={20} height={20} className={styles.avatar} />
             ) : (
               <div className={styles.avatarPlaceholder}>{news.author_username?.[0]?.toUpperCase() || "?"}</div>
             )}
-            <span>{news.author_username}</span>
-          </div>
-          <span className={styles.date}>
-            {new Date(news.created_at).toLocaleDateString("pt-BR", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })}
+            <span className={cardStyles.identity}>{news.author_username}</span>
+            <span className={styles.date}>
+              ·{" "}
+              {new Date(news.created_at).toLocaleDateString("pt-BR", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })}
+            </span>
           </span>
-        </div>
 
-        <div className={cardStyles.footer}>
-          <div className={cardStyles.footerStats}>
+          <span className={cardStyles.metrics}>
             <span className={cardStyles.rating}>
               <StarFillIcon size={14} />
               {Number(news.avg_rating).toFixed(1)}
@@ -83,17 +94,7 @@ export default function NewsCard({ news }) {
               <XIcon size={13} />
               {news.fake_count}
             </span>
-          </div>
-
-          <div className={cardStyles.footerFlags}>
-            <span
-              className={`${styles.factcheckBadge} ${
-                factcheckStatus === "ok" ? styles.factcheckOk : factcheckStatus === "warning" ? styles.factcheckWarning : styles.factcheckNeutral
-              }`}
-            >
-              {factcheckLabel}
-            </span>
-          </div>
+          </span>
         </div>
       </div>
     </article>
