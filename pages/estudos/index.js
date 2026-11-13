@@ -6,7 +6,6 @@ import { Heading, TextInput, Spinner } from "@primer/react";
 import { BookIcon, CheckIcon, PlusIcon, StarFillIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
-import useTiltEffect from "@/hooks/useTiltEffect";
 import { SITE_URL } from "@/lib/seo";
 import styles from "./index.module.css";
 
@@ -224,15 +223,8 @@ export default function CursosPage({ initialCourses }) {
 }
 
 function CourseCard({ course }) {
-  const tiltRef = useTiltEffect({
-    max: 8,
-    perspective: 900,
-    scale: 1.02,
-    maxGlare: 0.12,
-  });
-
   return (
-    <li className={styles.courseCard} ref={tiltRef}>
+    <li className={styles.courseCard}>
       <Link href={`/estudos/${course.slug}`} className={styles.cardLink}>
         <div className={styles.cardCover}>
           {course.cover_url ? (

@@ -1,143 +1,22 @@
-/* Card de asset — capa 16:9 (preset `mediaCover`), igual aos cards de obra. */
-.card {
-  display: flex;
-  flex-direction: column;
-  text-decoration: none;
-  color: inherit;
-  background: var(--bgColor-default);
-  border: 1px solid var(--borderColor-default);
-  border-radius: 6px;
-  overflow: hidden;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.card:hover {
-  border-color: var(--brand-primary);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(var(--brand-rgb-primary), 0.15);
-}
+/* AssetCard — só o que é específico do asset.
+   Carcaça, capa, corpo, título, rodapé e chips vêm de `cardBase.module.css`. */
 
 /* A proporção tem de ser a do preset que o formulário recorta (16:9).
    `scripts/audit-image-presets.js` compara este par. */
 .cardCover {
-  position: relative;
-  width: 100%;
   aspect-ratio: 16 / 9;
-  background: var(--bgColor-inset);
-  overflow: hidden;
-  border-bottom: 1px solid var(--borderColor-muted);
 }
 
-.coverInner {
-  position: relative;
-  width: 100%;
-  height: 100%;
+/* Preço saiu da capa: era um overlay no canto onde a arte costuma ter o logo.
+   Agora é um chip no rodapé, ao lado do selo de uso de IA. */
+.freeChip {
+  --chip-bg: var(--bgColor-success-muted);
+  --chip-border: var(--borderColor-success-muted);
+  --chip-fg: var(--fgColor-success);
 }
 
-.coverImg {
-  object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.card:hover .coverImg {
-  transform: scale(1.04);
-}
-
-.coverPlaceholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
-  color: #fff;
-  font-size: 2.5rem;
-  font-weight: 900;
-}
-
-.priceBadge {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-}
-
-/* O selo de preço fica à direita; o de uso de IA, à esquerda. */
-.badgeStack {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 5px;
-}
-
-.freeBadge {
-  background: var(--bgColor-success-emphasis, #1a7f37);
-  color: var(--fgColor-onEmphasis, #fff);
-}
-
-.paidBadge {
-  background: var(--bgColor-attention-emphasis, #9a6700);
-  color: var(--fgColor-onEmphasis, #fff);
-}
-
-.cardBody {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 12px 14px 14px;
-}
-
-.cardName {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.3;
-  color: var(--fgColor-default);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.cardDesc {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.45;
-  color: var(--fgColor-muted);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.chips {
-  margin-top: 2px;
-}
-
-.cardMeta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 2px;
-}
-
-.studioLabel {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--fgColor-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.paidChip {
+  --chip-bg: var(--bgColor-attention-muted);
+  --chip-border: var(--borderColor-attention-muted);
+  --chip-fg: var(--fgColor-attention);
 }

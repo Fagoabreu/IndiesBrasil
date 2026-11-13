@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { StarFillIcon, CommentDiscussionIcon, CheckIcon, XIcon } from "@primer/octicons-react";
+import cardStyles from "@/components/Card/cardBase.module.css";
 import styles from "./NewsCard.module.css";
 
 export default function NewsCard({ news }) {
@@ -25,23 +26,28 @@ export default function NewsCard({ news }) {
   }
 
   return (
-    <article className={styles.card}>
-      <Link href={`/noticias/${news.id}`} className={styles.coverLink}>
-        {hasImage ? (
-          <Image src={news.img_url} alt={news.title} fill className={styles.coverImg} sizes="(max-width: 600px) 100vw, 400px" />
-        ) : (
-          <div className={styles.coverPlaceholder}>{firstLetter}</div>
-        )}
+    /* Card editorial: usa a carcaça compartilhada, mas SEM `interactive` —
+       o `<article>` não é clicável por inteiro, e levantar no hover um elemento
+       que não responde ao clique é promessa falsa. */
+    <article className={cardStyles.card}>
+      <Link href={`/noticias/${news.id}`} className={`${cardStyles.cover} ${styles.cardCover}`}>
+        <div className={cardStyles.coverInner}>
+          {hasImage ? (
+            <Image src={news.img_url} alt={news.title} fill className={cardStyles.coverImg} sizes="(max-width: 600px) 100vw, 400px" />
+          ) : (
+            <div className={cardStyles.coverPlaceholder}>{firstLetter}</div>
+          )}
+        </div>
       </Link>
 
-      <div className={styles.body}>
-        <Link href={`/noticias/${news.id}`} style={{ textDecoration: "none", color: "inherit" }}>
-          <h3 className={styles.title}>{news.title}</h3>
+      <div className={cardStyles.body}>
+        <Link href={`/noticias/${news.id}`} className={styles.titleLink}>
+          <h3 className={cardStyles.title}>{news.title}</h3>
         </Link>
 
-        <p className={styles.summary}>{news.summary}</p>
+        <p className={cardStyles.desc}>{news.summary}</p>
 
-        <div className={styles.meta}>
+        <div className={cardStyles.meta}>
           <div className={styles.author}>
             {news.author_avatar_url ? (
               <Image src={news.author_avatar_url} alt={news.author_username} width={20} height={20} className={styles.avatar} />
@@ -59,30 +65,35 @@ export default function NewsCard({ news }) {
           </span>
         </div>
 
-        <div className={styles.stats}>
-          <span className={styles.rating}>
-            <StarFillIcon size={14} />
-            {Number(news.avg_rating).toFixed(1)}
-          </span>
-          <span className={styles.statItem}>
-            <CommentDiscussionIcon size={13} />
-            {news.comment_count}
-          </span>
-          <span className={`${styles.statItem} ${styles.statCheck}`}>
-            <CheckIcon size={13} />
-            {news.factcheck_count}
-          </span>
-          <span className={`${styles.statItem} ${styles.statFake}`}>
-            <XIcon size={13} />
-            {news.fake_count}
-          </span>
-          <span
-            className={`${styles.factcheckBadge} ${
-              factcheckStatus === "ok" ? styles.factcheckOk : factcheckStatus === "warning" ? styles.factcheckWarning : styles.factcheckNeutral
-            }`}
-          >
-            {factcheckLabel}
-          </span>
+        <div className={cardStyles.footer}>
+          <div className={cardStyles.footerStats}>
+            <span className={cardStyles.rating}>
+              <StarFillIcon size={14} />
+              {Number(news.avg_rating).toFixed(1)}
+            </span>
+            <span className={styles.statItem}>
+              <CommentDiscussionIcon size={13} />
+              {news.comment_count}
+            </span>
+            <span className={`${styles.statItem} ${styles.statCheck}`}>
+              <CheckIcon size={13} />
+              {news.factcheck_count}
+            </span>
+            <span className={`${styles.statItem} ${styles.statFake}`}>
+              <XIcon size={13} />
+              {news.fake_count}
+            </span>
+          </div>
+
+          <div className={cardStyles.footerFlags}>
+            <span
+              className={`${styles.factcheckBadge} ${
+                factcheckStatus === "ok" ? styles.factcheckOk : factcheckStatus === "warning" ? styles.factcheckWarning : styles.factcheckNeutral
+              }`}
+            >
+              {factcheckLabel}
+            </span>
+          </div>
         </div>
       </div>
     </article>

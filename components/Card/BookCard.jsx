@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import PropTypes from "prop-types";
+
+import cardStyles from "./cardBase.module.css";
 import styles from "./BookCard.module.css";
 import ContentRatingBadge from "@/components/ContentRatingBadge";
 import AiUsageBadge from "@/components/AiUsageBadge";
@@ -28,48 +30,55 @@ export const STAGES = {
 export default function BookCard({ book }) {
   const typeLabel = BOOK_TYPES[book.book_type] ?? book.book_type;
   const stageLabel = STAGES[book.stage] ?? book.stage;
-  const stageClass = styles[`stage_${book.stage}`];
 
   return (
-    <Link href={`/quadrinhos/${book.slug}`} className={styles.card}>
-      <div className={styles.cardCover}>
-        <div className={styles.coverInner}>
+    <Link href={`/quadrinhos/${book.slug}`} className={`${cardStyles.card} ${cardStyles.interactive} ${cardStyles.row}`}>
+      {/* A capa fica limpa: nenhum selo cobre a arte. */}
+      <div className={`${cardStyles.cover} ${styles.cardCover}`}>
+        <div className={cardStyles.coverInner}>
           {book.cover_url ? (
-            <Image src={book.cover_url} alt={book.title} width={200} height={300} className={styles.coverImg} unoptimized />
+            <Image
+              src={book.cover_url}
+              alt={book.title}
+              width={200}
+              height={300}
+              className={`${cardStyles.coverImg} ${styles.coverImg}`}
+              unoptimized
+            />
           ) : (
-            <div className={styles.coverPlaceholder}>
+            <div className={cardStyles.coverPlaceholder}>
               <span>{book.title[0]}</span>
             </div>
           )}
         </div>
-        {/* Efeito de páginas (lado direito) — sempre presente */}
-        <div className={styles.pagesEffect} />
-        <span className={`${styles.stageBadge} ${stageClass}`}>{stageLabel}</span>
-        <span className={styles.badgeStack}>
-          <ContentRatingBadge rating={book.content_rating} size="sm" />
-          <AiUsageBadge level={book.ai_level} size="sm" />
-        </span>
       </div>
 
-      <div className={styles.cardBody}>
-        <h2 className={styles.cardName}>{book.title}</h2>
-        {book.short_description && <p className={styles.cardDesc}>{book.short_description}</p>}
+      <div className={cardStyles.body}>
+        <h2 className={cardStyles.title}>{book.title}</h2>
+        {book.short_description && <p className={cardStyles.desc}>{book.short_description}</p>}
 
-        <div className={styles.cardMeta}>
+        <div className={cardStyles.footer}>
+          <div className={cardStyles.footerStats}>
+            {book.avg_rating > 0 && <span className={cardStyles.rating}>★ {Number(book.avg_rating).toFixed(1)}</span>}
+            {Number(book.follower_count) > 0 && <span>♥ {book.follower_count}</span>}
+          </div>
+
+          {/* Fase, classificação e uso de IA ao lado da nota — nunca sobre a arte. */}
+          <div className={cardStyles.footerFlags}>
+            {stageLabel && <span className={`${cardStyles.chip} ${styles[`stage_${book.stage}`]}`}>{stageLabel}</span>}
+            <ContentRatingBadge rating={book.content_rating} size="sm" inline />
+            <AiUsageBadge level={book.ai_level} size="sm" />
+          </div>
+        </div>
+
+        <div className={cardStyles.meta}>
           {book.studio_name && (
-            <span className={styles.studioLabel} title={book.studio_name}>
+            <span className={cardStyles.studioLabel} title={book.studio_name}>
               {book.studio_name}
             </span>
           )}
-          <span className={styles.typeBadge}>{typeLabel}</span>
+          {typeLabel && <span className={`${cardStyles.chip} ${cardStyles.chipNeutral}`}>{typeLabel}</span>}
         </div>
-
-        {(book.avg_rating > 0 || Number(book.follower_count) > 0) && (
-          <div className={styles.cardStats}>
-            {book.avg_rating > 0 && <span className={styles.rating}>★ {Number(book.avg_rating).toFixed(1)}</span>}
-            {Number(book.follower_count) > 0 && <span className={styles.stat}>{book.follower_count} seguindo</span>}
-          </div>
-        )}
       </div>
     </Link>
   );

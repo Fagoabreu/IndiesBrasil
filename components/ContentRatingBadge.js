@@ -13,13 +13,13 @@ const BASE_CLASS = "crBadge";
  *   size     — "sm" (cards) | "md" (default, detail pages)
  *   reasons  — array opcional de motivos (mostrado em tooltip)
  */
-export default function ContentRatingBadge({ rating, size = "md", reasons, className }) {
+export default function ContentRatingBadge({ rating, size = "md", reasons, className, inline = false }) {
   if (!rating) {
     return (
       <span
         className={`${BASE_CLASS} ${BASE_CLASS}--unrated ${BASE_CLASS}--${size} ${className || ""}`}
         title="Não classificado"
-        style={styles.unrated}
+        style={{ ...styles.unrated, ...(inline ? styles.inline : {}) }}
       >
         N/C
       </span>
@@ -38,6 +38,7 @@ export default function ContentRatingBadge({ rating, size = "md", reasons, class
       title={tooltip}
       style={{
         ...styles.badge,
+        ...(inline ? styles.inline : {}),
         backgroundColor: color,
         ...(size === "sm" ? styles.sm : {}),
       }}
@@ -60,6 +61,14 @@ const styles = {
     flexShrink: 0,
     fontFamily: "var(--fontStack-monospace, monospace)",
     border: "1.5px solid #ffffff",
+  },
+  /*
+   * No corpo do card o selo não está sobre uma foto: a borda branca existia
+   * para recortar o selo da arte e, fora dela, só engorda a caixa e cria um
+   * segundo anel no "N/C".
+   */
+  inline: {
+    border: "1px solid var(--borderColor-muted)",
   },
   sm: {
     width: "24px",
