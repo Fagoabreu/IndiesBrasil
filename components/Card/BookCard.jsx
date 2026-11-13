@@ -55,29 +55,28 @@ export default function BookCard({ book }) {
 
       <div className={cardStyles.body}>
         <h2 className={cardStyles.title}>{book.title}</h2>
-        {book.short_description && <p className={cardStyles.desc}>{book.short_description}</p>}
+        {/* Slot fixo: o vazio reservado mantém a zona de selos alinhada entre
+            os cards da mesma linha do grid. */}
+        <p className={cardStyles.desc}>{book.short_description}</p>
 
-        <div className={cardStyles.footer}>
-          <div className={cardStyles.footerStats}>
-            {book.avg_rating > 0 && <span className={cardStyles.rating}>★ {Number(book.avg_rating).toFixed(1)}</span>}
-            {Number(book.follower_count) > 0 && <span>♥ {book.follower_count}</span>}
-          </div>
-
-          {/* Fase, classificação e uso de IA ao lado da nota — nunca sobre a arte. */}
-          <div className={cardStyles.footerFlags}>
-            {stageLabel && <span className={`${cardStyles.chip} ${styles[`stage_${book.stage}`]}`}>{stageLabel}</span>}
-            <ContentRatingBadge rating={book.content_rating} size="sm" inline />
-            <AiUsageBadge level={book.ai_level} size="sm" />
-          </div>
+        {/* Zona 3 — estado. Sempre na mesma ordem: fase, classificação, IA. */}
+        <div className={cardStyles.badges}>
+          {stageLabel && <span className={`${cardStyles.chip} ${styles[`stage_${book.stage}`]}`}>{stageLabel}</span>}
+          <ContentRatingBadge rating={book.content_rating} size="sm" inline />
+          <AiUsageBadge level={book.ai_level} size="sm" />
         </div>
 
-        <div className={cardStyles.meta}>
-          {book.studio_name && (
-            <span className={cardStyles.studioLabel} title={book.studio_name}>
-              {book.studio_name}
+        {/* Zona 4 — identidade à esquerda, métricas à direita. */}
+        <div className={cardStyles.footer}>
+          <span className={cardStyles.identity} title={[book.studio_name, typeLabel].filter(Boolean).join(" · ")}>
+            {[book.studio_name, typeLabel].filter(Boolean).join(" · ")}
+          </span>
+          {(book.avg_rating > 0 || Number(book.follower_count) > 0) && (
+            <span className={cardStyles.metrics}>
+              {book.avg_rating > 0 && <span className={cardStyles.rating}>★ {Number(book.avg_rating).toFixed(1)}</span>}
+              {Number(book.follower_count) > 0 && <span>♥ {book.follower_count}</span>}
             </span>
           )}
-          {typeLabel && <span className={`${cardStyles.chip} ${cardStyles.chipNeutral}`}>{typeLabel}</span>}
         </div>
       </div>
     </Link>

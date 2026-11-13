@@ -46,37 +46,36 @@ export default function GameCard({ game, priority = false }) {
 
       <div className={cardStyles.body}>
         <h2 className={cardStyles.title}>{game.name}</h2>
-        {game.short_description && <p className={cardStyles.desc}>{game.short_description}</p>}
+        {/* Slot fixo: o vazio reservado mantém a zona de selos alinhada entre
+            os cards da mesma linha do grid. */}
+        <p className={cardStyles.desc}>{game.short_description}</p>
 
-        <div className={cardStyles.footer}>
-          <div className={cardStyles.footerStats}>
-            {game.avg_rating > 0 && <span className={cardStyles.rating}>★ {Number(game.avg_rating).toFixed(1)}</span>}
-            {game.follower_count > 0 && <span>♥ {game.follower_count}</span>}
-          </div>
-
-          {/* Fase, classificação e uso de IA ao lado da nota — nunca sobre a arte. */}
-          <div className={cardStyles.footerFlags}>
-            {stageLabel && <span className={`${cardStyles.chip} ${styles[`stage_${game.stage}`]}`}>{stageLabel}</span>}
-            <ContentRatingBadge rating={game.content_rating} size="sm" inline />
-            <AiUsageBadge level={game.ai_level} size="sm" />
-            {hasMonetization && (
-              <MonetizationBadge
-                hasLootboxes={game.has_lootboxes}
-                hasInGamePurchases={game.has_in_game_purchases}
-                hasExcessiveAds={game.has_excessive_ads}
-                size="sm"
-              />
-            )}
-          </div>
+        {/* Zona 3 — estado. Sempre na mesma ordem: fase, classificação, IA. */}
+        <div className={cardStyles.badges}>
+          {stageLabel && <span className={`${cardStyles.chip} ${styles[`stage_${game.stage}`]}`}>{stageLabel}</span>}
+          <ContentRatingBadge rating={game.content_rating} size="sm" inline />
+          <AiUsageBadge level={game.ai_level} size="sm" />
+          {hasMonetization && (
+            <MonetizationBadge
+              hasLootboxes={game.has_lootboxes}
+              hasInGamePurchases={game.has_in_game_purchases}
+              hasExcessiveAds={game.has_excessive_ads}
+              size="sm"
+            />
+          )}
         </div>
 
-        <div className={cardStyles.meta}>
-          {game.studio_name && (
-            <span className={cardStyles.studioLabel} title={game.studio_name}>
-              {game.studio_name}
+        {/* Zona 4 — identidade à esquerda, métricas à direita. */}
+        <div className={cardStyles.footer}>
+          <span className={cardStyles.identity} title={[game.studio_name, game.genre].filter(Boolean).join(" · ")}>
+            {[game.studio_name, game.genre !== "Indefinido" ? game.genre : null].filter(Boolean).join(" · ")}
+          </span>
+          {(game.avg_rating > 0 || game.follower_count > 0) && (
+            <span className={cardStyles.metrics}>
+              {game.avg_rating > 0 && <span className={cardStyles.rating}>★ {Number(game.avg_rating).toFixed(1)}</span>}
+              {game.follower_count > 0 && <span>♥ {game.follower_count}</span>}
             </span>
           )}
-          {game.genre && game.genre !== "Indefinido" && <span className={`${cardStyles.chip} ${cardStyles.chipNeutral}`}>{game.genre}</span>}
         </div>
       </div>
     </Link>

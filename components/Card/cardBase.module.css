@@ -133,7 +133,23 @@
   text-transform: uppercase;
 }
 
-/* ── Corpo ── */
+/* ── Corpo ──
+ *
+ * O corpo tem QUATRO zonas, sempre na mesma ordem e na mesma altura em todos
+ * os cards da linha. Antes eram cinco "pílulas" espalhadas por três linhas
+ * variáveis, e a linha de selos começava em quatro alturas diferentes na mesma
+ * linha do grid (medido: 190, 194, 216, 220px) — daí a impressão de bagunça.
+ *
+ *   1. título      — slot de 2 linhas
+ *   2. descrição   — slot de 2 linhas (vazio quando não há resumo)
+ *   3. selos       — sempre 1 linha: fase, classificação, uso de IA, monetização
+ *   4. rodapé      — identidade (estúdio · gênero) + métricas (★, ♥)
+ *
+ * Os slots fixos de título e descrição são o que mantém a zona de selos na
+ * mesma altura. Reservam espaço mesmo vazio de propósito: previsibilidade de
+ * leitura (o olho sabe onde achar o status) vale mais que eliminar 34px num
+ * card sem resumo.
+ */
 .body {
   display: flex;
   flex-direction: column;
@@ -144,9 +160,11 @@
 }
 
 /* Sentence case: título de obra é nome de produto, não manchete. Caixa alta
-   engolia nomes longos em duas linhas e competia com a arte. */
+   engolia nomes longos em duas linhas e competia com a arte.
+   `min-height: 2.6em` = 2 linhas × line-height 1.3. */
 .title {
   margin: 0;
+  min-height: 2.6em;
   font-size: 0.9375rem;
   font-weight: 700;
   line-height: 1.3;
@@ -158,13 +176,10 @@
   overflow: hidden;
 }
 
-/*
- * Sem `min-height`: reservar duas linhas para o descritivo abria um buraco de
- * ~38px em todo card sem resumo (asset, jogo recém-criado). O card é um bloco de
- * conteúdo — o que sobra fica no pé dele, não no meio.
- */
+/* `min-height: 2.9em` = 2 linhas × line-height 1.45. É o slot da descrição. */
 .desc {
   margin: 0;
+  min-height: 2.9em;
   font-size: 0.8125rem;
   line-height: 1.45;
   color: var(--fgColor-muted);
@@ -174,53 +189,67 @@
   overflow: hidden;
 }
 
-/* ── Rodapé: nota + selos ──
-   Flui logo abaixo do descritivo, sem `margin-top: auto`.
-   Empurrar o rodapé para o pé do card abria um buraco no meio: como o card é
-   esticado pela linha do grid, o card com menos texto ficava com o título
-   colado no topo e os selos colados na base, com um vazio no meio. O
-   alinhamento entre cards vem da altura fixa da zona de texto (`.desc`), não
-   de empurrar o conteúdo — a sobra, quando existe, fica no pé do card. */
+/* ── Zona 3: selos de estado ──
+   Uma linha só, sem quebra. Fase, classificação indicativa e uso de IA são
+   sempre renderizados (o "N/C" e o "IA N/C" são estados, não ausências), então
+   esta zona tem altura constante — 24px, o tamanho do maior selo.
+   `overflow: hidden` + `max-width` nos chips impedem que um rótulo longo
+   escape do card (medido antes: +75px além da borda). */
+.badges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: nowrap;
+  min-height: 24px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ── Zona 4: rodapé ──
+   `margin-top: auto` prende o rodapé no pé do card. Com os slots 1 e 2 fixos,
+   ele fica na mesma altura em todos os cards da linha e absorve a sobra de
+   altura do card esticado pelo grid. */
 .footer {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
   gap: var(--space-2);
-  flex-wrap: wrap;
+  margin-top: auto;
   padding-top: var(--space-1);
+  min-width: 0;
 }
 
-.footerStats {
+/* Identidade: "Estúdio · Gênero" em UMA linha de texto, não em pílulas.
+ *
+ * Eram dois chips com o mesmo peso visual do status — cinco pílulas por card
+ * competindo entre si. Como texto, a identidade desce um degrau na hierarquia e
+ * sobra cor para o que é estado (fase, classificação, IA). `ellipsis` porque
+ * gênero pode ser uma lista longa ("PLATAFORMA 2D, AVENTURA, NARRATIVO…"). */
+.identity {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.6875rem;
+  /* Peso 500, não 600: o gênero vem em caixa alta do banco e, em negrito, a
+     linha competia com os selos coloridos logo acima. */
+  font-weight: 500;
+  color: var(--fgColor-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Métricas (nota, seguidores) à direita: são números, alinham à direita e não
+   empurram a identidade para fora. `flex-shrink: 0` porque número truncado
+   ("★ 4.…") não serve para nada. */
+.metrics {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  flex: 0 0 auto;
   font-size: 0.75rem;
   color: var(--fgColor-muted);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-}
-
-/* Card sem nota e sem seguidores: o contêiner vazio ainda ocuparia o `gap` do
-   flex e indentaria os selos em 8px, desalinhando-os em relação aos cards
-   vizinhos. */
-.footerStats:empty {
-  display: none;
-}
-
-/*
- * Os selos ficam AO LADO da nota, alinhados à esquerda.
- *
- * Antes tinham `margin-left: auto` e flutuavam no canto direito: em card sem
- * nota sobrava um vazio à esquerda e o grupo de selos começava numa coluna
- * diferente em cada card — a leitura parecia quebrada. Também é o que atende
- * "status, uso de IA e classificação junto da avaliação": o espaçamento é o
- * mesmo, independente de existir nota ou não.
- */
-.footerFlags {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  flex-wrap: wrap;
 }
 
 .rating {
@@ -232,33 +261,6 @@
   color: var(--fgColor-attention);
 }
 
-/* Metadados de texto (estúdio, gênero, categoria) — última linha do card, então
-   a extensão mais próxima da borda inferior é sempre esta, igual em todos.
-   Alinhados à esquerda: com `space-between` o chip do gênero ia para a borda
-   direita e ficava solto, longe do estúdio a que se refere. */
-.meta {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-  min-width: 0;
-}
-
-/* Nome do estúdio em sentence case e encolhendo só quando precisa. A caixa alta
-   com `letter-spacing` + `max-width: 62%` truncava "PIXEL CHICKEN STUDIO" em
-   "PIXEL CHICKEN STU…" num card de 230px. */
-.studioLabel {
-  flex: 0 1 auto;
-  min-width: 0;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: var(--fgColor-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 /* Chip de texto.
  *
  * O tom vem de `--chip-tone` (definida pelos cards de fase/preço). O
@@ -267,7 +269,7 @@
  * "preenchido" no claro e "vazado" no escuro — e o de fase, que aparece em
  * todos os cards, praticamente sumia sobre `#0d1117`.
  *
- * `color-mix` sobre `--bgColor-default` dá a mesma densidade aparente nos dois
+ * `color-mix` sobre `--card-surface` dá a mesma densidade aparente nos dois
  * temas com uma regra só, sem bloco por tema e sem hex novo.
  */
 .chip {
@@ -283,9 +285,13 @@
   text-transform: uppercase;
   white-space: nowrap;
   flex-shrink: 0;
+  /* Um rótulo maior que o card não pode escapar da borda. */
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Chip sem estado (gênero, categoria): não compete com o de fase. */
+/* Chip sem estado (preço, categoria): não compete com o de fase. */
 .chipNeutral {
   --chip-tone: var(--fgColor-neutral);
 }
@@ -311,12 +317,22 @@
     gap: var(--space-1);
   }
 
+  /* No layout em linha cada card tem a própria altura e a própria coluna —
+     não há linha de grid para alinhar. Os slots fixos só deixariam espaço
+     morto, então voltam a ser do tamanho do conteúdo. */
+  .row .title,
+  .row .desc {
+    min-height: 0;
+  }
+
   .row .title {
     font-size: 0.875rem;
   }
 
-  .row .studioLabel {
-    max-width: none;
+  .row .badges {
+    min-height: 0;
+    flex-wrap: wrap;
+    overflow: visible;
   }
 
   .row .footer {

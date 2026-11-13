@@ -7,6 +7,14 @@
   aspect-ratio: 16 / 9;
 }
 
+/* Categorias no rodapé: acompanham a identidade sem virar uma quinta linha.
+   Somem do olho antes do nome do estúdio, que é a âncora de leitura. */
+.categories {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
 /* Preço saiu da capa: era um overlay no canto onde a arte costuma ter o logo.
    Agora é um chip no rodapé, ao lado do selo de uso de IA. `--chip-tone` é
    consumida por `.chip` no cardBase. */

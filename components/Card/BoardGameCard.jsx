@@ -67,31 +67,30 @@ export default function BoardGameCard({ boardgame }) {
 
       <div className={cardStyles.body}>
         <h2 className={cardStyles.title}>{boardgame.name}</h2>
-        {boardgame.short_description && <p className={cardStyles.desc}>{boardgame.short_description}</p>}
+        {/* Slot fixo: o vazio reservado mantém a zona de selos alinhada entre
+            os cards da mesma linha do grid. */}
+        <p className={cardStyles.desc}>{boardgame.short_description}</p>
 
-        <div className={cardStyles.footer}>
-          <div className={cardStyles.footerStats}>
-            {boardgame.avg_rating > 0 && <span className={cardStyles.rating}>★ {Number(boardgame.avg_rating).toFixed(1)}</span>}
-            {playerCount && <span>👥 {playerCount}</span>}
-            {playTime && <span>⏱ {playTime}</span>}
-            {boardgame.follower_count > 0 && <span>♥ {boardgame.follower_count}</span>}
-          </div>
-
-          {/* Fase, classificação e uso de IA ao lado da nota — nunca sobre a arte. */}
-          <div className={cardStyles.footerFlags}>
-            {stageLabel && <span className={`${cardStyles.chip} ${styles[`stage_${boardgame.stage}`]}`}>{stageLabel}</span>}
-            <ContentRatingBadge rating={boardgame.content_rating} size="sm" inline />
-            <AiUsageBadge level={boardgame.ai_level} size="sm" />
-          </div>
+        {/* Zona 3 — estado. Sempre na mesma ordem: fase, classificação, IA. */}
+        <div className={cardStyles.badges}>
+          {stageLabel && <span className={`${cardStyles.chip} ${styles[`stage_${boardgame.stage}`]}`}>{stageLabel}</span>}
+          <ContentRatingBadge rating={boardgame.content_rating} size="sm" inline />
+          <AiUsageBadge level={boardgame.ai_level} size="sm" />
         </div>
 
-        <div className={cardStyles.meta}>
-          {boardgame.studio_name && (
-            <span className={cardStyles.studioLabel} title={boardgame.studio_name}>
-              {boardgame.studio_name}
+        {/* Zona 4 — identidade à esquerda, métricas à direita. */}
+        <div className={cardStyles.footer}>
+          <span className={cardStyles.identity} title={[boardgame.studio_name, categoryLabel].filter(Boolean).join(" · ")}>
+            {[boardgame.studio_name, categoryLabel].filter(Boolean).join(" · ")}
+          </span>
+          {(boardgame.avg_rating > 0 || playerCount || playTime || boardgame.follower_count > 0) && (
+            <span className={cardStyles.metrics}>
+              {boardgame.avg_rating > 0 && <span className={cardStyles.rating}>★ {Number(boardgame.avg_rating).toFixed(1)}</span>}
+              {playerCount && <span>👥 {playerCount}</span>}
+              {playTime && <span>⏱ {playTime}</span>}
+              {boardgame.follower_count > 0 && <span>♥ {boardgame.follower_count}</span>}
             </span>
           )}
-          {categoryLabel && <span className={`${cardStyles.chip} ${cardStyles.chipNeutral}`}>{categoryLabel}</span>}
         </div>
       </div>
     </Link>
