@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import PropTypes from "prop-types";
+
+import cardStyles from "./cardBase.module.css";
 import styles from "./AssetCard.module.css";
 import AssetCategoryChips from "@/components/Asset/AssetCategoryChips";
 import AiUsageBadge from "@/components/AiUsageBadge";
@@ -13,32 +15,39 @@ import AiUsageBadge from "@/components/AiUsageBadge";
  */
 export default function AssetCard({ asset }) {
   return (
-    <Link href={`/assets/${asset.slug}`} className={styles.card}>
-      <div className={styles.cardCover}>
-        <div className={styles.coverInner}>
+    <Link href={`/assets/${asset.slug}`} className={`${cardStyles.card} ${cardStyles.interactive} ${cardStyles.row}`}>
+      {/* A capa fica limpa: o preço era um overlay no canto onde a arte costuma
+          ter o logo e desceu para o rodapé, junto do selo de uso de IA. */}
+      <div className={`${cardStyles.cover} ${styles.cardCover}`}>
+        <div className={cardStyles.coverInner}>
           {asset.cover_url ? (
-            <Image src={asset.cover_url} alt={asset.name} fill sizes="(max-width: 600px) 100vw, 280px" className={styles.coverImg} />
+            <Image src={asset.cover_url} alt={asset.name} fill sizes="(max-width: 600px) 38vw, 280px" className={cardStyles.coverImg} />
           ) : (
-            <div className={styles.coverPlaceholder}>
+            <div className={cardStyles.coverPlaceholder}>
               <span>{asset.name?.[0]?.toUpperCase() ?? "?"}</span>
             </div>
           )}
         </div>
-        <span className={`${styles.priceBadge} ${asset.is_free ? styles.freeBadge : styles.paidBadge}`}>{asset.is_free ? "Gratuito" : "Pago"}</span>
-        <span className={styles.badgeStack}>
-          <AiUsageBadge level={asset.ai_level} size="sm" />
-        </span>
       </div>
 
-      <div className={styles.cardBody}>
-        <h2 className={styles.cardName}>{asset.name}</h2>
-        {asset.short_description && <p className={styles.cardDesc}>{asset.short_description}</p>}
+      <div className={cardStyles.body}>
+        <h2 className={cardStyles.title}>{asset.name}</h2>
+        {asset.short_description && <p className={cardStyles.desc}>{asset.short_description}</p>}
 
-        <AssetCategoryChips categories={asset.categories} limit={3} as="span" className={styles.chips} />
+        <div className={cardStyles.footer}>
+          <div className={cardStyles.footerFlags}>
+            <span className={`${cardStyles.chip} ${asset.is_free ? styles.freeChip : styles.paidChip}`}>{asset.is_free ? "Gratuito" : "Pago"}</span>
+            <AiUsageBadge level={asset.ai_level} size="sm" />
+          </div>
+        </div>
+
+        <div className={cardStyles.meta}>
+          <AssetCategoryChips categories={asset.categories} limit={3} as="span" />
+        </div>
 
         {asset.studio_name && (
-          <div className={styles.cardMeta}>
-            <span className={styles.studioLabel} title={asset.studio_name}>
+          <div className={cardStyles.meta}>
+            <span className={cardStyles.studioLabel} title={asset.studio_name}>
               {asset.studio_name}
             </span>
           </div>
@@ -57,6 +66,7 @@ AssetCard.propTypes = {
     is_free: PropTypes.bool,
     price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     studio_name: PropTypes.string,
+    ai_level: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
     categories: PropTypes.array,
   }).isRequired,
 };

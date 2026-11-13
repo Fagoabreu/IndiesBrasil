@@ -166,6 +166,15 @@ const RATIO_SURFACES = [
   // Capa de asset: recorte `mediaCover` (16:9), exibido no card e no herói da
   // página do asset.
   { preset: "mediaCover", css: "components/Card/AssetCard.module.css", selector: ".cardCover" },
+  // Cards de obra: o card é a superfície em que o recorte aparece primeiro, e o
+  // card e a página de detalhe mostram a mesma imagem. Sem estes pares, trocar
+  // a proporção do card cortava o enquadramento sem nenhum aviso.
+  { preset: "mediaCover", css: "components/Card/GameCard.module.css", selector: ".cardCover" },
+  { preset: "mediaCover", css: "components/Card/BoardGameCard.module.css", selector: ".cardCover" },
+  { preset: "bookCover", css: "components/Card/BookCard.module.css", selector: ".cardCover" },
+  { preset: "newsCover", css: "components/NewsCard/NewsCard.module.css", selector: ".cardCover" },
+  { preset: "studioBanner", css: "components/Card/StudioCard.module.css", selector: ".cardBanner" },
+  { preset: "profileBanner", css: "components/MemberCard/MemberCard.module.css", selector: ".topDivider" },
   { preset: "mediaCover", css: "pages/assets/[slug]/asset.module.css", selector: ".heroCoverBox" },
   // Press kit do produto: a key art (banner) abre o documento com o mesmo
   // recorte `mediaCover` que o estúdio escolheu no formulário.

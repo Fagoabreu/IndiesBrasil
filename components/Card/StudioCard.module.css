@@ -1,63 +1,20 @@
-/* Cartão de estúdio, compartilhado por /estudios e /servicos. As medidas vieram
-   de `pages/estudios/index.module.css` — o cartão é o mesmo, e o CSS Module é
-   hasheado por arquivo, então importar aquele módulo não alcançaria este
-   componente. */
+/* Cartão de estúdio, compartilhado por /estudios e /servicos.
+   Carcaça, hover e chips vêm de `components/Card/cardBase.module.css` — o
+   `useTiltEffect` que inclinava o cartão seguindo o mouse saiu daqui. */
 
-.studioCard {
-  display: flex;
-  border-radius: 4px;
-  border: 1px solid var(--borderColor-muted);
-  background: var(--bgColor-default);
-  min-width: 0;
-  position: relative;
-  overflow: hidden;
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    0 2px 8px rgba(0, 0, 0, 0.03);
-  will-change: transform;
-}
-
-.studioCard:hover {
-  border-color: var(--brand-hover-border);
-  box-shadow:
-    0 4px 12px rgba(var(--brand-rgb-primary), 0.08),
-    0 8px 24px rgba(var(--brand-rgb-primary), 0.06);
-}
-
-.studioCard::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent 5%,
-    rgba(255, 255, 255, 0.08) 20%,
-    rgba(255, 255, 255, 0.12) 50%,
-    rgba(255, 255, 255, 0.08) 80%,
-    transparent 95%
-  );
-  pointer-events: none;
-  z-index: 2;
-}
-
+/* O `<li>` é a carcaça; o link ocupa a caixa inteira. */
 .cardLink {
   display: flex;
   flex-direction: column;
+  width: 100%;
   text-decoration: none;
   color: inherit;
-  width: 100%;
-  position: relative;
-  z-index: 1;
 }
 
 .cardBanner {
   position: relative;
   width: 100%;
-  height: 80px;
-  min-height: 80px;
+  aspect-ratio: 968 / 150; /* preset `studioBanner` (lib/image-presets.js) */
   overflow: hidden;
   background: var(--bgColor-muted);
   flex-shrink: 0;
@@ -67,105 +24,76 @@
 .bannerPlaceholder {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, rgba(var(--brand-rgb-primary), 0.12), rgba(var(--brand-rgb-secondary), 0.08));
+  background: var(--brand-gradient);
 }
 
 .bannerImg {
-  transition: transform 0.4s ease;
-}
-
-.studioCard:hover .bannerImg {
-  transform: scale(1.03);
+  object-fit: cover;
 }
 
 .cardBody {
-  padding: 10px 14px 14px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2);
   flex: 1;
+  padding: 0 var(--space-4) var(--space-4);
 }
 
+/* O logo sobe sobre o banner. */
 .cardLogoRow {
-  margin-top: -28px;
-  margin-bottom: 6px;
+  margin-top: -26px;
+  margin-bottom: var(--space-1);
   position: relative;
   z-index: 1;
 }
 
 .studioLogo {
   border: 2px solid var(--bgColor-default);
-  border-radius: 6px;
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.08),
-    0 0 0 1px rgba(var(--brand-rgb-primary), 0.15);
+  border-radius: var(--radius-md);
 }
 
 .studioName {
+  margin: 0;
   font-size: 1rem;
   font-weight: 700;
+  letter-spacing: -0.01em;
   color: var(--fgColor-default);
-  margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  letter-spacing: -0.01em;
 }
 
 .studioPitch {
-  font-size: 0.8rem;
-  color: var(--fgColor-muted);
   margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--fgColor-muted);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  line-height: 1.45;
 }
 
-/* Chips dos serviços declarados — o que responde "este estúdio faz portabilidade?" */
 .serviceChips {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-}
-
-.serviceChip,
-.serviceChipMore {
-  font-size: 0.68rem;
-  font-weight: 600;
-  line-height: 1.6;
-  padding: 1px 8px;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-
-.serviceChip {
-  color: var(--brand-primary);
-  background: rgba(var(--brand-rgb-primary), 0.08);
-  border: 1px solid var(--brand-active-ring);
-}
-
-.serviceChipMore {
-  color: var(--fgColor-muted);
-  background: var(--bgColor-muted);
-  border: 1px solid var(--borderColor-muted);
+  gap: var(--space-1);
 }
 
 .cardMeta {
   display: flex;
-  gap: 12px;
+  align-items: center;
+  gap: var(--space-3);
   flex-wrap: wrap;
   margin-top: auto;
-  padding-top: 6px;
-  border-top: 1px solid var(--borderColor-muted);
+  padding-top: var(--space-2);
 }
 
 .metaItem {
-  font-size: 0.75rem;
-  color: var(--fgColor-muted);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
+  font-size: 0.75rem;
   font-weight: 500;
+  color: var(--fgColor-muted);
 }

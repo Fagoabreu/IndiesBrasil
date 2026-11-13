@@ -1,7 +1,5 @@
 import styles from "./MonetizationBadge.module.css";
 
-const BASE_CLASS = "mzBadge";
-
 /**
  * Selo de transparência de monetização — Lei Felca (PL 412/2022).
  *
@@ -62,7 +60,15 @@ export default function MonetizationBadge({ hasLootboxes = false, hasInGamePurch
   }
 
   return (
-    <span className={`${BASE_CLASS} ${BASE_CLASS}--${size}`} aria-label="Selos de transparência de monetização — Lei Felca">
+    /*
+     * Classes vêm do CSS Module: `mzBadge` como string literal nunca casava com
+     * o nome hasheado, então `mzBadge--sm` (que zera o padding e o texto do
+     * selo) jamais foi aplicada — o card renderizava o selo no tamanho cheio.
+     */
+    <span
+      className={`${styles.mzBadge} ${size === "sm" ? styles["mzBadge--sm"] : ""}`}
+      aria-label="Selos de transparência de monetização — Lei Felca"
+    >
       {flags.map((flag) => (
         <span key={flag.key} className={`${styles.badge} ${styles[flag.key]}`} title={flag.title}>
           {flag.icon}

@@ -134,10 +134,12 @@
 }
 
 /* ---- GRID — portrait cards, narrower columns ---- */
+/* Card retrato (capa 2:3): colunas mais estreitas que as de capa 16:9 —
+   com 230px a capa passaria de 340px de altura. O gap é o mesmo de todas. */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 20px;
+  gap: var(--space-4);
 }
 
 /* ---- LOADING STATE ---- */

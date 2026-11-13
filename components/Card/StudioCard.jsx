@@ -4,8 +4,8 @@ import PropTypes from "prop-types";
 import { Avatar } from "@primer/react";
 import { PeopleIcon } from "@primer/octicons-react";
 
-import useTiltEffect from "@/hooks/useTiltEffect";
 import { serviceChipLabel } from "@/lib/serviceGroups";
+import cardStyles from "./cardBase.module.css";
 import styles from "./StudioCard.module.css";
 
 /**
@@ -21,32 +21,16 @@ import styles from "./StudioCard.module.css";
  * chips.
  */
 export default function StudioCard({ studio }) {
-  const tiltRef = useTiltEffect({
-    max: 8,
-    perspective: 900,
-    scale: 1.02,
-    maxGlare: 0.12,
-  });
-
   const services = Array.isArray(studio.services) ? studio.services : [];
   const visibleServices = services.slice(0, 3);
   const extraServices = services.length - visibleServices.length;
 
   return (
-    <li className={styles.studioCard} ref={tiltRef}>
+    <li className={`${cardStyles.card} ${cardStyles.interactive}`}>
       <Link href={`/estudios/${studio.slug}`} className={styles.cardLink}>
         <div className={styles.cardBanner}>
           {studio.banner_url ? (
-            <div style={{ position: "relative", width: "100%", height: "100%" }}>
-              <Image
-                src={studio.banner_url}
-                alt=""
-                fill
-                className={styles.bannerImg}
-                sizes="(max-width: 600px) 100vw, 300px"
-                style={{ objectFit: "cover" }}
-              />
-            </div>
+            <Image src={studio.banner_url} alt="" fill className={styles.bannerImg} sizes="(max-width: 600px) 100vw, 300px" />
           ) : (
             <div className={styles.bannerPlaceholder} />
           )}
@@ -63,11 +47,11 @@ export default function StudioCard({ studio }) {
           {visibleServices.length > 0 && (
             <div className={styles.serviceChips}>
               {visibleServices.map((service) => (
-                <span key={service.slug} className={styles.serviceChip}>
+                <span key={service.slug} className={cardStyles.chip}>
                   {serviceChipLabel(service)}
                 </span>
               ))}
-              {extraServices > 0 && <span className={styles.serviceChipMore}>+{extraServices}</span>}
+              {extraServices > 0 && <span className={`${cardStyles.chip} ${cardStyles.chipNeutral}`}>+{extraServices}</span>}
             </div>
           )}
 

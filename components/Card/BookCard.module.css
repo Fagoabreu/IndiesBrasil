@@ -1,250 +1,60 @@
-/* ════════════════════════════════════════
-   BookCard — Efeito de livro fechado 3D
-════════════════════════════════════════ */
-.card {
-  display: flex;
-  flex-direction: column;
-  border-radius: 4px 10px 10px 4px;
-  overflow: hidden;
-  background: var(--bgColor-default);
-  text-decoration: none;
-  color: inherit;
-  position: relative;
-  transition:
-    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
-    box-shadow 0.3s ease;
+/* BookCard — só o que é específico do livro/quadrinho.
+   Carcaça, capa, corpo, título, rodapé e chips vêm de `cardBase.module.css`.
+   O "livro 3D" (lombada com `border-left`, `.pagesEffect` simulando o bloco de
+   páginas) saiu: era o efeito que mais datava o card e não sobrevivia ao tema
+   claro, onde as bordas falsas viravam riscos cinza. */
 
-  /* Lombada na esquerda — simulando a capa grossa */
-  border-left: 6px solid var(--borderColor-muted);
-  border-top: 1px solid var(--borderColor-muted);
-  border-right: 1px solid var(--borderColor-muted);
-  border-bottom: 1px solid var(--borderColor-muted);
-}
-
-/* Sombra de profundidade na lombada */
-.card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 6px;
-  background: linear-gradient(to right, rgba(0, 0, 0, 0.08), transparent 60%);
-  pointer-events: none;
-  z-index: 2;
-}
-
-.card:hover {
-  border-color: var(--brand-primary);
-  border-left-color: var(--brand-primary);
-  transform: translateY(-4px) rotateY(-3deg) perspective(800px) translateZ(8px);
-  box-shadow:
-    6px 8px 28px rgba(var(--brand-rgb-primary), 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-/* Capa */
+/* Capa 2:3 — proporção do preset `bookCover` (lib/image-presets.js).
+   `scripts/audit-image-presets.js` compara este par via ProductPressKit; o card
+   usa a mesma do formulário. */
 .cardCover {
-  position: relative;
-  width: 100%;
   aspect-ratio: 2 / 3;
-  background: var(--bgColor-inset);
-  overflow: hidden;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-    inset 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
-/* ── Wrapper da imagem ── */
-.coverInner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
+/*
+ * A capa do livro é `<Image width={200} height={300} unoptimized>` (a origem
+ * pode ser URL externa), não `fill`. Sem esticar para a caixa ela para nos
+ * 200px intrínsecos e sobra faixa vazia dentro da proporção 2:3.
+ */
 .coverImg {
-  width: 100% !important;
-  height: 100% !important;
-  max-width: 100%;
-  object-fit: cover;
-  transition: transform 0.4s ease;
-}
-
-.card:hover .coverImg {
-  transform: scale(1.04);
-}
-
-.coverPlaceholder {
   width: 100%;
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--brand-secondary) 0%, var(--brand-primary) 100%);
-  font-size: 3rem;
-  font-weight: 900;
-  color: #fff;
-  text-transform: uppercase;
+  object-fit: cover;
 }
 
-/* ── Efeito de páginas no lado direito da capa ── */
-.pagesEffect {
-  position: absolute;
-  top: 2px;
-  right: -4px;
-  bottom: 2px;
-  width: 6px;
-  background: linear-gradient(to right, var(--bgColor-default), var(--bgColor-muted));
-  border-radius: 0 2px 2px 0;
-  box-shadow:
-    -1px 0 2px rgba(0, 0, 0, 0.06),
-    inset 1px 0 0 rgba(255, 255, 255, 0.3);
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* Stage badge */
-.stageBadge {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  background: rgba(0, 0, 0, 0.65);
-  color: #fff;
-  z-index: 3;
-}
-
-.ratingBadge {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 3;
-}
-
-/* Classificação indicativa e uso de IA empilhados no mesmo canto. */
-.badgeStack {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 5px;
-}
-
+/* Tom do chip de fase. `--chip-*` são lidos por `.chip` no cardBase. */
 .stage_released {
-  background: rgba(9, 105, 218, 0.85);
+  --chip-bg: var(--bgColor-success-muted);
+  --chip-border: var(--borderColor-success-muted);
+  --chip-fg: var(--fgColor-success);
 }
+
 .stage_crowdfunding {
-  background: rgba(26, 127, 55, 0.85);
+  --chip-bg: var(--bgColor-attention-muted);
+  --chip-border: var(--borderColor-attention-muted);
+  --chip-fg: var(--fgColor-attention);
 }
+
 .stage_production {
-  background: rgba(154, 103, 0, 0.85);
+  --chip-bg: var(--bgColor-done-muted);
+  --chip-border: var(--borderColor-done-muted);
+  --chip-fg: var(--fgColor-done);
 }
+
 .stage_writing {
-  background: rgba(130, 80, 223, 0.85);
+  --chip-bg: var(--bgColor-accent-muted);
+  --chip-border: var(--borderColor-accent-muted);
+  --chip-fg: var(--fgColor-accent);
 }
+
 .stage_concept {
-  background: rgba(99, 110, 123, 0.75);
+  --chip-bg: var(--bgColor-neutral-muted);
+  --chip-border: var(--borderColor-neutral-muted);
+  --chip-fg: var(--fgColor-neutral);
 }
+
 .stage_cancelled {
-  background: rgba(207, 34, 46, 0.75);
-}
-
-/* Card body */
-.cardBody {
-  padding: 10px 14px 12px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  flex: 1;
-  position: relative;
-}
-
-.cardName {
-  font-size: 0.9rem;
-  font-weight: 700;
-  margin: 0;
-  color: var(--fgColor-default);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.cardDesc {
-  font-size: 0.75rem;
-  color: var(--fgColor-muted);
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.cardMeta {
-  display: flex;
-  gap: 5px;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-top: 2px;
-}
-
-.studioLabel {
-  font-size: 0.72rem;
-  color: var(--fgColor-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100px;
-}
-
-.typeBadge {
-  font-size: 0.68rem;
-  padding: 2px 6px;
-  border-radius: 12px;
-  background: rgba(var(--brand-rgb-primary), 0.12);
-  color: var(--brand-primary);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.cardStats {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 2px;
-}
-
-.stat {
-  font-size: 0.75rem;
-  color: var(--fgColor-muted);
-}
-.rating {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #e6a817;
-}
-
-/* Mobile */
-@media (max-width: 600px) {
-  .cardName {
-    font-size: 0.85rem;
-  }
-  .card {
-    border-left-width: 4px;
-  }
-  .card::before {
-    width: 4px;
-  }
-  .cardCover::after {
-    width: 4px;
-    right: -3px;
-  }
+  --chip-bg: var(--bgColor-danger-muted);
+  --chip-border: var(--borderColor-danger-muted);
+  --chip-fg: var(--fgColor-danger);
 }

@@ -17,14 +17,16 @@
   align-items: center;
   gap: 3px;
   padding: 2px 6px;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   font-size: 11px;
   font-weight: 600;
   line-height: 1.4;
   white-space: nowrap;
-  color: #fff;
+  color: var(--fgColor-onEmphasis);
   font-family: var(--fontStack-monospace, monospace);
-  border: 1.5px solid #ffffff;
+  /* Sem a borda branca: o selo agora vive no corpo do card, sobre a superfície
+     do tema, e não sobre a foto onde o contorno servia de recorte. */
+  border: none;
 }
 
 .mzBadge--sm .badge {
@@ -38,19 +40,17 @@
   height: 10px;
 }
 
-/* Lootboxes — vermelho/alaranjado (alerta) */
+/* Cores por token: hex fixo não acompanhava o tema claro. */
 .lootboxes {
-  background-color: #cf222e;
+  background-color: var(--bgColor-danger-emphasis);
 }
 
-/* Compras no jogo — laranja/amarelo (atenção) */
 .purchases {
-  background-color: #d1750b;
+  background-color: var(--bgColor-attention-emphasis);
 }
 
-/* Anúncios excessivos — azul claro */
 .ads {
-  background-color: #0969da;
+  background-color: var(--bgColor-accent-emphasis);
 }
 
 .label {

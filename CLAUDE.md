@@ -28,6 +28,19 @@
 - Tema por cookie. Usar `[data-color-mode="light"]`, nunca `prefers-color-scheme`.
 - Excecoes: `#fff` em texto sobre gradiente; `#ffffff` em `<iframe>` de preview HTML.
 
+## Cards (listagens)
+
+- **Uma carcaça só**: `components/Card/cardBase.module.css` (`card`, `interactive`, `cover`, `coverInner`, `coverImg`, `coverPlaceholder`, `body`, `title`, `desc`, `footer`, `footerStats`, `footerFlags`, `rating`, `meta`, `studioLabel`, `chip`, `chipNeutral`). Cada card importa esse módulo e declara **só** o que é dele (a proporção da capa e o tom dos chips). Antes havia cinco "físicas" — jewel case de CD com 10 sombras, caixa de papelão com textura, livro 3D com `border-left` de lombada, crachá e um card flat — cada uma envelhecendo para um lado.
+- **A proporção da capa fica no CSS do card, nunca no `cardBase`**: um padrão ali esconderia um par errado. `.cardCover` com `16/9` em jogo, boardgame, asset e notícia; `2/3` em livro; `968/150` em estúdio; `752/150` em membro. Todos os sete estão em `RATIO_SURFACES` do `scripts/audit-image-presets.js` — trocar a proporção sem trocar o preset corta o enquadramento que a pessoa escolheu no formulário.
+- **Nenhum selo sobre a capa.** Fase, classificação indicativa, uso de IA e monetização ficam no `footer`, ao lado da nota. Sobre a arte eles cobriam justamente o canto onde o logo da obra costuma estar. Isso é o que `check-cards` verifica: nenhum elemento posicionado em absoluto com texto dentro da capa.
+- **Hover não desloca o conteúdo**: `translateY(-2px)` + borda + `--shadow-md` + filete de marca de 2px (`--brand-gradient-h`). `useTiltEffect` (inclinar o card seguindo o mouse) foi **removido** junto com o hook — o texto saía de eixo enquanto era lido.
+- **Sentence case no título**. A primeira versão usava caixa alta em nome de obra; foi revertida (engolia nomes longos em 2 linhas e competia com a arte).
+- **Mobile**: card em linha, mas a capa mantém `aspect-ratio` com largura em `%` (`.row .cover { flex: 0 0 38% }`). `height: auto` esticava a capa e cortava o recorte.
+- `NewsCard` usa a carcaça **sem** `interactive`: o `<article>` não é clicável por inteiro, e levantar no hover um elemento que não responde ao clique é promessa falsa.
+- Cores de estado saem de `--bgColor-*-muted`/`--fgColor-*` via `--chip-bg`/`--chip-border`/`--chip-fg`, e o selo de monetização usa `--bgColor-*-emphasis`. Hex fixo (`#e6a817`, `#cf222e`) sumia no tema claro.
+- `ContentRatingBadge` recebe `inline` quando está no corpo do card: a borda branca de 1.5px existia para recortar o selo da foto e, fora dela, só engordava a caixa.
+- Grid das listagens: `repeat(auto-fill, minmax(230px, 1fr))` + `gap: var(--space-4)`; retrato (quadrinhos) usa `160px` porque a capa 2:3 ficaria com 340px de altura.
+
 ## Design system (tokens e primitivas)
 
 - **Geometria, elevacao, movimento e tipografia tem token.** Antes so a cor era tokenizada: havia 204 `border-radius` >=10px escritos a mao em 76 arquivos e **zero** ocorrencia de `--space-*`/`--radius-*`. Tudo isso vive em `css/styles.css :root`:

@@ -1,415 +1,46 @@
-/* ════════════════════════════════════════
-   GameCard — CD Jewel Case Clássico (PS1/PS2 style)
-   Com efeito 3D de profundidade de case de CD
-═══════════════════════════════════════════ */
-.card {
-  display: flex;
-  flex-direction: column;
-  text-decoration: none;
-  color: inherit;
-  position: relative;
-  background: var(--bgColor-default, #fff);
-  overflow: visible;
-  transition:
-    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
-    box-shadow 0.3s ease;
+/* GameCard — só o que é específico do jogo.
+   Carcaça, capa, corpo, título, rodapé e chips vêm de `cardBase.module.css`. */
 
-  border: 1px solid var(--borderColor-default, #d0d0d0);
-  border-radius: 4px;
-
-  /* ── Profundidade 3D — espessura do jewel case ── */
-  --_sd1: rgba(0, 0, 0, 0.06);
-  --_sd2: rgba(0, 0, 0, 0.04);
-  --_sd3: rgba(0, 0, 0, 0.025);
-  --_sd4: rgba(0, 0, 0, 0.015);
-  --_sd5: rgba(0, 0, 0, 0.008);
-  --_se: rgba(0, 0, 0, 0.03);
-  --_sd: rgba(0, 0, 0, 0.06);
-  --_sdl: rgba(0, 0, 0, 0.04);
-  box-shadow:
-    -1px 0 0 0 var(--_se),
-    1px 0 0 0 var(--_se),
-    0 -1px 0 0 var(--_se),
-    0 1px 0 0 var(--_sd1),
-    0 2px 0 0 var(--_sd2),
-    0 3px 0 0 var(--_sd3),
-    0 4px 0 0 var(--_sd4),
-    0 5px 0 0 var(--_sd5),
-    0 6px 12px var(--_sd),
-    0 10px 24px var(--_sdl);
-}
-
-[data-color-mode="dark"] .card {
-  --_sd1: rgba(0, 0, 0, 0.2);
-  --_sd2: rgba(0, 0, 0, 0.15);
-  --_sd3: rgba(0, 0, 0, 0.1);
-  --_sd4: rgba(0, 0, 0, 0.07);
-  --_sd5: rgba(0, 0, 0, 0.04);
-  --_se: rgba(0, 0, 0, 0.12);
-  --_sd: rgba(0, 0, 0, 0.25);
-  --_sdl: rgba(0, 0, 0, 0.18);
-}
-
-.card:hover {
-  border-color: var(--brand-primary);
-  transform: translateY(-6px) perspective(800px) rotateY(-3deg) rotateX(1deg);
-  box-shadow:
-    0 1px 0 0 var(--_sd1),
-    0 2px 0 0 var(--_sd2),
-    0 3px 0 0 var(--_sd3),
-    0 4px 0 0 var(--_sd4),
-    0 5px 0 0 var(--_sd5),
-    0 8px 24px rgba(var(--brand-rgb-primary), 0.15),
-    0 14px 40px var(--_sd),
-    0 4px 10px var(--_sdl);
-}
-
-/* ── Lombada lateral esquerda (dobradiça do jewel case) ── */
-.card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 6px;
-  background: linear-gradient(to right, rgba(0, 0, 0, 0.02) 0%, rgba(0, 0, 0, 0.05) 1px, rgba(255, 255, 255, 0.08) 2px, transparent 100%);
-  border-right: 1px solid rgba(0, 0, 0, 0.05);
-  pointer-events: none;
-  z-index: 2;
-  box-shadow:
-    inset 0 0 2px rgba(255, 255, 255, 0.1),
-    2px 0 3px rgba(0, 0, 0, 0.02);
-}
-
-[data-color-mode="dark"] .card::before {
-  background: linear-gradient(to right, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.04) 1px, rgba(255, 255, 255, 0.06) 2px, transparent 100%);
-  border-right: 1px solid rgba(255, 255, 255, 0.04);
-  box-shadow:
-    inset 0 0 2px rgba(255, 255, 255, 0.04),
-    2px 0 3px rgba(0, 0, 0, 0.08);
-}
-
-/* ── Tampa de acrílico (plástico transparente) ── */
-.card::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.35) 0%,
-    rgba(255, 255, 255, 0.08) 15%,
-    transparent 35%,
-    rgba(255, 255, 255, 0.02) 50%,
-    rgba(255, 255, 255, 0.04) 65%,
-    rgba(255, 255, 255, 0.12) 82%,
-    rgba(255, 255, 255, 0.02) 100%
-  );
-  pointer-events: none;
-  z-index: 4;
-  border-radius: 3px;
-}
-
-.card:hover::after {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.45) 0%,
-    rgba(255, 255, 255, 0.12) 18%,
-    transparent 40%,
-    rgba(255, 255, 255, 0.06) 55%,
-    rgba(255, 255, 255, 0.1) 70%,
-    rgba(255, 255, 255, 0.18) 88%,
-    rgba(255, 255, 255, 0.03) 100%
-  );
-}
-
+/* Capa 16:9 — proporção do preset `mediaCover` (lib/image-presets.js).
+   `scripts/audit-image-presets.js` compara este par. */
 .cardCover {
-  position: relative;
-  width: 100%;
   aspect-ratio: 16 / 9;
-  background: var(--bgColor-inset);
-  overflow: hidden;
-  box-shadow:
-    inset 0 0 0 1px rgba(0, 0, 0, 0.04),
-    inset 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
-[data-color-mode="dark"] .cardCover {
-  box-shadow:
-    inset 0 0 0 1px rgba(0, 0, 0, 0.12),
-    inset 0 1px 3px rgba(0, 0, 0, 0.18);
-}
-
-.coverInner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.coverImg {
-  object-fit: cover;
-  transition: transform 0.4s ease;
-}
-
-.card:hover .coverImg {
-  transform: scale(1.05);
-}
-
-.coverPlaceholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
-  font-size: 3rem;
-  font-weight: 900;
-  color: #fff;
-  text-transform: uppercase;
-}
-
-.stageBadge {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 4px 10px;
-  border-radius: 3px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  background: rgba(0, 0, 0, 0.7);
-  color: #fff;
-  z-index: 3;
-  backdrop-filter: blur(2px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-/* Pilha dos selos no canto superior esquerdo: classificação indicativa,
-   uso de IA e (em jogos) os selos da Lei Felca. Fica em uma coluna só porque
-   três posições absolutas fixas passariam a se sobrepor quando um deles
-   faltasse. */
-.badgeStack {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-}
-
+/* Tom do chip de fase. `--chip-*` são lidos por `.chip` no cardBase. */
 .stage_released {
-  background: rgba(9, 105, 218, 0.88);
+  --chip-bg: var(--bgColor-success-muted);
+  --chip-border: var(--borderColor-success-muted);
+  --chip-fg: var(--fgColor-success);
 }
+
 .stage_early_access {
-  background: rgba(26, 127, 55, 0.88);
+  --chip-bg: var(--bgColor-done-muted);
+  --chip-border: var(--borderColor-done-muted);
+  --chip-fg: var(--fgColor-done);
 }
+
 .stage_beta {
-  background: rgba(154, 103, 0, 0.88);
+  --chip-bg: var(--bgColor-attention-muted);
+  --chip-border: var(--borderColor-attention-muted);
+  --chip-fg: var(--fgColor-attention);
 }
+
 .stage_alpha {
-  background: rgba(130, 80, 223, 0.88);
+  --chip-bg: var(--bgColor-accent-muted);
+  --chip-border: var(--borderColor-accent-muted);
+  --chip-fg: var(--fgColor-accent);
 }
-.stage_prototype {
-  background: rgba(99, 110, 123, 0.8);
-}
+
+.stage_prototype,
 .stage_concept {
-  background: rgba(99, 110, 123, 0.8);
+  --chip-bg: var(--bgColor-neutral-muted);
+  --chip-border: var(--borderColor-neutral-muted);
+  --chip-fg: var(--fgColor-neutral);
 }
+
 .stage_cancelled {
-  background: rgba(207, 34, 46, 0.8);
-}
-
-/* ── Contracapa (body) — encarte interno ── */
-.cardBody {
-  padding: 14px 16px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-  background: var(--bgColor-default, #fff);
-  border-top: 1px solid var(--borderColor-muted, rgba(0, 0, 0, 0.06));
-  position: relative;
-  z-index: 1;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.02);
-}
-
-[data-color-mode="dark"] .cardBody {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
-}
-
-.cardBody::after {
-  content: "";
-  position: absolute;
-  bottom: 8px;
-  right: 10px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 40% 35%,
-    rgba(200, 200, 200, 0.06) 0%,
-    rgba(180, 180, 180, 0.04) 25%,
-    rgba(100, 100, 100, 0.02) 50%,
-    transparent 72%
-  );
-  border: 1px solid rgba(0, 0, 0, 0.03);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-[data-color-mode="dark"] .cardBody::after {
-  background: radial-gradient(
-    circle at 40% 35%,
-    rgba(255, 255, 255, 0.04) 0%,
-    rgba(255, 255, 255, 0.025) 25%,
-    rgba(255, 255, 255, 0.01) 50%,
-    transparent 72%
-  );
-  border: 1px solid rgba(255, 255, 255, 0.03);
-}
-
-.card:hover .cardBody::after {
-  opacity: 1;
-}
-
-.cardName {
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin: 0;
-  color: var(--fgColor-default, #1f2328);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.cardDesc {
-  font-size: 0.78rem;
-  color: var(--fgColor-muted, #555);
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.cardMeta {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-top: 2px;
-}
-
-.studioLabel {
-  font-size: 0.75rem;
-  color: var(--fgColor-muted, #666);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 120px;
-}
-
-.genreBadge {
-  font-size: 0.7rem;
-  padding: 2px 7px;
-  border-radius: 12px;
-  background: rgba(var(--brand-rgb-primary), 0.12);
-  color: var(--brand-primary);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.cardStats {
-  display: flex;
-  gap: 10px;
-  margin-top: 4px;
-}
-
-.rating {
-  font-size: 0.8rem;
-  color: #e6a817;
-  font-weight: 700;
-}
-
-.followers {
-  font-size: 0.8rem;
-  color: var(--fgColor-muted, #666);
-}
-
-@media (max-width: 600px) {
-  .card {
-    flex-direction: row;
-    align-items: stretch;
-    border-radius: 4px;
-    overflow: hidden;
-    box-shadow:
-      0 1px 0 0 var(--_sd1),
-      0 2px 0 0 var(--_sd3),
-      0 3px 0 0 var(--_sd5),
-      0 4px 10px var(--_sd);
-  }
-
-  .card::before {
-    width: 4px;
-  }
-
-  .cardCover {
-    flex-shrink: 0;
-    width: 110px;
-    aspect-ratio: auto;
-    height: auto;
-    align-self: stretch;
-  }
-
-  .cardBody {
-    padding: 10px 12px;
-    gap: 4px;
-    justify-content: center;
-    border-top: none;
-    border-left: 1px solid var(--borderColor-muted, rgba(0, 0, 0, 0.06));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  }
-
-  [data-color-mode="dark"] .cardBody {
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  }
-
-  .cardBody::after {
-    display: none;
-  }
-
-  .cardName {
-    font-size: 1rem;
-  }
-  .cardDesc {
-    font-size: 0.8rem;
-  }
-
-  .stageBadge {
-    top: 6px;
-    right: 6px;
-    font-size: 0.65rem;
-    padding: 2px 6px;
-  }
-
-  .badgeStack {
-    top: 6px;
-    left: 6px;
-    gap: 4px;
-  }
-
-  .studioLabel {
-    max-width: none;
-  }
+  --chip-bg: var(--bgColor-danger-muted);
+  --chip-border: var(--borderColor-danger-muted);
+  --chip-fg: var(--fgColor-danger);
 }

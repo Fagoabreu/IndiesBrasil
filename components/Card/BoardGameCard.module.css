@@ -1,403 +1,44 @@
-/* ════════════════════════════════════════
-   BoardGameCard — Caixa de Board Game 3D
-   Com profundidade de caixa de jogos de tabuleiro
-═══════════════════════════════════════════ */
-.card {
-  display: flex;
-  flex-direction: column;
-  text-decoration: none;
-  color: inherit;
-  position: relative;
-  background: var(--bgColor-default);
-  border-radius: 6px;
-  overflow: visible;
-  transition:
-    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
-    box-shadow 0.35s ease;
+/* BoardGameCard — só o que é específico do jogo de mesa.
+   Carcaça, capa, corpo, título, rodapé e chips vêm de `cardBase.module.css`. */
 
-  border: 1px solid var(--borderColor-muted);
-
-  /* ── Profundidade de caixa de board game ──
-       Simula a espessura do papelão da caixa */
-  --_sd1: rgba(0, 0, 0, 0.07);
-  --_sd2: rgba(0, 0, 0, 0.05);
-  --_sd3: rgba(0, 0, 0, 0.03);
-  --_sd4: rgba(0, 0, 0, 0.02);
-  --_sd5: rgba(0, 0, 0, 0.01);
-  --_se: rgba(0, 0, 0, 0.03);
-  --_sd: rgba(0, 0, 0, 0.06);
-  --_sdl: rgba(0, 0, 0, 0.04);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    -1px 0 0 0 var(--_se),
-    1px 0 0 0 var(--_se),
-    0 -1px 0 0 var(--_se),
-    0 1px 0 0 var(--_sd1),
-    0 2px 0 0 var(--_sd2),
-    0 3px 0 0 var(--_sd3),
-    0 4px 0 0 var(--_sd4),
-    0 5px 0 0 var(--_sd5),
-    0 6px 12px var(--_sd),
-    0 10px 24px var(--_sdl);
-}
-
-[data-color-mode="dark"] .card {
-  --_sd1: rgba(0, 0, 0, 0.22);
-  --_sd2: rgba(0, 0, 0, 0.18);
-  --_sd3: rgba(0, 0, 0, 0.14);
-  --_sd4: rgba(0, 0, 0, 0.1);
-  --_sd5: rgba(0, 0, 0, 0.06);
-  --_se: rgba(0, 0, 0, 0.12);
-  --_sd: rgba(0, 0, 0, 0.25);
-  --_sdl: rgba(0, 0, 0, 0.18);
-}
-
-.card:hover {
-  border-color: var(--brand-primary);
-  transform: translateY(-7px) perspective(700px) rotateX(2deg) rotateY(-2deg);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    0 1px 0 0 var(--_sd1),
-    0 2px 0 0 var(--_sd2),
-    0 3px 0 0 var(--_sd3),
-    0 4px 0 0 var(--_sd4),
-    0 5px 0 0 var(--_sd5),
-    0 8px 24px rgba(var(--brand-rgb-primary), 0.14),
-    0 14px 40px var(--_sd),
-    0 4px 10px var(--_sdl);
-}
-
-/* ── Vinco da tampa (dobra do papelão no topo) ── */
-.card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 4px;
-  right: 4px;
-  height: 5px;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 0%, rgba(0, 0, 0, 0.02) 2px, rgba(255, 255, 255, 0.06) 3px, transparent 100%);
-  border-radius: 3px 3px 0 0;
-  pointer-events: none;
-  z-index: 2;
-}
-
-[data-color-mode="dark"] .card::before {
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.06) 2px, rgba(255, 255, 255, 0.03) 3px, transparent 100%);
-}
-
-/* ── "Encaixe" da caixa — canto inferior direito ── */
-.card::after {
-  content: "";
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  width: 14px;
-  height: 14px;
-  border-right: 2px solid rgba(0, 0, 0, 0.08);
-  border-bottom: 2px solid rgba(0, 0, 0, 0.08);
-  border-radius: 0 0 2px 0;
-  pointer-events: none;
-  z-index: 2;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-[data-color-mode="dark"] .card::after {
-  border-right: 2px solid rgba(255, 255, 255, 0.06);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.06);
-}
-
-.card:hover::after {
-  opacity: 1;
-}
-
-/* ── Tampo da caixa (tampa superior com brilho) ── */
+/* Capa 16:9 — proporção do preset `mediaCover` (lib/image-presets.js). */
 .cardCover {
-  position: relative;
-  width: 100%;
   aspect-ratio: 16 / 9;
-  background: var(--bgColor-inset);
-  overflow: hidden;
-
-  /* Moldura que afunda a imagem na caixa */
-  box-shadow:
-    inset 0 0 0 1px rgba(0, 0, 0, 0.05),
-    inset 0 2px 6px rgba(0, 0, 0, 0.06),
-    0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
-[data-color-mode="dark"] .cardCover {
-  box-shadow:
-    inset 0 0 0 1px rgba(0, 0, 0, 0.15),
-    inset 0 2px 6px rgba(0, 0, 0, 0.2),
-    0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-/* ── Brilho de plástico/laminado na tampa ── */
-.cardCover::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.25) 0%,
-    rgba(255, 255, 255, 0.05) 20%,
-    transparent 45%,
-    rgba(255, 255, 255, 0.03) 65%,
-    rgba(255, 255, 255, 0.08) 85%,
-    transparent 100%
-  );
-  pointer-events: none;
-  z-index: 2;
-}
-
-[data-color-mode="dark"] .cardCover::after {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.1) 0%,
-    rgba(255, 255, 255, 0.02) 20%,
-    transparent 45%,
-    rgba(255, 255, 255, 0.01) 65%,
-    rgba(255, 255, 255, 0.03) 85%,
-    transparent 100%
-  );
-}
-
-.coverImg {
-  object-fit: cover;
-  transition: transform 0.4s ease;
-}
-
-.card:hover .coverImg {
-  transform: scale(1.06);
-}
-
-.coverPlaceholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--brand-secondary) 0%, var(--brand-primary) 100%);
-  font-size: 3rem;
-  font-weight: 900;
-  color: #fff;
-  text-transform: uppercase;
-}
-
-.stageBadge {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  background: rgba(0, 0, 0, 0.7);
-  color: #fff;
-  z-index: 3;
-  backdrop-filter: blur(2px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.ratingBadge {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 3;
-}
-
-/* Classificação indicativa e uso de IA empilhados no mesmo canto. */
-.badgeStack {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-}
-
+/* Tom do chip de fase. `--chip-*` são lidos por `.chip` no cardBase. */
 .stage_released {
-  background: rgba(9, 105, 218, 0.88);
+  --chip-bg: var(--bgColor-success-muted);
+  --chip-border: var(--borderColor-success-muted);
+  --chip-fg: var(--fgColor-success);
 }
+
 .stage_crowdfunding {
-  background: rgba(26, 127, 55, 0.88);
+  --chip-bg: var(--bgColor-attention-muted);
+  --chip-border: var(--borderColor-attention-muted);
+  --chip-fg: var(--fgColor-attention);
 }
+
 .stage_production {
-  background: rgba(154, 103, 0, 0.88);
+  --chip-bg: var(--bgColor-done-muted);
+  --chip-border: var(--borderColor-done-muted);
+  --chip-fg: var(--fgColor-done);
 }
+
 .stage_prototype {
-  background: rgba(130, 80, 223, 0.88);
+  --chip-bg: var(--bgColor-accent-muted);
+  --chip-border: var(--borderColor-accent-muted);
+  --chip-fg: var(--fgColor-accent);
 }
+
 .stage_concept {
-  background: rgba(99, 110, 123, 0.8);
+  --chip-bg: var(--bgColor-neutral-muted);
+  --chip-border: var(--borderColor-neutral-muted);
+  --chip-fg: var(--fgColor-neutral);
 }
+
 .stage_cancelled {
-  background: rgba(207, 34, 46, 0.8);
-}
-
-/* ── Lateral da caixa (cardBody) — papelão texturizado ── */
-.cardBody {
-  padding: 14px 16px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-  position: relative;
-
-  /* Textura de papelão mais evidente */
-  background:
-    repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(0, 0, 0, 0.012) 3px, rgba(0, 0, 0, 0.012) 4px),
-    linear-gradient(to bottom, var(--bgColor-default), color-mix(in srgb, var(--bgColor-default) 98%, #000));
-
-  /* Vinco de dobra entre tampa e lateral */
-  border-top: 2px solid rgba(0, 0, 0, 0.04);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.02);
-}
-
-[data-color-mode="dark"] .cardBody {
-  background:
-    repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255, 255, 255, 0.012) 3px, rgba(255, 255, 255, 0.012) 4px),
-    linear-gradient(to bottom, var(--bgColor-default), color-mix(in srgb, var(--bgColor-default) 95%, #000));
-  border-top: 2px solid rgba(255, 255, 255, 0.03);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.05);
-}
-
-.cardName {
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin: 0;
-  color: var(--fgColor-default);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.cardDesc {
-  font-size: 0.78rem;
-  color: var(--fgColor-muted);
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.cardMeta {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-top: 2px;
-}
-
-.studioLabel {
-  font-size: 0.75rem;
-  color: var(--fgColor-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 120px;
-}
-
-.categoryBadge {
-  font-size: 0.7rem;
-  padding: 2px 7px;
-  border-radius: 12px;
-  background: rgba(var(--brand-rgb-secondary), 0.12);
-  color: var(--brand-secondary);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.cardStats {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 4px;
-}
-
-.rating {
-  font-size: 0.8rem;
-  color: #e6a817;
-  font-weight: 700;
-}
-
-.stat {
-  font-size: 0.78rem;
-  color: var(--fgColor-muted);
-}
-
-/* Mobile */
-@media (max-width: 600px) {
-  .card {
-    flex-direction: row;
-    align-items: stretch;
-    overflow: hidden;
-    border-radius: 6px;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.3),
-      0 1px 0 0 var(--_sd1),
-      0 2px 0 0 var(--_sd2),
-      0 3px 0 0 var(--_sd4),
-      0 4px 10px var(--_sd);
-  }
-
-  .card::before {
-    left: 3px;
-    right: 3px;
-    height: 4px;
-  }
-
-  .cardCover {
-    flex-shrink: 0;
-    width: 110px;
-    aspect-ratio: auto;
-    height: auto;
-    align-self: stretch;
-    border-radius: 6px 0 0 6px;
-  }
-
-  .cardCover::after {
-    display: none;
-  }
-
-  .cardBody {
-    padding: 10px 12px;
-    gap: 4px;
-    justify-content: center;
-    border-top: none;
-    border-left: 1px solid var(--borderColor-muted);
-  }
-
-  .cardName {
-    font-size: 1rem;
-  }
-
-  .cardDesc {
-    font-size: 0.8rem;
-  }
-
-  .stageBadge {
-    top: 6px;
-    right: 6px;
-    font-size: 0.65rem;
-    padding: 2px 6px;
-  }
-
-  .studioLabel {
-    max-width: none;
-  }
+  --chip-bg: var(--bgColor-danger-muted);
+  --chip-border: var(--borderColor-danger-muted);
+  --chip-fg: var(--fgColor-danger);
 }
