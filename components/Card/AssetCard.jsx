@@ -42,16 +42,13 @@ export default function AssetCard({ asset }) {
         </div>
 
         <div className={cardStyles.meta}>
-          <AssetCategoryChips categories={asset.categories} limit={3} as="span" />
-        </div>
-
-        {asset.studio_name && (
-          <div className={cardStyles.meta}>
+          {asset.studio_name && (
             <span className={cardStyles.studioLabel} title={asset.studio_name}>
               {asset.studio_name}
             </span>
-          </div>
-        )}
+          )}
+          <AssetCategoryChips categories={asset.categories} limit={3} as="span" />
+        </div>
       </div>
     </Link>
   );
