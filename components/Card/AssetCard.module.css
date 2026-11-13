@@ -8,15 +8,12 @@
 }
 
 /* Preço saiu da capa: era um overlay no canto onde a arte costuma ter o logo.
-   Agora é um chip no rodapé, ao lado do selo de uso de IA. */
+   Agora é um chip no rodapé, ao lado do selo de uso de IA. `--chip-tone` é
+   consumida por `.chip` no cardBase. */
 .freeChip {
-  --chip-bg: var(--bgColor-success-muted);
-  --chip-border: var(--borderColor-success-muted);
-  --chip-fg: var(--fgColor-success);
+  --chip-tone: var(--fgColor-success);
 }
 
 .paidChip {
-  --chip-bg: var(--bgColor-attention-muted);
-  --chip-border: var(--borderColor-attention-muted);
-  --chip-fg: var(--fgColor-attention);
+  --chip-tone: var(--fgColor-attention);
 }

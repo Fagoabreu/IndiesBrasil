@@ -10,6 +10,9 @@ import Layout from "@/components/Layout";
 import { useRouter } from "next/router";
 import "@primer/primitives/dist/css/functional/themes/light.css";
 import "@primer/primitives/dist/css/functional/themes/dark.css";
+// Depois dos temas do Primer de propósito: precisa vencer por ordem de cascata
+// (ver o cabeçalho do arquivo).
+import "../css/theme-dark.css";
 
 /**
  * Fonte da aplicação. `next/font/google` baixa no build e serve do próprio

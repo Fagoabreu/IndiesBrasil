@@ -25,7 +25,21 @@
   flex-direction: column;
   overflow: hidden;
   isolation: isolate;
-  background: var(--bgColor-default);
+  /*
+   * `--surface-raised` é a superfície de card decidida por tema em
+   * `css/theme-dark.css`: branco sobre a página acinzentada no claro,
+   * `--bgColor-muted` um degrau acima do `#010409` no escuro.
+   *
+   * Não há `[data-color-mode]` aqui de propósito: o escuro também chega com
+   * `data-color-mode="auto"` + `prefers-color-scheme`, e um seletor por
+   * atributo deixaria metade dos visitantes de fora.
+   *
+   * A separação não pode vir de sombra: `--shadow-md` é `rgba(1,4,9,.28)`, que
+   * é exatamente a cor da página no escuro — a sombra não aparece. No escuro a
+   * elevação é a superfície; a borda de 1px fecha a silhueta.
+   */
+  --card-surface: var(--surface-raised, var(--bgColor-default));
+  background: var(--card-surface);
   border: 1px solid var(--borderColor-muted);
   border-radius: var(--radius-lg);
   text-decoration: none;
@@ -85,7 +99,9 @@
   width: 100%;
   flex-shrink: 0;
   overflow: hidden;
-  background: var(--bgColor-inset);
+  /* Superfície do próprio card, não `--bgColor-inset`: no escuro o inset é
+     `#010409` e a área da capa virava um retângulo preto dentro do card. */
+  background: var(--card-surface, var(--bgColor-inset));
 }
 
 .coverInner {
@@ -142,6 +158,11 @@
   overflow: hidden;
 }
 
+/*
+ * Sem `min-height`: reservar duas linhas para o descritivo abria um buraco de
+ * ~38px em todo card sem resumo (asset, jogo recém-criado). O card é um bloco de
+ * conteúdo — o que sobra fica no pé dele, não no meio.
+ */
 .desc {
   margin: 0;
   font-size: 0.8125rem;
@@ -154,16 +175,19 @@
 }
 
 /* ── Rodapé: nota + selos ──
-   `margin-top: auto` gruda o rodapé no pé do card, então cards de alturas
-   diferentes na mesma linha alinham os selos em vez de flutuarem no meio. */
+   Flui logo abaixo do descritivo, sem `margin-top: auto`.
+   Empurrar o rodapé para o pé do card abria um buraco no meio: como o card é
+   esticado pela linha do grid, o card com menos texto ficava com o título
+   colado no topo e os selos colados na base, com um vazio no meio. O
+   alinhamento entre cards vem da altura fixa da zona de texto (`.desc`), não
+   de empurrar o conteúdo — a sobra, quando existe, fica no pé do card. */
 .footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: var(--space-2);
   flex-wrap: wrap;
-  margin-top: auto;
-  padding-top: var(--space-2);
+  padding-top: var(--space-1);
 }
 
 .footerStats {
@@ -176,15 +200,27 @@
   white-space: nowrap;
 }
 
-/* `margin-left: auto` encosta os selos à direita quando cabem na linha da nota
-   e os joga para a linha de baixo quando não cabem, sem prender a ordem a um
-   tamanho de card específico. */
+/* Card sem nota e sem seguidores: o contêiner vazio ainda ocuparia o `gap` do
+   flex e indentaria os selos em 8px, desalinhando-os em relação aos cards
+   vizinhos. */
+.footerStats:empty {
+  display: none;
+}
+
+/*
+ * Os selos ficam AO LADO da nota, alinhados à esquerda.
+ *
+ * Antes tinham `margin-left: auto` e flutuavam no canto direito: em card sem
+ * nota sobrava um vazio à esquerda e o grupo de selos começava numa coluna
+ * diferente em cada card — a leitura parecia quebrada. Também é o que atende
+ * "status, uso de IA e classificação junto da avaliação": o espaçamento é o
+ * mesmo, independente de existir nota ou não.
+ */
 .footerFlags {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
   flex-wrap: wrap;
-  margin-left: auto;
 }
 
 .rating {
@@ -196,48 +232,62 @@
   color: var(--fgColor-attention);
 }
 
-/* Metadados de texto (estúdio, gênero, categoria) — abaixo do rodapé de selos. */
+/* Metadados de texto (estúdio, gênero, categoria) — última linha do card, então
+   a extensão mais próxima da borda inferior é sempre esta, igual em todos.
+   Alinhados à esquerda: com `space-between` o chip do gênero ia para a borda
+   direita e ficava solto, longe do estúdio a que se refere. */
 .meta {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: var(--space-2);
   flex-wrap: wrap;
   min-width: 0;
 }
 
+/* Nome do estúdio em sentence case e encolhendo só quando precisa. A caixa alta
+   com `letter-spacing` + `max-width: 62%` truncava "PIXEL CHICKEN STUDIO" em
+   "PIXEL CHICKEN STU…" num card de 230px. */
 .studioLabel {
+  flex: 0 1 auto;
+  min-width: 0;
   font-size: 0.6875rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--fgColor-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 62%;
 }
 
-/* Chip de texto. A cor vem de `--chip-*`, definida pelos cards de fase/preço;
-   sem elas usa o roxo da marca. */
+/* Chip de texto.
+ *
+ * O tom vem de `--chip-tone` (definida pelos cards de fase/preço). O
+ * preenchimento NÃO usa `--bgColor-*-muted`: esse token é opaco no tema claro
+ * (`#dafbe1`) e translúcido no escuro (`#2ea04326`), então o mesmo chip ficava
+ * "preenchido" no claro e "vazado" no escuro — e o de fase, que aparece em
+ * todos os cards, praticamente sumia sobre `#0d1117`.
+ *
+ * `color-mix` sobre `--bgColor-default` dá a mesma densidade aparente nos dois
+ * temas com uma regra só, sem bloco por tema e sem hex novo.
+ */
 .chip {
   padding: 2px 7px;
   border-radius: var(--radius-xs);
-  border: 1px solid var(--chip-border, rgba(var(--brand-rgb-primary), 0.3));
-  background: var(--chip-bg, rgba(var(--brand-rgb-primary), 0.1));
-  color: var(--chip-fg, var(--brand-primary));
+  border: 1px solid color-mix(in srgb, var(--chip-tone, var(--brand-chip, var(--brand-primary))) 38%, transparent);
+  background: color-mix(in srgb, var(--chip-tone, var(--brand-chip, var(--brand-primary))) 16%, var(--card-surface, var(--bgColor-default)));
+  color: var(--chip-tone, var(--brand-chip, var(--brand-primary)));
   font-size: 0.625rem;
   font-weight: 700;
   line-height: 1.7;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* Chip sem estado (gênero, categoria): não compete com o de fase. */
 .chipNeutral {
-  --chip-bg: var(--bgColor-neutral-muted);
-  --chip-border: var(--borderColor-neutral-muted);
-  --chip-fg: var(--fgColor-neutral);
+  --chip-tone: var(--fgColor-neutral);
 }
 
 /* Mobile: capa e corpo lado a lado, com a capa mantendo a PROPORÇÃO

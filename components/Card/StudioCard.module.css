@@ -16,7 +16,9 @@
   width: 100%;
   aspect-ratio: 968 / 150; /* preset `studioBanner` (lib/image-presets.js) */
   overflow: hidden;
-  background: var(--bgColor-muted);
+  /* `--bgColor-inset`, não `muted`: no escuro o card é `muted`, e o banner
+     ficaria com a mesma cor do corpo (perdendo a faixa superior). */
+  background: var(--bgColor-inset);
   flex-shrink: 0;
   border-bottom: 1px solid var(--borderColor-muted);
 }
