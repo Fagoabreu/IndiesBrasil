@@ -41,7 +41,7 @@ describe("Páginas de streams (HTML servido)", () => {
     });
 
     studio = await organization.create(user, { name: "Estúdio Ao Vivo", pitch: "Fazemos jogos e streams." });
-    await organization.update(studio.slug, { twitch_channel: "indiesbrasil" });
+    await organization.update(studio.slug, { twitch_channel: "jogosocial" });
   });
 
   test("A listagem linka a página de assistir", async () => {
@@ -58,8 +58,8 @@ describe("Páginas de streams (HTML servido)", () => {
     // O canal está offline (não há status cacheado), mas o player da Twitch abre
     // o canal de qualquer forma — é o estado offline da própria Twitch.
     expect(html).toContain("Estúdio Ao Vivo");
-    expect(html).toContain("player.twitch.tv/?channel=indiesbrasil");
-    expect(html).toContain("https://www.twitch.tv/indiesbrasil");
+    expect(html).toContain("player.twitch.tv/?channel=jogosocial");
+    expect(html).toContain("https://www.twitch.tv/jogosocial");
     expect(html).toContain(`rel="canonical" href="${SITE_URL}/streams/${studio.slug}"`);
   });
 

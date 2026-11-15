@@ -145,7 +145,7 @@ function svgPostPhoto({ dataUri, width, height }) {
  * do perfil desenhada por cima da publicação.
  */
 async function renderSvg(postData) {
-  const username = String(postData.author_username || "indiesbrasil");
+  const username = String(postData.author_username || "jogosocial");
   // Mesmo texto que os metadados publicam (`lib/seo.js`), para a imagem e a
   // prévia do link não contarem coisas diferentes.
   const content = postText(postData);

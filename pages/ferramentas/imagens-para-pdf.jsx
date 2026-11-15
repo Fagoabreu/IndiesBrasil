@@ -2,18 +2,18 @@ import SeoHead from "@/components/SeoHead";
 import styles from "./imagens-para-pdf.module.css";
 import { useRef, useState, useCallback } from "react";
 import Image from "next/image";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 import { formatBytes } from "@/lib/bytes";
 import { downloadBlob } from "@/lib/download";
 
-const PAGE_TITLE = "Converter Imagens em PDF Grátis Online | Indies Brasil";
+const PAGE_TITLE = `Converter Imagens em PDF Grátis Online | ${SITE_NAME}`;
 const PAGE_DESCRIPTION =
   "Converta múltiplas imagens em um único PDF ou comprima PDFs existentes. Controle qualidade e resolução. Grátis, sem cadastro e sem armazenamento.";
 const PAGE_URL = `${SITE_URL}/ferramentas/imagens-para-pdf`;
 const JSON_LD = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "Imagens para PDF — Indies Brasil",
+  name: `Imagens para PDF — ${SITE_NAME}`,
   url: PAGE_URL,
   applicationCategory: "UtilitiesApplication",
   operatingSystem: "Web",

@@ -8,6 +8,7 @@ import { useUser } from "@/context/UserContext";
 import PropTypes from "prop-types";
 import { useRouter } from "next/router";
 import NotificationButton from "./NotificationButton";
+import { SITE_NAME } from "@/lib/seo";
 
 const ThemeSwitcher = dynamic(() => import("../ThemeSwitcher"), { ssr: false });
 
@@ -30,9 +31,9 @@ export default function HeaderComponent({ onMenuClick }) {
 
         <Link href="/" className={styles.logoArea}>
           <div className={styles.logoWrapper}>
-            <Image src="/images/logo.png" alt="Logo Indies Brasil" fill sizes="36px" priority />
+            <Image src="/images/logo.png" alt={`Logo ${SITE_NAME}`} fill sizes="36px" priority />
           </div>
-          <span className={styles.logoText}>Indies Brasil</span>
+          <span className={styles.logoText}>{SITE_NAME}</span>
         </Link>
       </div>
 

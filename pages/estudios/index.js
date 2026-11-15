@@ -7,10 +7,10 @@ import { OrganizationIcon, PlusIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import StudioCard from "@/components/Card/StudioCard";
 import { useUser } from "@/context/UserContext";
-import { SITE_URL } from "@/lib/seo";
+import { pageTitle, SITE_URL } from "@/lib/seo";
 import styles from "./index.module.css";
 
-const PAGE_TITLE = "Estúdios — Indies Brasil";
+const PAGE_TITLE = pageTitle("Estúdios");
 const PAGE_DESCRIPTION = "Conheça os estúdios de jogos indie brasileiros: press kits, membros, projetos e muito mais.";
 const PAGE_URL = `${SITE_URL}/estudios`;
 

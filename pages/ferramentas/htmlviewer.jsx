@@ -5,19 +5,19 @@ import { PlayIcon, TrashIcon } from "@primer/octicons-react";
 
 import shared from "./toolPage.module.css";
 import styles from "./htmlviewer.module.css";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 
 // Maximum HTML input size accepted before rendering.
 // Prevents excessive memory use in the sandboxed iframe.
 const MAX_INPUT_LENGTH = 500_000;
 
-const PAGE_TITLE = "Visualizador de HTML Online | Indies Brasil";
+const PAGE_TITLE = `Visualizador de HTML Online | ${SITE_NAME}`;
 const PAGE_DESCRIPTION = "Cole seu código HTML e visualize a página renderizada em tempo real. Ferramenta online gratuita, segura e sem cadastro.";
 const PAGE_URL = `${SITE_URL}/ferramentas/htmlviewer`;
 const JSON_LD = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "Visualizador de HTML — Indies Brasil",
+  name: `Visualizador de HTML — ${SITE_NAME}`,
   url: PAGE_URL,
   applicationCategory: "DeveloperApplication",
   operatingSystem: "Web",

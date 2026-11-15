@@ -8,11 +8,11 @@ import SeoHead from "@/components/SeoHead";
 import StudioCard from "@/components/Card/StudioCard";
 import { useUser } from "@/context/UserContext";
 import { SERVICE_GROUPS, groupServices } from "@/lib/serviceGroups";
-import { SITE_URL } from "@/lib/seo";
+import { pageTitle, SITE_URL } from "@/lib/seo";
 import { resolveStudioEntry } from "@/lib/studioEntry";
 import styles from "./index.module.css";
 
-const PAGE_TITLE = "Serviços — Indies Brasil";
+const PAGE_TITLE = pageTitle("Serviços");
 const PAGE_DESCRIPTION =
   "Encontre estúdios indie brasileiros que prestam desenvolvimento, portabilidade, arte, áudio, QA, localização, publicação e consultoria para o seu jogo.";
 const PAGE_URL = `${SITE_URL}/servicos`;

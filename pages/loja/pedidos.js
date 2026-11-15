@@ -6,10 +6,10 @@ import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
 import { formatBRL } from "@/lib/currency";
 import { BUYER_CANCELLABLE_STATUSES, ORDER_STATUS_LABELS } from "@/lib/store-constants";
-import { SITE_URL } from "@/lib/seo";
+import { pageTitle, SITE_URL } from "@/lib/seo";
 import styles from "./pedidos.module.css";
 
-const PAGE_TITLE = "Meus pedidos — Indies Brasil";
+const PAGE_TITLE = pageTitle("Meus pedidos");
 const PAGE_DESCRIPTION = "Acompanhe os pedidos feitos na loja de estúdios indie brasileiros.";
 const PAGE_URL = `${SITE_URL}/loja/pedidos`;
 

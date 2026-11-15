@@ -10,11 +10,11 @@ import PostRightBarComponent from "@/components/RightBar/PostRightBarComponent";
 import TrendingTags from "@/components/TrendingTags/TrendingTagsComponent";
 import WhoToFollow from "@/components/WhoToFollow/WhoToFollow";
 import { useRouter } from "next/router";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 import useInView from "@/hooks/useInView";
 import { uploadWithProgress } from "@/utils/uploadWithProgress";
 
-const PAGE_TITLE = "Feed da Comunidade Indie | Indies Brasil";
+const PAGE_TITLE = `Feed da Comunidade Indie | ${SITE_NAME}`;
 const PAGE_DESCRIPTION =
   "Acompanhe posts e atualizações de desenvolvedores, artistas e criadores de jogos independentes brasileiros. Compartilhe projetos, conquistas e conteúdo.";
 const PAGE_URL = `${SITE_URL}/posts`;

@@ -1,4 +1,4 @@
-# Funcionalidades da Indies Brasil
+# Funcionalidades da Jogos Social
 
 Inventário completo da aplicação, organizado por módulo. Serve como referência para apresentação, onboarding de equipe e planejamento de produto.
 
@@ -10,7 +10,7 @@ Inventário completo da aplicação, organizado por módulo. Serve como referên
 
 ## Visão geral
 
-A Indies Brasil é o portal da comunidade de desenvolvimento de jogos independentes brasileiros. Reúne, num só lugar:
+A Jogos Social é o portal da comunidade de desenvolvimento de jogos independentes brasileiros. Reúne, num só lugar:
 
 - **Rede profissional** — perfil, currículo, portfólio, reputação e diretório de membros.
 - **Estúdios** — equipe, papéis, contatos, relacionamentos, QR Code e press kit.

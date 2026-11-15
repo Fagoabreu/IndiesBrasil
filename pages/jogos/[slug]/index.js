@@ -11,7 +11,7 @@ import GameReviews from "@/components/GameReviews/GameReviews";
 import ContentEngagement from "@/components/ContentEngagement/ContentEngagement";
 import IconSvg from "@/components/IconSvg/IconSvg";
 import PressKitButton from "@/components/PressKit/PressKitButton";
-import { SITE_URL, ogImageSizeFromPreset } from "@/lib/seo";
+import { ogImageSizeFromPreset, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { formatAiLevelName } from "@/lib/ai-usage";
 import { breadcrumbList, graph, videoGame } from "@/lib/structured-data";
 
@@ -250,7 +250,7 @@ export default function GamePage({ initialGame, siteUrl }) {
   return (
     <>
       <SeoHead
-        title={`${gameData.name} — Indies Brasil`}
+        title={`${gameData.name} — ${SITE_NAME}`}
         description={gameData.short_description || gameData.name}
         canonical={canonicalUrl}
         ogImage={coverImage}

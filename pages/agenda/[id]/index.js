@@ -6,7 +6,7 @@ import { Spinner } from "@primer/react";
 import { CalendarIcon, LocationIcon, BroadcastIcon, PersonIcon, ArrowLeftIcon, OrganizationIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
-import { SITE_URL, OG_CARD_SIZE } from "@/lib/seo";
+import { OG_CARD_SIZE, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { breadcrumbList, event as eventStructuredData, graph } from "@/lib/structured-data";
 import { eventTypeLabel } from "@/lib/event-types";
 import { eventProductLabel, eventProductPath } from "@/lib/event-products";
@@ -327,8 +327,8 @@ export default function EventDetailPage({ initialEvent = null, eventNotFound = f
             ele não guarda um resultado que não existe. Mesmo tratamento do
             "post não encontrado" (`pages/posts/[id].jsx`). */}
         <SeoHead
-          title="Evento não encontrado — Indies Brasil"
-          description="Este evento não foi encontrado na agenda do Indies Brasil."
+          title={`Evento não encontrado — ${SITE_NAME}`}
+          description={`Este evento não foi encontrado na agenda do ${SITE_NAME}.`}
           canonical={`${SITE_URL}/agenda/${id}`}
           noIndex
         />
@@ -338,7 +338,7 @@ export default function EventDetailPage({ initialEvent = null, eventNotFound = f
     );
   }
 
-  const pageTitle = `${ev.title} — Agenda Indies Brasil`;
+  const pageTitle = `${ev.title} — Agenda ${SITE_NAME}`;
   const pageUrl = `${SITE_URL}/agenda/${id}`;
 
   return (

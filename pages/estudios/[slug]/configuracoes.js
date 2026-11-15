@@ -32,6 +32,7 @@ import AssetEditor from "@/components/Studio/AssetEditor/AssetEditor";
 import StudioServicesEditor from "@/components/Studio/StudioServicesEditor/StudioServicesEditor";
 import { normalizeMemberQuery } from "@/context/dataHooks/UseUserSuggest";
 import styles from "./configuracoes.module.css";
+import { SITE_NAME } from "@/lib/seo";
 
 const PLATFORM_OPTIONS = [
   ["windows", "Windows"],
@@ -1536,7 +1537,7 @@ export default function ConfiguracoesPage() {
 
   return (
     <>
-      <SeoHead title={`Configurações — ${name || "Estúdio"} — Indies Brasil`} />
+      <SeoHead title={`Configurações — ${name || "Estúdio"} — ${SITE_NAME}`} />
 
       <div className={styles.page}>
         <div className={styles.topBar}>

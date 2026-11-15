@@ -1,4 +1,4 @@
-# Roteiro — vídeo de apresentação da Indies Brasil
+# Roteiro — vídeo de apresentação da Jogos Social
 
 Roteiro de gravação para um vídeo de apresentação do produto. As falas estão prontas para locução; as ações descrevem exatamente o que deve aparecer na tela.
 
@@ -83,9 +83,9 @@ Prepare um ambiente com dados ricos. Tela vazia não vende produto.
 
 **Fala:**
 
-> Esta é a Indies Brasil. A casa dos jogos independentes brasileiros. Um lugar para criar, publicar, descobrir e fechar negócio — em português, para a cena indie nacional.
+> Esta é a Jogos Social. A casa dos jogos independentes brasileiros. Um lugar para criar, publicar, descobrir e fechar negócio — em português, para a cena indie nacional.
 
-**Legenda na tela:** `Indies Brasil — a casa dos jogos independentes brasileiros`
+**Legenda na tela:** `Jogos Social — a casa dos jogos independentes brasileiros`
 
 ---
 

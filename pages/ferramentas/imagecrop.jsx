@@ -6,16 +6,16 @@ import Image from "next/image";
 
 import styles from "./imagecrop.module.css";
 import { generateImage } from "@/utils/ImageUtils";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 
-const PAGE_TITLE = "Editor e Recorte de Imagem Online Grátis | Indies Brasil";
+const PAGE_TITLE = `Editor e Recorte de Imagem Online Grátis | ${SITE_NAME}`;
 const PAGE_DESCRIPTION =
   "Recorte, redimensione, ajuste brilho, contraste e saturação de imagens online. Exporte em PNG, JPG ou WebP. Sem cadastro, grátis e direto no navegador.";
 const PAGE_URL = `${SITE_URL}/ferramentas/imagecrop`;
 const JSON_LD = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "Editor de Imagem — Indies Brasil",
+  name: `Editor de Imagem — ${SITE_NAME}`,
   url: PAGE_URL,
   applicationCategory: "UtilitiesApplication",
   operatingSystem: "Web",

@@ -5,10 +5,10 @@ import Link from "next/link";
 import { Heading, Spinner, Button } from "@primer/react";
 import { ArrowLeftIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
-import { SITE_URL } from "@/lib/seo";
+import { pageTitle, SITE_URL } from "@/lib/seo";
 import styles from "./[slug]/curso.module.css";
 
-const PAGE_TITLE = "Criar curso — Indies Brasil";
+const PAGE_TITLE = pageTitle("Criar curso");
 const PAGE_URL = `${SITE_URL}/estudos/novo`;
 
 const SUGGESTED_TAGS = ["Jogo", "Unity", "Godot", "Arte", "Som", "Programação", "Design", "Marketing"];

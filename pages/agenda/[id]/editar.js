@@ -10,6 +10,7 @@ import EventForm from "@/components/Agenda/EventForm";
 import applyBannerChange from "@/components/Agenda/applyBannerChange";
 import { eventValuesFromApi } from "@/components/Agenda/eventFormOptions";
 import styles from "@/components/Agenda/EventFormPage.module.css";
+import { SITE_NAME } from "@/lib/seo";
 
 export default function EditarEventoPage() {
   const router = useRouter();
@@ -107,7 +108,7 @@ export default function EditarEventoPage() {
 
   return (
     <>
-      <SeoHead title="Editar Evento — Agenda Indies Brasil" description="Edite as informações do evento." />
+      <SeoHead title={`Editar Evento — Agenda ${SITE_NAME}`} description="Edite as informações do evento." />
 
       <div className={styles.pageWrapper}>
         <Link href={`/agenda/${id}`} className={styles.backLink}>

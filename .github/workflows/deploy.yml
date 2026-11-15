@@ -1,4 +1,4 @@
-name: Deploy Indies Brasil
+name: Deploy Jogos Social
 
 on:
   push:

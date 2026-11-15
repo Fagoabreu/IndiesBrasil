@@ -7,7 +7,7 @@ import SeoHead from "@/components/SeoHead";
 import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 import { formatBRL } from "@/lib/currency";
 import { ORDER_STATUS_LABELS, ORDER_STATUSES, PRODUCT_TYPE_LABELS, PRODUCT_TYPES } from "@/lib/store-constants";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 import styles from "./loja.module.css";
 
 export async function getServerSideProps(context) {
@@ -102,7 +102,7 @@ export default function StudioStorePage({ initialStudio, initialEligible, initia
   if (notFound) {
     return (
       <div className={styles.page}>
-        <SeoHead title="Estúdio não encontrado — Indies Brasil" description="Estúdio não encontrado." canonical={`${SITE_URL}/estudios`} noIndex />
+        <SeoHead title="Estúdio não encontrado — ${SITE_NAME}" description="Estúdio não encontrado." canonical={`${SITE_URL}/estudios`} noIndex />
         <Banner variant="critical" title="Estúdio não encontrado">
           Estúdio não encontrado.
         </Banner>
@@ -129,7 +129,7 @@ export default function StudioStorePage({ initialStudio, initialEligible, initia
   return (
     <div className={styles.page}>
       <SeoHead
-        title={`Loja de ${initialStudio.name} — Indies Brasil`}
+        title={`Loja de ${initialStudio.name} — ${SITE_NAME}`}
         description={`Produtos e pedidos da loja do estúdio ${initialStudio.name}.`}
         canonical={`${SITE_URL}/estudios/${initialStudio.slug}/loja`}
         noIndex={canManage}

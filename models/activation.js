@@ -6,6 +6,8 @@ import user from "./user.js";
 import authorization from "./authorization.js";
 import activationEmailTemplate from "@/lib/email/templates/activationEmail.js";
 import resetPasswordEmailTemplate from "@/lib/email/templates/resetPasswordEmail.js";
+import { EMAIL_FROM } from "@/lib/email/sender.js";
+import { SITE_NAME } from "@/lib/seo";
 
 const EXPIRATION_IN_MILLISECONDS = 60 * 60 * 1000; // 1 hora
 
@@ -321,9 +323,9 @@ async function sendEmailToUser(user, activationToken) {
   });
 
   await email.send({
-    from: "Indies Brasil <contato@indies.com.br>",
+    from: EMAIL_FROM,
     to: user.email,
-    subject: "Ative seu cadastro no Indies Brasil",
+    subject: `Ative seu cadastro no ${SITE_NAME}`,
     html,
     text,
   });
@@ -338,9 +340,9 @@ async function sendPasswordEmailToUser(user, activationToken) {
   });
 
   await email.send({
-    from: "Indies Brasil <contato@indies.com.br>",
+    from: EMAIL_FROM,
     to: user.email,
-    subject: "Redefinição de senha — Indies Brasil",
+    subject: `Redefinição de senha — ${SITE_NAME}`,
     html,
     text,
     headers: {

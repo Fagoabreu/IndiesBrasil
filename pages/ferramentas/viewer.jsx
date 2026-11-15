@@ -5,20 +5,20 @@ import { CopyIcon, CheckIcon, TrashIcon, CodeIcon } from "@primer/octicons-react
 
 import shared from "./toolPage.module.css";
 import styles from "./viewer.module.css";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 
 // Maximum input size (bytes) accepted before any regex runs.
 // Prevents ReDoS via excessively large payloads.
 const MAX_INPUT_LENGTH = 200_000;
 
-const PAGE_TITLE = "Visualizador e Formatador de JSON e XML Online | Indies Brasil";
+const PAGE_TITLE = `Visualizador e Formatador de JSON e XML Online | ${SITE_NAME}`;
 const PAGE_DESCRIPTION =
   "Formate, visualize e valide JSON e XML com syntax highlighting e indentação automática. Ferramenta online grátis, sem cadastro e sem instalação.";
 const PAGE_URL = `${SITE_URL}/ferramentas/viewer`;
 const JSON_LD = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "Visualizador XML / JSON — Indies Brasil",
+  name: `Visualizador XML / JSON — ${SITE_NAME}`,
   url: PAGE_URL,
   applicationCategory: "DeveloperApplication",
   operatingSystem: "Web",

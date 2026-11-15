@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useUser } from "@/context/UserContext";
 import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 import styles from "./novo.module.css";
+import { SITE_NAME } from "@/lib/seo";
 
 const CONTENT_TYPE_OPTIONS = [
   { value: "game", label: "Jogo" },
@@ -252,7 +253,7 @@ export default function NovaAnalisePage() {
   return (
     <>
       <Head>
-        <title>{isEditing ? "Editar Análise" : "Nova Análise"} — Indies Brasil</title>
+        <title>{isEditing ? "Editar Análise" : "Nova Análise"} — ${SITE_NAME}</title>
       </Head>
 
       <div className={styles.page}>

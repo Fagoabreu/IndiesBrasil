@@ -9,8 +9,7 @@ import notification from "./notification.js";
 import email from "infra/email";
 import storeOrderReceivedEmailTemplate from "lib/email/templates/storeOrderReceivedEmail";
 import storeOrderUpdatedEmailTemplate from "lib/email/templates/storeOrderUpdatedEmail";
-
-const EMAIL_FROM = "Indies Brasil <contato@indies.com.br>";
+import { EMAIL_FROM } from "lib/email/sender";
 
 /* =========================================================
  * Produtos

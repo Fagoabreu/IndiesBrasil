@@ -4,14 +4,14 @@ import { ArrowRightIcon, CheckCircleFillIcon, PlusIcon } from "@primer/octicons-
 
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
-import { SITE_URL } from "@/lib/seo";
+import { pageTitle, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { breadcrumbList } from "@/lib/structured-data";
 import { HOW_TO_PUBLISH_PATH, STUDIO_ENTRY_KINDS, resolveStudioEntry } from "@/lib/studioEntry";
 import styles from "./index.module.css";
 
-const PAGE_TITLE = "Como publicar no Indies Brasil";
+const PAGE_TITLE = `Como publicar no ${SITE_NAME}`;
 const PAGE_DESCRIPTION =
-  "Todo jogo, jogo de mesa, publicação, asset e canal de transmissão do Indies Brasil é publicado por um estúdio. Veja como criar o seu em três passos.";
+  `Todo jogo, jogo de mesa, publicação, asset e canal de transmissão do ${SITE_NAME} é publicado por um estúdio. Veja como criar o seu em três passos.`;
 const PAGE_URL = `${SITE_URL}${HOW_TO_PUBLISH_PATH}`;
 
 /**
@@ -98,7 +98,7 @@ export default function ComoPublicarPage() {
   return (
     <>
       <SeoHead
-        title={`${PAGE_TITLE} — Indies Brasil`}
+        title={pageTitle(PAGE_TITLE)}
         description={PAGE_DESCRIPTION}
         canonical={PAGE_URL}
         jsonLd={breadcrumbList([{ name: "Como publicar", path: HOW_TO_PUBLISH_PATH }])}
@@ -107,7 +107,7 @@ export default function ComoPublicarPage() {
       <div className={styles.page}>
         <header className={styles.hero}>
           <p className={styles.eyebrow}>Para quem quer publicar</p>
-          <h1 className={styles.title}>Como publicar no Indies Brasil</h1>
+          <h1 className={styles.title}>{`Como publicar no ${SITE_NAME}`}</h1>
           <p className={styles.lead}>
             Todo jogo, jogo de mesa, publicação, asset e canal de transmissão é publicado por um <strong>estúdio</strong>. Não existe publicação em
             perfil pessoal: o estúdio é quem assina a obra.

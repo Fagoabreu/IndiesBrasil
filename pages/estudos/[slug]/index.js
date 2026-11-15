@@ -7,7 +7,7 @@ import { Heading, Spinner, Button } from "@primer/react";
 import { BookIcon, StarIcon, StarFillIcon, CheckIcon, ChevronRightIcon, PencilIcon, TrashIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
-import { SITE_URL, ogImageSizeFromPreset } from "@/lib/seo";
+import { ogImageSizeFromPreset, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { breadcrumbList, course as courseStructuredData, graph } from "@/lib/structured-data";
 import styles from "./curso.module.css";
 
@@ -208,7 +208,7 @@ export default function CursoPage({ initialCourse }) {
   return (
     <div className={styles.page}>
       <SeoHead
-        title={`${course.title} — Indies Brasil`}
+        title={`${course.title} — ${SITE_NAME}`}
         description={course.description?.slice(0, 160) || `Curso: ${course.title}`}
         canonical={`${SITE_URL}/estudos/${course.slug}`}
         ogImage={course.cover_url}

@@ -1,4 +1,4 @@
-import { embedHostname, normalizeHostname, siteHostname } from "@/lib/seo";
+import { SITE_NAME, embedHostname, normalizeHostname, pageTitle, siteHostname } from "@/lib/seo";
 
 /**
  * Host do site no formato que players de terceiros aceitam em `parent`.
@@ -76,5 +76,37 @@ describe("lib/seo.js — host do site", () => {
 
       expect(embedHostname()).toBe("localhost");
     });
+  });
+});
+
+/**
+ * Nome da marca e título de página.
+ *
+ * A marca estava literal em ~90 arquivos antes do rebrand. Agora ela vem de
+ * `SITE_NAME` (que lê `NEXT_PUBLIC_SITE_NAME`) e o título passa por
+ * `pageTitle()`. Estes testes fixam o contrato que o resto do app consome —
+ * se alguém voltar a escrever o nome à mão, o `pageTitle` deixa de ser a fonte.
+ */
+describe("lib/seo.js — marca", () => {
+  test("SITE_NAME tem valor mesmo sem a variável de ambiente", () => {
+    expect(typeof SITE_NAME).toBe("string");
+    expect(SITE_NAME.trim().length).toBeGreaterThan(0);
+  });
+
+  test("pageTitle() põe a marca no fim", () => {
+    expect(pageTitle("Agenda")).toBe(`Agenda — ${SITE_NAME}`);
+  });
+
+  test("pageTitle() não duplica a marca quando o rótulo já a contém", () => {
+    // "Como publicar no Jogos Social — Jogos Social" era o título real da
+    // página antes deste guard.
+    const label = `Como publicar no ${SITE_NAME}`;
+    expect(pageTitle(label)).toBe(label);
+  });
+
+  test("pageTitle() sem rótulo devolve só a marca", () => {
+    expect(pageTitle()).toBe(SITE_NAME);
+    expect(pageTitle("   ")).toBe(SITE_NAME);
+    expect(pageTitle(null)).toBe(SITE_NAME);
   });
 });

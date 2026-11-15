@@ -7,10 +7,10 @@ import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
 import { formatBRL } from "@/lib/currency";
 import { PRODUCT_TYPE_LABELS, STORE_SALES_ENABLED } from "@/lib/store-constants";
-import { SITE_URL } from "@/lib/seo";
+import { pageTitle, SITE_URL } from "@/lib/seo";
 import styles from "./index.module.css";
 
-const PAGE_TITLE = "Loja — Indies Brasil";
+const PAGE_TITLE = pageTitle("Loja");
 const PAGE_DESCRIPTION = "Produtos e merch de estúdios indie brasileiros. A venda é feita diretamente pelo estúdio.";
 const PAGE_URL = `${SITE_URL}/loja`;
 

@@ -21,7 +21,7 @@ import {
  */
 
 const twitchStudio = {
-  twitch_channel: "indiesbrasil",
+  twitch_channel: "jogosocial",
   youtube_channel_id: null,
   active_platform: null,
   is_live: false,
@@ -47,7 +47,7 @@ describe("lib/streams", () => {
   });
 
   test("linka e rotula a plataforma resolvida", () => {
-    expect(getWatchUrl(twitchStudio)).toBe("https://www.twitch.tv/indiesbrasil");
+    expect(getWatchUrl(twitchStudio)).toBe("https://www.twitch.tv/jogosocial");
     expect(getWatchUrl(youtubeStudio)).toBe("https://www.youtube.com/channel/UCabc123");
     expect(getPlatformLabel(bothChannels)).toBe("Twitch");
     expect(getPlatform("kick")).toBeNull();
@@ -61,7 +61,7 @@ describe("lib/streams", () => {
   test("o player da Twitch abre o canal mesmo offline e usa o host de quem renderiza", () => {
     const url = getEmbedUrl(twitchStudio, "exemplo.com.br");
 
-    expect(url).toContain("channel=indiesbrasil");
+    expect(url).toContain("channel=jogosocial");
     expect(url).toContain("parent=exemplo.com.br");
   });
 

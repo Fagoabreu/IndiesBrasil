@@ -44,7 +44,7 @@ import MessagesPanel from "@/components/Messages/MessagesPanel";
 import SendMessageButton from "@/components/Messages/SendMessageButton";
 import { resolveUserNotificationHref } from "@/lib/notifications";
 import { isUnread, markAllNotificationsRead, markNotificationRead, notificationKey } from "@/lib/notificationActions";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 
 /* =====================
  * Metadados (OG) e SSR
@@ -359,7 +359,7 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
     return (
       <div className={style.stateCard}>
         <SeoHead
-          title="Perfil não encontrado — Indies Brasil"
+          title={`Perfil não encontrado — ${SITE_NAME}`}
           description="Esse usuário não existe ou foi removido."
           canonical={`${SITE_URL}/perfil/${encodeURIComponent(username ?? "")}`}
           noIndex
@@ -487,11 +487,11 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
    *
    * A página não tinha `SeoHead` nenhum, então o HTML entregue ao crawler do
    * WhatsApp saía sem `og:title`/`og:image` — o preview caía no default do site
-   * ("Indies Brasil" + domínio). Agora os dados vêm do SSR (`initialProfile`),
+   * (`SITE_NAME` + domínio). Agora os dados vêm do SSR (`initialProfile`),
    * porque o crawler não executa JavaScript.
    * ===================== */
   const profilePath = `/perfil/${encodeURIComponent(perfilUser.user.username)}`;
-  const seoTitle = `${perfilUser.user.username} — Indies Brasil`;
+  const seoTitle = `${perfilUser.user.username} — ${SITE_NAME}`;
   const seoDescription =
     perfilUser.user.resumo ||
     perfilUser.user.bio?.slice(0, 160) ||
@@ -894,7 +894,7 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
         {showShareModal && (
           <ShareModal
             path={profilePath}
-            text={`Veja o perfil de @${perfilUser.user.username} no Indies Brasil`}
+            text={`Veja o perfil de @${perfilUser.user.username} no ${SITE_NAME}`}
             title="Compartilhar perfil"
             hint="Copie o link e cole no WhatsApp, Discord ou Instagram. O perfil será exibido como um cartão com nome, foto e resumo."
             onClose={() => setShowShareModal(false)}

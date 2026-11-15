@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import SeoHead from "@/components/SeoHead";
-import { SITE_URL } from "@/lib/seo";
+import { pageTitle, SITE_NAME, SITE_URL } from "@/lib/seo";
 import styles from "./analises.module.css";
 
 const CONTENT_TYPE_LABELS = {
@@ -11,8 +11,8 @@ const CONTENT_TYPE_LABELS = {
   book: "Livro/Quadrinho",
 };
 
-const PAGE_TITLE = "Análises — Indies Brasil";
-const PAGE_DESCRIPTION = "Análises e reviews de jogos, jogos de mesa e livros feitas pela comunidade Indies Brasil.";
+const PAGE_TITLE = pageTitle("Análises");
+const PAGE_DESCRIPTION = `Análises e reviews de jogos, jogos de mesa e livros feitas pela comunidade ${SITE_NAME}.`;
 const PAGE_URL = `${SITE_URL}/analises`;
 const LIMIT = 20;
 

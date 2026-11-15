@@ -8,10 +8,10 @@ import AssetCard from "@/components/Card/AssetCard";
 import StudioPublishNotice from "@/components/Studio/StudioPublishNotice/StudioPublishNotice";
 import { ASSET_GROUPS, groupAssetCategories } from "@/lib/assetGroups";
 import { AI_USAGE_LEVELS, formatAiLevelLabel } from "@/lib/ai-usage";
-import { SITE_URL } from "@/lib/seo";
+import { pageTitle, SITE_URL } from "@/lib/seo";
 import styles from "./index.module.css";
 
-const PAGE_TITLE = "Assets — Indies Brasil";
+const PAGE_TITLE = pageTitle("Assets");
 const PAGE_DESCRIPTION = "Pacotes de arte, áudio, interface, efeitos e código para game dev, publicados por estúdios brasileiros.";
 const PAGE_URL = `${SITE_URL}/assets`;
 const LIMIT = 20;

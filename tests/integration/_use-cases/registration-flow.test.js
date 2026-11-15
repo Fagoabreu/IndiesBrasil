@@ -4,6 +4,8 @@ import activation from "models/activation.js";
 import user from "models/user.js";
 import orchestrator from "tests/orchestrator.js";
 import TEST_CREDENTIALS from "tests/helpers/testCredentials.js";
+import { EMAIL_FROM_ADDRESS } from "@/lib/email/sender";
+import { SITE_NAME } from "@/lib/seo";
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices();
@@ -54,9 +56,11 @@ describe("Use case: Registration Flow (all successful)", () => {
   test("Receive activation email", async () => {
     const lastEmail = await orchestrator.getLastEmail();
 
-    expect(lastEmail.sender).toBe("<contato@indies.com.br>");
+    // Endereço conferido pela constante: a caixa postal NÃO acompanha a marca
+    // (ver `lib/email/sender.js`) e o valor literal era a quarta cópia dele.
+    expect(lastEmail.sender).toBe(`<${EMAIL_FROM_ADDRESS}>`);
     expect(lastEmail.recipients[0]).toBe("<registration.flow@curso.dev>");
-    expect(lastEmail.subject).toBe("Ative seu cadastro no Indies Brasil");
+    expect(lastEmail.subject).toBe(`Ative seu cadastro no ${SITE_NAME}`);
     expect(lastEmail.text).toContain("RegistrationFlow");
 
     activationTokenId = orchestrator.extractUUID(lastEmail.text);

@@ -4,6 +4,7 @@ import { useUser } from "@/context/UserContext";
 import useInView from "@/hooks/useInView";
 import { MAX_TESTIMONIAL_CONTENT_LENGTH, MAX_TESTIMONIAL_ROLE_LENGTH } from "@/lib/testimonial";
 import styles from "./TestimonialsSection.module.css";
+import { SITE_NAME } from "@/lib/seo";
 
 /**
  * Seção de depoimentos da comunidade.
@@ -200,7 +201,7 @@ export default function TestimonialsSection() {
       <header className={styles.header}>
         <p className={styles.label}>Comunidade</p>
         <h2 className={styles.title}>Quem vive a cena indie recomenda</h2>
-        <p className={styles.sub}>Depoimentos de membros que fazem parte da Indies Brasil.</p>
+        <p className={styles.sub}>{`Depoimentos de membros que fazem parte da ${SITE_NAME}.`}</p>
       </header>
 
       {testimonials.length > 0 && (

@@ -11,6 +11,7 @@ import { useUser } from "@/context/UserContext";
 import StatusMessageComponent from "@/components/StatusMessage/StatusMessageComponent";
 import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 import styles from "./editar.module.css";
+import { SITE_NAME } from "@/lib/seo";
 
 const SUGGESTED_TAGS = ["Jogo", "Unity", "Godot", "Arte", "Som", "Programação", "Design", "Marketing"];
 
@@ -651,7 +652,7 @@ export default function EditarCursoPage() {
 
   return (
     <>
-      <SeoHead title={`Editar — ${title || "Curso"} — Indies Brasil`} />
+      <SeoHead title={`Editar — ${title || "Curso"} — ${SITE_NAME}`} />
 
       <div className={styles.page}>
         <div className={styles.topBar}>

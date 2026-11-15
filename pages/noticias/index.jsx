@@ -6,10 +6,10 @@ import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
 import NewsCard from "@/components/NewsCard/NewsCard";
 import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 import styles from "./NewsPage.module.css";
 
-const PAGE_TITLE = "Notícias | Indies Brasil";
+const PAGE_TITLE = `Notícias | ${SITE_NAME}`;
 const PAGE_DESCRIPTION = "Fique por dentro das últimas notícias, novidades e atualizações do cenário indie brasileiro.";
 const PAGE_URL = `${SITE_URL}/noticias`;
 

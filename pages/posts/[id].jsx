@@ -5,7 +5,7 @@ import { ArrowLeftIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import PostCardComponent from "@/components/PostCard/PostCardComponent";
 import { useUser } from "@/context/UserContext";
-import { SITE_URL, postMetaDescription, postMetaTitle } from "@/lib/seo";
+import { postMetaDescription, postMetaTitle, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { loopbackOrigin } from "@/lib/internal-url";
 
 /**
@@ -75,10 +75,10 @@ export default function PostDetailPage({ initialPost, ssrNotFound, ssrError, pos
 
   // ── OG tags: preenchidas com dados do SSR ──
   // Título e descrição descrevem a PUBLICAÇÃO (o autor entra como contexto).
-  // Antes o título era `@username no Indies Brasil`, o que fazia a prévia do
+  // Antes o título era `@username no Jogos Social`, o que fazia a prévia do
   // link falar do usuário em vez do post. Ver `lib/seo.js`.
-  const seoTitle = post ? postMetaTitle(post) : "Post no Indies Brasil";
-  const seoDescription = post ? postMetaDescription(post) : "Veja este post na comunidade Indies Brasil.";
+  const seoTitle = post ? postMetaTitle(post) : `Post no ${SITE_NAME}`;
+  const seoDescription = post ? postMetaDescription(post) : `Veja este post na comunidade ${SITE_NAME}.`;
   const seoCanonical = `${SITE_URL}/posts/${postId}`;
   const seoImage = `${SITE_URL}/api/og/post/${postId}`;
 
@@ -117,8 +117,8 @@ export default function PostDetailPage({ initialPost, ssrNotFound, ssrError, pos
     return (
       <div className="posts-page">
         <SeoHead
-          title="Post não encontrado — Indies Brasil"
-          description="Este post não foi encontrado no Indies Brasil."
+          title={`Post não encontrado — ${SITE_NAME}`}
+          description={`Este post não foi encontrado no ${SITE_NAME}.`}
           canonical={seoCanonical}
           ogImage={seoImage}
         />
@@ -138,7 +138,7 @@ export default function PostDetailPage({ initialPost, ssrNotFound, ssrError, pos
   if (ssrError && !post) {
     return (
       <div className="posts-page">
-        <SeoHead title="Erro — Indies Brasil" description="Ocorreu um erro ao carregar este post." canonical={seoCanonical} ogImage={seoImage} />
+        <SeoHead title={`Erro — ${SITE_NAME}`} description="Ocorreu um erro ao carregar este post." canonical={seoCanonical} ogImage={seoImage} />
         <div className="posts-empty">
           <p className="posts-empty-title">Erro ao carregar o post.</p>
           <p className="posts-empty-description">

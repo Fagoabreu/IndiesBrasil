@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Dialog } from "@primer/react";
 import { CopyIcon, CheckIcon, LinkIcon } from "@primer/octicons-react";
 import PropTypes from "prop-types";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 import styles from "./ShareModal.module.css";
 
 /**
@@ -19,7 +19,7 @@ export default function ShareModal({ path, text, title = "Compartilhar", hint, o
   const [copied, setCopied] = useState(false);
 
   const shareUrl = `${SITE_URL}${path}`;
-  const shareText = text || "Confira no Indies Brasil!";
+  const shareText = text || `Confira no ${SITE_NAME}!`;
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent([shareText, shareUrl].join("\n\n"))}`;
 
   const handleCopy = async () => {

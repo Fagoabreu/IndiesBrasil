@@ -8,12 +8,12 @@ import PageHeader from "@/components/PageHeader";
 import TabBar from "@/components/TabBar";
 import StudioPublishNotice from "@/components/Studio/StudioPublishNotice/StudioPublishNotice";
 import { useUser } from "@/context/UserContext";
-import { SITE_URL } from "@/lib/seo";
+import { pageTitle, SITE_URL } from "@/lib/seo";
 import { RATING_LABELS, RATING_ORDER } from "@/lib/rating-constants";
 import { AI_USAGE_LEVELS, formatAiLevelLabel } from "@/lib/ai-usage";
 import styles from "./index.module.css";
 
-const PAGE_TITLE = "Jogos — Indies Brasil";
+const PAGE_TITLE = pageTitle("Jogos");
 const PAGE_DESCRIPTION = "Descubra jogos criados por desenvolvedores indie brasileiros.";
 const PAGE_URL = `${SITE_URL}/jogos`;
 
