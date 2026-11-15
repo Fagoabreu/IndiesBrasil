@@ -6,6 +6,7 @@ import { createActivatedUserWithSession } from "tests/helpers/storeTestUtils";
 import organization from "models/organization";
 import book from "models/book";
 import asset from "models/asset";
+import assetCategory from "models/assetCategory";
 import moderation from "models/moderation";
 
 beforeAll(async () => {
@@ -79,6 +80,11 @@ describe("GET /api/v1/highlights", () => {
 
     const studio = await organization.create(ownerCtx.user, { name: "Estúdio Limite" });
 
+    // `asset.create` exige ao menos uma categoria (`validateCategories` roda
+    // ANTES do INSERT): sem ela, o teste falhava com 400 em vez de medir o
+    // limite do destaque.
+    const category = await assetCategory.findBySlug("sprites");
+
     // 5 livros com capa: o endpoint não pode devolver os 5.
     for (let index = 0; index < 5; index++) {
       const created = await book.create(ownerCtx.user.id, studio.id, { title: `Livro ${index}` });
@@ -90,6 +96,7 @@ describe("GET /api/v1/highlights", () => {
       const created = await asset.create(ownerCtx.user.id, studio.id, {
         name: `Asset Com Capa ${index}`,
         external_url: "https://exemplo.itch.io/asset",
+        category_ids: [category.id],
         is_free: true,
       });
       const coverId = await createCoverImage(`https://res.cloudinary.com/demo/image/upload/asset-${index}.png`);
@@ -98,6 +105,7 @@ describe("GET /api/v1/highlights", () => {
     await asset.create(ownerCtx.user.id, studio.id, {
       name: "Asset Sem Capa",
       external_url: "https://exemplo.itch.io/asset-sem-capa",
+      category_ids: [category.id],
       is_free: true,
     });
 
