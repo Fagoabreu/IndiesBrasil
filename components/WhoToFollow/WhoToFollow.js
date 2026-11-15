@@ -14,7 +14,10 @@ export default function WhoToFollow() {
   useEffect(() => {
     async function loadUsers() {
       try {
-        const res = await fetch(`/api/v1/users?isfollowing=false&limit=${MAX_SUGGESTIONS}`, {
+        // `exclude_self=true`: sugerir que a pessoa siga a si mesma é ruído. A
+        // rota inclui o leitor por padrão (é o que o diretório precisa), então
+        // quem quer "outras pessoas" pede a exclusão explicitamente.
+        const res = await fetch(`/api/v1/users?isfollowing=false&exclude_self=true&limit=${MAX_SUGGESTIONS}`, {
           credentials: "include",
         });
 

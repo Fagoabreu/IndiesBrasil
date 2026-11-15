@@ -1,0 +1,463 @@
+/* ==========================================
+   MD VIEWER — Visualizador de Markdown
+   Estilos únicos desta ferramenta.
+   A carcaça (container, painel, textarea, rodapé)
+   vem de toolPage.module.css como `shared`.
+========================================== */
+
+/* Input de arquivo escondido: o gatilho é o botão do cabeçalho. */
+.fileInput {
+  display: none;
+}
+
+/* ---- Área de trabalho ------------------------------------------------ */
+
+.workspace {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+/*
+ * Maximizado: sobreposição fixa sobre a página inteira.
+ *
+ * Não usa a Fullscreen API de propósito — ela falha dentro de iframe, exige
+ * gesto em alguns navegadores e some do teclado no iOS. Uma camada fixa com
+ * Escape para sair funciona igual em todo lugar e mantém o botão "Restaurar"
+ * visível (a Fullscreen API esconde os controles da própria página).
+ *
+ * `position: fixed` só cobre a viewport se nenhum ancestral tiver `transform`,
+ * `filter`, `backdrop-filter`, `perspective`, `contain` ou `container-type`.
+ * O `.page-transition` (em `css/styles.css`) tinha `animation ... both`, que
+ * retém o `transform` do keyframe e transformava a coluna de conteúdo no bloco
+ * de contenção — a camada aparecia cortada à direita da sidebar. A animação
+ * agora usa `backwards`. Não reintroduza `transform` em wrapper de página.
+ */
+.workspaceMaximized {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  /*
+   * A cor da PÁGINA, não a do painel: os painéis usam `--bgColor-default` e
+   * sobem um degrau sobre `--bgColor-inset`. Com os dois no mesmo token o
+   * painel sumia dentro da camada (no escuro, `#0d1117` sobre `#0d1117`).
+   */
+  background: var(--bgColor-inset);
+  overscroll-behavior: contain;
+}
+
+/* A barra não encolhe: quem cede espaço é a área dos painéis. */
+.workspaceMaximized .toolbar {
+  flex-shrink: 0;
+}
+
+.maximizedHint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--fgColor-muted);
+  white-space: nowrap;
+}
+
+.maximizedHint kbd {
+  font-family: "JetBrains Mono", "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: 0.7rem;
+  padding: 1px 5px;
+  border: 1px solid var(--borderColor-muted);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-xs);
+  /* `--bgColor-muted`, não `--bgColor-inset`: a camada maximizada já é
+     `--bgColor-inset`, e a tecla sumiria dentro do próprio fundo. */
+  background: var(--bgColor-muted);
+}
+
+/* ---- Barra de ferramentas ------------------------------------------- */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.toolGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.modeGroup {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: var(--radius-full);
+  background: var(--bgColor-muted);
+}
+
+.modeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 5px var(--space-3);
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--fgColor-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out);
+}
+
+.modeBtn:hover {
+  color: var(--fgColor-default);
+}
+
+.modeBtn:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-brand);
+}
+
+/*
+ * O ativo não pode ser `--bgColor-default`: no escuro esse token é MAIS ESCURO
+ * que o `--bgColor-muted` da trilha, então a aba selecionada parecia a apagada.
+ * O tom de marca compõe sobre a trilha e funciona nos dois temas.
+ */
+.modeBtnActive,
+.modeBtnActive:hover {
+  background: color-mix(in srgb, var(--brand-solid) 16%, var(--bgColor-muted));
+  color: var(--fgColor-default);
+  box-shadow: inset 0 0 0 1px rgba(var(--brand-rgb-primary), 0.3);
+}
+
+.fileName {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  color: var(--fgColor-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Painéis --------------------------------------------------------- */
+
+.panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  align-items: stretch;
+}
+
+.panelsSingle {
+  grid-template-columns: 1fr;
+}
+
+/* `min-width: 0` é o que impede uma tabela larga ou uma linha longa de código
+   de esticar a coluna do grid em vez de rolar dentro do painel. */
+.panels > * {
+  min-width: 0;
+}
+
+.editorPanel,
+.previewPanel {
+  min-height: 520px;
+}
+
+.workspaceMaximized .panels {
+  flex: 1 1 auto;
+  min-height: 0;
+  /* `minmax(0, 1fr)`: sem o piso zero a linha do grid assume o conteúdo
+     mínimo do painel (o `min-height: 520px` de `.editorPanel`) e a camada
+     estoura a viewport em vez de rolar dentro dos painéis. */
+  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.workspaceMaximized .panels > * {
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.editorPanelDragOver {
+  border-color: var(--brand-solid);
+  box-shadow: var(--ring-brand);
+}
+
+.codeArea {
+  min-height: 420px;
+}
+
+/* Dentro da camada maximizada o textarea não tem piso: quem define a altura é
+   o painel, e um `min-height` de 420px faria o conteúdo vazar do grid. */
+.workspaceMaximized .codeArea {
+  min-height: 0;
+}
+
+.fileErrorBox {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--borderColor-danger-emphasis);
+  border-radius: var(--radius-md);
+  background: var(--bgColor-danger-muted);
+  color: var(--fgColor-danger);
+  font-size: 0.8125rem;
+}
+
+/* Selo do painel de prévia: lembra que o HTML passou por filtro. */
+.renderedBadge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--borderColor-success-muted);
+  background: color-mix(in srgb, var(--fgColor-success) 10%, transparent);
+  color: var(--fgColor-success);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: default;
+}
+
+/* ---- Corpo do documento renderizado ---------------------------------- */
+
+.markdown {
+  flex: 1;
+  overflow: auto;
+  padding: var(--space-5);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--fgColor-default);
+  overflow-wrap: anywhere;
+}
+
+.markdown > :first-child {
+  margin-top: 0;
+}
+
+.markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  margin: var(--space-6) 0 var(--space-3);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.markdown h1 {
+  font-size: 1.75rem;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+.markdown h2 {
+  font-size: 1.4rem;
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+.markdown h3 {
+  font-size: 1.15rem;
+}
+
+.markdown h4 {
+  font-size: 1rem;
+}
+
+.markdown h5 {
+  font-size: 0.9rem;
+}
+
+.markdown h6 {
+  font-size: 0.85rem;
+  color: var(--fgColor-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.markdown p {
+  margin: 0 0 var(--space-4);
+}
+
+/* `--brand-strong` em vez de `--brand-primary`: um link precisa de contraste de
+   texto, e branco sobre a marca fica em 4.2:1. */
+.markdown a {
+  color: var(--brand-strong);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.markdown a:hover {
+  color: var(--brand-strong-hover);
+}
+
+.markdown strong {
+  font-weight: 700;
+}
+
+.markdown del {
+  color: var(--fgColor-muted);
+}
+
+.markdown ul,
+.markdown ol {
+  margin: 0 0 var(--space-4);
+  padding-left: 1.5em;
+}
+
+.markdown li + li {
+  margin-top: var(--space-1);
+}
+
+.markdown li > ul,
+.markdown li > ol {
+  margin-top: var(--space-1);
+  margin-bottom: 0;
+}
+
+/* Checkboxes do GFM viram marcadores de texto em `lib/markdown.js`. */
+.markdown li > span[aria-hidden="true"] {
+  margin-right: 2px;
+}
+
+.markdown blockquote {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--brand-solid);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  /* `color-mix` porque `--bgColor-*-muted` é opaco no claro e translúcido no
+     escuro: o mesmo bloco apareceria preenchido num tema e vazado no outro. */
+  background: color-mix(in srgb, var(--brand-solid) 7%, transparent);
+  color: var(--fgColor-muted);
+}
+
+.markdown blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown code {
+  font-family: "JetBrains Mono", "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: 0.85em;
+  padding: 1px 5px;
+  border-radius: var(--radius-xs);
+  background: color-mix(in srgb, var(--fgColor-default) 9%, transparent);
+}
+
+.markdown pre {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: var(--radius-md);
+  /* `--bgColor-muted` é translúcido no escuro; sobre a superfície do card o
+     resultado é uma faixa levemente mais clara, que é o efeito desejado. */
+  background: var(--bgColor-inset);
+  overflow-x: auto;
+}
+
+.markdown pre code {
+  padding: 0;
+  background: none;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+.markdown img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+}
+
+.markdown hr {
+  margin: var(--space-6) 0;
+  border: 0;
+  border-top: 1px solid var(--borderColor-muted);
+}
+
+/* Contêiner rolável de tabela — a classe é passada por parâmetro para
+   `renderMarkdown`, porque CSS Module é hasheado por arquivo. */
+.tableWrap {
+  margin: 0 0 var(--space-4);
+  overflow-x: auto;
+}
+
+.markdown table {
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.markdown th,
+.markdown td {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--borderColor-muted);
+  text-align: left;
+  vertical-align: top;
+}
+
+.markdown th {
+  background: var(--bgColor-muted);
+  font-weight: 700;
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+@media (max-width: 820px) {
+  .panels {
+    grid-template-columns: 1fr;
+  }
+
+  .editorPanel,
+  .previewPanel {
+    min-height: 360px;
+  }
+
+  .codeArea {
+    min-height: 260px;
+  }
+
+  .workspaceMaximized {
+    padding: var(--space-2);
+  }
+
+  /*
+   * Maximizado no mobile: os dois painéis dividem a altura da tela e rolam
+   * internamente. Empilhados sem altura definida eles cresceriam até o
+   * `min-height` e a camada estouraria a viewport sem scroll visível.
+   */
+  .workspaceMaximized .panels {
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .workspaceMaximized .panelsSingle {
+    grid-template-rows: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .markdown {
+    padding: var(--space-4);
+    font-size: 0.9rem;
+  }
+
+  .fileName {
+    display: none;
+  }
+}

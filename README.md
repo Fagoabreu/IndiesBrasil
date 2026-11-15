@@ -20,7 +20,7 @@ Portal da comunidade de desenvolvedores indie brasileiros. Plataforma web com fe
 - **Home** com vitrine de conteúdo em destaque, tags em alta e sugestões de quem seguir.
 - **Posts** com texto e imagens, incorporação de conteúdo externo (YouTube, Vimeo, Twitch, Steam, Instagram etc.), **enquetes**, curtidas, comentários, compartilhamento por link, **embed público do post** e denúncia.
 - **Mensagens diretas** entre membros e entre membro e estúdio, com histórico, contador de não lidas, silenciar (e lista das silenciadas) e denúncia da conversa. O estúdio **só responde**: quem inicia é sempre o membro. Na caixa do estúdio, qualquer membro lê e responde em nome dele — e a moderação guarda quem digitou cada mensagem.
-- **Diretório de membros** com busca e filtros.
+- **Diretório de membros** com busca e filtros, incluindo o próprio perfil de quem está logado.
 
 ### Estúdios e obras
 
@@ -59,7 +59,7 @@ Portal da comunidade de desenvolvedores indie brasileiros. Plataforma web com fe
 
 ### Ferramentas
 
-- **Gerador de QR Code**, **recorte de imagem** (crop), **visualizador/formatador XML e JSON**, **visualizador de HTML** e **conversão de imagens para PDF**.
+- **Gerador de QR Code**, **recorte de imagem** (crop), **visualizador/formatador XML e JSON**, **visualizador de HTML**, **visualizador de Markdown**, **conversão de imagens para PDF** e **compressão de vídeo**.
 
 ### Administração e moderação
 

@@ -24,8 +24,9 @@ export function normalizeMemberQuery(value) {
  *
  * Reaproveita `GET /api/v1/users`, a mesma busca da página `/membros`: ela já
  * filtra conta ativada (convidar quem nunca confirmou o e-mail cria um convite
- * que ninguém vê) e já exclui o próprio usuário logado. Um endpoint novo de
- * busca seria a terceira cópia da mesma consulta.
+ * que ninguém vê). O `exclude_self=true` é necessário porque a rota passou a
+ * INCLUIR o leitor por padrão (o diretório mostra o próprio perfil) — aqui,
+ * convidar a si mesmo para o próprio estúdio é ruído.
  *
  * Mesmo formato do `useTagSuggest` (SWR com a URL como chave): assim digitar
  * rápido não dispara uma requisição por tecla, porque o SWR deduplica pela
@@ -33,7 +34,10 @@ export function normalizeMemberQuery(value) {
  */
 export function useUserSuggest(query) {
   const term = normalizeMemberQuery(query);
-  const key = term.length >= MEMBER_SUGGEST_MIN_LENGTH ? `/api/v1/users?q=${encodeURIComponent(term)}&limit=${MEMBER_SUGGEST_LIMIT}` : null;
+  const key =
+    term.length >= MEMBER_SUGGEST_MIN_LENGTH
+      ? `/api/v1/users?q=${encodeURIComponent(term)}&exclude_self=true&limit=${MEMBER_SUGGEST_LIMIT}`
+      : null;
 
   return useSWR(key, (url) => fetch(url).then((r) => r.json()));
 }
