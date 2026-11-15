@@ -28,7 +28,7 @@ Portal da comunidade de desenvolvedores indie brasileiros. Plataforma web com fe
 - Convites de participação no estúdio e **follow** de estúdios.
 - **Relacionamentos entre estúdios** (parceiro, distribuidora, publicadora, incubadora, investidora etc.).
 - Catálogos de **Jogos Digitais**, **Jogos de Mesa** e **Livros & Quadrinhos** com ficha completa, galeria de imagens, follow e reviews.
-- **Autoclassificação indicativa** por questionário (ClassInd/ECA Digital — jogos) e sugestões para jogos de mesa, livros e quadrinhos, com selos de **monetização** (Lei Felca).
+- **Autoclassificação indicativa** por questionário (ClassInd/ECA Digital — jogos) e sugestões para jogos de mesa, livros e quadrinhos, com selos de **monetização** (ECA Digital).
 - **Leitor de livros e quadrinhos digitais** em PDF no navegador.
 
 ### Artigos e educação
@@ -456,6 +456,26 @@ docker ps
 ```
 
 Você deve ver 5 containers: `postgres`, `indies-app`, `galene`, `nginx` e `certbot`.
+
+#### 4.3 Acessar o banco de produção (túnel SSH)
+
+O Postgres **não** fica aberto na internet: a única porta publicada é `127.0.0.1:5432`, aceita somente por processos do próprio servidor. O acesso de fora é por túnel SSH.
+
+No DBeaver (ou outro cliente), na aba **SSH**:
+
+| Campo | Valor |
+| --- | --- |
+| Host/IP | `SEU_DOMINIO` — porta `22` |
+| Autenticação | chave pública (`~/.ssh/id_rsa`) |
+| **Host remoto** | **`127.0.0.1`** |
+| **Porta remota** | `5432` |
+| Host local / porta local | `127.0.0.1` / `5433` (qualquer porta livre) |
+
+Na aba **Principal**, use `localhost:5433` com o banco e o usuário de `POSTGRES_DB`/`POSTGRES_USER`.
+
+> **Não use o IP do container** (`172.18.0.x`) como host remoto. Ele é atribuído pelo Docker na criação e muda quando outro container é recriado no deploy — o túnel passa a encaminhar para um endereço sem Postgres e o cliente mostra `EOFException`, como se o túnel tivesse parado de funcionar. `127.0.0.1` é o host, não o container, então não muda.
+
+Alternativa sem abrir porta nenhuma: `docker exec -it postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"`.
 
 ---
 

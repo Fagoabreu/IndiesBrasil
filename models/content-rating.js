@@ -34,9 +34,14 @@ export { RATING_LABELS, RATING_COLORS, RATING_ORDER };
 /**
  * Questionário para Jogos Digitais
  *
- * Baseado no Guia Prático ClassInd 5ª Ed (2025). As perguntas
- * cobrem os 3 eixos: Violência, Sexo/Nudez, Drogas.
- * A faixa etária é o máximo entre os 3 eixos.
+ * Baseado no Guia Prático ClassInd 5ª Ed (2025). As perguntas cobrem os eixos
+ * Violência, Sexo/Nudez e Drogas, mais um eixo de **Monetização** (ECA Digital
+ * — Lei nº 15.211/2025).
+ *
+ * `calculateGameRating` devolve o **maior** valor entre os eixos, incluindo
+ * monetização — decisão de produto mantida de propósito (ver o comentário no
+ * bloco de monetização daquela função). Consequência que precisa ser conhecida
+ * por quem mexer aqui: um jogo só com DLCs sai como 10 anos.
  */
 export const GAME_QUESTIONNAIRE = {
   title: "Classificação Indicativa — Jogo Digital",
@@ -289,9 +294,9 @@ export const GAME_QUESTIONNAIRE = {
     },
     {
       id: "monetization",
-      title: "Monetização e Compras (Lei Felca — PL 412/2022)",
+      title: "Monetização e Compras (ECA Digital — Lei nº 15.211/2025)",
       description:
-        "Avalie a presença de lootboxes, compras dentro do jogo e publicidade. Conforme o PL 412/2022 (Lei Felca), jogos com lootboxes pagas ou compras que configurem exploração comercial de vulneráveis devem ser sinalizados com selo próprio.",
+        "Avalie a presença de lootboxes, compras dentro do jogo e publicidade. Segundo o ECA Digital (Lei nº 15.211/2025), jogos com lootboxes pagas ou compras que configurem exploração comercial de vulneráveis devem ser sinalizados com selo próprio. As respostas desta seção também contam para a faixa etária.",
       questions: [
         {
           id: "m_lootboxes",
@@ -791,14 +796,25 @@ export function calculateGameRating(answers) {
     );
   }
 
-  // Monetização (Lei Felca — PL 412/2022)
+  // Monetização (ECA Digital — Lei nº 15.211/2025)
+  //
+  // **Decisão de produto, mantida de propósito**: a monetização ENTRA no
+  // cálculo da faixa etária, e por isso um jogo com apenas DLCs sai como "10
+  // anos" mesmo sem violência, sexo ou drogas. A alternativa (faixa só por
+  // conteúdo, monetização apenas como selo) foi considerada e **descartada**:
+  // o entendimento do projeto é que transparência comercial pesa na proteção
+  // de menor sob o ECA Digital, e o questionário já avisa que as respostas
+  // desta seção contam para a classificação.
+  //
+  // Não "simplifique" removendo este bloco: mudaria a classificação de todo
+  // jogo com monetização e rebaixaria jogos já publicados.
   const monetizationQuestions = ["m_lootboxes", "m_purchases", "m_ads"];
   const monetizationMax = getMaxFromAnswers(answers, monetizationQuestions);
   if (RATING_ORDER.indexOf(monetizationMax) > RATING_ORDER.indexOf(maxRating)) {
     maxRating = monetizationMax;
   }
 
-  // Flags de monetização para o selo à parte (Lei Felca)
+  // Flags de monetização para o selo à parte (ECA Digital)
   const monetizationFlags = {
     hasLootboxes: answers.m_lootboxes === "16" || answers.m_lootboxes === "18",
     hasInGamePurchases: answers.m_purchases === "12" || answers.m_purchases === "16" || answers.m_purchases === "18",
@@ -806,11 +822,10 @@ export function calculateGameRating(answers) {
   };
 
   if (monetizationMax !== "L") {
-    const flagParts = [];
-    if (monetizationFlags.hasLootboxes) flagParts.push("lootboxes pagas");
-    if (monetizationFlags.hasInGamePurchases) flagParts.push("compras no jogo");
-    if (monetizationFlags.hasExcessiveAds) flagParts.push("anúncios excessivos");
-    reasons.push(`Monetização (Lei Felca): classificação ${monetizationMax} — ${flagParts.join(", ") || "microtransações"}`);
+    // `RATING_LABELS` em vez do valor cru: "classificação 10" não diz de que
+    // unidade se trata, e é o rótulo que a pessoa lê no selo ("10 anos"). É a
+    // mesma forma que os questionários de mesa e de livro já usam.
+    reasons.push(`Monetização (ECA Digital): classificação ${RATING_LABELS[monetizationMax] || monetizationMax} — ${describeMonetization(answers)}`);
   }
 
   if (maxRating === "L") {
@@ -818,6 +833,64 @@ export function calculateGameRating(answers) {
   }
 
   return { rating: maxRating, reasons, monetizationFlags };
+}
+
+/**
+ * Descreve o que a pessoa **respondeu** sobre monetização.
+ *
+ * Antes o texto vinha das *flags* de selo, e caía num fallback fixo quando
+ * nenhuma delas acendia: quem respondia "apenas expansões ou DLCs" (valor `10`)
+ * — que de propósito **não** acende `hasInGamePurchases` — recebia
+ * `Monetização (ECA Digital): classificação 10 — microtransações`. O rótulo
+ * afirmava uma coisa que o formulário tinha negado, e o mesmo acontecia com
+ * "anúncios no menu" (valor `10`, sem `hasExcessiveAds`).
+ *
+ * Agora cada resposta de monetização tem sua própria descrição, indexada pelo
+ * valor escolhido. A flag responde "tem selo?"; esta função responde "o que foi
+ * declarado?", que é a pergunta certa para o motivo da classificação.
+ *
+ * @param {Object} answers respostas do questionário
+ * @returns {string} descrição das respostas não-neutras, ou o fallback neutro
+ */
+function describeMonetization(answers) {
+  const descriptions = [
+    {
+      id: "m_lootboxes",
+      byValue: {
+        16: "lootboxes pagas com probabilidades divulgadas",
+        18: "lootboxes pagas que afetam a jogabilidade",
+      },
+    },
+    {
+      id: "m_purchases",
+      byValue: {
+        10: "expansões e DLCs",
+        12: "itens cosméticos pagos",
+        16: "itens pagos com vantagem competitiva",
+        18: "compras predatórias",
+      },
+    },
+    {
+      id: "m_ads",
+      byValue: {
+        10: "anúncios em menus e telas de carregamento",
+        12: "anúncios entre fases",
+        14: "anúncios frequentes",
+        16: "anúncios excessivos",
+      },
+    },
+  ];
+
+  const parts = [];
+  for (const { id, byValue } of descriptions) {
+    const value = answers[id];
+    const description = value ? byValue[value] : undefined;
+    if (description) parts.push(description);
+  }
+
+  // Sem descrição só acontece com resposta fora do questionário; um motivo
+  // vago é melhor que nenhum, e nunca afirma algo que o formulário não disse.
+  return parts.length > 0 ? parts.join(", ") : "compras ou publicidade não detalhadas";
 }
 
 /**
@@ -1035,7 +1108,7 @@ const TABLE_DISPLAY = {
  * @param {string} rating  — "L" | "6" | "10" | "12" | "14" | "16" | "18"
  * @param {string[]} reasons — array de strings com os motivos
  * @param {string} userId  — quem está classificando
- * @param {Object} [monetizationFlags] — { hasLootboxes, hasInGamePurchases, hasExcessiveAds } (apenas para games, Lei Felca)
+ * @param {Object} [monetizationFlags] — { hasLootboxes, hasInGamePurchases, hasExcessiveAds } (apenas para games, ECA Digital)
  * @returns {Object} — item atualizado
  */
 async function saveRating(type, slug, rating, reasons, userId, monetizationFlags) {
@@ -1068,7 +1141,7 @@ async function saveRating(type, slug, rating, reasons, userId, monetizationFlags
   // Atualmente confiamos na autenticação do endpoint.
   void userId;
 
-  // Atualizar classificação indicativa + flags de monetização (Lei Felca, apenas games)
+  // Atualizar classificação indicativa + flags de monetização (ECA Digital, apenas games)
   if (type === "game" && monetizationFlags) {
     await database.query({
       text: `

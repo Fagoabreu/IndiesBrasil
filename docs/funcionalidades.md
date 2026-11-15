@@ -229,9 +229,9 @@ Nove abas, cada uma com seu editor:
 
 ### 5.5 Classificação, IA e monetização
 
-- **Classificação indicativa** (Livre, 6, 10, 12, 14, 16 e 18 anos) por questionário em etapas, alinhado ao ClassInd e ao ECA Digital. O selo escolhe a cor do texto pela luminância do fundo para manter contraste.
+- **Classificação indicativa** (Livre, 6, 10, 12, 14, 16 e 18 anos) por questionário em etapas, alinhado ao ClassInd e ao ECA Digital. O selo escolhe a cor do texto pela luminância do fundo para manter contraste. As respostas de **monetização contam para a faixa etária** (decisão do projeto: um jogo só com DLCs sai como 10 anos), e o questionário avisa isso.
 - **Selo de uso de IA em faixas de 0 a 5**, de "Sem Uso de IA" a "IA Autônoma", com modal explicando cada faixa. Nível não declarado aparece como "Não informado" — é um estado, não uma ausência.
-- **Selos Lei Felca (PL 412/2022)**: lootboxes, compras dentro do jogo e publicidade excessiva.
+- **Selos de monetização (ECA Digital — Lei nº 15.211/2025)**: lootboxes, compras dentro do jogo e publicidade excessiva, com o motivo descrevendo o que foi **respondido** no questionário (DLC é DLC, não "microtransação").
 - **Filtros de listagem** por classificação indicativa em jogos, jogos de mesa e livros, e por nível de IA também nos assets, incluindo "não classificado".
 
 ### 5.6 Press kits
