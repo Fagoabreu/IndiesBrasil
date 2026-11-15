@@ -81,6 +81,20 @@
 - `infra/**/*.js` excluido do lint.
 - Commits: Conventional Commits (`feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`).
 
+## Validacao (obrigatoria): `npm run dev` tem que funcionar
+
+- **Toda mudanca e validada com `npm run dev`**, nao so com lint e teste unitario. O comando encadeia `services:up` -> `Services:wait:database` -> `migrations:up` -> `ffmpeg:sync` -> `next dev`; e o unico que prova que a aplicacao sobe inteira. Lint verde e Jest verde com a aplicacao quebrada e entrega incompleta.
+- **Criterio de pronto**: `npm run dev` termina o encadeamento e o Next responde. Abrir (ou buscar por HTTP) a rota alterada e confirmar **200** com o conteudo esperado no HTML servido — `curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/<rota>`.
+- Se a mudanca e uma pagina, conferir que o HTML traz o titulo/marcador da tela. Pagina que responde 200 com a casca e erro de importacao so aparece no console de quem abre — o teste de integracao (`tests/integration/pages/`) existe para pegar isso.
+- Se a mudanca toca banco, confirmar que as migracoes rodaram (`migrations:up` no encadeamento). Ordem de migracao quebrada derruba o `npm run dev` inteiro, nao so o teste.
+- **Falha no `npm run dev` bloqueia a entrega**: nao entregar com o dev quebrado nem "contornar" com `npx next dev` pulando servicos. Causas comuns e o que conferir:
+  - porta 3000 ocupada por um processo anterior (encerrar antes de subir);
+  - Docker parado (`docker compose -f infra/compose.yaml ps`);
+  - core do ffmpeg ausente (`npm run ffmpeg:sync`);
+  - `Not run migration X is preceding already run migration Y` — ver a secao de migrations; o reparo e `npm run migrations:repair-order --dry-run` e depois sem `--dry-run`, nunca `up --no-check-order`.
+- `npx next dev` isolado serve para iterar rapido durante o desenvolvimento, **nao** substitui a validacao final: ele pula servicos, migracoes e `ffmpeg:sync`.
+- Testes de integracao (`npm test`) sobem a aplicacao pelo `next dev` do proprio script; use quando a mudanca tocar API, banco ou pagina com `getServerSideProps`.
+
 ## Git (revisao obrigatoria)
 
 - **NUNCA** fazer `merge` nem `push` automaticamente, sem ordem explicita do usuario.
@@ -200,6 +214,26 @@ Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESM
 - `formatBytes` e `downloadBlob` sairam de `pages/ferramentas/imagens-para-pdf.jsx` para **`lib/bytes.js`** e **`lib/download.js`**; as duas ferramentas importam de la. Duas copias divergem (uma arredondando diferente) e o numero da tela para de bater com o arquivo baixado.
 - Testes: `tests/unit/lib/videoPresets.test.js` (escala sem upscale, paridade, alvo, args) e `tests/integration/pages/toolsPages.test.js` (200 na pagina, core servido e com cache imutavel — o teste pega o script de sync nao ter rodado).
 
+## Visualizador de Markdown (`/ferramentas/mdviewer`)
+
+- Toda a conversao "Markdown colado -> HTML na pagina" mora em **`lib/markdown.js`** (modulo puro, testavel sem DOM), nunca na pagina. A ordem e fixa: `marked` -> `sanitizeHtml.sanitize()` -> pos-processamento. Reordenar (ou injetar HTML sem passar pelo sanitizador) e o unico jeito de abrir XSS aqui.
+- **`marked` e ESM-only** (`type: module`). Por isso ele entra em `EXTRA_PACKAGES` do `jest.config.js`, junto de `node-pg-migrate|glob`: sem isso o teste de `lib/markdown.js` falha com `Cannot use import statement outside a module` **e so o teste** — o Next transpila `node_modules` no bundle, entao o app continua funcionando e o erro parece um problema de teste.
+- Instancia propria de `Marked` no escopo do modulo: a instancia global (`marked.parse` direto) guarda opcoes compartilhadas no processo, e uma pagina que ligasse `breaks` mudaria a outra.
+- **Pos-processamento depois do sanitizador** (e so acrescentando atributos a tags ja aprovadas):
+  - `<img>` remoto vira `/api/v1/image-proxy?url=<encodeURIComponent>`. Sem isso o README com imagem de `raw.githubusercontent` renderiza em `npm run dev` (que nao aplica CSP) e **quebra em producao sem erro visivel** — a CSP de `deploy/nginx/indies.https.conf` so libera `img-src` para hosts conhecidos. `data:`/`blob:`/caminhos relativos ficam intactos.
+  - `<a>` externo ganha `target="_blank"` + `rel="noopener noreferrer"`; ancora (`#`) e `mailto:` ficam na mesma aba.
+  - `<table>` ganha um contêiner com `overflow-x`; **a classe vem por parametro** (`tableWrapperClass`), porque CSS Module e hasheado por arquivo e uma string fixa no modulo puro viraria `className` sem CSS.
+- **Lista de tarefas**: o sanitizador nao permite `<input>`, entao `[x]`/`[ ]` viram marcadores de texto (`☑`/`☐`) em `<span>` antes da sanitizacao. Sem isso a caixa desaparecia da lista.
+- A pagina usa `useDeferredValue` em vez de debounce manual: o lint do projeto recusa `setState` sincrono no corpo do efeito (`react-hooks/set-state-in-effect` e **erro**), e o valor adiado mantem a digitacao responsiva num documento grande.
+- **Maximizar** e uma camada `position: fixed; inset: 0` com `Escape` para sair — **nao** a Fullscreen API (falha dentro de iframe, exige gesto e esconde o proprio botao "Restaurar"). O scroll do `body` e travado enquanto esta maximizado e restaurado na limpeza do efeito. Duas condicoes para funcionar, e as duas ja falharam:
+  - **nenhum ancestral com `transform`** (ou `filter`, `backdrop-filter`, `perspective`, `contain`, `container-type`): qualquer um deles vira bloco de contencao do `position: fixed`, e a camada cobre so a caixa do ancestral. `.page-transition` (o wrapper de toda pagina em `pages/_app.js`) usava `animation ... both`, que **retem** o `translateY(0)` do keyframe — a camada aparecia limitada a coluna de conteudo, abaixo do header e a direita da sidebar. A animacao agora usa `backwards` (`backwards` aplica o `from` antes de comecar e devolve os valores normais no fim; resultado visual identico ao de `both`). **Nao reintroduza `both`/`forwards` ali**: `tests/unit/css/pageTransition.test.js` falha se alguem fizer isso.
+  - **a camada usa a cor da PAGINA** (`--bgColor-inset`), nao a do painel: os paineis sao `--bgColor-default` e precisam subir um degrau. Com o mesmo token nos dois (no escuro, `#0d1117` sobre `#0d1117`) os paineis somem dentro da camada.
+  - `grid-template-rows: minmax(0, 1fr)` na area dos paineis e `min-height: 0` nos filhos: sem o piso zero o grid respeita o `min-height: 520px` do painel e a camada estoura a viewport em vez de rolar por dentro.
+  - Estado ativo do alternador de modos usa tom de marca (`color-mix` sobre a trilha), nao `--bgColor-default` — no escuro esse token e mais escuro que a trilha e a aba selecionada parecia a desabilitada.
+- O arquivo `.html` exportado leva um bloco `<style>` **com cores literais**: ele sai do site e vai abrir onde nao existe `--fgColor-default` nem tema por cookie; token ali resolveria para vazio. Nao "tokenize" esse bloco.
+- O `<input type="file">` da pagina **nao** passa pelo `ImageUploader` — e documento, nao imagem (mesma familia das excecoes ja abertas para PDF e video).
+- Testes: `tests/unit/lib/markdown.test.js` (estrutura GFM, payloads de XSS fixados, proxy de imagem, `rel` de link, contêiner de tabela, teto de tamanho) e `tests/integration/pages/toolsPages.test.js` (200 na pagina).
+
 ## Convite de membro do estudio (autocomplete)
 
 - O campo de convite (`pages/estudios/[slug]/configuracoes.js`, aba Equipe) usa `components/Studio/InviteMemberField.jsx`: busca enquanto digita, navega com seta/Enter/Escape, e marca quem **ja e membro** ou tem **convite pendente** (nao selecionavel).
@@ -216,6 +250,17 @@ Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESM
 - O estilo de `.btnOutline` mora em `components/Studio/StudioActionButton.module.css` e a pagina **importa esse modulo** para os dois botoes que nao passam pelo componente (Voltar, mensagem). Copia em `studio.module.css` divergiria — e a classe e hasheada por arquivo, entao uma regra da pagina nunca alcancaria o botao do componente.
 - Mobile: o cabeçalho do estudio empilha em **≤700px** (nao mais so em ≤480): com 122px de recuo do logo + ~135px do QR, o `flex-wrap` quebrava os botoes em linhas irregulares (2, 2, 1). Os botoes viram grid de 2 colunas com alvo de 44px.
 
+## Destaques da home (`/api/v1/highlights`)
+
+- **3 itens por tipo** (`HIGHLIGHTS_PER_TYPE`), 4 tipos: jogos, jogos de mesa, livros e assets. Era `LIMIT 1` por tipo — a vitrine parecia "um exemplo de cada coisa".
+- `lib/highlights.js` e o **registro unico** (quantidade por tipo, ordem, rotulos, rotas e `shouldGroupHighlights`), importado pela rota **e** pela pagina. A constante nao mora na rota porque ela importa `infra/database` e levaria o pool do `pg` para o bundle do cliente.
+- **Filtro de moderacao em cada tipo** (conteudo bloqueado e estudio bloqueado), igual ao das listagens: o endpoint nao tinha esse filtro e um destaque podia levar a uma pagina 404. Verificado: os livros do estudio bloqueado no banco local deixaram de aparecer.
+- "Tem imagem" = o que o card desenha (`coverExpression IS NOT NULL`, ou video de galeria em jogos e boardgames). **Asset so entra com capa**; capa externa (`cover_url_external`) so vale em livros.
+- A ordem da resposta (games, boardgames, books, assets) e o que permite o layout **uma coluna por tipo** (`grid-auto-flow: column` + `grid-template-rows: repeat(3, auto)`, em `min-width: 1041px`), aplicado so quando `shouldGroupHighlights(total)` — com 4 itens, agrupar por coluna deixaria uma coluna de 3 e outra de 1.
+- **Nao usar carrossel** aqui: 3 itens por tipo nao transbordam no desktop, e um controle de rolagem que nao rola e affordance falsa. Quatro colunas (e nao tres) mantem a secao em 3 linhas (~800px em vez de ~1060px).
+- O `sizes` do `<Image>` e `25vw` no topo da faixa: com quatro colunas, `33vw` fazia o Next baixar imagem maior que o card.
+- Testes: `tests/unit/lib/highlights.test.js` e `tests/integration/api/v1/highlights/index.test.js` (limite por tipo, assets com e sem capa, conteudo bloqueado).
+
 ## Diretorio de membros (`/membros`)
 
 - Ordenacao: `lib/memberSort.js` e o registro unico (campos, sentidos, rotulos e o parser que a tela e a rota usam). O SQL de cada criterio fica em `models/user.js` (`MEMBER_SORT_SQL`) — a lista de chaves e compartilhada, a consulta nao.
@@ -226,6 +271,7 @@ Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESM
 - A resposta traz `sort` (`campo:ordem`) junto de `items`/`total`/`has_more`/`next_cursor`: quem pagina precisa saber a que criterio o cursor pertence.
 - A ordenacao e sincronizada na URL (`?sort=reputation&order=desc`), omitida no padrao. Na aba "Seguindo" o seletor nao aparece (mesma condicao da busca).
 - Testes em `tests/unit/lib/memberSort.test.js` e `tests/integration/api/v1/users/get.test.js` (bloco "ordenacao").
+- **O leitor faz parte da lista** (desde a correcao do "procuro meu perfil e nao acho"): a exclusao do proprio usuario deixou de ser incondicional e virou **opt-in** em `findUsers` (`excludeSelf`, exposta como `?exclude_self=true`). O diretorio nao passa o parametro; `WhoToFollow` (`isfollowing=false`) e `UseUserSuggest` (convite do estudio) passam, porque sugerir que a pessoa siga ou convide a si mesma e ruido. O guard `$1::uuid IS NULL OR u.id <> $1::uuid` no SQL e obrigatorio: com leitor anonimo, `u.id <> NULL` avalia para `NULL` e a lista sairia vazia. Fixado em `tests/integration/api/v1/users/get.test.js` (bloco "isfollowing filter").
 
 - A lista publica mostra **so conta ativada** (`'create:session' = ANY(u.features)`), a mesma definicao de `user_accounts` em `models/serverStatus.js`. Antes nao havia filtro: o diretorio listava cadastro nunca ativado e `/membros` mostrava mais gente que a home (47 x 41 em producao) — e publicava perfil de quem nunca confirmou o e-mail.
 - `GET /api/v1/users?status=inactive` lista as contas **travadas**: nunca ativadas, com token de ativacao existente e nenhum aproveitavel (todos vencidos ou usados). Conta sem token nenhum nao entra (nao e o caso da aba) e conta com token valido tambem nao (ainda pode ativar).

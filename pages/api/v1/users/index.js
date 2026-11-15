@@ -30,7 +30,7 @@ async function postHandler(request, response) {
 
 async function getHandler(request, response) {
   const userTryingToGet = request.context.user;
-  const { isfollowing, cursor, q, limit, status, sort, order, profession, tool, include_filters } = request.query;
+  const { isfollowing, cursor, q, limit, status, sort, order, profession, tool, include_filters, exclude_self } = request.query;
   const userId = request.context.user.id;
 
   const rawStatus = Array.isArray(status) ? status[0] : status;
@@ -69,6 +69,13 @@ async function getHandler(request, response) {
   // cada tecla e não desenha seletor nenhum.
   const rawIncludeFilters = Array.isArray(include_filters) ? include_filters[0] : include_filters;
 
+  // `?exclude_self=true`: remove o leitor da lista. O padrão é INCLUIR — o
+  // diretório mostra o próprio perfil como qualquer outro membro. Quem precisa
+  // de "outras pessoas" (sugestão de quem seguir, autocomplete de convite) pede
+  // a exclusão.
+  const rawExcludeSelf = Array.isArray(exclude_self) ? exclude_self[0] : exclude_self;
+  const excludeSelf = rawExcludeSelf === "true";
+
   // A lista de contas travadas expõe e-mail e vencimento de token — dados que
   // não pertencem à listagem pública. `read:user` (quem está logado) não basta.
   if (includeInactive && !authorization.can(userTryingToGet, "read:admin")) {
@@ -91,6 +98,7 @@ async function getHandler(request, response) {
     // As opções dos seletores só fazem sentido na primeira página: o recorte não
     // muda ao paginar, e a lista de inativos não tem portfólio para contar.
     includeFilters: rawIncludeFilters === "true" && !cursor && !includeInactive,
+    excludeSelf,
   });
 
   // Contas travadas: resposta montada campo a campo. `filterOutput("read:user")`

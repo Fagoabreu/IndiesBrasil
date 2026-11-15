@@ -34,6 +34,7 @@ import {
   TrashIcon,
   ArchiveIcon,
   ListUnorderedIcon,
+  MarkdownIcon,
   SearchIcon,
   PlusIcon,
 } from "@primer/octicons-react";
@@ -321,6 +322,12 @@ export default function LeftSidebarComponent({ onNavigate }) {
                 <FileCodeIcon />
               </NavList.LeadingVisual>
               Visualizador HTML
+            </NavList.Item>
+            <NavList.Item as={Link} href="/ferramentas/mdviewer" onClick={onNavigate}>
+              <NavList.LeadingVisual>
+                <MarkdownIcon />
+              </NavList.LeadingVisual>
+              Visualizador Markdown
             </NavList.Item>
             <NavList.Item as={Link} href="/ferramentas/imagens-para-pdf" onClick={onNavigate}>
               <NavList.LeadingVisual>

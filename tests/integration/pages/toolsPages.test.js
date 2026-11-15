@@ -29,6 +29,19 @@ describe("Ferramentas que dependem de arquivo estático", () => {
     expect(html).toContain("WhatsApp");
   });
 
+  test("A página do visualizador de Markdown responde 200", async () => {
+    const response = await fetch(`${origin}/ferramentas/mdviewer`);
+
+    expect(response.status).toBe(200);
+
+    const html = await response.text();
+    expect(html).toContain("Visualizador Markdown");
+    // O espaço de trabalho precisa estar no HTML servido: se o componente
+    // quebrar na importação, a página responde 200 com a casca e o erro só
+    // aparece no console de quem abre.
+    expect(html).toContain("Prévia");
+  });
+
   test("O core do ffmpeg.wasm é servido e fica em cache imutável", async () => {
     const response = await fetch(`${origin}/ffmpeg/ffmpeg-core.wasm`, { method: "HEAD" });
 

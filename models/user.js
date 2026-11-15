@@ -1038,8 +1038,14 @@ function normalizeMembersLimit(limit) {
 //   não sai sozinho: o e-mail/CPF/username continuam ocupados e a pessoa não
 //   consegue ativar. Só administradores podem pedir esta lista (a rota faz o
 //   gate); `email` e a data do token exposto só aparecem nela.
+//
+// `excludeSelf` (padrão `false`) tira o leitor do resultado. O padrão é
+// **incluir**: o diretório mostra o próprio perfil como qualquer outro membro.
+// Só quem quer "outras pessoas" (who-to-follow, autocomplete de convite) pede a
+// exclusão.
 async function findUsers(options = {}) {
   const { userId, isfollowing, q } = options;
+  const excludeSelf = options.excludeSelf === true;
   const includeInactive = options.status === "inactive";
   const limit = normalizeMembersLimit(options.limit);
   const sort = normalizeMembersSort(options.sort);
@@ -1119,9 +1125,36 @@ async function findUsers(options = {}) {
           on ub.id = u.background_image
     `;
 
-  // $1 ($1::uuid IS NULL) cobre o caso anônimo, em que o usuário não tem id.
-  const conditions = ["($1::uuid IS NULL OR u.id <> $1::uuid)"];
-  const whereValues = [userId ?? null];
+  /*
+   * $1 é sempre o leitor logado (ou `NULL` para visitante) e $2 é a decisão de
+   * excluí-lo.
+   *
+   * A condição entra **sempre**, mesmo quando a exclusão não foi pedida: com
+   * `$2 = false` ela é verdadeira para toda linha e não filtra nada. O motivo
+   * de existir é o bind, não o filtro — a consulta de `total` não tem o JOIN de
+   * `baseQuery` (que usa `$1` para `is_following`), então sem nenhuma condição
+   * referenciando `$1` o Postgres recusa o valor sobrando com
+   * `bind message supplies 1 parameters, but prepared statement requires 0`, e
+   * `/membros` (e qualquer listagem sem filtro de seguidos) respondia **500**.
+   * Escrever a condição como parâmetro evita o "predicado neutro" tautológico:
+   * ela tem significado próprio.
+   *
+   * A própria pessoa FAZ parte da lista por padrão.
+   *
+   * Antes a exclusão era incondicional e o diretório nunca mostrava o membro
+   * logado: em `/membros` ele procurava o próprio perfil, não achava, e a
+   * leitura era "a busca está quebrada". O who-to-follow (`?isfollowing=false`)
+   * e o autocomplete de convite, por outro lado, precisam da lista SEM o
+   * leitor — sugerir que alguém siga a si mesmo, ou convide a si mesmo, é
+   * ruído. Por isso a exclusão passou a ser **opt-in** (`excludeSelf`, exposta
+   * como `?exclude_self=true`), e não o comportamento padrão.
+   *
+   * O guard `$1::uuid IS NULL` é obrigatório: com leitor anônimo, `u.id <> NULL`
+   * avalia para `NULL` (nunca verdadeiro) e a lista sairia vazia.
+   */
+  const conditions = [];
+  const whereValues = [userId ?? null, excludeSelf];
+  conditions.push("(NOT $2::boolean OR $1::uuid IS NULL OR u.id <> $1::uuid)");
 
   // População da lista. A condição de ativo é a MESMA de `serverStatus`
   // (`user_accounts`), e é por isso que o número de `/membros` e o da home

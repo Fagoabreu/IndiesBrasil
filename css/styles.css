@@ -17,7 +17,18 @@
 ======================================== */
 
 .page-transition {
-  animation: page-fade-slide-up 0.25s ease-out both;
+  /*
+   * `backwards`, e NÃO `both`: `both`/`forwards` retêm o `transform` do último
+   * keyframe (`translateY(0)`), e um `transform` retido — mesmo valendo zero —
+   * torna este elemento **bloco de contenção para `position: fixed`**. Todo
+   * `position: fixed` dentro de uma página passava a ser posicionado em relação
+   * a esta div (a coluna de conteúdo, abaixo do header e à direita da sidebar)
+   * em vez da viewport. Foi assim que a camada maximizada do visualizador de
+   * Markdown apareceu cortada. `backwards` aplica o `from` antes da animação
+   * começar (sem flash de conteúdo) e devolve os valores normais quando ela
+   * termina, então o resultado visual é idêntico ao de `both`.
+   */
+  animation: page-fade-slide-up 0.25s ease-out backwards;
 }
 
 @keyframes page-fade-slide-up {

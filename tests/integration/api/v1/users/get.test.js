@@ -753,7 +753,10 @@ describe("GET /api/v1/users", () => {
         const { response, body } = await getUsers("?limit=50", cookie);
 
         expect(response.status).toBe(200);
-        expect(body.items.map((item) => item.username)).not.toContain(loggedUser.username);
+        // O leitor aparece na própria lista, como qualquer outro membro — e,
+        // obviamente, sem seguir a si mesmo.
+        expect(body.items.map((item) => item.username)).toContain(loggedUser.username);
+        expect(body.items.find((item) => item.username === loggedUser.username).is_following).toBe(false);
         expect(body.items.find((item) => item.username === followedUser.username).is_following).toBe(true);
         expect(body.items.find((item) => item.username === notFollowedUser.username).is_following).toBe(false);
       });
@@ -771,8 +774,35 @@ describe("GET /api/v1/users", () => {
         const usernames = body.items.map((item) => item.username);
 
         expect(usernames).toContain(notFollowedUser.username);
+        // Ninguém segue a si mesmo, então o leitor está neste recorte.
+        expect(usernames).toContain(loggedUser.username);
         expect(usernames).not.toContain(followedUser.username);
+      });
+
+      test("`exclude_self=true` remove o leitor da lista", async () => {
+        // É o recorte de "outras pessoas": sugestão de quem seguir e
+        // autocomplete de convite usam este parâmetro.
+        const { body } = await getUsers("?exclude_self=true&limit=50", cookie);
+        const usernames = body.items.map((item) => item.username);
+
         expect(usernames).not.toContain(loggedUser.username);
+        expect(usernames).toContain(followedUser.username);
+        expect(usernames).toContain(notFollowedUser.username);
+      });
+
+      test("`exclude_self=true` não zera a lista do visitante anônimo", async () => {
+        // Sem sessão não existe "próprio usuário": a condição `u.id <> NULL`
+        // avaliaria para NULL e o diretório sairia vazio.
+        const { response, body } = await getUsers("?exclude_self=true&limit=50");
+
+        expect(response.status).toBe(200);
+        expect(body.items).toHaveLength(3);
+      });
+
+      test("`exclude_self` só vale no valor `true`", async () => {
+        const { body } = await getUsers("?exclude_self=false&limit=50", cookie);
+
+        expect(body.items.map((item) => item.username)).toContain(loggedUser.username);
       });
 
       test("Combines the search term with the following filter", async () => {
