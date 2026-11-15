@@ -81,14 +81,14 @@ describe("lib/markdown.js", () => {
     const payloads = [
       "<script>alert(1)</script>",
       "<img src=x onerror=alert(1)>",
-      "<iframe src=\"https://exemplo.com\"></iframe>",
+      '<iframe src="https://exemplo.com"></iframe>',
       "<style>body{display:none}</style>",
-      "<object data=\"x\"></object>",
-      "<embed src=\"x\">",
+      '<object data="x"></object>',
+      '<embed src="x">',
       "[clique](javascript:alert(1))",
-      "<a href=\"&#106;avascript:alert(1)\">clique</a>",
-      "<div onmouseover=\"alert(1)\">passe o mouse</div>",
-      "<p style=\"position:fixed;inset:0\">sobreposição</p>",
+      '<a href="&#106;avascript:alert(1)">clique</a>',
+      '<div onmouseover="alert(1)">passe o mouse</div>',
+      '<p style="position:fixed;inset:0">sobreposição</p>',
     ];
 
     test.each(payloads)("neutraliza %s", (payload) => {

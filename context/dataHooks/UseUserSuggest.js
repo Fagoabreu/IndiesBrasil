@@ -35,9 +35,7 @@ export function normalizeMemberQuery(value) {
 export function useUserSuggest(query) {
   const term = normalizeMemberQuery(query);
   const key =
-    term.length >= MEMBER_SUGGEST_MIN_LENGTH
-      ? `/api/v1/users?q=${encodeURIComponent(term)}&exclude_self=true&limit=${MEMBER_SUGGEST_LIMIT}`
-      : null;
+    term.length >= MEMBER_SUGGEST_MIN_LENGTH ? `/api/v1/users?q=${encodeURIComponent(term)}&exclude_self=true&limit=${MEMBER_SUGGEST_LIMIT}` : null;
 
   return useSWR(key, (url) => fetch(url).then((r) => r.json()));
 }

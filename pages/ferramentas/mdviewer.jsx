@@ -1,6 +1,17 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@primer/react";
-import { CheckIcon, CopyIcon, DownloadIcon, EyeIcon, MarkdownIcon, PencilIcon, ScreenFullIcon, ScreenNormalIcon, TrashIcon, UploadIcon } from "@primer/octicons-react";
+import {
+  CheckIcon,
+  CopyIcon,
+  DownloadIcon,
+  EyeIcon,
+  MarkdownIcon,
+  PencilIcon,
+  ScreenFullIcon,
+  ScreenNormalIcon,
+  TrashIcon,
+  UploadIcon,
+} from "@primer/octicons-react";
 
 import PageHeader from "@/components/PageHeader";
 import SeoHead from "@/components/SeoHead";
@@ -333,9 +344,7 @@ export default function MarkdownViewerPage() {
                 <span className={shared.charCount}>
                   {dragOver ? "Solte o arquivo para abrir" : fileName ? `Arquivo: ${fileName}` : "Arraste um arquivo .md para esta área"}
                 </span>
-                <span className={shared.charCount}>
-                  {Math.min(100, Math.round((input.length / MAX_MARKDOWN_LENGTH) * 100))}% do limite
-                </span>
+                <span className={shared.charCount}>{Math.min(100, Math.round((input.length / MAX_MARKDOWN_LENGTH) * 100))}% do limite</span>
               </div>
             </section>
           )}
@@ -352,9 +361,7 @@ export default function MarkdownViewerPage() {
               </div>
 
               {result.error === "too-large" && (
-                <div className={shared.errorBox}>
-                  Documento muito grande. O limite é {(MAX_MARKDOWN_LENGTH / 1000).toFixed(0)} KB de Markdown.
-                </div>
+                <div className={shared.errorBox}>Documento muito grande. O limite é {(MAX_MARKDOWN_LENGTH / 1000).toFixed(0)} KB de Markdown.</div>
               )}
 
               {result.html ? (

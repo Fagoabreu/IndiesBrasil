@@ -24,14 +24,14 @@ A Indies Brasil é o portal da comunidade de desenvolvimento de jogos independen
 
 ### Números do projeto
 
-| Item | Quantidade |
-| --- | --- |
-| Páginas (fora da API) | 80 |
-| Rotas de API | 176 |
-| Arquivos em `models/` | 44 |
-| Migrações de banco | 101 |
-| Arquivos em `components/` | 95 |
-| Arquivos de teste | 161 |
+| Item                      | Quantidade |
+| ------------------------- | ---------- |
+| Páginas (fora da API)     | 80         |
+| Rotas de API              | 176        |
+| Arquivos em `models/`     | 44         |
+| Migrações de banco        | 101        |
+| Arquivos em `components/` | 95         |
+| Arquivos de teste         | 161        |
 
 Stack: Next.js (Pages Router), React, Primer React, PostgreSQL com `node-pg-migrate`, Cloudinary para imagens, Galene para webconferência e `ffmpeg.wasm` para compressão de vídeo no cliente.
 
@@ -124,16 +124,16 @@ Stack: Next.js (Pages Router), React, Primer React, PostgreSQL com `node-pg-migr
 
 - **Pontos por contribuição real**, com limite diário por ação:
 
-| Ação | Pontos | Limite diário |
-| --- | --- | --- |
-| Post criado | 2 | 5 |
-| Comentário criado | 1 | 20 |
-| Post curtido | 1 | 50 |
-| Estúdio criado | 15 | — |
-| Jogo / jogo de mesa / livro publicado | 8 | 5 |
-| Perfil profissional preenchido | 3 | — |
-| Denúncia validada | 10 | — |
-| Denúncia arquivada | -5 | — |
+| Ação                                  | Pontos | Limite diário |
+| ------------------------------------- | ------ | ------------- |
+| Post criado                           | 2      | 5             |
+| Comentário criado                     | 1      | 20            |
+| Post curtido                          | 1      | 50            |
+| Estúdio criado                        | 15     | —             |
+| Jogo / jogo de mesa / livro publicado | 8      | 5             |
+| Perfil profissional preenchido        | 3      | —             |
+| Denúncia validada                     | 10     | —             |
+| Denúncia arquivada                    | -5     | —             |
 
 - **Níveis:** Novato (0), Membro Ativo (15), Confiável (50), Referência (100). Não é gamificação punitiva: é sinal de atividade e confiança.
 - **Painel de reputação** com o extrato por ação.
@@ -169,17 +169,17 @@ Stack: Next.js (Pages Router), React, Primer React, PostgreSQL com `node-pg-migr
 
 Nove abas, cada uma com seu editor:
 
-| Aba | O que faz |
-| --- | --- |
-| **Perfil** | Dados, descrição, história e endereço |
-| **Equipe** | Membros, papéis e convites |
-| **Contatos** | Canais e redes sociais |
-| **Jogos** | Cadastro de jogos digitais (informações, mídia e lojas) |
+| Aba               | O que faz                                                          |
+| ----------------- | ------------------------------------------------------------------ |
+| **Perfil**        | Dados, descrição, história e endereço                              |
+| **Equipe**        | Membros, papéis e convites                                         |
+| **Contatos**      | Canais e redes sociais                                             |
+| **Jogos**         | Cadastro de jogos digitais (informações, mídia e lojas)            |
 | **Jogos de Mesa** | Cadastro de jogos de tabuleiro, cartas e RPG (informações e mídia) |
-| **Publicações** | Livros, quadrinhos e PDFs (informações, capa, PDF e lojas) |
-| **Streaming** | Canais da Twitch e do YouTube |
-| **Assets** | Pacotes para game dev, com categorias e licença |
-| **Serviços** | O que o estúdio presta, com resumo e valor de referência |
+| **Publicações**   | Livros, quadrinhos e PDFs (informações, capa, PDF e lojas)         |
+| **Streaming**     | Canais da Twitch e do YouTube                                      |
+| **Assets**        | Pacotes para game dev, com categorias e licença                    |
+| **Serviços**      | O que o estúdio presta, com resumo e valor de referência           |
 
 ---
 
@@ -355,17 +355,18 @@ Nove abas, cada uma com seu editor:
 
 sete utilitários gratuitos, sem instalação e sem upload para servidor de terceiros:
 
-| Ferramenta | Rota | O que faz |
-| --- | --- | --- |
-| **Gerador de QR Code** | `/ferramentas/qrgen` | QR com personalização de cores e marca central, download em imagem |
-| **Recortar imagem** | `/ferramentas/imagecrop` | Recorte com zoom, rotação e proporções predefinidas |
-| **Visualizador XML/JSON** | `/ferramentas/viewer` | Formatação, validação e navegação por estrutura |
-| **Visualizador HTML** | `/ferramentas/htmlviewer` | Renderização de HTML colado em área isolada |
-| **Visualizador Markdown** | `/ferramentas/mdviewer` | Prévia de arquivo `.md` ou de texto colado, lado a lado com o código |
-| **Imagens para PDF** | `/ferramentas/imagens-para-pdf` | Junta imagens em PDF na ordem de envio e comprime PDFs existentes |
-| **Comprimir vídeo** | `/ferramentas/comprimir-video` | Compressão com `ffmpeg.wasm`, 100% no navegador |
+| Ferramenta                | Rota                            | O que faz                                                            |
+| ------------------------- | ------------------------------- | -------------------------------------------------------------------- |
+| **Gerador de QR Code**    | `/ferramentas/qrgen`            | QR com personalização de cores e marca central, download em imagem   |
+| **Recortar imagem**       | `/ferramentas/imagecrop`        | Recorte com zoom, rotação e proporções predefinidas                  |
+| **Visualizador XML/JSON** | `/ferramentas/viewer`           | Formatação, validação e navegação por estrutura                      |
+| **Visualizador HTML**     | `/ferramentas/htmlviewer`       | Renderização de HTML colado em área isolada                          |
+| **Visualizador Markdown** | `/ferramentas/mdviewer`         | Prévia de arquivo `.md` ou de texto colado, lado a lado com o código |
+| **Imagens para PDF**      | `/ferramentas/imagens-para-pdf` | Junta imagens em PDF na ordem de envio e comprime PDFs existentes    |
+| **Comprimir vídeo**       | `/ferramentas/comprimir-video`  | Compressão com `ffmpeg.wasm`, 100% no navegador                      |
 
 Sobre o visualizador de Markdown:
+
 - **Abre arquivo `.md`** (arrastar ou botão) ou aceita texto colado, com prévia atualizada enquanto se digita.
 - **Três modos de visualização**: lado a lado, só prévia e só código, além de **maximizar** o espaço de trabalho (tela cheia com `Esc` para sair).
 - **GFM**: títulos, listas (inclusive listas de tarefas), tabelas, citação, riscado, blocos de código e imagens.
@@ -373,6 +374,7 @@ Sobre o visualizador de Markdown:
 - **Seguro por desenho**: o HTML gerado passa pelo sanitizador (sem `script`, `iframe`, `style` inline, handlers `on*` ou `javascript:`), e imagens remotas entram pelo proxy de imagem para funcionar dentro da CSP de produção.
 
 Sobre a compressão de vídeo:
+
 - **O arquivo nunca sai da máquina** — não há upload, fila nem storage.
 - **Presets**: status do WhatsApp, redes sociais (economia), WhatsApp como documento e alta qualidade (Full HD).
 - **Alvo em MB inclui o áudio**, com piso de bitrate para não gerar vídeo ilegível.
@@ -447,39 +449,39 @@ Sobre a compressão de vídeo:
 
 ### Públicas e de comunidade
 
-| Rota | Conteúdo |
-| --- | --- |
-| `/` | Home: proposta, métricas, destaques (até 3 jogos, 3 jogos de mesa, 3 livros e 3 assets), agenda, depoimentos e press kit |
-| `/posts` | Feed da comunidade |
-| `/membros` | Diretório de membros |
-| `/estudios` | Diretório de estúdios |
-| `/jogos` | Catálogo de jogos digitais |
-| `/jogos-de-mesa` | Catálogo de jogos de mesa |
-| `/quadrinhos` | Catálogo de livros e quadrinhos |
-| `/assets` | Catálogo de assets |
-| `/noticias` | Notícias |
-| `/analises` | Análises e reviews |
-| `/estudos` | Cursos |
-| `/agenda` | Agenda de eventos |
-| `/streams` | Streams ao vivo |
-| `/servicos` | Diretório de serviços |
-| `/presskit` | Press kit oficial da plataforma |
-| `/como-publicar` | Guia de publicação |
-| `/ferramentas/*` | Sete ferramentas |
-| `/status` | Status do servidor |
+| Rota             | Conteúdo                                                                                                                 |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `/`              | Home: proposta, métricas, destaques (até 3 jogos, 3 jogos de mesa, 3 livros e 3 assets), agenda, depoimentos e press kit |
+| `/posts`         | Feed da comunidade                                                                                                       |
+| `/membros`       | Diretório de membros                                                                                                     |
+| `/estudios`      | Diretório de estúdios                                                                                                    |
+| `/jogos`         | Catálogo de jogos digitais                                                                                               |
+| `/jogos-de-mesa` | Catálogo de jogos de mesa                                                                                                |
+| `/quadrinhos`    | Catálogo de livros e quadrinhos                                                                                          |
+| `/assets`        | Catálogo de assets                                                                                                       |
+| `/noticias`      | Notícias                                                                                                                 |
+| `/analises`      | Análises e reviews                                                                                                       |
+| `/estudos`       | Cursos                                                                                                                   |
+| `/agenda`        | Agenda de eventos                                                                                                        |
+| `/streams`       | Streams ao vivo                                                                                                          |
+| `/servicos`      | Diretório de serviços                                                                                                    |
+| `/presskit`      | Press kit oficial da plataforma                                                                                          |
+| `/como-publicar` | Guia de publicação                                                                                                       |
+| `/ferramentas/*` | Sete ferramentas                                                                                                         |
+| `/status`        | Status do servidor                                                                                                       |
 
 ### Autenticadas
 
-| Rota | Conteúdo |
-| --- | --- |
-| `/perfil/[username]` | Perfil e abas |
-| `/perfil/[username]/configuracoes` | Edição do perfil |
-| `/perfil/[username]/curriculo` | Currículo para impressão |
-| `/estudios/novo` | Criar estúdio |
-| `/estudios/[slug]/configuracoes` | Nove abas de gestão |
-| `/estudios/[slug]/reunioes` | Reuniões do estúdio |
-| `/loja/pedidos` | Meus pedidos |
-| `/servicos/sugerir` | Sugerir serviço |
+| Rota                               | Conteúdo                 |
+| ---------------------------------- | ------------------------ |
+| `/perfil/[username]`               | Perfil e abas            |
+| `/perfil/[username]/configuracoes` | Edição do perfil         |
+| `/perfil/[username]/curriculo`     | Currículo para impressão |
+| `/estudios/novo`                   | Criar estúdio            |
+| `/estudios/[slug]/configuracoes`   | Nove abas de gestão      |
+| `/estudios/[slug]/reunioes`        | Reuniões do estúdio      |
+| `/loja/pedidos`                    | Meus pedidos             |
+| `/servicos/sugerir`                | Sugerir serviço          |
 
 ### Administrativas
 
