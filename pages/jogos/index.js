@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/router";
 import { TextInput, Spinner } from "@primer/react";
 import { DeviceMobileIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
@@ -33,25 +34,21 @@ const STAGES = {
   cancelled: "Cancelado",
 };
 
-const GENRES = [
-  "Ação",
-  "Aventura",
-  "RPG",
-  "Estratégia",
-  "Simulação",
-  "Puzzle",
-  "Plataforma",
-  "Corrida",
-  "Esportes",
-  "Terror",
-  "Roguelike",
-  "Indie",
-  "Multiplayer",
-  "Narrativo",
-  "Indefinido",
-];
-
 const LIMIT = 20;
+
+/**
+ * Lê um filtro da URL (`/jogos?genre=Ação`, `/jogos?tag=emocional`).
+ *
+ * É o que faz o link do chip funcionar: sem isso a ficha do jogo oferecia
+ * "ver todos os jogos de Ação" e a listagem abria sem filtro nenhum — o pior
+ * tipo de link, o que parece ter funcionado. A página já usa `getServerSideProps`
+ * (e não prerender), então `router.query` está preenchido no primeiro render do
+ * cliente.
+ */
+function queryFilter(query, key) {
+  const value = query?.[key];
+  return typeof value === "string" ? value : "";
+}
 
 /**
  * A primeira página da listagem vem do servidor.
@@ -77,12 +74,33 @@ export async function getServerSideProps() {
   if (!anonymousCan("read:game:all")) return { notFound: true };
 
   const game = (await import("@/models/game")).default;
-  const rows = await game.findAll({ page: 1, limit: LIMIT });
+  const gameGenre = (await import("@/models/gameGenre")).default;
+  const gameTag = (await import("@/models/gameTag")).default;
 
-  return { props: { initialGames: JSON.parse(JSON.stringify(rows)) } };
+  const [rows, genreTree, popularTags] = await Promise.all([
+    game.findAll({ page: 1, limit: LIMIT }),
+    // Catálogo e tags vêm no servidor junto da primeira página: o `<select>`
+    // precisa das opções no HTML servido, e buscar no cliente deixaria o filtro
+    // vazio no primeiro paint.
+    gameGenre.findTree(),
+    gameTag.findPopular(20),
+  ]);
+
+  // `JSON.parse(JSON.stringify(...))` nos três: `created_at`/`updated_at` chegam
+  // como `Date` (node-pg) e o Next não serializa — a página respondia 500 com
+  // "Error serializing `.genreTree[0].created_at`". É a mesma armadilha já
+  // documentada para a ficha de jogo de mesa.
+  return {
+    props: {
+      initialGames: JSON.parse(JSON.stringify(rows)),
+      genreTree: JSON.parse(JSON.stringify(genreTree)),
+      popularTags: JSON.parse(JSON.stringify(popularTags)),
+    },
+  };
 }
 
-export default function JogosPage({ initialGames }) {
+export default function JogosPage({ initialGames, genreTree = [], popularTags = [] }) {
+  const router = useRouter();
   const { user } = useUser();
   const [tab, setTab] = useState("all");
 
@@ -91,9 +109,10 @@ export default function JogosPage({ initialGames }) {
   const [allLoading, setAllLoading] = useState(false);
   const [allPage, setAllPage] = useState(1);
   const [allHasMore, setAllHasMore] = useState(initialGames.length === LIMIT);
-  const [search, setSearch] = useState("");
-  const [genre, setGenre] = useState("");
-  const [stage, setStage] = useState("");
+  const [search, setSearch] = useState(() => queryFilter(router.query, "search"));
+  const [genre, setGenre] = useState(() => queryFilter(router.query, "genre"));
+  const [tag, setTag] = useState(() => queryFilter(router.query, "tag"));
+  const [stage, setStage] = useState(() => queryFilter(router.query, "stage"));
   const [contentRating, setContentRating] = useState("");
   const [aiLevel, setAiLevel] = useState("");
 
@@ -101,7 +120,7 @@ export default function JogosPage({ initialGames }) {
   const [followingGames, setFollowingGames] = useState([]);
   const [followingLoading, setFollowingLoading] = useState(false);
 
-  const loadAll = useCallback(async (pageNum, searchQuery, genreQuery, stageQuery, ratingQuery, aiQuery) => {
+  const loadAll = useCallback(async (pageNum, searchQuery, genreQuery, stageQuery, ratingQuery, aiQuery, tagQuery = "") => {
     setAllLoading(true);
     try {
       const params = new URLSearchParams({
@@ -110,6 +129,7 @@ export default function JogosPage({ initialGames }) {
         search: searchQuery,
         genre: genreQuery,
         stage: stageQuery,
+        tag: tagQuery,
         content_rating: ratingQuery,
         ai_level: aiQuery,
       });
@@ -137,18 +157,18 @@ export default function JogosPage({ initialGames }) {
 
       if (skipInitialLoad.current) {
         skipInitialLoad.current = false;
-        if (!search && !genre && !stage && !contentRating && !aiLevel) return;
+        if (!search && !genre && !tag && !stage && !contentRating && !aiLevel) return;
       }
 
-      loadAll(1, search, genre, stage, contentRating, aiLevel);
+      loadAll(1, search, genre, stage, contentRating, aiLevel, tag);
     }, 350);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, genre, stage, contentRating, aiLevel]);
+  }, [search, genre, tag, stage, contentRating, aiLevel]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (allPage > 1) loadAll(allPage, search, genre, stage, contentRating, aiLevel);
+    if (allPage > 1) loadAll(allPage, search, genre, stage, contentRating, aiLevel, tag);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allPage]);
 
@@ -174,7 +194,7 @@ export default function JogosPage({ initialGames }) {
   let emptyTitle;
   if (tab === "following") {
     emptyTitle = "Você ainda não segue nenhum jogo";
-  } else if (search || genre || stage || contentRating || aiLevel) {
+  } else if (search || genre || tag || stage || contentRating || aiLevel) {
     emptyTitle = "Nenhum jogo encontrado";
   } else {
     emptyTitle = "Ainda não há jogos cadastrados";
@@ -183,7 +203,7 @@ export default function JogosPage({ initialGames }) {
   // O estado vazio sem conteúdo mostra o caminho de publicação, não um convite
   // sem destino: "cadastre o seu jogo" não existe sem um estúdio, e é o
   // `StudioPublishNotice` que explica isso e leva ao lugar certo.
-  const hasFilters = Boolean(search || genre || stage || contentRating || aiLevel);
+  const hasFilters = Boolean(search || genre || tag || stage || contentRating || aiLevel);
 
   return (
     <div className={styles.page}>
@@ -200,21 +220,43 @@ export default function JogosPage({ initialGames }) {
           <>
             <TextInput
               aria-label="Pesquisar jogos"
-              placeholder="Pesquisar por nome ou descrição..."
+              placeholder="Pesquisar por nome, descrição ou tag..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               leadingVisual="search"
               className={styles.searchInput}
             />
             <div className={styles.selectRow}>
-              <select className={styles.select} value={genre} onChange={(e) => setGenre(e.target.value)}>
+              {/*
+               * Gênero › subgênero em `<optgroup>`: 75 nós em chips viram uma
+               * parede. O pai aparece como opção **de propósito** — filtrar por
+               * "Ação" devolve os jogos marcados com qualquer subgênero dele
+               * (o SQL casa `name` ou `parent_name`).
+               */}
+              <select className={styles.select} value={genre} onChange={(e) => setGenre(e.target.value)} aria-label="Filtrar por gênero">
                 <option value="">Todos os gêneros</option>
-                {GENRES.map((g) => (
-                  <option key={g} value={g}>
-                    {g}
-                  </option>
+                {genreTree.map((parent) => (
+                  <optgroup key={parent.name} label={parent.name}>
+                    <option value={parent.name}>{parent.name} (tudo)</option>
+                    {parent.children.map((child) => (
+                      <option key={child.name} value={child.name}>
+                        {child.name}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
+
+              {popularTags.length > 0 && (
+                <select className={styles.select} value={tag} onChange={(e) => setTag(e.target.value)} aria-label="Filtrar por tag">
+                  <option value="">Todas as tags</option>
+                  {popularTags.map((item) => (
+                    <option key={item.name} value={item.name}>
+                      #{item.name} ({item.game_count})
+                    </option>
+                  ))}
+                </select>
+              )}
               <select className={styles.select} value={stage} onChange={(e) => setStage(e.target.value)}>
                 <option value="">Todas as fases</option>
                 {Object.entries(STAGES).map(([k, v]) => (

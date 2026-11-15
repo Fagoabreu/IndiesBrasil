@@ -50,6 +50,28 @@ export default function GameCard({ game, priority = false }) {
             os cards da mesma linha do grid. */}
         <p className={cardStyles.desc}>{game.short_description}</p>
 
+        {/*
+         * Tags em linha própria, acima dos selos, e como TEXTO.
+         *
+         * - Não são `.chip`: chip significa ESTADO (fase, classificação, IA) e
+         *   esta zona já é a terceira classificação do card; mais uma pílula
+         *   competiria com o que importa.
+         * - Slot com `min-height` fixo: card sem tag não pode deslocar a zona
+         *   de selos dos vizinhos da mesma linha do grid.
+         * - Sem `<Link>`: o card inteiro é um `<Link>` e `<a>` dentro de `<a>` é
+         *   HTML inválido — o clique na tag existe na ficha, não aqui.
+         * - Duas tags no máximo (`+N` indica o resto): em 230px de card, três
+         *   cortariam no meio de uma tag.
+         */}
+        <p className={cardStyles.tags} title={game.tags?.length ? game.tags.map((tag) => `#${tag}`).join(" ") : undefined}>
+          {game.tags?.length
+            ? `${game.tags
+                .slice(0, 2)
+                .map((tag) => `#${tag}`)
+                .join(" ")}${game.tags.length > 2 ? ` +${game.tags.length - 2}` : ""}`
+            : ""}
+        </p>
+
         {/* Zona 3 — estado. Sempre na mesma ordem: fase, classificação, IA. */}
         <div className={cardStyles.badges}>
           {stageLabel && <span className={`${cardStyles.chip} ${styles[`stage_${game.stage}`]}`}>{stageLabel}</span>}
@@ -89,6 +111,7 @@ GameCard.propTypes = {
     short_description: PropTypes.string,
     stage: PropTypes.string,
     genre: PropTypes.string,
+    tags: PropTypes.arrayOf(PropTypes.string),
     banner_url: PropTypes.string,
     cover_url: PropTypes.string,
     studio_name: PropTypes.string,

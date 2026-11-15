@@ -274,6 +274,11 @@ async function activateUserByUserId(userId) {
     "read:service:all",
     "create:service_suggestion",
     "create:profession_suggestion",
+    //game genre (catálogo de gêneros) e tags de jogo
+    "read:game_genre",
+    "read:game_genre:all",
+    "create:game_genre_suggestion",
+    "create:game_tag",
     //content-review (analises)
     "read:content_review",
     "read:content_review:all",

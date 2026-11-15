@@ -31,6 +31,9 @@ import InviteMemberField from "@/components/Studio/InviteMemberField";
 import AssetEditor from "@/components/Studio/AssetEditor/AssetEditor";
 import StudioServicesEditor from "@/components/Studio/StudioServicesEditor/StudioServicesEditor";
 import { normalizeMemberQuery } from "@/context/dataHooks/UseUserSuggest";
+import { MAX_GAME_GENRES, normalizeSelection } from "@/lib/gameGenres";
+import { MAX_GAME_TAGS, parseTagInput } from "@/lib/gameTags";
+import GenreSuggest from "@/components/Studio/GenreSuggest/GenreSuggest";
 import styles from "./configuracoes.module.css";
 import { SITE_NAME } from "@/lib/seo";
 
@@ -245,6 +248,12 @@ export default function ConfiguracoesPage() {
   const [newGameStage, setNewGameStage] = useState("concept");
   const [creatingGame, setCreatingGame] = useState(false);
   const [gameMsg, setGameMsg] = useState({ type: null, text: "" });
+
+  // Catálogo de gêneros (árvore gênero › subgênero). Carregado uma vez: é o
+  // mesmo para todos os jogos do estúdio, e o `<optgroup>` precisa dos filhos
+  // aninhados.
+  const [gameGenreTree, setGameGenreTree] = useState([]);
+  const genreNodes = gameGenreTree.flatMap((parent) => [parent, ...parent.children]);
 
   // Jogos de Mesa
   const [boardgames, setBoardgames] = useState([]);
@@ -493,6 +502,16 @@ export default function ConfiguracoesPage() {
     fetch("/api/v1/contact-types", { credentials: "include" })
       .then((r) => r.json())
       .then((d) => Array.isArray(d) && setContactTypes(d))
+      .catch(() => {});
+  }, []);
+
+  // Catálogo de gêneros: uma vez para a tela inteira. Falha em silêncio deixa o
+  // `<select>` vazio, mas não derruba o formulário — gênero é classificação, não
+  // pré-requisito para salvar o jogo.
+  useEffect(() => {
+    fetch("/api/v1/game-genres", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => Array.isArray(data) && setGameGenreTree(data))
       .catch(() => {});
   }, []);
 
@@ -875,7 +894,7 @@ export default function ConfiguracoesPage() {
         credentials: "include",
         body: JSON.stringify({
           name: newGameName.trim(),
-          genre: newGameGenre || "Indefinido",
+          genre_names: newGameGenre ? [newGameGenre] : [],
           stage: newGameStage,
         }),
       });
@@ -934,10 +953,15 @@ export default function ConfiguracoesPage() {
         return;
       }
       setEditGameForm({
+        // `id` é o que a sugestão de gênero usa como jogo de origem: aprovada,
+        // o gênero novo é vinculado a ele.
+        id: data.id,
         name: data.name || "",
         short_description: data.short_description || "",
         description: data.description || "",
-        genre: data.genre === "Indefinido" ? "" : data.genre || "",
+        genre_names: (data.genres || []).map((genre) => genre.name),
+        tag_names: data.tags || [],
+        tag_draft: (data.tags || []).join(", "),
         engine: data.engine || "",
         stage: data.stage || "concept",
         release_date: data.release_date ? data.release_date.slice(0, 10) : "",
@@ -1015,7 +1039,8 @@ export default function ConfiguracoesPage() {
       const payload = {
         ...editGameForm,
         name: editGameForm.name.trim(),
-        genre: editGameForm.genre.trim() || "Indefinido",
+        genre_names: editGameForm.genre_names,
+        tag_names: parseTagInput(editGameForm.tag_draft || ""),
         trailer_url: editGameForm.trailer_url?.trim() || "",
         website_url: editGameForm.website_url?.trim() || "",
         store_pages: editGameForm.store_pages
@@ -1940,21 +1965,89 @@ export default function ConfiguracoesPage() {
                                   />
                                 </label>
 
-                                {/* Gênero */}
+                                {/*
+                                 * Gênero › subgênero, em `<optgroup>`.
+                                 *
+                                 * Texto livre foi removido de propósito: o
+                                 * filtro da listagem só funciona com vocabulário
+                                 * comum, e foi o texto livre que produziu valores
+                                 * como "2D Topdown, Puzzle, Emocional" numa
+                                 * coluna só.
+                                 *
+                                 * O `<select>` fica sempre em `""` — ele é o
+                                 * gatilho de adicionar, não o valor. Cada escolha
+                                 * vira um chip removível abaixo, e
+                                 * `normalizeSelection` (cliente e servidor) tira o
+                                 * pai quando um filho dele está presente.
+                                 */}
+                                <div className={styles.fieldLabel}>
+                                  <span>Gêneros (até {MAX_GAME_GENRES})</span>
+                                  <select
+                                    className={styles.input}
+                                    value=""
+                                    aria-label="Adicionar gênero"
+                                    onChange={(e) => {
+                                      const name = e.target.value;
+                                      if (!name) return;
+                                      setEditGameForm((form) => {
+                                        const next = normalizeSelection([...(form.genre_names || []), name], genreNodes);
+                                        return { ...form, genre_names: next };
+                                      });
+                                    }}
+                                  >
+                                    <option value="">Adicionar gênero...</option>
+                                    {gameGenreTree.map((parent) => (
+                                      <optgroup key={parent.name} label={parent.name}>
+                                        <option value={parent.name}>{parent.name} (gênero)</option>
+                                        {parent.children.map((child) => (
+                                          <option key={child.name} value={child.name}>
+                                            {child.name}
+                                          </option>
+                                        ))}
+                                      </optgroup>
+                                    ))}
+                                  </select>
+
+                                  <div className={styles.genreChips}>
+                                    {(editGameForm.genre_names || []).map((name) => {
+                                      const node = genreNodes.find((genre) => genre.name === name);
+                                      return (
+                                        <span key={name} className={styles.genreChip}>
+                                          {node?.parent_name ? `${node.parent_name} › ${name}` : name}
+                                          <button
+                                            type="button"
+                                            aria-label={`Remover gênero ${name}`}
+                                            onClick={() =>
+                                              setEditGameForm((form) => ({
+                                                ...form,
+                                                genre_names: (form.genre_names || []).filter((item) => item !== name),
+                                              }))
+                                            }
+                                          >
+                                            ×
+                                          </button>
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+
+                                {/*
+                                 * Tags: campo LIVRE, separado por vírgula.
+                                 * Perspectiva ("2D Topdown"), modo ("Multiplayer")
+                                 * e tom ("Emocional") não são gênero — é aqui que
+                                 * eles entram. O `#` é prefixo de exibição; o
+                                 * valor gravado é minúsculo e sem `#`.
+                                 */}
                                 <label className={styles.fieldLabel}>
-                                  <span>Gênero</span>
+                                  <span>Tags (até {MAX_GAME_TAGS})</span>
                                   <input
                                     type="text"
                                     className={styles.input}
-                                    placeholder="Ex: Plataforma, RPG, Puzzle"
-                                    value={editGameForm.genre}
-                                    onChange={(e) =>
-                                      setEditGameForm((f) => ({
-                                        ...f,
-                                        genre: e.target.value,
-                                      }))
-                                    }
-                                    maxLength={50}
+                                    placeholder="ex: coop, pixel art, 2d topdown"
+                                    value={editGameForm.tag_draft || ""}
+                                    onChange={(e) => setEditGameForm((form) => ({ ...form, tag_draft: e.target.value }))}
+                                    maxLength={200}
                                   />
                                 </label>
 
@@ -1975,6 +2068,23 @@ export default function ConfiguracoesPage() {
                                     maxLength={50}
                                   />
                                 </label>
+
+                                {/*
+                                 * Sugestão de gênero FORA do formulário do jogo:
+                                 * o componente tem `<form>` próprio, e formulário
+                                 * dentro de formulário é HTML inválido — o
+                                 * navegador descarta o interno e o envio
+                                 * dispararia o de edição do jogo.
+                                 */}
+                                <GenreSuggest
+                                  gameId={editGameForm.id}
+                                  onSubmitted={() => {
+                                    fetch("/api/v1/game-genres", { credentials: "include" })
+                                      .then((response) => response.json())
+                                      .then((data) => Array.isArray(data) && setGameGenreTree(data))
+                                      .catch(() => {});
+                                  }}
+                                />
 
                                 {/* Status */}
                                 <label className={styles.fieldLabel}>
@@ -2253,14 +2363,25 @@ export default function ConfiguracoesPage() {
                 required
               />
               <div className={styles.gameFormRow}>
-                <input
-                  type="text"
-                  className={styles.input}
-                  placeholder="Gênero (ex: Plataforma, RPG)"
-                  value={newGameGenre}
-                  onChange={(e) => setNewGameGenre(e.target.value)}
-                  maxLength={60}
-                />
+                {/*
+                 * Criação rápida: um gênero só. O formulário completo (aba
+                 * Informações → Gêneros) permite vários; aqui o objetivo é criar
+                 * o jogo e abrir a edição, então um `<select>` do catálogo basta
+                 * — e já impede o texto livre que quebrava o filtro.
+                 */}
+                <select className={styles.input} value={newGameGenre} onChange={(e) => setNewGameGenre(e.target.value)} aria-label="Gênero do jogo">
+                  <option value="">Gênero (opcional)</option>
+                  {gameGenreTree.map((parent) => (
+                    <optgroup key={parent.name} label={parent.name}>
+                      <option value={parent.name}>{parent.name}</option>
+                      {parent.children.map((child) => (
+                        <option key={child.name} value={child.name}>
+                          {child.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
                 <select className={styles.input} value={newGameStage} onChange={(e) => setNewGameStage(e.target.value)}>
                   <option value="concept">Conceito</option>
                   <option value="prototype">Protótipo</option>

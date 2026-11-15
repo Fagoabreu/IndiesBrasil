@@ -263,6 +263,17 @@ export default function LeftSidebarComponent({ onNavigate }) {
                   </NavList.LeadingVisual>
                   Serviços e Sugestões
                 </NavList.Item>
+                <NavList.Item
+                  as={Link}
+                  href="/admin/game-genres"
+                  aria-current={router.pathname.startsWith("/admin/game-genres") ? "page" : undefined}
+                  onClick={onNavigate}
+                >
+                  <NavList.LeadingVisual>
+                    <TagIcon />
+                  </NavList.LeadingVisual>
+                  Gêneros de Jogos
+                </NavList.Item>
                 <NavList.Item as={Link} href="/admin/reports" onClick={onNavigate}>
                   <NavList.LeadingVisual>
                     <ReportIcon />

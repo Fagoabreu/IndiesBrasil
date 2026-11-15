@@ -551,6 +551,56 @@
   grid-column: 1 / -1;
 }
 
+/* ── Gêneros selecionados (chips removíveis) ──
+   Cada escolha no `<optgroup>` vira um chip com "×". O texto mostra o caminho
+   (`Ação › Shooter`) porque só o nome do subgênero esconde a hierarquia.
+   `flex-wrap` com `min-width: 0` no filho: um caminho longo encolhe em vez de
+   estourar o card do formulário. */
+.genreChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.genreChips:empty {
+  display: none;
+}
+
+.genreChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 100%;
+  padding: 3px var(--space-2);
+  border: 1px solid color-mix(in srgb, var(--brand-solid) 38%, transparent);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--brand-solid) 12%, transparent);
+  color: var(--fgColor-default);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.genreChip > button {
+  border: none;
+  background: none;
+  padding: 0 2px;
+  color: var(--fgColor-muted);
+  font-size: 0.875rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.genreChip > button:hover {
+  color: var(--fgColor-danger);
+}
+
+.genreChip > button:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-brand);
+  border-radius: var(--radius-xs);
+}
+
 .fieldsetFull {
   grid-column: 1 / -1;
 }

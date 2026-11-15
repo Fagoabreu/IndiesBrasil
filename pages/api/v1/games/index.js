@@ -9,7 +9,7 @@ export default createRouter()
   .handler(controller.errorHandlers);
 
 async function getHandler(request, response) {
-  const { page = 1, limit = 20, search = "", genre = "", stage = "", isfollowing, content_rating, ai_level } = request.query;
+  const { page = 1, limit = 20, search = "", genre = "", stage = "", tag = "", isfollowing, content_rating, ai_level } = request.query;
   const requestUser = request.context.user;
 
   if (isfollowing === "true" && requestUser.id) {
@@ -23,6 +23,9 @@ async function getHandler(request, response) {
     search,
     genre,
     stage,
+    // `?tag=` é valor exato de tag (clique no chip); `?q=` casa trecho, inclusive
+    // em tag. A distinção é a mesma de `?profession=` em `/membros`.
+    tag: typeof tag === "string" ? tag : "",
     contentRating: parseContentRatingFilter(content_rating),
     aiLevel: parseAiLevelFilter(ai_level),
   });

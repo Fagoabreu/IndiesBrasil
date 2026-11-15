@@ -1,0 +1,186 @@
+/* ==========================================
+   ADMIN — Gêneros de Jogos
+   Catálogo em dois níveis + fila de sugestões.
+========================================== */
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-8) 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.hint {
+  margin: 0 0 var(--space-4);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--fgColor-muted);
+}
+
+/* ---- Seções (mesma forma de /admin/services) ---- */
+.section {
+  margin-bottom: var(--space-6);
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.badge {
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--brand-solid);
+  color: var(--fgColor-onEmphasis);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.emptyLine {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--fgColor-muted);
+}
+
+/* ---- Formulários ---- */
+.createForm,
+.editForm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.input {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: var(--radius-sm);
+  background: var(--bgColor-default);
+  color: var(--fgColor-default);
+  font-family: inherit;
+  font-size: 0.875rem;
+  min-width: 0;
+}
+
+.input:focus-visible {
+  outline: none;
+  border-color: var(--brand-solid);
+  box-shadow: var(--ring-brand);
+}
+
+.orderInput {
+  width: 90px;
+}
+
+/* ---- Lista em árvore ---- */
+.list,
+.sublist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Subgêneros indentados com filete: a hierarquia precisa ser visível sem repetir
+   o nome do pai em cada linha. */
+.sublist {
+  margin-left: var(--space-4);
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--borderColor-muted);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+.rowName {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.inactiveBadge {
+  padding: 1px 8px;
+  border: 1px solid var(--borderColor-muted);
+  border-radius: var(--radius-full);
+  background: var(--bgColor-muted);
+  color: var(--fgColor-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* `usage_count` é o número que decide entre excluir e desativar — por isso fica
+   visível em cada linha, e não só na mensagem de erro do clique. */
+.rowUsage {
+  font-size: 0.75rem;
+  color: var(--fgColor-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rowActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* ---- Sugestões ---- */
+.suggestionItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+.suggestionName {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.suggestionMeta {
+  margin: var(--space-1) 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--fgColor-muted);
+}
+
+.suggestionActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+@media (max-width: 640px) {
+  .row {
+    align-items: flex-start;
+  }
+
+  .rowName {
+    flex-basis: 100%;
+  }
+}

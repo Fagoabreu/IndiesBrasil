@@ -5,7 +5,10 @@ import { generateUniqueSlug } from "lib/slug";
 import moderation from "./moderation.js";
 import notification from "./notification";
 import reputation from "./reputation";
+import gameGenre from "./gameGenre";
+import gameTag from "./gameTag";
 import { FILTER_NONE } from "lib/productFilters";
+import { NO_GENRE, splitGenreNames } from "lib/gameGenres";
 
 /* =========================================================
  * Constantes
@@ -39,10 +42,10 @@ export const PLATFORMS = {
  * Leitura
  * ========================================================= */
 
-async function findAll({ page = 1, limit = 20, search = "", genre = "", stage = "", contentRating = "", aiLevel = "" } = {}) {
+async function findAll({ page = 1, limit = 20, search = "", genre = "", stage = "", tag = "", contentRating = "", aiLevel = "" } = {}) {
   const offset = (page - 1) * limit;
   const filters = [];
-  const values = [limit, offset, search, genre, stage];
+  const values = [limit, offset, search, genre, stage, tag];
 
   // `"none"` filtra o que ainda não foi classificado (`IS NULL`); qualquer
   // outro valor já vem validado por `lib/productFilters.js` na rota.
@@ -65,7 +68,31 @@ async function findAll({ page = 1, limit = 20, search = "", genre = "", stage = 
   const result = await database.query({
     text: `
       SELECT
-        g.id, g.slug, g.name, g.short_description, g.genre, g.stage,
+        g.id, g.slug, g.name, g.short_description, g.stage,
+        -- 'genre' continua existindo para quem lê a string (card, press kit,
+        -- JSON-LD), mas agora é DERIVADO dos vínculos, e mostra os PAIS: a
+        -- lista de subgêneros estouraria o ellipsis do card ("Hack and
+        -- Slash" sozinho já ocupa a linha inteira). A coluna antiga é o último
+        -- recurso, para jogo que a migration não conseguiu interpretar.
+        COALESCE(
+          (SELECT string_agg(DISTINCT parent.name, ', ')
+             FROM game_genre_links gl
+             JOIN game_genres child  ON child.name  = gl.genre_name
+             JOIN game_genres parent ON parent.name = COALESCE(child.parent_name, child.name)
+            WHERE gl.game_id = g.id),
+          NULLIF(g.genre, 'Indefinido')
+        ) AS genre,
+        -- Subconsulta correlacionada (e não LATERAL + array_agg): um JOIN a
+        -- mais multiplicaria as linhas de seguidores e reviews e inflaria
+        -- follower_count/avg_rating. Mesmo motivo do json_agg correlacionado
+        -- em organization.findAll.
+        COALESCE(
+          (SELECT array_agg(t.name ORDER BY t.name)
+             FROM game_tags gt
+             JOIN tags t ON t.id = gt.tag_id
+            WHERE gt.game_id = g.id),
+          '{}'
+        ) AS tags,
         g.release_date, g.created_at, g.content_rating, g.ai_level,
         g.has_lootboxes, g.has_in_game_purchases, g.has_excessive_ads,
         ui_cover.secure_url  AS cover_url,
@@ -85,9 +112,39 @@ async function findAll({ page = 1, limit = 20, search = "", genre = "", stage = 
       LEFT JOIN game_followers gf        ON gf.game_id  = g.id
       LEFT JOIN game_reviews   gr        ON gr.game_id  = g.id
       LEFT JOIN game_platforms gp        ON gp.game_id  = g.id
-      WHERE ($3 = '' OR g.name ILIKE '%' || $3 || '%' OR g.short_description ILIKE '%' || $3 || '%')
-        AND ($4 = '' OR g.genre = $4)
+      WHERE ($3 = '' OR g.name ILIKE '%' || $3 || '%' OR g.short_description ILIKE '%' || $3 || '%'
+        -- Busca livre cobre tag: quem digita "coop" acha o jogo marcado #coop
+        -- mesmo sem a palavra no nome nem no resumo.
+        OR EXISTS (
+          SELECT 1
+          FROM game_tags gt_search
+          JOIN tags t_search ON t_search.id = gt_search.tag_id
+          WHERE gt_search.game_id = g.id
+            AND t_search.name ILIKE '%' || $3 || '%'
+        ))
+        -- Hierárquico de propósito: filtrar por "Ação" tem de achar o jogo
+        -- marcado como "Shooter". Igualdade contra a coluna devolvia vazio
+        -- porque o valor gravado era a frase inteira; igualdade contra o
+        -- vínculo devolveria só quem marcou o pai — e ninguém marca o pai
+        -- quando existe subgênero mais preciso.
+        AND ($4 = '' OR EXISTS (
+          SELECT 1
+          FROM game_genre_links gl_filter
+          JOIN game_genres gg_filter ON gg_filter.name = gl_filter.genre_name
+          WHERE gl_filter.game_id = g.id
+            AND (gg_filter.name = $4 OR gg_filter.parent_name = $4)
+        ))
         AND ($5 = '' OR g.stage = $5)
+        -- 'tag=' em query é valor EXATO de tag (o clique no chip), diferente de
+        -- 'q=', que casa trecho em nome, resumo e tag. Mesma distinção de
+        -- 'profession=' em /membros.
+        AND ($6 = '' OR EXISTS (
+          SELECT 1
+          FROM game_tags gt_filter
+          JOIN tags t_filter ON t_filter.id = gt_filter.tag_id
+          WHERE gt_filter.game_id = g.id
+            AND t_filter.name = $6
+        ))
         ${filterSql}
         AND NOT EXISTS (
           SELECT 1
@@ -184,15 +241,37 @@ async function findBySlug(slug) {
   }
 
   // Carregar dados relacionados em paralelo
-  const [platforms, media, team, storePages, tags] = await Promise.all([
+  const [platforms, media, team, storePages, tags, genres] = await Promise.all([
     findPlatforms(game.id),
     findMedia(game.id),
     findTeam(game.id),
     findStorePages(game.id),
-    findTags(game.id),
+    // `gameTag.findByGame` devolve **nomes**, que é a forma que o card, a ficha e
+    // o JSON-LD consomem. A função local que existia aqui devolvia as linhas
+    // (`{ id, name }`) e a ficha renderizava o objeto como texto — dava 500
+    // ("Objects are not valid as a React child") em qualquer jogo com tag. Era
+    // latente porque `game_tags` nunca tinha recebido um INSERT.
+    gameTag.findByGame(game.id),
+    gameGenre.findByGame(game.id),
   ]);
 
-  return { ...game, platforms, media, team, store_pages: storePages, tags };
+  return {
+    ...game,
+    // `genre` é a forma curta de uma linha (card, press kit, JSON-LD) e mostra os
+    // PAIS, na mesma definição de `findAll`. Sem isso a ficha mostraria os
+    // subgêneros ("Shooter, Plataforma") e o card o gênero ("Ação") — duas
+    // respostas para o mesmo campo, dependendo de onde se lê.
+    genre: derivedGenreLine(genres, game.genre),
+    // `genres` traz o pai junto: a ficha monta "Ação › Shooter" e o link de
+    // cada nível leva ao filtro correspondente.
+    genres,
+    genre_paths: genres.map((genre) => (genre.parent_name ? `${genre.parent_name} › ${genre.name}` : genre.name)),
+    platforms,
+    media,
+    team,
+    store_pages: storePages,
+    tags,
+  };
 }
 
 async function findByOrg(orgId) {
@@ -282,25 +361,77 @@ async function findStorePages(gameId) {
   return result.rows;
 }
 
-async function findTags(gameId) {
-  const result = await database.query({
-    text: `
-      SELECT t.id, t.name
-      FROM game_tags gt
-      JOIN tags t ON t.id = gt.tag_id
-      WHERE gt.game_id = $1
-      ORDER BY t.name
-    `,
-    values: [gameId],
-  });
-  return result.rows;
-}
-
 async function findStoreTypes() {
   const result = await database.query({
     text: `SELECT id, name FROM game_store ORDER BY id`,
   });
   return result.rows;
+}
+
+/**
+ * Resolve o que gravar como gênero.
+ *
+ * `genre_names` (array) é o formato novo. `genre` (string livre) continua aceito
+ * porque o formulário antigo e chamadas de API existentes o enviam — e é
+ * quebrado nos mesmos separadores usados pela migration.
+ */
+function resolveGenreNames(data) {
+  if (Array.isArray(data.genre_names)) return data.genre_names;
+  if (typeof data.genre === "string") return splitGenreNames(data.genre);
+  return null;
+}
+
+/**
+ * Coluna legada (`games.genre`) em sincronia com os vínculos.
+ *
+ * Ela não é mais fonte de verdade — a leitura deriva dos vínculos — mas continua
+ * sendo o último recurso para jogo cujo gênero não casou com o catálogo, e é o
+ * que uma API cliente antiga lê. Truncada no limite de 50 da coluna.
+ */
+function legacyGenreValue(names) {
+  return (names.join(", ") || NO_GENRE).slice(0, 50);
+}
+
+/**
+ * Linha curta de gêneros a partir dos vínculos: os PAIS, sem repetir.
+ *
+ * A lista de subgêneros estouraria o `ellipsis` do card ("Hack and Slash"
+ * sozinho já ocupa a linha inteira) e o press kit/JSON-LD só precisam do nível
+ * alto. Sem vínculo, cai para a coluna legada — e "Indefinido" vira `null`, que
+ * é a forma de dizer "não classificado".
+ */
+function derivedGenreLine(genres, legacyValue) {
+  const parents = [...new Set(genres.map((genre) => genre.parent_name ?? genre.name))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  if (parents.length > 0) return parents.join(", ");
+  return legacyValue === NO_GENRE ? null : (legacyValue ?? null);
+}
+
+/**
+ * Grava gêneros e mantém a coluna legada coerente.
+ *
+ * O campo legado (`genre`, texto livre) roda com `ignoreUnknown`: o que não está
+ * no catálogo fica só na coluna antiga, que é o último recurso de leitura. O
+ * formato novo (`genre_names`) é estrito.
+ */
+async function syncGenres(gameId, data) {
+  const names = resolveGenreNames(data);
+  if (names === null) return;
+
+  const fromLegacyString = !Array.isArray(data.genre_names);
+  const saved = await gameGenre.replaceForGame(gameId, names, { ignoreUnknown: fromLegacyString });
+  const persisted = saved.map((genre) => genre.name);
+
+  // Quando o valor veio do campo legado, a coluna antiga **não** é reescrita: é
+  // ali que mora o texto que não casou com o catálogo, e é o último recurso de
+  // leitura (`NULLIF(g.genre, 'Indefinido')` no `findAll`). Reescrevê-la com a
+  // lista que casou apagaria "Aventura" de um jogo cujo token não existe no
+  // catálogo — a classificação sumiria da ficha por não ter sido convertida.
+  if (fromLegacyString) return;
+
+  await database.query({
+    text: `UPDATE games SET genre = $1 WHERE id = $2`,
+    values: [legacyGenreValue(persisted), gameId],
+  });
 }
 
 /* =========================================================
@@ -345,6 +476,15 @@ async function create(orgId, userId, data) {
 
   const game = result.rows[0];
 
+  // Gêneros e tags: as duas listas vivem em tabelas próprias (N:N). Falhar aqui
+  // derruba a criação inteira de propósito — um jogo publicado sem a
+  // classificação que a pessoa escolheu seria pior que um erro visível.
+  await syncGenres(game.id, data);
+
+  if (Array.isArray(data.tag_names)) {
+    await gameTag.replaceForGame(game.id, data.tag_names);
+  }
+
   // Pontuação de reputação (best-effort: não bloqueia a publicação do jogo).
   try {
     await reputation.award({
@@ -356,7 +496,7 @@ async function create(orgId, userId, data) {
     console.error("Falha ao pontuar criação de jogo", error);
   }
 
-  return game;
+  return findBySlug(game.slug);
 }
 
 /* =========================================================
@@ -386,7 +526,14 @@ async function update(slug, data) {
     }
   }
 
-  if (fields.length === 0 && !Array.isArray(data.platforms) && !Array.isArray(data.store_pages)) {
+  if (
+    fields.length === 0 &&
+    !Array.isArray(data.platforms) &&
+    !Array.isArray(data.store_pages) &&
+    !Array.isArray(data.genre_names) &&
+    !Array.isArray(data.tag_names) &&
+    typeof data.genre !== "string"
+  ) {
     return findBySlug(slug);
   }
 
@@ -417,6 +564,16 @@ async function update(slug, data) {
   // Atualizar links de lojas se fornecidos
   if (Array.isArray(data.store_pages)) {
     await updateStorePages(game.id, data.store_pages);
+  }
+
+  // Gêneros e tags. O gênero aceita o array novo (`genre_names`) e a string
+  // legada (`genre`), e nos dois casos a coluna antiga é reescrita com a lista
+  // que realmente ficou — inclusive quando o servidor removeu o pai porque um
+  // filho estava selecionado.
+  await syncGenres(game.id, data);
+
+  if (Array.isArray(data.tag_names)) {
+    await gameTag.replaceForGame(game.id, data.tag_names);
   }
 
   return findBySlug(effectiveSlug);
