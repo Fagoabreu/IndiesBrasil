@@ -6,8 +6,7 @@ import { downloadPressKitPdf } from "lib/presskit-pdf";
 import styles from "./presskit.module.css";
 
 const PAGE_TITLE = pageTitle("Press Kit");
-const PAGE_DESCRIPTION =
-  `Material de imprensa da ${SITE_NAME}: factsheet, boilerplate, público e contatos para cobertura da maior comunidade de jogos independentes do Brasil.`;
+const PAGE_DESCRIPTION = `Material de imprensa da ${SITE_NAME}: factsheet, boilerplate, público e contatos para cobertura da maior comunidade de jogos independentes do Brasil.`;
 
 const FACTSHEET = [
   ["Desenvolvedor", SITE_NAME],
@@ -19,11 +18,9 @@ const FACTSHEET = [
   ["Idioma", "Português (Brasil)"],
 ];
 
-const BOILERPLATE_SHORT =
-  `A ${SITE_NAME} é a rede social da indústria brasileira de jogos independentes — um ponto de encontro para desenvolvedores, artistas e público gamer criarem, divulgarem e descobrirem jogos nacionais.`;
+const BOILERPLATE_SHORT = `A ${SITE_NAME} é a rede social da indústria brasileira de jogos independentes — um ponto de encontro para desenvolvedores, artistas e público gamer criarem, divulgarem e descobrirem jogos nacionais.`;
 
-const BOILERPLATE_LONG =
-  `A ${SITE_NAME} conecta toda a cadeia de produção de jogos independentes no país. Desenvolvedores, artistas, roteiristas, músicos e designers montam portfólios profissionais, formam estúdios, publicam obras (jogos digitais, jogos de mesa, livros e quadrinhos) e divulgam seu trabalho para uma comunidade ativa de gamers e criadores. A plataforma também serve de vitrine para a imprensa, eventos e parceiros de negócios que buscam conhecer o cenário indie nacional.`;
+const BOILERPLATE_LONG = `A ${SITE_NAME} conecta toda a cadeia de produção de jogos independentes no país. Desenvolvedores, artistas, roteiristas, músicos e designers montam portfólios profissionais, formam estúdios, publicam obras (jogos digitais, jogos de mesa, livros e quadrinhos) e divulgam seu trabalho para uma comunidade ativa de gamers e criadores. A plataforma também serve de vitrine para a imprensa, eventos e parceiros de negócios que buscam conhecer o cenário indie nacional.`;
 
 const AUDIENCES = [
   "Membros — artistas, programadores, roteiristas, músicos e desenvolvedores de jogos que constroem portfólios e formam estúdios.",

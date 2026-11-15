@@ -253,7 +253,9 @@ export default function NovaAnalisePage() {
   return (
     <>
       <Head>
-        <title>{isEditing ? "Editar Análise" : "Nova Análise"} — ${SITE_NAME}</title>
+        <title>
+          {isEditing ? "Editar Análise" : "Nova Análise"} — ${SITE_NAME}
+        </title>
       </Head>
 
       <div className={styles.page}>

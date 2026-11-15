@@ -10,8 +10,7 @@ import { HOW_TO_PUBLISH_PATH, STUDIO_ENTRY_KINDS, resolveStudioEntry } from "@/l
 import styles from "./index.module.css";
 
 const PAGE_TITLE = `Como publicar no ${SITE_NAME}`;
-const PAGE_DESCRIPTION =
-  `Todo jogo, jogo de mesa, publicação, asset e canal de transmissão do ${SITE_NAME} é publicado por um estúdio. Veja como criar o seu em três passos.`;
+const PAGE_DESCRIPTION = `Todo jogo, jogo de mesa, publicação, asset e canal de transmissão do ${SITE_NAME} é publicado por um estúdio. Veja como criar o seu em três passos.`;
 const PAGE_URL = `${SITE_URL}${HOW_TO_PUBLISH_PATH}`;
 
 /**

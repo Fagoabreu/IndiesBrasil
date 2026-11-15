@@ -390,7 +390,7 @@ Vá para o GitHub: **Settings → Secrets and variables → Actions**.
 | ------------------------- | ---------------------------------------- | ---------------------------------------------------------- |
 | `CERTBOT_DOMAIN`          | Seus domínios (separados por vírgula)    | `jogos.social.br,meet.jogos.social.br,www.jogos.social.br` |
 | `CERTBOT_EMAIL`           | Email para notificações do Let's Encrypt | `seu@email.com`                                            |
-| `NEXT_PUBLIC_SITE_NAME`   | Nome do site                             | `Jogos Social`                                            |
+| `NEXT_PUBLIC_SITE_NAME`   | Nome do site                             | `Jogos Social`                                             |
 | `NEXT_PUBLIC_BASE_URL`    | Domínio principal                        | `jogos.social.br`                                          |
 | `NEXT_PUBLIC_SITE_URL`    | URL completa                             | `https://jogos.social.br`                                  |
 | `POSTGRES_HOST`           | Host do banco                            | `postgres`                                                 |
@@ -463,12 +463,12 @@ O Postgres **não** fica aberto na internet: a única porta publicada é `127.0.
 
 No DBeaver (ou outro cliente), na aba **SSH**:
 
-| Campo | Valor |
-| --- | --- |
-| Host/IP | `SEU_DOMINIO` — porta `22` |
-| Autenticação | chave pública (`~/.ssh/id_rsa`) |
-| **Host remoto** | **`127.0.0.1`** |
-| **Porta remota** | `5432` |
+| Campo                    | Valor                                       |
+| ------------------------ | ------------------------------------------- |
+| Host/IP                  | `SEU_DOMINIO` — porta `22`                  |
+| Autenticação             | chave pública (`~/.ssh/id_rsa`)             |
+| **Host remoto**          | **`127.0.0.1`**                             |
+| **Porta remota**         | `5432`                                      |
 | Host local / porta local | `127.0.0.1` / `5433` (qualquer porta livre) |
 
 Na aba **Principal**, use `localhost:5433` com o banco e o usuário de `POSTGRES_DB`/`POSTGRES_USER`.
