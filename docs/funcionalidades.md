@@ -503,7 +503,7 @@ Sobre a compressão de vídeo:
 
 ---
 
-## 16. Limites atuais (o que não prometer no vídeo)
+## 16. Limites atuais
 
 - **Loja**: o módulo está completo, mas as vendas estão **desligadas** por `NEXT_PUBLIC_STORE_SALES_ENABLED`. Não há checkout nem pagamento online — o pedido é registrado e conduzido pelo estúdio.
 - **Mensagens**: não há tempo real; a conversa atualiza por consulta a cada 15 segundos.

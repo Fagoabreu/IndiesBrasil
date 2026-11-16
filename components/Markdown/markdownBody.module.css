@@ -1,0 +1,197 @@
+/**
+ * Corpo de documento Markdown renderizado por `lib/markdown.js`.
+ *
+ * Vive fora das páginas porque os dois consumidores desenham o MESMO HTML:
+ * `/ferramentas/mdviewer` (prévia do que a pessoa cola) e `/sobre/[slug]` (os
+ * documentos do repositório). Copiar o bloco criaria duas tipografias para o
+ * mesmo `renderMarkdown` — e a divergência só apareceria quando alguém abrisse
+ * as duas telas lado a lado.
+ *
+ * O que NÃO está aqui é o layout: cada tela decide se o documento rola dentro
+ * de um painel (mdviewer) ou rola com a página (leitura). Só o conteúdo é
+ * compartilhado.
+ *
+ * A classe do contêiner de tabela é passada por parâmetro para
+ * `renderMarkdown` (`tableWrapperClass`), porque CSS Module é hasheado por
+ * arquivo: uma string fixa no módulo de origem produziria um nome que não
+ * existe em nenhum módulo.
+ */
+
+.md {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--fgColor-default);
+  overflow-wrap: anywhere;
+}
+
+.md > :first-child {
+  margin-top: 0;
+}
+
+.md > :last-child {
+  margin-bottom: 0;
+}
+
+.md h1,
+.md h2,
+.md h3,
+.md h4,
+.md h5,
+.md h6 {
+  margin: var(--space-6) 0 var(--space-3);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.md h1 {
+  font-size: 1.75rem;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+.md h2 {
+  font-size: 1.4rem;
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+.md h3 {
+  font-size: 1.15rem;
+}
+
+.md h4 {
+  font-size: 1rem;
+}
+
+.md h5 {
+  font-size: 0.9rem;
+}
+
+.md h6 {
+  font-size: 0.85rem;
+  color: var(--fgColor-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.md p {
+  margin: 0 0 var(--space-4);
+}
+
+/* `--brand-strong` em vez de `--brand-primary`: um link precisa de contraste de
+   texto, e branco sobre a marca fica em 4.2:1. */
+.md a {
+  color: var(--brand-strong);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.md a:hover {
+  color: var(--brand-strong-hover);
+}
+
+.md strong {
+  font-weight: 700;
+}
+
+.md del {
+  color: var(--fgColor-muted);
+}
+
+.md ul,
+.md ol {
+  margin: 0 0 var(--space-4);
+  padding-left: 1.5em;
+}
+
+.md li + li {
+  margin-top: var(--space-1);
+}
+
+.md li > ul,
+.md li > ol {
+  margin-top: var(--space-1);
+  margin-bottom: 0;
+}
+
+/* Checkboxes do GFM viram marcadores de texto em `lib/markdown.js`. */
+.md li > span[aria-hidden="true"] {
+  margin-right: 2px;
+}
+
+.md blockquote {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--brand-solid);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  /* `color-mix` porque `--bgColor-*-muted` é opaco no claro e translúcido no
+     escuro: o mesmo bloco apareceria preenchido num tema e vazado no outro. */
+  background: color-mix(in srgb, var(--brand-solid) 7%, transparent);
+  color: var(--fgColor-muted);
+}
+
+.md blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+.md code {
+  font-family: "JetBrains Mono", "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: 0.85em;
+  padding: 1px 5px;
+  border-radius: var(--radius-xs);
+  background: color-mix(in srgb, var(--fgColor-default) 9%, transparent);
+}
+
+.md pre {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: var(--radius-md);
+  /* `--bgColor-muted` é translúcido no escuro; sobre a superfície do card o
+     resultado é uma faixa levemente mais clara, que é o efeito desejado. */
+  background: var(--bgColor-inset);
+  overflow-x: auto;
+}
+
+.md pre code {
+  padding: 0;
+  background: none;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+.md img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+}
+
+.md hr {
+  margin: var(--space-6) 0;
+  border: 0;
+  border-top: 1px solid var(--borderColor-muted);
+}
+
+.tableWrap {
+  margin: 0 0 var(--space-4);
+  overflow-x: auto;
+}
+
+.md table {
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.md th,
+.md td {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--borderColor-muted);
+  text-align: left;
+  vertical-align: top;
+}
+
+.md th {
+  background: var(--bgColor-muted);
+  font-weight: 700;
+}

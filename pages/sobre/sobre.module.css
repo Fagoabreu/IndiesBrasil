@@ -1,0 +1,112 @@
+/* ==========================================
+   SOBRE — documentos de referência
+   Layout das duas telas: o índice e a leitura de um documento.
+========================================== */
+
+.page {
+  width: 100%;
+  max-width: var(--layout-content);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4) var(--space-12);
+}
+
+/* ---- Índice ---- */
+
+.list {
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.card:hover {
+  border-color: var(--borderColor-accent-emphasis);
+  box-shadow: var(--shadow-md);
+}
+
+.card:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-brand);
+}
+
+.cardIcon {
+  display: inline-flex;
+  flex: none;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--brand-solid) 10%, transparent);
+  color: var(--brand-strong);
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1;
+  min-width: 0;
+}
+
+.cardTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.cardSummary {
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--fgColor-muted);
+}
+
+.cardArrow {
+  flex: none;
+  margin-top: 2px;
+  color: var(--fgColor-muted);
+}
+
+/* ---- Documento ---- */
+
+/*
+ * Leitura rola com a PÁGINA, não dentro de um painel: os documentos têm tabelas
+ * largas e passam de 200 linhas, e uma caixa com rolagem própria no meio da tela
+ * cria duas barras de rolagem e esconde o tamanho real do texto.
+ */
+.doc {
+  max-width: 76ch;
+}
+
+.indexLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--brand-strong);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.indexLink:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: var(--space-4) var(--space-3) var(--space-8);
+  }
+}
