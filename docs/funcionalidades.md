@@ -512,3 +512,9 @@ Sobre a compressão de vídeo:
 - **Galeria de screenshots**: depende de imagens cadastradas na mídia; hoje o envio de mídia grava vídeo.
 - **Pacote de mídia em ZIP** para imprensa: não existe; o press kit é uma página para imprimir/salvar em PDF.
 - **Idioma**: apenas pt-BR (sem `i18n`).
+
+---
+
+## 17. Próximos passos
+
+O que ainda não existe está no [roadmap](./roadmap.md), organizado em cinco fases (2025 → 2029), com o status de cada item conferido no código. O único item aberto da fase atual — verificação de membros — tem a análise das três opções possíveis em [verificacao-de-membros.md](./verificacao-de-membros.md).
