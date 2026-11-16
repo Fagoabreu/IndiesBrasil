@@ -6,7 +6,7 @@ import { ArrowLeftIcon, LinkExternalIcon, CheckIcon, XIcon, TrashIcon, PencilIco
 import { Spinner } from "@primer/react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
-import { SITE_URL, ogImageSizeFromPreset } from "@/lib/seo";
+import { ogImageSizeFromPreset, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { breadcrumbList, graph, newsArticle } from "@/lib/structured-data";
 import styles from "./NewsDetail.module.css";
 
@@ -265,8 +265,8 @@ export default function NewsDetailPage({ initialNews }) {
   return (
     <div className={styles.page}>
       <SeoHead
-        title={`${news.title} — Indies Brasil`}
-        description={news.summary?.slice(0, 160) || "Notícia na comunidade Indies Brasil."}
+        title={`${news.title} — ${SITE_NAME}`}
+        description={news.summary?.slice(0, 160) || `Notícia na comunidade ${SITE_NAME}.`}
         canonical={`${SITE_URL}/noticias/${id}`}
         ogImage={news.img_url}
         ogImageWidth={newsOgSize.width}

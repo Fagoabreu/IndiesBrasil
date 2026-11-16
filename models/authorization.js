@@ -120,6 +120,12 @@ const availableFeatures = new Set([
   "create:game:like",
   "create:game:comment",
 
+  //game genre (catálogo) e tags
+  "read:game_genre",
+  "read:game_genre:all",
+  "create:game_genre_suggestion",
+  "create:game_tag",
+
   //boardgame
   "read:boardgame",
   "read:boardgame:all",

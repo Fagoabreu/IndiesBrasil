@@ -4,6 +4,7 @@ import { XIcon } from "@primer/octicons-react";
 import LeftSidebarComponent from "./LeftSidebarComponent";
 import HeaderComponent from "./Header/HeaderComponent";
 import Head from "next/head";
+import { SITE_NAME } from "@/lib/seo";
 
 export default function Layout({ children, RightSidebar = null }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -12,7 +13,7 @@ export default function Layout({ children, RightSidebar = null }) {
     <>
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Indies Brasil</title>
+        <title>{SITE_NAME}</title>
       </Head>
 
       {/* Mobile sidebar drawer */}

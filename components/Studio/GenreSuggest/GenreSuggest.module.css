@@ -1,0 +1,105 @@
+/* ==========================================
+   GENRE SUGGEST — "não encontrou o gênero?"
+   Saída para o caso de exceção dentro do
+   formulário de jogo. Fechado por padrão.
+========================================== */
+
+.wrapper {
+  margin-top: var(--space-2);
+}
+
+.toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--brand-strong);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.toggle:hover {
+  color: var(--brand-strong-hover);
+}
+
+.toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-brand);
+  border-radius: var(--radius-xs);
+}
+
+.form {
+  margin-top: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: var(--radius-md);
+  background: var(--bgColor-muted);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.intro {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--fgColor-muted);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--fgColor-muted);
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: var(--radius-sm);
+  background: var(--bgColor-default);
+  color: var(--fgColor-default);
+  font-size: 0.875rem;
+  font-family: inherit;
+}
+
+.textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.input:focus-visible,
+.textarea:focus-visible {
+  outline: none;
+  border-color: var(--brand-solid);
+  box-shadow: var(--ring-brand);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.success,
+.error {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.success {
+  color: var(--fgColor-success);
+}
+
+.error {
+  color: var(--fgColor-danger);
+}

@@ -6,6 +6,7 @@ import { ArrowLeftIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
 import styles from "./sugerir.module.css";
+import { SITE_NAME } from "@/lib/seo";
 
 /**
  * Sugestão de serviço para o catálogo.
@@ -60,8 +61,8 @@ export default function SugerirServicoPage() {
   return (
     <>
       <SeoHead
-        title="Sugerir um serviço — Indies Brasil"
-        description="Sugira um serviço para o catálogo do Indies Brasil."
+        title={`Sugerir um serviço — ${SITE_NAME}`}
+        description={`Sugira um serviço para o catálogo do ${SITE_NAME}.`}
         canonical="https://jogos.social.br/servicos/sugerir"
         noIndex
       />

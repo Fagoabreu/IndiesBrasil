@@ -9,7 +9,7 @@ import GameReviews from "@/components/GameReviews/GameReviews";
 import BookViewer from "@/components/BookViewer/BookViewer";
 import ContentEngagement from "@/components/ContentEngagement/ContentEngagement";
 import PressKitButton from "@/components/PressKit/PressKitButton";
-import { ogImageSizeFromPreset } from "@/lib/seo";
+import { ogImageSizeFromPreset, SITE_NAME } from "@/lib/seo";
 import { formatAiLevelName } from "@/lib/ai-usage";
 import { book as bookStructuredData, breadcrumbList, graph } from "@/lib/structured-data";
 
@@ -134,7 +134,7 @@ export default function BookPage({ initialBook, siteUrl }) {
   return (
     <>
       <SeoHead
-        title={`${bookData.title} — Indies Brasil`}
+        title={`${bookData.title} — ${SITE_NAME}`}
         description={bookData.short_description || bookData.title}
         canonical={canonicalUrl}
         ogImage={coverImage}

@@ -9,6 +9,23 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - postgres-certs:/etc/postgres/certs
+    # Porta publicada SÓ no loopback do host, para o túnel SSH.
+    #
+    # O container nunca publicou porta, e o acesso por cliente (DBeaver) era
+    # feito com um túnel apontando para o IP do container na rede privada —
+    # `172.18.0.x`. Esse IP é atribuído pelo Docker na CRIAÇÃO do container:
+    # quando `indies-app` foi recriado pelo deploy, o Docker redistribuiu os
+    # endereços, o `postgres` passou de `.3` para `.2` e o túnel que já estava
+    # configurado passou a encaminhar para um endereço sem Postgres — o cliente
+    # recebia `EOFException` e o sintoma parecia "o túnel parou de funcionar".
+    #
+    # `127.0.0.1` e NÃO `0.0.0.0`: o bind só aceita conexão de um processo do
+    # próprio servidor (o `sshd` que atende o túnel). `0.0.0.0` abriria 5432 na
+    # interface pública e o firewall seria a única defesa contra força bruta no
+    # Postgres. O app continua falando com o banco pela rede `private`, sem
+    # passar por esta porta.
+    ports:
+      - "127.0.0.1:5432:5432"
     command:
       - "-c"
       - "ssl=on"

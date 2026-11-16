@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Spinner } from "@primer/react";
 import { LockIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 import { formatMeetingRange, getMeetingPhase } from "@/lib/meetingFormat";
 import styles from "./convidado.module.css";
 
@@ -74,7 +74,7 @@ export default function GuestMeetingPage({ initialMeeting, notFound }) {
   if (notFound) {
     return (
       <div className={styles.page}>
-        <SeoHead title="Reunião não encontrada — Indies Brasil" noIndex />
+        <SeoHead title={`Reunião não encontrada — ${SITE_NAME}`} noIndex />
         <div className={styles.card}>
           <p className={styles.errorMessage}>Este link de reunião é inválido ou foi removido.</p>
         </div>
@@ -85,7 +85,7 @@ export default function GuestMeetingPage({ initialMeeting, notFound }) {
   return (
     <div className={styles.page}>
       <SeoHead
-        title={`Reunião — ${initialMeeting.org_name} — Indies Brasil`}
+        title={`Reunião — ${initialMeeting.org_name} — ${SITE_NAME}`}
         description="Entre em uma reunião do estúdio usando seu código de convidado."
         canonical={`${SITE_URL}/reunioes/${initialMeeting.id}`}
         noIndex

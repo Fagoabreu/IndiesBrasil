@@ -315,7 +315,7 @@ async function resolveSteam(url) {
   try {
     const apiUrl = `https://store.steampowered.com/api/appdetails?appids=${appId}`;
     const res = await fetch(apiUrl, {
-      headers: { "User-Agent": "IndiesBrasil/1.0" },
+      headers: { "User-Agent": "JogosSocial/1.0" },
     });
     const json = await res.json();
     const data = json?.[appId]?.data;

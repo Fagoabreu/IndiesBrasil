@@ -9,11 +9,11 @@ import LiveBadge from "@/components/Streams/LiveBadge";
 import PlatformBadge from "@/components/Streams/PlatformBadge";
 import StudioPublishNotice from "@/components/Studio/StudioPublishNotice/StudioPublishNotice";
 import { useUser } from "@/context/UserContext";
-import { SITE_URL } from "@/lib/seo";
+import { pageTitle, SITE_URL } from "@/lib/seo";
 import { formatViewerCount, getPlatformLabel, getWatchUrl, resolvePlatformId } from "@/lib/streams";
 import styles from "./index.module.css";
 
-const PAGE_TITLE = "Streams — Indies Brasil";
+const PAGE_TITLE = pageTitle("Streams");
 const PAGE_DESCRIPTION = "Assista aos estúdios de jogos indie brasileiros ao vivo na Twitch e YouTube.";
 const PAGE_URL = `${SITE_URL}/streams`;
 

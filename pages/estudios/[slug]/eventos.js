@@ -11,7 +11,7 @@ import EventCard from "@/components/Agenda/EventCard";
 import applyBannerChange from "@/components/Agenda/applyBannerChange";
 import { emptyEventValues, eventValuesFromApi } from "@/components/Agenda/eventFormOptions";
 import { eventProductLabel } from "@/lib/event-products";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 import styles from "./eventos.module.css";
 
 /**
@@ -220,7 +220,7 @@ export default function StudioEventsPage({ initialStudio, notFound }) {
   if (notFound) {
     return (
       <div className={styles.page}>
-        <SeoHead title="Estúdio não encontrado — Indies Brasil" noIndex />
+        <SeoHead title={`Estúdio não encontrado — ${SITE_NAME}`} noIndex />
         <p className={styles.emptyMessage}>Estúdio não encontrado.</p>
       </div>
     );
@@ -229,7 +229,7 @@ export default function StudioEventsPage({ initialStudio, notFound }) {
   return (
     <div className={styles.page}>
       <SeoHead
-        title={`Eventos de ${studioName} — Indies Brasil`}
+        title={`Eventos de ${studioName} — ${SITE_NAME}`}
         description={`Agenda de eventos do estúdio ${studioName}: lançamentos, streams e eventos presenciais.`}
         canonical={`${SITE_URL}/estudios/${slug}/eventos`}
         noIndex

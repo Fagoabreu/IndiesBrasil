@@ -9,7 +9,7 @@ import GameMediaPlayer from "@/components/GameMedia/GameMediaPlayer";
 import GameReviews from "@/components/GameReviews/GameReviews";
 import ContentEngagement from "@/components/ContentEngagement/ContentEngagement";
 import PressKitButton from "@/components/PressKit/PressKitButton";
-import { ogImageSizeFromPreset } from "@/lib/seo";
+import { ogImageSizeFromPreset, SITE_NAME } from "@/lib/seo";
 import { formatAiLevelName } from "@/lib/ai-usage";
 import { boardGame, breadcrumbList, graph } from "@/lib/structured-data";
 
@@ -154,7 +154,7 @@ export default function BoardgamePage({ initialBgData, siteUrl }) {
   return (
     <>
       <SeoHead
-        title={`${bgData.name} — Indies Brasil`}
+        title={`${bgData.name} — ${SITE_NAME}`}
         description={bgData.short_description || bgData.name}
         canonical={canonicalUrl}
         ogImage={coverImage}

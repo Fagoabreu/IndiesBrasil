@@ -27,7 +27,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { QRCodeSVG } from "qrcode.react";
 import profile from "@/models/profile";
 import authorization from "@/models/authorization";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 import {
   CARD,
   CARD_BANNER,
@@ -105,7 +105,7 @@ function renderQrSvg(profileUrl, size) {
  */
 async function renderProfileSvg(profile) {
   const user = profile.user ?? {};
-  const username = String(user.username ?? "indiesbrasil");
+  const username = String(user.username ?? "jogosocial");
   const profileUrl = `${SITE_URL}/perfil/${encodeURIComponent(username)}`;
 
   // O rasterizador não busca recursos remotos, então capa e avatar viram data
@@ -113,7 +113,7 @@ async function renderProfileSvg(profile) {
   const [banner, avatar] = await Promise.all([fetchAsDataUri(user.background_image), fetchAsDataUri(user.avatar_image)]);
 
   // Resumo costuma ser a melhor linha curta; a bio entra como alternativa.
-  const summary = user.resumo || user.bio || "Perfil na comunidade Indies Brasil.";
+  const summary = user.resumo || user.bio || `Perfil na comunidade ${SITE_NAME}.`;
   const lines = wrapText(summary, 54, 2);
 
   const badgeSize = 164;

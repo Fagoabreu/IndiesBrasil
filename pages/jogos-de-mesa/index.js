@@ -6,12 +6,12 @@ import SeoHead from "@/components/SeoHead";
 import BoardGameCard from "@/components/Card/BoardGameCard";
 import StudioPublishNotice from "@/components/Studio/StudioPublishNotice/StudioPublishNotice";
 import { useUser } from "@/context/UserContext";
-import { SITE_URL } from "@/lib/seo";
+import { pageTitle, SITE_URL } from "@/lib/seo";
 import { RATING_LABELS, RATING_ORDER } from "@/lib/rating-constants";
 import { AI_USAGE_LEVELS, formatAiLevelLabel } from "@/lib/ai-usage";
 import styles from "./index.module.css";
 
-const PAGE_TITLE = "Jogos de Mesa — Indies Brasil";
+const PAGE_TITLE = pageTitle("Jogos de Mesa");
 const PAGE_DESCRIPTION = "Descubra jogos de tabuleiro, cartas e RPGs criados por desenvolvedores indie brasileiros.";
 const PAGE_URL = `${SITE_URL}/jogos-de-mesa`;
 

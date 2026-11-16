@@ -292,8 +292,8 @@ describe("lib/galene.js", () => {
     });
 
     test("aceita apenas URLs do nosso Cloudinary", () => {
-      process.env.CLOUDINARY_CLOUD_NAME = "indiesbrasil";
-      const prefix = "https://res.cloudinary.com/indiesbrasil/";
+      process.env.CLOUDINARY_CLOUD_NAME = "jogosocial";
+      const prefix = "https://res.cloudinary.com/jogosocial/";
       expect(galene.getAvatarPrefix()).toBe(prefix);
 
       const ours = `${prefix}image/upload/v1/avatares/maria.png`;
@@ -303,15 +303,15 @@ describe("lib/galene.js", () => {
       // não-string são todos recusados.
       expect(galene.sanitizeAvatarUrl("https://res.cloudinary.com/outro/image/upload/a.png")).toBe("");
       expect(galene.sanitizeAvatarUrl("https://evil.example.com/a.png")).toBe("");
-      expect(galene.sanitizeAvatarUrl(`http://res.cloudinary.com/indiesbrasil/a.png`)).toBe("");
+      expect(galene.sanitizeAvatarUrl(`http://res.cloudinary.com/jogosocial/a.png`)).toBe("");
       expect(galene.sanitizeAvatarUrl("/images/avatar.png")).toBe("");
       expect(galene.sanitizeAvatarUrl(42)).toBe("");
       expect(galene.sanitizeAvatarUrl("")).toBe("");
     });
 
     test("recusa URL gigante e caminho com ..", () => {
-      process.env.CLOUDINARY_CLOUD_NAME = "indiesbrasil";
-      const prefix = "https://res.cloudinary.com/indiesbrasil/";
+      process.env.CLOUDINARY_CLOUD_NAME = "jogosocial";
+      const prefix = "https://res.cloudinary.com/jogosocial/";
 
       expect(galene.sanitizeAvatarUrl(`${prefix}${"a".repeat(600)}`)).toBe("");
       expect(galene.sanitizeAvatarUrl(`${prefix}image/../../etc/passwd`)).toBe("");
@@ -320,9 +320,9 @@ describe("lib/galene.js", () => {
     test("a URL de entrada carrega avatar e prefixo quando há cloud configurado", async () => {
       process.env.GALENE_GROUPS_DIR = groupsDir;
       process.env.MEET_URL = "wss://meet.example.com";
-      process.env.CLOUDINARY_CLOUD_NAME = "indiesbrasil";
+      process.env.CLOUDINARY_CLOUD_NAME = "jogosocial";
 
-      const avatar = "https://res.cloudinary.com/indiesbrasil/image/upload/v1/avatares/maria.png";
+      const avatar = "https://res.cloudinary.com/jogosocial/image/upload/v1/avatares/maria.png";
       const { joinUrl, token } = await galene.createJoinTokenAndUrl({
         studio: "aurora-games",
         roomId: "cafe0000cafe0000",
@@ -334,7 +334,7 @@ describe("lib/galene.js", () => {
 
       const params = new URL(joinUrl).searchParams;
       expect(params.get("avatar")).toBe(avatar);
-      expect(params.get("avatarPrefix")).toBe("https://res.cloudinary.com/indiesbrasil/");
+      expect(params.get("avatarPrefix")).toBe("https://res.cloudinary.com/jogosocial/");
       // O token continua intacto — os extras vêm depois dele.
       expect(params.get("token")).toBe(token);
 
@@ -354,7 +354,7 @@ describe("lib/galene.js", () => {
         studio: "aurora-games",
         roomId: "semcloud00000001",
         username: "Maria",
-        avatar: "https://res.cloudinary.com/indiesbrasil/a.png",
+        avatar: "https://res.cloudinary.com/jogosocial/a.png",
         permissions: galene.GALENE_PERMISSIONS.member,
         endsAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
       });

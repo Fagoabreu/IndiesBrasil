@@ -13,7 +13,7 @@ const { join } = require("path");
 const W = 1200;
 const H = 300;
 
-// ─── Paleta (estilo visual Indies Brasil — dark/gaming) ──────────────────────
+// ─── Paleta (estilo visual Jogos Social — dark/gaming) ──────────────────────
 // Canto superior-esquerdo: roxo profundo #1c0b3a
 // Canto inferior-direito:  azul marinho escuro #060d1a
 const C0 = { r: 28, g: 11, b: 58 };

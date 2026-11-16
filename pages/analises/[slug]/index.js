@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useUser } from "@/context/UserContext";
 import SeoHead from "@/components/SeoHead";
-import { SITE_URL, ogImageSizeFromPreset } from "@/lib/seo";
+import { ogImageSizeFromPreset, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { breadcrumbList, graph, review as reviewStructuredData } from "@/lib/structured-data";
 import styles from "./analise.module.css";
 
@@ -150,8 +150,8 @@ export default function AnalisePage({ initialAnalise }) {
   return (
     <>
       <SeoHead
-        title={`${analise.title} — Análises — Indies Brasil`}
-        description={`Análise de ${analise.content_name || analise.title} por ${analise.author_username} na comunidade Indies Brasil.`}
+        title={`${analise.title} — Análises — ${SITE_NAME}`}
+        description={`Análise de ${analise.content_name || analise.title} por ${analise.author_username} na comunidade ${SITE_NAME}.`}
         canonical={canonicalUrl}
         ogImage={analise.cover_url || analise.content_cover_url}
         ogImageWidth={ogSize.width}

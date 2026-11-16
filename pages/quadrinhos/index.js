@@ -5,12 +5,12 @@ import SeoHead from "@/components/SeoHead";
 import BookCard from "@/components/Card/BookCard";
 import StudioPublishNotice from "@/components/Studio/StudioPublishNotice/StudioPublishNotice";
 import { useUser } from "@/context/UserContext";
-import { SITE_URL } from "@/lib/seo";
+import { pageTitle, SITE_URL } from "@/lib/seo";
 import { RATING_LABELS, RATING_ORDER } from "@/lib/rating-constants";
 import { AI_USAGE_LEVELS, formatAiLevelLabel } from "@/lib/ai-usage";
 import styles from "./index.module.css";
 
-const PAGE_TITLE = "Quadrinhos e Livros — Indies Brasil";
+const PAGE_TITLE = pageTitle("Quadrinhos e Livros");
 const PAGE_DESCRIPTION = "Descubra quadrinhos, mangás, livros e publicações criadas por artistas e escritores indie brasileiros.";
 const PAGE_URL = `${SITE_URL}/quadrinhos`;
 

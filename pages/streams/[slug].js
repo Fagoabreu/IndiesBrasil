@@ -9,7 +9,7 @@ import ShareModal from "@/components/ShareModal/ShareModal";
 import LiveBadge from "@/components/Streams/LiveBadge";
 import PlatformBadge from "@/components/Streams/PlatformBadge";
 import StreamPlayer from "@/components/Streams/StreamPlayer";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 import { breadcrumbList, graph } from "@/lib/structured-data";
 import {
   STREAM_THUMBNAIL_SIZE,
@@ -127,10 +127,10 @@ export default function StreamWatchPage({ studio, otherStudios, hostname }) {
 
   const headline = studio.stream_title || (studio.is_live ? "Transmissão ao vivo" : `${studio.name} está offline agora`);
   const canonicalUrl = `${SITE_URL}/streams/${studio.slug}`;
-  const pageTitle = `${studio.name}${studio.is_live ? " ao vivo" : ""} — Streams — Indies Brasil`;
+  const pageTitle = `${studio.name}${studio.is_live ? " ao vivo" : ""} — Streams — ${SITE_NAME}`;
   const description = studio.is_live
     ? `Assista ao vivo a ${studio.name}${studio.category_name ? ` — ${studio.category_name}` : ""}.${studio.stream_title ? ` ${studio.stream_title}.` : ""}`
-    : `${studio.name} transmite em ${platformLabel}. Veja o canal, o status da transmissão e outros estúdios brasileiros ao vivo no Indies Brasil.`;
+    : `${studio.name} transmite em ${platformLabel}. Veja o canal, o status da transmissão e outros estúdios brasileiros ao vivo no ${SITE_NAME}.`;
 
   // A miniatura da Twitch é a única cujo tamanho nós pedimos
   // (`STREAM_THUMBNAIL_SIZE`, usado em `models/stream.js`): a do YouTube vem

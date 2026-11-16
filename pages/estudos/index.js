@@ -6,10 +6,10 @@ import { Heading, TextInput, Spinner } from "@primer/react";
 import { BookIcon, CheckIcon, PlusIcon, StarFillIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
-import { SITE_URL } from "@/lib/seo";
+import { pageTitle, SITE_URL } from "@/lib/seo";
 import styles from "./index.module.css";
 
-const PAGE_TITLE = "Cursos — Indies Brasil";
+const PAGE_TITLE = pageTitle("Cursos");
 const PAGE_DESCRIPTION = "Aprenda sobre desenvolvimento de jogos, arte, Unity, Godot e muito mais com cursos criados pela comunidade.";
 const PAGE_URL = `${SITE_URL}/estudos`;
 

@@ -144,6 +144,10 @@ const ANONYMOUS_FEATURES = Object.freeze([
   "read:studio",
   "read:game",
   "read:game:all",
+  // Catálogo de gêneros: o filtro e o formulário de jogo montam as opções no
+  // servidor, e o Google precisa vê-las no HTML. `read:game_genre` (singular)
+  // fica fora do anônimo — é a leitura de um nó, usada pela tela de admin.
+  "read:game_genre:all",
   "read:boardgame",
   "read:boardgame:all",
   "read:book",

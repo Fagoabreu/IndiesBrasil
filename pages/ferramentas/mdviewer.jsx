@@ -19,11 +19,11 @@ import SeoHead from "@/components/SeoHead";
 import shared from "./toolPage.module.css";
 import styles from "./mdviewer.module.css";
 
-import { SITE_URL } from "@/lib/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 import { downloadBlob } from "@/lib/download";
 import { MAX_MARKDOWN_LENGTH, renderMarkdown } from "@/lib/markdown";
 
-const PAGE_TITLE = "Visualizador de Markdown Online — Prévia de arquivo .md | Indies Brasil";
+const PAGE_TITLE = `Visualizador de Markdown Online — Prévia de arquivo .md | ${SITE_NAME}`;
 const PAGE_DESCRIPTION =
   "Cole ou abra um arquivo Markdown e veja o documento renderizado em tempo real, com títulos, tabelas, listas de tarefas e blocos de código. Ferramenta online gratuita, sem cadastro e sem upload.";
 const PAGE_URL = `${SITE_URL}/ferramentas/mdviewer`;
@@ -31,7 +31,7 @@ const PAGE_URL = `${SITE_URL}/ferramentas/mdviewer`;
 const JSON_LD = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "Visualizador de Markdown — Indies Brasil",
+  name: `Visualizador de Markdown — ${SITE_NAME}`,
   url: PAGE_URL,
   applicationCategory: "DeveloperApplication",
   operatingSystem: "Web",

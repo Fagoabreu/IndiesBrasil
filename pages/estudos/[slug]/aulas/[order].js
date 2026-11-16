@@ -7,7 +7,7 @@ import { Heading, Spinner } from "@primer/react";
 import { ChevronLeftIcon, ChevronRightIcon, CheckIcon, CommentDiscussionIcon, PencilIcon, TrashIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 import { markdownToHtml } from "@/utils/markdown";
 import CommentEditor from "@/components/CommentEditor/CommentEditor";
 import styles from "./aula.module.css";
@@ -227,7 +227,7 @@ export default function AulaPage() {
   return (
     <div className={styles.page}>
       <SeoHead
-        title={`${lesson.title} — ${course?.title || ""} — Indies Brasil`}
+        title={`${lesson.title} — ${course?.title || ""} — ${SITE_NAME}`}
         description={lesson.description?.slice(0, 160) || `Aula: ${lesson.title}`}
         canonical={`${SITE_URL}/estudos/${slug}/aulas/${order}`}
       />

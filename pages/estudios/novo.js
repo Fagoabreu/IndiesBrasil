@@ -8,6 +8,7 @@ import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
 import AddressFormFields from "@/components/Address/AddressFormFields";
 import styles from "./novo.module.css";
+import { SITE_NAME } from "@/lib/seo";
 
 const EMPTY_ADDRESS = {
   street: "",
@@ -104,7 +105,7 @@ export default function NovoEstudioPage() {
 
   return (
     <>
-      <SeoHead title="Criar Estúdio — Indies Brasil" robots="noindex" />
+      <SeoHead title={`Criar Estúdio — ${SITE_NAME}`} robots="noindex" />
 
       <div className={styles.pageWrapper}>
         <Link href="/estudios" className={styles.backLink}>

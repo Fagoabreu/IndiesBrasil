@@ -85,7 +85,7 @@ async function getHandler(request, response) {
     // validado na conexão. Um `fetch(url)` direto seguia o `Location` de um
     // host público controlado pelo atacante sem checar para onde ia.
     const imageResponse = await safeFetch(url, {
-      headers: { "User-Agent": "IndiesBrasil/1.0 (image proxy)" },
+      headers: { "User-Agent": "JogosSocial/1.0 (image proxy)" },
       timeoutMs: 10000,
     });
 

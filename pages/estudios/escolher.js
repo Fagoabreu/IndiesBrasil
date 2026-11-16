@@ -8,6 +8,7 @@ import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
 import { STUDIO_PRODUCT_TABS, canEditStudio } from "@/lib/studioEntry";
 import styles from "./escolher.module.css";
+import { SITE_NAME } from "@/lib/seo";
 
 /**
  * Seletor de estúdio para quem administra mais de um.
@@ -73,7 +74,7 @@ export default function EscolherEstudioPage() {
   if (!loadingUser && !user) {
     return (
       <div className={styles.page}>
-        <SeoHead title="Escolher estúdio — Indies Brasil" noIndex />
+        <SeoHead title={`Escolher estúdio — ${SITE_NAME}`} noIndex />
         <Flash variant="warning">
           <Link href={`/login?next=${encodeURIComponent(router.asPath)}`}>Entre na sua conta</Link> para escolher o estúdio.
         </Flash>
@@ -86,7 +87,7 @@ export default function EscolherEstudioPage() {
 
   return (
     <>
-      <SeoHead title="Escolher estúdio — Indies Brasil" description="Escolha em qual estúdio você vai publicar." noIndex />
+      <SeoHead title={`Escolher estúdio — ${SITE_NAME}`} description="Escolha em qual estúdio você vai publicar." noIndex />
 
       <div className={styles.page}>
         <Link href="/estudios?member=me" className={styles.backLink}>

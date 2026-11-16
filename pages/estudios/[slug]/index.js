@@ -34,7 +34,7 @@ import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
 import MessagesPanel from "@/components/Messages/MessagesPanel";
 import SendMessageButton from "@/components/Messages/SendMessageButton";
 import { formatPriceWithNote } from "@/lib/price";
-import { SITE_URL, OG_CARD_SIZE, embedHostname } from "@/lib/seo";
+import { embedHostname, OG_CARD_SIZE, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { resolveOrgNotificationTitle, resolveOrgNotificationMessage, resolveOrgNotificationHref } from "@/lib/notifications";
 import styles from "./studio.module.css";
 // O estilo dos botões de ação mora junto do componente (ver o comentário lá);
@@ -613,7 +613,7 @@ export default function StudioPage({ initialStudio }) {
     }
   };
   const liveEmbedSrc = getLiveEmbedSrc(studioStream);
-  const pageTitle = `${studio.name} — Indies Brasil`;
+  const pageTitle = `${studio.name} — ${SITE_NAME}`;
   const pageUrl = `${SITE_URL}/estudios/${studio.slug}`;
   const embedUrl = getVideoEmbedUrl(studio.banner_video_url);
   const studioLogoUrl = studio.logo_url?.startsWith("http") ? studio.logo_url : `${SITE_URL}${studio.logo_url || "/images/studio.jpg"}`;

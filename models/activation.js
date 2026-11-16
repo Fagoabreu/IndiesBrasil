@@ -6,6 +6,8 @@ import user from "./user.js";
 import authorization from "./authorization.js";
 import activationEmailTemplate from "@/lib/email/templates/activationEmail.js";
 import resetPasswordEmailTemplate from "@/lib/email/templates/resetPasswordEmail.js";
+import { EMAIL_FROM } from "@/lib/email/sender.js";
+import { SITE_NAME } from "@/lib/seo";
 
 const EXPIRATION_IN_MILLISECONDS = 60 * 60 * 1000; // 1 hora
 
@@ -272,6 +274,11 @@ async function activateUserByUserId(userId) {
     "read:service:all",
     "create:service_suggestion",
     "create:profession_suggestion",
+    //game genre (catálogo de gêneros) e tags de jogo
+    "read:game_genre",
+    "read:game_genre:all",
+    "create:game_genre_suggestion",
+    "create:game_tag",
     //content-review (analises)
     "read:content_review",
     "read:content_review:all",
@@ -321,9 +328,9 @@ async function sendEmailToUser(user, activationToken) {
   });
 
   await email.send({
-    from: "Indies Brasil <contato@indies.com.br>",
+    from: EMAIL_FROM,
     to: user.email,
-    subject: "Ative seu cadastro no Indies Brasil",
+    subject: `Ative seu cadastro no ${SITE_NAME}`,
     html,
     text,
   });
@@ -338,9 +345,9 @@ async function sendPasswordEmailToUser(user, activationToken) {
   });
 
   await email.send({
-    from: "Indies Brasil <contato@indies.com.br>",
+    from: EMAIL_FROM,
     to: user.email,
-    subject: "Redefinição de senha — Indies Brasil",
+    subject: `Redefinição de senha — ${SITE_NAME}`,
     html,
     text,
     headers: {

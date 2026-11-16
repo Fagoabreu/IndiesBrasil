@@ -8,11 +8,11 @@ import ShareModal from "@/components/ShareModal/ShareModal";
 import EventCard from "@/components/Agenda/EventCard";
 import StudioMeetingList from "@/components/Agenda/StudioMeetingList";
 import { useUser } from "@/context/UserContext";
-import { SITE_URL } from "@/lib/seo";
+import { pageTitle, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { EVENT_MONTHS, brasiliaMonthRange, sortEventsByStart } from "@/lib/eventFormat";
 import styles from "./index.module.css";
 
-const PAGE_TITLE = "Agenda — Indies Brasil";
+const PAGE_TITLE = pageTitle("Agenda");
 const PAGE_DESCRIPTION = "Eventos da comunidade indie brasileira: game jams, lançamentos, reuniões, maratonas de stream e mais.";
 const PAGE_URL = `${SITE_URL}/agenda`;
 
@@ -185,7 +185,7 @@ export default function AgendaPage() {
       {shareEvent && (
         <ShareModal
           path={`/agenda/${shareEvent.event_id}`}
-          text={`Confira "${shareEvent.override_title || shareEvent.title}" na agenda do Indies Brasil`}
+          text={`Confira "${shareEvent.override_title || shareEvent.title}" na agenda do ${SITE_NAME}`}
           title="Compartilhar evento"
           hint="Copie o link e cole no WhatsApp, Discord ou Instagram. A miniatura do evento será exibida automaticamente."
           onClose={() => setShareEvent(null)}

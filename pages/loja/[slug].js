@@ -8,7 +8,7 @@ import AddressFormFields from "@/components/Address/AddressFormFields";
 import { useUser } from "@/context/UserContext";
 import { formatBRL } from "@/lib/currency";
 import { PRODUCT_TYPE_LABELS, STORE_SALES_ENABLED } from "@/lib/store-constants";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 import styles from "./[slug].module.css";
 
 function ProductGallery({ images, alt }) {
@@ -179,7 +179,7 @@ export default function StoreProductPage() {
   if (notFound) {
     return (
       <div className={styles.page}>
-        <SeoHead title="Produto não encontrado — Indies Brasil" description="Produto não encontrado." canonical={`${SITE_URL}/loja`} noIndex />
+        <SeoHead title="Produto não encontrado — ${SITE_NAME}" description="Produto não encontrado." canonical={`${SITE_URL}/loja`} noIndex />
         <Banner variant="danger">Produto não encontrado.</Banner>
       </div>
     );
@@ -210,7 +210,7 @@ export default function StoreProductPage() {
   return (
     <div className={styles.page}>
       <SeoHead
-        title={`${product.name} — Loja Indies Brasil`}
+        title={`${product.name} — Loja ${SITE_NAME}`}
         description={product.description || `Compre ${product.name} na loja de ${product.org_name}.`}
         canonical={`${SITE_URL}/loja/${product.slug}`}
         ogImage={product.image_url || undefined}

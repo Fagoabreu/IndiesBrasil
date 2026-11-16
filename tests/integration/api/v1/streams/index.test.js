@@ -29,7 +29,7 @@ describe("GET /api/v1/streams", () => {
     });
 
     const studio = await organization.create(ownerCtx.user, { name: "Estúdio Com Stream" });
-    await organization.update(studio.slug, { twitch_channel: "indiesbrasil" });
+    await organization.update(studio.slug, { twitch_channel: "jogosocial" });
 
     const response = await fetch(`${webserver.origin}/api/v1/streams`);
     expect(response.status).toBe(200);
@@ -38,7 +38,7 @@ describe("GET /api/v1/streams", () => {
     expect(body.length).toBe(1);
     expect(body[0].slug).toBe(studio.slug);
     expect(body[0].name).toBe("Estúdio Com Stream");
-    expect(body[0].twitch_channel).toBe("indiesbrasil");
+    expect(body[0].twitch_channel).toBe("jogosocial");
     expect(body[0].is_live).toBe(false);
     expect(body[0].active_platform).toBeNull();
   });

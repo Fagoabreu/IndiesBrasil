@@ -13,6 +13,7 @@ import AiUsageModal from "@/components/AiUsageModal";
 import { MAX_ASSET_CATEGORIES } from "@/lib/assetGroups";
 import { isValidAssetUrl } from "@/lib/assetUrl";
 import styles from "./AssetEditor.module.css";
+import { SITE_NAME } from "@/lib/seo";
 
 /**
  * Aba "Assets" das configurações do estúdio.
@@ -353,7 +354,7 @@ export default function AssetEditor({ slug }) {
       <h2 className={styles.title}>Assets</h2>
       <p className={styles.hint}>
         Referencie pacotes de arte, áudio, UI, VFX e código publicados em outros sites (itch.io, Kenney, OpenGameArt, Unity Asset Store…). O arquivo
-        continua onde está — o Indies Brasil publica a ficha e o link.
+        continua onde está — o ${SITE_NAME} publica a ficha e o link.
       </p>
 
       {loading ? (

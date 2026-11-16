@@ -11,7 +11,7 @@ import GameReviews from "@/components/GameReviews/GameReviews";
 import ContentEngagement from "@/components/ContentEngagement/ContentEngagement";
 import IconSvg from "@/components/IconSvg/IconSvg";
 import PressKitButton from "@/components/PressKit/PressKitButton";
-import { SITE_URL, ogImageSizeFromPreset } from "@/lib/seo";
+import { ogImageSizeFromPreset, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { formatAiLevelName } from "@/lib/ai-usage";
 import { breadcrumbList, graph, videoGame } from "@/lib/structured-data";
 
@@ -250,7 +250,7 @@ export default function GamePage({ initialGame, siteUrl }) {
   return (
     <>
       <SeoHead
-        title={`${gameData.name} — Indies Brasil`}
+        title={`${gameData.name} — ${SITE_NAME}`}
         description={gameData.short_description || gameData.name}
         canonical={canonicalUrl}
         ogImage={coverImage}
@@ -349,10 +349,48 @@ export default function GamePage({ initialGame, siteUrl }) {
                   <span className={styles.heroDetailLabel}>Status</span>
                   <span className={`${styles.stagePill} ${styles[`stage_${gameData.stage}`]}`}>{STAGES[gameData.stage] ?? gameData.stage}</span>
                 </div>
-                {gameData.genre && gameData.genre !== "Indefinido" && (
+                {/*
+                 * Cada gênero é um link para o filtro. O caminho completo
+                 * (`Ação › Shooter`) é exibido porque só o nome do subgênero
+                 * esconde a hierarquia — e é o pai que a pessoa reconhece
+                 * primeiro. `genre_paths` vem pronto do model.
+                 */}
+                {gameData.genres?.length > 0 && (
                   <div className={styles.heroDetailRow}>
-                    <span className={styles.heroDetailLabel}>Gênero</span>
-                    <span className={styles.heroDetailValue}>{gameData.genre}</span>
+                    <span className={styles.heroDetailLabel}>Gêneros</span>
+                    <div className={styles.platformsList}>
+                      {gameData.genres.map((genre) => (
+                        <Link
+                          key={genre.name}
+                          href={`/jogos?genre=${encodeURIComponent(genre.name)}`}
+                          className={styles.platformPill}
+                          title={
+                            genre.parent_name
+                              ? `Ver todos os jogos de ${genre.name} (dentro de ${genre.parent_name})`
+                              : `Ver todos os jogos de ${genre.name}`
+                          }
+                        >
+                          {genre.parent_name ? `${genre.parent_name} › ${genre.name}` : genre.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {gameData.tags?.length > 0 && (
+                  <div className={styles.heroDetailRow}>
+                    <span className={styles.heroDetailLabel}>Tags</span>
+                    <div className={styles.platformsList}>
+                      {gameData.tags.map((tagName) => (
+                        <Link
+                          key={tagName}
+                          href={`/jogos?tag=${encodeURIComponent(tagName)}`}
+                          className={styles.platformPill}
+                          title={`Ver todos os jogos marcados com #${tagName}`}
+                        >
+                          #{tagName}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 )}
                 {gameData.content_rating && (

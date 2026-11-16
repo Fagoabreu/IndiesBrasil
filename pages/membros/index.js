@@ -7,13 +7,13 @@ import InactiveMemberRow from "@/components/MemberCard/InactiveMemberRow";
 // página importa o mesmo módulo em vez de repetir a regra.
 import inactiveListStyles from "@/components/MemberCard/InactiveMemberRow.module.css";
 import styles from "./MembersPage.module.css";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 import { DEFAULT_MEMBER_SORT, MEMBER_SORT_OPTIONS, memberSortValue, parseMemberSort } from "@/lib/memberSort";
 import { useUser } from "@/context/UserContext";
 import { useRouter } from "next/router";
 import useInView from "@/hooks/useInView";
 
-const PAGE_TITLE = "Membros da Comunidade Indie Brasileira | Indies Brasil";
+const PAGE_TITLE = `Membros da Comunidade Indie Brasileira | ${SITE_NAME}`;
 const PAGE_DESCRIPTION =
   "Conheça desenvolvedores, artistas, designers e criadores de jogos independentes do Brasil. Encontre talentos e parceiros para seu próximo projeto indie.";
 const PAGE_URL = `${SITE_URL}/membros`;

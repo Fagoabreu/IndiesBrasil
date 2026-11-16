@@ -1,4 +1,4 @@
-# DeepSeek Instructions — Indies Brasil
+# DeepSeek Instructions — Jogos Social
 
 ## Stack
 

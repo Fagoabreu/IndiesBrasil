@@ -1,7 +1,7 @@
 import styles from "./MonetizationBadge.module.css";
 
 /**
- * Selo de transparência de monetização — Lei Felca (PL 412/2022).
+ * Selo de transparência de monetização — ECA Digital (Lei nº 15.211/2025).
  *
  * Exibe selos indicativos quando o jogo contém lootboxes pagas,
  * compras dentro do jogo ou anúncios excessivos.
@@ -25,7 +25,7 @@ export default function MonetizationBadge({ hasLootboxes = false, hasInGamePurch
         </svg>
       ),
       label: "Lootboxes",
-      title: "Este jogo contém lootboxes (caixas de recompensa aleatória pagas) — Lei Felca PL 412/2022",
+      title: "Este jogo contém lootboxes (caixas de recompensa aleatória pagas) — ECA Digital (Lei nº 15.211/2025)",
     });
   }
 
@@ -38,7 +38,7 @@ export default function MonetizationBadge({ hasLootboxes = false, hasInGamePurch
         </svg>
       ),
       label: "Compras",
-      title: "Este jogo contém compras dentro do jogo (microtransações) — Lei Felca PL 412/2022",
+      title: "Este jogo contém compras dentro do jogo (microtransações) — ECA Digital (Lei nº 15.211/2025)",
     });
   }
 
@@ -51,7 +51,7 @@ export default function MonetizationBadge({ hasLootboxes = false, hasInGamePurch
         </svg>
       ),
       label: "Anúncios",
-      title: "Este jogo contém publicidade excessiva — Lei Felca PL 412/2022",
+      title: "Este jogo contém publicidade excessiva — ECA Digital (Lei nº 15.211/2025)",
     });
   }
 
@@ -67,7 +67,7 @@ export default function MonetizationBadge({ hasLootboxes = false, hasInGamePurch
      */
     <span
       className={`${styles.mzBadge} ${size === "sm" ? styles["mzBadge--sm"] : ""}`}
-      aria-label="Selos de transparência de monetização — Lei Felca"
+      aria-label="Selos de transparência de monetização — ECA Digital"
     >
       {flags.map((flag) => (
         <span key={flag.key} className={`${styles.badge} ${styles[flag.key]}`} title={flag.title}>

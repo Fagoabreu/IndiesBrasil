@@ -14,7 +14,7 @@ import ContentEngagement from "@/components/ContentEngagement/ContentEngagement"
 import { ASSET_LICENSES } from "@/lib/assetLicenses";
 import { assetGroupLabel } from "@/lib/assetGroups";
 import { formatAiLevelName } from "@/lib/ai-usage";
-import { SITE_URL, ogImageSizeFromPreset } from "@/lib/seo";
+import { ogImageSizeFromPreset, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { breadcrumbList, creativeWork, graph } from "@/lib/structured-data";
 import styles from "./asset.module.css";
 
@@ -107,7 +107,7 @@ export default function AssetPage({ initialAsset }) {
   return (
     <>
       <SeoHead
-        title={`${asset.name} — Indies Brasil`}
+        title={`${asset.name} — ${SITE_NAME}`}
         description={asset.short_description || asset.description?.slice(0, 160) || asset.name}
         canonical={canonicalUrl}
         ogImage={asset.cover_url || undefined}

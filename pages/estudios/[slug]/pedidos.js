@@ -6,7 +6,7 @@ import { Banner, Heading, Spinner } from "@primer/react";
 import SeoHead from "@/components/SeoHead";
 import { formatBRL } from "@/lib/currency";
 import { ORDER_STATUS_LABELS } from "@/lib/store-constants";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 import styles from "./pedidos.module.css";
 
 export async function getServerSideProps(context) {
@@ -69,7 +69,7 @@ export default function StudioOrdersPage({ studio, notFound }) {
   if (notFound) {
     return (
       <div className={styles.page}>
-        <SeoHead title="Estúdio não encontrado — Indies Brasil" description="Estúdio não encontrado." canonical={`${SITE_URL}/estudios`} noIndex />
+        <SeoHead title="Estúdio não encontrado — ${SITE_NAME}" description="Estúdio não encontrado." canonical={`${SITE_URL}/estudios`} noIndex />
         <Banner variant="critical" title="Estúdio não encontrado">
           Estúdio não encontrado.
         </Banner>
@@ -80,7 +80,7 @@ export default function StudioOrdersPage({ studio, notFound }) {
   return (
     <div className={styles.page}>
       <SeoHead
-        title={`Pedidos de ${studio.name} — Indies Brasil`}
+        title={`Pedidos de ${studio.name} — ${SITE_NAME}`}
         description={`Pedidos recebidos na loja do estúdio ${studio.name}.`}
         canonical={`${SITE_URL}/estudios/${studio.slug}/pedidos`}
         noIndex

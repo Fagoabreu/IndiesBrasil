@@ -6,20 +6,20 @@ import { DownloadIcon, SyncIcon, UploadIcon, VideoIcon } from "@primer/octicons-
 import shared from "./toolPage.module.css";
 import styles from "./comprimir-video.module.css";
 
-import { SITE_URL } from "@/lib/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 import { formatBytesPtBr } from "@/lib/bytes";
 import { downloadBlob } from "@/lib/download";
 import { DEFAULT_VIDEO_PRESET, MAX_INPUT_BYTES, VIDEO_PRESETS, formatDuration, getVideoPreset, planCompression } from "@/lib/videoPresets";
 import useVideoCompressor from "@/hooks/useVideoCompressor";
 
-const PAGE_TITLE = "Comprimir Vídeo Online Grátis para WhatsApp e Redes Sociais | Indies Brasil";
+const PAGE_TITLE = `Comprimir Vídeo Online Grátis para WhatsApp e Redes Sociais | ${SITE_NAME}`;
 const PAGE_DESCRIPTION =
   "Comprima vídeos direto no navegador para caber no limite do WhatsApp e das redes sociais. Escolha o tamanho final, baixe em MP4 e pronto — sem upload, sem cadastro.";
 const PAGE_URL = `${SITE_URL}/ferramentas/comprimir-video`;
 const JSON_LD = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "Compressor de Vídeo — Indies Brasil",
+  name: `Compressor de Vídeo — ${SITE_NAME}`,
   url: PAGE_URL,
   applicationCategory: "MultimediaApplication",
   operatingSystem: "Web",

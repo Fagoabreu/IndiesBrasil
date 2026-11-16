@@ -7,7 +7,7 @@ import SeoHead from "@/components/SeoHead";
 import { useUser } from "@/context/UserContext";
 import MeetingCreateForm from "@/components/Meetings/MeetingCreateForm";
 import MeetingCard from "@/components/Meetings/MeetingCard";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 import styles from "./reunioes.module.css";
 
 export async function getServerSideProps(context) {
@@ -118,7 +118,7 @@ export default function StudioMeetingsPage({ initialStudio, notFound }) {
   if (notFound) {
     return (
       <div className={styles.page}>
-        <SeoHead title="Estúdio não encontrado — Indies Brasil" noIndex />
+        <SeoHead title={`Estúdio não encontrado — ${SITE_NAME}`} noIndex />
         <p className={styles.emptyMessage}>Estúdio não encontrado.</p>
       </div>
     );
@@ -127,7 +127,7 @@ export default function StudioMeetingsPage({ initialStudio, notFound }) {
   return (
     <div className={styles.page}>
       <SeoHead
-        title={`Reuniões de ${studioName} — Indies Brasil`}
+        title={`Reuniões de ${studioName} — ${SITE_NAME}`}
         description={`Reuniões e webconferências do estúdio ${studioName}.`}
         canonical={`${SITE_URL}/estudios/${slug}/reunioes`}
         noIndex

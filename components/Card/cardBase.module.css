@@ -189,6 +189,24 @@
   overflow: hidden;
 }
 
+/* ── Zona 2b: tags ──
+   Linha própria com slot fixo: sem `min-height`, o card com tag empurraria a
+   zona de selos para baixo e a linha do grid ficaria desalinhada — mesmo motivo
+   dos slots de `.title` e `.desc`.
+   Texto e não pílula: `.chip` significa ESTADO, e esta zona já é a terceira
+   classificação do card. `overflow: hidden` + `ellipsis` impedem que uma tag
+   longa escape do card. */
+.tags {
+  margin: 0;
+  min-height: 1.1em;
+  font-size: 0.6875rem;
+  line-height: 1.1;
+  color: var(--fgColor-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ── Zona 3: selos de estado ──
    Uma linha só, sem quebra. Fase, classificação indicativa e uso de IA são
    sempre renderizados (o "N/C" e o "IA N/C" são estados, não ausências), então
@@ -321,7 +339,8 @@
      não há linha de grid para alinhar. Os slots fixos só deixariam espaço
      morto, então voltam a ser do tamanho do conteúdo. */
   .row .title,
-  .row .desc {
+  .row .desc,
+  .row .tags {
     min-height: 0;
   }
 

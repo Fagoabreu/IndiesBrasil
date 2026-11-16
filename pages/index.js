@@ -28,7 +28,7 @@ import { sortEventsByStart } from "@/lib/eventFormat";
 import { shouldGroupHighlights } from "@/lib/highlights";
 import useInView from "@/hooks/useInView";
 
-const PAGE_TITLE = "Indies Brasil — A casa dos jogos independentes brasileiros";
+const PAGE_TITLE = `${SITE_NAME} — A casa dos jogos independentes brasileiros`;
 const PAGE_DESCRIPTION =
   "Conecte-se com desenvolvedores, artistas e gamers que constroem o futuro dos jogos independentes no Brasil. Portfólio, estúdios, catálogos e comunidade em um só lugar.";
 const PAGE_URL = SITE_URL;
@@ -41,9 +41,11 @@ const JSON_LD = {
       "@id": `${SITE_URL}/#website`,
       url: SITE_URL,
       name: SITE_NAME,
-      // O apelido ("Jogos Social") e o endereço sem `www` são como as pessoas
-      // procuram o site; sem esta linha o único nome declarado era "Indies
-      // Brasil", que não é o termo usado na busca. Ver `SITE_ALTERNATE_NAMES`.
+      // O nome histórico ("Indies Brasil") e o endereço sem `www` são como
+      // parte das pessoas procura o site; `alternateName` é o campo que o
+      // Google consulta para o "nome do site". Ver `SITE_ALTERNATE_NAMES`. O
+      // nome principal (`SITE_NAME`) não entra na lista: repeti-lo não ensina
+      // nada ao buscador.
       alternateName: SITE_ALTERNATE_NAMES,
       description: PAGE_DESCRIPTION,
       inLanguage: "pt-BR",
@@ -571,7 +573,7 @@ function Home() {
         <SectionReveal className={styles.metricsSection}>
           {/* Os cards são h3; sem um h2 anterior a hierarquia saltaria de h1
               para h3. O título é visualmente oculto, mas presente na árvore. */}
-          <h2 className={styles.srOnly}>Indies Brasil em números</h2>
+          <h2 className={styles.srOnly}>{`${SITE_NAME} em números`}</h2>
 
           {/* Declara de frente a ausência de barreira: é a informação que
               faltava para desfazer a conclusão de que a conta é obrigatória. */}
@@ -614,7 +616,7 @@ function Home() {
           <header className={styles.sectionHeader}>
             <p className={styles.sectionLabel}>Para quem é</p>
             <h2 className={styles.sectionTitle}>Um ecossistema completo para a cena indie</h2>
-            <p className={styles.sectionSub}>Da criação à descoberta — todo mundo tem um lugar na Indies Brasil.</p>
+            <p className={styles.sectionSub}>{`Da criação à descoberta — todo mundo tem um lugar na ${SITE_NAME}.`}</p>
           </header>
 
           <div className={styles.audienceGrid}>

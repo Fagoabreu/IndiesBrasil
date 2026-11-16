@@ -9,6 +9,7 @@ import EventForm from "@/components/Agenda/EventForm";
 import applyBannerChange from "@/components/Agenda/applyBannerChange";
 import { emptyEventValues } from "@/components/Agenda/eventFormOptions";
 import styles from "@/components/Agenda/EventFormPage.module.css";
+import { SITE_NAME } from "@/lib/seo";
 
 // Valores iniciais criados uma única vez: o EventForm guarda a referência como
 // estado e nunca a muta (todo update gera um objeto novo).
@@ -65,7 +66,7 @@ export default function CriarEventoPage() {
 
   return (
     <>
-      <SeoHead title="Criar Evento — Agenda Indies Brasil" description="Crie um novo evento na agenda da comunidade Indies Brasil." />
+      <SeoHead title={`Criar Evento — Agenda ${SITE_NAME}`} description={`Crie um novo evento na agenda da comunidade ${SITE_NAME}.`} />
 
       <div className={styles.pageWrapper}>
         <Link href="/agenda" className={styles.backLink}>

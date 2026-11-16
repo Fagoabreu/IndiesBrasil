@@ -82,7 +82,7 @@ async function getHandler(request, response) {
     // além de fixar o endereço validado na conexão.
     const pdfResponse = await safeFetch(url, {
       allowedHosts: ["res.cloudinary.com"],
-      headers: { "User-Agent": "IndiesBrasil/1.0 (pdf proxy)" },
+      headers: { "User-Agent": "JogosSocial/1.0 (pdf proxy)" },
       timeoutMs: 30000,
     });
 

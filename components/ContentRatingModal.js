@@ -204,7 +204,7 @@ export default function ContentRatingModal({ type, itemName, onClose }) {
             {result.monetizationFlags &&
               (result.monetizationFlags.hasLootboxes || result.monetizationFlags.hasInGamePurchases || result.monetizationFlags.hasExcessiveAds) && (
                 <div className={styles.monetizationResult}>
-                  <p className={styles.monetizationTitle}>Selos Lei Felca (PL 412/2022)</p>
+                  <p className={styles.monetizationTitle}>Selos de monetização (ECA Digital)</p>
                   <div className={styles.monetizationTags}>
                     {result.monetizationFlags.hasLootboxes && <span className={`${styles.monetizationTag} ${styles.mzLootboxes}`}>🎁 Lootboxes</span>}
                     {result.monetizationFlags.hasInGamePurchases && (
@@ -215,7 +215,7 @@ export default function ContentRatingModal({ type, itemName, onClose }) {
                     )}
                   </div>
                   <p className={styles.monetizationHint}>
-                    Estes selos serão exibidos no card do jogo para informar os consumidores, conforme determina a Lei Felca.
+                    Estes selos serão exibidos no card do jogo para informar os consumidores, conforme o ECA Digital (Lei nº 15.211/2025).
                   </p>
                 </div>
               )}

@@ -1,4 +1,4 @@
-# Funcionalidades da Indies Brasil
+# Funcionalidades da Jogos Social
 
 Inventário completo da aplicação, organizado por módulo. Serve como referência para apresentação, onboarding de equipe e planejamento de produto.
 
@@ -10,7 +10,7 @@ Inventário completo da aplicação, organizado por módulo. Serve como referên
 
 ## Visão geral
 
-A Indies Brasil é o portal da comunidade de desenvolvimento de jogos independentes brasileiros. Reúne, num só lugar:
+A Jogos Social é o portal da comunidade de desenvolvimento de jogos independentes brasileiros. Reúne, num só lugar:
 
 - **Rede profissional** — perfil, currículo, portfólio, reputação e diretório de membros.
 - **Estúdios** — equipe, papéis, contatos, relacionamentos, QR Code e press kit.
@@ -191,6 +191,7 @@ Nove abas, cada uma com seu editor:
 - **Abas** Visão geral e Análises (com contador).
 - **Embed da itch.io** quando o jogo tem página lá, e cartão de prévia da Steam.
 - **Curtidas, comentários, avaliações (1 a 5 estrelas) e follow**.
+- **Gêneros e tags** — ver 5.6.
 - **Classificação indicativa** por questionário e **selos de monetização** — ver 5.5.
 - **Press kit** por obra, com factsheet, descrição em níveis, mídia, equipe e contato de imprensa.
 - **Edição** por quem é admin, criador ou membro ativo do estúdio.
@@ -229,12 +230,24 @@ Nove abas, cada uma com seu editor:
 
 ### 5.5 Classificação, IA e monetização
 
-- **Classificação indicativa** (Livre, 6, 10, 12, 14, 16 e 18 anos) por questionário em etapas, alinhado ao ClassInd e ao ECA Digital. O selo escolhe a cor do texto pela luminância do fundo para manter contraste.
+- **Classificação indicativa** (Livre, 6, 10, 12, 14, 16 e 18 anos) por questionário em etapas, alinhado ao ClassInd e ao ECA Digital. O selo escolhe a cor do texto pela luminância do fundo para manter contraste. As respostas de **monetização contam para a faixa etária** (decisão do projeto: um jogo só com DLCs sai como 10 anos), e o questionário avisa isso.
 - **Selo de uso de IA em faixas de 0 a 5**, de "Sem Uso de IA" a "IA Autônoma", com modal explicando cada faixa. Nível não declarado aparece como "Não informado" — é um estado, não uma ausência.
-- **Selos Lei Felca (PL 412/2022)**: lootboxes, compras dentro do jogo e publicidade excessiva.
+- **Selos de monetização (ECA Digital — Lei nº 15.211/2025)**: lootboxes, compras dentro do jogo e publicidade excessiva, com o motivo descrevendo o que foi **respondido** no questionário (DLC é DLC, não "microtransação").
 - **Filtros de listagem** por classificação indicativa em jogos, jogos de mesa e livros, e por nível de IA também nos assets, incluindo "não classificado".
 
-### 5.6 Press kits
+### 5.6 Gêneros e tags de jogo
+
+- **Gênero é catálogo curado em dois níveis** (gênero › subgênero): 11 gêneros e 66 subgêneros, mantidos em `/admin/game-genres`. Um jogo recebe de 1 a 5 gêneros pelo seletor — nunca texto livre.
+- **Filtro hierárquico**: filtrar por "Ação" devolve também os jogos marcados com "Shooter" ou "Plataforma". Marcar o pai e o filho é permitido, mas o pai é removido da seleção porque o filtro já o alcança pelo filho.
+- **Toda a base antiga de texto livre foi convertida**: o que casava com o catálogo (ou com uma grafia conhecida, como "Shoot 'Em Up" → "Shoot 'em up (Shmup)") virou vínculo; o que não era gênero — perspectiva, modo e tom, como "2D Topdown", "Multiplayer" e "Emocional" — virou **tag**. Nenhum jogo perdeu classificação.
+- **Tag é vocabulário livre** (até 8 por jogo, com `#` só na exibição). A listagem filtra por tag exata (o clique no chip) e a busca livre (`?q=`) também casa trecho de tag.
+- **Sugestão de gênero** por qualquer membro, direto da ficha do jogo; aprovar cria o gênero **e** o vincula ao jogo de origem, sem obrigar a pessoa a reabrir o formulário.
+- **Gênero em uso não é excluído, é desativado** — excluir apagaria a classificação de jogos existentes.
+- **No card**, os gêneros de primeiro nível ocupam a linha de identidade e as tags aparecem em `#tag` logo abaixo da descrição (duas + contador).
+
+**Rotas:** `/admin/game-genres`, `/api/v1/game-genres`, `/api/v1/game-genre-suggestions`, `/api/v1/game-tags`
+
+### 5.7 Press kits
 
 - **Um press kit por obra** (`/jogos/[slug]/press-kit`, `/jogos-de-mesa/[slug]/press-kit`, `/quadrinhos/[slug]/press-kit`) e um **press kit do estúdio**.
 - **Formato `presskit()`**: factsheet, descrição em níveis, mídia, estúdio, equipe e contato de imprensa.
@@ -394,6 +407,7 @@ Sobre a compressão de vídeo:
   - Ferramentas
   - Profissões (com grupo e ícone, sugeridas por usuários)
   - Serviços (com fila de sugestões)
+  - Gêneros de jogos (dois níveis, com fila de sugestões que já vincula o gênero ao jogo)
   - Categorias de assets
 - **Exclusão definitiva de conta** com confirmação por e-mail, recusa de autoexclusão, proteção do último admin e decisão sobre o estúdio (apagar ou transferir para membro ativo).
 - **Status do servidor** com conexão do banco, migrações aplicadas e versão da API.
@@ -485,7 +499,7 @@ Sobre a compressão de vídeo:
 
 ### Administrativas
 
-`/admin`, `/admin/reports`, `/admin/moderation`, `/admin/conversas/[id]`, `/admin/contact-types`, `/admin/tools`, `/admin/professions`, `/admin/services`, `/admin/asset-categories`, `/admin/users`, `/status`.
+`/admin`, `/admin/reports`, `/admin/moderation`, `/admin/conversas/[id]`, `/admin/contact-types`, `/admin/tools`, `/admin/professions`, `/admin/services`, `/admin/game-genres`, `/admin/asset-categories`, `/admin/users`, `/status`.
 
 ---
 

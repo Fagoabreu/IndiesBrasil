@@ -1,4 +1,4 @@
-# Indies Brasil
+# Jogos Social
 
 Portal da comunidade de desenvolvedores indie brasileiros. Plataforma web com feed de posts, perfis de usuários, compartilhamento de projetos, sistema de comentários e muito mais.
 
@@ -28,7 +28,7 @@ Portal da comunidade de desenvolvedores indie brasileiros. Plataforma web com fe
 - Convites de participação no estúdio e **follow** de estúdios.
 - **Relacionamentos entre estúdios** (parceiro, distribuidora, publicadora, incubadora, investidora etc.).
 - Catálogos de **Jogos Digitais**, **Jogos de Mesa** e **Livros & Quadrinhos** com ficha completa, galeria de imagens, follow e reviews.
-- **Autoclassificação indicativa** por questionário (ClassInd/ECA Digital — jogos) e sugestões para jogos de mesa, livros e quadrinhos, com selos de **monetização** (Lei Felca).
+- **Autoclassificação indicativa** por questionário (ClassInd/ECA Digital — jogos) e sugestões para jogos de mesa, livros e quadrinhos, com selos de **monetização** (ECA Digital).
 - **Leitor de livros e quadrinhos digitais** em PDF no navegador.
 
 ### Artigos e educação
@@ -117,7 +117,7 @@ Siga cada passo na ordem. Se algum comando falhar, volte e verifique o passo ant
 
 ```bash
 git clone https://github.com/Fagoabreu/IndiesBrasil.git
-cd IndiesBrasil
+cd Jogos Social
 ```
 
 ### 2. Configure as variáveis de ambiente
@@ -127,7 +127,7 @@ Crie um arquivo chamado `.env.development` na raiz do projeto com o seguinte con
 ```bash
 # App
 PORT=3000
-NEXT_PUBLIC_SITE_NAME=IndiesBrasil
+NEXT_PUBLIC_SITE_NAME="Jogos Social"
 NEXT_PUBLIC_BASE_URL=localhost
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
@@ -185,14 +185,14 @@ Este comando faz três coisas automaticamente:
 | **Emails (Mailcatcher)**    | http://localhost:1080     |
 | **Webconferência (Galene)** | http://localhost:8000     |
 
-Se tudo deu certo, você verá a página inicial do Indies Brasil no navegador.
+Se tudo deu certo, você verá a página inicial do Jogos Social no navegador.
 
 ---
 
 ## Estrutura do projeto
 
 ```
-IndiesBrasil/
+Jogos Social/
 ├── components/          # Componentes React reutilizáveis
 │   ├── PostCard/        # Card de post (feed)
 │   ├── PostActions/     # Botões de curtir, comentar, compartilhar
@@ -390,7 +390,7 @@ Vá para o GitHub: **Settings → Secrets and variables → Actions**.
 | ------------------------- | ---------------------------------------- | ---------------------------------------------------------- |
 | `CERTBOT_DOMAIN`          | Seus domínios (separados por vírgula)    | `jogos.social.br,meet.jogos.social.br,www.jogos.social.br` |
 | `CERTBOT_EMAIL`           | Email para notificações do Let's Encrypt | `seu@email.com`                                            |
-| `NEXT_PUBLIC_SITE_NAME`   | Nome do site                             | `Indies Brasil`                                            |
+| `NEXT_PUBLIC_SITE_NAME`   | Nome do site                             | `Jogos Social`                                             |
 | `NEXT_PUBLIC_BASE_URL`    | Domínio principal                        | `jogos.social.br`                                          |
 | `NEXT_PUBLIC_SITE_URL`    | URL completa                             | `https://jogos.social.br`                                  |
 | `POSTGRES_HOST`           | Host do banco                            | `postgres`                                                 |
@@ -429,7 +429,7 @@ git commit -m "chore: deploy initial"
 git push origin main
 ```
 
-O deploy será executado automaticamente. Você pode acompanhar em: **GitHub → Actions → Deploy Indies Brasil**.
+O deploy será executado automaticamente. Você pode acompanhar em: **GitHub → Actions → Deploy Jogos Social**.
 
 #### 4.1 Emitir certificado SSL (executar UMA VEZ após o primeiro deploy)
 
@@ -457,6 +457,26 @@ docker ps
 
 Você deve ver 5 containers: `postgres`, `indies-app`, `galene`, `nginx` e `certbot`.
 
+#### 4.3 Acessar o banco de produção (túnel SSH)
+
+O Postgres **não** fica aberto na internet: a única porta publicada é `127.0.0.1:5432`, aceita somente por processos do próprio servidor. O acesso de fora é por túnel SSH.
+
+No DBeaver (ou outro cliente), na aba **SSH**:
+
+| Campo                    | Valor                                       |
+| ------------------------ | ------------------------------------------- |
+| Host/IP                  | `SEU_DOMINIO` — porta `22`                  |
+| Autenticação             | chave pública (`~/.ssh/id_rsa`)             |
+| **Host remoto**          | **`127.0.0.1`**                             |
+| **Porta remota**         | `5432`                                      |
+| Host local / porta local | `127.0.0.1` / `5433` (qualquer porta livre) |
+
+Na aba **Principal**, use `localhost:5433` com o banco e o usuário de `POSTGRES_DB`/`POSTGRES_USER`.
+
+> **Não use o IP do container** (`172.18.0.x`) como host remoto. Ele é atribuído pelo Docker na criação e muda quando outro container é recriado no deploy — o túnel passa a encaminhar para um endereço sem Postgres e o cliente mostra `EOFException`, como se o túnel tivesse parado de funcionar. `127.0.0.1` é o host, não o container, então não muda.
+
+Alternativa sem abrir porta nenhuma: `docker exec -it postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"`.
+
 ---
 
 ## GitHub Actions
@@ -481,7 +501,7 @@ Todos os workflows de deploy (`deploy.yml`, `deploy-infra.yml`, `renew-ssl.yml`)
 
 ```bash
 PORT=3000
-NEXT_PUBLIC_SITE_NAME=IndiesBrasil
+NEXT_PUBLIC_SITE_NAME="Jogos Social"
 NEXT_PUBLIC_BASE_URL=localhost
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 PEPPER="uma-string-secreta"
