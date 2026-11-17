@@ -1,8 +1,11 @@
 /* Portas de entrada da home — ver `CategoryTiles.jsx`.
    Uma grade de links, não de cards de dado: cada item leva a uma listagem. */
+/* 240px (e não 220): com as 12 portas do catálogo, o desktop fecha em quatro
+   colunas × três linhas. Com 220px cabiam cinco colunas e as duas últimas
+   portas ficavam órfãs na terceira linha. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: var(--space-3);
   margin: 0;
   padding: 0;

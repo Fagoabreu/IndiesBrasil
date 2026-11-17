@@ -4,6 +4,7 @@ import TEST_CREDENTIALS from "tests/helpers/testCredentials.js";
 import { createActivatedUserWithSession } from "tests/helpers/storeTestUtils";
 import organization from "models/organization";
 import book from "models/book";
+import post from "models/post";
 import moderation from "models/moderation";
 
 /**
@@ -20,6 +21,7 @@ import moderation from "models/moderation";
 describe("Home (HTML servido)", () => {
   let visibleSlug;
   let blockedSlug;
+  let visiblePostId;
 
   beforeAll(async () => {
     await orchestrator.waitForAllServices();
@@ -52,6 +54,11 @@ describe("Home (HTML servido)", () => {
       reason: "violacao_termos",
       moderatorId: user.id,
     });
+
+    // Sem post, a home não tinha nenhuma referência à rede social: o feed é a
+    // metade do produto que a vitrine de catálogo não mostra.
+    const createdPost = await post.create({ content: "Primeiro post da home", author_id: user.id });
+    visiblePostId = createdPost.id;
   });
 
   test("o HTML traz o destaque e as portas de entrada", async () => {
@@ -66,6 +73,11 @@ describe("Home (HTML servido)", () => {
     expect(html).toContain('href="/jogos-de-mesa"');
     expect(html).toContain('href="/assets"');
     expect(html).toContain('href="/servicos"');
+    expect(html).toContain('href="/posts"');
+
+    // A prévia do feed também sai no HTML: a home se apresenta como rede social
+    // e precisa mostrar a conversa, não só o catálogo.
+    expect(html).toContain(`href="/posts/${visiblePostId}"`);
   });
 
   test("não anuncia obra bloqueada pela moderação", async () => {

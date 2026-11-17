@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import styles from "./index.module.css";
 import CategoryTiles from "@/components/Landing/CategoryTiles/CategoryTiles";
+import CommunityFeed from "@/components/Landing/CommunityFeed/CommunityFeed";
 import CommunityStats from "@/components/Landing/CommunityStats/CommunityStats";
 import HighlightCard from "@/components/HighlightCard/HighlightCard";
 import EventCard from "@/components/Agenda/EventCard";
@@ -83,7 +84,7 @@ const AUDIENCES = [
     href: "/jogos",
     icon: <VideoIcon />,
     title: "Para quem joga",
-    desc: "Descubra jogos digitais e de mesa, quadrinhos e assets feitos no Brasil — e acompanhe os estúdios que você gosta.",
+    desc: "Descubra jogos digitais e de mesa, quadrinhos e assets feitos no Brasil — e participe do feed da comunidade.",
     cta: "Explorar o catálogo",
   },
   {
@@ -211,7 +212,10 @@ function SectionReveal({ children, className = "", as: Tag = "section", ...props
 /** Quantos eventos a home mostra antes de mandar para a agenda completa. */
 const UPCOMING_EVENTS_LIMIT = 2;
 
-function Home({ initialHighlights = [] }) {
+/** Quantos posts a prévia do feed mostra antes de mandar para `/posts`. */
+const RECENT_POSTS_LIMIT = 3;
+
+function Home({ initialHighlights = [], recentPosts = [] }) {
   const { user } = useUser();
   const isLoggedIn = Boolean(user?.id);
   const [summary, setSummary] = useState(null);
@@ -349,7 +353,7 @@ function Home({ initialHighlights = [] }) {
 
               <p className={styles.heroSub}>
                 Descubra jogos digitais, jogos de mesa, quadrinhos e assets feitos no Brasil — e mostre o seu: portfólio, estúdio, catálogo e material
-                de imprensa em um só lugar.
+                de imprensa. O feed da comunidade está aberto para ler.
               </p>
 
               <div className={styles.heroCta}>
@@ -468,6 +472,29 @@ function Home({ initialHighlights = [] }) {
             ))}
           </div>
         </SectionReveal>
+
+        {/* ════════════════════════════════════
+            COMUNIDADE — o feed em si
+            A página se apresenta como rede social e não mostrava nenhum post:
+            portas de entrada e vitrine cobrem o catálogo, não a conversa.
+        ════════════════════════════════════ */}
+        {recentPosts.length > 0 && (
+          <SectionReveal id="feed" className={styles.section}>
+            <header className={styles.sectionHeader}>
+              <p className={styles.sectionLabel}>Comunidade</p>
+              <h2 className={styles.sectionTitle}>O que estão falando agora</h2>
+              <p className={styles.sectionSub}>
+                Posts de quem faz jogos no Brasil — atualizações de projeto, conquistas e dúvidas. Ler é livre; responder pede uma conta.
+              </p>
+            </header>
+
+            <CommunityFeed posts={recentPosts} />
+
+            <Link href="/posts" className={styles.upcomingMore}>
+              Entrar no feed da comunidade →
+            </Link>
+          </SectionReveal>
+        )}
 
         {/* ════════════════════════════════════
             AGENDA — próximos eventos
@@ -674,8 +701,15 @@ export default Home;
  * apresentação do produto.
  */
 export async function getServerSideProps() {
+  const { anonymousCan } = await import("@/infra/controller");
+
+  const [highlights, posts] = await Promise.all([loadHighlights(anonymousCan), loadRecentPosts(anonymousCan)]);
+
+  return { props: { initialHighlights: highlights, recentPosts: posts } };
+}
+
+async function loadHighlights(anonymousCan) {
   try {
-    const { anonymousCan } = await import("@/infra/controller");
     const { default: highlight } = await import("@/models/highlight");
 
     const highlights = await highlight.findHighlights();
@@ -685,9 +719,32 @@ export async function getServerSideProps() {
     // anunciar um endereço que responde 404.
     const allowed = highlights.filter((item) => anonymousCan(HIGHLIGHT_TYPE_FEATURES[item.type]));
 
-    return { props: { initialHighlights: JSON.parse(JSON.stringify(allowed)) } };
+    return JSON.parse(JSON.stringify(allowed));
   } catch (error) {
     console.error("Erro ao buscar destaques da home:", error);
-    return { props: { initialHighlights: [] } };
+    return [];
+  }
+}
+
+/**
+ * Três posts recentes para a prévia do feed.
+ *
+ * `getPosts(null, …)` é o caminho anônimo do model — o mesmo que a rota
+ * pública usa —, então a moderação (post, autor ou estúdio bloqueado) vale aqui
+ * sem código extra. `JSON.parse(JSON.stringify())` porque `created_at` é `Date`
+ * e o Next não serializa `Date` em props (a página responderia 500).
+ */
+async function loadRecentPosts(anonymousCan) {
+  if (!anonymousCan("read:post")) return [];
+
+  try {
+    const { default: post } = await import("@/models/post");
+
+    const posts = await post.getPosts(null, undefined, undefined, { limit: RECENT_POSTS_LIMIT });
+
+    return JSON.parse(JSON.stringify(posts));
+  } catch (error) {
+    console.error("Erro ao buscar posts da home:", error);
+    return [];
   }
 }

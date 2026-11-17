@@ -3,11 +3,13 @@ import PropTypes from "prop-types";
 import {
   ArchiveIcon,
   BookIcon,
+  BroadcastIcon,
   CodeReviewIcon,
   LightBulbIcon,
   MilestoneIcon,
   OrganizationIcon,
   PaperAirplaneIcon,
+  PeopleIcon,
   TableIcon,
   ToolsIcon,
   VideoIcon,
@@ -31,9 +33,11 @@ const ICONS = {
   asset: ArchiveIcon,
   studio: OrganizationIcon,
   service: ToolsIcon,
+  community: PeopleIcon,
   news: PaperAirplaneIcon,
   review: CodeReviewIcon,
   course: LightBulbIcon,
+  live: BroadcastIcon,
   event: MilestoneIcon,
 };
 

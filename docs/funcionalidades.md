@@ -76,7 +76,7 @@ Stack: Next.js (Pages Router), React, Primer React, PostgreSQL com `node-pg-migr
 
 ## 3. Comunidade
 
-- **Home** com vitrine de conteúdo em destaque — até 3 jogos, 3 jogos de mesa, 3 livros e 3 assets, uma coluna por tipo — renderizada no **servidor** (o HTML sai com os links das obras), mapa de categorias com contagem, faixa de números da comunidade, agenda, depoimentos e convite ao cadastro.
+- **Home** com vitrine de conteúdo em destaque — até 3 jogos, 3 jogos de mesa, 3 livros e 3 assets, uma coluna por tipo — renderizada no **servidor** (o HTML sai com os links das obras), mapa de categorias com contagem, faixa de números da comunidade, prévia do feed (3 posts mais recentes), agenda, depoimentos e convite ao cadastro.
 
 ### 3.1 Posts
 
@@ -463,26 +463,26 @@ Sobre a compressão de vídeo:
 
 ### Públicas e de comunidade
 
-| Rota             | Conteúdo                                                                                                                                                                                                             |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`              | Home: proposta, mapa de categorias com contagem, números da comunidade (jogos, estúdios, membros, eventos), destaques (até 3 jogos, 3 jogos de mesa, 3 livros e 3 assets), agenda, depoimentos e convite ao cadastro |
-| `/posts`         | Feed da comunidade                                                                                                                                                                                                   |
-| `/membros`       | Diretório de membros                                                                                                                                                                                                 |
-| `/estudios`      | Diretório de estúdios                                                                                                                                                                                                |
-| `/jogos`         | Catálogo de jogos digitais                                                                                                                                                                                           |
-| `/jogos-de-mesa` | Catálogo de jogos de mesa                                                                                                                                                                                            |
-| `/quadrinhos`    | Catálogo de livros e quadrinhos                                                                                                                                                                                      |
-| `/assets`        | Catálogo de assets                                                                                                                                                                                                   |
-| `/noticias`      | Notícias                                                                                                                                                                                                             |
-| `/analises`      | Análises e reviews                                                                                                                                                                                                   |
-| `/estudos`       | Cursos                                                                                                                                                                                                               |
-| `/agenda`        | Agenda de eventos                                                                                                                                                                                                    |
-| `/streams`       | Streams ao vivo                                                                                                                                                                                                      |
-| `/servicos`      | Diretório de serviços                                                                                                                                                                                                |
-| `/presskit`      | Press kit oficial da plataforma                                                                                                                                                                                      |
-| `/como-publicar` | Guia de publicação                                                                                                                                                                                                   |
-| `/ferramentas/*` | Sete ferramentas                                                                                                                                                                                                     |
-| `/status`        | Status do servidor                                                                                                                                                                                                   |
+| Rota             | Conteúdo                                                                                                                                                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/`              | Home: proposta, mapa de categorias com contagem, números da comunidade (jogos, estúdios, membros, eventos), destaques (até 3 jogos, 3 jogos de mesa, 3 livros e 3 assets), prévia do feed, agenda, depoimentos e convite ao cadastro |
+| `/posts`         | Feed da comunidade                                                                                                                                                                                                                   |
+| `/membros`       | Diretório de membros                                                                                                                                                                                                                 |
+| `/estudios`      | Diretório de estúdios                                                                                                                                                                                                                |
+| `/jogos`         | Catálogo de jogos digitais                                                                                                                                                                                                           |
+| `/jogos-de-mesa` | Catálogo de jogos de mesa                                                                                                                                                                                                            |
+| `/quadrinhos`    | Catálogo de livros e quadrinhos                                                                                                                                                                                                      |
+| `/assets`        | Catálogo de assets                                                                                                                                                                                                                   |
+| `/noticias`      | Notícias                                                                                                                                                                                                                             |
+| `/analises`      | Análises e reviews                                                                                                                                                                                                                   |
+| `/estudos`       | Cursos                                                                                                                                                                                                                               |
+| `/agenda`        | Agenda de eventos                                                                                                                                                                                                                    |
+| `/streams`       | Streams ao vivo                                                                                                                                                                                                                      |
+| `/servicos`      | Diretório de serviços                                                                                                                                                                                                                |
+| `/presskit`      | Press kit oficial da plataforma                                                                                                                                                                                                      |
+| `/como-publicar` | Guia de publicação                                                                                                                                                                                                                   |
+| `/ferramentas/*` | Sete ferramentas                                                                                                                                                                                                                     |
+| `/status`        | Status do servidor                                                                                                                                                                                                                   |
 
 ### Autenticadas
 
