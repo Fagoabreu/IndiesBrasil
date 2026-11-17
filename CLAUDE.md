@@ -2,8 +2,8 @@
 
 ## Stack
 
-- Next.js 16.1.6 — **Pages Router** (`pages/`). Nunca `"use client"` nem App Router.
-- React 19.2.3 / @primer/react 38.0.0 / @primer/primitives 11.2.1 / react-easy-crop 5.5.6
+- Next.js 16.2.9 — **Pages Router** (`pages/`). Nunca `"use client"` nem App Router.
+- React 19.2.4 / @primer/react 38.0.0 / @primer/primitives 11.2.1 / react-easy-crop 5.5.6
 - PostgreSQL + node-pg-migrate. Queries sempre parametrizadas.
 - Dirs: `pages/`, `pages/api/`, `components/`, `models/`, `lib/`, `infra/`, `context/`, `css/`, `tests/`
 
@@ -78,6 +78,7 @@
 - `npm run lint` apos toda mudanca. Zero erros para entregar.
 - `no-undef: error` / `no-unused-vars: warn`. Remover imports nao usados.
 - `Number.parseInt(x,10)`, `Number.isNaN`, `===`. Nunca `var`.
+- **`catch` vazio so com justificativa inline.** Engolir erro sem dizer por que esconde falha silenciosa; onde a tolerancia e proposital (imagem ja apagada no Cloudinary, por exemplo), o comentario dentro do bloco e o que impede alguem de "consertar" o silencio depois.
 - `infra/**/*.js` excluido do lint.
 - Commits: Conventional Commits (`feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`).
 
@@ -133,6 +134,7 @@ Inserir antes de `"read:content_review"`. Usar contexto unico para cada bloco (v
 
 - Migrations single-purpose com `exports.down`. Sem string-interpolation em SQL.
 - Funcoes `async` de data-access: tratamento explicito de erros obrigatorio.
+- **Query reutilizada vira funcao nomeada em `models/`**, nunca copia na rota: duas copias divergem na primeira correcao (foi assim que o filtro de moderacao ficou de fora de um endpoint e ele passou a servir conteudo bloqueado).
 - **Ordem das migrations e por POSICAO, nao por nome**: `node-pg-migrate` le `pgmigrations` ordenada por `run_on, id` e compara indice a indice com os arquivos ordenados pelo carimbo do nome (`checkOrder`). Se o `run_on` de uma migration ficar depois do de uma migration seguinte, **todo** `up` passa a falhar com `Not run migration X is preceding already run migration Y` — mesmo sem faltar migration nenhuma. Aconteceu no `local_db`: quatro (`1779580800003`, `…004`, `…005`, `1779840000000_create-games`) foram gravadas 12 s depois das 93 restantes.
 - O reparo e `npm run migrations:repair-order` (`scripts/repair-migration-order.js`): ele move o **minimo** de linhas (mantem a maior subsequencia crescente e encaixa as outras no vao entre as vizinhas), muda so `run_on`, em transacao, e recusa quando falta arquivo na tabela (ai e pendencia de verdade) ou sobra linha sem arquivo (migration apagada). Rode com `--dry-run` primeiro; `--envPath=` troca o `.env`.
 - **Nunca** contorne com `up --no-check-order`: isso desliga a checagem em vez de corrigir o estado, e a divergencia entre arquivo e banco so aparece quando alguem precisa de `down`. Tambem nao rode `up --file` por migration avulsa nem insira linha em `pgmigrations` a mao — e assim que o `run_on` sai de sequencia.
@@ -142,6 +144,7 @@ Inserir antes de `"read:content_review"`. Usar contexto unico para cada bloco (v
 ## Seguranca
 
 - Sem secrets hardcoded. Sanitizar todo input externo. Auth sempre server-side.
+- **Nunca logar senha, token ou PII** (CPF, e-mail, telefone, IP de usuario). Token de sessao/ativacao em log e o mesmo que publica-lo: o log vai para lugar que ninguem audita e sobrevive ao incidente. Quando o valor entra numa mensagem de erro, logue o id do registro, nao o dado.
 - `dangerouslySetInnerHTML`: comentar justificativa inline.
 - **`safeFetch` e o unico jeito de buscar URL que vem de usuario** — `isSafeUrl` sozinho **nao basta**. Ele valida a URL de entrada, mas o `fetch` segue redirecionamento por padrao e resolve o DNS de novo ao conectar; um host publico do atacante que responde `302 Location: http://169.254.169.254/` era buscado sem nova checagem. `safeFetch` (`lib/safe-fetch.js`) segue cada hop revalidando e **fixa o endereco validado na conexao** (option `lookup`), o que fecha tambem DNS rebinding. Ocorrencia corrigida: `lib/og-image.js` usava `isSafeUrl` + `fetch` e as rotas `/api/og/**` sao publicas e sem rate limit.
 - **`isPrivateIp` e allowlist, nao lista de bloqueio.** `lib/ssrf-guard.js` so considera publico IPv4 fora das faixas privadas e IPv6 dentro de **`2000::/3`** (unicast global). O guard antigo olhava o prefixo textual do IPv6 (`fc`, `fd`, `fe`, `ff`) e classificava `::ffff:127.0.0.1` como **publico** — em host dual-stack isso alcanca o loopback de verdade (Postgres 5432, app 3000, Galene 8000). `ipv6ToBytes` + `isPrivateIpv6` extraem o IPv4 embutido de `::ffff:a.b.c.d`, `::a.b.c.d`, `64:ff9b::/96` (NAT64), `2002::/16` (6to4) e bloqueiam Teredo e `2001:db8::/32`. `tests/unit/lib/ssrf-guard.test.js` fixa cada caso.
