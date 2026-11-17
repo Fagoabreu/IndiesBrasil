@@ -68,6 +68,11 @@ describe("Home (HTML servido)", () => {
     expect(response.status).toBe(200);
     expect(html).toContain(`href="/quadrinhos/${visibleSlug}"`);
 
+    // Uma linha por tipo: o agrupamento é dito por um título, não só pelo selo
+    // sobre a arte.
+    expect(html).toContain("Livros e quadrinhos");
+    expect(html).toContain('href="/quadrinhos"');
+
     // O mapa de categorias é o que responde "o que existe aqui?" mesmo quando
     // não há destaque nenhum no banco: ele não depende da API.
     expect(html).toContain('href="/jogos-de-mesa"');

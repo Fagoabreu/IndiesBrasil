@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL, SITE_NAME, SITE_ALTERNATE_NAMES, OG_COVER_ART, OG_IMAGE_SIZE } from "@/lib/seo";
 import { sortEventsByStart } from "@/lib/eventFormat";
-import { HIGHLIGHT_TYPE_FEATURES, shouldGroupHighlights } from "@/lib/highlights";
+import { HIGHLIGHT_TYPE_FEATURES, groupHighlightsByType } from "@/lib/highlights";
 import { LANDING_CATEGORIES } from "@/lib/landing";
 import useInView from "@/hooks/useInView";
 
@@ -300,10 +300,9 @@ function Home({ initialHighlights = [], recentPosts = [] }) {
     getUpcomingEvents();
   }, []);
 
-  // Agrupar uma coluna por tipo só faz sentido quando cada tipo preenche a
-  // coluna inteira (ver `shouldGroupHighlights`). Fora disso, grade fluida: uma
-  // coluna com 3 itens e outra com 1 pareceria um grid quebrado.
-  const groupHighlights = shouldGroupHighlights(highlights.length);
+  // Uma linha por tipo, na ordem de `HIGHLIGHT_TYPES`: o agrupamento passa a
+  // ser dito por um título, e não só pelo selo sobre a arte.
+  const highlightGroups = groupHighlightsByType(highlights);
 
   return (
     <div className={styles.root}>
@@ -404,24 +403,35 @@ function Home({ initialHighlights = [], recentPosts = [] }) {
         </section>
 
         {/* ════════════════════════════════════
-            DESTAQUES — conteúdo real na primeira rolagem
+            DESTAQUES — conteúdo real na primeira rolagem, uma linha por tipo
             Antes esta seção vinha depois de 12 métricas e 3 cards de
             audiência: quinze caixas de texto antes de o visitante ver uma
             única obra. Os dados chegam do servidor (`getServerSideProps`),
             então o HTML já sai com os links.
         ════════════════════════════════════ */}
-        {highlights.length > 0 && (
+        {highlightGroups.length > 0 && (
           <SectionReveal className={styles.section}>
             <header className={styles.sectionHeader}>
               <p className={styles.sectionLabel}>Destaques</p>
               <h2 className={styles.sectionTitle}>O que a comunidade está criando</h2>
               <p className={styles.sectionSub}>Jogos digitais, jogos de mesa, livros e assets feitos por estúdios brasileiros.</p>
             </header>
-            <div className={`${styles.highlightGrid} ${groupHighlights ? styles.highlightGridGrouped : ""}`}>
-              {highlights.map((item) => (
-                <HighlightCard key={`${item.type}-${item.slug}`} item={item} />
-              ))}
-            </div>
+
+            {highlightGroups.map((group) => (
+              <div key={group.type} className={styles.highlightGroup}>
+                <div className={styles.highlightGroupHeader}>
+                  <h3 className={styles.highlightGroupTitle}>{group.heading}</h3>
+                  <Link href={group.route} className={styles.highlightGroupLink}>
+                    Ver todos →
+                  </Link>
+                </div>
+                <div className={styles.highlightGrid}>
+                  {group.items.map((item) => (
+                    <HighlightCard key={`${item.type}-${item.slug}`} item={item} />
+                  ))}
+                </div>
+              </div>
+            ))}
           </SectionReveal>
         )}
 
