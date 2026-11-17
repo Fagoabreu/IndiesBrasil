@@ -1,5 +1,6 @@
 import database from "infra/database";
 import password from "models/password";
+import session from "./session";
 import { ValidationError, NotFoundError, ServiceError } from "infra/errors.js";
 import notification from "./notification";
 import organization from "./organization";
@@ -568,7 +569,16 @@ async function create(userInputValues) {
   }
 }
 
-async function update(username, userInputValues) {
+/**
+ * Atualiza o usuário.
+ *
+ * @param {string} username
+ * @param {object} userInputValues
+ * @param {{ exceptSessionId?: string|null }} [options]
+ *   `exceptSessionId`: sessão a preservar quando a senha muda (a que fez a
+ *   troca). Ausente = encerra todas, que é o correto no fluxo de reset por token.
+ */
+async function update(username, userInputValues, options = {}) {
   // O username usado para LOCALIZAR o usuário também passa pela forma canônica:
   // uma URL antiga com espaço no fim continua encontrando o registro, em vez de
   // responder 404.
@@ -589,6 +599,11 @@ async function update(username, userInputValues) {
   }
   if ("password" in userInputValues) {
     await hashPasswordInObject(userInputValues);
+    // Trocar a senha encerra as OUTRAS sessões. Sem isto, o fluxo de "esqueci a
+    // senha" não tirava o invasor de dentro da conta: ele seguia com a sessão
+    // antiga por até 30 dias, e a pessoa que acabou de redefinir a senha não
+    // tinha como saber. Ver `session.invalidateAllUserSessions`.
+    await session.invalidateAllUserSessions(currentUser.id, { exceptSessionId: options.exceptSessionId });
   }
   const userWithNewValues = {
     ...currentUser,

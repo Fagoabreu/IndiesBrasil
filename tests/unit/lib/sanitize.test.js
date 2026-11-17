@@ -187,10 +187,44 @@ describe("lib/sanitize.js", () => {
       expect(sanitizeHtml.sanitize('<form action="javascript:alert(1)"><input></form>')).not.toMatch(/javascript:/i);
     });
 
+    test("remove event handler separado por barra (bypass do parser HTML)", () => {
+      // O parser HTML aceita `/` onde aceita espaço: `<img src=x /onerror=…>` é
+      // lido como `<img src=x onerror=…>`. Como `EVENT_HANDLERS` exige `\s+`
+      // antes do nome, o handler sobrevivia ao filtro — e a tag `img` é
+      // permitida, então o payload chegava inteiro no `dangerouslySetInnerHTML`.
+      expect(sanitizeHtml.sanitize('<img src="x" /onerror="alert(1)">')).not.toMatch(/onerror/i);
+      expect(sanitizeHtml.sanitize("<img/src=x/onerror=alert(1)>")).not.toMatch(/onerror/i);
+      expect(sanitizeHtml.sanitize('<a href="#" /onclick="alert(1)">x</a>')).not.toMatch(/onclick/i);
+      // A barra "colada" no nome também é separador válido para o parser.
+      expect(sanitizeHtml.sanitize('<div/onmouseover="alert(1)">a</div>')).not.toMatch(/onmouseover/i);
+    });
+
+    test("remove style e URL perigosa separados por barra", () => {
+      expect(sanitizeHtml.sanitize('<div/style="position:fixed">a</div>')).not.toMatch(/style/i);
+      expect(sanitizeHtml.sanitize('<a/href="javascript:alert(1)">x</a>')).not.toMatch(/javascript:/i);
+    });
+
+    test("barra de fechamento de tag não é confundida com separador", () => {
+      // `/>` não pode virar espaço: a tag precisa continuar bem formada. O que
+      // se verifica aqui é que a normalização não cria atributo nenhum.
+      const output = sanitizeHtml.sanitize('<img src="a.png"/>');
+      expect(output).toContain("<img");
+      expect(output).toContain('src="a.png"');
+      expect(output).not.toMatch(/on\w+=/i);
+
+      // Nota: `<br>`/`<br/>`/`<hr/>` são descartados pelo sanitizador desde
+      // antes desta mudança (a alternativa da allowlist consome o `>` e o `>`
+      // final do padrão não casa). É um bug pré-existente, fora do escopo aqui —
+      // não é efeito da normalização de separador.
+      expect(sanitizeHtml.sanitize("<br/>")).not.toMatch(/on\w+=/i);
+    });
+
     test("é idempotente sobre os payloads (segunda passada não ressuscita nada)", () => {
       const payloads = [
         '<div style="position:fixed">a</div>',
         "<img src=x onerror=alert(1)>",
+        '<img src="x" /onerror="alert(1)">',
+        '<div/style="position:fixed">a</div>',
         '<a href="javascript:alert(1)">x</a>',
         "<svg><script>alert(1)</script></svg>",
       ];

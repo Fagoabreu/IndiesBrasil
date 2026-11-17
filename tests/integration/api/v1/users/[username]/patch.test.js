@@ -766,4 +766,85 @@ describe("Patch /api/v1/users/[username]", () => {
       expect(responseBody).not.toHaveProperty("features");
     });
   });
+
+  describe("troca de senha e sessões", () => {
+    test("Trocar a própria senha mantém a sessão atual", async () => {
+      // A sessão que fez a troca é preservada: derrubá-la seria um logout
+      // inesperado logo depois de uma ação deliberada.
+      const owner = await orchestrator.createUser({
+        username: "TrocaPropriaSenha",
+        email: "troca.propria.senha@teste.dev",
+        password: "Senha@Antiga1",
+        cpf: "80123456704",
+      });
+      const activated = await orchestrator.activateUser(owner);
+      const current = await orchestrator.createSession(activated);
+
+      const response = await fetch(`${webserver.origin}/api/v1/users/${owner.username}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", cookie: `session_id=${current.token}` },
+        body: JSON.stringify({ password: "Senha@Nova1" }),
+      });
+      expect(response.status).toBe(200);
+
+      const after = await fetch(`${webserver.origin}/api/v1/user`, {
+        headers: { cookie: `session_id=${current.token}` },
+      });
+      expect(after.status).toBe(200);
+    });
+
+    test("Trocar a própria senha encerra as OUTRAS sessões", async () => {
+      // É o caso da conta invadida: a pessoa troca a senha pelo perfil e o
+      // invasor, que estava logado em outro dispositivo, perde o acesso.
+      const owner = await orchestrator.createUser({
+        username: "TrocaSenhaOutrasSessoes",
+        email: "troca.senha.outras@teste.dev",
+        password: "Senha@Antiga1",
+        cpf: "80123456705",
+      });
+      const activated = await orchestrator.activateUser(owner);
+      const current = await orchestrator.createSession(activated);
+      const otherDevice = await orchestrator.createSession(activated);
+
+      const response = await fetch(`${webserver.origin}/api/v1/users/${owner.username}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", cookie: `session_id=${current.token}` },
+        body: JSON.stringify({ password: "Senha@Nova1" }),
+      });
+      expect(response.status).toBe(200);
+
+      const other = await fetch(`${webserver.origin}/api/v1/user`, {
+        headers: { cookie: `session_id=${otherDevice.token}` },
+      });
+      // 401: o token não corresponde mais a nenhuma sessão ativa.
+      expect(other.status).toBe(401);
+    });
+
+    test("Salvar o perfil sem senha não encerra sessão nenhuma", async () => {
+      // O encerramento é amarrado à presença de `password` no corpo. Se ele
+      // disparasse em qualquer PATCH, editar o resumo deslogaria o usuário de
+      // todos os dispositivos — perder funcionalidade sem ganhar segurança.
+      const owner = await orchestrator.createUser({
+        username: "PatchSemSenha",
+        email: "patch.sem.senha@teste.dev",
+        password: "Senha@Antiga1",
+        cpf: "80123456706",
+      });
+      const activated = await orchestrator.activateUser(owner);
+      const current = await orchestrator.createSession(activated);
+      const otherDevice = await orchestrator.createSession(activated);
+
+      const response = await fetch(`${webserver.origin}/api/v1/users/${owner.username}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", cookie: `session_id=${current.token}` },
+        body: JSON.stringify({ resumo: "Novo resumo" }),
+      });
+      expect(response.status).toBe(200);
+
+      const other = await fetch(`${webserver.origin}/api/v1/user`, {
+        headers: { cookie: `session_id=${otherDevice.token}` },
+      });
+      expect(other.status).toBe(200);
+    });
+  });
 });

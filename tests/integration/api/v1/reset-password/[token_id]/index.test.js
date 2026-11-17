@@ -125,4 +125,51 @@ describe("PATCH /api/v1/reset-password/[token_id]", () => {
     expect(stillValid.used_at).toBeNull();
     expect(stillValid.purpose).toBe(activation.TOKEN_PURPOSE.ACTIVATION);
   });
+
+  test("Trocar a senha encerra as sessões abertas", async () => {
+    // O cenário que isto cobre é o motivo de o reset existir: a conta foi
+    // invadida e a pessoa redefine a senha. Sem encerrar as sessões, o invasor
+    // seguia logado com o token antigo por até 30 dias — e a pessoa não tinha
+    // como saber, porque a senha dela já era outra.
+    const victim = await orchestrator.createUser({
+      username: "ResetEncerraSessoes",
+      email: "reset.encerra.sessoes@teste.dev",
+      password: "Senha@Antiga1",
+      cpf: "80123456703",
+    });
+    await orchestrator.activateUser(victim);
+
+    // A sessão do "invasor": aberta antes da troca de senha.
+    const attackerSession = await orchestrator.createSession(victim);
+
+    const before = await fetch(`${webserver.origin}/api/v1/user`, {
+      headers: { cookie: `session_id=${attackerSession.token}` },
+    });
+    expect(before.status).toBe(200);
+
+    const resetToken = await activation.create(victim.id, activation.TOKEN_PURPOSE.RESET);
+    const reset = await fetch(`${webserver.origin}/api/v1/reset-password/${resetToken.id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ password: "Senha@Nova1" }),
+    });
+    expect(reset.status).toBe(201);
+
+    // A sessão antiga deixa de valer no pedido seguinte: **401**, porque o token
+    // já não corresponde a nenhuma sessão ativa (`findOneValidByToken` lança
+    // `UnauthorizedError` antes de chegar a qualquer regra de permissão).
+    const after = await fetch(`${webserver.origin}/api/v1/user`, {
+      headers: { cookie: `session_id=${attackerSession.token}` },
+    });
+    expect(after.status).toBe(401);
+
+    // E a senha nova realmente entrou — o encerramento não é efeito de a troca
+    // ter falhado.
+    const login = await fetch(`${webserver.origin}/api/v1/sessions`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email: "reset.encerra.sessoes@teste.dev", password: "Senha@Nova1" }),
+    });
+    expect(login.status).toBe(201);
+  });
 });
