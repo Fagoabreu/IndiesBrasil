@@ -17,6 +17,7 @@
 ## Imagens
 
 - Nunca `<img>` — sempre `<Image>` de `next/image`. Nao otimizaveis (blob/canvas/dataURI): `unoptimized` + `width`/`height`.
+- **Host fora de `images.remotePatterns` tambem e `unoptimized`.** `cover_url_external` (livro), avatar de contato e afins vem de endereco digitado pelo usuario: o `next/image` lanca `Invalid src prop` e, renderizado no servidor, o erro derruba a PAGINA INTEIRA com 500. `HighlightCard` decide por host (`res.cloudinary.com` otimiza, o resto nao); `BookCard` e `pages/quadrinhos/[slug]` desenham a capa sempre `unoptimized`. Verificado: a home respondia 500 assim que um destaque de livro tinha capa externa.
 - `fill`: pai com `position:relative`, CSS do fill so `object-fit`.
 
 ## CSS / Cores
