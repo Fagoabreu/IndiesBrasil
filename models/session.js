@@ -173,21 +173,71 @@ function getExpitationDate() {
   return new Date(Date.now() + EXPIRATION_IN_MILLISECONDS);
 }
 
-async function invalidateAllUserSessions(userId) {
+/**
+ * Encerra as sessões válidas do usuário.
+ *
+ * ## Por que existir, e por que agora é chamada
+ *
+ * A função existia desde antes e **não era chamada em lugar nenhum** — nem no
+ * reset de senha, nem no `PATCH` do perfil. O cenário que isso deixava aberto é
+ * o mais comum de todos: conta invadida → a pessoa usa o "esqueci a senha" →
+ * o invasor continua logado com a sessão antiga por até **30 dias**. O reset não
+ * resolvia o problema para o qual existe.
+ *
+ * ## `exceptSessionId`
+ *
+ * Quando a própria pessoa troca a senha pelo perfil, a sessão que fez a troca é
+ * preservada: derrubá-la seria um logout inesperado logo depois de uma ação
+ * deliberada. Quem **não** tem sessão (o fluxo de reset por token, onde a pessoa
+ * chega deslogada) encerra todas — e é justamente esse o caso que tira o invasor
+ * de dentro da conta.
+ *
+ * @param {string} userId
+ * @param {{ exceptSessionId?: string|null }} [options]
+ */
+async function invalidateAllUserSessions(userId, { exceptSessionId = null } = {}) {
   await database.query({
     text: `
       UPDATE sessions
       SET expires_at = NOW() - interval '1 year',
           updated_at = NOW()
       WHERE user_id = $1
-        AND expires_at > NOW()`,
-    values: [userId],
+        AND expires_at > NOW()
+        AND ($2::uuid IS NULL OR id <> $2::uuid)`,
+    values: [userId, exceptSessionId],
   });
+}
+
+/**
+ * Id da sessão válida correspondente ao token, ou `null`.
+ *
+ * Não lança — ao contrário de `findOneValidByToken`, que é o certo para
+ * autenticar e o errado para "descobrir qual sessão preservar". Aceita as duas
+ * formas de token (hash e texto plano legado), como a leitura principal.
+ *
+ * @param {string|undefined} token
+ * @returns {Promise<string|null>}
+ */
+async function findIdByToken(token) {
+  if (!token) return null;
+
+  const result = await database.query({
+    text: `
+      SELECT id
+      FROM sessions
+      WHERE (token = $1 OR token = $2)
+        AND expires_at > now()
+      LIMIT 1`,
+    values: [hashToken(token), token],
+  });
+
+  return result.rows[0]?.id ?? null;
 }
 
 const session = {
   create,
   findOneValidByToken,
+  findIdByToken,
   renew,
   expireById,
   invalidateAllUserSessions,

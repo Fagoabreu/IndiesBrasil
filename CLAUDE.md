@@ -2,8 +2,8 @@
 
 ## Stack
 
-- Next.js 16.1.6 — **Pages Router** (`pages/`). Nunca `"use client"` nem App Router.
-- React 19.2.3 / @primer/react 38.0.0 / @primer/primitives 11.2.1 / react-easy-crop 5.5.6
+- Next.js 16.2.9 — **Pages Router** (`pages/`). Nunca `"use client"` nem App Router.
+- React 19.2.4 / @primer/react 38.0.0 / @primer/primitives 11.2.1 / react-easy-crop 5.5.6
 - PostgreSQL + node-pg-migrate. Queries sempre parametrizadas.
 - Dirs: `pages/`, `pages/api/`, `components/`, `models/`, `lib/`, `infra/`, `context/`, `css/`, `tests/`
 
@@ -17,6 +17,7 @@
 ## Imagens
 
 - Nunca `<img>` — sempre `<Image>` de `next/image`. Nao otimizaveis (blob/canvas/dataURI): `unoptimized` + `width`/`height`.
+- **Host fora de `images.remotePatterns` tambem e `unoptimized`.** `cover_url_external` (livro), avatar de contato e afins vem de endereco digitado pelo usuario: o `next/image` lanca `Invalid src prop` e, renderizado no servidor, o erro derruba a PAGINA INTEIRA com 500. `HighlightCard` decide por host (`res.cloudinary.com` otimiza, o resto nao); `BookCard` e `pages/quadrinhos/[slug]` desenham a capa sempre `unoptimized`. Verificado: a home respondia 500 assim que um destaque de livro tinha capa externa.
 - `fill`: pai com `position:relative`, CSS do fill so `object-fit`.
 
 ## CSS / Cores
@@ -78,6 +79,7 @@
 - `npm run lint` apos toda mudanca. Zero erros para entregar.
 - `no-undef: error` / `no-unused-vars: warn`. Remover imports nao usados.
 - `Number.parseInt(x,10)`, `Number.isNaN`, `===`. Nunca `var`.
+- **`catch` vazio so com justificativa inline.** Engolir erro sem dizer por que esconde falha silenciosa; onde a tolerancia e proposital (imagem ja apagada no Cloudinary, por exemplo), o comentario dentro do bloco e o que impede alguem de "consertar" o silencio depois.
 - `infra/**/*.js` excluido do lint.
 - Commits: Conventional Commits (`feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`).
 
@@ -133,6 +135,7 @@ Inserir antes de `"read:content_review"`. Usar contexto unico para cada bloco (v
 
 - Migrations single-purpose com `exports.down`. Sem string-interpolation em SQL.
 - Funcoes `async` de data-access: tratamento explicito de erros obrigatorio.
+- **Query reutilizada vira funcao nomeada em `models/`**, nunca copia na rota: duas copias divergem na primeira correcao (foi assim que o filtro de moderacao ficou de fora de um endpoint e ele passou a servir conteudo bloqueado).
 - **Ordem das migrations e por POSICAO, nao por nome**: `node-pg-migrate` le `pgmigrations` ordenada por `run_on, id` e compara indice a indice com os arquivos ordenados pelo carimbo do nome (`checkOrder`). Se o `run_on` de uma migration ficar depois do de uma migration seguinte, **todo** `up` passa a falhar com `Not run migration X is preceding already run migration Y` — mesmo sem faltar migration nenhuma. Aconteceu no `local_db`: quatro (`1779580800003`, `…004`, `…005`, `1779840000000_create-games`) foram gravadas 12 s depois das 93 restantes.
 - O reparo e `npm run migrations:repair-order` (`scripts/repair-migration-order.js`): ele move o **minimo** de linhas (mantem a maior subsequencia crescente e encaixa as outras no vao entre as vizinhas), muda so `run_on`, em transacao, e recusa quando falta arquivo na tabela (ai e pendencia de verdade) ou sobra linha sem arquivo (migration apagada). Rode com `--dry-run` primeiro; `--envPath=` troca o `.env`.
 - **Nunca** contorne com `up --no-check-order`: isso desliga a checagem em vez de corrigir o estado, e a divergencia entre arquivo e banco so aparece quando alguem precisa de `down`. Tambem nao rode `up --file` por migration avulsa nem insira linha em `pgmigrations` a mao — e assim que o `run_on` sai de sequencia.
@@ -142,7 +145,13 @@ Inserir antes de `"read:content_review"`. Usar contexto unico para cada bloco (v
 ## Seguranca
 
 - Sem secrets hardcoded. Sanitizar todo input externo. Auth sempre server-side.
+- **Nunca logar senha, token ou PII** (CPF, e-mail, telefone, IP de usuario). Token de sessao/ativacao em log e o mesmo que publica-lo: o log vai para lugar que ninguem audita e sobrevive ao incidente. Quando o valor entra numa mensagem de erro, logue o id do registro, nao o dado.
 - `dangerouslySetInnerHTML`: comentar justificativa inline.
+- **`safeFetch` e o unico jeito de buscar URL que vem de usuario** — `isSafeUrl` sozinho **nao basta**. Ele valida a URL de entrada, mas o `fetch` segue redirecionamento por padrao e resolve o DNS de novo ao conectar; um host publico do atacante que responde `302 Location: http://169.254.169.254/` era buscado sem nova checagem. `safeFetch` (`lib/safe-fetch.js`) segue cada hop revalidando e **fixa o endereco validado na conexao** (option `lookup`), o que fecha tambem DNS rebinding. Ocorrencia corrigida: `lib/og-image.js` usava `isSafeUrl` + `fetch` e as rotas `/api/og/**` sao publicas e sem rate limit.
+- **`isPrivateIp` e allowlist, nao lista de bloqueio.** `lib/ssrf-guard.js` so considera publico IPv4 fora das faixas privadas e IPv6 dentro de **`2000::/3`** (unicast global). O guard antigo olhava o prefixo textual do IPv6 (`fc`, `fd`, `fe`, `ff`) e classificava `::ffff:127.0.0.1` como **publico** — em host dual-stack isso alcanca o loopback de verdade (Postgres 5432, app 3000, Galene 8000). `ipv6ToBytes` + `isPrivateIpv6` extraem o IPv4 embutido de `::ffff:a.b.c.d`, `::a.b.c.d`, `64:ff9b::/96` (NAT64), `2002::/16` (6to4) e bloqueiam Teredo e `2001:db8::/32`. `tests/unit/lib/ssrf-guard.test.js` fixa cada caso.
+- **O sanitizador de HTML trata `/` como separador de atributo.** O parser HTML aceita barra onde aceita espaco: `<img src=x /onerror=alert(1)>` e lido como `<img src=x onerror=alert(1)>`. `EVENT_HANDLERS` em `lib/sanitize.js` exige `\s+` antes do nome, entao o handler sobrevivia — nas duas passadas. `ATTRIBUTE_SEPARATOR_SLASH` normaliza a barra **antes** dos filtros, e roda tambem na defesa em profundidade do fim de `sanitize()`. Sem isso o payload chega inteiro no `dangerouslySetInnerHTML` de analise, aula e comentario (XSS armazenado contra usuario logado). Regex nao acompanha o parser do navegador: ao mexer no sanitizador, adicione o payload novo em `tests/unit/lib/sanitize.test.js` — nao confie em "parece seguro".
+- **Trocar a senha encerra as OUTRAS sessoes** (`session.invalidateAllUserSessions`, chamada em `user.update` quando o corpo traz `password`). A funcao existia e **nao era chamada em lugar nenhum**: no fluxo de "esqueci a senha" o invasor continuava logado por ate 30 dias, e a pessoa nao tinha como saber. `exceptSessionId` preserva a sessao que fez a troca pelo perfil (`pages/api/v1/users/[username]/index.js` resolve o id do cookie); no reset por token nao ha sessao, entao todas caem — que e o caso que importa.
+- **Firewall de producao**: 80/443 publicos, 22 so do IP do administrador, default `drop`. `5432` nao aparece porque o Postgres publica so em `127.0.0.1` (`deploy/compose.yaml`). O Galene roda `network_mode: host` com `-http :8000 -insecure`, entao 8000 depende **so** do default drop — nao adicione regra que o abra. `1194` (TURN) e `40000-40100/udp` (`-udp-range`) precisam estar abertos para a webconferencia; o TURN usa porta **efemera** para relay, nao a faixa, entao na pratica ele nao funciona de ponta a ponta (ver `docs/webconference/README.md`).
 
 ## Padroes
 
@@ -254,13 +263,28 @@ Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESM
 ## Destaques da home (`/api/v1/highlights`)
 
 - **3 itens por tipo** (`HIGHLIGHTS_PER_TYPE`), 4 tipos: jogos, jogos de mesa, livros e assets. Era `LIMIT 1` por tipo — a vitrine parecia "um exemplo de cada coisa".
-- `lib/highlights.js` e o **registro unico** (quantidade por tipo, ordem, rotulos, rotas e `shouldGroupHighlights`), importado pela rota **e** pela pagina. A constante nao mora na rota porque ela importa `infra/database` e levaria o pool do `pg` para o bundle do cliente.
+- A query mora em **`models/highlight.js`** (`findHighlights`), e a rota e um wrapper fino. Nao e organizacao gratuita: a home renderiza os mesmos destaques em `getServerSideProps`, e duas copias da regra divergiriam — a do SSR e a que vai no HTML servido ao visitante e ao Google.
+- `lib/highlights.js` e o **registro unico** (quantidade por tipo, ordem, rotulos, rotas, `shouldGroupHighlights` e `HIGHLIGHT_TYPE_FEATURES`), importado pela rota, pelo model e pela pagina. A constante nao mora na rota/model porque a pagina a importa e levaria o pool do `pg` para o bundle do cliente.
+- **Gate por tipo no SSR**: `getServerSideProps` filtra com `anonymousCan(HIGHLIGHT_TYPE_FEATURES[type])` (como `pages/sitemap/[type].js`). Sem isso, revogar `read:asset:all` do anonimo tirava os assets do sitemap e os deixava no HTML da home.
 - **Filtro de moderacao em cada tipo** (conteudo bloqueado e estudio bloqueado), igual ao das listagens: o endpoint nao tinha esse filtro e um destaque podia levar a uma pagina 404. Verificado: os livros do estudio bloqueado no banco local deixaram de aparecer.
 - "Tem imagem" = o que o card desenha (`coverExpression IS NOT NULL`, ou video de galeria em jogos e boardgames). **Asset so entra com capa**; capa externa (`cover_url_external`) so vale em livros.
 - A ordem da resposta (games, boardgames, books, assets) e o que permite o layout **uma coluna por tipo** (`grid-auto-flow: column` + `grid-template-rows: repeat(3, auto)`, em `min-width: 1041px`), aplicado so quando `shouldGroupHighlights(total)` — com 4 itens, agrupar por coluna deixaria uma coluna de 3 e outra de 1.
 - **Nao usar carrossel** aqui: 3 itens por tipo nao transbordam no desktop, e um controle de rolagem que nao rola e affordance falsa. Quatro colunas (e nao tres) mantem a secao em 3 linhas (~800px em vez de ~1060px).
 - O `sizes` do `<Image>` e `25vw` no topo da faixa: com quatro colunas, `33vw` fazia o Next baixar imagem maior que o card.
-- Testes: `tests/unit/lib/highlights.test.js` e `tests/integration/api/v1/highlights/index.test.js` (limite por tipo, assets com e sem capa, conteudo bloqueado).
+- A secao aparece **logo depois do hero** (era depois de 12 cards de metrica + 3 de audiencia): "mostre, nao conte". Sem destaques no banco, ela simplesmente nao renderiza.
+- Testes: `tests/unit/lib/highlights.test.js`, `tests/integration/api/v1/highlights/index.test.js` (limite por tipo, assets com e sem capa, conteudo bloqueado) e `tests/integration/pages/home.test.js` (o HTML de `/` linka a obra e nao linka a bloqueada).
+
+## Home (`pages/index.js`)
+
+- **O H1 diz o que a plataforma e** ("A rede social dos jogos independentes brasileiros"). A versao anterior ("Onde o talento indie brasileiro se encontra") descrevia um sentimento, e o teste dos 5 segundos falhava: comunidade, portal de noticias ou vaga de emprego?
+- **Um CTA preenchido por tela.** Havia cinco botoes com `--brand-gradient` na mesma pagina (nav, hero, estudio, press kit, CTA final), entao nenhum era o proximo passo. Primario = conteudo ("Explorar jogos"); conta e secundaria.
+- **Mapa de categorias em `lib/landing.js`** (`LANDING_CATEGORIES`), desenhado por `components/Landing/CategoryTiles`. Substituiu a parede de 12 cards de metrica: numero sozinho nao dizia o que existe ali e escondia metade do catalogo. A contagem vem de `/api/v1/status/summary` e e **opcional** — a porta (link + rotulo) funciona sem numero e sem JavaScript; categoria vazia nao mostra "0".
+- `tests/unit/lib/landing.test.js` falha se uma porta apontar para pagina inexistente, se houver rotulo repetido ou se um `HIGHLIGHT_TYPE_FEATURES` nao estiver em `ANONYMOUS_FEATURES`.
+- **Faixa de números da comunidade** (`components/Landing/CommunityStats`): quatro contagens em uma linha — jogos, estúdios, membros e eventos dos próximos 30 dias —, cada uma linkando a listagem. E a prova social pedida de volta depois que a grade de 12 cards saiu; o que ficou de fora foi o `periodo anterior` e o `novos em 30 dias`, que sao dado de acompanhamento, nao de primeira visita.
+- **O resumo devolve as contagens como STRING** (`bigint` do Postgres: `user_accounts: "3"`). Use `parseSummaryCount` de `lib/landing.js`; `Number.isFinite("3")` e `false` e o numero simplesmente nunca aparece — bug silencioso, sem erro no servidor, fixado em `tests/unit/components/communityStats.test.js`. Numeros zerados nao sao exibidos (nem "0", nem travessao).
+- **Nao reintroduzir**: o texto digitado do hero (a primeira leitura era "Somos ", 200 ms por caractere), os cards de metrica com "periodo anterior", a grade de "recursos" (repetia as audiencias) e o bloco de press kit na home (publico de jornalista, nao do visitante — vive no rodape).
+- Os cards de audiencia sao **links** para o destino de cada publico (`/cadastro`, `/jogos`, `/presskit`); "Como funciona" so aparece para quem nao tem sessao.
+- Teste de regressao de SEO em `tests/integration/pages/home.test.js`: o HTML de `/` precisa sair com `href="/quadrinhos/<slug>"`.
 
 ## Diretorio de membros (`/membros`)
 
@@ -473,8 +497,8 @@ Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESM
 - **Um host canonico so**: `jogos.social.br`. O `www` responde **301** para o apex (`deploy/nginx/indies.https.conf`, bloco proprio) e o `http` tambem (`indies.http.conf`). Sem o bloco do `www` o nome nao casava com `server_name` nenhum, caia no bloco padrao do nginx e **servia o site inteiro com 200** — duas copias em dois enderecos dividindo os sinais (links, historico) da mesma pagina. O `rel=canonical` sozinho nao resolve: e sugestao, nao ordem. O certificado cobre `www` (SAN), entao a conexao se estabelece antes do redirect; ao mexer em `server_name`, mantenha o `www` no bloco de HTTP tambem, senao a renovacao do certificado (acme-challenge) e o redirect de porta 80 quebram.
 - **A marca sai de UM lugar so**: `SITE_NAME` (`lib/seo.js`), que le `NEXT_PUBLIC_SITE_NAME` (a variavel ja existia no `.env` e no `deploy.yml` e **nenhum codigo a consumia**). Nunca escreva "Jogos Social" literal em pagina, componente, e-mail ou documento gerado — o rebrand Indies Brasil → Jogos Social custou um codemod em ~90 arquivos exatamente porque o nome estava espalhado. Titulos de pagina passam por `pageTitle("Agenda")`, que monta `Agenda — Jogos Social` e **nao duplica** quando o rotulo ja contem a marca (`Como publicar no Jogos Social`).
 - **A marca precisa aparecer no HTML, nao so no JSON-LD**: `<title>`, `og:site_name` e o texto visivel do header/rodape vem de `SITE_NAME`. Quando "Jogos Social" existia apenas em `SITE_ALTERNATE_NAMES`, buscar pelo termo nao encontrava o site — o Google tinha o dominio e a marca como duas coisas separadas. `SITE_ALTERNATE_NAMES` agora lista so o que e **outro** nome (`Indies Brasil`, `jogos.social.br`): repetir o nome principal como alternativa nao ensina nada ao buscador.
-- **`lib/seo.js` é a definição**: qualquer `import { SITE_NAME } from "@/lib/seo"` **dentro dele** é circular (aconteceu no codemod: `export const SITE_NAME = ... || \`${SITE_NAME}\``derrubou o lint com`Identifier 'SITE_NAME' has already been declared`).
-- **Indexacao nao e so codigo**: nada disso aparece no Google sem propriedade no Search Console. O projeto nao tem `<meta name="google-site-verification">`, arquivo em `public/` nem TXT no DNS — os tres caminhos de verificacao estao ausentes, entao sitemap declarado em `robots.txt` nao e o mesmo que sitemap enviado. Ao verificar, prefira a propriedade de **dominio** (TXT no DNS), que cobre `www` e subdominios de uma vez.
+- **`lib/seo.js` é a definição**: qualquer `import { SITE_NAME } from "@/lib/seo"` **dentro dele** é circular — aconteceu no codemod, onde `export const SITE_NAME = ... || \`${SITE_NAME}\``derrubou o lint com`Identifier 'SITE_NAME' has already been declared`.
+- **Indexacao nao e so codigo**: sitemap declarado em `robots.txt` nao e o mesmo que sitemap enviado. O caminho de verificacao escolhido foi o **TXT no DNS** (`google-site-verification=...` no apex), que cobre `www` e `meet.` de uma vez por ser propriedade de **dominio** — os outros dois caminhos (`<meta name="google-site-verification">` e arquivo em `public/`) nao sao usados. Ter o registro **nao** e ter a propriedade: ela precisa ser adicionada e verificada no Search Console, e o sitemap enviado la. Antes esta linha afirmava que os tres caminhos estavam ausentes, o que passou a ser falso quando o TXT entrou no registro.br.
 - Regressao aqui e silenciosa (o site continua funcionando no navegador): `tests/integration/pages/` confere sitemap e os links das listagens no HTML servido.
 
 ### Exposicao de dados (o que o SSR pode e nao pode publicar)

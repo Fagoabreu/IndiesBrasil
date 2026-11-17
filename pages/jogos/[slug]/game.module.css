@@ -85,6 +85,17 @@
   }
 }
 
+/* Coluna de conteúdo do `.layout`.
+   Faltava esta classe: o `<main>` estava com `className="undefined"` (o audit
+   pegava isso como classe usada e não definida). O valor não é decorativo —
+   filho de grid nasce com `min-width: auto`, e um trecho que não quebra linha
+   (URL longa num comentário, tabela do markdown, iframe do Steam) empurrava a
+   coluna de 300px da barra lateral para fora da tela em vez de quebrar dentro
+   da coluna de conteúdo. */
+.main {
+  min-width: 0;
+}
+
 /* ── Título mobile ── */
 .titleBlockMobile {
   margin-bottom: 16px;

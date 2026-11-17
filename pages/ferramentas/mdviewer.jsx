@@ -17,6 +17,7 @@ import PageHeader from "@/components/PageHeader";
 import SeoHead from "@/components/SeoHead";
 
 import shared from "./toolPage.module.css";
+import mdBody from "@/components/Markdown/markdownBody.module.css";
 import styles from "./mdviewer.module.css";
 
 import { SITE_NAME, SITE_URL } from "@/lib/seo";
@@ -112,7 +113,7 @@ export default function MarkdownViewerPage() {
   // o `setState` dentro de efeito que o lint do projeto recusa).
   const deferredInput = useDeferredValue(input);
 
-  const result = useMemo(() => renderMarkdown(deferredInput, { tableWrapperClass: styles.tableWrap }), [deferredInput]);
+  const result = useMemo(() => renderMarkdown(deferredInput, { tableWrapperClass: mdBody.tableWrap }), [deferredInput]);
 
   const wordCount = useMemo(() => {
     const trimmed = input.trim();
@@ -371,7 +372,7 @@ export default function MarkdownViewerPage() {
                  * `<embed>`, handlers `on*`, `style` inline e URLs `javascript:`
                  * não sobrevivem ao filtro. Nenhuma outra string entra aqui.
                  */
-                <div className={styles.markdown} dangerouslySetInnerHTML={{ __html: result.html }} />
+                <div className={`${mdBody.md} ${styles.markdownPane}`} dangerouslySetInnerHTML={{ __html: result.html }} />
               ) : (
                 result.error !== "too-large" && <div className={shared.emptyOutput}>O documento renderizado aparecerá aqui.</div>
               )}

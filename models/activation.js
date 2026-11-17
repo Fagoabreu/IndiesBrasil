@@ -314,6 +314,10 @@ async function changePasswordByToken(tokenId, password) {
       action: "Entre em contato com o suporte.",
     });
   }
+  // Sem `exceptSessionId`: o fluxo de reset chega deslogado, então TODAS as
+  // sessões caem — e é esse o ponto. Quem invadiu a conta perde o acesso no
+  // instante em que a senha é redefinida, em vez de continuar dentro dela com a
+  // sessão antiga por até 30 dias (ver `models/session.js`).
   await user.update(usertoPatch.username, { password });
   const usedActivationToken = await activation.markTokenAsUsed(tokenId);
   return usedActivationToken;

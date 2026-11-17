@@ -82,7 +82,7 @@
 }
 
 .heroHeading {
-  font-size: clamp(2.4rem, 5.5vw, 3.75rem);
+  font-size: clamp(2.05rem, 4.4vw, 3.1rem);
   font-weight: 800;
   line-height: 1.08;
   letter-spacing: -0.025em;
@@ -203,60 +203,6 @@
 }
 
 /* ========================================
-   MÉTRICAS — Seção destacada após hero
-======================================== */
-.metricsSection {
-  margin-bottom: 4rem;
-  position: relative;
-  z-index: 1;
-}
-
-/* Aviso de acesso livre — precisa ler como informação neutra, não como
-   alerta: por isso usa linha lateral da marca em vez de fundo colorido
-   ou ícone de advertência. */
-.freeNotice {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 16px 20px;
-  margin-bottom: 16px;
-  border-radius: 12px;
-  border: 1px solid var(--borderColor-muted);
-  border-left: 3px solid var(--brand-primary);
-  background: var(--bgColor-default);
-}
-
-.freeNoticeIcon {
-  font-size: 22px;
-  line-height: 1.2;
-  flex-shrink: 0;
-}
-
-.freeNoticeTitle {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--fgColor-default);
-  margin: 0 0 4px;
-}
-
-.freeNoticeText {
-  font-size: 13.5px;
-  line-height: 1.6;
-  color: var(--fgColor-muted);
-  margin: 0;
-  max-width: 620px;
-}
-
-/* 12 métricas: divisível por 4 (desktop), 3 (≤860px) e 2 (≤640px), então
-   cada breakpoint fecha linhas cheias. O `auto-fit` anterior gerava 6 colunas
-   apertadas e uma segunda linha órfã. */
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-
-/* ========================================
    SECTION SHARED TYPOGRAPHY
 ======================================== */
 .sectionLabel {
@@ -284,76 +230,6 @@
   /* Sem margem: .sectionHeader já define o respiro até o grid. Manter as duas
      somava 3.75rem de vão e deixava as seções visualmente soltas. */
   margin-bottom: 0;
-}
-
-/* ========================================
-   FEATURES
-======================================== */
-.featureGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 14px;
-}
-
-.featureCard {
-  background: var(--bgColor-default);
-  border: 1px solid var(--borderColor-muted);
-  border-radius: 12px;
-  padding: 22px 20px;
-  position: relative;
-  overflow: hidden;
-  transition:
-    border-color 0.2s ease,
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.featureCard::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--brand-gradient-h);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.featureCard:hover {
-  border-color: var(--brand-hover-border);
-  transform: translateY(-3px);
-  box-shadow: 0 10px 28px rgba(var(--brand-rgb-primary), 0.1);
-}
-
-.featureCard:hover::before {
-  opacity: 1;
-}
-
-.featureIcon {
-  width: 46px;
-  height: 46px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 14px;
-  font-size: 22px;
-  background: var(--brand-icon-bg);
-  border: 1px solid var(--brand-icon-border);
-}
-
-.featureTitle {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--fgColor-default);
-  margin: 0 0 6px;
-}
-
-.featureDesc {
-  font-size: 13px;
-  color: var(--fgColor-muted);
-  line-height: 1.55;
 }
 
 /* ========================================
@@ -471,8 +347,8 @@
     align-self: center;
   }
 
-  .metrics {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .heroRoles {
+    justify-content: center;
   }
 }
 
@@ -493,26 +369,8 @@
     text-align: center;
   }
 
-  .metrics {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .featureGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-
   .section {
     margin-bottom: 3rem;
-  }
-}
-
-@media (max-width: 400px) {
-  .metrics {
-    grid-template-columns: 1fr;
-  }
-
-  .featureGrid {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -631,12 +489,25 @@
   -webkit-text-fill-color: transparent;
 }
 
-.heroTypeWriter {
-  font-size: clamp(1.15rem, 2.4vw, 1.5rem);
-  font-weight: 700;
-  color: var(--brand-primary);
-  margin-bottom: 1.25rem;
-  min-height: 2.2rem;
+/* Funções de quem está aqui — substitui a frase digitada (200 ms por
+   caractere, começando vazia). Uma linha de chips é lida de imediato. */
+.heroRoles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+
+.heroRoles li {
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--borderColor-muted);
+  background: var(--bgColor-default);
+  color: var(--fgColor-muted);
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .heroMicrocopy {
@@ -655,10 +526,14 @@
 }
 
 .audienceCard {
+  display: block;
+  height: 100%;
   background: var(--bgColor-default);
   border: 1px solid var(--borderColor-muted);
   border-radius: 14px;
   padding: 28px 24px;
+  color: inherit;
+  text-decoration: none;
   transition:
     transform 0.2s ease,
     border-color 0.2s ease,
@@ -677,7 +552,7 @@
   height: 52px;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
+  color: var(--brand-primary);
   border-radius: 12px;
   background: var(--brand-icon-bg);
   border: 1px solid var(--brand-icon-border);
@@ -695,6 +570,20 @@
   font-size: 14px;
   line-height: 1.6;
   color: var(--fgColor-muted);
+}
+
+/* O convite dentro do card: sem ele o card era só texto, e nada indicava que
+   a caixa inteira é clicável. */
+.audienceCta {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--brand-primary);
+}
+
+.audienceCard:hover .audienceCta {
+  text-decoration: underline;
 }
 
 /* ========================================
@@ -739,19 +628,6 @@
   font-weight: 800;
   line-height: 1;
   color: var(--brand-hover-border);
-}
-
-.stepIcon {
-  display: inline-flex;
-  width: 50px;
-  height: 50px;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  border-radius: 50%;
-  background: var(--brand-icon-bg);
-  border: 1px solid var(--brand-icon-border);
-  margin-bottom: 14px;
 }
 
 .stepTitle {
@@ -839,52 +715,11 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.studioBadge {
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-}
-
 .studioVisualText {
   font-size: 14px;
   color: #fff;
   opacity: 0.9;
   line-height: 1.6;
-}
-
-/* ========================================
-   MÍDIA / PRESS KIT
-======================================== */
-.pressSection {
-  margin-bottom: 4.5rem;
-}
-
-.pressCard {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-  border-radius: 20px;
-  padding: 2.5rem;
-  border: 1px solid var(--borderColor-muted);
-  background: var(--bgColor-default);
-  box-shadow: 0 4px 24px rgba(var(--brand-rgb-primary), 0.06);
-}
-
-.pressContent {
-  flex: 1;
-}
-
-.pressDesc {
-  color: var(--fgColor-muted);
-  line-height: 1.7;
-  margin-bottom: 1.75rem;
-  max-width: 520px;
-}
-
-.pressIcon {
-  font-size: 64px;
-  flex-shrink: 0;
-  opacity: 0.9;
 }
 
 /* ========================================
@@ -1026,15 +861,6 @@
     padding: 2rem 1.5rem;
   }
 
-  .pressCard {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .pressIcon {
-    order: -1;
-  }
-
   .footerInner {
     grid-template-columns: 1fr;
   }
@@ -1064,20 +890,6 @@
 /* ========================================
    ACESSIBILIDADE
 ======================================== */
-/* Visível apenas para leitores de tela — usado nos títulos que existem
-   só para manter a hierarquia de headings coerente. */
-.srOnly {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 .skipLink {
   position: absolute;
   top: -100px;
@@ -1215,7 +1027,6 @@
 
   .promoCard:hover,
   .audienceCard:hover,
-  .featureCard:hover,
   .navCta:hover,
   .ctaPrimary:hover,
   .skipLink {

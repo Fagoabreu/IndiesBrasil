@@ -1,6 +1,7 @@
 import { createRouter } from "next-connect";
 import controller from "infra/controller";
 import user from "models/user";
+import session from "models/session";
 import authorization from "@/models/authorization";
 import { ForbiddenError } from "@/infra/errors";
 
@@ -33,7 +34,15 @@ async function patchHandler(request, response) {
     });
   }
 
-  const updatedUser = await user.update(username, userInputValues);
+  // Troca de senha encerra as outras sessões (ver `user.update`). A sessão que
+  // fez a troca é preservada: quem acabou de digitar a senha nova não deve ser
+  // deslogado. Quando o admin troca a senha de OUTRA pessoa, `targetUser` não é
+  // o dono da sessão atual e nada é preservado — o outro perde o acesso, que é
+  // o comportamento desejado num reset administrativo.
+  const keepSessionId =
+    "password" in userInputValues && targetUser.id === userTryingToPatch.id ? await session.findIdByToken(request.cookies.session_id) : null;
+
+  const updatedUser = await user.update(username, userInputValues, { exceptSessionId: keepSessionId });
 
   const secureOutputValues = authorization.filterOutput(userTryingToPatch, "read:user", updatedUser);
 

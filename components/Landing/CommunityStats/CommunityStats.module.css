@@ -1,0 +1,54 @@
+/* Faixa de números da comunidade — ver `CommunityStats.jsx`.
+   Uma linha de texto com separadores, não uma grade de cards: o dado aqui é
+   apoio da vitrine, e não a primeira coisa a ser lida. */
+.band {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 0;
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--fgColor-muted);
+}
+
+/* Separador entre itens, feito no CSS para não entrar no texto que o leitor de
+   tela anuncia nem no `copy` da faixa. */
+.item + .item::before {
+  content: "";
+  flex-shrink: 0;
+  width: 3px;
+  height: 3px;
+  margin: 0 10px;
+  border-radius: var(--radius-full);
+  background: var(--borderColor-default);
+}
+
+.link {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.link:hover {
+  color: var(--brand-primary);
+}
+
+.value {
+  color: var(--fgColor-default);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .item {
+    font-size: 12.5px;
+  }
+}

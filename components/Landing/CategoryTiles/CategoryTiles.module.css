@@ -1,0 +1,95 @@
+/* Portas de entrada da home — ver `CategoryTiles.jsx`.
+   Uma grade de links, não de cards de dado: cada item leva a uma listagem. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* `height: 100%` mantém as portas da mesma linha com a mesma altura quando o
+   rótulo quebra em duas linhas (ex.: "Livros e quadrinhos"). */
+.item {
+  display: flex;
+}
+
+.tile {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  height: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--borderColor-muted);
+  border-radius: var(--radius-lg);
+  background: var(--bgColor-default);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
+}
+
+.tile:hover {
+  border-color: var(--brand-hover-border);
+  background: var(--brand-hover-bg);
+}
+
+.tile:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--brand-icon-bg);
+  border: 1px solid var(--brand-icon-border);
+  color: var(--brand-primary);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--fgColor-default);
+}
+
+.hint {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--fgColor-muted);
+}
+
+/* O contador usa a marca porque é o único dado da porta; sem o preenchimento
+   translúcido ele competiria com o rótulo. */
+.count {
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(var(--brand-rgb-primary), 0.08);
+  color: var(--brand-primary);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

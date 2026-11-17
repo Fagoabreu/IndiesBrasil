@@ -1,0 +1,85 @@
+.card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  /* O cabeçalho do `.storeCard` (logo, nome e preço) já tem o padding dele: a
+     borda superior é o que separa as duas zonas, como nos widgets de iframe. */
+  border-top: 1px solid var(--borderColor-muted);
+  background: var(--surface-raised);
+  color: var(--fgColor-default);
+  text-decoration: none;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.card:hover {
+  background: color-mix(in srgb, var(--brand-primary) 8%, transparent);
+}
+
+.icon {
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+}
+
+/* Sem ícone (Play bloqueou e a loja não tem logo local): um alvo sempre visível,
+   para o card não ficar com um buraco à esquerda do texto. */
+.iconFallback {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--brand-primary) 14%, transparent);
+  color: var(--brand-primary);
+  font-size: 1.25rem;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.title {
+  overflow: hidden;
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* O resumo da ficha da Play é longo; sem o corte o card vira um bloco de seis
+   linhas e desalinha o resto da coluna "Onde comprar". */
+.desc {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--fgColor-muted);
+}
+
+.cta {
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  background: var(--brand-strong);
+  color: var(--fgColor-onEmphasis);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Em coluna estreita (celular), a chamada desce para a linha de baixo em vez de
+   espremer o título em poucos caracteres. */
+@media (max-width: 520px) {
+  .card {
+    grid-template-columns: auto 1fr;
+  }
+
+  .cta {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}

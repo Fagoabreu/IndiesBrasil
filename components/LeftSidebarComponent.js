@@ -37,10 +37,24 @@ import {
   MarkdownIcon,
   SearchIcon,
   PlusIcon,
+  InfoIcon,
+  MilestoneIcon,
 } from "@primer/octicons-react";
 import { useUser } from "@/context/UserContext";
 import { resolveStudioEntry } from "@/lib/studioEntry";
+import { ABOUT_DOCS } from "@/lib/aboutDocs";
 import styles from "./LeftSidebarComponent.module.css";
+
+/**
+ * Ícone de cada documento de `/sobre`.
+ *
+ * Só os que têm ícone próprio; o resto cai em `BookIcon`. Um mapa explícito para
+ * cada documento obrigaria a editar o menu a cada arquivo novo — e o ícone não
+ * carrega informação que a ausência dele perca.
+ */
+const ABOUT_DOC_ICONS = {
+  roadmap: MilestoneIcon,
+};
 
 export default function LeftSidebarComponent({ onNavigate }) {
   const router = useRouter();
@@ -60,6 +74,17 @@ export default function LeftSidebarComponent({ onNavigate }) {
    * primeiro instante da página.
    */
   const offerServicesHref = resolveStudioEntry({ user, loadingUser, studios: myStudios, tab: "services" }).href;
+
+  /**
+   * Documento de `/sobre` aberto, ou `""`.
+   *
+   * `router.pathname` é o **padrão** da rota (`/sobre/[slug]`), não o endereço
+   * resolvido: comparar `pathname === "/sobre/roadmap"` nunca casa em rota
+   * dinâmica e o item do menu ficaria sem `aria-current` — e é justamente esse
+   * atributo que faz o `NavList` abrir o submenu sozinho. O slug vem de
+   * `router.query`.
+   */
+  const currentAboutSlug = router.pathname.startsWith("/sobre") && typeof router.query.slug === "string" ? router.query.slug : "";
 
   return (
     <div className={styles.sidebar}>
@@ -146,20 +171,6 @@ export default function LeftSidebarComponent({ onNavigate }) {
                 <ArchiveIcon />
               </NavList.LeadingVisual>
               Artes e Assets
-            </NavList.Item>
-            {/* Publicar exige um estúdio, e este grupo é onde os tipos de
-                conteúdo aparecem lado a lado — é aqui que a regra precisa estar
-                visível, não só na tela de explicção. */}
-            <NavList.Item
-              as={Link}
-              href="/como-publicar"
-              aria-current={router.pathname.startsWith("/como-publicar") ? "page" : undefined}
-              onClick={onNavigate}
-            >
-              <NavList.LeadingVisual>
-                <LightBulbIcon />
-              </NavList.LeadingVisual>
-              Como publicar
             </NavList.Item>
           </NavList.SubNav>
         </NavList.Item>
@@ -352,6 +363,70 @@ export default function LeftSidebarComponent({ onNavigate }) {
               </NavList.LeadingVisual>
               Comprimir Vídeo
             </NavList.Item>
+          </NavList.SubNav>
+        </NavList.Item>
+        <NavList.Divider />
+
+        {/*
+         * "Sobre" é grupo de PRIMEIRO nível: o guia de publicação e os
+         * documentos de referência ficam no segundo.
+         *
+         * Antes ele era um item dentro de "Em Construção", o que custava duas
+         * coisas: o submenu exigia um terceiro nível de aninhamento (o `NavList`
+         * do Primer só vai até três, então não havia para onde crescer) e ficava
+         * escondido, porque "Em Construção" abre fechado — os documentos eram
+         * inalcançáveis pelo menu até alguém expandir um grupo que, pelo nome,
+         * não promete documentação.
+         *
+         * "Como publicar" veio de "Conteúdo" porque ela é a explicação de como
+         * esta plataforma funciona, não um tipo de conteúdo — e é aqui que ela
+         * fica ao lado do que descreve a plataforma por dentro.
+         *
+         * A lista de documentos sai de `lib/aboutDocs.js`, a mesma fonte que a
+         * rota `/sobre/[slug]` usa: não existe link no menu sem página, nem
+         * página sem link.
+         *
+         * `aria-current` fica só no item aberto. No item que abre o submenu ele
+         * mentiria ("esta é a página atual" para um botão que não navega) e é o
+         * `aria-current` do filho que faz o Primer abrir o submenu sozinho.
+         */}
+        <NavList.Item href="#" defaultOpen>
+          <NavList.LeadingVisual>
+            <InfoIcon />
+          </NavList.LeadingVisual>
+          Sobre
+          <NavList.SubNav>
+            <NavList.Item
+              as={Link}
+              href="/como-publicar"
+              aria-current={router.pathname.startsWith("/como-publicar") ? "page" : undefined}
+              onClick={onNavigate}
+            >
+              <NavList.LeadingVisual>
+                <LightBulbIcon />
+              </NavList.LeadingVisual>
+              Como publicar
+            </NavList.Item>
+            {ABOUT_DOCS.map((doc) => {
+              // Documento novo cai em `BookIcon` sem precisar de mapa: o ícone
+              // é enfeite, não informação, então errar a escolha não quebra nada.
+              const DocIcon = ABOUT_DOC_ICONS[doc.slug] ?? BookIcon;
+
+              return (
+                <NavList.Item
+                  key={doc.slug}
+                  as={Link}
+                  href={`/sobre/${doc.slug}`}
+                  aria-current={currentAboutSlug === doc.slug ? "page" : undefined}
+                  onClick={onNavigate}
+                >
+                  <NavList.LeadingVisual>
+                    <DocIcon />
+                  </NavList.LeadingVisual>
+                  {doc.title}
+                </NavList.Item>
+              );
+            })}
           </NavList.SubNav>
         </NavList.Item>
         <NavList.Divider />

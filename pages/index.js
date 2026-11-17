@@ -2,35 +2,23 @@ import SeoHead from "@/components/SeoHead";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./index.module.css";
-import MetricCard from "@/components/Card/MetricCard";
+import CategoryTiles from "@/components/Landing/CategoryTiles/CategoryTiles";
+import CommunityStats from "@/components/Landing/CommunityStats/CommunityStats";
 import HighlightCard from "@/components/HighlightCard/HighlightCard";
 import EventCard from "@/components/Agenda/EventCard";
 import TestimonialsSection from "@/components/Landing/TestimonialsSection";
-import {
-  MilestoneIcon,
-  OrganizationIcon,
-  PeopleIcon,
-  StarIcon,
-  VideoIcon,
-  TableIcon,
-  BookIcon,
-  BroadcastIcon,
-  ArchiveIcon,
-  PaperAirplaneIcon,
-  CodeReviewIcon,
-  LightBulbIcon,
-} from "@primer/octicons-react";
+import { PaperAirplaneIcon, PersonIcon, VideoIcon } from "@primer/octicons-react";
 import { useEffect, useState } from "react";
-import TyperwriterComponent from "@/components/TypeWriter/TyperwriterComponent";
 import { useUser } from "@/context/UserContext";
 import { SITE_URL, SITE_NAME, SITE_ALTERNATE_NAMES, OG_COVER_ART, OG_IMAGE_SIZE } from "@/lib/seo";
 import { sortEventsByStart } from "@/lib/eventFormat";
-import { shouldGroupHighlights } from "@/lib/highlights";
+import { HIGHLIGHT_TYPE_FEATURES, shouldGroupHighlights } from "@/lib/highlights";
+import { LANDING_CATEGORIES } from "@/lib/landing";
 import useInView from "@/hooks/useInView";
 
-const PAGE_TITLE = `${SITE_NAME} — A casa dos jogos independentes brasileiros`;
+const PAGE_TITLE = `${SITE_NAME} — A rede social dos jogos independentes brasileiros`;
 const PAGE_DESCRIPTION =
-  "Conecte-se com desenvolvedores, artistas e gamers que constroem o futuro dos jogos independentes no Brasil. Portfólio, estúdios, catálogos e comunidade em um só lugar.";
+  "Descubra jogos digitais, jogos de mesa, quadrinhos e assets feitos no Brasil. Mostre seu portfólio, crie a página do seu estúdio e encontre parceiros de projeto.";
 const PAGE_URL = SITE_URL;
 
 const JSON_LD = {
@@ -75,213 +63,64 @@ const JSON_LD = {
   ],
 };
 
-const FRASES = ["Gamers.", "Programadores.", "Roteiristas.", "Animadores.", "Produtores.", "Ilustradores.", "Designers.", "Streamers.", "Artistas."];
+// Quem está aqui — a resposta ESTÁTICA para "para quem é". Antes eram nove
+// frases digitadas em loop (200 ms por caractere) e a primeira leitura do
+// visitante era literalmente "Somos ", porque o componente começa vazio: a
+// informação existia, mas só para quem esperasse o ciclo terminar.
+const HERO_ROLES = ["Programação", "Arte", "Roteiro", "Áudio", "Design", "Produção", "Streaming"];
 
+// Cada card leva a um destino real. Antes eram três caixas de texto sem ação —
+// e a seção "recursos", logo abaixo, repetia as mesmas três ideias.
 const AUDIENCES = [
   {
-    icon: "🎨",
+    href: "/cadastro",
+    icon: <PersonIcon />,
     title: "Para criadores",
-    desc: "Monte um portfólio profissional, forme um estúdio, publique seus jogos e encontre parceiros de projeto.",
+    desc: "Monte seu portfólio, crie a página do estúdio, publique jogos e quadrinhos e encontre parceiros de projeto.",
+    cta: "Criar meu perfil",
   },
   {
-    icon: "🎮",
-    title: "Para gamers",
-    desc: "Descubra jogos, boardgames e quadrinhos independentes feitos no Brasil e acompanhe seus estúdios favoritos.",
+    href: "/jogos",
+    icon: <VideoIcon />,
+    title: "Para quem joga",
+    desc: "Descubra jogos digitais e de mesa, quadrinhos e assets feitos no Brasil — e acompanhe os estúdios que você gosta.",
+    cta: "Explorar o catálogo",
   },
   {
-    icon: "📰",
-    title: "Para mídia e negócios",
-    desc: "Encontre pautas, press kits prontos e estúdios para cobrir, publicar, investir ou fechar parcerias.",
+    href: "/presskit",
+    icon: <PaperAirplaneIcon />,
+    title: "Para imprensa e negócios",
+    desc: "Press kits prontos, contatos de estúdio, catálogo de serviços e pautas para cobrir, investir ou fechar parceria.",
+    cta: "Ver o press kit",
   },
 ];
 
 const STEPS = [
   {
-    icon: "🧭",
     title: "Crie seu perfil",
     desc: "Conte quem você é, o que faz e o que procura na indústria.",
   },
   {
-    icon: "🚀",
     title: "Publique seu trabalho",
     desc: "Divulgue projetos, portfólio, jogos e atualizações para a comunidade.",
   },
   {
-    icon: "🤝",
     title: "Conecte-se e cresça",
     desc: "Encontre talentos, estúdios, gamers e oportunidades de negócio.",
   },
 ];
 
-// Apenas recursos sem seção dedicada na própria página — "Sistema de Tags",
-// "Embeds Multimídia" e "Comunidade Ativa" já têm seções próprias abaixo
-// (Tags, Integrações e Testemunhos) e eram repetição.
-const FEATURES = [
-  {
-    icon: "🎮",
-    title: "Portfólio Profissional",
-    desc: "Monte um perfil completo com seus projetos, habilidades e histórico de atuação na indústria.",
-  },
-  {
-    icon: "🤝",
-    title: "Rede de Talentos",
-    desc: "Conecte-se com devs, artistas, músicos e designers que constroem jogos independentes.",
-  },
-  {
-    icon: "📢",
-    title: "Feed Social",
-    desc: "Compartilhe atualizações de projetos, conquistas e conteúdo com toda a comunidade.",
-  },
-];
-
 // Navegação principal: aponta para CONTEÚDO navegável (não para seções da
-// própria landing). Antes só havia âncoras, então um visitante que quisesse
-// ler algo não tinha nenhuma porta no topo — só "Entrar" e "Criar conta",
-// o que reforçava a impressão de que a conta era obrigatória.
+// própria landing). Quatro itens, os mesmos quatro de antes — trocar "Notícias"
+// por "Serviços" cobre a única capacidade do produto que não aparecia em lugar
+// nenhum do topo. O resto do catálogo vive no mapa de categorias logo abaixo do
+// hero (`LANDING_CATEGORIES`), onde há espaço para dizer o que tem dentro.
 const NAV_LINKS = [
   { href: "/jogos", label: "Jogos" },
-  { href: "/noticias", label: "Notícias" },
   { href: "/estudios", label: "Estúdios" },
+  { href: "/servicos", label: "Serviços" },
   { href: "/posts", label: "Comunidade" },
 ];
-
-// Descritor das métricas: cada `field` é lido do /api/v1/status/summary.
-// Sem isso, cada card repetia `summary ? summary.x : "..."` no JSX — dez
-// expressões condicionais que estouravam a complexidade cognitiva de Home.
-// `href` leva à listagem correspondente: o número só ganha utilidade quando
-// dá para ver quem/o quê está sendo contado.
-const METRICS = [
-  {
-    title: "Usuários",
-    period: "Desde o início",
-    field: "user_accounts",
-    previousLabel: "Últimos 30 dias",
-    previousField: "new_user_accounts",
-    icon: <PeopleIcon />,
-    href: "/membros",
-  },
-  {
-    title: "Posts",
-    period: "30 dias",
-    field: "new_posts",
-    previousLabel: "Período Anterior",
-    previousField: "previous_posts",
-    icon: <StarIcon />,
-    href: "/posts",
-  },
-  {
-    title: "Eventos",
-    period: "Próximos 30 dias",
-    field: "events",
-    previousLabel: "Período Anterior",
-    previousField: "previous_events",
-    icon: <MilestoneIcon />,
-    href: "/agenda",
-  },
-  {
-    title: "Estúdios",
-    period: "Total",
-    field: "organizations",
-    previousLabel: "Novos nos últimos 30 dias",
-    previousField: "new_organizations",
-    icon: <OrganizationIcon />,
-    href: "/estudios",
-  },
-  {
-    title: "Jogos",
-    period: "Total",
-    field: "games",
-    previousLabel: "Novos nos últimos 30 dias",
-    previousField: "new_games",
-    icon: <VideoIcon />,
-    href: "/jogos",
-  },
-  {
-    title: "Jogos de mesa",
-    period: "Total",
-    field: "boardgames",
-    previousLabel: "Novos nos últimos 30 dias",
-    previousField: "new_boardgames",
-    icon: <TableIcon />,
-    href: "/jogos-de-mesa",
-  },
-  {
-    title: "Livros e quadrinhos",
-    period: "Total",
-    field: "books",
-    previousLabel: "Novos nos últimos 30 dias",
-    previousField: "new_books",
-    icon: <BookIcon />,
-    href: "/quadrinhos",
-  },
-  {
-    title: "Assets",
-    period: "Total",
-    field: "assets",
-    previousLabel: "Novos nos últimos 30 dias",
-    previousField: "new_assets",
-    icon: <ArchiveIcon />,
-    href: "/assets",
-  },
-  {
-    title: "Notícias",
-    period: "Total",
-    field: "news",
-    previousLabel: "Novas nos últimos 30 dias",
-    previousField: "new_news",
-    icon: <PaperAirplaneIcon />,
-    href: "/noticias",
-  },
-  {
-    // O campo é `content_reviews` na API; o rótulo diz "Análises" porque é
-    // assim que a seção aparece no site (e na navegação).
-    title: "Análises",
-    period: "Total",
-    field: "content_reviews",
-    previousLabel: "Novas nos últimos 30 dias",
-    previousField: "new_content_reviews",
-    icon: <CodeReviewIcon />,
-    href: "/analises",
-  },
-  {
-    title: "Cursos",
-    period: "Total",
-    field: "courses",
-    previousLabel: "Novos nos últimos 30 dias",
-    previousField: "new_courses",
-    icon: <LightBulbIcon />,
-    href: "/estudos",
-  },
-  {
-    // `live_streams` vem do cache de status alimentado pelo refresh da página
-    // de streams, então é um retrato da última verificação — daí o "Agora".
-    title: "Lives",
-    period: "Ao vivo agora",
-    field: "live_streams",
-    previousLabel: "Estúdios com canal",
-    previousField: "streaming_studios",
-    icon: <BroadcastIcon />,
-    href: "/streams",
-  },
-];
-
-/**
- * Valor exibido num card de métrica.
- *
- * O `"..."` fixo de antes mentia em dois casos: ficava para sempre se a
- * requisição falhasse (o visitante nunca sabia que o dado não vinha), e não
- * distinguia "carregando" de "não há esse dado". Agora:
- *  - `loading`: reticências, que é a convenção de "aguarde";
- *  - `ready` sem o campo, ou `error`: travessão, que significa "sem dado".
- * @param {object|null} summary
- * @param {"loading"|"ready"|"error"} state
- * @param {string} field
- */
-function getMetricValue(summary, state, field) {
-  if (state === "loading") return "…";
-  if (state !== "ready" || !summary) return "—";
-  return summary[field] ?? "—";
-}
 
 function NavToggle({ open, onToggle }) {
   return (
@@ -311,9 +150,9 @@ function LandingNav({ isLoggedIn, username, menuOpen, onToggle, onNavigate }) {
 
         <nav className={styles.navLinks} aria-label="Navegação principal">
           {NAV_LINKS.map((link) => (
-            <a key={link.href} href={link.href} className={styles.navLink}>
+            <Link key={link.href} href={link.href} className={styles.navLink}>
               {link.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
@@ -342,9 +181,9 @@ function LandingNav({ isLoggedIn, username, menuOpen, onToggle, onNavigate }) {
       <div id="menu-mobile" className={menuOpen ? `${styles.navMobile} ${styles.navMobileOpen}` : styles.navMobile} hidden={!menuOpen}>
         <nav className={styles.navMobileLinks} aria-label="Navegação principal (mobile)">
           {NAV_LINKS.map((link) => (
-            <a key={link.href} href={link.href} className={styles.navMobileLink} onClick={onNavigate}>
+            <Link key={link.href} href={link.href} className={styles.navMobileLink} onClick={onNavigate}>
               {link.label}
-            </a>
+            </Link>
           ))}
           {!isLoggedIn && (
             <Link href="/login" className={styles.navMobileLink} onClick={onNavigate}>
@@ -372,12 +211,16 @@ function SectionReveal({ children, className = "", as: Tag = "section", ...props
 /** Quantos eventos a home mostra antes de mandar para a agenda completa. */
 const UPCOMING_EVENTS_LIMIT = 2;
 
-function Home() {
+function Home({ initialHighlights = [] }) {
   const { user } = useUser();
   const isLoggedIn = Boolean(user?.id);
   const [summary, setSummary] = useState(null);
   const [summaryState, setSummaryState] = useState("loading");
-  const [highlights, setHighlights] = useState([]);
+  // Os destaques chegam do servidor (`getServerSideProps`): o HTML da home
+  // precisa sair com `href="/jogos/<slug>"`. Buscá-los no cliente deixava a
+  // primeira dobra sem nenhuma obra — o visitante via só texto de marketing e
+  // o Google precisava executar JavaScript para achar o conteúdo.
+  const highlights = initialHighlights;
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -427,20 +270,6 @@ function Home() {
       }
     }
 
-    async function getHighlights() {
-      try {
-        const response = await fetch("/api/v1/highlights", {
-          method: "GET",
-          credentials: "include",
-        });
-        if (response.ok) {
-          setHighlights(await response.json());
-        }
-      } catch (error) {
-        console.error("Erro ao buscar highlights:", error);
-      }
-    }
-
     // Próximos eventos da agenda. A rota devolve os três meses seguintes na
     // ordem das instâncias (por id, não por data), então a ordenação por data
     // acontece aqui.
@@ -464,7 +293,6 @@ function Home() {
     }
 
     getSummary();
-    getHighlights();
     getUpcomingEvents();
   }, []);
 
@@ -499,25 +327,29 @@ function Home() {
         <section className={styles.hero}>
           <div className={styles.heroInner}>
             <div className={styles.heroContent}>
-              <span className={styles.heroBadge}>🇧🇷 A casa dos jogos independentes brasileiros</span>
+              <span className={styles.heroBadge}>🇧🇷 Comunidade indie brasileira</span>
 
-              {/* Sem <br> forçado: a quebra vinha no lugar errado em telas
-                  estreitas. O texto quebra naturalmente pela largura. */}
+              {/* O H1 diz o que a plataforma É. A versão anterior — "Onde o
+                  talento indie brasileiro se encontra" — descrevia um
+                  sentimento e deixava a pergunta principal sem resposta:
+                  comunidade? portal de notícias? vaga de emprego? Sem <br>
+                  forçado: a quebra vem da largura. */}
               <h1 className={styles.heroHeading}>
-                Onde o talento indie <span className={styles.heroAccent}>brasileiro</span> se encontra
+                A rede social dos <span className={styles.heroAccent}>jogos independentes</span> brasileiros
               </h1>
 
-              <p className={styles.heroTypeWriter}>
-                {/* O texto animado muda a cada 100–200ms; para leitores de tela
-                    isso vira ruído, então a versão acessível é estática. */}
-                <span aria-hidden="true">
-                  Somos <TyperwriterComponent initText="" frases={FRASES} />
-                </span>
-                <span className={styles.srOnly}>Somos gamers, programadores, roteiristas, animadores, produtores, ilustradores e designers.</span>
-              </p>
+              {/* Quem está aqui, estático. Antes esta era a frase que respondia
+                  "para quem é" — e ela era digitada a 200 ms por caractere,
+                  começando vazia: a primeira leitura era literalmente "Somos ". */}
+              <ul className={styles.heroRoles} aria-label="Quem faz parte">
+                {HERO_ROLES.map((role) => (
+                  <li key={role}>{role}</li>
+                ))}
+              </ul>
 
               <p className={styles.heroSub}>
-                Conecte-se com desenvolvedores, artistas e gamers que constroem o futuro dos jogos independentes no Brasil.
+                Descubra jogos digitais, jogos de mesa, quadrinhos e assets feitos no Brasil — e mostre o seu: portfólio, estúdio, catálogo e material
+                de imprensa em um só lugar.
               </p>
 
               <div className={styles.heroCta}>
@@ -568,79 +400,18 @@ function Home() {
         </section>
 
         {/* ════════════════════════════════════
-            MÉTRICAS — Prova social
-        ════════════════════════════════════ */}
-        <SectionReveal className={styles.metricsSection}>
-          {/* Os cards são h3; sem um h2 anterior a hierarquia saltaria de h1
-              para h3. O título é visualmente oculto, mas presente na árvore. */}
-          <h2 className={styles.srOnly}>{`${SITE_NAME} em números`}</h2>
-
-          {/* Declara de frente a ausência de barreira: é a informação que
-              faltava para desfazer a conclusão de que a conta é obrigatória. */}
-          {!isLoggedIn && (
-            <div className={styles.freeNotice}>
-              <span className={styles.freeNoticeIcon} aria-hidden="true">
-                🔓
-              </span>
-              <div>
-                <p className={styles.freeNoticeTitle}>Explore à vontade — sem cadastro</p>
-                <p className={styles.freeNoticeText}>
-                  Ler jogos, notícias, estúdios e publicações é livre e não exige conta. Você só precisa de uma para publicar, comentar e seguir.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* `aria-busy` avisa a tecnologia assistiva que os números ainda
-              estão chegando — antes as reticências passavam como valor. */}
-          <div className={styles.metrics} aria-busy={summaryState === "loading"}>
-            {METRICS.map((metric) => (
-              <MetricCard
-                key={metric.title}
-                title={metric.title}
-                period={metric.period}
-                value={getMetricValue(summary, summaryState, metric.field)}
-                previousLabel={metric.previousLabel}
-                previousValue={getMetricValue(summary, summaryState, metric.previousField)}
-                icon={metric.icon}
-                href={metric.href}
-              />
-            ))}
-          </div>
-        </SectionReveal>
-
-        {/* ════════════════════════════════════
-            AUDIÊNCIAS
-        ════════════════════════════════════ */}
-        <SectionReveal id="audiencias" className={styles.section}>
-          <header className={styles.sectionHeader}>
-            <p className={styles.sectionLabel}>Para quem é</p>
-            <h2 className={styles.sectionTitle}>Um ecossistema completo para a cena indie</h2>
-            <p className={styles.sectionSub}>{`Da criação à descoberta — todo mundo tem um lugar na ${SITE_NAME}.`}</p>
-          </header>
-
-          <div className={styles.audienceGrid}>
-            {AUDIENCES.map((audience) => (
-              <div key={audience.title} className={styles.audienceCard}>
-                <span className={styles.audienceIcon} aria-hidden="true">
-                  {audience.icon}
-                </span>
-                <h3 className={styles.audienceTitle}>{audience.title}</h3>
-                <p className={styles.audienceDesc}>{audience.desc}</p>
-              </div>
-            ))}
-          </div>
-        </SectionReveal>
-
-        {/* ════════════════════════════════════
-            HIGHLIGHTS — Conteúdo em destaque
+            DESTAQUES — conteúdo real na primeira rolagem
+            Antes esta seção vinha depois de 12 métricas e 3 cards de
+            audiência: quinze caixas de texto antes de o visitante ver uma
+            única obra. Os dados chegam do servidor (`getServerSideProps`),
+            então o HTML já sai com os links.
         ════════════════════════════════════ */}
         {highlights.length > 0 && (
           <SectionReveal className={styles.section}>
             <header className={styles.sectionHeader}>
               <p className={styles.sectionLabel}>Destaques</p>
               <h2 className={styles.sectionTitle}>O que a comunidade está criando</h2>
-              <p className={styles.sectionSub}>Jogos, boardgames, publicações e assets em destaque dos estúdios brasileiros.</p>
+              <p className={styles.sectionSub}>Jogos digitais, jogos de mesa, livros e assets feitos por estúdios brasileiros.</p>
             </header>
             <div className={`${styles.highlightGrid} ${groupHighlights ? styles.highlightGridGrouped : ""}`}>
               {highlights.map((item) => (
@@ -651,9 +422,57 @@ function Home() {
         )}
 
         {/* ════════════════════════════════════
+            PORTAS DE ENTRADA — o mapa do produto
+            Substituem os 12 cards de métrica: o número dizia "existe", mas não
+            levava a nada e escondia metade do catálogo. Cada porta é um link
+            com o rótulo do que tem dentro; o contador é aprimoramento.
+        ════════════════════════════════════ */}
+        <SectionReveal id="explorar" className={styles.section}>
+          <header className={styles.sectionHeader}>
+            <p className={styles.sectionLabel}>Explore</p>
+            <h2 className={styles.sectionTitle}>Tudo o que existe aqui, por categoria</h2>
+            <p className={styles.sectionSub}>
+              Dez portas de entrada. Ler é livre e não exige conta — publicar, comentar e seguir é que pedem um perfil.
+            </p>
+          </header>
+          <CategoryTiles categories={LANDING_CATEGORIES} summary={summary} state={summaryState} />
+
+          {/* Prova social em uma linha. Os mesmos números que antes ocupavam
+              uma grade de 12 cards com "período anterior" — agora como apoio
+              da vitrine, não como primeira coisa a ser lida. */}
+          <CommunityStats summary={summary} state={summaryState} />
+        </SectionReveal>
+
+        {/* ════════════════════════════════════
+            AUDIÊNCIAS — para quem é, e para onde ir
+            Cada card é um link: antes eram três caixas de texto sem ação, ao
+            lado de uma grade de "recursos" que repetia as mesmas ideias.
+        ════════════════════════════════════ */}
+        <SectionReveal id="audiencias" className={styles.section}>
+          <header className={styles.sectionHeader}>
+            <p className={styles.sectionLabel}>Para quem é</p>
+            <h2 className={styles.sectionTitle}>Feito para quem faz e para quem joga</h2>
+            <p className={styles.sectionSub}>Escolha por onde começar — cada caminho leva direto ao que você procura.</p>
+          </header>
+
+          <div className={styles.audienceGrid}>
+            {AUDIENCES.map((audience) => (
+              <Link key={audience.title} href={audience.href} className={styles.audienceCard}>
+                <span className={styles.audienceIcon} aria-hidden="true">
+                  {audience.icon}
+                </span>
+                <h3 className={styles.audienceTitle}>{audience.title}</h3>
+                <p className={styles.audienceDesc}>{audience.desc}</p>
+                <span className={styles.audienceCta}>{audience.cta} →</span>
+              </Link>
+            ))}
+          </div>
+        </SectionReveal>
+
+        {/* ════════════════════════════════════
             AGENDA — próximos eventos
-            Logo após os destaques: quem veio ver o que a comunidade está
-            fazendo também quer saber quando e onde encontrá-la.
+            Depois das portas de entrada e das audiências: quem veio ver o que
+            a comunidade está fazendo também quer saber quando e onde encontrá-la.
         ════════════════════════════════════ */}
         {upcomingEvents.length > 0 && (
           <SectionReveal className={styles.section}>
@@ -676,51 +495,27 @@ function Home() {
         )}
 
         {/* ════════════════════════════════════
-            FEATURES — O que a plataforma oferece
+            COMO FUNCIONA — só para quem ainda não tem conta: "crie seu perfil"
+            não é próximo passo de quem já está dentro.
         ════════════════════════════════════ */}
-        <SectionReveal id="recursos" className={styles.section}>
-          <header className={styles.sectionHeader}>
-            <p className={styles.sectionLabel}>Plataforma</p>
-            <h2 className={styles.sectionTitle}>Tudo que você precisa, num só lugar</h2>
-            <p className={styles.sectionSub}>Ferramentas pensadas para profissionais e entusiastas da indústria indie brasileira.</p>
-          </header>
+        {!isLoggedIn && (
+          <SectionReveal className={styles.sectionAlt}>
+            <header className={styles.sectionHeader}>
+              <p className={styles.sectionLabel}>Como funciona</p>
+              <h2 className={styles.sectionTitle}>Comece em três passos</h2>
+            </header>
 
-          <div className={styles.featureGrid}>
-            {FEATURES.map((feature) => (
-              <div key={feature.title} className={styles.featureCard}>
-                <div className={styles.featureIcon} aria-hidden="true">
-                  {feature.icon}
+            <div className={styles.stepsGrid}>
+              {STEPS.map((step, index) => (
+                <div key={step.title} className={styles.stepCard}>
+                  <span className={styles.stepNumber}>{index + 1}</span>
+                  <h3 className={styles.stepTitle}>{step.title}</h3>
+                  <p className={styles.stepDesc}>{step.desc}</p>
                 </div>
-                <h3 className={styles.featureTitle}>{feature.title}</h3>
-                <p className={styles.featureDesc}>{feature.desc}</p>
-              </div>
-            ))}
-          </div>
-        </SectionReveal>
-
-        {/* ════════════════════════════════════
-            COMO FUNCIONA — depois dos recursos: o passo a passo só faz
-            sentido após apresentar o que a plataforma oferece.
-        ════════════════════════════════════ */}
-        <SectionReveal className={styles.sectionAlt}>
-          <header className={styles.sectionHeader}>
-            <p className={styles.sectionLabel}>Como funciona</p>
-            <h2 className={styles.sectionTitle}>Comece em três passos</h2>
-          </header>
-
-          <div className={styles.stepsGrid}>
-            {STEPS.map((step, index) => (
-              <div key={step.title} className={styles.stepCard}>
-                <span className={styles.stepNumber}>{index + 1}</span>
-                <span className={styles.stepIcon} aria-hidden="true">
-                  {step.icon}
-                </span>
-                <h3 className={styles.stepTitle}>{step.title}</h3>
-                <p className={styles.stepDesc}>{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </SectionReveal>
+              ))}
+            </div>
+          </SectionReveal>
+        )}
 
         {/* ════════════════════════════════════
             ESTÚDIOS & NEGÓCIOS
@@ -746,10 +541,7 @@ function Home() {
               </div>
             </div>
             <div className={styles.studioVisual}>
-              <div className={styles.studioBadge} aria-hidden="true">
-                🎮 + 🎨 + 📰
-              </div>
-              <p className={styles.studioVisualText}>Portfólio, catálogos e press kit em um só lugar.</p>
+              <p className={styles.studioVisualText}>Portfólio, catálogo de obras e press kit — o material que a imprensa e o investidor procuram.</p>
             </div>
           </div>
         </SectionReveal>
@@ -761,32 +553,6 @@ function Home() {
         <div id="comunidade" className={styles.section}>
           <TestimonialsSection />
         </div>
-
-        {/* ════════════════════════════════════
-            MÍDIA / PRESS KIT
-        ════════════════════════════════════ */}
-        <SectionReveal className={styles.pressSection}>
-          <div className={styles.pressCard}>
-            <div className={styles.pressContent}>
-              <p className={styles.sectionLabel}>Para a imprensa</p>
-              <h2 className={styles.sectionTitle}>Press kit oficial</h2>
-              <p className={styles.pressDesc}>
-                Fatos, descrição da plataforma e contatos para cobertura. Baixe o material em PDF ou acesse a página completa.
-              </p>
-              <div className={styles.studioActions}>
-                <Link href="/presskit" className={styles.ctaPrimary}>
-                  Ver press kit
-                </Link>
-                <Link href="/presskit" className={styles.ctaSecondary}>
-                  Baixar PDF ⬇
-                </Link>
-              </div>
-            </div>
-            <span className={styles.pressIcon} aria-hidden="true">
-              📄
-            </span>
-          </div>
-        </SectionReveal>
 
         {/* ════════════════════════════════════
             CTA FINAL
@@ -824,17 +590,20 @@ function Home() {
           <div className={styles.footerColumns}>
             <div className={styles.footerColumn}>
               <p className={styles.footerHeading}>Plataforma</p>
-              <Link href="/posts" className={styles.footerLink}>
-                Comunidade
-              </Link>
               <Link href="/jogos" className={styles.footerLink}>
                 Jogos
               </Link>
               <Link href="/estudios" className={styles.footerLink}>
                 Estúdios
               </Link>
-              <Link href="/agenda" className={styles.footerLink}>
-                Agenda
+              <Link href="/assets" className={styles.footerLink}>
+                Artes e assets
+              </Link>
+              <Link href="/servicos" className={styles.footerLink}>
+                Serviços
+              </Link>
+              <Link href="/posts" className={styles.footerLink}>
+                Comunidade
               </Link>
             </div>
             <div className={styles.footerColumn}>
@@ -848,14 +617,26 @@ function Home() {
               <Link href="/quadrinhos" className={styles.footerLink}>
                 Quadrinhos
               </Link>
+              <Link href="/analises" className={styles.footerLink}>
+                Análises
+              </Link>
               <Link href="/estudos" className={styles.footerLink}>
                 Cursos
+              </Link>
+              <Link href="/streams" className={styles.footerLink}>
+                Lives
+              </Link>
+              <Link href="/agenda" className={styles.footerLink}>
+                Agenda
               </Link>
             </div>
             <div className={styles.footerColumn}>
               <p className={styles.footerHeading}>Institucional</p>
               <Link href="/presskit" className={styles.footerLink}>
                 Press kit
+              </Link>
+              <Link href="/sobre" className={styles.footerLink}>
+                Sobre o projeto
               </Link>
               <a href="mailto:contato@indies.com.br" className={styles.footerLink}>
                 Contato
@@ -876,3 +657,37 @@ function Home() {
 Home.noLayout = true;
 
 export default Home;
+
+/**
+ * Destaques renderizados no servidor.
+ *
+ * A home mostrava o conteúdo só depois de três `fetch` no cliente: o HTML
+ * servido era texto de marketing + a arte, sem um único link de obra. Para
+ * quem chega de fora — e para o Google — a plataforma parecia não ter catálogo.
+ *
+ * Os imports são dinâmicos pelo mesmo motivo das outras páginas: `models` e
+ * `infra/controller` puxam o pool do Postgres e não podem entrar no bundle do
+ * cliente.
+ *
+ * A falha não derruba a home: sem banco (ou sem a feature) a seção de destaques
+ * simplesmente não aparece, e o resto da página continua servindo como
+ * apresentação do produto.
+ */
+export async function getServerSideProps() {
+  try {
+    const { anonymousCan } = await import("@/infra/controller");
+    const { default: highlight } = await import("@/models/highlight");
+
+    const highlights = await highlight.findHighlights();
+
+    // Cada tipo tem a sua feature (ver `HIGHLIGHT_TYPE_FEATURES`): se o anônimo
+    // perde a leitura de um catálogo, o card daquele tipo sai do HTML em vez de
+    // anunciar um endereço que responde 404.
+    const allowed = highlights.filter((item) => anonymousCan(HIGHLIGHT_TYPE_FEATURES[item.type]));
+
+    return { props: { initialHighlights: JSON.parse(JSON.stringify(allowed)) } };
+  } catch (error) {
+    console.error("Erro ao buscar destaques da home:", error);
+    return { props: { initialHighlights: [] } };
+  }
+}
