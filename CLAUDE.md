@@ -262,13 +262,28 @@ Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESM
 ## Destaques da home (`/api/v1/highlights`)
 
 - **3 itens por tipo** (`HIGHLIGHTS_PER_TYPE`), 4 tipos: jogos, jogos de mesa, livros e assets. Era `LIMIT 1` por tipo — a vitrine parecia "um exemplo de cada coisa".
-- `lib/highlights.js` e o **registro unico** (quantidade por tipo, ordem, rotulos, rotas e `shouldGroupHighlights`), importado pela rota **e** pela pagina. A constante nao mora na rota porque ela importa `infra/database` e levaria o pool do `pg` para o bundle do cliente.
+- A query mora em **`models/highlight.js`** (`findHighlights`), e a rota e um wrapper fino. Nao e organizacao gratuita: a home renderiza os mesmos destaques em `getServerSideProps`, e duas copias da regra divergiriam — a do SSR e a que vai no HTML servido ao visitante e ao Google.
+- `lib/highlights.js` e o **registro unico** (quantidade por tipo, ordem, rotulos, rotas, `shouldGroupHighlights` e `HIGHLIGHT_TYPE_FEATURES`), importado pela rota, pelo model e pela pagina. A constante nao mora na rota/model porque a pagina a importa e levaria o pool do `pg` para o bundle do cliente.
+- **Gate por tipo no SSR**: `getServerSideProps` filtra com `anonymousCan(HIGHLIGHT_TYPE_FEATURES[type])` (como `pages/sitemap/[type].js`). Sem isso, revogar `read:asset:all` do anonimo tirava os assets do sitemap e os deixava no HTML da home.
 - **Filtro de moderacao em cada tipo** (conteudo bloqueado e estudio bloqueado), igual ao das listagens: o endpoint nao tinha esse filtro e um destaque podia levar a uma pagina 404. Verificado: os livros do estudio bloqueado no banco local deixaram de aparecer.
 - "Tem imagem" = o que o card desenha (`coverExpression IS NOT NULL`, ou video de galeria em jogos e boardgames). **Asset so entra com capa**; capa externa (`cover_url_external`) so vale em livros.
 - A ordem da resposta (games, boardgames, books, assets) e o que permite o layout **uma coluna por tipo** (`grid-auto-flow: column` + `grid-template-rows: repeat(3, auto)`, em `min-width: 1041px`), aplicado so quando `shouldGroupHighlights(total)` — com 4 itens, agrupar por coluna deixaria uma coluna de 3 e outra de 1.
 - **Nao usar carrossel** aqui: 3 itens por tipo nao transbordam no desktop, e um controle de rolagem que nao rola e affordance falsa. Quatro colunas (e nao tres) mantem a secao em 3 linhas (~800px em vez de ~1060px).
 - O `sizes` do `<Image>` e `25vw` no topo da faixa: com quatro colunas, `33vw` fazia o Next baixar imagem maior que o card.
-- Testes: `tests/unit/lib/highlights.test.js` e `tests/integration/api/v1/highlights/index.test.js` (limite por tipo, assets com e sem capa, conteudo bloqueado).
+- A secao aparece **logo depois do hero** (era depois de 12 cards de metrica + 3 de audiencia): "mostre, nao conte". Sem destaques no banco, ela simplesmente nao renderiza.
+- Testes: `tests/unit/lib/highlights.test.js`, `tests/integration/api/v1/highlights/index.test.js` (limite por tipo, assets com e sem capa, conteudo bloqueado) e `tests/integration/pages/home.test.js` (o HTML de `/` linka a obra e nao linka a bloqueada).
+
+## Home (`pages/index.js`)
+
+- **O H1 diz o que a plataforma e** ("A rede social dos jogos independentes brasileiros"). A versao anterior ("Onde o talento indie brasileiro se encontra") descrevia um sentimento, e o teste dos 5 segundos falhava: comunidade, portal de noticias ou vaga de emprego?
+- **Um CTA preenchido por tela.** Havia cinco botoes com `--brand-gradient` na mesma pagina (nav, hero, estudio, press kit, CTA final), entao nenhum era o proximo passo. Primario = conteudo ("Explorar jogos"); conta e secundaria.
+- **Mapa de categorias em `lib/landing.js`** (`LANDING_CATEGORIES`), desenhado por `components/Landing/CategoryTiles`. Substituiu a parede de 12 cards de metrica: numero sozinho nao dizia o que existe ali e escondia metade do catalogo. A contagem vem de `/api/v1/status/summary` e e **opcional** — a porta (link + rotulo) funciona sem numero e sem JavaScript; categoria vazia nao mostra "0".
+- `tests/unit/lib/landing.test.js` falha se uma porta apontar para pagina inexistente, se houver rotulo repetido ou se um `HIGHLIGHT_TYPE_FEATURES` nao estiver em `ANONYMOUS_FEATURES`.
+- **Faixa de números da comunidade** (`components/Landing/CommunityStats`): quatro contagens em uma linha — jogos, estúdios, membros e eventos dos próximos 30 dias —, cada uma linkando a listagem. E a prova social pedida de volta depois que a grade de 12 cards saiu; o que ficou de fora foi o `periodo anterior` e o `novos em 30 dias`, que sao dado de acompanhamento, nao de primeira visita.
+- **O resumo devolve as contagens como STRING** (`bigint` do Postgres: `user_accounts: "3"`). Use `parseSummaryCount` de `lib/landing.js`; `Number.isFinite("3")` e `false` e o numero simplesmente nunca aparece — bug silencioso, sem erro no servidor, fixado em `tests/unit/components/communityStats.test.js`. Numeros zerados nao sao exibidos (nem "0", nem travessao).
+- **Nao reintroduzir**: o texto digitado do hero (a primeira leitura era "Somos ", 200 ms por caractere), os cards de metrica com "periodo anterior", a grade de "recursos" (repetia as audiencias) e o bloco de press kit na home (publico de jornalista, nao do visitante — vive no rodape).
+- Os cards de audiencia sao **links** para o destino de cada publico (`/cadastro`, `/jogos`, `/presskit`); "Como funciona" so aparece para quem nao tem sessao.
+- Teste de regressao de SEO em `tests/integration/pages/home.test.js`: o HTML de `/` precisa sair com `href="/quadrinhos/<slug>"`.
 
 ## Diretorio de membros (`/membros`)
 
