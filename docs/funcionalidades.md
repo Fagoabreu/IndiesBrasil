@@ -76,7 +76,7 @@ Stack: Next.js (Pages Router), React, Primer React, PostgreSQL com `node-pg-migr
 
 ## 3. Comunidade
 
-- **Home** com vitrine de conteúdo em destaque — até 3 jogos, 3 jogos de mesa, 3 livros e 3 assets, uma coluna por tipo — renderizada no **servidor** (o HTML sai com os links das obras), mapa de categorias com contagem, faixa de números da comunidade, prévia do feed (3 posts mais recentes), agenda, depoimentos e convite ao cadastro.
+- **Home** com vitrine de conteúdo em destaque — até 3 jogos, 3 jogos de mesa, 3 livros e 3 assets, **uma linha por tipo** com título e link para a listagem — renderizada no **servidor** (o HTML sai com os links das obras), mapa de categorias com contagem, faixa de números da comunidade, prévia do feed (3 posts mais recentes), agenda, depoimentos e convite ao cadastro.
 
 ### 3.1 Posts
 

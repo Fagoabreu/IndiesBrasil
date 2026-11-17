@@ -233,38 +233,48 @@
 }
 
 /* ========================================
-   HIGHLIGHTS GRID
+   HIGHLIGHTS — uma linha por tipo
 ======================================== */
-.highlightGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--space-4);
+.highlightGroup + .highlightGroup {
+  margin-top: 2.25rem;
 }
 
-/*
- * Vitrine cheia: três linhas de quatro colunas, sendo **uma coluna por tipo** —
- * a API devolve 3 jogos, 3 jogos de mesa, 3 livros e 3 assets, nessa ordem.
- *
- * `grid-auto-flow: column` + `grid-template-rows: repeat(3, auto)` lê a lista em
- * coluna (1-2-3 | 4-5-6 | …). Sem isso a leitura seria por linha e cada linha
- * misturaria tipos: três jogos e o primeiro jogo de mesa na mesma linha.
- *
- * A classe só entra quando `shouldGroupHighlights(total)` — com 4 itens, uma
- * coluna ficaria com 3 e outra com 1.
- *
- * Por que não carrossel: com 3 itens por tipo nada transborda no desktop, então
- * um controle de rolagem não teria o que rolar. E por que quatro colunas e não
- * três: em 1200px, três colunas dariam quatro linhas (~1060px de seção);
- * quatro colunas cabem em três linhas (~800px), com o card ainda em 288px e o
- * banner 16:9 intacto.
- */
-@media (min-width: 1041px) {
-  .highlightGridGrouped {
-    grid-auto-flow: column;
-    grid-template-columns: none;
-    grid-template-rows: repeat(3, auto);
-    grid-auto-columns: minmax(0, 1fr);
-  }
+.highlightGroupHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+/* Título da linha: `<h3>` abaixo do `<h2>` da seção — é o que diz onde terminam
+   os jogos e começam os jogos de mesa, sem depender do selo sobre a arte. */
+.highlightGroupTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--fgColor-default);
+  margin: 0;
+}
+
+.highlightGroupLink {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand-primary);
+  text-decoration: none;
+}
+
+.highlightGroupLink:hover {
+  text-decoration: underline;
+}
+
+/* As três colunas vêm de `HIGHLIGHTS_PER_TYPE` × a largura disponível: em
+   1200px, `repeat(3, 1fr)` dá ~380px por card com o banner 16:9 intacto. */
+.highlightGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: var(--space-4);
 }
 
 /* ========================================
@@ -371,6 +381,12 @@
 
   .section {
     margin-bottom: 3rem;
+  }
+
+  /* Um card por linha no celular: a grade de 3 colunas daria cards de ~100px,
+     onde o banner 16:9 some. */
+  .highlightGrid {
+    grid-template-columns: 1fr;
   }
 }
 

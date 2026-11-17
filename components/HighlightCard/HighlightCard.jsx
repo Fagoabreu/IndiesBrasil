@@ -39,13 +39,14 @@ export default function HighlightCard({ item }) {
       {/* Banner / cover */}
       <div className={styles.cardBanner}>
         {banner_url ? (
-          /* Quatro colunas em tela cheia (ver `.highlightGridGrouped`): um
-             `sizes` de 33vw faria o Next baixar imagem maior que o card. */
+          /* Uma linha por tipo: a grade fica em 3 colunas no desktop (o mesmo
+             número de `HIGHLIGHTS_PER_TYPE`), então um `sizes` de 25vw
+             desenharia a imagem maior que o card. */
           <Image
             src={banner_url}
             alt={name}
             fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1100px) 50vw, 25vw"
+            sizes="(max-width: 768px) 100vw, (max-width: 1100px) 50vw, 33vw"
             className={styles.bannerImg}
             unoptimized={!isOptimizable(banner_url)}
           />
@@ -59,7 +60,10 @@ export default function HighlightCard({ item }) {
 
       {/* Info */}
       <div className={styles.cardBody}>
-        <h3 className={styles.cardName}>{name}</h3>
+        {/* h4: a seção é h2, cada linha de tipo é h3 — o nome da obra desce um
+            degrau. Com h3 aqui, dois níveis diferentes usavam o mesmo tamanho
+            de título e o índice do leitor de tela ficava ambíguo. */}
+        <h4 className={styles.cardName}>{name}</h4>
         {short_description && <p className={styles.cardDesc}>{short_description}</p>}
 
         {studio_name && (
