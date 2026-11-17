@@ -11,8 +11,10 @@ import GameReviews from "@/components/GameReviews/GameReviews";
 import ContentEngagement from "@/components/ContentEngagement/ContentEngagement";
 import IconSvg from "@/components/IconSvg/IconSvg";
 import PressKitButton from "@/components/PressKit/PressKitButton";
+import GooglePlayCard from "@/components/StoreLinks/GooglePlayCard";
 import { ogImageSizeFromPreset, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { formatAiLevelName } from "@/lib/ai-usage";
+import { googlePlayPackageId, storeCtaLabel } from "@/lib/storeLinks";
 import { breadcrumbList, graph, videoGame } from "@/lib/structured-data";
 
 import styles from "./game.module.css";
@@ -495,6 +497,7 @@ export default function GamePage({ initialGame, siteUrl }) {
                           const steamAppId = steamMatch ? steamMatch[1] : null;
                           const storeLogoSrc = getStoreLogoSrc(sp.store_name);
                           const itchEmbedUrl = Boolean(itchStoreUrl) && sp.page_url === itchStoreUrl ? displayItchEmbedUrl : null;
+                          const playPackageId = googlePlayPackageId(sp.page_url);
                           const widgetTitle = `${sp.store_name} widget`;
 
                           let storeEmbed;
@@ -510,10 +513,15 @@ export default function GamePage({ initialGame, siteUrl }) {
                             );
                           } else if (itchEmbedUrl) {
                             storeEmbed = <iframe src={itchEmbedUrl} className={styles.storeItchWidget} title={widgetTitle} loading="lazy" />;
+                          } else if (playPackageId) {
+                            // A Play não tem widget para incorporar. O card nasce
+                            // com o nome do jogo e só se enriquece se o preview
+                            // responder (429/anti-bot é comum e não quebra o card).
+                            storeEmbed = <GooglePlayCard url={sp.page_url} gameName={gameData.name} logoSrc={storeLogoSrc} />;
                           } else {
                             storeEmbed = (
                               <a href={sp.page_url} target="_blank" rel="noopener noreferrer" className={styles.storeSimpleLink}>
-                                Visitar loja ↗
+                                {storeCtaLabel(sp.store_name)} ↗
                               </a>
                             );
                           }
