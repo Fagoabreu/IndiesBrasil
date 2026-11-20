@@ -86,6 +86,15 @@
   white-space: nowrap;
 }
 
+/* "Editar" e "Deletar" no mesmo grupo, no canto do header. Sem o container os
+   dois botões ficavam em coluna (o header é flex row e o autor ocupa o resto). */
+.ownerActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
 .authorName {
   display: inline;
   font-weight: 600;
@@ -123,6 +132,28 @@
   border: none;
   cursor: pointer;
   transition: opacity 0.15s ease;
+}
+
+/* Editor inline: mesma coluna do texto, sem modal — a edição acontece onde o
+   texto está, e o card continua visível (contexto de quem lê e edita). */
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* O `.text` é `white-space: pre-wrap`; o formulário não precisa disso. */
+  white-space: normal;
+}
+
+.editError {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--fgColor-danger);
+}
+
+.editActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .showMoreBtn:hover {

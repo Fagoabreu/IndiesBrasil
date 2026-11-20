@@ -435,6 +435,10 @@ export default function StudioPage({ initialStudio }) {
     if (res.ok) setStudioPosts((prev) => (prev || []).filter((p) => p.id !== postId));
   };
 
+  const handleEditPost = (updatedPost) => {
+    setStudioPosts((prev) => (prev || []).map((p) => (p.id === updatedPost.id ? { ...p, ...updatedPost } : p)));
+  };
+
   const handleFollowChange = useCallback((nowFollowing) => {
     setViewer((v) => ({ ...v, isFollowing: nowFollowing }));
     setStudio((s) =>
@@ -848,7 +852,7 @@ export default function StudioPage({ initialStudio }) {
             ) : (
               <div className={styles.postList}>
                 {(studioPosts || []).map((p) => (
-                  <PostCardComponent key={p.id} post={p} canInteract={!!authUser?.id} onDelete={handleDeletePost} />
+                  <PostCardComponent key={p.id} post={p} canInteract={!!authUser?.id} onDelete={handleDeletePost} onEdit={handleEditPost} />
                 ))}
               </div>
             )}

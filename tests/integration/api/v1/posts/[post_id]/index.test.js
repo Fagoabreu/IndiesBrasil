@@ -105,3 +105,93 @@ describe("GET/DELETE /api/v1/posts/[post_id]", () => {
     expect(body.id).toBe(freshPost.id);
   });
 });
+
+describe("PATCH /api/v1/posts/[post_id]", () => {
+  let author;
+  let authorToken;
+  let otherToken;
+  let editablePost;
+
+  beforeAll(async () => {
+    const authorCtx = await createActivatedUserWithSession({
+      username: "AutorEdicao",
+      email: "autor.edicao@post.dev",
+      password: TEST_CREDENTIALS.userDefault,
+      cpf: 70123456703,
+    });
+    author = authorCtx.user;
+    authorToken = authorCtx.sessionToken;
+
+    const otherCtx = await createActivatedUserWithSession({
+      username: "OutroEdicao",
+      email: "outro.edicao@post.dev",
+      password: TEST_CREDENTIALS.userDefault,
+      cpf: 70123456704,
+    });
+    otherToken = otherCtx.sessionToken;
+
+    editablePost = await post.create({
+      author_id: author.id,
+      content: "Texto original do post",
+    });
+  });
+
+  async function patch(postId, content, token) {
+    return fetch(`${webserver.origin}/api/v1/posts/${postId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...(token ? authHeaders(token) : {}) },
+      body: JSON.stringify({ content }),
+    });
+  }
+
+  test("autor edita o próprio post e a marca de edição é gravada", async () => {
+    const response = await patch(editablePost.id, "Texto editado pelo autor", authorToken);
+    expect(response.status).toBe(200);
+
+    const body = await response.json();
+    expect(body.content).toBe("Texto editado pelo autor");
+    expect(body.edited_at).not.toBeNull();
+    expect(body.id).toBe(editablePost.id);
+  });
+
+  test("a edição recalcula as tags do texto", async () => {
+    const taggedPost = await post.create({ author_id: author.id, content: "Post sobre #rpg" });
+
+    const response = await patch(taggedPost.id, "Agora o assunto é #pixelart", authorToken);
+    expect(response.status).toBe(200);
+
+    const porTagAntiga = await fetch(`${webserver.origin}/api/v1/posts?search_type=tag&tag=rpg`, { headers: authHeaders(authorToken) });
+    const antigas = await porTagAntiga.json();
+    expect(antigas.map((item) => item.id)).not.toContain(taggedPost.id);
+
+    const porTagNova = await fetch(`${webserver.origin}/api/v1/posts?search_type=tag&tag=pixelart`, { headers: authHeaders(authorToken) });
+    const novas = await porTagNova.json();
+    expect(novas.map((item) => item.id)).toContain(taggedPost.id);
+  });
+
+  test("anônimo não pode editar", async () => {
+    const response = await patch(editablePost.id, "Tentativa anônima");
+    expect(response.status).toBe(403);
+  });
+
+  test("quem não é o autor recebe 404 (não confirma que o post existe)", async () => {
+    const response = await patch(editablePost.id, "Tentativa de terceiro", otherToken);
+    expect(response.status).toBe(404);
+
+    const body = await response.json();
+    expect(body.name).toBe("NotFoundError");
+  });
+
+  test("conteúdo vazio é recusado", async () => {
+    const response = await patch(editablePost.id, "   ", authorToken);
+    expect(response.status).toBe(400);
+
+    const body = await response.json();
+    expect(body.name).toBe("ValidationError");
+  });
+
+  test("post inexistente responde 404", async () => {
+    const response = await patch(999999999, "Texto qualquer", authorToken);
+    expect(response.status).toBe(404);
+  });
+});

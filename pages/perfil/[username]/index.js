@@ -447,6 +447,12 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
     }).catch(() => {});
   }
 
+  // PATCH /api/v1/posts/:id — o card já mostrou o texto novo; aqui a aba
+  // "Posts" do perfil guarda a versão atualizada.
+  function handleEditPost(updatedPost) {
+    setPosts((prev) => prev.map((p) => (p.id === updatedPost.id ? { ...p, ...updatedPost } : p)));
+  }
+
   const followingCount = perfilUser.user.following_count ?? 0;
   const followersCount = perfilUser.user.followers_count ?? 0;
   const postsCount = perfilUser.user.posts_count ?? 0;
@@ -842,7 +848,13 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
               {!loadingPosts && posts.length === 0 && <p className={style.postsState}>Nenhuma postagem ainda.</p>}
               {!loadingPosts &&
                 posts.map((p) => (
-                  <PostCardComponent key={p.id} post={p} canInteract={!!authUser} onDelete={isOwnProfile ? handleDeletePost : undefined} />
+                  <PostCardComponent
+                    key={p.id}
+                    post={p}
+                    canInteract={!!authUser}
+                    onDelete={isOwnProfile ? handleDeletePost : undefined}
+                    onEdit={isOwnProfile ? handleEditPost : undefined}
+                  />
                 ))}
             </div>
           )}

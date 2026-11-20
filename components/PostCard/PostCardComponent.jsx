@@ -1,6 +1,6 @@
 // components/PostCardComponent.jsx
 import { useState } from "react";
-import { Avatar, Button } from "@primer/react";
+import { Avatar, Button, Textarea } from "@primer/react";
 import Link from "next/link";
 import styles from "./PostCardComponent.module.css";
 import PostActionsComponent from "../PostActions/PostActionsComponent";
@@ -42,6 +42,7 @@ PostCardComponent.propTypes = {
     author_avatar_url: PropTypes.string,
 
     created_at: PropTypes.string.isRequired,
+    edited_at: PropTypes.string,
 
     liked_by_user: PropTypes.bool,
     likes_count: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
@@ -63,15 +64,24 @@ PostCardComponent.propTypes = {
   }).isRequired,
 
   onDelete: PropTypes.func,
+  onEdit: PropTypes.func,
   canInteract: PropTypes.bool,
   onTagClick: PropTypes.func,
 };
 
-export default function PostCardComponent({ post, onDelete, canInteract = true, onTagClick }) {
+export default function PostCardComponent({ post, onDelete, onEdit, canInteract = true, onTagClick }) {
   const [hasLiked, setHasLiked] = useState(post.liked_by_user || false);
   const [actionMessage, setActionMessage] = useState(null);
   const [likesCount, setLikesCount] = useState(Number(post.likes_count) || 0);
   const [commentsCount, setCommentsCount] = useState(Number(post.comments_count));
+
+  // O texto exibido sai daqui, não direto de `post.content`: depois de salvar a
+  // edição o card precisa refletir o texto novo mesmo antes de o pai repropsá-lo.
+  const [content, setContent] = useState(post.content);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(post.content);
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState(null);
 
   const [showCommentBox, setShowCommentBox] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -87,8 +97,58 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
   const [reportError, setReportError] = useState(null);
 
   const MAX_CHARS = 240;
-  const isLong = post.content.length > MAX_CHARS;
-  const shownText = expanded ? post.content : post.content.slice(0, MAX_CHARS);
+  const isLong = content.length > MAX_CHARS;
+  const shownText = expanded ? content : content.slice(0, MAX_CHARS);
+
+  function startEditing() {
+    setDraft(content);
+    setEditError(null);
+    setEditing(true);
+  }
+
+  function cancelEditing() {
+    setEditing(false);
+    setEditError(null);
+  }
+
+  async function handleSaveEdit(event) {
+    event.preventDefault();
+
+    const nextContent = draft.trim();
+    if (!nextContent) {
+      setEditError("O post não pode ficar vazio.");
+      return;
+    }
+
+    setSaving(true);
+    setEditError(null);
+
+    try {
+      const res = await fetch(`/api/v1/posts/${post.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ content: nextContent }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setEditError(data.message || "Não foi possível salvar a edição.");
+        return;
+      }
+
+      setContent(data.content);
+      setEditing(false);
+      // O pai guarda a lista de posts: sem avisar, o texto antigo volta no
+      // próximo render (troca de aba, paginação, refetch).
+      onEdit?.(data);
+    } catch {
+      setEditError("Falha de rede ao salvar a edição.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   const handleLike = async () => {
     const beforeLiked = hasLiked;
@@ -263,12 +323,20 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
               </Link>
               <span className={styles.subInfo}>
                 @{post.author_username} · {timeAgo(post.created_at)}
+                {post.edited_at ? " · editado" : ""}
               </span>
             </div>
             {canInteract && post.is_current_user && (
-              <Button variant="invisible" size="small" className={styles.deleteBtn} onClick={() => onDelete?.(post.id)}>
-                Deletar
-              </Button>
+              <div className={styles.ownerActions}>
+                {!editing && (
+                  <Button variant="invisible" size="small" onClick={startEditing}>
+                    Editar
+                  </Button>
+                )}
+                <Button variant="invisible" size="small" className={styles.deleteBtn} onClick={() => onDelete?.(post.id)}>
+                  Deletar
+                </Button>
+              </div>
             )}
           </div>
 
@@ -300,11 +368,32 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
 
           {/* TEXTO */}
           <div className={styles.text}>
-            {renderRichText(shownText, { onTagClick })}
-            {isLong && (
-              <button className={styles.showMoreBtn} onClick={() => setExpanded(!expanded)}>
-                {expanded ? "Mostrar menos" : "Mostrar mais"}
-              </button>
+            {editing ? (
+              <form className={styles.editForm} onSubmit={handleSaveEdit}>
+                <Textarea value={draft} onChange={(event) => setDraft(event.target.value)} rows={4} block aria-label="Editar post" autoFocus />
+                {editError && (
+                  <p className={styles.editError} role="alert">
+                    {editError}
+                  </p>
+                )}
+                <div className={styles.editActions}>
+                  <Button type="submit" variant="primary" size="small" loading={saving}>
+                    Salvar
+                  </Button>
+                  <Button type="button" variant="invisible" size="small" onClick={cancelEditing} disabled={saving}>
+                    Cancelar
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <>
+                {renderRichText(shownText, { onTagClick })}
+                {isLong && (
+                  <button className={styles.showMoreBtn} onClick={() => setExpanded(!expanded)}>
+                    {expanded ? "Mostrar menos" : "Mostrar mais"}
+                  </button>
+                )}
+              </>
             )}
           </div>
 
@@ -359,7 +448,7 @@ export default function PostCardComponent({ post, onDelete, canInteract = true, 
       {showShareModal && (
         <ShareModal
           path={`/posts/${post.id}`}
-          text={post.content?.slice(0, 200)}
+          text={content?.slice(0, 200)}
           title="Compartilhar post"
           hint="Copie o link e cole no WhatsApp, Discord ou Instagram. A miniatura do post será exibida automaticamente."
           onClose={() => setShowShareModal(false)}

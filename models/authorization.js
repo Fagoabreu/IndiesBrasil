@@ -609,6 +609,8 @@ function getPostResource(resource) {
     content: resource.content,
     img: resource.img,
     created_at: resource.created_at,
+    // Nula até a primeira edição; é o que o card usa para exibir "editado".
+    edited_at: resource.edited_at,
     parent_post_id: resource.parent_post_id,
     embed: resource.embed,
     post_img_url: resource.post_img_url,
