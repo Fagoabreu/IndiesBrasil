@@ -171,7 +171,7 @@ export default function PostDetailPage({ initialPost, ssrNotFound, ssrError, pos
         </Link>
       </div>
 
-      <PostCardComponent key={post.id} post={post} canInteract={!!user} onDelete={() => router.push("/posts")} />
+      <PostCardComponent key={post.id} post={post} canInteract={!!user} onDelete={() => router.push("/posts")} onEdit={setPost} />
     </div>
   );
 }

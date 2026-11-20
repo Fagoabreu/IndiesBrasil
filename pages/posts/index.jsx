@@ -182,6 +182,12 @@ export default function PostsPage() {
     }
   };
 
+  // PATCH /api/v1/posts/:id — o card já trocou o próprio texto; aqui o feed
+  // guarda a versão nova para o próximo render (troca de aba, paginação).
+  const handleEditPost = (updatedPost) => {
+    setPosts((prev) => prev.map((p) => (p.id === updatedPost.id ? { ...p, ...updatedPost } : p)));
+  };
+
   if (loadingUser || loadingPosts) {
     return (
       <div className="posts-page">
@@ -259,6 +265,7 @@ export default function PostsPage() {
               <PostCardComponent
                 post={post}
                 onDelete={handleDeletePost}
+                onEdit={handleEditPost}
                 canInteract={user}
                 onTagClick={(tag) => {
                   setActiveTag(tag);

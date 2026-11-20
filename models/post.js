@@ -12,6 +12,7 @@ const camposBase = `
   p.content,
   p.img,
   p.created_at,
+  p.edited_at,
   p.parent_post_id,
   p.embed,
   pui.secure_url AS post_img_url,
@@ -170,11 +171,7 @@ const moderationFilter = `
 async function create(postInputValues) {
   const newPost = await runInsertQuery(postInputValues);
   if (postInputValues.tags) {
-    await Promise.all(
-      postInputValues.tags.map(async (tag) => {
-        return await runAddTagsQuery(newPost.id, tag.id);
-      }),
-    );
+    await replaceTags(newPost.id, postInputValues.tags);
   }
 
   // Cria poll se tiver dados
@@ -231,23 +228,59 @@ async function create(postInputValues) {
     });
     return results.rows[0];
   }
+}
 
-  async function runAddTagsQuery(post_id, tag_id) {
-    const results = await database.query({
-      text: `
-      insert into
-        post_tags  (
-          post_id,
-          tag_id)
-      values
-        ($1, $2)
-      returning
-        *
+async function update({ postId, authorId, content, tagList = [], embed = null }) {
+  const result = await database.query({
+    text: `
+      update posts
+         set content   = $3,
+             embed     = $4,
+             edited_at = timezone('utc', now())
+       where id = $2
+         and author_id = $1
+      returning id
       `,
-      values: [post_id, tag_id],
+    values: [authorId, postId, content, embed],
+  });
+
+  // `author_id` no WHERE: quem não é o autor recebe o mesmo 404 de post
+  // inexistente, como no delete. Confirmar a existência de um post alheio não
+  // é informação que este endpoint precise entregar.
+  if (result.rowCount === 0) {
+    throw new NotFoundError({
+      message: "O post informado não foi encontrado ou usuario não é o criador do post.",
+      action: "Verifique se o post a ser editado está correto",
     });
-    return results.rows[0];
   }
+
+  await replaceTags(postId, tagList);
+
+  return getPostById(authorId, postId);
+}
+
+/**
+ * Substitui as tags do post pelo conjunto novo.
+ *
+ * Criar e editar precisam da MESMA operação: no `create` são as tags do texto
+ * publicado; no `update`, é o que faz uma tag removida do texto sair de
+ * `post_tags` (sem isso o filtro por tag continuaria achando o post por uma tag
+ * que ele não tem mais).
+ */
+async function replaceTags(postId, tagList) {
+  await database.query({
+    text: `delete from post_tags where post_id = $1`,
+    values: [postId],
+  });
+
+  await Promise.all(
+    tagList.map((tag) =>
+      database.query({
+        text: `insert into post_tags (post_id, tag_id) values ($1, $2)`,
+        values: [postId, tag.id],
+      }),
+    ),
+  );
 }
 
 async function deleteById(postId) {
@@ -540,6 +573,7 @@ async function getPostsByUsername(viewerUserId, authorUsername) {
 
 const post = {
   create,
+  update,
   deleteById,
   getPosts,
   getPostById,

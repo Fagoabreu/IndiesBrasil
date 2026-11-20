@@ -380,6 +380,17 @@ Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESM
 - **Embed antigo se conserta na leitura**: post publicado antes disso tem `{type: "preview", url: ...}` gravado. O `EmbedComponent` reconhece pela URL (nao pelo `type`) e desenha o player/embed, entao corrigir o resolvedor nao exige regravar post.
 - Testes em `tests/unit/lib/embedLinks.test.js` e `tests/unit/infra/embededResolver.test.js` — os dois casos foram verificados tambem por HTTP: `/reel/.../embed/captioned/` = 200, `/reels/.../embed/captioned/` = 404.
 
+## Edicao de post (autor)
+
+- **O editor vive no card** (`components/PostCard/PostCardComponent.jsx`), nao em cada pagina: o card e renderizado no feed (`/posts`), no detalhe (`/posts/[id]`), no perfil e na pagina do estudio. Editar ali cobre os quatro lugares de uma vez. Nao reutilizar o `CreatePost`: ele carrega webcam, uploader, enquete e progresso de upload — por card seria peso em dobro.
+- **`PATCH /api/v1/posts/[post_id]`** usa `update:post` (a feature ja existia, criada para `endPoll`) e aceita **so `content`**. Imagem e enquete nao se editam: trocar `img` exige upload + apagar a anterior no Cloudinary, e enquete com votos e outro fluxo.
+- **Nao-autor recebe 404**, nunca 403: `UPDATE ... WHERE author_id = $1` responde `rowCount = 0` para os dois casos, como no `deletePostByIdAndAuthorId`. Confirmar a existencia de post alheio nao e informacao que a rota deva dar.
+- **Editar recalcula tags e embeds** (`replaceTags` + `embededResolver.getEmbededLinks`). Sem isso a tag removida do texto continuaria em `post_tags` (e o filtro por tag acharia o post) e o player do link apagado continuaria renderizado. `replaceTags` e o mesmo helper que o `create` usa — duas copias divergiriam.
+- **`posts.edited_at`** (migration `1794100000000`): o card mostra "editado" quando a coluna esta preenchida. Nula por padrao; `created_at` segue sendo a data de publicacao.
+- **O texto exibido no card sai de estado local** (`content`), nao de `post.content`: depois de salvar, o card precisa mostrar o texto novo mesmo antes de o pai repropsá-lo. O `onEdit(post)` avisa a pagina para atualizar a lista (`setPosts(prev => prev.map(...))`) — sem isso o texto antigo volta na troca de aba ou na paginacao.
+- **Post bloqueado pela moderacao nao e editavel**: `getPostById` aplica o filtro e responde 404 ate para o autor. Reescrever o texto nao e caminho para sair da moderacao.
+- Testes: `tests/integration/api/v1/posts/[post_id]/index.test.js`, bloco `PATCH` (autor edita, tags recalculadas, anonimo 403, terceiro 404, vazio 400, inexistente 404).
+
 ## Contatos (perfil, estudio, press kit, curriculo)
 
 - O contato e **um campo de texto livre** (`contact_value`, `VARCHAR(255)`) em duas tabelas espelhadas: `users_contacts` e `organization_contacts`. Os tipos vem de `contact_type` (gerenciavel em `/admin/contact-types`).
