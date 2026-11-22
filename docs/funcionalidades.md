@@ -299,7 +299,7 @@ Nove abas, cada uma com seu editor:
 - **Dia inteiro** com término exclusivo (o formulário pede o último dia incluído; o servidor normaliza a fronteira).
 - **Fuso fixo de Brasília** na exibição e na digitação — sem o clássico card com o dia anterior.
 - **RSVP em três estados** (vou, talvez, não vou), com contadores, além de confirmação de presença de estúdios.
-- **Posts vinculados** ao evento, com criação direta na página para quem organiza.
+- **Posts vinculados** ao evento, com criação direta na página para quem organiza. A listagem usa o **mesmo card do feed** (imagem, embed, enquete, curtidas e comentários) e cada post tem link para a página dele.
 - **Página do evento** com endereço e mapa do local, links e contadores de presença.
 - **Sitemap** inclui apenas eventos públicos e publicados; rascunho e evento privado ficam de fora.
 

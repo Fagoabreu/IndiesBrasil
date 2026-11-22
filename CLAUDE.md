@@ -381,6 +381,9 @@ Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESM
 
 ## Embeds de link em post
 
+- **A lista de posts de um evento usa `post.getPostsByEventId`**, não uma query própria: era uma segunda seleção em `models/event.js` que não trazia `embed`, `comments_count`, `is_current_user` nem filtro de moderação — a página do evento não desenhava vídeo/card de link nem enquete, e listava post bloqueado. A tela do evento agora usa o mesmo `PostCardComponent` do feed (`showPermalink`).
+- **Endereço de evento é `/agenda/<uuid>`**, nunca slug: `/agenda/[id]` valida `isUuid` e responde 404 para slug. O badge do card já preferiu `event_slug` e levava a "página não encontrada" — o id é o endereço canônico em `EventCard`, sitemap, compartilhar e editar. Fixado em `tests/unit/components/postCardLinks.test.js`.
+
 - O que vira player e o que vira card de preview e decidido em `lib/embedLinks.js` — modulo puro (nao faz rede), usado pelo resolvedor do servidor (`infra/embededResolver.js`, que grava o embed) **e** pelo componente (`components/Embeds/EmbedComponent.jsx`, que desenha). Duas copias divergiriam.
 - **`youtube.com/live/<id>` e video**, nao canal: era o caminho que faltava e o link caia em `fetchLinkPreview`; como o YouTube nao serve o HTML do video para requisicao de servidor, o post ficava com card de preview **sem imagem**. O reconhecimento e por ID (watch?v, youtu.be, /live/, /shorts/, /embed/, /v/) — canal, playlist e busca devolvem `null` e seguem para o preview, que e o que tem titulo e miniatura.
 - **`/reels/<id>` (plural) responde 404 em `/embed/captioned/`**; so `/reel/<id>` responde 200 — e o plural e justamente o link que o app do Instagram compartilha. `normalizeInstagramUrl` grava o permalink canonico no servidor e o componente normaliza de novo na leitura.

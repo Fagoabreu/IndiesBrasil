@@ -541,6 +541,33 @@ async function setPostLikes(postId, userId, liked) {
   }
 }
 
+/**
+ * Posts de um evento, com o MESMO formato do feed.
+ *
+ * A versao anterior era uma query propria em `models/event.js` que devolvia so
+ * id/content/imagem/autor/curtidas — sem `embed`, sem `comments_count`, sem
+ * `is_current_user` e **sem o filtro de moderacao**. A pagina do evento
+ * renderizava um card artesanal em que video, card de link e enquete nao
+ * apareciam, e post bloqueado continuava listado.
+ *
+ * Reusa `baseSelectQuery`/`baseNoUserSelectQuery` para a tela poder desenhar
+ * com o mesmo `PostCardComponent` do feed.
+ */
+async function getPostsByEventId(viewerUserId, eventId) {
+  if (viewerUserId) {
+    const results = await database.query({
+      text: baseSelectQuery + ` WHERE p.event_id = $2${moderationFilter} ORDER BY p.created_at DESC`,
+      values: [viewerUserId, eventId],
+    });
+    return results.rows;
+  }
+  const results = await database.query({
+    text: baseNoUserSelectQuery + ` WHERE p.event_id = $2${moderationFilter} ORDER BY p.created_at DESC`,
+    values: [null, eventId],
+  });
+  return results.rows;
+}
+
 async function getPostsByOrgId(viewerUserId, orgId) {
   if (viewerUserId) {
     const results = await database.query({
@@ -578,6 +605,7 @@ const post = {
   getPosts,
   getPostById,
   getPostsByOrgId,
+  getPostsByEventId,
   deletePostByIdAndAuthorId,
   deleteCommentsByPostId,
   setPostLikes,

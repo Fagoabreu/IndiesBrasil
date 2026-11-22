@@ -68,9 +68,15 @@ PostCardComponent.propTypes = {
   onEdit: PropTypes.func,
   canInteract: PropTypes.bool,
   onTagClick: PropTypes.func,
+  /**
+   * Exibe "Ver post completo" apontando para `/posts/[id]`. Ligado na página do
+   * evento, onde o card é a única superfície do post — no feed o permalink já
+   * existe no botão de compartilhar, e o link extra seria ruído.
+   */
+  showPermalink: PropTypes.bool,
 };
 
-export default function PostCardComponent({ post, onDelete, onEdit, canInteract = true, onTagClick }) {
+export default function PostCardComponent({ post, onDelete, onEdit, canInteract = true, onTagClick, showPermalink = false }) {
   const [hasLiked, setHasLiked] = useState(post.liked_by_user || false);
   const [actionMessage, setActionMessage] = useState(null);
   const [likesCount, setLikesCount] = useState(Number(post.likes_count) || 0);
@@ -382,9 +388,13 @@ export default function PostCardComponent({ post, onDelete, onEdit, canInteract 
             )}
           </div>
 
-          {/* EVENTO RELACIONADO */}
+          {/* EVENTO RELACIONADO
+              Sempre pelo **id**: `/agenda/[id]` valida UUID (`isUuid`) e
+              responde 404 para slug. O badge preferia `event_slug`, então todo
+              post com slug preenchido levava a "página não encontrada" — o id é
+              o endereço canônico em todo o resto do site (EventCard, sitemap). */}
           {post.event_id && (
-            <Link href={post.event_slug ? `/agenda/${post.event_slug}` : `/agenda/${post.event_id}`} className={styles.eventBadge}>
+            <Link href={`/agenda/${post.event_id}`} className={styles.eventBadge}>
               <span className={styles.eventBadgeIcon}>📅</span>
               <span className={styles.eventBadgeLabel}>{post.event_title || "Ver evento"}</span>
             </Link>
@@ -459,6 +469,13 @@ export default function PostCardComponent({ post, onDelete, onEdit, canInteract 
               endedAt={post.poll_ended_at}
               isAuthor={post.is_current_user}
             />
+          )}
+
+          {/* PERMALINK */}
+          {showPermalink && (
+            <Link href={`/posts/${post.id}`} className={styles.permalink}>
+              Ver post completo →
+            </Link>
           )}
 
           {/* AÇÕES */}
