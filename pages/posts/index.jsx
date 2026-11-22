@@ -167,6 +167,8 @@ export default function PostsPage() {
   };
 
   // DELETE /api/v1/posts/:id
+  // Devolve `false` quando a API recusa: o card mantém o diálogo de confirmação
+  // aberto com a mensagem, em vez de fechar como se o post tivesse saído.
   const handleDeletePost = async (postId) => {
     try {
       const response = await fetch(`/api/v1/posts/${postId}`, {
@@ -174,11 +176,13 @@ export default function PostsPage() {
         credentials: "include",
       });
 
-      if (!response.ok) return;
+      if (!response.ok) return false;
 
       setPosts((prev) => prev.filter((p) => p.id !== postId));
+      return true;
     } catch (error) {
       console.error("Erro ao deletar:", error);
+      return false;
     }
   };
 

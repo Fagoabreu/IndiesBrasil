@@ -118,6 +118,13 @@ Toda nova feature de API exige registro em **3 lugares**:
 2. `models/activation.js` -> `activateUserByUserId`
 3. `infra/controller.js` -> `injectAnonymousUser` (se publica)
 
+E, para feature que **nao** seja publica, exige tambem um **4o lugar**: uma migration de **backfill**.
+
+- `activation.js` so vale para quem se ativa **depois** do release. Quem ja tem `create:session` continua com o array antigo, e as rotas passam a responder 403 para essa pessoa. `ANONYMOUS_FEATURES` nao cobre usuario logado — o `canRequest` le `users.features`.
+- Padrao: `UPDATE users SET features = ARRAY(SELECT DISTINCT UNNEST(features || ARRAY['...'])) WHERE 'create:session' = ANY(features)` — ver `1790740000001_assets-user-features.js`.
+- Foi o que faltou em **servicos, profissoes e generos de jogo**: entraram sem backfill e o editor de servicos do estudio ficou vazio para toda conta antiga (`GET /api/v1/services` respondia 403 e o aviso era invisivel — ver `StatusMessageComponent`). `1794200000000_services-professions-genres-user-features.js` corrige.
+- `tests/unit/lib/featureBackfill.test.js` le `models/activation.js` e as migrations e falha quando uma feature fica sem backfill (com baseline documentado para as anteriores ao sistema).
+
 ### Testes de feature arrays — atualizar sempre
 
 Novas features exigem atualizar os arrays em **4 arquivos de teste**:
@@ -391,6 +398,15 @@ Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESM
 - **Post bloqueado pela moderacao nao e editavel**: `getPostById` aplica o filtro e responde 404 ate para o autor. Reescrever o texto nao e caminho para sair da moderacao.
 - Testes: `tests/integration/api/v1/posts/[post_id]/index.test.js`, bloco `PATCH` (autor edita, tags recalculadas, anonimo 403, terceiro 404, vazio 400, inexistente 404).
 
+## Confirmacao de acao destrutiva (`ConfirmDialog`)
+
+- **Excluir post pede confirmacao**, num dialogo do Primer (`role="alertdialog"`, botao `danger`) — antes o botao agia na primeira batida e um clique errado no feed apagava o post e os comentarios, sem desfazer. O dialogo vive no card (`components/PostCard/PostCardComponent.jsx`), entao vale nos quatro lugares onde ele aparece; nao repetir o modal por pagina.
+- `components/ConfirmDialog` e **generico de proposito**: proxima exclusao (comentario, noticia — hoje em `window.confirm`) deve usa-lo, nao criar modal proprio nem `confirm()`. `confirm()` nativo ignora o tema por cookie e nao usa o Primer.
+- **`onDelete` pode devolver `false`** quando a API recusa: o card mantem o dialogo aberto com a mensagem (`error`). Antes a falha era silenciosa — a lista sumia com o item mesmo assim (perfil fazia `fire-and-forget`) e a exclusao malsucedida parecia concluida.
+- Durante a operacao o dialogo **nao fecha** (`loading` bloqueia `onClose`, Escape, backdrop e o X): fechar no meio daria a impressao de cancelamento quando o pedido ja foi enviado.
+- **Teste de interacao com jsdom**: `tests/unit/components/postCardDeleteConfirm.test.js` (clique em Deletar nao chama `onDelete`; cancelar nao apaga; confirmar chama uma vez; falha mantem o dialogo). Ele exigiu `jest-environment-jsdom` (devDependency) e o docblock `@jest-environment jsdom` — precisa ser o **primeiro** comentario do arquivo, antes dos imports, senao o Prettier o desloca e o Jest ignora. jsdom nao tem `ResizeObserver`/`IntersectionObserver`: o teste define stubs antes de renderizar, porque `useOverflow` do Primer os usa em efeito.
+- `@primer/react` e as dependencias Lit entraram em `EXTRA_PACKAGES` do `jest.config.js`: o pacote e ESM e o barril importa `@lit-labs/react`. Sem isso qualquer teste que renderize componente do Primer falha com `Unexpected token 'export'` — e so o teste, nunca o app.
+
 ## Contatos (perfil, estudio, press kit, curriculo)
 
 - O contato e **um campo de texto livre** (`contact_value`, `VARCHAR(255)`) em duas tabelas espelhadas: `users_contacts` e `organization_contacts`. Os tipos vem de `contact_type` (gerenciavel em `/admin/contact-types`).
@@ -480,7 +496,8 @@ Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESM
 
 ## E-mail em desenvolvimento (Mailcatcher)
 
-- O Mailcatcher publica **4025 (SMTP)** e **4080 (HTTP)** no host — nao 1025/1080. A 1025 e `quick` no IANA e o Windows a disputa: o **Rockstar Games Launcher (`RLHostService`) a ocupa em `127.0.0.1` e aceita a conexao sem responder SMTP**, o que aparece como `ETIMEDOUT: Greeting never received` no nodemailer e como e-mail que nunca chega.
+- O Mailcatcher publica **5025 (SMTP)** e **5080 (HTTP)** no host — nao 1025/1080. A 1025 e `quick` no IANA e o Windows a disputa: o **Rockstar Games Launcher (`RLHostService`) a ocupa em `127.0.0.1` e aceita a conexao sem responder SMTP**, o que aparece como `ETIMEDOUT: Greeting never received` no nodemailer e como e-mail que nunca chega.
+- A escolha anterior era 4025/4080. O Hyper-V reserva faixas dinamicas de porta no Windows (`netsh interface ipv4 show excludedportrange protocol=tcp` — no ambiente de desenvolvimento apareceu 4012–4211) e o Docker recusou a subida do Mailcatcher com `bind: access is forbidden`. Se voltar a acontecer, conferir a faixa e escolher portas fora dela — as excluídas mudam entre reinicializacoes.
 - Dentro do container as portas continuam 1025/1080 (imagem fixa); muda so o lado do host. Ao mexer, atualize os **dois** lugares: `ports` em `infra/compose.yaml` e `EMAIL_SMTP_PORT`/`EMAIL_HTTP_PORT` em `.env.development`.
 - O app usa `EMAIL_HTTP_PORT` no link do e-mail; a suite de testes usa `EMAIL_HTTP_HOST`/`EMAIL_HTTP_PORT` no `orchestrator` (o `beforeAll` testa `GET /` do Mailcatcher — um substituto precisa responder 200 nessa rota).
 
@@ -571,6 +588,9 @@ Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESM
 - **`price` e informativo** (nao ha checkout): o negocio fecha por `SendMessageButton` (`targetType="studio"`), que ja existe. `price_note` cobre "por projeto"/"a combinar". `lib/price.js` normaliza e formata — o **mesmo** helper de `assets.price`; duas copias divergiriam (uma aceitando string, a outra 500).
 - **Sugestoes: qualquer usuario autenticado** (`create:service_suggestion`, fora de `ANONYMOUS_FEATURES`). Nome que ja existe no catalogo responde 400 **dizendo qual**. Aprovar **cria o servico na mesma chamada** — mandar o admin redigitar o nome que acabou de ler e o passo que faz a fila nunca esvaziar. O servico e criado antes de marcar a sugestao: se a criacao falhar, a sugestao continua `pending`.
 - **Features**: `read:service`, `read:service:all` (anonima) e `create:service_suggestion`. Escrita no catalogo usa `read:admin` (como `asset-categories`); a declaracao do estudio reusa `update:studio` (como os contatos).
+- **Backfill**: a secao entrou sem migration de features e toda conta ativada antes dela recebia **403 em `GET /api/v1/services`** — o editor nao carregava o catalogo. Corrigido em `1794200000000_services-professions-genres-user-features.js`. Ao acrescentar uma feature nova aqui, conferir o checklist em "Authorization (critico)".
+- **O editor nao pode tratar falha de leitura como "sem servicos"**: `StudioServicesEditor.reload()` interrompe se `GET .../services` falhar. Antes a falha virava lista vazia e o proximo "Salvar" enviava `services: []`, apagando a declaracao do estudio. O `reload()` depois de um PUT bem-sucedido tem `try` proprio: a gravacao ja aconteceu, e mostrar "erro de conexao" ali faria a pessoa tentar de novo.
+- **Feedbacks de tela usam `StatusMessageComponent` com `type` + `message`** (ou `errorMsg`/`successMsg`, a API antiga — as duas convivem). Ele ignorava `type`/`message` e 13 chamadas renderizavam caixa vazia: o 400/403 de salvar servico, asset ou aula nao aparecia. Ver `tests/unit/components/statusMessage.test.js`.
 - **Estudio**: a secao "Servicos" recebe `services` de `GET /api/v1/studios/[slug]` e mostra resumo + valor. A declaracao vive na aba **Servicos** de `/configuracoes` (`components/Studio/StudioServicesEditor/`), e `services` entrou em `STUDIO_PRODUCT_TABS` (`lib/studioEntry.js`) — o teste que fixa as abas exige as seis.
 - **Card de estudio e compartilhado**: `components/Card/StudioCard.jsx` (extraido de `pages/estudios/index.js`) desenha ate 3 chips de servico + "+N". `organization.findAll` traz os servicos por `json_agg` correlacionado, **nao** por JOIN: o `GROUP BY` ja tem seis colunas e um terceiro join multiplicaria as linhas de seguidores/membros.
 - **Sidebar**: grupo "Servicos" com "Procurar servicos" (`/servicos`) e "Oferecer servicos" (destino vindo de `resolveStudioEntry({ tab: "services" })` — nunca uma escada de `if` propria).

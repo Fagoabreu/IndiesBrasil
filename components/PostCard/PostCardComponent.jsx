@@ -8,6 +8,7 @@ import CommentPanelComponent from "../CommentPanel/CommentPanelComponent";
 import EmbedComponent from "../Embeds/EmbedComponent";
 import ShareModal from "../ShareModal/ShareModal";
 import ReportModal from "../ReportModal/ReportModal";
+import ConfirmDialog from "../ConfirmDialog/ConfirmDialog";
 import Image from "next/image";
 import PropTypes from "prop-types";
 import PollComponent from "./PollComponent";
@@ -83,6 +84,12 @@ export default function PostCardComponent({ post, onDelete, onEdit, canInteract 
   const [saving, setSaving] = useState(false);
   const [editError, setEditError] = useState(null);
 
+  // Exclusão pede confirmação: o botão agia na primeira batida e não há
+  // desfazer para o post nem para os comentários dele.
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+
   const [showCommentBox, setShowCommentBox] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -148,6 +155,41 @@ export default function PostCardComponent({ post, onDelete, onEdit, canInteract 
     } finally {
       setSaving(false);
     }
+  }
+
+  /**
+   * Exclusão já confirmada no diálogo.
+   *
+   * O `onDelete` vem da página e devolve `true`/`false` (ou `undefined` quando a
+   * página navega depois). O `await` cobre os três formatos; o diálogo fecha
+   * depois da resposta, não antes, para o "excluindo" aparecer no botão e para
+   * uma falha não passar como sucesso.
+   */
+  async function handleConfirmDelete() {
+    setDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const deleted = await onDelete?.(post.id);
+
+      // Contrato opcional: a página devolve `false` quando a API recusou. Sem
+      // isso, o diálogo fecharia como se o post tivesse saído.
+      if (deleted === false) {
+        setDeleteError("Não foi possível deletar o post. Tente novamente.");
+        return;
+      }
+
+      setConfirmingDelete(false);
+    } catch {
+      setDeleteError("Falha de rede ao deletar o post.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  function openDeleteConfirmation() {
+    setDeleteError(null);
+    setConfirmingDelete(true);
   }
 
   const handleLike = async () => {
@@ -333,7 +375,7 @@ export default function PostCardComponent({ post, onDelete, onEdit, canInteract 
                     Editar
                   </Button>
                 )}
-                <Button variant="invisible" size="small" className={styles.deleteBtn} onClick={() => onDelete?.(post.id)}>
+                <Button variant="invisible" size="small" className={styles.deleteBtn} aria-haspopup="dialog" onClick={openDeleteConfirmation}>
                   Deletar
                 </Button>
               </div>
@@ -457,6 +499,20 @@ export default function PostCardComponent({ post, onDelete, onEdit, canInteract 
 
       {showReportModal && (
         <ReportModal onClose={() => setShowReportModal(false)} onSubmit={handleReport} submitting={reportSubmitting} error={reportError} />
+      )}
+
+      {confirmingDelete && (
+        <ConfirmDialog
+          title="Deletar post"
+          description="Tem certeza de que quer deletar este post?"
+          details="O texto, as curtidas e os comentários serão apagados. Não dá para desfazer."
+          error={deleteError}
+          confirmLabel="Deletar"
+          danger
+          loading={deleting}
+          onClose={() => setConfirmingDelete(false)}
+          onConfirm={handleConfirmDelete}
+        />
       )}
     </article>
   );

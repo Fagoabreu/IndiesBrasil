@@ -439,12 +439,23 @@ export default function Perfil({ initialProfile, profileNotFound = false }) {
     globalThis.open(`/perfil/${username}/curriculo`, "_blank");
   }
 
-  function handleDeletePost(postId) {
-    setPosts((prev) => prev.filter((p) => p.id !== postId));
-    fetch(`/api/v1/posts/${postId}`, {
-      method: "DELETE",
-      credentials: "include",
-    }).catch(() => {});
+  // A exclusão agora espera a resposta e devolve `false` quando a API recusa:
+  // o card mantém o diálogo de confirmação aberto com a mensagem. Antes a linha
+  // saía da lista na hora (`fire-and-forget`) e uma falha passava despercebida.
+  async function handleDeletePost(postId) {
+    try {
+      const res = await fetch(`/api/v1/posts/${postId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!res.ok) return false;
+
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   // PATCH /api/v1/posts/:id — o card já mostrou o texto novo; aqui a aba

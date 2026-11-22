@@ -47,15 +47,20 @@ export default function StudioServicesEditor({ slug }) {
     ]);
 
     if (!catalogRes.ok) throw new Error("Não foi possível carregar o catálogo de serviços.");
+    // Ler a declaração atual é pré-requisito para salvar: tratar a falha como
+    // lista vazia fazia o próximo "Salvar" enviar `services: []` e APAGAR tudo
+    // o que o estúdio tinha declarado. Falha de leitura interrompe aqui.
+    if (!mineRes.ok) throw new Error("Não foi possível carregar os serviços do estúdio. Recarregue a página.");
 
     const catalogData = await catalogRes.json();
-    const mineData = mineRes.ok ? await mineRes.json() : [];
+    const mineData = await mineRes.json();
+    const mineList = Array.isArray(mineData) ? mineData : [];
 
-    const mineBySlug = new Map((Array.isArray(mineData) ? mineData : []).map((item) => [item.slug, item]));
+    const mineBySlug = new Map(mineList.map((item) => [item.slug, item]));
 
     // Um serviço desativado que o estúdio já declarava não volta na lista
     // pública: é acrescentado ao catálogo local para não sumir da tela.
-    const missing = (Array.isArray(mineData) ? mineData : []).filter((item) => !catalogData.some((service) => service.slug === item.slug));
+    const missing = mineList.filter((item) => !catalogData.some((service) => service.slug === item.slug));
 
     setCatalog([...(Array.isArray(catalogData) ? catalogData : []), ...missing]);
 
@@ -144,7 +149,15 @@ export default function StudioServicesEditor({ slug }) {
       }
 
       setMessage({ type: "success", text: "Serviços atualizados." });
-      await reload();
+
+      // Recarregar é só para normalizar a tela. Se falhar depois do 200, a
+      // gravação já aconteceu: mostrar "erro de conexão" aqui faria a pessoa
+      // tentar salvar de novo achando que nada foi gravado.
+      try {
+        await reload();
+      } catch {
+        // mantém o aviso de sucesso
+      }
     } catch {
       setMessage({ type: "error", text: "Erro de conexão. Tente novamente." });
     } finally {

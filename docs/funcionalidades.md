@@ -85,7 +85,7 @@ Stack: Next.js (Pages Router), React, Primer React, PostgreSQL com `node-pg-migr
 - **Embed antigo se conserta na leitura**: posts gravados antes da correção passam a ser desenhados como player sem precisar regravar.
 - **Curtidas, comentários e compartilhamento** com card de preview.
 - **Edição pelo autor** (`PATCH /api/v1/posts/[post_id]`): o texto é reescrito no lugar, tags e embeds são recalculados a partir do novo conteúdo e o card passa a exibir "editado". Disponível no feed, no perfil, na página do estúdio e no detalhe do post — o editor vive no card compartilhado.
-- **Exclusão** pelo autor, com permissões verificadas no servidor.
+- **Exclusão** pelo autor, com confirmação em diálogo — o botão não apaga na primeira batida — e permissões verificadas no servidor.
 - **Denúncia** de post, estúdio, obra, asset e conversa.
 - **Tags** com sugestão enquanto digita e lista de **tags em alta**.
 
