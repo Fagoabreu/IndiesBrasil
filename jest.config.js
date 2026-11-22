@@ -20,8 +20,15 @@ const jestConfig = createJestConfig({
 // `main: lib/marked.esm.js`). Sem isso, o teste de `lib/markdown.js` falha com
 // "Cannot use import statement outside a module" — e só o teste, nunca o app,
 // porque o Next transpila `node_modules` no bundle.
+//
+// `@primer/react` e as dependências Lit entram pelo mesmo motivo: o pacote é
+// `type: module` e o barril `dist/index.js` importa `@lit-labs/react`, também
+// ESM. Sem isso, qualquer teste que renderize um componente do Primer falha com
+// "Unexpected token 'export'" — e o app continua funcionando, porque o Next
+// transpila `node_modules` no bundle.
 const originalConfigFn = jestConfig;
-const EXTRA_PACKAGES = "node-pg-migrate|glob|marked|";
+const EXTRA_PACKAGES =
+  "node-pg-migrate|glob|marked|@primer/react|@lit-labs/react|@lit/reactive-element|@lit/context|lit|lit-html|lit-element|@github/relative-time-element|@github/tab-container-element|@primer/live-region-element|";
 
 module.exports = async () => {
   const config = await originalConfigFn();

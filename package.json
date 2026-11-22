@@ -85,6 +85,7 @@
     "husky": "9.1.7",
     "inquirer": "^13.3.0",
     "jest": "30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
     "node-pg-migrate": "^8.0.4",
     "prettier": "3.8.1",
     "set-cookie-parser": "3.0.1"

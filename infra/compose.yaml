@@ -13,14 +13,17 @@ services:
     # disputada no Windows — o Rockstar Games Launcher (`RLHostService`) a ocupa
     # em `127.0.0.1` e **aceita a conexão sem responder SMTP**, o que aparece
     # como "Greeting never received" no nodemailer e como e-mail que nunca chega.
+    # Eram 4025/4080, mas o Hyper-V reserva faixas dinâmicas no Windows
+    # (`netsh interface ipv4 show excludedportrange protocol=tcp`, hoje
+    # 4012–4211) e o Docker recusava a subida com "bind: access is forbidden".
     # Como o Mailcatcher saudável continua na 1025 **dentro** do container
     # (imagem fixa), só o lado do host muda: o container fica intocado.
     #
     # Quem depende destes números no host: `EMAIL_SMTP_PORT`/`EMAIL_HTTP_PORT`
     # em `.env.development` (app e suíte de testes). Ao mudar aqui, mude lá.
     ports:
-      - "4025:1025"
-      - "4080:1080"
+      - "5025:1025"
+      - "5080:1080"
   # Webconferência (Galene 1.2.1). Mesma imagem do deploy (`galene/`),
   # compilada localmente na primeira subida com `services:up`. O app (npm run
   # dev, no host) usa MEET_URL padrão ws://localhost:8000 e grava os grupos em

@@ -8,6 +8,7 @@ import CommentPanelComponent from "../CommentPanel/CommentPanelComponent";
 import EmbedComponent from "../Embeds/EmbedComponent";
 import ShareModal from "../ShareModal/ShareModal";
 import ReportModal from "../ReportModal/ReportModal";
+import ConfirmDialog from "../ConfirmDialog/ConfirmDialog";
 import Image from "next/image";
 import PropTypes from "prop-types";
 import PollComponent from "./PollComponent";
@@ -67,9 +68,15 @@ PostCardComponent.propTypes = {
   onEdit: PropTypes.func,
   canInteract: PropTypes.bool,
   onTagClick: PropTypes.func,
+  /**
+   * Exibe "Ver post completo" apontando para `/posts/[id]`. Ligado na página do
+   * evento, onde o card é a única superfície do post — no feed o permalink já
+   * existe no botão de compartilhar, e o link extra seria ruído.
+   */
+  showPermalink: PropTypes.bool,
 };
 
-export default function PostCardComponent({ post, onDelete, onEdit, canInteract = true, onTagClick }) {
+export default function PostCardComponent({ post, onDelete, onEdit, canInteract = true, onTagClick, showPermalink = false }) {
   const [hasLiked, setHasLiked] = useState(post.liked_by_user || false);
   const [actionMessage, setActionMessage] = useState(null);
   const [likesCount, setLikesCount] = useState(Number(post.likes_count) || 0);
@@ -82,6 +89,12 @@ export default function PostCardComponent({ post, onDelete, onEdit, canInteract 
   const [draft, setDraft] = useState(post.content);
   const [saving, setSaving] = useState(false);
   const [editError, setEditError] = useState(null);
+
+  // Exclusão pede confirmação: o botão agia na primeira batida e não há
+  // desfazer para o post nem para os comentários dele.
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   const [showCommentBox, setShowCommentBox] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -148,6 +161,41 @@ export default function PostCardComponent({ post, onDelete, onEdit, canInteract 
     } finally {
       setSaving(false);
     }
+  }
+
+  /**
+   * Exclusão já confirmada no diálogo.
+   *
+   * O `onDelete` vem da página e devolve `true`/`false` (ou `undefined` quando a
+   * página navega depois). O `await` cobre os três formatos; o diálogo fecha
+   * depois da resposta, não antes, para o "excluindo" aparecer no botão e para
+   * uma falha não passar como sucesso.
+   */
+  async function handleConfirmDelete() {
+    setDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const deleted = await onDelete?.(post.id);
+
+      // Contrato opcional: a página devolve `false` quando a API recusou. Sem
+      // isso, o diálogo fecharia como se o post tivesse saído.
+      if (deleted === false) {
+        setDeleteError("Não foi possível deletar o post. Tente novamente.");
+        return;
+      }
+
+      setConfirmingDelete(false);
+    } catch {
+      setDeleteError("Falha de rede ao deletar o post.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  function openDeleteConfirmation() {
+    setDeleteError(null);
+    setConfirmingDelete(true);
   }
 
   const handleLike = async () => {
@@ -333,16 +381,20 @@ export default function PostCardComponent({ post, onDelete, onEdit, canInteract 
                     Editar
                   </Button>
                 )}
-                <Button variant="invisible" size="small" className={styles.deleteBtn} onClick={() => onDelete?.(post.id)}>
+                <Button variant="invisible" size="small" className={styles.deleteBtn} aria-haspopup="dialog" onClick={openDeleteConfirmation}>
                   Deletar
                 </Button>
               </div>
             )}
           </div>
 
-          {/* EVENTO RELACIONADO */}
+          {/* EVENTO RELACIONADO
+              Sempre pelo **id**: `/agenda/[id]` valida UUID (`isUuid`) e
+              responde 404 para slug. O badge preferia `event_slug`, então todo
+              post com slug preenchido levava a "página não encontrada" — o id é
+              o endereço canônico em todo o resto do site (EventCard, sitemap). */}
           {post.event_id && (
-            <Link href={post.event_slug ? `/agenda/${post.event_slug}` : `/agenda/${post.event_id}`} className={styles.eventBadge}>
+            <Link href={`/agenda/${post.event_id}`} className={styles.eventBadge}>
               <span className={styles.eventBadgeIcon}>📅</span>
               <span className={styles.eventBadgeLabel}>{post.event_title || "Ver evento"}</span>
             </Link>
@@ -419,6 +471,13 @@ export default function PostCardComponent({ post, onDelete, onEdit, canInteract 
             />
           )}
 
+          {/* PERMALINK */}
+          {showPermalink && (
+            <Link href={`/posts/${post.id}`} className={styles.permalink}>
+              Ver post completo →
+            </Link>
+          )}
+
           {/* AÇÕES */}
           <PostActionsComponent
             hasLiked={hasLiked}
@@ -457,6 +516,20 @@ export default function PostCardComponent({ post, onDelete, onEdit, canInteract 
 
       {showReportModal && (
         <ReportModal onClose={() => setShowReportModal(false)} onSubmit={handleReport} submitting={reportSubmitting} error={reportError} />
+      )}
+
+      {confirmingDelete && (
+        <ConfirmDialog
+          title="Deletar post"
+          description="Tem certeza de que quer deletar este post?"
+          details="O texto, as curtidas e os comentários serão apagados. Não dá para desfazer."
+          error={deleteError}
+          confirmLabel="Deletar"
+          danger
+          loading={deleting}
+          onClose={() => setConfirmingDelete(false)}
+          onConfirm={handleConfirmDelete}
+        />
       )}
     </article>
   );

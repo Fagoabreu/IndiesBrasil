@@ -14,6 +14,7 @@ import { allDayLastInstant, eventDateParts, formatEventDate, formatEventShortDat
 import { loopbackOrigin } from "@/lib/internal-url";
 import { isUuid } from "@/lib/uuid";
 import CreatePost from "@/components/CreatePost/CreatePost";
+import PostCardComponent from "@/components/PostCard/PostCardComponent";
 import AddressDisplay from "@/components/Address/AddressDisplay";
 import styles from "./index.module.css";
 import { uploadWithProgress } from "@/utils/uploadWithProgress";
@@ -96,15 +97,6 @@ function showsEndDate(ev) {
   const start = eventDateParts(ev.starts_at);
   const end = eventDateParts(eventEndForDisplay(ev));
   return !(start.year === end.year && start.month === end.month && start.day === end.day);
-}
-
-function timeAgo(dateStr) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
 }
 
 export default function EventDetailPage({ initialEvent = null, eventNotFound = false }) {
@@ -250,6 +242,26 @@ export default function EventDetailPage({ initialEvent = null, eventNotFound = f
       console.error("Erro ao criar post:", err);
       throw err;
     }
+  }
+
+  // DELETE /api/v1/posts/:id — o card só chama depois da confirmação.
+  // Devolver `false` mantém o diálogo aberto com a mensagem de erro.
+  async function handleDeletePost(postId) {
+    try {
+      const res = await fetch(`/api/v1/posts/${postId}`, { method: "DELETE", credentials: "include" });
+      if (!res.ok) return false;
+
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // PATCH /api/v1/posts/:id — o card já mostrou o texto novo; aqui a lista do
+  // evento guarda a versão atualizada.
+  function handleEditPost(updatedPost) {
+    setPosts((prev) => prev.map((p) => (p.id === updatedPost.id ? { ...p, ...updatedPost } : p)));
   }
 
   function isOrgGoing(orgId) {
@@ -506,22 +518,7 @@ export default function EventDetailPage({ initialEvent = null, eventNotFound = f
                 <p className={styles.noPostsHint}>Nenhum post ainda. Seja o primeiro a comentar!</p>
               ) : (
                 posts.map((p) => (
-                  <div key={p.id} className={styles.postCard}>
-                    <div className={styles.postHeader}>
-                      <Image
-                        src={p.author_avatar_url || "/images/avatar.png"}
-                        alt={p.author_username}
-                        width={28}
-                        height={28}
-                        className={styles.postAvatar}
-                      />
-                      <Link href={`/perfil/${p.author_username}`} className={styles.postAuthor}>
-                        @{p.author_username}
-                      </Link>
-                      <span className={styles.postDate}>{timeAgo(p.created_at)}</span>
-                    </div>
-                    {p.content && <p className={styles.postContent}>{p.content}</p>}
-                  </div>
+                  <PostCardComponent key={p.id} post={p} canInteract={!!user} showPermalink onDelete={handleDeletePost} onEdit={handleEditPost} />
                 ))
               )}
             </div>

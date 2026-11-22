@@ -1363,39 +1363,12 @@ async function respondInvitation(eventId, userId, status) {
 
 /* ================================================================
  * POSTS DO EVENTO
- * ================================================================ */
-
-async function getEventPosts(eventId, userId) {
-  const result = await database.query({
-    text: `
-      SELECT
-        p.id,
-        p.content,
-        p.img,
-        p.created_at,
-        pui.secure_url     AS post_img_url,
-        u.username         AS author_username,
-        u.avatar_image     AS author_avatar,
-        uui.secure_url     AS author_avatar_url,
-        COALESCE(lc.likes_count, 0) AS likes_count,
-        (pl.post_id IS NOT NULL)    AS liked_by_user
-      FROM posts p
-      INNER JOIN users u ON u.id = p.author_id
-      LEFT JOIN uploaded_images uui ON uui.id = u.avatar_image
-      LEFT JOIN uploaded_images pui ON pui.id = p.img
-      LEFT JOIN LATERAL (
-        SELECT COUNT(*) AS likes_count FROM post_likes WHERE post_id = p.id
-      ) lc ON true
-      LEFT JOIN LATERAL (
-        SELECT 1, post_id FROM post_likes WHERE post_id = p.id AND user_id = $2 LIMIT 1
-      ) pl ON true
-      WHERE p.event_id = $1
-      ORDER BY p.created_at DESC
-    `,
-    values: [eventId, userId ?? null],
-  });
-  return result.rows;
-}
+ * ================================================================
+ * A listagem vive em `models/post.js` (`getPostsByEventId`), junto da base de
+ * seleção do feed. Havia uma segunda query aqui que devolvia um subconjunto dos
+ * campos e nenhum filtro de moderação — como a rota agora usa a função do model
+ * de post, manter as duas seria a divergência esperando acontecer.
+ */
 
 /* ================================================================
  * GERAÇÃO ESTENDIDA (para job periódico ou rota admin)
@@ -1534,7 +1507,6 @@ const event = {
   getRsvpCounts,
   invite,
   respondInvitation,
-  getEventPosts,
   extendInstances,
   expandRecurrenceRule,
   setBannerImage,

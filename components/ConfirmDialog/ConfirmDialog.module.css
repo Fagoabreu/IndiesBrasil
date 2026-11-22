@@ -1,0 +1,29 @@
+/* Corpo do diálogo de confirmação — ver `ConfirmDialog.jsx`.
+   A tipografia mora aqui (e não na tela que chama) para toda confirmação de
+   ação destrutiva ter a mesma leitura. */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--fgColor-default);
+}
+
+.description {
+  margin: 0;
+}
+
+/* A consequência fica em tom secundário: é o que a pessoa precisa ler antes de
+   confirmar, mas não é a pergunta. */
+.details {
+  margin: 0;
+  font-size: 13px;
+  color: var(--fgColor-muted);
+}
+
+.error {
+  margin: 0;
+  font-size: 13px;
+  color: var(--fgColor-danger);
+}

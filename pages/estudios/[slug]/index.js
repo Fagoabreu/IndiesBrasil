@@ -432,7 +432,10 @@ export default function StudioPage({ initialStudio }) {
       method: "DELETE",
       credentials: "include",
     });
-    if (res.ok) setStudioPosts((prev) => (prev || []).filter((p) => p.id !== postId));
+    if (!res.ok) return false;
+
+    setStudioPosts((prev) => (prev || []).filter((p) => p.id !== postId));
+    return true;
   };
 
   const handleEditPost = (updatedPost) => {

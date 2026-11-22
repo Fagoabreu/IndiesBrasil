@@ -480,51 +480,6 @@
   gap: 12px;
 }
 
-.postCard {
-  padding: 14px;
-  background: var(--bgColor-default);
-  border: 1px solid var(--borderColor-muted);
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.postHeader {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.postAvatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.postAuthor {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--fgColor-default);
-  text-decoration: none;
-}
-
-.postAuthor:hover {
-  color: var(--brand-primary);
-}
-
-.postDate {
-  font-size: 0.75rem;
-  color: var(--fgColor-muted);
-}
-
-.postContent {
-  font-size: 0.875rem;
-  color: var(--fgColor-default);
-  line-height: 1.6;
-}
-
 .noPostsHint {
   font-size: 0.875rem;
   color: var(--fgColor-muted);
