@@ -465,6 +465,33 @@ function BookDetail({ book }) {
  * Page
  * ========================================================= */
 
+/**
+ * 404 no servidor para estúdio inexistente.
+ *
+ * A página é montada no cliente: sem esta checagem, **qualquer** slug — inclusive
+ * o literal `[slug]` que aparece nas listas de rotas da documentação — respondia
+ * 200 com `Carregando press kit...`, e o Search Console marcava como soft 404.
+ */
+export async function getServerSideProps(context) {
+  const { slug } = context.params;
+
+  const { anonymousCan } = await import("@/infra/controller");
+  if (!anonymousCan("read:studio")) return { notFound: true };
+
+  try {
+    const organization = (await import("@/models/organization")).default;
+    await organization.findBySlug(slug);
+    return { props: {} };
+  } catch (error) {
+    // `findBySlug` lança `NotFoundError` para estúdio inexistente **ou bloqueado**
+    // — os dois casos são 404 (não confirma existência de conteúdo moderado).
+    if (error?.name === "NotFoundError") return { notFound: true };
+
+    // Falha de banco não é "não existe": deixa a página carregar no cliente.
+    return { props: {} };
+  }
+}
+
 export default function PressKitPage() {
   const router = useRouter();
   const { slug } = router.query;
@@ -541,12 +568,33 @@ export default function PressKitPage() {
     ]);
   }, [games, boardGames, books]);
 
+  // `noindex` em **todos** os estados: este documento repete o conteúdo da
+  // página do estúdio. Antes o `<Head>` ficava só no retorno final, então o HTML
+  // servido era `Carregando press kit...` sem meta nenhuma — daí o soft 404 no
+  // Search Console.
+  const noindexMeta = (
+    <Head>
+      <title>{studio ? `Press Kit — ${studio.name}` : "Press Kit"}</title>
+      <meta name="robots" content="noindex" />
+    </Head>
+  );
+
   if (loading) {
-    return <div className={styles.loading}>Carregando press kit...</div>;
+    return (
+      <>
+        {noindexMeta}
+        <div className={styles.loading}>Carregando press kit...</div>
+      </>
+    );
   }
 
   if (!studio || studio.status_code) {
-    return <div className={styles.loading}>Estúdio não encontrado.</div>;
+    return (
+      <>
+        {noindexMeta}
+        <div className={styles.loading}>Estúdio não encontrado.</div>
+      </>
+    );
   }
 
   const studioUrl = `${SITE_URL}/estudios/${slug}`;
@@ -572,10 +620,7 @@ export default function PressKitPage() {
 
   return (
     <>
-      <Head>
-        <title>Press Kit — {studio.name}</title>
-        <meta name="robots" content="noindex" />
-      </Head>
+      {noindexMeta}
 
       {/* Barra de ação — oculta no print (componente compartilhado com o press
           kit do produto e o currículo; o `@media print` mora nele). */}

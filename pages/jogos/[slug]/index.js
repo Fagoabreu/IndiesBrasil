@@ -102,13 +102,21 @@ export async function getServerSideProps(context) {
   try {
     const game = (await import("@/models/game")).default;
     const gameData = await game.findBySlug(slug);
-    if (!gameData) return { props: { initialGame: null, siteUrl } };
+    // Jogo inexistente é **404 de verdade**. Antes a página respondia 200 com a
+    // casca e o cliente redirecionava para /jogos — o Google registrava isso
+    // como "Página com redirecionamento" e o endereço não era indexado.
+    if (!gameData) return { notFound: true };
 
     // node-pg retorna TIMESTAMP como Date — Next.js não serializa.
     const serialized = JSON.parse(JSON.stringify(gameData));
 
     return { props: { initialGame: serialized, siteUrl } };
-  } catch {
+  } catch (error) {
+    // `findBySlug` **lança** `NotFoundError` (jogo inexistente ou bloqueado pela
+    // moderação). Engolir isso no catch era o que fazia a página responder 200
+    // com a casca e redirecionar no cliente — "Página com redirecionamento" no
+    // Search Console. Só falha de infraestrutura mantém a casca.
+    if (error?.name === "NotFoundError") return { notFound: true };
     return { props: { initialGame: null, siteUrl } };
   }
 }
@@ -143,10 +151,17 @@ export default function GamePage({ initialGame, siteUrl }) {
         const res = await fetch(`/api/v1/games/${slug}`, {
           credentials: "include",
         });
-        if (!res.ok) {
+
+        // Só 404 justifica sair da página, e só quando o SSR não entregou nada.
+        // Qualquer outra falha (429, 500, rede) antes mandava para /jogos e
+        // transformava uma página válida em redirecionamento — era o que o
+        // Search Console reportava. Agora o conteúdo do SSR permanece.
+        if (res.status === 404 && !initialGame) {
           router.replace("/jogos");
           return;
         }
+        if (!res.ok) return;
+
         const data = await res.json();
         if (!cancelled) {
           setGameData(data);
@@ -159,7 +174,7 @@ export default function GamePage({ initialGame, siteUrl }) {
     return () => {
       cancelled = true;
     };
-  }, [slug, router]);
+  }, [slug, router, initialGame]);
 
   useEffect(() => {
     if (!gameData?.website_url) return;

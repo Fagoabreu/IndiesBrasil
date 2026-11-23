@@ -51,13 +51,18 @@ export async function getServerSideProps(context) {
   try {
     const book = (await import("@/models/book")).default;
     const bookData = await book.findBySlug(slug);
-    if (!bookData) return { props: { initialBook: null, siteUrl } };
+    // Livro/quadrinho inexistente é **404 de verdade** — mesmo motivo de
+    // `pages/jogos/[slug]/index.js`.
+    if (!bookData) return { notFound: true };
 
     // node-pg retorna TIMESTAMP como Date — Next.js não serializa.
     const serialized = JSON.parse(JSON.stringify(bookData));
 
     return { props: { initialBook: serialized, siteUrl } };
-  } catch {
+  } catch (error) {
+    // Livro/quadrinho inexistente ou bloqueado: `findBySlug` lança
+    // `NotFoundError`. É 404, não 200 com redirect no cliente.
+    if (error?.name === "NotFoundError") return { notFound: true };
     return { props: { initialBook: null, siteUrl } };
   }
 }
@@ -79,17 +84,21 @@ export default function BookPage({ initialBook, siteUrl }) {
       const res = await fetch(`/api/v1/books/${slug}`, {
         credentials: "include",
       });
-      if (!res.ok) {
+      if (res.status === 404 && !initialBook) {
         router.replace("/quadrinhos");
         return;
       }
+      // Falha transitória (429/500/rede) mantém o conteúdo do SSR — antes
+      // qualquer erro virava redirecionamento para a listagem.
+      if (!res.ok) return;
+
       const data = await res.json();
       setBookData(data);
       setFollowing(data.viewer?.isFollowing ?? false);
     } finally {
       setLoading(false);
     }
-  }, [slug, router]);
+  }, [slug, router, initialBook]);
 
   useEffect(() => {
     fetchBook();
