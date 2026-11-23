@@ -61,7 +61,10 @@ export async function getServerSideProps(context) {
   try {
     const boardgame = (await import("@/models/boardgame")).default;
     const bgData = await boardgame.findBySlug(slug);
-    if (!bgData) return { props: { initialBgData: null, siteUrl } };
+    // Jogo de mesa inexistente é **404 de verdade** — mesmo motivo de
+    // `pages/jogos/[slug]/index.js`: 200 + redirect no cliente vira "Página com
+    // redirecionamento" no Search Console.
+    if (!bgData) return { notFound: true };
 
     // node-pg devolve TIMESTAMP como `Date`, e o Next não serializa `Date` em
     // props — sem esta linha a rota responde 500 para **todo** jogo de mesa
@@ -71,7 +74,10 @@ export async function getServerSideProps(context) {
     const serialized = JSON.parse(JSON.stringify(bgData));
 
     return { props: { initialBgData: serialized, siteUrl } };
-  } catch {
+  } catch (error) {
+    // Jogo de mesa inexistente ou bloqueado: `findBySlug` lança `NotFoundError`.
+    // Virar 404 evita o 200 + redirect que o Search Console reportava.
+    if (error?.name === "NotFoundError") return { notFound: true };
     return { props: { initialBgData: null, siteUrl } };
   }
 }
@@ -94,10 +100,14 @@ export default function BoardgamePage({ initialBgData, siteUrl }) {
         fetch(`/api/v1/boardgames/${slug}`, { credentials: "include" }),
         fetch(`/api/v1/boardgames/${slug}/media`, { credentials: "include" }),
       ]);
-      if (!bgRes.ok) {
+      if (bgRes.status === 404 && !initialBgData) {
         router.replace("/jogos-de-mesa");
         return;
       }
+      // Falha transitória (429/500/rede) não pode derrubar a página: o conteúdo
+      // do SSR continua válido. Antes qualquer resposta não-ok redirecionava.
+      if (!bgRes.ok) return;
+
       const data = await bgRes.json();
       setBgData(data);
       setFollowing(data.viewer?.isFollowing ?? false);
@@ -107,7 +117,7 @@ export default function BoardgamePage({ initialBgData, siteUrl }) {
     } finally {
       setLoading(false);
     }
-  }, [slug, router]);
+  }, [slug, router, initialBgData]);
 
   useEffect(() => {
     fetchBoardgame();

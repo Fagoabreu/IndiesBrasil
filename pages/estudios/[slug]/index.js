@@ -139,7 +139,10 @@ export async function getServerSideProps(context) {
   try {
     const organization = (await import("@/models/organization")).default;
     const studio = await organization.findBySlug(slug);
-    if (!studio) return { props: { initialStudio: null } };
+    // Estúdio inexistente é **404 de verdade**. Antes a página respondia 200
+    // com "Estúdio não encontrado." e o Search Console classificava como soft
+    // 404 (slug de estúdio renomeado ou excluído, como `medalha-zero`).
+    if (!studio) return { notFound: true };
 
     // Normalize address (same logic as the API handler)
     const { street, number, complement, neighborhood, city, state, zip_code, country, ...studioData } = studio;
@@ -154,7 +157,11 @@ export async function getServerSideProps(context) {
         initialStudio: { ...serialized, address },
       },
     };
-  } catch {
+  } catch (error) {
+    // `findBySlug` **lança** `NotFoundError` (estúdio inexistente ou bloqueado
+    // pela moderação). Responder 200 com "Estúdio não encontrado." é o soft 404
+    // que o Search Console reportava em `/estudios/medalha-zero`.
+    if (error?.name === "NotFoundError") return { notFound: true };
     return { props: { initialStudio: null } };
   }
 }

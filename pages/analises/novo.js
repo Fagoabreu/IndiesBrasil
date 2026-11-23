@@ -1,12 +1,12 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
-import Head from "next/head";
 import Image from "next/image";
 import { useUser } from "@/context/UserContext";
 import ImageUploader from "@/components/ImageTools/ImageUploader/ImageUploader";
+import SeoHead from "@/components/SeoHead";
 import styles from "./novo.module.css";
-import { SITE_NAME } from "@/lib/seo";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 
 const CONTENT_TYPE_OPTIONS = [
   { value: "game", label: "Jogo" },
@@ -242,21 +242,33 @@ export default function NovaAnalisePage() {
     }
   }
 
+  // Página de formulário: não deve ser indexada (o conteúdo público é a análise
+  // em `/analises/[slug]`). Fica no `noIndex` do SeoHead — e **fora** dos retornos
+  // antecipados, senão o HTML servido ao visitante anônimo (spinner) saía sem
+  // meta nenhuma e o Google tratava a URL como página com redirecionamento.
+  const seo = (
+    <SeoHead
+      title={`${isEditing ? "Editar análise" : "Nova análise"} — ${SITE_NAME}`}
+      description={`Escreva uma análise para a comunidade do ${SITE_NAME}.`}
+      canonical={`${SITE_URL}/analises/novo`}
+      noIndex
+    />
+  );
+
   if (loadingUser || !user) {
     return (
-      <div className={styles.loadingPage}>
-        <div className={styles.spinner} />
-      </div>
+      <>
+        {seo}
+        <div className={styles.loadingPage}>
+          <div className={styles.spinner} />
+        </div>
+      </>
     );
   }
 
   return (
     <>
-      <Head>
-        <title>
-          {isEditing ? "Editar Análise" : "Nova Análise"} — ${SITE_NAME}
-        </title>
-      </Head>
+      {seo}
 
       <div className={styles.page}>
         <h1 className={styles.pageTitle}>{isEditing ? "Editar Análise" : "Nova Análise"}</h1>
