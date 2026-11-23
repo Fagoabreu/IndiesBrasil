@@ -1805,38 +1805,56 @@ export default function ConfiguracoesPage() {
                   // com este botão à vista receberia 403.
                   const canRemoveThis = viewerIsOwner || !isAdminMember;
                   const roleActionLabel = isAdminMember ? "Revogar acesso" : "Conceder acesso";
+                  // O responsável não tem ação nesta lista; sem esta checagem a
+                  // linha dele renderizava um `.memberActions` vazio, que no
+                  // celular ocupa uma faixa inteira por causa do `flex-basis`.
+                  const hasActions = (viewerIsOwner && !isOwnerMember) || (!isOwnerMember && canRemoveThis);
 
                   return (
-                    <li key={m.id} className={styles.pendingItem}>
-                      <span className={styles.pendingUsername}>{m.display_name || m.username}</span>
+                    <li key={m.id} className={styles.memberItem}>
+                      {/* Identidade primeiro: `@username` é o que a pessoa
+                          reconhece e é o que os botões usam (a API recebe
+                          username). O `resumo` do perfil fica como segunda
+                          linha — ele era o texto principal e, no celular,
+                          truncava justamente o nome de quem era. */}
+                      <div className={styles.memberIdentity}>
+                        <span className={styles.memberHeadline}>
+                          {/* Link para o perfil: é o "ver os dados do membro".
+                              O `@username` é o identificador que a API usa nos
+                              botões, então ele é o texto principal. */}
+                          <Link href={`/perfil/${m.username}`} className={styles.memberUsername}>
+                            @{m.username}
+                          </Link>
+                          {isOwnerMember && <span className={styles.ownerBadge}>(dono)</span>}
+                          {isAdminMember && !isOwnerMember && <span className={styles.roleBadge}>Administrador</span>}
+                        </span>
+                        {m.display_name && <span className={styles.memberDisplayName}>{m.display_name}</span>}
+                      </div>
 
-                      <span className={styles.memberBadges}>
-                        {isOwnerMember && <span className={styles.ownerBadge}>(dono)</span>}
-                        {isAdminMember && !isOwnerMember && <span className={styles.roleBadge}>Administrador</span>}
-                      </span>
-
-                      <span className={styles.memberActions}>
-                        {viewerIsOwner && !isOwnerMember && (
-                          <button
-                            type="button"
-                            className={styles.btnRole}
-                            onClick={() => handleSetRole(m.username, isAdminMember ? "revoke" : "grant")}
-                            disabled={roleUsername === m.username}
-                          >
-                            {roleUsername === m.username ? "…" : roleActionLabel}
-                          </button>
-                        )}
-                        {!isOwnerMember && canRemoveThis && (
-                          <button
-                            type="button"
-                            className={styles.btnCancelInvite}
-                            onClick={() => handleRemoveMember(m.username)}
-                            disabled={removingUsername === m.username}
-                          >
-                            {removingUsername === m.username ? "…" : "Remover"}
-                          </button>
-                        )}
-                      </span>
+                      {hasActions && (
+                        <span className={styles.memberActions}>
+                          {viewerIsOwner && !isOwnerMember && (
+                            <button
+                              type="button"
+                              className={styles.btnRole}
+                              onClick={() => handleSetRole(m.username, isAdminMember ? "revoke" : "grant")}
+                              disabled={roleUsername === m.username}
+                            >
+                              {roleUsername === m.username ? "…" : roleActionLabel}
+                            </button>
+                          )}
+                          {!isOwnerMember && canRemoveThis && (
+                            <button
+                              type="button"
+                              className={styles.btnCancelInvite}
+                              onClick={() => handleRemoveMember(m.username)}
+                              disabled={removingUsername === m.username}
+                            >
+                              {removingUsername === m.username ? "…" : "Remover"}
+                            </button>
+                          )}
+                        </span>
+                      )}
                     </li>
                   );
                 })}

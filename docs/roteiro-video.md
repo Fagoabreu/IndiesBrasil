@@ -218,7 +218,7 @@ Prepare um ambiente com dados ricos. Tela vazia não vende produto.
 ### Cena 11 — Como publicar
 
 **Tempo:** 6:40–7:15
-**Tela:** `/como-publicar` → `/estudios/pixel-norte/configuracoes?tab=games`
+**Tela:** `/sobre/como-publicar` → `/estudios/pixel-norte/configuracoes?tab=games`
 **Ação:** mostrar os três passos. Abrir o editor de jogo e passar pelas abas Informações, Mídia e Lojas. Abrir o recorte de uma imagem e mostrar a proporção fixa.
 
 **Fala:**

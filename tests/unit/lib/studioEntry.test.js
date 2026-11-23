@@ -188,6 +188,6 @@ describe("lib/studioEntry.js", () => {
   });
 
   test("a página de explicação é um endereço só", () => {
-    expect(HOW_TO_PUBLISH_PATH).toBe("/como-publicar");
+    expect(HOW_TO_PUBLISH_PATH).toBe("/sobre/como-publicar");
   });
 });

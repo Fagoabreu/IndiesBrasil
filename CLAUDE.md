@@ -259,6 +259,8 @@ Imagem estatica (nao vem de upload): a arte do site sao DOIS arquivos com o MESM
 - O `@` e prefixo de exibicao: `normalizeMemberQuery` o remove antes de enviar. Sem isso a API respondia "usuario nao encontrado" para `@username`, que estava visivelmente certo na tela.
 - `Enter` com a lista aberta escolhe a sugestao destacada; sem sugestao, envia o formulario. O componente chama `onSubmit` porque o `<form>` do React nao dispara `submit` a partir de um `keydown` sintetico.
 - Debounce de 300 ms + minimo de 2 caracteres: a busca e varredura de tabela e uma letra casaria com quase toda a base.
+- **A lista de membros tem layout proprio (`.memberItem`), nao o `.pendingItem` dos convites.** Reusar a linha de convite ("texto + um botao") espremia nome + selo de papel + dois botoes numa linha so: no celular o nome virava "Programador de Jogos e Aplica…" e nao dava para saber quem era. O `flex-wrap` manda as acoes para a linha de baixo; em `max-width: 560px` a identidade ocupa a largura toda, o resumo do perfil quebra linha (em vez de truncar) e os dois botoes dividem a largura com alvo de 36px.
+- **Identidade e `@username` (link para o perfil); o resumo do perfil e a segunda linha.** `findMembers` devolve `u.resumo AS display_name`, e a tela usava esse texto como nome — quem queria conferir quem era o membro via a profissao, nunca o username.
 
 ## Loja desligada (botoes do perfil do estudio)
 

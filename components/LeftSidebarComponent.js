@@ -398,8 +398,8 @@ export default function LeftSidebarComponent({ onNavigate }) {
           <NavList.SubNav>
             <NavList.Item
               as={Link}
-              href="/como-publicar"
-              aria-current={router.pathname.startsWith("/como-publicar") ? "page" : undefined}
+              href="/sobre/como-publicar"
+              aria-current={router.pathname.startsWith("/sobre/como-publicar") ? "page" : undefined}
               onClick={onNavigate}
             >
               <NavList.LeadingVisual>

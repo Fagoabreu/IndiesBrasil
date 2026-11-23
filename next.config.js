@@ -51,6 +51,19 @@ const nextConfig = {
     ],
   },
 
+  async redirects() {
+    return [
+      {
+        // "Como publicar" passou a viver sob `/sobre`. O endereço antigo chegou a
+        // ser publicado no sitemap e circulou em links externos; 301 preserva o
+        // que já aponta para lá em vez de devolver 404.
+        source: "/como-publicar",
+        destination: "/sobre/como-publicar",
+        permanent: true,
+      },
+    ];
+  },
+
   async rewrites() {
     return [
       {
