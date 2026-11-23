@@ -122,7 +122,7 @@ describe("components/Studio/StudioPublishNotice", () => {
   });
 
   test("as duas variantes linkam a página de explicação", () => {
-    expect(render({ tab: "games" })).toContain("/como-publicar");
-    expect(render({ tab: "games", variant: "empty" })).toContain("/como-publicar");
+    expect(render({ tab: "games" })).toContain("/sobre/como-publicar");
+    expect(render({ tab: "games", variant: "empty" })).toContain("/sobre/como-publicar");
   });
 });

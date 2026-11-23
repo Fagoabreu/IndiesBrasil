@@ -321,18 +321,96 @@
   border: 1px solid rgba(var(--brand-rgb-primary), 0.3);
 }
 
-.memberBadges {
+/* Linha de membro da equipe.
+   Não reusa `.pendingItem`: aquele layout é "uma linha de texto + um botão" e,
+   com nome + selo + dois botões, o nome era espremido até sobrar "Programador
+   de Jogos e Aplica…" sem dar para saber quem era. Aqui o `flex-wrap` manda os
+   botões para a linha de baixo quando não cabem. */
+.memberItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--bgColor-default);
+  border: 1px solid var(--borderColor-muted);
+}
+
+.memberIdentity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.memberHeadline {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
-  flex-shrink: 0;
+  min-width: 0;
+}
+
+.memberUsername {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--fgColor-default);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.memberUsername:hover {
+  color: var(--brand-primary);
+  text-decoration: underline;
+}
+
+/* O resumo do perfil é contexto, não identidade: fica em segundo plano e pode
+   ser cortado no desktop. No celular ele volta a quebrar linha — esconder o
+   dado do membro é o defeito que esta tela tinha. */
+.memberDisplayName {
+  font-size: 0.78rem;
+  color: var(--fgColor-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .memberActions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
-  flex-shrink: 0;
+  margin-left: auto;
+}
+
+@media (max-width: 560px) {
+  .memberItem {
+    align-items: stretch;
+  }
+
+  .memberIdentity {
+    flex-basis: 100%;
+  }
+
+  .memberDisplayName {
+    white-space: normal;
+  }
+
+  /* Ações em linha própria e ocupando a largura: dois alvos de toque grandes,
+     em vez de dois botões espremidos na borda direita. */
+  .memberActions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .memberActions .btnRole,
+  .memberActions .btnCancelInvite {
+    flex: 1 1 0;
+    min-height: 36px;
+  }
 }
 
 /* Conceder/revogar acesso. Visual distinto do "Remover"
