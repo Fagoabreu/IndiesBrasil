@@ -9,6 +9,10 @@
   max-width: 720px;
   margin: 0 auto;
   padding: 24px 16px 64px;
+  /* Rede de segurança contra overflow horizontal: um texto longo em campo de
+     usuário (gênero, nome de plataforma) não pode empurrar a página inteira.
+     `clip` não cria scroll container, então não quebra `position: sticky`. */
+  overflow-x: clip;
 }
 
 /* Barra superior */
@@ -92,6 +96,9 @@
   flex-direction: column;
   gap: 16px;
   background: var(--bgColor-muted);
+  /* Sem `min-width: 0` o card assume o min-content do filho mais largo (um
+     `<select>` com opção longa, por exemplo) e vaza da viewport no celular. */
+  min-width: 0;
 }
 
 .sectionTitle {
@@ -142,6 +149,10 @@
   font-size: 0.875rem;
   font-family: inherit;
   transition: border-color 0.15s;
+  /* `select.input` tem min-content = a opção mais longa; sem estes dois o
+     controle define a largura da coluna do grid e estoura o card. */
+  min-width: 0;
+  max-width: 100%;
 }
 
 .input:focus,
@@ -464,10 +475,15 @@
 .gameFormRow {
   display: flex;
   gap: 10px;
+  /* Dois selects lado a lado estouram a largura do card no celular: o
+     `min-width` intrínseco de um `<select>` é a opção mais longa. Com wrap +
+     `min-width: 0`, a linha quebra em vez de empurrar o card. */
+  flex-wrap: wrap;
 }
 
 .gameFormRow .input {
-  flex: 1;
+  flex: 1 1 140px;
+  min-width: 0;
 }
 
 .gameLink {
@@ -475,6 +491,8 @@
   color: var(--fgColor-default);
   font-weight: 600;
   font-size: 0.875rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .gameLink:hover {
@@ -489,6 +507,8 @@
   border-radius: 4px;
   padding: 2px 7px;
   margin-left: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* Game list */
@@ -513,6 +533,11 @@
   gap: 10px;
   padding: 10px 14px;
   background: var(--bgColor-muted);
+  /* Título + 2 selos + até 4 botões não cabem numa linha no celular. Sem o
+     wrap, o excedente era cortado pelo `overflow: hidden` do `.gameListItem` —
+     "Fechar" e "Classificar" ficavam fora do alcance. */
+  flex-wrap: wrap;
+  row-gap: 8px;
 }
 
 .btnEditGame {
@@ -524,6 +549,8 @@
   color: var(--fgColor-muted);
   font-size: 0.78rem;
   cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
   transition:
     border-color 0.15s,
     color 0.15s;
@@ -548,6 +575,8 @@
   color: var(--fgColor-muted);
   font-size: 0.78rem;
   cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
   transition:
     border-color 0.15s,
     color 0.15s;
@@ -566,6 +595,8 @@
   color: var(--fgColor-muted);
   font-size: 0.78rem;
   cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
   transition:
     border-color 0.15s,
     color 0.15s;
@@ -602,13 +633,13 @@
 
 .gameEditGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
 @media (max-width: 560px) {
   .gameEditGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -619,6 +650,8 @@
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--fgColor-muted);
+  /* Item de grid/flex: sem `min-width: 0` ele adota o min-content do controle. */
+  min-width: 0;
 }
 
 .fieldLabel .input {
@@ -716,14 +749,14 @@
 
 .platformsGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   margin-top: 8px;
 }
 
 @media (max-width: 560px) {
   .platformsGrid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -734,6 +767,8 @@
   font-size: 0.82rem;
   color: var(--fgColor-default);
   cursor: pointer;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .checkboxLabel input[type="checkbox"] {
@@ -1004,6 +1039,11 @@
   gap: 2px;
   border-bottom: 1px solid var(--borderColor-muted);
   margin-bottom: 16px;
+  /* Quatro abas com `white-space: nowrap` passavam da largura no celular;
+     quebrar em duas linhas mantém todas visíveis (rolagem horizontal sem pista
+     é affordance falsa). */
+  flex-wrap: wrap;
+  row-gap: 4px;
 }
 
 .gameEditTab {
@@ -1030,6 +1070,31 @@
   color: var(--brand-primary);
   border-bottom-color: var(--brand-primary);
   font-weight: 700;
+}
+
+/* Linha do produto no celular: título ocupa a linha inteira e os selos/botões
+   descem. Os `margin-left: auto` existem para empurrar ao canto no desktop;
+   aqui precisam voltar a zero, senão abrem um buraco no meio da linha quebrada. */
+@media (max-width: 560px) {
+  .gameLink {
+    flex: 1 1 100%;
+  }
+
+  .gameStageBadge,
+  .btnEditGame {
+    margin-left: 0;
+  }
+
+  .btnEditGame,
+  .btnClassify,
+  .btnDeleteBook {
+    flex: 1 1 auto;
+    min-height: 34px;
+  }
+
+  .gameFormRow {
+    flex-direction: column;
+  }
 }
 
 /* ---- Streaming tab ---- */
