@@ -176,7 +176,7 @@ upstream e o procedimento de rebase estão em
 
 | #                          | Efeito                                                                                                                                                                       |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1                          | Mantém o `?token=` (sessionStorage) ao dar refresh — evita o "softlock" de login                                                                                             |
+| 1                          | Mantém o `?token=` (sessionStorage **por sala**) ao dar refresh — evita o "softlock" de login e o token de uma sala não é oferecido em outra        |
 | 2                          | Painel esquerdo mostra a contagem de participantes (antes repetia o nome do estúdio, que já está na barra superior)                                                          |
 | 3                          | Injeta `<link href="/indies.css">` após o `galene.css` no `head`                                                                                                             |
 | 4                          | Adiciona a classe `peer-screenshare` ao tile de compartilhamento de tela                                                                                                     |
@@ -187,6 +187,11 @@ upstream e o procedimento de rebase estão em
 | 9                          | Escolha do dispositivo de reprodução (saída de áudio) no painel de opções via `setSinkId` em cada tile; sem a API (Firefox/Safari) o controle é escondido                    |
 | 10                         | Controles do tile (play, mudo, PiP, tela cheia) respondem de novo: o rótulo do nome não engole o clique                                                                      |
 | 11                         | "Noise suppression" deixa de desligar o cancelamento de eco (microfonia com mais de uma pessoa no mesmo ambiente) e o painel traz a dica de fone                             |
+| 12                         | Tela de entrada com prévia, medidor e escolha de dispositivos antes de publicar                                                                                              |
+| 15                         | Barra de controles flutuante com ícone + rótulo, e botão "Parar tela"                                                                                                        |
+| 17                         | Chat na barra flutuante (o gatilho nativo só aparecia com vídeo publicado) e painel em tela cheia no mobile                                                                   |
+| 18                         | Microfone liga sob demanda: sem mídia publicada pede **só** o áudio; track encerrada pelo sistema é readquirida                                                              |
+| 19                         | Sem token, o Galene redireciona para `/estudios/<slug>/reunioes` (`authPortal` no grupo) em vez de mostrar o formulário de senha                                              |
 | `galene/static/indies.css` | Skin da marca: superfícies planas, cantos arredondados, paleta roxa; e o modo palco+faixa (`#peers.has-screenshare`, com `--thumb-w`/`--thumb-h` lidos pelo JS)              |
 
 O `displayName` é gravado no arquivo do **estúdio** no provisionamento
@@ -356,6 +361,9 @@ tela cheia e parar executam a ação — na grade e no modo palco.
 | Sala não carrega / some depois de um deploy             | Campo desconhecido no `groups/<estudio>.json`                         | O Galene lê o grupo com `DisallowUnknownFields`: conferir o JSON gravado por `lib/galene.js`      |
 | Cliente tenta `ws://` (Mixed Content / "Not Connected") | `data/config.json` sem `proxyURL`                                     | Gravar `"proxyURL": "https://meet.jogos.social.br"` (deploy ou manual) e `docker restart galene`  |
 | Refresh na sala pede login (usuário/senha)              | Galene remove o `?token=` da URL após o join                          | Usar a imagem `indies-galene:galene-1.2.1` (customização 1) — exige `--force-recreate galene`     |
+| Às vezes a sala abre na tela de login do Galene         | Link sem `?token=` (histórico, nova aba) ou token de outra sala       | Imagem com as customizações 1 (chave por sala) e 19 (`authPortal`): sem token, o Galene volta ao painel do estúdio |
+| Chat não abre no celular                                | O gatilho nativo só aparece quando há vídeo publicado                  | Imagem com a customização 17 (botão Chat na barra flutuante)                                      |
+| Microfone não reativa no celular                        | Entrou com "Ligar ao entrar: Nada" (sem track) ou track encerrada pelo sistema | Imagem com a customização 18: o botão liga o áudio sob demanda e readquire a track        |
 | Avatar não aparece na lista de participantes            | `CLOUDINARY_CLOUD_NAME` vazio, ou `img-src` da CSP sem Cloudinary     | Definir a variável e incluir `https://res.cloudinary.com` no `img-src` (`meet.https.conf`)        |
 | "Ainda não consigo relogar" após sair da sala           | Imagem antiga: caía no formulário de senha sem token                  | Recriar com a imagem atual (customização 8); "Entrar novamente" volta sem refresh                 |
 | Botão "Encerrar reunião" retorna erro 500               | `GALENE_INTERNAL_WS_URL` ausente, ou Galene inalcançável pelo app     | Conferir a variável e o `extra_hosts` (`host.docker.internal`) no `deploy/compose.yaml`           |

@@ -405,6 +405,20 @@ function onPeerConnection() {
 let hasJoined = false;
 let meetingEnded = false;
 
+/**
+ * Chave de sessionStorage **por sala** (customizacao 1, corrigida).
+ *
+ * Era uma chave global (`joinToken`): entrar na sala A gravava o token ali, e
+ * qualquer visita posterior a uma sala B **sem `?token=`** (link compartilhado
+ * depois do `replaceState`, historico do navegador) restaurava o token da sala
+ * A. O Galene respondia `token for wrong group` e a pessoa caia no formulario
+ * de login — que nunca autentica, porque a entrada e SO por JWT. O mesmo valia
+ * para `joinBack` (podia levar para a reuniao errada) e `joinName`/`joinAvatar`.
+ */
+function roomStorageKey(name) {
+    return name + ':' + window.location.pathname;
+}
+
 /** Le/escreve o sessionStorage sem deixar excecao (aba privada) vazar. */
 function storageGet(key) {
     try {
@@ -458,7 +472,7 @@ function ensureLeftPanel() {
     reconnect.className = 'btn btn-blue';
     reconnect.textContent = 'Entrar novamente';
     reconnect.onclick = async function() {
-        let stored = storageGet('joinToken');
+        let stored = storageGet(roomStorageKey('joinToken'));
         if(!stored)
             return;
         token = stored;
@@ -496,8 +510,10 @@ function hideLeftPanel() {
  * Mostra o painel de saida, escondendo o formulario do Galene.
  * @param {boolean} isMeetingEnded true quando a sala foi encerrada pelo
  *     organizador — nesse caso nao ha o que reconectar.
+ * @param {string} [reason] motivo quando a entrada foi recusada (token
+ *     expirado, de outra sala). Aparece no lugar do texto padrao.
  */
-function enterLeftState(isMeetingEnded) {
+function enterLeftState(isMeetingEnded, reason) {
     // A tela de entrada nao convive com o painel de saida.
     prejoinClose();
     let panel = ensureLeftPanel();
@@ -506,20 +522,24 @@ function enterLeftState(isMeetingEnded) {
     let reconnect = document.getElementById('ib-reconnect');
     let leave = document.getElementById('ib-leave');
 
-    let back = storageGet('joinBack');
+    let back = storageGet(roomStorageKey('joinBack'));
     if(back)
         leave.setAttribute('href', back);
     else
         leave.classList.add('invisible');
 
-    let stored = storageGet('joinToken');
+    let stored = storageGet(roomStorageKey('joinToken'));
 
     if(isMeetingEnded) {
         // A sala esta trancada e com `expires` no passado: o token nao serve
         // mais para nada, e mante-lo faria o refresh tentar de novo em loop.
-        storageRemove('joinToken');
+        storageRemove(roomStorageKey('joinToken'));
         title.textContent = 'Reunião encerrada';
         note.textContent = 'O organizador encerrou esta reunião.';
+        reconnect.classList.add('invisible');
+    } else if(reason) {
+        title.textContent = 'Não foi possível entrar';
+        note.textContent = reason;
         reconnect.classList.add('invisible');
     } else if(stored) {
         title.textContent = 'Você saiu da reunião';
@@ -684,6 +704,10 @@ function setButtonsVisibility() {
 
     // Barra de controles flutuante: so dentro da sala.
     setVisibility('controlbar', !!connected);
+    // Customizacao 17: o chat esta disponivel em qualquer sala, com ou sem
+    // video — o gatilho nativo (`collapse-video`) exigia video publicado.
+    setVisibility('ib-chat', !!connected);
+    updateChatButton();
     // Customizacao 15: o botao so aparece enquanto ha tela compartilhada.
     setVisibility('stopsharebutton', !!findUpMedia('screenshare'));
 }
@@ -768,14 +792,56 @@ getInputElement('hqaudiobox').onchange = function(e) {
     replaceCameraStream();
 };
 
-document.getElementById('mutebutton').onclick = function(e) {
+/* ---- Customizacao 18: microfone liga sob demanda -----------------------
+   O botao so alternava `track.enabled`. Quem entrava com "Ligar ao entrar:
+   Nada" nao tinha track nenhuma: o primeiro toque gravava `localMute = true`
+   sem mutar nada e TODOS os toques seguintes caiam na guarda antiga ("Use
+   Ligar"), um beco sem saida — no celular nao havia outro caminho. Agora:
+     1. sem midia publicada  -> pede SO o audio e entra desmutado;
+     2. track de audio morta (o sistema encerra em segundo plano) -> readquire;
+     3. caso normal -> alterna `enabled`, como antes.                        */
+document.getElementById('mutebutton').onclick = async function(e) {
     e.preventDefault();
-    let localMute = getSettings().localMute;
-    if (localMute && !findUpMedia('camera')) {
-        displayMessage('Use "Ligar" para ativar a câmera ou o microfone.');
-    } else {
-        localMute = !localMute;
-        setLocalMute(localMute, true);
+    let button = this;
+    if(button.disabled)
+        return;
+    button.disabled = true;
+    try {
+        let localMute = getSettings().localMute;
+        let id = findUpMedia('camera');
+
+        if(!id) {
+            // Sem stream local: ligar o microfone (audio apenas).
+            let audioConstraints = { echoCancellation: true };
+            if(!getSettings().preprocessing) {
+                audioConstraints.noiseSuppression = false;
+                audioConstraints.autoGainControl = false;
+            }
+            await addLocalMedia(undefined, { audio: audioConstraints, video: false });
+            setLocalMute(false, true);
+            displayMessage('Microfone ligado.');
+            return;
+        }
+
+        if(localMute) {
+            let stream = serverConnection?.findByLocalId(id)?.stream;
+            let live = !!stream && stream.getAudioTracks().some(t => t.readyState === 'live');
+            if(!live) {
+                // A track foi encerrada pelo sistema (aba em segundo plano no
+                // celular): reabrir o dispositivo, senao `enabled = true`
+                // produziria silencio.
+                await addLocalMedia(id);
+            }
+            setLocalMute(false, true);
+        } else {
+            setLocalMute(true, true);
+        }
+    } catch(err) {
+        console.error(err);
+        displayError(err);
+    } finally {
+        button.disabled = false;
+        setButtonsVisibility();
     }
 };
 
@@ -1030,7 +1096,7 @@ async function prejoinOpen() {
     // pode depender disso — o resto chega em seguida.
     overlay.classList.remove('ib-hidden');
 
-    let name = storageGet('joinName');
+    let name = storageGet(roomStorageKey('joinName'));
     let nameElt = prejoinEl('ib-prejoin-name');
     if(nameElt)
         nameElt.textContent = name ? 'Entrando como ' + name : '';
@@ -1104,7 +1170,7 @@ async function prejoinJoin() {
 }
 
 function prejoinCancel() {
-    let back = storageGet('joinBack');
+    let back = storageGet(roomStorageKey('joinBack'));
     if(back) {
         window.location.href = back;
         return;
@@ -1966,14 +2032,20 @@ function replaceCameraStream() {
 
 /**
  * @param {string} [localId]
+ * @param {{audio?: boolean|MediaTrackConstraints, video?: boolean|MediaTrackConstraints}} [override]
+ *     Constraints explicitas — usadas pelo botao de microfone para ligar SO o
+ *     audio quando ainda nao ha midia publicada (customizacao 18).
  */
-async function addLocalMedia(localId) {
+async function addLocalMedia(localId, override) {
     let settings = getSettings();
+    override = override || {};
 
     /** @type{boolean|MediaTrackConstraints} */
-    let audio = settings.audio ? {deviceId: settings.audio} : false;
+    let audio = override.audio !== undefined ? override.audio :
+        (settings.audio ? {deviceId: settings.audio} : false);
     /** @type{boolean|MediaTrackConstraints} */
-    let video = settings.video ? {deviceId: settings.video} : false;
+    let video = override.video !== undefined ? override.video :
+        (settings.video ? {deviceId: settings.video} : false);
 
     if(video) {
         let resolution = settings.resolution;
@@ -3386,10 +3458,14 @@ async function gotJoined(kind, group, perms, status, data, error, message) {
         } else {
             token = null;
             try {
-                window.sessionStorage.removeItem('joinToken');
+                window.sessionStorage.removeItem(roomStorageKey('joinToken'));
             } catch(e) {
             }
-            displayError('The server said: ' + message);
+            // Token rejeitado (expirado, de outra sala, assinatura errada): o
+            // Galene mostraria o formulario de usuario/senha, que nas nossas
+            // salas nao autentica. O painel de saida oferece o caminho real —
+            // voltar para a plataforma e pegar um token novo.
+            enterLeftState(false, 'Não foi possível entrar: ' + message);
         }
         closeSafariStream();
         this.close();
@@ -3433,7 +3509,7 @@ async function gotJoined(kind, group, perms, status, data, error, message) {
         // participante ficaria preso numa sala que nao aceita mais ninguem.
         if(status && status.locked) {
             meetingEnded = true;
-            storageRemove('joinToken');
+            storageRemove(roomStorageKey('joinToken'));
             closeUpMedia();
             closeSafariStream();
             this.close();
@@ -5061,10 +5137,10 @@ document.getElementById('disconnectbutton').onclick = function(e) {
     // refresh entraria de volta) e volta para a plataforma. Antes disso o
     // usuario ficava preso no formulario de senha do Galene, que nunca
     // autentica nas nossas salas (autenticacao por token).
-    let back = storageGet('joinBack');
+    let back = storageGet(roomStorageKey('joinBack'));
     hasJoined = false;
-    storageRemove('joinToken');
-    storageRemove('joinAvatar');
+    storageRemove(roomStorageKey('joinToken'));
+    storageRemove(roomStorageKey('joinAvatar'));
     storageRemove('avatarPrefix');
     // Solta camera/microfone da previa: sair com a luz da camera acesa e o
     // sintoma mais visivel de stream esquecido aberto.
@@ -5122,17 +5198,46 @@ document.getElementById('show-video').onclick = function(e) {
 
 document.getElementById('close-chat').onclick = function(e) {
     e.preventDefault();
-    setVisibility('left', false);
-    setVisibility('show-chat', true);
-    resizePeers();
+    setChatOpen(false);
 };
 
 document.getElementById('show-chat').onclick = function(e) {
     e.preventDefault();
-    setVisibility('left', true);
-    setVisibility('show-chat', false);
-    resizePeers();
+    setChatOpen(true);
 };
+
+/* ---- Customizacao 17: chat na barra flutuante -----------------------
+   O unico gatilho do Galene para o chat no mobile era o `#collapse-video`,
+   exibido so quando ha VIDEO na sala (`mediacount && mobilelayout`). Em sala
+   vazia — ou para quem entrou com "Nada" — o painel de conversa ficava
+   inacessivel no celular. Agora ha um botao proprio, sempre presente na sala. */
+function isChatOpen() {
+    return getVisibility('left');
+}
+
+function updateChatButton() {
+    let open = isChatOpen();
+    let button = document.getElementById('ib-chat');
+    if(button)
+        button.classList.toggle('ib-ctl-active', open);
+    // No mobile o chat ocupa a tela toda; a barra flutuante sairia por cima do
+    // compositor (ver `.ib-chat-open` em indies.css).
+    document.body.classList.toggle('ib-chat-open', open);
+}
+
+function setChatOpen(open) {
+    setVisibility('left', open);
+    setVisibility('show-chat', false);
+    updateChatButton();
+    resizePeers();
+    if(open)
+        document.getElementById('input')?.focus();
+}
+
+document.getElementById('ib-chat')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    setChatOpen(!isChatOpen());
+});
 
 async function serverConnect() {
     if(serverConnection && serverConnection.socket)
@@ -5197,7 +5302,7 @@ async function start() {
         // O Galene remove o token da URL apos o join (replaceState abaixo) e,
         // sem essa copia, recarregar a pagina cai na tela de login, impedindo
         // reentrada com o link/codigo da reuniao.
-        storageSet('joinToken', parms.get('token'));
+        storageSet(roomStorageKey('joinToken'), parms.get('token'));
     }
     // Avatar (customizacao 6) e destino de saida (customizacao 8) tambem
     // precisam sobreviver ao replaceState, que limpa a query inteira. O nome
@@ -5205,14 +5310,14 @@ async function start() {
     if(parms.has('avatarPrefix'))
         storageSet('avatarPrefix', parms.get('avatarPrefix'));
     if(parms.has('avatar'))
-        storageSet('joinAvatar', parms.get('avatar'));
+        storageSet(roomStorageKey('joinAvatar'), parms.get('avatar'));
     if(parms.has('back'))
-        storageSet('joinBack', parms.get('back'));
+        storageSet(roomStorageKey('joinBack'), parms.get('back'));
     if(parms.has('username'))
-        storageSet('joinName', parms.get('username'));
+        storageSet(roomStorageKey('joinName'), parms.get('username'));
 
     avatarPrefix = storageGet('avatarPrefix');
-    myAvatar = avatarUrl(storageGet('joinAvatar'));
+    myAvatar = avatarUrl(storageGet(roomStorageKey('joinAvatar')));
 
     if(window.location.search)
         window.history.replaceState(null, '', window.location.pathname);
@@ -5231,7 +5336,7 @@ async function start() {
     else {
         // Refresh da pagina: o token nao esta mais na URL (foi removido no
         // primeiro acesso); recupera do sessionStorage.
-        token = storageGet('joinToken');
+        token = storageGet(roomStorageKey('joinToken'));
     }
 
     if(token) {
