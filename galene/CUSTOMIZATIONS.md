@@ -585,6 +585,7 @@ Complemento no cliente: quando o servidor **rejeita** o token (`fail`), em vez
 de só exibir o erro do protocolo, o painel de saída (customização 8) é aberto com
 o motivo e o botão "Voltar para a plataforma" — de lá a pessoa pega um token
 novo.
+
 ## Por que não há mais arquivos `.patch`
 
 O subprojeto nasceu com 5 arquivos `.patch` que o `Dockerfile` aplicava por
