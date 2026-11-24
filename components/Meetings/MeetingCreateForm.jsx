@@ -1,15 +1,15 @@
 import { useState } from "react";
 import styles from "./MeetingCreateForm.module.css";
-import { toLocalDatetimeValue } from "@/lib/meetingFormat";
-
-const DEFAULT_STARTS = toLocalDatetimeValue(Date.now() + 60 * 60 * 1000);
-const DEFAULT_ENDS = toLocalDatetimeValue(Date.now() + 2 * 60 * 60 * 1000);
+import { defaultMeetingWindow, meetingInputToInstant } from "@/lib/meetingFormat";
 
 export default function MeetingCreateForm({ slug, onCreated, onCancel }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [startsAt, setStartsAt] = useState(DEFAULT_STARTS);
-  const [endsAt, setEndsAt] = useState(DEFAULT_ENDS);
+  // Início = **agora** (no fuso de reuniões) e término = +1h. Calculado na
+  // abertura do formulário, não no import do módulo: a página pode ficar aberta
+  // por horas e o campo nascia com o horário do carregamento (no passado).
+  const [startsAt, setStartsAt] = useState(() => defaultMeetingWindow().startsAt);
+  const [endsAt, setEndsAt] = useState(() => defaultMeetingWindow().endsAt);
   const [maxParticipants, setMaxParticipants] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -17,7 +17,9 @@ export default function MeetingCreateForm({ slug, onCreated, onCancel }) {
   function validate() {
     if (!title.trim()) return "Informe o título da reunião.";
     if (!startsAt || !endsAt) return "Informe as datas de início e término.";
-    if (new Date(endsAt) <= new Date(startsAt)) {
+    // Comparação por instante: os valores do input são hora de parede de
+    // Brasília, e `new Date(valor)` os leria no fuso do navegador.
+    if (meetingInputToInstant(endsAt) <= meetingInputToInstant(startsAt)) {
       return "O término deve ser posterior ao início.";
     }
     return "";
@@ -42,8 +44,8 @@ export default function MeetingCreateForm({ slug, onCreated, onCancel }) {
         body: JSON.stringify({
           title: title.trim(),
           description: description.trim() || null,
-          starts_at: new Date(startsAt).toISOString(),
-          ends_at: new Date(endsAt).toISOString(),
+          starts_at: meetingInputToInstant(startsAt).toISOString(),
+          ends_at: meetingInputToInstant(endsAt).toISOString(),
           max_participants: maxParticipants ? Number(maxParticipants) : undefined,
         }),
       });
@@ -58,8 +60,10 @@ export default function MeetingCreateForm({ slug, onCreated, onCancel }) {
       setTitle("");
       setDescription("");
       setMaxParticipants("");
-      setStartsAt(DEFAULT_STARTS);
-      setEndsAt(DEFAULT_ENDS);
+      // "Agora" mudou: recalcular em vez de reaproveitar o valor da abertura.
+      const next = defaultMeetingWindow();
+      setStartsAt(next.startsAt);
+      setEndsAt(next.endsAt);
       if (onCreated) onCreated(data);
     } catch {
       setError("Erro de conexão. Tente novamente.");
