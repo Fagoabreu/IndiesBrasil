@@ -557,10 +557,16 @@ e `enabled = true` numa track encerrada produz silêncio.
 1. sem stream local → `addLocalMedia(undefined, { audio, video: false })`
    (o segundo parâmetro é novo e aceita constraints explícitas), publicando
    **só** o microfone e entrando desmutado;
-2. stream existente com track de áudio `ended` → readquire via `addLocalMedia`;
+2. stream existente com track de áudio `ended` → readquire via
+   `addLocalMedia(media.localId)`;
 3. caso normal → alterna `enabled`, como antes.
 
-A guarda antiga foi removida.
+Dois detalhes que já causaram defeito aqui: `findUpMedia()` devolve a
+**Stream**, não o id — usar o objeto como `localId` fazia `findByLocalId()`
+não achar a stream existente e o cliente publicar uma **segunda câmera** (a
+câmera duplicada ao mexer no microfone). E a guarda antiga
+(`if (localMute && !findUpMedia('camera'))`) foi removida: ela bloqueava
+justamente quem não tinha mídia.
 
 ## 19. Sem token, volta para o painel do estúdio
 
