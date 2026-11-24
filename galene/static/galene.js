@@ -808,9 +808,13 @@ document.getElementById('mutebutton').onclick = async function(e) {
     button.disabled = true;
     try {
         let localMute = getSettings().localMute;
-        let id = findUpMedia('camera');
+        // `findUpMedia` devolve a STREAM, nao o id. Usar o objeto como id
+        // (`findByLocalId(objeto)` sempre undefined) fazia o caminho de
+        // "track morta" publicar uma SEGUNDA camera em vez de substituir a
+        // existente — era a camera duplicada ao mexer no microfone.
+        let media = findUpMedia('camera');
 
-        if(!id) {
+        if(!media) {
             // Sem stream local: ligar o microfone (audio apenas).
             let audioConstraints = { echoCancellation: true };
             if(!getSettings().preprocessing) {
@@ -824,13 +828,14 @@ document.getElementById('mutebutton').onclick = async function(e) {
         }
 
         if(localMute) {
-            let stream = serverConnection?.findByLocalId(id)?.stream;
+            let stream = media.stream;
             let live = !!stream && stream.getAudioTracks().some(t => t.readyState === 'live');
             if(!live) {
                 // A track foi encerrada pelo sistema (aba em segundo plano no
                 // celular): reabrir o dispositivo, senao `enabled = true`
-                // produziria silencio.
-                await addLocalMedia(id);
+                // produziria silencio. `media.localId` substitui a stream
+                // existente em vez de criar outra.
+                await addLocalMedia(media.localId);
             }
             setLocalMute(false, true);
         } else {
