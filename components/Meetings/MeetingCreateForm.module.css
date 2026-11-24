@@ -6,6 +6,9 @@
   border: 1px solid var(--borderColor-default);
   border-radius: 12px;
   padding: 18px;
+  /* Item de grid/flex no container da página: sem `min-width: 0` o formulário
+     adota o min-content do campo mais largo (o datetime-local) e vaza. */
+  min-width: 0;
 }
 
 .formTitle {
@@ -19,6 +22,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
 }
 
 .label {
@@ -45,6 +49,10 @@
     box-shadow 0.15s;
   width: 100%;
   box-sizing: border-box;
+  /* `datetime-local` tem largura intrínseca grande; sem isso ela define a
+     largura da coluna do grid e empurra o "Término" para fora do card. */
+  min-width: 0;
+  max-width: 100%;
 }
 
 .input:focus,
@@ -61,7 +69,9 @@
 
 .row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* `1fr` é `minmax(auto, 1fr)`: o piso seria o min-content do datetime-local e
+     as duas colunas somariam mais que o card. `minmax(0, 1fr)` permite encolher. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
 }
 
@@ -122,4 +132,20 @@
   color: #e05555;
   font-size: 13px;
   padding: 8px 12px;
+}
+
+@media (max-width: 560px) {
+  /* Empilhado: dois `datetime-local` lado a lado não cabem no celular (era o
+     "Término" cortado no print). */
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+  }
+
+  .actions button {
+    width: 100%;
+  }
 }

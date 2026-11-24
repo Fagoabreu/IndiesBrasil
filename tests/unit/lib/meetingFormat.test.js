@@ -1,4 +1,12 @@
-import { formatDateTimeBR, formatMeetingRange, getMeetingPhase, getMeetingPhaseLabel, toLocalDatetimeValue } from "@/lib/meetingFormat";
+import {
+  defaultMeetingWindow,
+  formatDateTimeBR,
+  formatMeetingRange,
+  getMeetingPhase,
+  getMeetingPhaseLabel,
+  meetingInputToInstant,
+  toMeetingInputValue,
+} from "@/lib/meetingFormat";
 
 /**
  * Testes unitários dos helpers de formatação/fase de reuniões (Fase 4).
@@ -11,14 +19,43 @@ const STARTS = "2025-03-12T14:30:00-03:00";
 const ENDS = "2025-03-12T15:30:00-03:00";
 
 describe("lib/meetingFormat.js", () => {
-  describe("toLocalDatetimeValue()", () => {
-    test("formata para input datetime-local (AAAA-MM-DDTHH:mm)", () => {
-      const value = toLocalDatetimeValue(STARTS);
-      expect(value).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+  describe("toMeetingInputValue()", () => {
+    test("converte instante para o valor do input no fuso de Brasília", () => {
+      // Independe do TZ do runner (CI roda em UTC): o valor é sempre 14:30.
+      expect(toMeetingInputValue(STARTS)).toBe("2025-03-12T14:30");
     });
 
     test("retorna vazio para data inválida", () => {
-      expect(toLocalDatetimeValue("data-invalida")).toBe("");
+      expect(toMeetingInputValue("data-invalida")).toBe("");
+    });
+  });
+
+  describe("meetingInputToInstant()", () => {
+    test("lê o valor do input como hora de Brasília, não do navegador", () => {
+      expect(meetingInputToInstant("2026-03-12T14:30").toISOString()).toBe("2026-03-12T17:30:00.000Z");
+    });
+
+    test("ida e volta preserva o horário digitado", () => {
+      const instant = meetingInputToInstant("2026-03-12T09:05");
+      expect(toMeetingInputValue(instant)).toBe("2026-03-12T09:05");
+    });
+  });
+
+  describe("defaultMeetingWindow()", () => {
+    test("início é a hora atual (Brasília) e término é uma hora depois", () => {
+      // 2026-11-24T01:46Z = 22:46 de 23/11 em Brasília (UTC-3).
+      const window = defaultMeetingWindow(Date.parse("2026-11-24T01:46:00Z"));
+
+      expect(window.startsAt).toBe("2026-11-23T22:46");
+      expect(window.endsAt).toBe("2026-11-23T23:46");
+    });
+
+    test("virada de dia no término", () => {
+      // 2026-11-24T02:40Z = 23:40 de 23/11 em Brasília → término 00:40 do dia seguinte.
+      const window = defaultMeetingWindow(Date.parse("2026-11-24T02:40:00Z"));
+
+      expect(window.startsAt).toBe("2026-11-23T23:40");
+      expect(window.endsAt).toBe("2026-11-24T00:40");
     });
   });
 
