@@ -435,7 +435,15 @@ describe("GET/POST/DELETE /api/v1/studios/[slug]/meetings", () => {
     expect(payload.sub).toBe("MembroReuniao");
     expect(payload.permissions).toContain("caption");
 
-    expect(new Date(body.expires_at).getTime()).toBeLessThanOrEqual(new Date(created.ends_at).getTime());
+    // O token de entrada ganha uma **folga** sobre o término da reunião: quem
+    // já está dentro continua podendo reconectar depois do horário marcado
+    // (sem isso, um refresh um minuto depois do `ends_at` caía na tela de
+    // login do Galene). A entrada de quem está FORA continua barrada por
+    // `meeting.assertCanJoin` — a folga é só da credencial já emitida.
+    const expiresMs = new Date(body.expires_at).getTime();
+    const endsMs = new Date(created.ends_at).getTime();
+    expect(expiresMs).toBeGreaterThan(endsMs);
+    expect(expiresMs).toBeLessThanOrEqual(endsMs + 2 * 60 * 60 * 1000);
   });
 
   test("Member cannot join a meeting that has not started yet", async () => {

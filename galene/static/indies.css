@@ -1169,3 +1169,56 @@ select:focus-visible,
     text-align: center;
   }
 }
+
+/* =====================  Chat e microfone no mobile  =====================
+   Customizacoes 17 e 18. O chat so abria pelo gatilho nativo do tile de video
+   (que exige video publicado), e o compositor ficava atras da barra flutuante
+   quando o painel abria em tela cheia. */
+#controlbar .ib-ctl-active {
+  background: rgba(var(--ib-brand-rgb), 0.38);
+  color: var(--ib-text-inverse);
+}
+
+@media (max-width: 1024px) {
+  /* Painel de conversa em tela cheia sobre o palco: e o unico jeito de o
+     compositor caber num aparelho de 360-400 px de largura. */
+  body.ib-chat-open #left,
+  body.ib-chat-open #chat {
+    position: fixed;
+    inset: 3.5rem 0 0 0;
+    width: auto !important;
+    max-width: none !important;
+    z-index: 1900;
+  }
+
+  body.ib-chat-open #left {
+    display: flex;
+    flex-direction: column;
+  }
+
+  body.ib-chat-open #chat {
+    position: static;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Com o chat aberto a barra flutuante cobriria o campo de mensagem. */
+  body.ib-chat-open #controlbar.ib-controlbar {
+    display: none;
+  }
+
+  body.ib-chat-open #chat #box {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  /* O X de fechar o painel era revelado no hover (nao existe no toque). */
+  body.ib-chat-open #close-chat {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+  }
+}

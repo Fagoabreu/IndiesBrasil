@@ -52,10 +52,14 @@ describe("lib/galene.js", () => {
       // `Description` derruba o carregamento da sala. Travar a forma exata do
       // JSON aqui impede introduzir um campo que só falharia em runtime —
       // `allow-anonymous`, por exemplo, está obsoleto desde o Galene 0.9.
-      expect(Object.keys(group).sort()).toEqual(["authKeys", "auto-subgroups", "comment"]);
+      expect(Object.keys(group).sort()).toEqual(["authKeys", "authPortal", "auto-subgroups", "comment"]);
       // Sem auto-subgroups o Galene não resolve `<estudio>/<sala>` e TODAS as
       // salas do estúdio param de abrir (galene/group/description.go).
       expect(group["auto-subgroups"]).toBe(true);
+      // `authPortal`: sem token, o Galene manda a pessoa para o painel de
+      // reuniões do estúdio em vez de mostrar o formulário de usuário/senha
+      // (que nas nossas salas nunca autentica).
+      expect(group.authPortal).toBe("https://jogos.social.br/estudios/aurora-games/reunioes");
       expect(group.authKeys).toHaveLength(1);
       expect(group.authKeys[0]).toMatchObject({ kty: "oct", alg: "HS256" });
       expect(group.authKeys[0].k).toBe(galene.getAuthSecret().encoded);
@@ -174,12 +178,15 @@ describe("lib/galene.js", () => {
       expect(payload["include-subgroups"]).toBe(true);
       expect(payload.sub).toBe("Maria Silva");
       expect(payload.permissions).toEqual(galene.GALENE_PERMISSIONS.member);
-      expect(payload.exp - payload.iat).toBeGreaterThan(7000);
-      expect(payload.exp - payload.iat).toBeLessThanOrEqual(7300);
+      // Término + 2 h de folga (reunião que passa do horário continua aceitando
+      // reconexão) e `iat` recuado em 30 s (tolerância de relógio do Galene).
+      expect(payload.exp - payload.iat).toBeGreaterThan(4 * 60 * 60 - 5);
+      expect(payload.exp - payload.iat).toBeLessThanOrEqual(4 * 60 * 60 + 35);
 
       const expiryMs = new Date(expiresAt).getTime();
       expect(expiryMs).toBeGreaterThan(nowMs);
-      expect(expiryMs).toBeLessThanOrEqual(new Date(endsAt).getTime());
+      expect(expiryMs).toBeGreaterThan(new Date(endsAt).getTime());
+      expect(expiryMs).toBeLessThanOrEqual(new Date(endsAt).getTime() + 2 * 60 * 60 * 1000);
 
       // A URL aponta para a SALA (subgrupo), não para o escopo do token.
       expect(joinUrl).toBe(`https://meet.example.com/group/aurora-games/${roomId}/?username=${encodeURIComponent("Maria Silva")}&token=${token}`);

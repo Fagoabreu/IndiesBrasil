@@ -27,6 +27,9 @@ contexto ao redor já mudou.
 | 14  | Volume inicial do tile de tela                        | `static/galene.js`                                       |
 | 15  | Barra de controles flutuante + botão "Parar tela"     | `static/galene.html` + `static/galene.js` + `indies.css` |
 | 16  | Interface em português (textos do HTML)               | `static/galene.html` + `static/galene.js`                |
+| 17  | Chat acessível no mobile (botão na barra flutuante)   | `static/galene.html` + `static/galene.js` + `indies.css` |
+| 18  | Microfone liga sob demanda (sem mídia publicada)      | `static/galene.js`                                       |
+| 19  | Sem token, volta para o estúdio em vez do login       | `lib/galene.js` (`authPortal` no grupo)                  |
 
 Nada de Go do servidor foi alterado — todas são de cliente. As customizações 6
 a 8 dependem de contrato com o app (`lib/galene.js`), documentado em cada seção;
@@ -45,6 +48,18 @@ já que não há senha local. Resultado: "softlock" de autorização ao recarreg
 restaurá-lo no `start()` quando a URL não tiver `?token=`. O token é apagado do
 `sessionStorage` quando o servidor rejeita a entrada (`fail`), evitando loop de
 tentativas com token expirado/revogado.
+
+**Chave POR SALA (correção):** a primeira versão usava uma chave global
+(`joinToken`). Entrar na sala A gravava o token ali, e qualquer visita posterior
+a uma sala B **sem `?token=`** restaurava o token de A — o Galene respondia
+`token for wrong group` e a pessoa caía no formulário de login. Agora a chave é
+`joinToken:<pathname>`, e o mesmo vale para `joinBack`, `joinName` e
+`joinAvatar` (um `back` antigo levava para a página da reunião errada).
+
+- `static/galene.js`: `roomStorageKey()` e os 4 pontos que gravam/leem o token,
+  o `back`, o nome e o avatar.
+- O `sessionStorage` é por aba e some ao fechar a aba: reabrir o link da sala
+  volta a funcionar normalmente (token presente na URL).
 
 - `static/galene.js`, 3 pontos: grava `joinToken`, restaura `joinToken`, remove
   `joinToken` no caso `fail`.
@@ -506,6 +521,70 @@ ganho para quem usa.
 
 - `static/galene.html`, `static/galene.js` (placeholders de chat, dica de
   "Ligar", título do painel de saída).
+
+## 17. Chat acessível no mobile
+
+**Problema:** o único gatilho para abrir o chat no layout de toque era o
+`#collapse-video`, exibido somente quando há **vídeo publicado** na sala
+(`setVisibility('collapse-video', mediacount && mobilelayout)`). Numa sala
+vazia, ou para quem entrou com "Ligar ao entrar: Nada", o painel de conversa
+ficava inacessível no celular. A barra flutuante da customização 15 também não
+tinha botão de chat.
+
+**Solução:** botão **Chat** na barra flutuante (`#ib-chat`), sempre visível
+dentro da sala. Ele alterna `#left` e sincroniza corpo/classe:
+
+- `setChatOpen()` / `isChatOpen()` / `updateChatButton()` em `static/galene.js`,
+  chamados também por `setButtonsVisibility()` e pelos handlers nativos
+  `#close-chat`/`#show-chat`;
+- `body.ib-chat-open` no `indies.css`: em ≤1024 px o painel vira tela cheia
+  (`position: fixed`, abaixo da barra superior), a barra flutuante some para não
+  cobrir o campo de mensagem e o X de fechar fica visível (o original só
+  aparecia no hover, que não existe no toque).
+
+## 18. Microfone liga sob demanda
+
+**Problema:** o botão de microfone apenas alternava `track.enabled` e tinha uma
+guarda — `if (localMute && !findUpMedia('camera'))` — que exibia "Use Ligar para
+ativar a câmera ou o microfone". Quem entrava com "Ligar ao entrar: Nada" não
+tinha track nenhuma: o primeiro toque gravava `localMute = true` sem mutar nada
+e **todos** os toques seguintes caíam na guarda. No celular isso é um beco sem
+saída. Além disso, o sistema encerra a track quando a aba vai para segundo plano
+e `enabled = true` numa track encerrada produz silêncio.
+
+**Solução:** o botão passa a garantir o áudio antes de alternar:
+
+1. sem stream local → `addLocalMedia(undefined, { audio, video: false })`
+   (o segundo parâmetro é novo e aceita constraints explícitas), publicando
+   **só** o microfone e entrando desmutado;
+2. stream existente com track de áudio `ended` → readquire via `addLocalMedia`;
+3. caso normal → alterna `enabled`, como antes.
+
+A guarda antiga foi removida.
+
+## 19. Sem token, volta para o painel do estúdio
+
+**Problema:** o Galene mostra o formulário usuário/senha sempre que a entrada
+chega sem token válido. Nas nossas salas não existe senha (autenticação só por
+JWT), então essa tela é um beco sem saída — e era o destino de quem abria a sala
+por um link sem `?token=` (histórico, nova aba, link compartilhado depois do
+`replaceState`).
+
+**Solução:** o arquivo do grupo passa a declarar `authPortal` (campo de
+`Description`, `galene/group/description.go`):
+
+```json
+"authPortal": "https://jogos.social.br/estudios/<slug>/reunioes"
+```
+
+O redirecionamento é feito pelo **servidor**, antes de qualquer tela. É escrito
+por `groupFileObject` em `lib/galene.js`; como o conteúdo do arquivo é comparado
+byte a byte, a próxima entrada em qualquer reunião do estúdio regrava o grupo.
+
+Complemento no cliente: quando o servidor **rejeita** o token (`fail`), em vez
+de só exibir o erro do protocolo, o painel de saída (customização 8) é aberto com
+o motivo e o botão "Voltar para a plataforma" — de lá a pessoa pega um token
+novo.
 
 ## Por que não há mais arquivos `.patch`
 
