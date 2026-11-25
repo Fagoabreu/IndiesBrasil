@@ -529,18 +529,27 @@ ganho para quem usa.
 (`setVisibility('collapse-video', mediacount && mobilelayout)`). Numa sala
 vazia, ou para quem entrou com "Ligar ao entrar: Nada", o painel de conversa
 ficava inacessível no celular. A barra flutuante da customização 15 também não
-tinha botão de chat.
+tinha botão de chat. E a primeira versão do painel mobile ocupava a tela inteira
+e escondia a barra de controles — parecia que a chamada tinha quebrado.
 
-**Solução:** botão **Chat** na barra flutuante (`#ib-chat`), sempre visível
-dentro da sala. Ele alterna `#left` e sincroniza corpo/classe:
+**Solução (padrão Meet/Zoom/Teams no celular):**
 
+- botão **Chat** na barra flutuante (`#ib-chat`), sempre visível na sala;
 - `setChatOpen()` / `isChatOpen()` / `updateChatButton()` em `static/galene.js`,
   chamados também por `setButtonsVisibility()` e pelos handlers nativos
-  `#close-chat`/`#show-chat`;
-- `body.ib-chat-open` no `indies.css`: em ≤1024 px o painel vira tela cheia
-  (`position: fixed`, abaixo da barra superior), a barra flutuante some para não
-  cobrir o campo de mensagem e o X de fechar fica visível (o original só
-  aparecia no hover, que não existe no toque).
+  `#close-chat`/`#show-chat`; no celular o foco do `#input` não é aplicado (abriria
+  o teclado sozinho);
+- **a sala entra com o chat fechado** no mobile (`start()` e `gotJoined`): a
+  primeira tela é o vídeo com os controles;
+- em ≤1024 px o painel é ancorado **acima da barra flutuante**
+  (`bottom: calc(var(--ib-ctlbar) + 12px)`), com cantos arredondados e sombra — a
+  barra continua visível, então microfone, câmera e o próprio botão do chat
+  permanecem ao alcance;
+- cabeçalho próprio (`#chatbox::before` com "Chat") e **X de 40 px** sempre
+  visível (`#close-chat`), porque o Galene esconde esse controle no mobile por
+  `display: none` e o original só aparecia no hover;
+- compositor com `env(safe-area-inset-bottom)` para não ficar sob a barra do
+  aparelho.
 
 ## 18. Microfone liga sob demanda
 

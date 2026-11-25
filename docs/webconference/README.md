@@ -189,7 +189,7 @@ upstream e o procedimento de rebase estão em
 | 11                         | "Noise suppression" deixa de desligar o cancelamento de eco (microfonia com mais de uma pessoa no mesmo ambiente) e o painel traz a dica de fone                             |
 | 12                         | Tela de entrada com prévia, medidor e escolha de dispositivos antes de publicar                                                                                              |
 | 15                         | Barra de controles flutuante com ícone + rótulo, e botão "Parar tela"                                                                                                        |
-| 17                         | Chat na barra flutuante (o gatilho nativo só aparecia com vídeo publicado) e painel em tela cheia no mobile                                                                  |
+| 17                         | Chat na barra flutuante e painel ancorado **acima** dela no mobile (a barra continua visível); a sala entra com o chat fechado                                               |
 | 18                         | Microfone liga sob demanda: sem mídia publicada pede **só** o áudio; track encerrada pelo sistema é readquirida                                                              |
 | 19                         | Sem token, o Galene redireciona para `/estudios/<slug>/reunioes` (`authPortal` no grupo) em vez de mostrar o formulário de senha                                             |
 | `galene/static/indies.css` | Skin da marca: superfícies planas, cantos arredondados, paleta roxa; e o modo palco+faixa (`#peers.has-screenshare`, com `--thumb-w`/`--thumb-h` lidos pelo JS)              |
