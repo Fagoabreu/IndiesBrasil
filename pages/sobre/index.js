@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRightIcon, BookIcon, LightBulbIcon, MilestoneIcon } from "@primer/octicons-react";
 
-import PageHeader from "@/components/PageHeader";
+import { PageHeader } from "@/components/ui/organisms";
 import SeoHead from "@/components/SeoHead";
 
 import { ABOUT_DOCS } from "@/lib/aboutDocs";

@@ -3,7 +3,7 @@ import path from "node:path";
 import Link from "next/link";
 import { ArrowLeftIcon } from "@primer/octicons-react";
 
-import PageHeader from "@/components/PageHeader";
+import { PageHeader } from "@/components/ui/organisms";
 import SeoHead from "@/components/SeoHead";
 import mdBody from "@/components/Markdown/markdownBody.module.css";
 

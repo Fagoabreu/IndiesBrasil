@@ -74,6 +74,29 @@
 - `--brand-chip` (`#a78bfa`) e o roxo para texto pequeno no escuro: `#8b5cf6` sobre `#0d1117` fica em 4.5:1.
 - **Cor de fundo clara exige texto escuro**: `ContentRatingBadge` escolhe a cor do texto pela luminancia do fundo (`isLightColor`). Texto branco fixo dava 1.9:1 no amarelo do "10 anos".
 
+## Atomic Design (frontend) — obrigatorio
+
+Toda alteracao de frontend comeca por `components/ui`, nao por JSX solto na pagina. Antes de escrever, procure o bloco na camada: se ele ja existe, a tarefa e reusar ou melhorar o componente (prop/variante), nunca um clone na tela.
+
+Camadas (uma seta so, de baixo para cima: `Primer -> atoms -> molecules -> organisms -> pages`):
+
+- `components/ui/atoms/` — menor unidade com significado proprio e sem dominio: `BackLink`, `FormField` (label + controle + hint/erro), `IconText`. **Atomo aqui e so o que carrega regra nossa**: `Button`, `Label`, `TextInput`, `Select`, `Textarea`, `Flash`, `Spinner`, `Avatar` e `Dialog` vem do Primer e nao se reembrulham.
+- `components/ui/molecules/` — combinacao com comportamento e um nome: `EmptyState`, `SearchField`, `FilterToolbar` (busca + select + limpar), `FilterChips`, `LoadMoreButton`.
+- `components/ui/organisms/` — bloco de ecra: `PageHeader`, `TabBar`, `ListingTemplate` (cabecalho + filtros + grid + vazio + carregar mais).
+
+Cada camada tem `index.js` reexportando (`export { default as X } from "./X/X";`). Consumo sempre pelo barril: `import { EmptyState } from "@/components/ui/molecules";` — o caminho interno pode mudar sem tocar nas telas.
+
+Regras:
+
+- **Dado fica na pagina.** `getServerSideProps`, SWR e `fetch` nao entram na camada de UI: o componente recebe props e devolve intencao (`onSubmit`, `onChange`, `onLoadMore`).
+- **Baixo nao conhece alto.** Atomo nunca importa molecule/organism e nada em `components/ui` importa de `pages/`.
+- **CSS Module de pagina e layout** (`.page`, grid, espaco entre blocos). Aparencia de bloco vive no `ComponentName.module.css` do componente, ao lado dele. Nunca copiar modulo entre pastas.
+- **Consistencia visual.** Mesma acao = mesmo controle: busca `TextInput`, selecao `Select`, multilinha `Textarea`, acao `Button` do Primer. Proibido `<select>`/`<input>`/`<textarea>` estilizados a mao e `<button className={styles.x}>` como botao principal. Numa barra, todos os controles com a mesma altura (precedente: `--control-h: 32px` em `pages/servicos/index.module.css`, que tambem documenta o `flex-wrap: nowrap` necessario quando a barra vira coluna).
+- **Token, nao valor.** Cor por `--fgColor-*`/`--bgColor-*`/`--brand-*`; espaco, raio, sombra e movimento por `--space-*`, `--radius-*`, `--shadow-*`, `--duration-*`. Hex em CSS Module e erro de revisao.
+- **Prova nos tres tamanhos** (1280, 700 e 360px) e nos dois temas. `html { overflow-x: hidden }` esconde estouro: medir `overflowX` e `scrollWidth` das caixas, nao so `documentElement.scrollWidth`.
+- **Ja consolidado — nao recriar**: `PageHeader`, `TabBar`, `Card/cardBase.module.css`, `StatusMessage`, `ConfirmDialog`, `ImageUploader`, `SeoHead`. Reintroduzir `.pageHeader`, `.feedTab`, `.empty*`, `.backLink`, `.loadMore` ou `.searchInput` numa pagina e regressao (havia 9 copias do primeiro, 4 do segundo e 55 usos dos `.empty*`).
+- **Checklist de PR de frontend**: procurei em `components/ui`? -> extrai para a camada mais baixa possivel? -> tokens e nao hex? -> 360px e tema escuro conferidos? -> `npm run lint` + `npm run lint:prettier:check` + rota a 200 no `npm run dev`? -> `node scripts/audit-css-modules.js <ficheiros>` nos arquivos tocados?
+
 ## Lint & Qualidade
 
 - `npm run lint` apos toda mudanca. Zero erros para entregar.
@@ -163,7 +186,7 @@ Inserir antes de `"read:content_review"`. Usar contexto unico para cada bloco (v
 ## Padroes
 
 - SEO: `SeoHead` — nunca `<Head>` inline.
-- CSS Module junto ao componente (`ComponentName.module.css`).
+- CSS Module junto ao componente (`ComponentName.module.css`). Componente novo de UI nasce em `components/ui/<camada>/` — ver `## Atomic Design (frontend)`.
 - Nomes: componentes `PascalCase`, hooks/utils `camelCase`, assets `kebab-case`, constantes `UPPER_SNAKE_CASE`.
 - Models: `const modelName = { ... }; export default modelName;` — nunca `export default { ... }` direto (evita `import/no-anonymous-default-export`).
 - Sidebar: novos itens em `components/LeftSidebarComponent.js` dentro do grupo `NavList` apropriado.
@@ -172,7 +195,7 @@ Inserir antes de `"read:content_review"`. Usar contexto unico para cada bloco (v
 
 ## Modularizacao e reuso (obrigatorio)
 
-Antes de escrever UI ou logica nova, procure o que ja existe (grep no repo). Duplicar e proibido: copias divergem em silencio — foi assim que a pagina de editar evento passou a usar `styles.hint`, classe que so existia no CSS da pagina de criar.
+Antes de escrever UI ou logica nova, procure o que ja existe (grep no repo). Duplicar e proibido: copias divergem em silencio — foi assim que a pagina de editar evento passou a usar `styles.hint`, classe que so existia no CSS da pagina de criar. Para UI, onde cada camada mora e o que ela pode importar esta em `## Atomic Design (frontend)`.
 
 Ordem de preferencia:
 
@@ -180,7 +203,7 @@ Ordem de preferencia:
 2. **Extrair** para compartilhado e consumir nos dois lugares.
 3. **Criar** novo so se nao houver nada reaproveitavel.
 
-Onde colocar: UI em `components/` (com `ComponentName.module.css` ao lado); logica, constantes e helpers em `lib/` ou `utils/`; dados e regra de negocio em `models/`. Nunca copiar CSS Module entre pastas — importe o modulo compartilhado.
+Onde colocar: UI em `components/ui/<camada>/` (atoms, molecules, organisms — ver Atomic Design), com `ComponentName.module.css` ao lado; logica, constantes e helpers em `lib/` ou `utils/`; dados e regra de negocio em `models/`. Nunca copiar CSS Module entre pastas — importe o modulo compartilhado.
 
 Extraia quando: duas paginas tem o mesmo formulario, listagem ou card; o mesmo bloco de JSX se repete com pequenas diferencas; a mesma constante, option list ou formatador aparece em 2+ arquivos; a mesma query ou regra aparece em 2+ rotas.
 
