@@ -778,6 +778,20 @@ export default function StudioPage({ initialStudio }) {
                   <SendMessageButton targetType="studio" targetId={studio.id} className={actionStyles.btnOutline} />
                 )}
                 <StudioActionButton href={`/estudios/${slug}/press-kit`} icon={<DownloadIcon size={14} />} label="Press Kit" external />
+
+                {canPost && <StudioActionButton href={`/estudios/${slug}/reunioes`} icon={<VideoIcon size={14} />} label="Reuniões" />}
+                {(viewer.isMember || viewer.isAdmin || viewer.isOwner) && (
+                  <StudioActionButton href={`/estudios/${slug}/eventos`} icon={<CalendarIcon size={14} />} label="Eventos" />
+                )}
+                {canEdit && (
+                  <>
+                    {/* Publicar é a ação mais frequente de quem tem estúdio — por
+                        isso ela vem do menu, e não de um botão "Editar" que abria
+                        a aba "Perfil". */}
+                    <StudioAddMenu slug={slug} />
+                    <StudioActionButton href={`/estudios/${slug}/configuracoes`} icon={<GearIcon size={14} />} label="Gerenciar" />
+                  </>
+                )}
                 {canEdit && (
                   <StudioActionButton
                     href={`/estudios/${slug}/loja`}
@@ -795,19 +809,6 @@ export default function StudioPage({ initialStudio }) {
                     disabled={!STORE_SALES_ENABLED}
                     disabledHint="Os pedidos ficam disponíveis quando a loja entrar no ar."
                   />
-                )}
-                {canPost && <StudioActionButton href={`/estudios/${slug}/reunioes`} icon={<VideoIcon size={14} />} label="Reuniões" />}
-                {(viewer.isMember || viewer.isAdmin || viewer.isOwner) && (
-                  <StudioActionButton href={`/estudios/${slug}/eventos`} icon={<CalendarIcon size={14} />} label="Eventos" />
-                )}
-                {canEdit && (
-                  <>
-                    {/* Publicar é a ação mais frequente de quem tem estúdio — por
-                        isso ela vem do menu, e não de um botão "Editar" que abria
-                        a aba "Perfil". */}
-                    <StudioAddMenu slug={slug} />
-                    <StudioActionButton href={`/estudios/${slug}/configuracoes`} icon={<GearIcon size={14} />} label="Gerenciar" />
-                  </>
                 )}
               </div>
             </div>

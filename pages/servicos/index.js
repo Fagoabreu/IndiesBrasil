@@ -195,36 +195,25 @@ export default function ServicosPage({ initialStudios, initialServices }) {
           </div>
         </header>
 
+        {/* Busca, serviço e "limpar" dividem a primeira linha: são os três
+            controles de altura fixa e ficam alinhados na mesma base. Antes o
+            seletor de serviço tinha linha própria e o "Limpar filtros" era
+            empurrado até a borda direita (`margin-left: auto`), o que fazia os
+            botões parecerem fora de ordem. */}
         <div className={styles.filters}>
-          <div className={styles.searchBox}>
-            <SearchIcon size={14} />
-            <TextInput
-              aria-label="Buscar estúdios por serviço"
-              placeholder="Buscar por estúdio ou serviço (ex: QA, portabilidade)…"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              className={styles.searchInput}
-              block
-            />
-          </div>
+          <div className={styles.toolbar}>
+            <div className={styles.searchBox}>
+              <SearchIcon size={14} />
+              <TextInput
+                aria-label="Buscar estúdios por serviço"
+                placeholder="Buscar por estúdio ou serviço (ex: QA, portabilidade)…"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                className={styles.searchInput}
+                block
+              />
+            </div>
 
-          <div className={styles.chipRow} role="group" aria-label="Filtrar por grupo de serviço">
-            <button type="button" className={`${styles.chip} ${!group ? styles.chipActive : ""}`} onClick={() => setFilter("grupo", "")}>
-              Todos
-            </button>
-            {SERVICE_GROUPS.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                className={`${styles.chip} ${group === item.key ? styles.chipActive : ""}`}
-                onClick={() => setFilter("grupo", group === item.key ? "" : item.key)}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-
-          <div className={styles.serviceRow}>
             <label className={styles.selectLabel}>
               Serviço
               <select className={styles.select} value={service} onChange={(event) => setFilter("servico", event.target.value)}>
@@ -254,6 +243,22 @@ export default function ServicosPage({ initialStudios, initialServices }) {
                 Limpar filtros
               </button>
             )}
+          </div>
+
+          <div className={styles.chipRow} role="group" aria-label="Filtrar por grupo de serviço">
+            <button type="button" className={`${styles.chip} ${!group ? styles.chipActive : ""}`} onClick={() => setFilter("grupo", "")}>
+              Todos
+            </button>
+            {SERVICE_GROUPS.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                className={`${styles.chip} ${group === item.key ? styles.chipActive : ""}`}
+                onClick={() => setFilter("grupo", group === item.key ? "" : item.key)}
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
         </div>
 
