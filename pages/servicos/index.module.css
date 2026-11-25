@@ -83,9 +83,12 @@
 /* ---- Filtros ---- */
 
 .filters {
+  /* Altura única dos controles (o `TextInput` do Primer tem 32px na variante
+     padrão); mantém busca, chips, seletor e botão na mesma base. */
+  --control-h: 32px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   margin-bottom: 18px;
   padding: 14px;
   border: 1px solid var(--borderColor-muted);
@@ -93,25 +96,41 @@
   background: var(--bgColor-default);
 }
 
+/* Uma linha, uma base: busca (elástica), seletor de serviço e "Limpar filtros"
+   têm a mesma altura (`--control-h`) e ficam centrados entre si. */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
 .searchBox {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 1 1 200px;
+  min-width: 0;
   color: var(--fgColor-muted);
 }
 
 .searchInput {
   flex: 1;
+  min-width: 0;
 }
 
 .chipRow {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
 }
 
 .chip {
-  padding: 4px 12px;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-h);
+  padding: 0 12px;
   border: 1px solid var(--borderColor-default);
   border-radius: 999px;
   background: transparent;
@@ -141,24 +160,22 @@
   color: var(--fgColor-onEmphasis);
 }
 
-.serviceRow {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
 .selectLabel {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  flex: 0 0 auto;
   font-size: 0.78rem;
   font-weight: 600;
+  white-space: nowrap;
   color: var(--fgColor-muted);
 }
 
 .select {
-  padding: 6px 10px;
+  height: var(--control-h);
+  min-width: 140px;
+  max-width: 100%;
+  padding: 0 10px;
   border: 1px solid var(--borderColor-default);
   border-radius: 6px;
   background: var(--bgColor-default);
@@ -175,8 +192,11 @@
 }
 
 .clearButton {
-  margin-left: auto;
-  padding: 6px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--control-h);
+  padding: 0 12px;
   border: 1px solid var(--borderColor-default);
   border-radius: 6px;
   background: transparent;
@@ -184,6 +204,7 @@
   font-family: inherit;
   font-size: 0.78rem;
   font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -288,16 +309,41 @@
   color: var(--fgColor-muted);
 }
 
+/* Abaixo desta largura a barra de filtros não cabe numa linha (busca mínima +
+   seletor + botão), então vira coluna com controles de largura total. */
+@media (max-width: 700px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    /* Coluna nunca deve quebrar em colunas paralelas. Com `flex-wrap: wrap`
+       herdado da regra base, o Chrome calcula a largura da linha da coluna
+       errado em telas estreitas (os controles ficavam ~25px mais largos que o
+       próprio `.toolbar` e estouravam o padding do card). */
+    flex-wrap: nowrap;
+  }
+
+  .searchBox {
+    flex: 1 1 auto;
+  }
+
+  .select {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
 @media (max-width: 600px) {
   .header {
     padding: 16px;
   }
 
-  .grid {
-    grid-template-columns: 1fr;
+  /* A faixa do cabeçalho quebra em duas linhas no celular e o separador "·"
+     sobrava no fim da primeira, solto. Sem ele, cada oferta fica na sua linha. */
+  .offerDivider {
+    display: none;
   }
 
-  .clearButton {
-    margin-left: 0;
+  .grid {
+    grid-template-columns: 1fr;
   }
 }
