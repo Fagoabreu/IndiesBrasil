@@ -13,7 +13,7 @@ import {
   UploadIcon,
 } from "@primer/octicons-react";
 
-import PageHeader from "@/components/PageHeader";
+import { PageHeader } from "@/components/ui/organisms";
 import SeoHead from "@/components/SeoHead";
 
 import shared from "./toolPage.module.css";

@@ -194,6 +194,10 @@ Se tudo deu certo, você verá a página inicial do Jogos Social no navegador.
 ```
 Jogos Social/
 ├── components/          # Componentes React reutilizáveis
+│   ├── ui/              # Atomic Design (camadas e regras no CLAUDE.md)
+│   │   ├── atoms/       # Menor unidade nossa (BackLink, FormField); o resto vem do Primer
+│   │   ├── molecules/   # Bloco com comportamento (EmptyState, SearchField, FilterToolbar)
+│   │   └── organisms/   # Bloco de ecrã (PageHeader, TabBar, ListingTemplate)
 │   ├── PostCard/        # Card de post (feed)
 │   ├── PostActions/     # Botões de curtir, comentar, compartilhar
 │   ├── ShareModal/      # Modal de compartilhamento
