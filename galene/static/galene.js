@@ -3524,6 +3524,10 @@ async function gotJoined(kind, group, perms, status, data, error, message) {
         hasJoined = true;
         setTitle((status && status.displayName) || capitalise(group));
         displayUsername();
+        // No celular, entrar na sala nunca abre o chat: a primeira tela e o
+        // video com os controles (a abertura manual usa o botao Chat).
+        if(kind === 'join' && isMobileLayout())
+            setChatOpen(false);
         // Publica o avatar apenas na ENTRADA. `setdata` sempre dispara um
         // broadcast de "change" no servidor (UpdateData -> Joined("change")),
         // entao republicar a cada "change" entraria em loop infinito:
@@ -5234,8 +5238,11 @@ function setChatOpen(open) {
     setVisibility('left', open);
     setVisibility('show-chat', false);
     updateChatButton();
-    resizePeers();
-    if(open)
+    if(serverConnection)
+        resizePeers();
+    // No celular o foco abriria o teclado na hora; no desktop ele poupa um
+    // clique para escrever.
+    if(open && !isMobileLayout())
         document.getElementById('input')?.focus();
 }
 
@@ -5328,6 +5335,12 @@ async function start() {
         window.history.replaceState(null, '', window.location.pathname);
     setTitle(groupStatus.displayName || capitalise(group));
     updateUsersHeader();
+
+    // No celular a sala abre no VIDEO, com os controles visiveis. O `#left`
+    // (chat) nasce visivel no HTML; deixa-lo aberto fazia a primeira tela ser
+    // um painel de mensagens cobrindo tudo.
+    if(isMobileLayout())
+        setChatOpen(false);
 
     addFilters();
     // `enumerateDevices` pode nao resolver (politica de permissao, headless):
