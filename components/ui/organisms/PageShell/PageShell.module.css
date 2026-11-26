@@ -1,0 +1,30 @@
+/* Conteúdo de página — ver PageShell.jsx.
+   Tokens em css/styles.css (--layout-*, --space-*). */
+
+.root {
+  /*
+   * `clip` e não `hidden`: não cria scroll container, então um `position:
+   * sticky` dentro da página continua a funcionar. Era a rede de segurança que
+   * só `pages/estudios/[slug]/configuracoes.module.css` declarava.
+   */
+  overflow-x: clip;
+  width: min(100%, var(--shell-w));
+  margin-inline: auto;
+  padding-block: var(--space-3) var(--space-12);
+}
+
+.content {
+  --shell-w: var(--layout-content);
+}
+
+.wide {
+  --shell-w: var(--layout-wide);
+}
+
+.form {
+  --shell-w: var(--layout-form);
+}
+
+.full {
+  --shell-w: 100%;
+}

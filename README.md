@@ -195,9 +195,9 @@ Se tudo deu certo, você verá a página inicial do Jogos Social no navegador.
 Jogos Social/
 ├── components/          # Componentes React reutilizáveis
 │   ├── ui/              # Atomic Design (camadas e regras no CLAUDE.md)
-│   │   ├── atoms/       # Menor unidade nossa (BackLink, FormField); o resto vem do Primer
+│   │   ├── atoms/       # Menor unidade nossa (Stack, Inline, SectionHeading, BackLink, FormField)
 │   │   ├── molecules/   # Bloco com comportamento (EmptyState, SearchField, FilterToolbar)
-│   │   └── organisms/   # Bloco de ecrã (PageHeader, TabBar, ListingTemplate)
+│   │   └── organisms/   # Bloco de ecrã (PageShell, Section, PageHeader, TabBar, ListingTemplate)
 │   ├── PostCard/        # Card de post (feed)
 │   ├── PostActions/     # Botões de curtir, comentar, compartilhar
 │   ├── ShareModal/      # Modal de compartilhamento
@@ -226,6 +226,7 @@ Jogos Social/
 │   ├── static/          # Cliente web customizado (indies.css, galene.js)
 │   ├── UPSTREAM.md      # Contrato com o upstream jech/galene (tag base)
 │   └── CUSTOMIZATIONS.md # O porquê de cada customização
+├── docs/                # Documentação interna (migracao-atomic-design.md, roteiro-video.md)
 ├── .github/workflows/   # GitHub Actions (CI/CD)
 ├── tests/               # Testes automatizados (Jest)
 ├── Dockerfile           # Imagem Docker para produção

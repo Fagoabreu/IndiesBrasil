@@ -1,0 +1,14 @@
+/* Linha horizontal — ver Inline.jsx. */
+
+.root {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--inline-gap, var(--space-2));
+  align-items: var(--inline-align, center);
+  justify-content: var(--inline-justify, flex-start);
+  min-width: 0;
+}
+
+.nowrap {
+  flex-wrap: nowrap;
+}

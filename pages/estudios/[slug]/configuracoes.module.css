@@ -5,15 +5,8 @@
   padding: 80px 0;
 }
 
-.page {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 24px 16px 64px;
-  /* Rede de segurança contra overflow horizontal: um texto longo em campo de
-     usuário (gênero, nome de plataforma) não pode empurrar a página inteira.
-     `clip` não cria scroll container, então não quebra `position: sticky`. */
-  overflow-x: clip;
-}
+/* A largura do formulário (`--layout-form`) e a rede de segurança contra
+   overflow horizontal vêm de `PageShell width="form"`. */
 
 /* Barra superior */
 .topBar {

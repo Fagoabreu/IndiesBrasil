@@ -140,6 +140,26 @@
   --layout-wide: 1200px;
 
   /*
+   * Largura de formulário. Existiam 720/800/820/840/860px espalhados por seis
+   * módulos de página; `PageShell width="form"` passa a ser o único lugar.
+   */
+  --layout-form: 720px;
+
+  /*
+   * Altura única de controlo numa barra (busca, select, botão). Existia só em
+   * `pages/servicos/index.module.css` e divergia no resto do site: um `Select`
+   * ao lado de um `Button` precisa de alinhar pela mesma linha de base.
+   */
+  --control-h: 32px;
+  --control-h-sm: 28px;
+
+  /*
+   * Distância entre blocos de primeiro nível de uma página (`PageHeader` ->
+   * `Section` -> `Section`). Antes cada `.section` trazia o seu `margin-bottom`.
+   */
+  --section-gap: var(--space-6);
+
+  /*
    * Superfície elevada (card, painel). O valor útil é declarado em
    * `css/theme-dark.css`, no escopo de `[data-color-mode]` — e não aqui no
    * `:root`, porque `var(--bgColor-default)` só existe dentro do ThemeProvider
@@ -158,6 +178,10 @@
    */
   --font-sans: var(--font-inter, "Inter", "Segoe UI"), system-ui, -apple-system, "Noto Sans", sans-serif;
   --text-display: clamp(1.75rem, 3.2vw, 2.4rem);
+  /* Título de bloco (`SectionHeading`). Antes: 1rem a 1.15rem em 22 módulos. */
+  --text-title: 1.0625rem;
+  /* Título de bloco dentro de um painel, que já tem o título da página acima. */
+  --text-title-sm: 0.9375rem;
   --text-eyebrow: 0.6875rem;
   --tracking-eyebrow: 0.12em;
   --tracking-display: -0.01em;

@@ -34,6 +34,7 @@ import { normalizeMemberQuery } from "@/context/dataHooks/UseUserSuggest";
 import { MAX_GAME_GENRES, normalizeSelection } from "@/lib/gameGenres";
 import { MAX_GAME_TAGS, parseTagInput } from "@/lib/gameTags";
 import GenreSuggest from "@/components/Studio/GenreSuggest/GenreSuggest";
+import { PageShell } from "@/components/ui/organisms";
 import styles from "./configuracoes.module.css";
 import { SITE_NAME } from "@/lib/seo";
 
@@ -1564,7 +1565,7 @@ export default function ConfiguracoesPage() {
     <>
       <SeoHead title={`Configurações — ${name || "Estúdio"} — ${SITE_NAME}`} />
 
-      <div className={styles.page}>
+      <PageShell width="form">
         <div className={styles.topBar}>
           <Link href={`/estudios/${slug}`} className={styles.backLink}>
             <ArrowLeftIcon size={14} /> Voltar para o estúdio
@@ -3534,7 +3535,7 @@ export default function ConfiguracoesPage() {
 
         {/* ---- SERVIÇOS TAB ---- */}
         {activeTab === "services" && <StudioServicesEditor slug={slug} />}
-      </div>
+      </PageShell>
 
       {/* Upload de PDF de publicação */}
       <input ref={bookPdfInputRef} type="file" accept=".pdf" style={{ display: "none" }} onChange={handleBookPdfSelected} />

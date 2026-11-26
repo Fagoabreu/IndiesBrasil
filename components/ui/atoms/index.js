@@ -6,6 +6,11 @@
  * Primer já entrega (`Button`, `Label`, `TextInput`, `Select`, `Textarea`,
  * `Flash`, `Spinner`, `Avatar`, `Dialog`) é usado direto, não reembrulhado.
  *
- * Sem exportações ainda: o primeiro átomo nasce na extração de um bloco que
- * duas telas repetem (ver `## Atomic Design (frontend)` no CLAUDE.md).
+ * Os átomos de layout (`Stack`, `Inline`) e de título de bloco
+ * (`SectionHeading`) nasceram na onda 0 da migração para Atomic Design
+ * (`docs/migracao-atomic-design.md`): são a única forma de o espaçamento entre
+ * blocos parar de ser decidido por cada página.
  */
+export { default as Inline } from "./Inline/Inline";
+export { default as SectionHeading } from "./SectionHeading/SectionHeading";
+export { default as Stack } from "./Stack/Stack";
