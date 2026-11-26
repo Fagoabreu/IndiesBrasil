@@ -1,8 +1,4 @@
-.page {
-  width: min(100%, var(--layout-content));
-  margin: 0 auto;
-  padding: 12px 0 32px;
-}
+/* Largura e ritmo vertical vêm de `PageShell width="wide"`. */
 
 /* Busca e filtros — renderizados dentro da barra do PageHeader. */
 .searchInput {
@@ -115,10 +111,6 @@
 }
 
 @media (max-width: 600px) {
-  .page {
-    width: 100%;
-  }
-
   .searchInput {
     max-width: 100%;
     width: 100%;

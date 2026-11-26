@@ -7,4 +7,6 @@
  * todas importam de `@/components/ui/organisms`.
  */
 export { default as PageHeader } from "./PageHeader/PageHeader";
+export { default as PageShell } from "./PageShell/PageShell";
+export { default as Section } from "./Section/Section";
 export { default as TabBar } from "./TabBar/TabBar";

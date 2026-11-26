@@ -3,7 +3,7 @@ import path from "node:path";
 import Link from "next/link";
 import { ArrowLeftIcon } from "@primer/octicons-react";
 
-import { PageHeader } from "@/components/ui/organisms";
+import { PageHeader, PageShell } from "@/components/ui/organisms";
 import SeoHead from "@/components/SeoHead";
 import mdBody from "@/components/Markdown/markdownBody.module.css";
 
@@ -24,7 +24,7 @@ import styles from "./sobre.module.css";
  */
 export default function SobreDocPage({ doc, html }) {
   return (
-    <div className={styles.page}>
+    <PageShell width="content">
       {/* `noIndex`: são documentos de referência do projeto, não páginas de
           entrada. Repetir o inventário interno no índice do Google só criaria
           página concorrendo com as listagens reais. */}
@@ -50,7 +50,7 @@ export default function SobreDocPage({ doc, html }) {
        * aqui.
        */}
       <article className={`${mdBody.md} ${styles.doc}`} dangerouslySetInnerHTML={{ __html: html }} />
-    </div>
+    </PageShell>
   );
 }
 

@@ -1,0 +1,9 @@
+/* Empilhamento vertical — ver Stack.jsx. */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-gap, var(--space-4));
+  align-items: var(--stack-align, stretch);
+  min-width: 0;
+}

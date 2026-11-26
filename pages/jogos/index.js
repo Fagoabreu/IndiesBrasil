@@ -5,7 +5,7 @@ import { TextInput, Spinner } from "@primer/react";
 import { DeviceMobileIcon } from "@primer/octicons-react";
 import SeoHead from "@/components/SeoHead";
 import GameCard from "@/components/Card/GameCard";
-import { PageHeader, TabBar } from "@/components/ui/organisms";
+import { PageHeader, PageShell, TabBar } from "@/components/ui/organisms";
 import StudioPublishNotice from "@/components/Studio/StudioPublishNotice/StudioPublishNotice";
 import { useUser } from "@/context/UserContext";
 import { pageTitle, SITE_URL } from "@/lib/seo";
@@ -205,7 +205,7 @@ export default function JogosPage({ initialGames, genreTree = [], popularTags = 
   const hasFilters = Boolean(search || genre || tag || stage || contentRating || aiLevel);
 
   return (
-    <div className={styles.page}>
+    <PageShell width="wide">
       <SeoHead title={PAGE_TITLE} description={PAGE_DESCRIPTION} canonical={PAGE_URL} />
 
       <PageHeader
@@ -332,6 +332,6 @@ export default function JogosPage({ initialGames, genreTree = [], popularTags = 
           )}
         </>
       )}
-    </div>
+    </PageShell>
   );
 }
